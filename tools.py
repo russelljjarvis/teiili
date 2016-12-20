@@ -1,6 +1,12 @@
 from brian2 import *
 import numpy as np
 
+
+def setParams(neurongroup , params):
+    for par in params:
+        setattr(neurongroup, par , params[par])
+
+
 # function that calculates 1D index from 2D index
 @implementation('numpy', discard_units=True)
 @check_units(x0=1,x1=1,n2dNeurons=1,result=1)

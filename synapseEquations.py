@@ -6,7 +6,7 @@ from brian2 import *
 def MemristiveFusiSynapses(load_path=None, Imemthr=None, theta_dl=None, theta_du=None,
                           theta_pl=None, theta_pu=None, R_min=None, R0_d=None, R0_p=None,
                           alpha_d=None, alpha_p=None, beta_p=None, C_p=None, D_p=None, D_d=None,
-                          Iw_fm=None, Iwca=None, tau_fm=None, prop=None):
+                          Iw_fm=None, Iwca=None, tau_fm=None, prop=None, debug=False):
 
     '''
     Fusi memristive synapses
@@ -56,7 +56,7 @@ def MemristiveFusiSynapses(load_path=None, Imemthr=None, theta_dl=None, theta_du
 
     arguments = dict(locals())
 
-    default_load_path = '../SynapsesParamters/memfusi_parameters.txt'
+    default_load_path = './SynapsesParamters/memfusi_parameters.txt'
 
     Pdict = {}
     if load_path is not None:
@@ -74,7 +74,7 @@ def MemristiveFusiSynapses(load_path=None, Imemthr=None, theta_dl=None, theta_du
     model_fm = '''
             w : 1
             dIsyn / dt = - Isyn / tau_fm : amp (event-driven)
-            Iin_post = Isyn : amp (summed)
+            Iin_ex_post = Isyn : amp (summed)
             '''
     on_pre_fm = '''
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
@@ -128,6 +128,19 @@ def MemristiveFusiSynapses(load_path=None, Imemthr=None, theta_dl=None, theta_du
              '''
 
     SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
+
+    if debug:
+        print 'Synapse dictionary:\nModel:'
+        print SynDict['model']
+        print '-_-_-_-_-_-_-_-'
+        print 'on_pre:'
+        print SynDict['on_pre']
+        print '-_-_-_-_-_-_-_-'
+        print 'on_post:'
+        print SynDict['on_post']
+        print '-------------'
+        print 'Parameters:'
+        print Pdict
 
     return SynDict, Pdict
 

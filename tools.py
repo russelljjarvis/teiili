@@ -4,7 +4,8 @@ import numpy as np
 
 def setParams(neurongroup , params):
     for par in params:
-        setattr(neurongroup, par , params[par])
+        if hasattr(neurongroup, par):
+            setattr(neurongroup, par , params[par])
 
 
 # function that calculates 1D index from 2D index
@@ -19,3 +20,39 @@ def xy2ind(x0,x1,n2dNeurons):
 def ind2xy(ind,n2dNeurons):
     ret = (np.mod(np.round(ind),n2dNeurons), np.floor_divide(np.round(ind),n2dNeurons))     
     return ret
+
+# from Brian2 Equations class
+def replaceEqVar(eq , varname, replacement, debug=False):
+    "replaces variables in equations like brian 2, helper for replaceConstants"
+    if isinstance(replacement, str):
+        # replace the name with another name
+        eq = eq.replace(varname,replacement)
+    else:
+        # replace the name with a value
+        eq = eq.replace(varname,'(' + repr(replacement) + ')')
+    if debug:
+        print('replaced ' + str(varname) + ' by ' + str(repr(replacement)))
+    return (eq)
+
+
+def replaceConstants(equation,replacedict, debug=False):
+    "replaces constants in equations and deletes the respective definitions, given a dictionary of replacements"
+    for key in replacedict:
+        if replacedict[key] is not None:            
+            # delete line from model eq
+            neweq = ''
+            firstline = True
+            for line in equation.splitlines():
+                if not all([kw in line for kw in [key,'(constant)']]):
+                    if firstline:
+                        neweq = neweq + line
+                        firstline = False
+                    else:
+                        neweq = neweq  +'\n' + line
+                else:
+                    print('deleted ' + str(key) + ' from equation constants')
+            equation = neweq
+            # replace variable in eq with constant
+            equation = replaceEqVar(equation ,key,replacedict[key],debug)
+    return (equation)
+        

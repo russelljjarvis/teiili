@@ -16,6 +16,9 @@ from brian2 import *
 
 from Training import Training
 from synapseEquations import MemristiveFusiSynapses
+#from NCSBrian2Lib.tools import *
+from tools import *
+from synapseParams import *
 import ParametersNet as p
 import NeuronsSynapses as NS
 
@@ -26,14 +29,14 @@ import NeuronsSynapses as NS
 eqs = NS.eqs
 
 InputNeurons = PoissonGroup(1, 100 * Hz)
-OutputNeurons = NeuronGroup(1, model = eqs, method = 'euler', threshold = 'Imem > 0.5*nA', reset = 'Imem = Ireset', refractory = 0.5 * ms)
-InhibitoryNeurons = NeuronGroup(1, model = eqs, method = 'euler', threshold = 'Imem > 0.05*nA', reset = 'Imem = Ireset', refractory = 0.5 * ms)
+OutputNeurons = NeuronGroup(1, model = eqs, method = 'euler', threshold = 'Imem > 0.15*nA', reset = 'Imem = Ireset', refractory = 0.5 * ms)
+InhibitoryNeurons = NeuronGroup(1, model = eqs, method = 'euler', threshold = 'Imem > 0.15*nA', reset = 'Imem = Ireset', refractory = 0.5 * ms)
 TeacherNeurons = PoissonGroup(1, rates = 0 * Hz)
 
 #-----------------------------------------------------
 #CREATING SYNAPSES GROUPS
 #-----------------------------------------------------
-sdict, pdict = MemristiveFusiSynapses(load_path='./memfusi_parameters.txt')
+sdict = MemristiveFusiSynapses(debug = True)
 
 Input_Output_train = Synapses(InputNeurons, OutputNeurons, model = sdict['model'], method = 'linear', on_pre = sdict['on_pre'], on_post = sdict['on_post'])
 
@@ -63,6 +66,7 @@ Inhibitory_Input.w = 0.35
 Inhibitory_Output.w = 1
 Teacher_Output.w = 1
 
+setParams(Input_Output_train, fusiMemristor, debug = True)
 
 #RUN Simulation----------------------
 print "start new training"
@@ -75,7 +79,7 @@ title('SPK input (blue), SPK out (red), SPK inh (green)')
 plot(SpikeMI.t/ms, SpikeMI.i, 'b.')
 plot(SpikeMO.t/ms, SpikeMO.i, 'r.')
 plot(SMInh.t/ms, SMInh.i, 'g.')
-xlim([0, 1400])
+#xlim([0, 1400])
 subplot(612)
 #plot(timestamps[:], 2 * np.ones(len(timestamps[:])))
 title('weights')

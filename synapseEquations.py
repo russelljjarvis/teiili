@@ -1,9 +1,21 @@
 # -*- coding: utf-8 -*-
 
 from brian2 import *
+from NCSBrian2Lib.tools import *
+
+def printeqDict(eqDict):
+    print( 'Model equation:')
+    print( eqDict['model'])
+    print( '-_-_-_-_-_-_-_-')
+    print( 'on pre equation:')
+    print( eqDict['on_pre'])
+    print( '-_-_-_-_-_-_-_-')
+    print( 'on post equation:')
+    print( eqDict['on_post'])
+    print( '-------------')
 
 
-def MemristiveFusiSynapses(load_path=None, Imemthr=None, theta_dl=None, theta_du=None,
+def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
                           theta_pl=None, theta_pu=None, R_min=None, R0_d=None, R0_p=None,
                           alpha_d=None, alpha_p=None, beta_p=None, C_p=None, D_p=None, D_d=None,
                           Iw_fm=None, Iwca=None, tau_fm=None, prop=None, debug=False):
@@ -53,39 +65,41 @@ def MemristiveFusiSynapses(load_path=None, Imemthr=None, theta_dl=None, theta_du
     Date: 16.12.2016 
     '''
 
-
     arguments = dict(locals())
-
-    default_load_path = './SynapsesParamters/memfusi_parameters.txt'
-
-    Pdict = {}
-    if load_path is not None:
-        path = load_path
-    else:
-        path = default_load_path
-
-    PFile = open(path, 'r')
-    for line in PFile:
-        (key, trash, val) = line.split()
-        Pdict[key] = val
-    PFile.close()
-
 
     model_fm = '''
             w : 1
             dIsyn / dt = - Isyn / tau_fm : amp (event-driven)
             Iin_ex_post = Isyn : amp (summed)
+            Iwca : amp (constant)
+            theta_pl : amp (constant)
+            theta_dl : amp (constant)
+            theta_pu : amp (constant)
+            theta_du : amp (constant)
+            Imemthr : amp (constant)
+            Iw_fm : amp (constant)
+            tau_fm : second (constant)
+            prop : 1 (constant)
+            R_min : 1 (constant)
+            R0_d : 1 (constant)
+            R0_p : 1 (constant)
+            alpha_p : 1 (constant)
+            alpha_d : 1 (constant)
+            beta_p : 1 (constant)
+            C_p : 1 (constant)
+            D_p : 1 (constant)
+            D_d : 1 (constant)
             '''
     on_pre_fm = '''
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
-            down = 1. * (Imem < Imemthr) * (Ica > theta_pl) * (Ica < theta_du)
+            down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
                                                                                              
             Rt0 = prop * R_min / w                        
             Gt0 = 1. / Rt0
 
             sigma_p = C_p / (alpha_p / (Rt0 - R0_p + alpha_p)) + D_p
-            R_new_p = Rt0 - alpha_p * beta_p / (alpha_p / (Rt0 - R0_p + alpha_p) + 1)**(1 + 1 / beta_p) + sigma_p * randn()
-            R_new_d = Rt0 + alpha_d * e**( - (Rt0 - R0_d) / (alpha_d) + 1) + D_d * randn()
+            R_new_p = Rt0 - (alpha_p * beta_p) / ((alpha_p / (Rt0 - R0_p + alpha_p) + 1)**(1 + 1 / beta_p)) #+ sigma_p * randn()
+            R_new_d = Rt0 + alpha_d * e**( - (Rt0 - R0_d) / (alpha_d) + 1) #+ D_d * randn()
                               
             G_new_d = 1. / R_new_d
             G_new_p = 1. / R_new_p
@@ -101,48 +115,16 @@ def MemristiveFusiSynapses(load_path=None, Imemthr=None, theta_dl=None, theta_du
             '''
     on_post_fm = '''Ica += Iwca'''
 
-    del(arguments['load_path'])
+    del(arguments['debug'])
 
-
-    #check if among input to function some parameter has been specified and updating parameters dictionary
-    for key in arguments:
-        if arguments[key] is not None:
-            if key in Pdict.keys():
-                #input variable is <class 'brian2.units.fundamentalunits.Quantity'> and not a string
-                #it is acquired as 1. nA and transformed into a string '1.*nA', then added to dict
-                tmp = str(arguments[key])
-                tmp = tmp.split()
-                new_val = tmp[0] + '*' + tmp[1]
-                Pdict[key] = new_val
-
-    #adding parameters to the synapse model with the correct unit of measure
-    for key in Pdict:
-        if ('nA' in Pdict[key]) or ('namp' in Pdict[key]) or ('pA' in Pdict[key]) or ('pamp' in Pdict[key]):
-            model_fm += key + ''' = ''' + Pdict[key] + ''' : amp (constant over dt)
-             '''
-        elif ('ms' in Pdict[key]) or ('msec' in Pdict[key]) or ('msecond' in Pdict[key]):
-            model_fm += key + ''' = ''' + Pdict[key] + ''' : second (constant over dt)
-             '''
-        else:
-            model_fm += key + ''' = ''' + Pdict[key] + ''' : 1 (constant over dt)
-             '''
-
+    model_fm = replaceConstants(model_fm, arguments, debug)
+            
     SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
 
     if debug:
-        print 'Synapse dictionary:\nModel:'
-        print SynDict['model']
-        print '-_-_-_-_-_-_-_-'
-        print 'on_pre:'
-        print SynDict['on_pre']
-        print '-_-_-_-_-_-_-_-'
-        print 'on_post:'
-        print SynDict['on_post']
-        print '-------------'
-        print 'Parameters:'
-        print Pdict
+        printeqDict(SynDict)
 
-    return SynDict, Pdict
+    return SynDict
 
     #synapses group is called as follow:
     #S = Synapses(populations1, population2, model=SynDict['model'], on_pre=SynDict['on_pre'], on_post=SynDict['on_post'], method = 'euler')

@@ -7,37 +7,8 @@ Created on Tue Nov 1 2016
 import numpy as np
 from brian2 import *
 import random
-import ParametersNet as p
 
-def Training(InputNeurons, OutputNeurons, Input_Output_train, InhibitoryNeurons, Inhibitory_Input, Inhibitory_Output, TeacherNeurons, Teacher_Output):
-
-    #PARAMETERS-----------------------------------
-    #Neurons
-    Ispkthr = p.Ispkthr
-    Ispkthr_inh = p.Ispkthr_inh
-    Ireset = p.Ireset
-
-    Itau = p.Itau
-    taum = p.taum
-    Ith = p.Ith
-    Io = p.Io
-    Iagain = p.Iagain
-    Iath = p.Iath
-    Ianorm = p.Ianorm
-    Iposa = p.Iposa
-    tauca = p.tauca
-    tauahp = p.tauahp
-    
-    #Synapses
-    tausyn = p.tausyn
-    tauinhib = p.tauinhib
-    Iwinh = p.Iwinh
-    tauexc = p.tauexc
-    Iwexc = p.Iwexc
-    tauexc = p.tauexc
-    Iw_in_h = p.Iw_in_h
-    Iw = p.Iw
-
+def Training(InputNeurons, OutputNeurons, Input_Output_train, InhibitoryNeurons, Inhibitory_Input, Inhibitory_Output, TeacherNeurons, Teacher_Output, training_img_time, resting_time):
 
     #MONITORS--------------------------------------
     SM = StateMonitor(OutputNeurons, True, record = True)
@@ -57,12 +28,12 @@ def Training(InputNeurons, OutputNeurons, Input_Output_train, InhibitoryNeurons,
 
     while count < 5:
 
-        run(p.training_img_time)
+        run(training_img_time)
 
         Input_Output_train.Isyn=0
         rates = None
 
-        run(p.resting_time)
+        run(resting_time)
         count += 1 
     
     weights = StateMw.w

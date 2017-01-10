@@ -31,26 +31,26 @@ eqs = NS.eqs
 InputNeurons = PoissonGroup(1, 100 * Hz)
 OutputNeurons = NeuronGroup(1, model = eqs, method = 'euler', threshold = 'Imem > 0.15*nA', reset = 'Imem = Ireset', refractory = 0.5 * ms)
 InhibitoryNeurons = NeuronGroup(1, model = eqs, method = 'euler', threshold = 'Imem > 0.15*nA', reset = 'Imem = Ireset', refractory = 0.5 * ms)
-TeacherNeurons = PoissonGroup(1, rates = 0 * Hz)
+TeacherNeurons = PoissonGroup(1, rates = 300 * Hz)
 
 #-----------------------------------------------------
 #CREATING SYNAPSES GROUPS
 #-----------------------------------------------------
 sdict = MemristiveFusiSynapses(debug = True)
 
-Input_Output_train = Synapses(InputNeurons, OutputNeurons, model = sdict['model'], method = 'linear', on_pre = sdict['on_pre'], on_post = sdict['on_post'])
+Input_Output_train = Synapses(InputNeurons, OutputNeurons, method = 'euler', **sdict)
 
 InhImodel = NS.Inhibitory_model
 InhIpre = NS.Inhibitory_pre
-Inhibitory_Input = Synapses(InputNeurons, InhibitoryNeurons, model = InhImodel, method = 'linear', on_pre = InhIpre)
+Inhibitory_Input = Synapses(InputNeurons, InhibitoryNeurons, model = InhImodel, method = 'euler', on_pre = InhIpre)
 
 InhOmodel = NS.Inhibitory_output_model
 InhOpre = NS.Inhibitory_output_pre
-Inhibitory_Output = Synapses(InhibitoryNeurons, OutputNeurons, model = InhOmodel, method = 'linear', on_pre = InhOpre)
+Inhibitory_Output = Synapses(InhibitoryNeurons, OutputNeurons, model = InhOmodel, method = 'euler', on_pre = InhOpre)
  
 TOmodel = NS.Teacher_model
 TOpre = NS.Teacher_pre
-Teacher_Output = Synapses(TeacherNeurons, OutputNeurons, model = TOmodel, method = 'linear', on_pre = TOpre)
+Teacher_Output = Synapses(TeacherNeurons, OutputNeurons, model = TOmodel, method = 'euler', on_pre = TOpre)
 
 #-----------------------------------------------------
 #CONNECTION AND INIT

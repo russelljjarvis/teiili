@@ -90,6 +90,11 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             C_p : 1 (constant)
             D_p : 1 (constant)
             D_d : 1 (constant)
+   
+            R_new_p : 1     #for monitors only
+            noiseRnewp : 1  #for monitors only
+            B : 1           #for monitors only
+            Rt0 : 1         #for monitors only
             '''
     on_pre_fm = '''
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
@@ -99,12 +104,17 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             Gt0 = 1. / Rt0
 
             sigma_p = C_p / (alpha_p / (Rt0 - R0_p + alpha_p)) + D_p
-            R_new_p = Rt0 - (alpha_p * beta_p) / ((alpha_p / (Rt0 - R0_p + alpha_p) + 1)**(1 + 1 / beta_p)) #+ sigma_p * randn()
-            R_new_d = Rt0 + alpha_d * e**( - (Rt0 - R0_d) / (alpha_d) + 1) #+ D_d * randn()
+            noiseRnewp = sigma_p * randn()               #draw variability for the new memristor resitance
+            C = alpha_p / (Rt0 - R0_p + alpha_p) + 1
+            C = C * (C > 0) + 1000 * (1 - (C > 0))       #check in order to avoid negative value, 1000 is arbitrary value
+            B = (alpha_p * beta_p) / C**(1 + 1 / beta_p) #if C negative the denominator becomes imaginary
+            R_new_p = Rt0 - B + noiseRnewp
+
+            R_new_d = Rt0 + alpha_d * e**( - (Rt0 - R0_d) / (alpha_d) + 1) + D_d * randn()
                               
             G_new_d = 1. / R_new_d
             G_new_p = 1. / R_new_p
-                        
+
             delta_G_p = G_new_p - Gt0
             delta_G_d = G_new_d - Gt0
                                 

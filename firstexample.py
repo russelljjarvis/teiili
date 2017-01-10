@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from brian2 import *
 import numpy as np
 import time
+#from NCSBrian2Lib.neuronEquations import ExpAdaptIF, ExpAdaptIFReversal
 from NCSBrian2Lib.neuronEquations import ExpAdaptIF, ExpAdaptIFReversal
 from NCSBrian2Lib.tools import *
 from NCSBrian2Lib.Parameters.neuronParams import *
@@ -30,7 +31,8 @@ indSeq = np.concatenate((np.zeros(50, dtype=np.int), np.ones(50, dtype=np.int),
                         np.zeros(50, dtype=np.int), 2*np.ones(50, dtype=np.int) ))
 gSeqInpGroup = SpikeGeneratorGroup(3, indices = indSeq, times=tsSeq)
 
-gSeqGroup = NeuronGroup(3, **eqsDict, refractory=1*ms, method = "euler")
+#gSeqGroup = NeuronGroup(3, **eqsDict, refractory=1*ms, method = "euler")
+gSeqGroup = NeuronGroup(3, model = eqsDict['modelEq'], threshod = eqsDict['thresholdEq'], reset = eqsDict['resetEq'], refractory=1*ms, method = "euler")
 synInpSeqe = Synapses(gSeqInpGroup, gSeqGroup, on_pre = 'Ie += 665*pA')
 #synInpSeqe = Synapses(gSeqInpGroup, gSeqGroup, on_pre = 'gIe += 5*nS')
 synInpSeqe.connect('i==j') 

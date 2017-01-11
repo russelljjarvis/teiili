@@ -125,7 +125,8 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
 
     on_post_fm = '''Ica += Iwca'''
 
-    del(arguments['debug', 'plastic'])
+    del(arguments['debug'])
+    del(arguments['plastic'])
 
     model_fm = replaceConstants(model_fm, arguments, debug)
             

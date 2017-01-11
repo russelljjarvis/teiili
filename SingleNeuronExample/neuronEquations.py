@@ -133,7 +133,7 @@ def ExpAdaptIFReversal(taugIe=None,taugIi=None,C=None,gL=None,EL=None,VT=None,De
     return (eqDict)
 
 
-def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, Ithreshold=None, debug=False):
+def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, debug=False, Excitatory=True):
     '''Silicon Neuron as in Chicca et al. 2014
     @return: a dictionary of keyword arguments for NeuronGroup()
     @note: you have to set parameters for each NeuronGroup after its creation, synapses have to increment the correct variable: Ie or Ii
@@ -192,7 +192,10 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, It
     Ithreshold : amp (constant)
     """
     
-    thresholdEq = "Imem > Ithreshold"
+    if Excitatory:
+        thresholdEq = "Imem > Ispkthr"
+    else:
+        thresholdEq = "Imem > Ispkthr_inh"
     
     resetEq = "Imem = Ireset"
     

@@ -27,11 +27,12 @@ from neuronParams import *
 #-----------------------------------------------------
 
 eqSil = Silicon()
+eqSilInh = Silicon(Excitatory=False)
 
 
 InputNeurons = PoissonGroup(1, 100 * Hz)
 OutputNeurons = NeuronGroup(1, method = 'euler', refractory = 0.5 * ms, **eqSil)
-InhibitoryNeurons = NeuronGroup(1, method = 'euler', refractory = 0.5 * ms, **eqSil)
+InhibitoryNeurons = NeuronGroup(1, method = 'euler', refractory = 0.5 * ms, **eqSilInh)
 TeacherNeurons = PoissonGroup(1, rates = 0 * Hz)
 
 setParams(OutputNeurons, SiliconNeuronP, debug = True)

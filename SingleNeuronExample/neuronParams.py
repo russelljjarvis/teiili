@@ -90,9 +90,8 @@ SiliconNeuronP = {
 #---------------------------------------------------------
 # Neuron parameters
 #---------------------------------------------------------
-                                "Ispkthr" : 20 * nA, #Spike threshold of excitatory neurons
-                                "Ispkthr_inh" : 5 * nA, #Spike threshold of inhibitory
+                                "Ispkthr" : 0.15 * nA, #Spike threshold of excitatory neurons
+                                "Ispkthr_inh" : 0.15 * nA, #Spike threshold of inhibitory
                                 "Ireset" : 1 * pA, #Reset Imem to Ireset after each spike 
                                 "Ith"    : 1 * pA,
-                                "Itau"   : 1 * pA,
-                                "Ithreshold" : 0.15 * nA}
+                                "Itau"   : 1 * pA}

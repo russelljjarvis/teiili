@@ -10,9 +10,10 @@ def printeqDict(eqDict):
     print( 'on pre equation:')
     print( eqDict['on_pre'])
     print( '-_-_-_-_-_-_-_-')
-    print( 'on post equation:')
-    print( eqDict['on_post'])
-    print( '-------------')
+    if any(eqDict.keys() == 'on_post'):
+        print( 'on post equation:')
+        print( eqDict['on_post'])
+        print( '-------------')
 
 
 def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
@@ -128,7 +129,7 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
     del(arguments['debug'])
     del(arguments['plastic'])
 
-    model_fm = replaceConstants(model_fm, arguments, debug)
+    #model_fm = replaceConstants(model_fm, arguments, debug)
             
     if plastic:
         SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
@@ -138,14 +139,14 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
     if debug:
         printeqDict(SynDict)
 
-    return SynDict
+    return SynDict, arguments
 
     #synapses group is called as follow:
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
 
 
 
-def DefaultInhibitorySynapses(tauinhib=None, Iw_in_h=None, inh2output=False, debug=False):
+def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=False, debug=False):
     
     '''
     Default Inhibitory Synapse with current decaying in time
@@ -169,22 +170,21 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_in_h=None, inh2output=False, deb
               Iin_inh_post = Isyn : amp (summed)
 
               tauinhib : second (constant)
-              Iw_in_h : amp (constant)
-              Iwinh : amp (constant)
+              Iw_inh : amp (constant)
               '''
     on_pre_inh='''
-              Isyn += Iw_in_h * w
+              Isyn += Iw_inh * w
               '''
 
     on_pre_inh_out='''
-              Isyn -= Iwinh * w
+              Isyn -= Iw_inh * w
               '''
 
 
     del(arguments['debug'])
     del(arguments['inh2output'])
 
-    model_inh = replaceConstants(model_inh, arguments, debug)
+    #model_inh = replaceConstants(model_inh, arguments, debug)
             
     if inh2output:
         SynDict = dict(model=model_inh, on_pre=on_pre_inh_out)
@@ -194,7 +194,7 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_in_h=None, inh2output=False, deb
     if debug:
         printeqDict(SynDict)
 
-    return SynDict
+    return SynDict, arguments
 
 
 
@@ -230,11 +230,11 @@ def DefaultTeacherSynapses(tauexc=None, Iwexc=None, debug=False):
 
     del(arguments['debug'])
 
-    model_teach = replaceConstants(model_teach, arguments, debug)
+    #model_teach = replaceConstants(model_teach, arguments, debug)
             
     SynDict = dict(model=model_teach, on_pre=on_pre_teach)
 
     if debug:
         printeqDict(SynDict)
 
-    return SynDict
+    return SynDict, arguments

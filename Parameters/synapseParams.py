@@ -48,8 +48,7 @@ fusiMemristor = {
 
 DefaultInhibitorySynapseP = {
                 "tauinhib" : 5 *msecond,
-                "Iw_in_h"  : 0.5 *namp,
-                "Iwinh"    : 0.5 *namp}
+                "Iw_inh"  : 0.5 *namp}
 
 DefaultTeacherSynapseP = {
                 "tauexc" : 5 *msecond,

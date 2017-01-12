@@ -2,12 +2,19 @@ from brian2 import *
 import numpy as np
 
 
-def setParams(neurongroup , params, debug=False):
+def setParams(briangroup, params, ndargs=None, debug=False):
     for par in params:
-        if hasattr(neurongroup, par):
-            setattr(neurongroup, par , params[par])
+        if hasattr(briangroup, par):
+            if ndargs is not None:
+                if ndargs[par] is None:
+                    setattr(briangroup, par, params[par])
+                else:
+                    print par, ndargs, ndargs[par]
+                    setattr(briangroup, par, ndargs[par])
+            else:
+                setattr(briangroup, par, params[par])
     if debug:
-        states = neurongroup.get_states()
+        states = briangroup.get_states()
         print '\n' 
         print '-_-_-_-_-_-_-_', '\n', 'Parameters set'
         for key in states.keys():
@@ -33,11 +40,10 @@ def ind2xy(ind,n2dNeurons):
 def replaceEqVar(eq , varname, replacement, debug=False):
     "replaces variables in equations like brian 2, helper for replaceConstants"
     if isinstance(replacement, str):
-        # replace the name with another name
         eq = eq.replace(varname,replacement)
     else:
-        # replace the name with a value
         eq = eq.replace(varname,'(' + repr(replacement) + ')')
+            
     if debug:
         print('replaced ' + str(varname) + ' by ' + str(repr(replacement)))
     return (eq)
@@ -58,9 +64,11 @@ def replaceConstants(equation,replacedict, debug=False):
                     else:
                         neweq = neweq  +'\n' + line
                 else:
+                    newline = replaceEqVar(line, key, replacedict[key],debug)
+                    neweq = neweq  +'\n' + newline
                     print('deleted ' + str(key) + ' from equation constants')
             equation = neweq
             # replace variable in eq with constant
-            equation = replaceEqVar(equation ,key,replacedict[key],debug)
+            #equation = replaceEqVar(equation ,key,replacedict[key],debug)
     return (equation)
         

@@ -189,7 +189,6 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, de
     Ireset : amp (constant)
     Ith    : amp (constant)
     Itau   : amp (constant)
-    Ithreshold : amp (constant)
     """
     
     if Excitatory:

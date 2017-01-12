@@ -64,11 +64,9 @@ def replaceConstants(equation,replacedict, debug=False):
                     else:
                         neweq = neweq  +'\n' + line
                 else:
-                    newline = replaceEqVar(line, key, replacedict[key],debug)
-                    neweq = neweq  +'\n' + newline
                     print('deleted ' + str(key) + ' from equation constants')
             equation = neweq
             # replace variable in eq with constant
-            #equation = replaceEqVar(equation ,key,replacedict[key],debug)
+            equation = replaceEqVar(equation ,key,replacedict[key],debug)
     return (equation)
         

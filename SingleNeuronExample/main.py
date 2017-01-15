@@ -62,7 +62,7 @@ Inhibitory_Input.connect(True) #fully connected
 Inhibitory_Output.connect(True) #fully connected
 Teacher_Output.connect(True) #fully connected
 
-Input_Output_train.w = 1.2
+Input_Output_train.w = 1.9
 Inhibitory_Input.w = 0.35
 Inhibitory_Output.w = 1
 Teacher_Output.w = 1
@@ -74,7 +74,7 @@ setParams(Teacher_Output, DefaultTeacherSynapseP, debug = True)
 
 #RUN Simulation----------------------
 
-training_img_time = 200 * ms
+training_img_time = 800 * ms
 resting_time = 10 * ms
 print "start new training"
     

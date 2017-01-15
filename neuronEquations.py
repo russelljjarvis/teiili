@@ -146,7 +146,8 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, de
     
     arguments = dict(locals())
     del(arguments['debug'])
-    
+    del(arguments['Excitatory'])
+ 
     modelEq = """
     dImem/dt = (Ipos - Imem * (1 + Iahp / Itau)) / ( taum * (1 + Ith / (Imem + noise + Io)) ) : amp
     Ipos =  ( (Ith / Itau) * (Iin - Iahp - Itau)  + Ifb ) : amp
@@ -201,15 +202,15 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, de
     if debug:
         print('arguments of Silicon Neuron: \n' + str(arguments))
     
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    thresholdEq = replaceConstants(thresholdEq,arguments,debug)
-    resetEq = replaceConstants(resetEq,arguments,debug)
+    #modelEq = replaceConstants(modelEq,arguments,debug)
+    #thresholdEq = replaceConstants(thresholdEq,arguments,debug)
+    #resetEq = replaceConstants(resetEq,arguments,debug)
     
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
     
     if debug:
         printeqDict(eqDict)
     
-    return (eqDict)
+    return eqDict, arguments
 
 

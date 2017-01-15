@@ -5,11 +5,10 @@ import numpy as np
 def setParams(briangroup, params, ndargs=None, debug=False):
     for par in params:
         if hasattr(briangroup, par):
-            if ndargs is not None:
+            if ndargs is not None and par in ndargs:
                 if ndargs[par] is None:
                     setattr(briangroup, par, params[par])
                 else:
-                    print par, ndargs, ndargs[par]
                     setattr(briangroup, par, ndargs[par])
             else:
                 setattr(briangroup, par, params[par])

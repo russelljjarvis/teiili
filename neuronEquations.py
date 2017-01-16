@@ -65,9 +65,9 @@ def ExpAdaptIF(tauIe=None,tauIi=None,C=None,gL=None,EL=None,VT=None,DeltaT=None,
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
     
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    thresholdEq = replaceConstants(thresholdEq,arguments,debug)
-    resetEq = replaceConstants(resetEq,arguments,debug)
+    #modelEq = replaceConstants(modelEq,arguments,debug)
+    #thresholdEq = replaceConstants(thresholdEq,arguments,debug)
+    #resetEq = replaceConstants(resetEq,arguments,debug)
     
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
     

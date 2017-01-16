@@ -65,10 +65,6 @@ def ExpAdaptIF(tauIe=None,tauIi=None,C=None,gL=None,EL=None,VT=None,DeltaT=None,
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
     
-    #modelEq = replaceConstants(modelEq,arguments,debug)
-    #thresholdEq = replaceConstants(thresholdEq,arguments,debug)
-    #resetEq = replaceConstants(resetEq,arguments,debug)
-    
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
     
     if debug:
@@ -120,10 +116,6 @@ def ExpAdaptIFReversal(taugIe=None,taugIi=None,C=None,gL=None,EL=None,VT=None,De
     
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
-    
-    #modelEq = replaceConstants(modelEq,arguments,debug)
-    #thresholdEq = replaceConstants(thresholdEq,arguments,debug)
-    #resetEq = replaceConstants(resetEq,arguments,debug)
     
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
     
@@ -201,10 +193,6 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, de
     
     if debug:
         print('arguments of Silicon Neuron: \n' + str(arguments))
-    
-    #modelEq = replaceConstants(modelEq,arguments,debug)
-    #thresholdEq = replaceConstants(thresholdEq,arguments,debug)
-    #resetEq = replaceConstants(resetEq,arguments,debug)
     
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
     

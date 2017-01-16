@@ -129,8 +129,6 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
     del(arguments['debug'])
     del(arguments['plastic'])
 
-    #model_fm = replaceConstants(model_fm, arguments, debug)
-            
     if plastic:
         SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
     else:
@@ -184,8 +182,6 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=False, debu
     del(arguments['debug'])
     del(arguments['inh2output'])
 
-    #model_inh = replaceConstants(model_inh, arguments, debug)
-            
     if inh2output:
         SynDict = dict(model=model_inh, on_pre=on_pre_inh_out)
     else:
@@ -230,8 +226,6 @@ def DefaultTeacherSynapses(tauexc=None, Iwexc=None, debug=False):
 
     del(arguments['debug'])
 
-    #model_teach = replaceConstants(model_teach, arguments, debug)
-            
     SynDict = dict(model=model_teach, on_pre=on_pre_teach)
 
     if debug:

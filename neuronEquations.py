@@ -74,7 +74,7 @@ def ExpAdaptIF(tauIe=None,tauIi=None,C=None,gL=None,EL=None,VT=None,DeltaT=None,
     if debug:
         printeqDict(eqDict)
     
-    return (eqDict)
+    return eqDict, arguments
 
 
 
@@ -121,16 +121,16 @@ def ExpAdaptIFReversal(taugIe=None,taugIi=None,C=None,gL=None,EL=None,VT=None,De
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
     
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    thresholdEq = replaceConstants(thresholdEq,arguments,debug)
-    resetEq = replaceConstants(resetEq,arguments,debug)
+    #modelEq = replaceConstants(modelEq,arguments,debug)
+    #thresholdEq = replaceConstants(thresholdEq,arguments,debug)
+    #resetEq = replaceConstants(resetEq,arguments,debug)
     
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
     
     if debug:
         printeqDict(eqDict)
     
-    return (eqDict)
+    return eqDict, arguments
 
 
 def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, debug=False, Excitatory=True):

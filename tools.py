@@ -164,7 +164,18 @@ def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True)
     ts_off = ts_off_tmp
     indices_on = ind_on_tmp
     ts_on = ts_on_tmp
+    return_on = False
+    return_off = False
     # normalize timestamps
-    ts_on -= np.min(ts_on)
-    ts_off -= np.min(ts_off)
-    return indices_on, ts_on, indices_off, ts_off
+    if np.size(ts_on) != 0:
+        ts_on -= np.min(ts_on)
+        return_on = True
+    if np.size(ts_off) != 0:
+        ts_off -= np.min(ts_off)
+        return_off = True
+    if return_on == True and return_off == True:
+        return indices_on, ts_on, indices_off, ts_off
+    elif return_on == True:
+        return indices_on, ts_on
+    elif return_off == True:
+        return indices_off, ts_off

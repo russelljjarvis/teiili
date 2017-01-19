@@ -76,14 +76,14 @@ The ind2px function are useful to plot recorded spikes in the same coordinate sy
 '''
 def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True):
 	'''
-	dvs2ind(directory, resolution):
-            Input:
-	            - directory hold the 4 x # Events numpy array
-	            - resolution specifies the x dimension of the DVS based on the model (e.g. DVS128 or DAVIS240) can be string such as 'DVS128'
-	              or an integer such as 128
-	            - scale: A flog to prevent rescaling of timestamps from micro to milliseconds if time stamps are already in milliseconds
-            Output:
-                - returns a vector of unique indices which maps the pixel location of the camera to the 1D neuron population in brian
+    Input:
+    	- Events: A numpy array (x, y, ts, pol)
+        - eventDirectory: A str containing the path to a .npy file to which holds the 4 x # Events numpy array (x, y, ts, pol)
+        - resolution: Specifies the x dimension of the DVS based on the model (e.g. DVS128 or DAVIS240) can be string such as 'DVS128'
+          or an integer such as 128
+        - scale: A flog to prevent rescaling of timestamps from micro to milliseconds if time stamps are already in milliseconds
+    Output:
+        - returns a vector of unique indices which maps the pixel location of the camera to the 1D neuron population in brian
 	'''
 	if eventDirectory is not None:
 		assert type(eventDirectory) == str, 'eventDirectory must be a string'

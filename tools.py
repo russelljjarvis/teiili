@@ -74,7 +74,7 @@ def replaceConstants(equation,replacedict, debug=False):
 Since Brian2 is only able to build 1D neuron population this script transforms indices to pixel location of the 128x128 DVS and vice versa.
 The ind2px function are useful to plot recorded spikes in the same coordinate system to compare the original events as proided by the DVS
 '''
-def dvs2ind(eventDirectory, resolution='DAVIS240', scale=True):
+def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True):
 	'''
 	dvs2ind(directory, resolution):
             Input:
@@ -85,9 +85,12 @@ def dvs2ind(eventDirectory, resolution='DAVIS240', scale=True):
             Output:
                 - returns a vector of unique indices which maps the pixel location of the camera to the 1D neuron population in brian
 	'''
-	assert type(eventDirectory) == str, 'eventDirectory must be a string'
-	assert eventDirectory[-4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
-    Events = np.load(eventDirectory)
+	if eventDirectory is not None:
+		assert type(eventDirectory) == str, 'eventDirectory must be a string'
+		assert eventDirectory[-4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
+	    Events = np.load(eventDirectory)
+	if Events is not None:
+		assert eventDirectory is None, 'Either you specify a path to load Events using eventDirectory. Or you pass the event numpy directly. NOT Both.'
     if np.size(Events, 0) > np.size(Events, 1):
         Events = np.transpose(Events)
 

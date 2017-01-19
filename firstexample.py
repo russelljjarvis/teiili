@@ -26,7 +26,7 @@ prefs.codegen.target = "numpy"
 
 VT1 = -49*mV
 #eqsDict = ExpAdaptIF(tauwad = 120*ms,DeltaT=3*mV,VT='VT1',debug=True)
-eqsDict = ExpAdaptIF(b =0.02*nA, debug=True)
+eqsDict, args = ExpAdaptIF(b =0.02*nA, debug=True)
 
 testNet = Network()
 

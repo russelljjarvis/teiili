@@ -17,7 +17,7 @@ def printeqDict(eqDict):
     print( '-------------')
 
 
-def ExpAdaptIF(taugIe=None,taugIi=None,C=None,gL=None,EL=None,VT=None,DeltaT=None, 
+def ExpAdaptIF(C=None,gL=None,EL=None,VT=None,DeltaT=None, 
     tauwad=None,a=None,b=None,Vr=None,debug=False):
     '''Brette, Gerstner 2005 Exponential adaptive IF model
     see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
@@ -27,7 +27,15 @@ def ExpAdaptIF(taugIe=None,taugIi=None,C=None,gL=None,EL=None,VT=None,DeltaT=Non
     eqDict = neuronEquatioons.ExpAdaptIF()
     neurongroup = NeuronGroup(nNeurons, **eqDict , refractory = 2*ms, method='euler',name='groupname')
     tools.setParams(neurongroup , equationParams.gerstnerExpAIFdefaultregular)
-    @param: see equation below
+    @param: C : farad (constant)              # membrane capacitance
+    gL : siemens (constant)           # leak conductance
+    EL : volt (constant)              # leak reversal potential
+    VT : volt (constant)              # threshold
+    DeltaT : volt (constant)          # slope factor
+    tauwad : second (constant)        # adaptation time constant
+    a : siemens (constant)            # adaptation decay parameter
+    b : amp (constant)                # adaptation weight
+    Vr : volt (constant)              # reset potential
     '''
     
     arguments = dict(locals())
@@ -56,16 +64,12 @@ def ExpAdaptIF(taugIe=None,taugIi=None,C=None,gL=None,EL=None,VT=None,DeltaT=Non
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
     
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    thresholdEq = replaceConstants(thresholdEq,arguments,debug)
-    resetEq = replaceConstants(resetEq,arguments,debug)
-    
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
 
     if debug:
         printeqDict(eqDict)
     
-    return (eqDict)
+    return eqDict, arguments
 
 
 def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, debug=False, Excitatory=True):
@@ -81,7 +85,8 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, de
     
     arguments = dict(locals())
     del(arguments['debug'])
-    
+    del(arguments['Excitatory'])
+ 
     modelEq = """
     dImem/dt = (Ipos - Imem * (1 + Iahp / Itau)) / ( taum * (1 + Ith / (Imem + noise + Io)) ) : amp
     Ipos =  ( (Ith / Itau) * (Iin - Iahp - Itau)  + Ifb ) : amp
@@ -136,15 +141,11 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, de
     if debug:
         print('arguments of Silicon Neuron: \n' + str(arguments))
     
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    thresholdEq = replaceConstants(thresholdEq,arguments,debug)
-    resetEq = replaceConstants(resetEq,arguments,debug)
-    
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
     
     if debug:
         printeqDict(eqDict)
     
-    return (eqDict)
+    return eqDict, arguments
 
 

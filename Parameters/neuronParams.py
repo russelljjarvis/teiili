@@ -10,9 +10,7 @@ Created on 17.12.2016
 from brian2 import *
 
 
-gerstnerExpAIFdefaultregular = {"tauIe"  : 5     *ms,
-                                "tauIi"  : 7     *ms,
-                                "C"      : 281   *pF,
+gerstnerExpAIFdefaultregular = {"C"      : 281   *pF,
                                 "gL"     : 35    *nS,
                                 "EL"     : -70.6 *mV,
                                 "VT"     : -50.4 *mV,
@@ -23,9 +21,7 @@ gerstnerExpAIFdefaultregular = {"tauIe"  : 5     *ms,
                                 "Vr"     : -70.6 *mV,
                                 "Vm"     : -70.6 *mV}
                
-gerstnerExpAIFdefaultbursting ={"tauIe"  : 5     *ms,
-                                "tauIi"  : 7     *ms,
-                                "C"      : 281   *pF,
+gerstnerExpAIFdefaultbursting ={"C"      : 281   *pF,
                                 "gL"     : 35    *nS,
                                 "EL"     : -70.6 *mV,
                                 "VT"     : -50.4 *mV,
@@ -36,9 +32,7 @@ gerstnerExpAIFdefaultbursting ={"tauIe"  : 5     *ms,
                                 "Vr"     : -45.4 *mV,
                                 "Vm"     : -70.6 *mV}
 
-gerstnerExpAIFdefaultfast   =  {"tauIe"  : 5     *ms,
-                                "tauIi"  : 7     *ms,
-                                "C"      : 281   *pF,
+gerstnerExpAIFdefaultfast   =  {"C"      : 281   *pF,
                                 "gL"     : 35    *nS,
                                 "EL"     : -70.6 *mV,
                                 "VT"     : -50.4 *mV,

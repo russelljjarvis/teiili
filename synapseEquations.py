@@ -103,7 +103,7 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             C = alpha_p / (Rt0 - R0_p + alpha_p) + 1
             C = C * (C > 0) + 1000 * (1 - (C > 0))       #check in order to avoid negative value, 1000 is arbitrary value
             B = (alpha_p * beta_p) / C**(1 + 1 / beta_p) #if C negative the denominator becomes imaginary
-            R_new_p = Rt0 - B + noiseRnewp            
+            R_new_p = Rt0 - B #+ noiseRnewp            
 
             R_new_d = Rt0 + alpha_d * e**( - (Rt0 - R0_d) / (alpha_d) + 1) #+ D_d * randn()
                               
@@ -129,8 +129,6 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
     del(arguments['debug'])
     del(arguments['plastic'])
 
-    #model_fm = replaceConstants(model_fm, arguments, debug)
-            
     if plastic:
         SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
     else:
@@ -166,26 +164,24 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=False, debu
 
     model_inh='''
               w:1
-              dIsyn/dt = (-Isyn) / tauinhib : amp (event-driven) 
-              Iin_inh_post = Isyn : amp (summed)
+              dIsyn_inh/dt = (-Isyn_inh) / tauinhib : amp (event-driven) 
+              Iin_inh_post = Isyn_inh : amp (summed)
 
               tauinhib : second (constant)
               Iw_inh : amp (constant)
               '''
     on_pre_inh='''
-              Isyn += Iw_inh * w
+              Isyn_inh += Iw_inh * w
               '''
 
     on_pre_inh_out='''
-              Isyn -= Iw_inh * w
+              Isyn_inh -= Iw_inh * w
               '''
 
 
     del(arguments['debug'])
     del(arguments['inh2output'])
 
-    #model_inh = replaceConstants(model_inh, arguments, debug)
-            
     if inh2output:
         SynDict = dict(model=model_inh, on_pre=on_pre_inh_out)
     else:
@@ -230,8 +226,6 @@ def DefaultTeacherSynapses(tauexc=None, Iwexc=None, debug=False):
 
     del(arguments['debug'])
 
-    #model_teach = replaceConstants(model_teach, arguments, debug)
-            
     SynDict = dict(model=model_teach, on_pre=on_pre_teach)
 
     if debug:

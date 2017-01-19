@@ -54,7 +54,7 @@ def Training(InputNeurons, OutputNeurons, Input_Output_train, InhibitoryNeurons,
     pB, = plot(StateMRB.t/ms, StateMRB.B[0], 'y')
     title('Controlling values for new resistances (useful during potentiation)')
     legend([pn, pbexp, pRnew, pRt0, pB], ["R@t", "R@(t-1)", "variability", "exp base", "B"])
-    show()
+    #show()
     
 
     return weights, timestamps, SM, SpikeMI, SpikeMO, StateMIsyn, SpikeMInh, StateMInh, StateMIsyninh

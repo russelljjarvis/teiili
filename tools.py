@@ -74,14 +74,6 @@ def replaceConstants(equation,replacedict, debug=False):
 Since Brian2 is only able to build 1D neuron population this script transforms indices to pixel location of the 128x128 DVS and vice versa.
 The ind2px function are useful to plot recorded spikes in the same coordinate system to compare the original events as proided by the DVS
 '''
-Function: 
-          ind2dvs(index, spiketimes, camera):
-                Input:
-                - index is an array of indices of neuron address in 1D neuronal population vector
-                - spiketimes hold the respective timestamp of each event/spike
-                - camera specifies the x and y dimension of the DVS based on the model (e.g. DVS128 or DAVIS240)
-                Output:
-                - returns a matrix of x and y coordinate! This function is only needed to plot in the spatial dimension as the input
 def dvs2ind(eventDirectory, resolution='DAVIS240', scale=True):
 	'''
 	dvs2ind(directory, resolution):

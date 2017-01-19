@@ -75,22 +75,22 @@ Since Brian2 is only able to build 1D neuron population this script transforms i
 The ind2px function are useful to plot recorded spikes in the same coordinate system to compare the original events as proided by the DVS
 '''
 def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True):
-	'''
+    '''
     Input:
-    	- Events: A numpy array (x, y, ts, pol)
+        - Events: A numpy array (x, y, ts, pol)
         - eventDirectory: A str containing the path to a .npy file to which holds the 4 x # Events numpy array (x, y, ts, pol)
         - resolution: Specifies the x dimension of the DVS based on the model (e.g. DVS128 or DAVIS240) can be string such as 'DVS128'
           or an integer such as 128
         - scale: A flog to prevent rescaling of timestamps from micro to milliseconds if time stamps are already in milliseconds
     Output:
         - returns a vector of unique indices which maps the pixel location of the camera to the 1D neuron population in brian
-	'''
-	if eventDirectory is not None:
-		assert type(eventDirectory) == str, 'eventDirectory must be a string'
-		assert eventDirectory[-4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
-	    Events = np.load(eventDirectory)
-	if Events is not None:
-		assert eventDirectory is None, 'Either you specify a path to load Events using eventDirectory. Or you pass the event numpy directly. NOT Both.'
+    '''
+    if eventDirectory is not None:
+        assert type(eventDirectory) == str, 'eventDirectory must be a string'
+        assert eventDirectory[-4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
+        Events = np.load(eventDirectory)
+    if Events is not None:
+        assert eventDirectory is None, 'Either you specify a path to load Events using eventDirectory. Or you pass the event numpy directly. NOT Both.'
     if np.size(Events, 0) > np.size(Events, 1):
         Events = np.transpose(Events)
 
@@ -114,15 +114,15 @@ def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True)
     indices_on = Events[0, cInd_on] + Events[1, cInd_on] * resolution
     indices_off = Events[0, cInd_off] + Events[1, cInd_off] * resolution
     if scale:
-    	# The DVS timestamps are in microseconds. We need to convert them to milliseconds for brian
-    	spiketimes_on = np.ceil(Events[2, cInd_on] * 10**(-3))
-    	spiketimes_off = np.ceil(Events[2, cInd_off] * 10**(-3))
-    	
+        # The DVS timestamps are in microseconds. We need to convert them to milliseconds for brian
+        spiketimes_on = np.ceil(Events[2, cInd_on] * 10**(-3))
+        spiketimes_off = np.ceil(Events[2, cInd_off] * 10**(-3))
+        
     else:
-    	# The flag scale is used to prevent rescaling of timestamps if we use artifically generated stimuli
-    	spiketimes_on = np.ceil(Events[2, cInd_on])
-    	spiketimes_off = np.ceil(Events[2, cInd_off])
-    	
+        # The flag scale is used to prevent rescaling of timestamps if we use artifically generated stimuli
+        spiketimes_on = np.ceil(Events[2, cInd_on])
+        spiketimes_off = np.ceil(Events[2, cInd_off])
+        
 
     
     # Check for double entries within 100 us

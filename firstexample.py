@@ -17,10 +17,10 @@ import sys
 from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 from NCSBrian2Lib.neuronEquations import ExpAdaptIF
-from NCSBrian2Lib.synapseEquations import reversalSyn
+from NCSBrian2Lib.synapseEquations import reversalSyn, fusiSyn
 from NCSBrian2Lib.tools import setParams
-from NCSBrian2Lib.Parameters.neuronParams import gerstnerExpAIFdefaultregular
-from NCSBrian2Lib.Parameters.synapseParams import revSyndefault
+from NCSBrian2Lib.Parameters.neuronParams import *
+from NCSBrian2Lib.Parameters.synapseParams import *
 
 prefs.codegen.target = "numpy" 
 
@@ -38,13 +38,19 @@ gSeqInpGroup = SpikeGeneratorGroup(3, indices = indSeq, times=tsSeq)
 
 #print(eqsDict['model'])
 gSeqGroup = NeuronGroup(3, **eqsDict, refractory=1*ms, method = "euler")
+#sDict = fusiSyn(debug = True)
 sDict = reversalSyn(debug = True)
 synInpSeqe = Synapses(gSeqInpGroup, gSeqGroup, **sDict, method = "euler")
 synInpSeqe.connect('i==j') 
 synInpSeqe.weight = 30
 
+
 setParams(synInpSeqe ,revSyndefault)
+#setParams(synInpSeqe ,fusiDefault, debug=True)
 setParams(gSeqGroup ,gerstnerExpAIFdefaultregular)
+
+#synInpSeqe.w = 1
+
 
 spikemonSeq = SpikeMonitor(gSeqGroup)
 spikemonSeqInp = SpikeMonitor(gSeqInpGroup)

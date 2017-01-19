@@ -53,3 +53,10 @@ DefaultInhibitorySynapseP = {
 DefaultTeacherSynapseP = {
                 "tauexc" : 5 *msecond,
                 "Iwexc"  : 0.5 *namp}
+
+revSyndefault = {"gIe" : 0 *nS,
+                "gIi" : 0 *nS,
+                "taugIe" : 5 *ms,
+                "taugIi" : 7 *ms,
+                "EIe" : 60.0 *mV,
+                "EIi" : -90.0  *mV}

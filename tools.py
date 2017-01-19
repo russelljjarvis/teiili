@@ -9,18 +9,18 @@ def setParams(briangroup, params, ndargs=None, debug=False):
                 if ndargs[par] is None:
                     setattr(briangroup, par, params[par])
                 else:
-                    print par, ndargs, ndargs[par]
+                    print(par, ndargs, ndargs[par])
                     setattr(briangroup, par, ndargs[par])
             else:
                 setattr(briangroup, par, params[par])
     if debug:
         states = briangroup.get_states()
-        print '\n' 
-        print '-_-_-_-_-_-_-_', '\n', 'Parameters set'
+        print ('\n') 
+        print ('-_-_-_-_-_-_-_', '\n', 'Parameters set')
         for key in states.keys():
             if key in params:
-                print key, states[key]
-        print '----------'
+                print (key, states[key])
+        print ('----------')
 
 
 # function that calculates 1D index from 2D index
@@ -57,14 +57,17 @@ def replaceConstants(equation,replacedict, debug=False):
             neweq = ''
             firstline = True
             for line in equation.splitlines():
-                if not all([kw in line for kw in [key,'(constant)']]):
+                # This checks which lines contain a constant and delete the line
+                # such a line must contain the word constant and a ';'
+                # If someone makes more spaces before the ':' or makes comments that fulfill the conditions, this might fail!
+                if not (all([kw in line for kw in [key+" :",'(constant)']]) or all([kw in line for kw in [key+":",'(constant)']])): 
                     if firstline:
                         neweq = neweq + line
                         firstline = False
                     else:
                         neweq = neweq  +'\n' + line
                 else:
-                    print('deleted ' + str(key) + ' from equation constants')
+                    print('deleted the line "' + line + '" from equation constants as it contains ' + str(key))
             equation = neweq
             # replace variable in eq with constant
             equation = replaceEqVar(equation ,key,replacedict[key],debug)

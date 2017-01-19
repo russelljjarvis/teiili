@@ -238,3 +238,37 @@ def DefaultTeacherSynapses(tauexc=None, Iwexc=None, debug=False):
         printeqDict(SynDict)
 
     return SynDict, arguments
+
+
+def reversalSyn(taugIe = None, taugIi = None, EIe = None, EIi = None, debug=False):
+    
+    
+    arguments = dict(locals())
+    del(arguments['debug'])
+    
+    preEq = '''gIe += weight*nS*(weight>0)
+gIi += weight*(weight<0)*nS''' 
+    modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # instantaneous rise, exponential decay
+dgIi/dt = (-gIi/taugIi) : siemens  (clock-driven) # instantaneous rise, exponential decay
+Ies = gIe*(EIe - Vm_post) :amp
+Iis = gIi*(EIi - Vm_post) :amp
+taugIe : second (constant)        # excitatory input time constant
+taugIi : second (constant)        # inhibitory input time constant
+EIe : volt (constant)             # excitatory reversal potential
+EIi : volt (constant)             # inhibitory reversal potential
+weight : 1 (constant)
+Vm_post : volt
+Ie_post = Ies : amp  (summed)
+Ii_post = Iis : amp  (summed)
+'''
+    
+    modelEq = replaceConstants(modelEq,arguments,debug)
+    preEq = replaceConstants(preEq,arguments,debug)
+    
+    SynDict = dict(model=modelEq, on_pre=preEq)
+   
+    if debug:
+        print('arguments of ExpAdaptIF: \n' + str(arguments))
+        printeqDict(SynDict)
+
+    return SynDict

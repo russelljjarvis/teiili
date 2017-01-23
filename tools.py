@@ -186,22 +186,20 @@ class GenerateWeightMatrix():
             self.weightRange = weightRange
         self.matrixSize = (population1.N, population2.N)
         self.mode = mode
+
         if connectionType == 'fully':
             weightMatrix = self.getWeights()
-            if save:
-                np.save(self.save_path + '/', weightMatrix)
-            else:
-                return weightMatrix
         # only if we don't have fc populations we need connectivity matrix
         elif connectionType == 'sparse':
             assert(type(connectivityMatrix) is np.ndarray), 'You want a sparse connectivity pattern,\nplease pass the connection matrix'
             self.matrixSize = np.shape(connectivityMatrix)
             weightMatrix = self.getWeights()
-            if save:
-                np.save(self.save_path + '/', weightMatrix)
-                return weightMatrix
-            else:
-                return weightMatrix
+
+        if save:
+            np.save(self.save_path + '/weightMatrix.npy', weightMatrix)
+            return weightMatrix
+        else:
+            return weightMatrix
 
 
 '''

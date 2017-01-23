@@ -199,6 +199,7 @@ class GenerateWeightMatrix():
             weightMatrix = self.getWeights()
             if save:
                 np.save(self.save_path + '/', weightMatrix)
+                return weightMatrix
             else:
                 return weightMatrix
 

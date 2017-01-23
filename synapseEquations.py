@@ -232,3 +232,90 @@ def DefaultTeacherSynapses(tauexc=None, Iwexc=None, debug=False):
         printeqDict(SynDict)
 
     return SynDict, arguments
+
+
+def reversalSyn(taugIe = None, taugIi = None, EIe = None, EIi = None, debug=False):
+    
+    
+    arguments = dict(locals())
+    del(arguments['debug'])
+    
+    preEq = '''gIe += weight*nS*(weight>0)
+gIi += weight*(weight<0)*nS''' 
+    modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # instantaneous rise, exponential decay
+dgIi/dt = (-gIi/taugIi) : siemens  (clock-driven) # instantaneous rise, exponential decay
+Ies = gIe*(EIe - Vm_post) :amp
+Iis = gIi*(EIi - Vm_post) :amp
+taugIe : second (constant)        # excitatory input time constant
+taugIi : second (constant)        # inhibitory input time constant
+EIe : volt (constant)             # excitatory reversal potential
+EIi : volt (constant)             # inhibitory reversal potential
+weight : 1 (constant)
+Vm_post : volt
+Ie_post = Ies : amp  (summed)
+Ii_post = Iis : amp  (summed)
+'''
+    
+    modelEq = replaceConstants(modelEq,arguments,debug)
+    preEq = replaceConstants(preEq,arguments,debug)
+    
+    SynDict = dict(model=modelEq, on_pre=preEq)
+   
+    if debug:
+        print('arguments of ExpAdaptIF: \n' + str(arguments))
+        printeqDict(SynDict)
+
+    return SynDict
+
+
+def fusiSyn(taugIe = None, EIe = None, w_plus = None, w_minus= None,
+            theta_upl= None, theta_uph= None, theta_downh = None, theta_downl = None,
+            theta_V = None, alpha = None, beta = None, tau_ca = None, w_ca = None, debug = False):         
+    ''' This is still not completely tested and might contain bugs.
+    '''
+    arguments = dict(locals())
+    del(arguments['debug'])
+
+    modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # instantaneous rise, exponential decay
+Ies = gIe*(EIe - Vm_post) :amp
+taugIe : second (constant)        # excitatory input time constant
+EIe : volt (constant)             # excitatory reversal potential
+dCa/dt = (-Ca/tau_ca) : volt (clock-driven) #Calcium Potential
+dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (clock-driven) # internal weight variable
+w_plus: 1 (constant)             
+w_minus: 1 (constant)
+theta_upl: volt (constant)
+theta_uph: volt (constant) 
+theta_downh: volt (constant)
+theta_downl: volt (constant)
+theta_V: volt (constant)
+alpha: 1/second (constant)
+beta: 1/second (constant)
+tau_ca: second (constant)
+w_min: 1 (constant)
+w_max: 1 (constant)
+theta_w: 1 (constant)
+w_ca: volt (constant)            # Calcium weight
+Vm_post : volt
+Ie_post = Ies : amp  (summed)
+weight: 1 (constant)
+'''
+    preEq  = '''
+gIe += floor(w+0.5) * weight *  nS
+w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   *(w<w_max) 
+w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) *(w>w_min)
+''' #  check if correct
+    postEq  = '''Ca += w_ca '''
+
+      
+    modelEq = replaceConstants(modelEq,arguments,debug)
+    preEq   = replaceConstants(preEq,arguments,debug)
+    postEq  = replaceConstants(postEq,arguments,debug)
+    
+    SynDict = dict(model=modelEq, on_pre=preEq, on_post=postEq)
+   
+    if debug:
+        print('arguments of ExpAdaptIF: \n' + str(arguments))
+        printeqDict(SynDict)
+
+    return SynDict

@@ -14,12 +14,12 @@ def setParams(briangroup, params, ndargs=None, debug=False):
                 setattr(briangroup, par, params[par])
     if debug:
         states = briangroup.get_states()
-        print '\n' 
-        print '-_-_-_-_-_-_-_', '\n', 'Parameters set'
+        print ('\n' )
+        print ('-_-_-_-_-_-_-_', '\n', 'Parameters set')
         for key in states.keys():
             if key in params:
-                print key, states[key]
-        print '----------'
+                print (key, states[key])
+        print ('----------')
 
 
 # function that calculates 1D index from 2D index

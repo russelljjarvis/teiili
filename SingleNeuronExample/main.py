@@ -15,42 +15,43 @@ import numpy as np
 from brian2 import *
 
 from Training import Training
-from synapseEquations import MemristiveFusiSynapses
+from synapseEquations import *
+from neuronEquations import Silicon
 #from NCSBrian2Lib.tools import *
 from tools import *
 from synapseParams import *
-import ParametersNet as p
-import NeuronsSynapses as NS
+from neuronParams import *
 
 #-----------------------------------------------------
 #CREATING NEURONS GROUPS
 #-----------------------------------------------------
 
-eqs = NS.eqs
+eqSil = Silicon()
+eqSilInh = Silicon(Excitatory=False)
+
 
 InputNeurons = PoissonGroup(1, 100 * Hz)
-OutputNeurons = NeuronGroup(1, model = eqs, method = 'euler', threshold = 'Imem > 0.15*nA', reset = 'Imem = Ireset', refractory = 0.5 * ms)
-InhibitoryNeurons = NeuronGroup(1, model = eqs, method = 'euler', threshold = 'Imem > 0.15*nA', reset = 'Imem = Ireset', refractory = 0.5 * ms)
+OutputNeurons = NeuronGroup(1, method = 'euler', refractory = 0.5 * ms, **eqSil)
+InhibitoryNeurons = NeuronGroup(1, method = 'euler', refractory = 0.5 * ms, **eqSilInh)
 TeacherNeurons = PoissonGroup(1, rates = 0 * Hz)
 
+setParams(OutputNeurons, SiliconNeuronP, debug = True)
+setParams(InhibitoryNeurons, SiliconNeuronP, debug = False)
 #-----------------------------------------------------
 #CREATING SYNAPSES GROUPS
 #-----------------------------------------------------
 sdict = MemristiveFusiSynapses(debug = True)
+sdict_inh = DefaultInhibitorySynapses()
+sdict_inh_out = DefaultInhibitorySynapses(inh2output=True)
+sdict_t = DefaultTeacherSynapses()
 
-Input_Output_train = Synapses(InputNeurons, OutputNeurons, model = sdict['model'], method = 'linear', on_pre = sdict['on_pre'], on_post = sdict['on_post'])
+Input_Output_train = Synapses(InputNeurons, OutputNeurons, method = 'euler', **sdict)
 
-InhImodel = NS.Inhibitory_model
-InhIpre = NS.Inhibitory_pre
-Inhibitory_Input = Synapses(InputNeurons, InhibitoryNeurons, model = InhImodel, method = 'linear', on_pre = InhIpre)
+Inhibitory_Input = Synapses(InputNeurons, InhibitoryNeurons, method = 'euler', **sdict_inh)
 
-InhOmodel = NS.Inhibitory_output_model
-InhOpre = NS.Inhibitory_output_pre
-Inhibitory_Output = Synapses(InhibitoryNeurons, OutputNeurons, model = InhOmodel, method = 'linear', on_pre = InhOpre)
+Inhibitory_Output = Synapses(InhibitoryNeurons, OutputNeurons, method = 'euler', **sdict_inh_out)
  
-TOmodel = NS.Teacher_model
-TOpre = NS.Teacher_pre
-Teacher_Output = Synapses(TeacherNeurons, OutputNeurons, model = TOmodel, method = 'linear', on_pre = TOpre)
+Teacher_Output = Synapses(TeacherNeurons, OutputNeurons, method = 'euler', **sdict_t)
 
 #-----------------------------------------------------
 #CONNECTION AND INIT
@@ -61,17 +62,23 @@ Inhibitory_Input.connect(True) #fully connected
 Inhibitory_Output.connect(True) #fully connected
 Teacher_Output.connect(True) #fully connected
 
-Input_Output_train.w = 1.2
+Input_Output_train.w = 1.9
 Inhibitory_Input.w = 0.35
 Inhibitory_Output.w = 1
 Teacher_Output.w = 1
 
 setParams(Input_Output_train, fusiMemristor, debug = True)
+setParams(Inhibitory_Input, DefaultInhibitorySynapseP, debug = True)
+setParams(Inhibitory_Output, DefaultInhibitorySynapseP, debug = False)
+setParams(Teacher_Output, DefaultTeacherSynapseP, debug = True)
 
 #RUN Simulation----------------------
+
+training_img_time = 800 * ms
+resting_time = 10 * ms
 print "start new training"
     
-weights, timestamps, SM, SpikeMI, SpikeMO, StateMIsyn, SMInh, StateMInh, SMIsyninh = Training(InputNeurons, OutputNeurons, Input_Output_train, InhibitoryNeurons, Inhibitory_Input, Inhibitory_Output, TeacherNeurons, Teacher_Output)
+weights, timestamps, SM, SpikeMI, SpikeMO, StateMIsyn, SMInh, StateMInh, SMIsyninh = Training(InputNeurons, OutputNeurons, Input_Output_train, InhibitoryNeurons, Inhibitory_Input, Inhibitory_Output, TeacherNeurons, Teacher_Output, training_img_time, resting_time)
 
 figure()
 subplot(611)

@@ -46,3 +46,11 @@ fusiMemristor = {
                 "D_p" : 17,
                 "D_d" : 139} #good default params only for single neuron example!
 
+DefaultInhibitorySynapseP = {
+                "tauinhib" : 5 *msecond,
+                "Iw_in_h"  : 0.5 *namp,
+                "Iwinh"    : 0.5 *namp}
+
+DefaultTeacherSynapseP = {
+                "tauexc" : 5 *msecond,
+                "Iwexc"  : 0.5 *namp}

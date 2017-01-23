@@ -11,7 +11,7 @@ Created on 17.12.2016
 
 from brian2 import *
 
-fusidefault = { "w_plus" : 0.2,
+fusiDefault = { "w_plus" : 0.2,
                 "w_minus": 0.2, 
                 "theta_upl" : 180 *mV,
                 "theta_uph" : 1*volt,  
@@ -21,9 +21,14 @@ fusidefault = { "w_plus" : 0.2,
                 "alpha" : 0.0001/second, 
                 "beta" : 0.0001/second, 
                 "tau_ca" : 8*ms,
-                "w_ca" : 250*mV, 
-                "qe_plast": 340 *pA,
-                "w" : 0} #maybe not good default params, just placeholder!
+                "w_ca" : 250*mV,
+                "w_min" : 0,
+                "w_max" : 1,
+                "theta_w" : 0.5,
+                "w" : 0,
+                "gIe" : 0 *nS,
+                "taugIe" : 5 *ms,
+                "EIe" : 60.0 *mV} #maybe not good default params, just placeholder!
 
 
 fusiMemristor = { 
@@ -46,3 +51,17 @@ fusiMemristor = {
                 "D_p" : 17,
                 "D_d" : 139} #good default params only for single neuron example!
 
+DefaultInhibitorySynapseP = {
+                "tauinhib" : 5 *msecond,
+                "Iw_inh"  : 0.5 *namp}
+
+DefaultTeacherSynapseP = {
+                "tauexc" : 5 *msecond,
+                "Iwexc"  : 0.5 *namp}
+
+revSyndefault = {"gIe" : 0 *nS,
+                "gIi" : 0 *nS,
+                "taugIe" : 5 *ms,
+                "taugIi" : 7 *ms,
+                "EIe" : 60.0 *mV,
+                "EIi" : -90.0  *mV}

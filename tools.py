@@ -306,4 +306,3 @@ def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True)
         return indices_on, ts_on
     elif return_off == True:
         return indices_off, ts_off
->>>>>> > 3e49c8144076e5d8826beddad08e802a48f5d7a1

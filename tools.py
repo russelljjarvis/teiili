@@ -153,6 +153,7 @@ class GenerateWeightMatrix():
         self.weightRange = 70
         self.mu = 0
         self.sigma = 0.25
+        self.getWeights = getWeights()
 
     def getWeights(self):
         '''
@@ -187,7 +188,7 @@ class GenerateWeightMatrix():
         self.matrixSize = (population1.N, population2.N)
         self.mode = mode
         if connectionType == 'fully':
-            weightMatrix = getWeights()
+            weightMatrix = self.getWeights()
             if save:
                 np.save(self.save_path + '/', weightMatrix)
             else:
@@ -196,7 +197,7 @@ class GenerateWeightMatrix():
         elif connectionType == 'sparse':
             assert(type(connectivityMatrix) is np.ndarray), 'You want a sparse connectivity pattern,\nplease pass the connection matrix'
             self.matrixSize = np.shape(connectivityMatrix)
-            weightMatrix = getWeights()
+            weightMatrix = self.getWeights()
             if save:
                 np.save(self.save_path + '/', weightMatrix)
             else:

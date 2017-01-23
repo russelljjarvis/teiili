@@ -96,7 +96,7 @@ def replaceConstants(equation, replacedict, debug=False):
     return (equation)
 
 
-class generateWeightMatrix():
+class GenerateWeightMatrix():
     '''
     This module will provide different types of standard weight matrix for 2 neuron population
     Type of weight matrices which are supported:

@@ -1,5 +1,7 @@
 from brian2 import *
 import numpy as np
+import os
+import tempfile
 
 
 def setParams(neurongroup, params, debug=False):

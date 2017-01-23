@@ -56,11 +56,12 @@ def replaceEqVar(eq, varname, replacement, debug=False):
     if isinstance(replacement, str):
         # replace the name with another name
         eq = eq.replace(varname, replacement)
+    # else:
+    #     # replace the name with a value
+    #     eq = eq.replace(varname, '(' + repr(replacement) + ')')
+    #     eq = eq.replace(varname, replacement)
     else:
         # replace the name with a value
-        eq = eq.replace(varname, '(' + repr(replacement) + ')')
-        eq = eq.replace(varname, replacement)
-    else:
         eq = eq.replace(varname, '(' + repr(replacement) + ')')
 
     if debug:
@@ -80,12 +81,13 @@ def replaceConstants(equation, replacedict, debug=False):
                     # This checks which lines contain a constant and delete the line
                     # such a line must contain the word constant and a ';'
                     # If someone makes more spaces before the ':' or makes comments that fulfill the conditions, this might fail!
-                if not (all([kw in line for kw in [key + " :", '(constant)']]) or all([kw in line for kw in [key + ":", '(constant)']])):
-                    if firstline:
-                        neweq = neweq + line
-                        firstline = False
-                    else:
-                        neweq = neweq + '\n' + line
+                    if not (all([kw in line for kw in [key + " :", '(constant)']]) or
+                            all([kw in line for kw in [key + ":", '(constant)']])):
+                        if firstline:
+                            neweq = neweq + line
+                            firstline = False
+                        else:
+                            neweq = neweq + '\n' + line
                 else:
                     print('deleted the line "' + line + '" from equation constants as it contains ' + str(key))
             equation = neweq
@@ -197,6 +199,8 @@ class generateWeightMatrix():
                 np.save(self.save_path + '/', weightMatrix)
             else:
                 return weightMatrix
+
+
 '''
 Since Brian2 is only able to build 1D neuron population this script transforms indices to pixel location of the 128x128 DVS and vice versa.
 The ind2px function are useful to plot recorded spikes in the same coordinate system to compare the original events as proided by the DVS

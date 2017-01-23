@@ -153,7 +153,6 @@ class GenerateWeightMatrix():
         self.weightRange = 70
         self.mu = 0
         self.sigma = 0.25
-        self.getWeights = getWeights()
 
     def getWeights(self):
         '''

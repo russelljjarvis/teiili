@@ -356,7 +356,7 @@ def rcn(population1, population2, probability, save_path):
         p = np.random.rand(population1.N * population2.N)
         #
         for source in range(0, population1.N):
-            print 'Source: %i/%i' % (source, population1.N)
+            print ('Source: %i/%i' % (source, population1.N))
             for target in range(0, population2.N):
                 if p[source * population2.N + target] < probability:
                     connections_source.append(source)
@@ -366,9 +366,9 @@ def rcn(population1, population2, probability, save_path):
         connections[:, 0] = np.asarray(connections_source)
         connections[:, 1] = np.asarray(connections_target)
 
-        print 'Saving connection matrix: semd_rcn'
+        print ('Saving connection matrix: semd_rcn')
         np.save(save_path + 'semd_rcn_v%i' % (i + 1), connections)
-
+    return connections[:,0], connections[:,1]
 
 
 

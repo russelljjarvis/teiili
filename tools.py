@@ -10,8 +10,8 @@ def setParams(neurongroup, params, debug=False):
             setattr(neurongroup, par, params[par])
     if debug:
         states = neurongroup.get_states()
-        print '\n'
-        print '-_-_-_-_-_-_-_', '\n', 'Parameters set'
+        print ('\n')
+        print ('-_-_-_-_-_-_-_', '\n', 'Parameters set')
 
 
 def setParams(briangroup, params, ndargs=None, debug=False):
@@ -221,8 +221,7 @@ def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True)
     '''
     if eventDirectory is not None:
         assert type(eventDirectory) == str, 'eventDirectory must be a string'
-        assert eventDirectory[
-            -4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
+        assert eventDirectory[-4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
         Events = np.load(eventDirectory)
     if Events is not None:
         assert eventDirectory is None, 'Either you specify a path to load Events using eventDirectory. Or you pass the event numpy directly. NOT Both.'

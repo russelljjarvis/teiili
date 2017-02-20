@@ -37,6 +37,7 @@ fusiMemristor = {
                 "tau_fm" : 5 *msecond,
                 "prop" : 2.0,
                 "R_min" : 3000,
+                "R_max" : 6500,
                 "R0_d" : 3234,
                 "R0_p" : 6031.56,
                 "alpha_p" : 3350,
@@ -44,12 +45,18 @@ fusiMemristor = {
                 "beta_p" : 0.612,
                 "C_p" : 286,
                 "D_p" : 17,
-                "D_d" : 139} #good default params only for single neuron example!
+                "D_d" : 139,
+                "count_up" : 0,
+                "count_down" : 0} #good default params only for single neuron example!
+
+DefaultExcitatorySynapseP = {
+                "tauexc" : 5 *msecond,
+                "Iw_exc"  : 5. *pamp}
 
 DefaultInhibitorySynapseP = {
                 "tauinhib" : 5 *msecond,
                 "Iw_inh"  : 0.5 *namp}
 
 DefaultTeacherSynapseP = {
-                "tauexc" : 5 *msecond,
-                "Iwexc"  : 0.5 *namp}
+                "taut" : 5 *msecond,
+                "Iw_t"  : 0.5 *namp}

@@ -82,6 +82,7 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             tau_fm : second (constant)
             prop : 1 (constant)
             R_min : 1 (constant)
+            R_max : 1 (constant)
             R0_d : 1 (constant)
             R0_p : 1 (constant)
             alpha_p : 1 (constant)
@@ -90,12 +91,15 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             C_p : 1 (constant)
             D_p : 1 (constant)
             D_d : 1 (constant)
+            count_up : 1 (constant)
+            count_down : 1 (constant)
             '''
     on_pre_fm = '''
-            up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
-            down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
+            rn = (2.1 - 0.8) * rand() + 0.8
+            up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu) #* (w < 2.1) * (rn < w)
+            down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du) * (w > 0.) #* (rn > w)
                                                                                              
-            Rt0 = prop * R_min / w                        
+            Rt0 = prop * R_min / w  #Rt0 = prop * R_min * R_max / (w * R_max + prop * R_min)  equivalent to w = prop * (R_min / R - R_min / R_max)                
             Gt0 = 1. / Rt0
 
             sigma_p = C_p / (alpha_p / (Rt0 - R0_p + alpha_p)) + D_p
@@ -116,7 +120,9 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             delta_pot = prop * R_min * delta_G_p
             delta_dep = prop * R_min * delta_G_d
             w += up * delta_pot + down * delta_dep
-                               
+            count_up += up
+            count_down += down
+                   
             Isyn += Iw_fm * w 
             '''
 
@@ -142,6 +148,43 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
     #synapses group is called as follow:
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
 
+def DefaultExcitatorySynapses(tauexc=None, Iw_exc=None, debug=False):
+    
+    '''
+    Default Excitatory Synapse with current decaying in time
+    Input Parameters:
+        tauexc:    synapse time constant
+        Iw_exc:     synaptic gain 
+
+    Output: 
+        Dictionary containing model, on_pre and on_post strings for synapses group
+
+    Author: Daniele Conti 
+    Author mail: daniele.conti@polito.it
+    Date: 27.01.2017 
+    '''
+    arguments = dict(locals())
+
+    model_ex='''
+                 w : 1
+                 dIsyn_exc/dt = (-Isyn_exc) / tauexc : amp (event-driven) 
+                 Iin_ex_post = Isyn_exc : amp (summed)
+
+                 tauexc : second (constant)
+                 Iw_exc : amp (constant)
+                 '''
+    on_pre_ex='''
+                 Isyn_exc += Iw_exc * w
+                 '''
+
+    del(arguments['debug'])
+
+    SynDict = dict(model=model_ex, on_pre=on_pre_ex)
+
+    if debug:
+        printeqDict(SynDict)
+
+    return SynDict, arguments
 
 
 def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=False, debug=False):
@@ -195,13 +238,13 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=False, debu
 
 
 
-def DefaultTeacherSynapses(tauexc=None, Iwexc=None, debug=False):
+def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
     
     '''
     Default Teacher Synapse with current decaying in time
     Input Parameters:
-        tauexc:    synapse time constant
-        Iwexc:     synaptic gain 
+        taut:    synapse time constant
+        Iw_t:     synaptic gain 
 
     Output: 
         Dictionary containing model, on_pre and on_post strings for synapses group
@@ -214,14 +257,14 @@ def DefaultTeacherSynapses(tauexc=None, Iwexc=None, debug=False):
 
     model_teach='''
                  w : 1
-                 dIsyn/dt = (Iwexc - Isyn) / tauexc : amp (event-driven) 
-                 Iin_teach_post = Isyn : amp (summed)
+                 dIsyn_teach/dt = (-Isyn_teach) / taut : amp (event-driven) 
+                 Iin_teach_post = Isyn_teach : amp (summed)
 
-                 tauexc : second (constant)
-                 Iwexc : amp (constant)
+                 taut : second (constant)
+                 Iw_t : amp (constant)
                  '''
     on_pre_teach='''
-                 Isyn += Iwexc * w
+                 Isyn_teach += Iw_t * w
                  '''
 
     del(arguments['debug'])
@@ -232,3 +275,8 @@ def DefaultTeacherSynapses(tauexc=None, Iwexc=None, debug=False):
         printeqDict(SynDict)
 
     return SynDict, arguments
+
+
+
+
+

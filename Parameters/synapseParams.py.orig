@@ -63,9 +63,12 @@ DefaultInhibitorySynapseP = {
                 "Iw_inh"  : 0.5 *namp}
 
 DefaultTeacherSynapseP = {
+<<<<<<< HEAD
                 "taut" : 5 *msecond,
                 "Iw_t"  : 0.5 *namp}
-                }
+=======
+                "tauexc" : 5 *msecond,
+                "Iwexc"  : 0.5 *namp}
 
 revSyndefault = {"gIe" : 0 *nS,
                 "gIi" : 0 *nS,
@@ -73,3 +76,4 @@ revSyndefault = {"gIe" : 0 *nS,
                 "taugIi" : 7 *ms,
                 "EIe" : 60.0 *mV,
                 "EIi" : -90.0  *mV}
+>>>>>>> ba5501e80931289a1b418bbd666396cab0d81dd7

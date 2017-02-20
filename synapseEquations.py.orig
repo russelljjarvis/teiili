@@ -277,6 +277,11 @@ def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
     return SynDict, arguments
 
 
+<<<<<<< HEAD
+
+
+
+=======
 def reversalSyn(taugIe = None, taugIi = None, EIe = None, EIi = None, debug=False):
     
     
@@ -362,3 +367,4 @@ w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) *(w>w_min
         printeqDict(SynDict)
 
     return SynDict
+>>>>>>> ba5501e80931289a1b418bbd666396cab0d81dd7

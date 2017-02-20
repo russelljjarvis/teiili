@@ -361,3 +361,93 @@ w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) *(w>w_min
         printeqDict(SynDict)
 
     return SynDict
+
+
+def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
+                       theta_pl=None, theta_pu=None,
+                       Iw_fm=None, Iwca=None, tau_fm=None, prop=None, debug=False, plastic=True):
+
+    '''
+    Fusi memristive synapses
+
+    if plastic=True the resistance update is executed
+
+    Equations for neurons group in input must have defined Imem and Ica variables
+
+    All parameters below are added to the synapse model as internal variable, thus for each synapse 
+    in the network a parameter is defined. Imemthr refers to the post-synaptic neuron.
+
+    Inputs:
+        Parameters:         Required parameters for fusi learning and memristive fit
+                            Parameters required:
+                            Imemthr:    spiking threshold for neurons
+                            theta_dl:   calcium lower threshold for depression
+                            theta_du:   calcium upper threshold for depression
+                            theta_pl:   calcium lower threshold for potentiation
+                            theta_pu:   calcium upper threshold for potentiation
+                            Iw_fm:      synaptic gain
+                            tau_fm:     synaptic time constant
+                            Iwca :      Calcium current gain
+
+    Output: 
+        Dictionary containing model, on_pre and on_post strings for synapses group
+
+    Author: Daniele Conti 
+    Author mail: daniele.conti@polito.it
+    Date: 20.02.2017 
+    '''
+
+    arguments = dict(locals())
+
+    model_fm = '''
+            dIsyn / dt = - Isyn / tau_fm : amp (event-driven)
+            dw / dt = alpha * (w > wth) - beta * (w < wth) : 1 (clock-driven)
+
+            Iin_ex_post = Isyn : amp (summed)
+            Iwca : amp (constant)
+            theta_pl : amp (constant)
+            theta_dl : amp (constant)
+            theta_pu : amp (constant)
+            theta_du : amp (constant)
+            Imemthr : amp (constant)
+            Iw_fm : amp (constant)
+            tau_fm : second (constant)
+            alpha : 1 (constant)
+            beta : 1 (constant)
+            wth : 1 (constant)
+            count_up : 1 (constant)
+            count_down : 1 (constant)
+            '''
+    on_pre_fm = '''
+            up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
+            down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
+                                                                                             
+            w += up * alpha - down * beta
+            count_up += up
+            count_down += down
+            
+            w = clip(w,0,1)       
+            Isyn += Iw_fm * w 
+            '''
+
+    on_pre_fm_nonplastic='''
+            Isyn += Iw_fm * w
+            '''
+
+    on_post_fm = '''Ica += Iwca'''
+
+    del(arguments['debug'])
+    del(arguments['plastic'])
+
+    if plastic:
+        SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
+    else:
+        SynDict = dict(model=model_fm, on_pre=on_pre_fm_nonplastic, on_post=on_post_fm)
+        
+    if debug:
+        printeqDict(SynDict)
+
+    return SynDict, arguments
+
+    #synapses group is called as follow:
+    #S = Synapses(populations1, population2, method = 'euler', **SynDict)

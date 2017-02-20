@@ -72,3 +72,18 @@ revSyndefault = {"gIe" : 0 *nS,
                 "taugIi" : 7 *ms,
                 "EIe" : 60.0 *mV,
                 "EIi" : -90.0  *mV}
+
+Braderfusi = { 
+                "Iwca" : 0.25 *pA,
+                "theta_pl" : 4 *pA,
+                "theta_dl" : 0 *pA,
+                "theta_pu" : 9.99 *pA,
+                "theta_du" : 3.99 *pA,
+                "Imemthr" : 0.05 *nA,
+                "Iw_fm" : 0.5 *nA, 
+                "tau_fm" : 5 *msecond,
+                "alpha" : 0.1,
+                "beta" : 0.1,
+                "wth" : 0.5,
+                "count_up" : 0,
+                "count_down" : 0} #good default params only for single neuron example!

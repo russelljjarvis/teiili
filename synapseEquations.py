@@ -95,9 +95,8 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             count_down : 1 (constant)
             '''
     on_pre_fm = '''
-            rn = (2.1 - 0.8) * rand() + 0.8
-            up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu) #* (w < 2.1) * (rn < w)
-            down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du) * (w > 0.) #* (rn > w)
+            up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
+            down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
                                                                                              
             Rt0 = prop * R_min / w  #Rt0 = prop * R_min * R_max / (w * R_max + prop * R_min)  equivalent to w = prop * (R_min / R - R_min / R_max)                
             Gt0 = 1. / Rt0

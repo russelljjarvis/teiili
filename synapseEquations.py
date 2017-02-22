@@ -98,7 +98,7 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
             down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
                                                                                              
-            Rt0 = prop * R_min / w  #Rt0 = prop * R_min * R_max / (w * R_max + prop * R_min)  equivalent to w = prop * (R_min / R - R_min / R_max)                
+            Rt0 = prop * R_min * R_max / (w * R_max + prop * R_min) # equivalent to w = prop * (R_min / R - R_min / R_max)  Rt0 = prop * R_min / w                
             Gt0 = 1. / Rt0
 
             sigma_p = C_p / (alpha_p / (Rt0 - R0_p + alpha_p)) + D_p
@@ -121,7 +121,8 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             w += up * delta_pot + down * delta_dep
             count_up += up
             count_down += down
-                   
+                
+            w = clip(w,0,1)   
             Isyn += Iw_fm * w 
             '''
 
@@ -401,7 +402,7 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
 
     model_fm = '''
             dIsyn / dt = - Isyn / tau_fm : amp (event-driven)
-            dw / dt = alpha * (w > wth) - beta * (w < wth) : 1 (clock-driven)
+            dw / dt = alpha * (w > wth) * (w < 1) - beta * (w <= wth) * (w > 0) : 1 (clock-driven)
 
             Iin_ex_post = Isyn : amp (summed)
             Iwca : amp (constant)
@@ -412,8 +413,10 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             Imemthr : amp (constant)
             Iw_fm : amp (constant)
             tau_fm : second (constant)
-            alpha : 1 (constant)
-            beta : 1 (constant)
+            alpha : hertz (constant)
+            beta : hertz (constant)
+            wa : 1 (constant)
+            wb : 1 (constant)
             wth : 1 (constant)
             count_up : 1 (constant)
             count_down : 1 (constant)
@@ -422,7 +425,7 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
             down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
                                                                                              
-            w += up * alpha - down * beta
+            w += up * wa - down * wb
             count_up += up
             count_down += down
             

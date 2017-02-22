@@ -64,7 +64,7 @@ DefaultInhibitorySynapseP = {
 
 DefaultTeacherSynapseP = {
                 "taut" : 5 *msecond,
-                "Iw_t"  : 0.5 *namp}
+                "Iw_t"  : 1.0 *namp}
 
 revSyndefault = {"gIe" : 0 *nS,
                 "gIi" : 0 *nS,
@@ -82,8 +82,10 @@ Braderfusi = {
                 "Imemthr" : 0.05 *nA,
                 "Iw_fm" : 0.5 *nA, 
                 "tau_fm" : 5 *msecond,
-                "alpha" : 0.1,
-                "beta" : 0.1,
+                "alpha" : 3.5 *Hz,
+                "beta" : 0.5 *Hz,
+                "wa" : 0.1,
+                "wb" : 0.1,
                 "wth" : 0.5,
                 "count_up" : 0,
                 "count_down" : 0} #good default params only for single neuron example!

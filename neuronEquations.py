@@ -88,7 +88,7 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, ta
     del(arguments['Excitatory'])
  
     modelEq = """
-    dImem/dt = (Ipos * (Ipos > 1*pamp)  - Imem * (1 + Iahp / Itau)) / ( taum * (1 + Ith / (Imem + noise + Io)) ) : amp #
+    dImem/dt = (Ipos * (Ipos > 1*pamp)  - Imem * (1 + Iahp / Itau)) / ( taum * (1 + Ith / (Imem + noise + Io)) ) : amp (unless refractory)
     Ipos =  ( (Ith / Itau) * (Iin - Iahp - Itau)  + Ifb ) : amp
     Ifb  =  ( (Ia / Itau) * (Imem + Ith) ) : amp
     Ia   =  ( Iagain * 1 / (1 + exp(-(Imem - Iath)/ Ianorm) ) ) : amp

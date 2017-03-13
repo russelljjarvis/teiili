@@ -190,14 +190,13 @@ def DefaultExcitatorySynapses(tauexc=None, Iw_exc=None, debug=False):
     return SynDict, arguments
 
 
-def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=False, debug=False):
+def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=True, debug=False):
     
     '''
     Default Inhibitory Synapse with current decaying in time
     Input Parameters:
         tauinhib:    synapse time constant
-        Iw_in_h:     synaptic gain for synapses not going to output neurons
-        Iwinh:       synaptic gain for synapses to the output neurons (substracted)
+        Iw_inh:      synaptic gain (substracted only for synapses to output neurons)
 
     Output: 
         Dictionary containing model, on_pre and on_post strings for synapses group

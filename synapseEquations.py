@@ -46,6 +46,7 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
                             theta_pl:   calcium lower threshold for potentiation
                             theta_pu:   calcium upper threshold for potentiation
                             R_min:      Minimum resistance reachable for the device
+                            R_max:      Maximum resistance reachable for the device
                             R0_d:       Pristine resistance for depression (average on experimental data)
                             R0_p:       Pristine resistance for potentiation (average on experimental data)
                             alpha_d:    fitting parameter depression
@@ -56,10 +57,12 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
                             D_d:        fitting parameter of value dispersion for depression
                             Iw_fm:      synaptic gain
                             tau_fm:     synaptic time constant
-                            Iwca :      Calcium current gain
+                            Iwca:       Calcium current gain
+                            count_up:   Auxiliary variable counting LTD transitions
+                            count_down: Auxiliary variable counting LTP transitions
 
     Output: 
-        Dictionary containing model, on_pre and on_post strings for synapses group
+        Dictionary containing model, on_pre and on_post strings for synapses group, dictionary of non-default parameters
 
     Author: Daniele Conti 
     Author mail: daniele.conti@polito.it
@@ -104,11 +107,11 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             sigma_p = C_p / (alpha_p / (Rt0 - R0_p + alpha_p)) + D_p
             noiseRnewp = sigma_p * randn()               #draw variability for the new memristor resitance
             C = alpha_p / (Rt0 - R0_p + alpha_p) + 1
-            C = C * (C > 0) + 1000 * (1 - (C > 0))       #check in order to avoid negative value, 1000 is arbitrary value
+            C = C * (C > 0) + 1000 * (1 - (C > 0))       #check in order to avoid negative value, 1000 is arbitrary value and tuned further
             B = (alpha_p * beta_p) / C**(1 + 1 / beta_p) #if C negative the denominator becomes imaginary
-            R_new_p = Rt0 - B #+ noiseRnewp            
+            R_new_p = Rt0 - B + noiseRnewp            
 
-            R_new_d = Rt0 + alpha_d * e**( - (Rt0 - R0_d) / (alpha_d) + 1) #+ D_d * randn()
+            R_new_d = Rt0 + alpha_d * e**( - (Rt0 - R0_d) / (alpha_d) + 1) + D_d * randn()
                               
             G_new_d = 1. / R_new_d
             G_new_p = 1. / R_new_p
@@ -151,13 +154,13 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
 def DefaultExcitatorySynapses(tauexc=None, Iw_exc=None, debug=False):
     
     '''
-    Default Excitatory Synapse with current decaying in time
+    Default Excitatory Synapse with exponentially decaying current in time
     Input Parameters:
         tauexc:    synapse time constant
-        Iw_exc:     synaptic gain 
+        Iw_exc:    synaptic gain 
 
     Output: 
-        Dictionary containing model, on_pre and on_post strings for synapses group
+        Dictionary containing model, on_pre and on_post strings for synapses group, dictionary of non-default parameters
 
     Author: Daniele Conti 
     Author mail: daniele.conti@polito.it
@@ -241,13 +244,13 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=False, debu
 def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
     
     '''
-    Default Teacher Synapse with current decaying in time
+    Default Teacher Synapse with exponentially decaying current in time
     Input Parameters:
         taut:    synapse time constant
-        Iw_t:     synaptic gain 
+        Iw_t:    synaptic gain 
 
     Output: 
-        Dictionary containing model, on_pre and on_post strings for synapses group
+        Dictionary containing model, on_pre and on_post strings for synapses group, dictionary of non-default parameters
 
     Author: Daniele Conti 
     Author mail: daniele.conti@polito.it
@@ -369,7 +372,7 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
                        Iw_fm=None, Iwca=None, tau_fm=None, prop=None, debug=False, plastic=True):
 
     '''
-    Fusi memristive synapses
+    Fusi bistable synapses, cfr Brader et al 2007
 
     if plastic=True the resistance update is executed
 
@@ -389,9 +392,16 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
                             Iw_fm:      synaptic gain
                             tau_fm:     synaptic time constant
                             Iwca :      Calcium current gain
+                            alpha:      Angular coefficient of increasing synaptic weight drift
+                            beta:       Angular coefficient of decreasing synaptic weight drift
+                            wa:         Unitary increment of synaptic weight during LTP
+                            wb:         Unitary decrement of synaptic weight during LTD
+                            wth:        Synaptic weight threshold for drift
+                            count_up:   Auxiliary variable counting LTP transitions
+                            count_down: Auxiliary variable counting LTD transitions
 
     Output: 
-        Dictionary containing model, on_pre and on_post strings for synapses group
+        Dictionary containing model, on_pre and on_post strings for synapses group, dictionary of non-default parameters
 
     Author: Daniele Conti 
     Author mail: daniele.conti@polito.it

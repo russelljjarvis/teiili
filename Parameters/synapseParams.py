@@ -83,7 +83,7 @@ Braderfusi = {
                 "Iw_fm" : 0.5 *nA, 
                 "tau_fm" : 5 *msecond,
                 "alpha" : 3.5 *Hz,
-                "beta" : 0.5 *Hz,
+                "beta" : 3.5 *Hz,
                 "wa" : 0.1,
                 "wb" : 0.1,
                 "wth" : 0.5,

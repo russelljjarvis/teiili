@@ -66,12 +66,18 @@ DefaultTeacherSynapseP = {
                 "taut" : 5 *msecond,
                 "Iw_t"  : 1.0 *namp}
 
+simpleSyndefault = {
+                "tau" : 5 *ms,
+                "Iw"  : 1 *nA}
+
 revSyndefault = {"gIe" : 0 *nS,
                 "gIi" : 0 *nS,
                 "taugIe" : 5 *ms,
                 "taugIi" : 7 *ms,
                 "EIe" : 60.0 *mV,
-                "EIi" : -90.0  *mV}
+                "EIi" : -90.0  *mV,
+                "gWe" : 7 *nS,
+                "gWi" : 1 *nS}
 
 Braderfusi = { 
                 "Iwca" : 0.25 *pA,

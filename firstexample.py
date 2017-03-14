@@ -17,7 +17,7 @@ import sys
 from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 from NCSBrian2Lib.neuronEquations import ExpAdaptIF
-from NCSBrian2Lib.synapseEquations import reversalSyn, fusiSyn
+from NCSBrian2Lib.synapseEquations import reversalSynV, fusiSyn, simpleSyn
 from NCSBrian2Lib.tools import setParams
 from NCSBrian2Lib.Parameters.neuronParams import *
 from NCSBrian2Lib.Parameters.synapseParams import *
@@ -39,13 +39,14 @@ gSeqInpGroup = SpikeGeneratorGroup(3, indices = indSeq, times=tsSeq)
 #print(eqsDict['model'])
 gSeqGroup = NeuronGroup(3, **eqsDict, refractory=1*ms, method = "euler")
 #sDict = fusiSyn(debug = True)
-sDict = reversalSyn(debug = True)
+#sDict = reversalSynV(debug = True)
+sDict = simpleSyn(debug = True)
 synInpSeqe = Synapses(gSeqInpGroup, gSeqGroup, **sDict, method = "euler")
 synInpSeqe.connect('i==j') 
-synInpSeqe.weight = 30
+synInpSeqe.weight = 1
 
-
-setParams(synInpSeqe ,revSyndefault)
+setParams(synInpSeqe ,simpleSyndefault)
+#setParams(synInpSeqe ,revSyndefault)
 #setParams(synInpSeqe ,fusiDefault, debug=True)
 setParams(gSeqGroup ,gerstnerExpAIFdefaultregular)
 
@@ -55,9 +56,9 @@ setParams(gSeqGroup ,gerstnerExpAIFdefaultregular)
 spikemonSeq = SpikeMonitor(gSeqGroup)
 spikemonSeqInp = SpikeMonitor(gSeqInpGroup)
 statemonSeq = StateMonitor(gSeqGroup,('Vm','Ie'), record=[0,1,2])
-statemonSyn = StateMonitor(synInpSeqe,('gIe'), record=[0,1,2])
+#statemonSyn = StateMonitor(synInpSeqe,('gIe'), record=[0,1,2])
 
-testNet.add((gSeqInpGroup,gSeqGroup,spikemonSeq,spikemonSeqInp,statemonSeq,synInpSeqe,statemonSyn))
+testNet.add((gSeqInpGroup,gSeqGroup,spikemonSeq,spikemonSeqInp,statemonSeq,synInpSeqe))#,statemonSyn))
 
 start = time.clock()
 duration = 600 * ms
@@ -75,12 +76,14 @@ xlabel('Time [ms]')
 ylabel('V (mV)')
 #plt.show()#savefig('fig/figSeqV.png')
 
-fig = figure(figsize=(8,3))
-plot(statemonSyn.t/ms, statemonSyn.gIe[0]/nS, label='gIe')
-plot(statemonSyn.t/ms, statemonSyn.gIe[1]/nS, label='gIe')
-plot(statemonSyn.t/ms, statemonSyn.gIe[2]/nS, label='gIe')
-xlabel('Time [ms]')
-ylabel('gIe (nS)')
+#===============================================================================
+# fig = figure(figsize=(8,3))
+# plot(statemonSyn.t/ms, statemonSyn.gIe[0]/nS, label='gIe')
+# plot(statemonSyn.t/ms, statemonSyn.gIe[1]/nS, label='gIe')
+# plot(statemonSyn.t/ms, statemonSyn.gIe[2]/nS, label='gIe')
+# xlabel('Time [ms]')
+# ylabel('gIe (nS)')
+#===============================================================================
 
 fig = figure(figsize=(8,3))
 plot(statemonSeq.t/ms, statemonSeq.Ie[0]/pA, label='Ie')

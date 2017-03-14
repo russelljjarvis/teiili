@@ -278,27 +278,79 @@ def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
 
     return SynDict, arguments
 
+def simpleSyn(tau=None, Iw=None, debug=False):
+    '''
+    simple excitatory or inhibitory Synapse with instantaneous rise - exponential decay kernel
+    Input Parameters:
+        tau:    synapse time constant
+        Iw:     synaptic gain 
+ 
+    Author: Alpha
+    Date: 03.2017 
+    '''
+    arguments = dict(locals())
+    del(arguments['debug'])
 
-def reversalSyn(taugIe = None, taugIi = None, EIe = None, EIi = None, debug=False):
+ 
+    modelEq='''dIesyn/dt = (-Iesyn) / tau : amp (clock-driven) 
+dIisyn/dt = (-Iisyn) / tau : amp (clock-driven) 
+weight : 1
+tau : second (constant)
+Iw : amp (constant)
+Ie_post = Iesyn : amp  (summed)
+Ii_post = Iisyn : amp  (summed)
+
+'''
+    preEq='''Iesyn += Iw * weight *(weight>0)
+Iisyn += Iw * weight * (weight<0)
+'''
+ 
+    modelEq = replaceConstants(modelEq,arguments,debug)
+    preEq = replaceConstants(preEq,arguments,debug)
     
+    SynDict = dict(model=modelEq, on_pre=preEq)
+   
+    if debug:
+        print('arguments of ExpAdaptIF: \n' + str(arguments))
+        printeqDict(SynDict)
+
+    return SynDict
+
+
+def reversalSynV(taugIe = None, taugIi = None, EIe = None, EIi = None, gWe = None, gWi = None, debug=False):
+    '''
+    Synapse with reversal potential and instantaneous rise - exponential decay kernel
+    for voltage based neurons!
+    Input Parameters:
+        taugIe : second (constant)        # excitatory input time constant
+        taugIi : second (constant)        # inhibitory input time constant
+        EIe : volt (constant)             # excitatory reversal potential
+        EIi : volt (constant)             # inhibitory reversal potential
+        gWe : siemens (constant)          # excitatory synaptic gain
+        gWi : siemens (constant)          # inhibitory synaptic gain 
+    Author: Alpha Renner
+    Date: 03.2017 
+    '''
     
     arguments = dict(locals())
     del(arguments['debug'])
-    
-    preEq = '''gIe += weight*nS*(weight>0)
-gIi += weight*(weight<0)*nS''' 
+
+    preEq = '''gIe += weight*gWe*(weight>0)
+gIi += weight*(weight<0)*gWi''' 
     modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # instantaneous rise, exponential decay
 dgIi/dt = (-gIi/taugIi) : siemens  (clock-driven) # instantaneous rise, exponential decay
-Ies = gIe*(EIe - Vm_post) :amp
-Iis = gIi*(EIi - Vm_post) :amp
+Iesyn = gIe*(EIe - Vm_post) :amp
+Iisyn = gIi*(EIi - Vm_post) :amp
 taugIe : second (constant)        # excitatory input time constant
 taugIi : second (constant)        # inhibitory input time constant
 EIe : volt (constant)             # excitatory reversal potential
 EIi : volt (constant)             # inhibitory reversal potential
+gWe : siemens (constant)          # excitatory synaptic gain
+gWi : siemens (constant)          # inhibitory synaptic gain 
 weight : 1 (constant)
 Vm_post : volt
-Ie_post = Ies : amp  (summed)
-Ii_post = Iis : amp  (summed)
+Ie_post = Iesyn : amp  (summed)
+Ii_post = Iisyn : amp  (summed)
 '''
     
     modelEq = replaceConstants(modelEq,arguments,debug)
@@ -311,6 +363,7 @@ Ii_post = Iis : amp  (summed)
         printeqDict(SynDict)
 
     return SynDict
+
 
 
 def fusiSyn(taugIe = None, EIe = None, w_plus = None, w_minus= None,

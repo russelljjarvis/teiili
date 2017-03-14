@@ -27,7 +27,8 @@ def ExpAdaptIF(C=None,gL=None,EL=None,VT=None,DeltaT=None,
     eqDict = neuronEquatioons.ExpAdaptIF()
     neurongroup = NeuronGroup(nNeurons, **eqDict , refractory = 2*ms, method='euler',name='groupname')
     tools.setParams(neurongroup , equationParams.gerstnerExpAIFdefaultregular)
-    @param: C : farad (constant)              # membrane capacitance
+    @param: 
+    C : farad (constant)              # membrane capacitance
     gL : siemens (constant)           # leak conductance
     EL : volt (constant)              # leak reversal potential
     VT : volt (constant)              # threshold
@@ -42,10 +43,11 @@ def ExpAdaptIF(C=None,gL=None,EL=None,VT=None,DeltaT=None,
     del(arguments['debug'])
     
     modelEq = """
-    dVm/dt = (gL*(EL - Vm) + gL*DeltaT*exp((Vm - VT)/DeltaT) + Ie + Ii - wad)/C : volt (unless refractory)
+    dVm/dt = (gL*(EL - Vm) + gL*DeltaT*exp((Vm - VT)/DeltaT) + Iin - wad)/C : volt (unless refractory)
     dwad/dt = (a*(Vm - EL) - wad)/tauwad : amp
-    Ie : amp
-    Ii : amp
+    Iin = Ii +Ie :amp
+    Ii : amp                          # inh input current
+    Ie : amp                          # exc input current
     C : farad (constant)              # membrane capacitance
     gL : siemens (constant)           # leak conductance
     EL : volt (constant)              # leak reversal potential

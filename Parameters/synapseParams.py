@@ -26,6 +26,7 @@ fusiDefault = { "w_plus" : 0.2,
                 "w_max" : 1,
                 "theta_w" : 0.5,
                 "w" : 0,
+                "gWe" : 7 *nS,
                 "gIe" : 0 *nS,
                 "taugIe" : 5 *ms,
                 "EIe" : 60.0 *mV} #maybe not good default params, just placeholder!
@@ -73,11 +74,11 @@ simpleSyndefault = {
 revSyndefault = {"gIe" : 0 *nS,
                 "gIi" : 0 *nS,
                 "taugIe" : 5 *ms,
-                "taugIi" : 7 *ms,
+                "taugIi" : 6 *ms,
                 "EIe" : 60.0 *mV,
                 "EIi" : -90.0  *mV,
                 "gWe" : 7 *nS,
-                "gWi" : 1 *nS}
+                "gWi" : -3 *nS}
 
 Braderfusi = { 
                 "Iwca" : 0.25 *pA,

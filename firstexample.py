@@ -16,17 +16,18 @@ import time
 import sys
 from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
-from NCSBrian2Lib.neuronEquations import ExpAdaptIF
-from NCSBrian2Lib.synapseEquations import reversalSynV, fusiSyn, simpleSyn
+from NCSBrian2Lib.neuronEquations import ExpAdaptIFrev as neuronEq
+from NCSBrian2Lib.synapseEquations import fusiSynV as synapseEq # reversalSynV as synapseEq
 from NCSBrian2Lib.tools import setParams
-from NCSBrian2Lib.Parameters.neuronParams import *
-from NCSBrian2Lib.Parameters.synapseParams import *
+from NCSBrian2Lib.Parameters.neuronParams import gerstnerExpAIFdefaultregular as neuronPar
+from NCSBrian2Lib.Parameters.synapseParams import fusiDefault as synapsePar # revSyndefault as synapsePar
+from NCSBrian2Lib.tools import setParams, fkernel1d, printStates
 
 prefs.codegen.target = "numpy" 
 
-VT1 = -49*mV
+#VT1 = -49*mV
 #eqsDict = ExpAdaptIF(tauwad = 120*ms,DeltaT=3*mV,VT='VT1',debug=True)
-eqsDict, args = ExpAdaptIF(b =0.02*nA, debug=True)
+eqsDict, args = neuronEq(debug=True)
 
 testNet = Network()
 
@@ -37,26 +38,33 @@ indSeq = np.concatenate((np.zeros(50, dtype=np.int), np.ones(50, dtype=np.int),
 gSeqInpGroup = SpikeGeneratorGroup(3, indices = indSeq, times=tsSeq)
 
 #print(eqsDict['model'])
-gSeqGroup = NeuronGroup(3, **eqsDict, refractory=1*ms, method = "euler")
+gSeqGroup = NeuronGroup(3, refractory=5*ms, method = "euler", **eqsDict)
 #sDict = fusiSyn(debug = True)
 #sDict = reversalSynV(debug = True)
-sDict = simpleSyn(debug = True)
-synInpSeqe = Synapses(gSeqInpGroup, gSeqGroup, **sDict, method = "euler")
+sDict = synapseEq(debug = True)
+synInpSeqe = Synapses(gSeqInpGroup, gSeqGroup, method = "euler", **sDict)
 synInpSeqe.connect('i==j') 
 synInpSeqe.weight = 1
 
-setParams(synInpSeqe ,simpleSyndefault)
+#===============================================================================
+# synSeqSeq1e = Synapses(gSeqGroup,   gSeqGroup,    method = "euler", **sDict)
+# synSeqSeq1e.connect('True') 
+# synSeqSeq1e.weight = -1
+# setParams(synSeqSeq1e ,synapsePar)
+# testNet.add((synSeqSeq1e))
+#===============================================================================
+             
+setParams(synInpSeqe ,synapsePar)
 #setParams(synInpSeqe ,revSyndefault)
 #setParams(synInpSeqe ,fusiDefault, debug=True)
-setParams(gSeqGroup ,gerstnerExpAIFdefaultregular)
+setParams(gSeqGroup ,neuronPar)
 
-#synInpSeqe.w = 1
-
+synInpSeqe.w = 1
 
 spikemonSeq = SpikeMonitor(gSeqGroup)
 spikemonSeqInp = SpikeMonitor(gSeqInpGroup)
-statemonSeq = StateMonitor(gSeqGroup,('Vm','Ie'), record=[0,1,2])
-#statemonSyn = StateMonitor(synInpSeqe,('gIe'), record=[0,1,2])
+statemonSeq = StateMonitor(gSeqGroup,('Vm','Ie','Ii'), record=[0,1,2])
+#statemonSyn = StateMonitor(synInpSeqe,('Iesyn'), record=[0,1,2])
 
 testNet.add((gSeqInpGroup,gSeqGroup,spikemonSeq,spikemonSeqInp,statemonSeq,synInpSeqe))#,statemonSyn))
 
@@ -85,13 +93,30 @@ ylabel('V (mV)')
 # ylabel('gIe (nS)')
 #===============================================================================
 
+#===============================================================================
+# fig = figure(figsize=(8,3))
+# plot(statemonSyn.t/ms, statemonSyn.Iesyn[0]/nS, label='Iesyn')
+# plot(statemonSyn.t/ms, statemonSyn.Iesyn[1]/nS, label='Iesyn')
+# plot(statemonSyn.t/ms, statemonSyn.Iesyn[2]/nS, label='Iesyn')
+# xlabel('Time [ms]')
+# ylabel('Iesyn')
+#===============================================================================
+
+
 fig = figure(figsize=(8,3))
 plot(statemonSeq.t/ms, statemonSeq.Ie[0]/pA, label='Ie')
 plot(statemonSeq.t/ms, statemonSeq.Ie[1]/pA, label='Ie')
 plot(statemonSeq.t/ms, statemonSeq.Ie[2]/pA, label='Ie')
-
 xlabel('Time [ms]')
 ylabel('Ie (pA)')
+
+
+fig = figure(figsize=(8,3))
+plot(statemonSeq.t/ms, statemonSeq.Ii[0]/pA, label='Ii')
+plot(statemonSeq.t/ms, statemonSeq.Ii[1]/pA, label='Ii')
+plot(statemonSeq.t/ms, statemonSeq.Ii[2]/pA, label='Ii')
+xlabel('Time [ms]')
+ylabel('Ii (pA)')
 plt.show()#savefig('fig/figSeqIe.png')
 
 

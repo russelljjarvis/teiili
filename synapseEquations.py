@@ -278,8 +278,9 @@ def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
 
     return SynDict, arguments
 
-def simpleSyn(tau=None, Iw=None, debug=False):
+def simpleSynS(tau=None, Iw=None, debug=False):
     '''
+    !!! This Synapse uses (summed) and should net be used until a bug in Brian2 is fixed
     simple excitatory or inhibitory Synapse with instantaneous rise - exponential decay kernel
     Input Parameters:
         tau:    synapse time constant
@@ -292,19 +293,51 @@ def simpleSyn(tau=None, Iw=None, debug=False):
     del(arguments['debug'])
 
  
-    modelEq='''dIesyn/dt = (-Iesyn) / tau : amp (clock-driven) 
-dIisyn/dt = (-Iisyn) / tau : amp (clock-driven) 
+    modelEq='''dIe_syn/dt = (-Ie_syn) / tau : amp (clock-driven) 
+dIi_syn/dt = (-Ii_syn) / tau : amp (clock-driven) 
+Ie_post = Ie_syn : amp  (summed)
+Ii_post = Ii_syn : amp  (summed)
 weight : 1
 tau : second (constant)
 Iw : amp (constant)
-Ie_post = Iesyn : amp  (summed)
-Ii_post = Iisyn : amp  (summed)
+'''
+    preEq='''
+Ie_syn += Iw * weight *(weight>0)
+Ii_syn += Iw * weight * (weight<0)
+'''
 
-'''
-    preEq='''Iesyn += Iw * weight *(weight>0)
-Iisyn += Iw * weight * (weight<0)
-'''
+    modelEq = replaceConstants(modelEq,arguments,debug)
+    preEq = replaceConstants(preEq,arguments,debug)
+    
+    SynDict = dict(model=modelEq, on_pre=preEq)
+   
+    if debug:
+        print('arguments of ExpAdaptIF: \n' + str(arguments))
+        printeqDict(SynDict)
+
+    return SynDict
+
+def simpleSyn(Iw=None, debug=False):
+    '''
+    simple excitatory or inhibitory Synapse
+    Input Parameters:
+        Iw:     synaptic gain 
  
+    Author: Alpha
+    Date: 03.2017 
+    '''
+    arguments = dict(locals())
+    del(arguments['debug'])
+
+ 
+    modelEq='''weight : 1
+Iw : amp (constant)
+'''
+    preEq='''
+Ie_post += Iw * weight *(weight>0)
+Ii_post += Iw * weight * (weight<0)
+'''
+
     modelEq = replaceConstants(modelEq,arguments,debug)
     preEq = replaceConstants(preEq,arguments,debug)
     
@@ -317,8 +350,10 @@ Iisyn += Iw * weight * (weight<0)
     return SynDict
 
 
-def reversalSynV(taugIe = None, taugIi = None, EIe = None, EIi = None, gWe = None, gWi = None, debug=False):
+
+def reversalSynV_S(taugIe = None, taugIi = None, EIe = None, EIi = None, gWe = None, gWi = None, debug=False):
     '''
+    !!! This Synapse uses (summed) and should net be used until a bug in Brian2 is fixed
     Synapse with reversal potential and instantaneous rise - exponential decay kernel
     for voltage based neurons!
     Input Parameters:
@@ -336,9 +371,11 @@ def reversalSynV(taugIe = None, taugIi = None, EIe = None, EIi = None, gWe = Non
     del(arguments['debug'])
 
     preEq = '''gIe += weight*gWe*(weight>0)
-gIi += weight*(weight<0)*gWi''' 
-    modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # instantaneous rise, exponential decay
-dgIi/dt = (-gIi/taugIi) : siemens  (clock-driven) # instantaneous rise, exponential decay
+gIi += weight*gWi*(weight<0)
+''' 
+
+    modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # exponential decay
+dgIi/dt = (-gIi/taugIi) : siemens  (clock-driven) # exponential decay
 Iesyn = gIe*(EIe - Vm_post) :amp
 Iisyn = gIi*(EIi - Vm_post) :amp
 taugIe : second (constant)        # excitatory input time constant
@@ -359,17 +396,50 @@ Ii_post = Iisyn : amp  (summed)
     SynDict = dict(model=modelEq, on_pre=preEq)
    
     if debug:
-        print('arguments of ExpAdaptIF: \n' + str(arguments))
+        print('arguments of reversalSynV: \n' + str(arguments))
+        printeqDict(SynDict)
+
+    return SynDict
+
+def reversalSynV(gWe = None, gWi = None, debug=False):
+    '''
+    for voltage based neurons!
+    Input Parameters:
+        gWe : siemens (constant)          # excitatory synaptic gain
+        gWi : siemens (constant)          # inhibitory synaptic gain 
+    Author: Alpha Renner
+    Date: 03.2017 
+    '''
+    
+    arguments = dict(locals())
+    del(arguments['debug'])
+
+    preEq = '''gIe_post += weight*gWe*(weight>0)
+gIi_post += weight*gWi*(weight<0)
+''' 
+
+    modelEq = '''gWe : siemens (constant)          # excitatory synaptic gain
+gWi : siemens (constant)          # inhibitory synaptic gain 
+weight : 1 (constant)
+'''
+    
+    modelEq = replaceConstants(modelEq,arguments,debug)
+    preEq = replaceConstants(preEq,arguments,debug)
+    
+    SynDict = dict(model=modelEq, on_pre=preEq)
+   
+    if debug:
+        print('arguments of reversalSynV: \n' + str(arguments))
         printeqDict(SynDict)
 
     return SynDict
 
 
 
-def fusiSyn(taugIe = None, EIe = None, w_plus = None, w_minus= None,
+def fusiSynV_S(taugIe = None, EIe = None, w_plus = None, w_minus= None,
             theta_upl= None, theta_uph= None, theta_downh = None, theta_downl = None,
             theta_V = None, alpha = None, beta = None, tau_ca = None, w_ca = None, debug = False):         
-    ''' This is still not completely tested and might contain bugs.
+    ''' This is not yet completely tested and might contain bugs.
     '''
     arguments = dict(locals())
     del(arguments['debug'])
@@ -418,6 +488,53 @@ w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) *(w>w_min
 
     return SynDict
 
+
+def fusiSynV(w_plus = None, w_minus= None,theta_upl= None, theta_uph= None, theta_downh = None, theta_downl = None,
+            theta_V = None, alpha = None, beta = None, tau_ca = None, w_ca = None,gWe = None, debug = False):         
+    ''' This is not yet completely tested and might contain bugs.
+    '''
+    arguments = dict(locals())
+    del(arguments['debug'])
+
+    modelEq = '''dCa/dt = (-Ca/tau_ca) : volt (clock-driven) #Calcium Potential
+dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (clock-driven) # internal weight variable
+w_plus: 1 (constant)             
+w_minus: 1 (constant)
+theta_upl: volt (constant)
+theta_uph: volt (constant) 
+theta_downh: volt (constant)
+theta_downl: volt (constant)
+theta_V: volt (constant)
+alpha: 1/second (constant)
+beta: 1/second (constant)
+tau_ca: second (constant)
+w_min: 1 (constant)
+w_max: 1 (constant)
+theta_w: 1 (constant)
+w_ca: volt (constant)            # Calcium weight
+Vm_post : volt
+gWe : siemens (constant)          # excitatory synaptic gain
+weight: 1 (constant)
+'''
+    
+    preEq  = '''gIe_post += floor(w+0.5) * weight * gWe
+w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   *(w<w_max) 
+w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) *(w>w_min)
+''' #  check if correct
+    postEq  = '''Ca += w_ca '''
+
+      
+    modelEq = replaceConstants(modelEq,arguments,debug)
+    preEq   = replaceConstants(preEq,arguments,debug)
+    postEq  = replaceConstants(postEq,arguments,debug)
+    
+    SynDict = dict(model=modelEq, on_pre=preEq, on_post=postEq)
+   
+    if debug:
+        print('arguments of fusiSynV: \n' + str(arguments))
+        printeqDict(SynDict)
+
+    return SynDict
 
 def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
                        theta_pl=None, theta_pu=None,

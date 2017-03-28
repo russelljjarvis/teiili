@@ -54,3 +54,8 @@ DefaultInhibitorySynapseP = {
 DefaultTeacherSynapseP = {
                 "tauexc" : 5 *msecond,
                 "Iwexc"  : 0.5 *namp}
+
+KernelP = {
+        "tau" : 40 *msecond,
+        "omega" : 30/second,
+        "sigma_gaussian" : 20 *msecond}

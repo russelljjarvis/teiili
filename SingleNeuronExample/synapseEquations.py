@@ -11,9 +11,10 @@ def printeqDict(eqDict):
     print( 'on pre equation:')
     print( eqDict['on_pre'])
     print( '-_-_-_-_-_-_-_-')
-    print( 'on post equation:')
-    print( eqDict['on_post'])
-    print( '-------------')
+    if any(eqDict.keys() == 'on_post'):
+        print( 'on post equation:')
+        print( eqDict['on_post'])
+        print( '-------------')
 
 
 def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
@@ -232,6 +233,122 @@ def DefaultTeacherSynapses(tauexc=None, Iwexc=None, debug=False):
         printeqDict(SynDict)
 
     return SynDict
+
+def KernelsSynapses(tau=None,omega=None,sigma_gaussian=None,kernel=None,debug=False):
+
+    '''
+    Kernel Synapse function
+
+    The kernel has to be specified when the funtion is called:
+    kernel= alpha; for an alpha function
+    kernel= expdecay; for exponential decay response
+    kernel= gaussian; for a gaussian function
+    kernel= resonant; for resosnant function
+
+    In the Synaptic Kernel Method from Tapson et al.(2013), There is a input layer that connects to
+    a hidden layer that represents the synapses, each of these synapses implements a synaptic kernel
+    filter. The kernel function simply represents the response of the synapse due to an input. The three
+    important properties of these filters are:
+    * Convert spikes into continuos signal
+    * Project the input into a higher-dimensional space
+    * Implement a short-time memory of past events 
+
+    Comments:
+    * Weights are not in the default parameters.
+    * t_spike must be set to 1 second as initial value to avoid kernel function at time zero (when no spike is received)
+    * Equations for neurons group in input must have defined Iin_ex, in order to pass information from 
+        synapse to neuron.
+    * All parameters below are added to the synapse model as internal variable, thus for each synapse 
+    in the network a parameter is defined.
+
+    Inputs:
+        Parameters:         Required parameters for kernel function
+                            tau: time constant
+                            t_spike: time when a spike occurs will be reset to zero
+                            omega: for the resonant function
+                            sigma: standard deviation for gaussian function
+
+
+    Output: 
+        Dictionary containing model and on_pre strings for synapses group
+        Arguments that pass the non-default parameters
+
+    Author: Karla Burelo 
+    Date: 25.03.2017 
+    '''
+    arguments = dict(locals())
+ 
+    
+    
+
+    model_alpha_fm = '''
+            w : amp
+            tau: second
+            omega: 1/second
+            sigma_gaussian : second 
+            dI_alpha/dt  = -I_alpha/tau+w*exp(-t_spike/tau)/tau: amp (clock-driven)
+            dt_spike/dt = 1 : second (clock-driven) 
+            Iin_ex_post = I_alpha : amp (summed)
+            '''
+    model_resonant_fm= '''
+            w : amp
+            tau: second
+            omega: 1/second
+            sigma_gaussian : second 
+            dI_resonant/dt  = (w*exp(-t_spike/tau)*cos(omega*t_spike)*omega-I_resonant/tau) : amp (clock-driven)
+            dt_spike/dt = 1 : second (clock-driven) 
+            Iin_ex_post = I_resonant : amp (summed)
+            '''
+    model_expdecay_fm= '''
+            w : amp
+            tau: second
+            omega: 1/second
+            sigma_gaussian : second 
+            dI_expdecay/dt  = -I_expdecay/tau : amp (clock-driven)
+            dt_spike/dt = 1 : second (clock-driven) 
+            Iin_ex_post = I_expdecay : amp (summed)
+            '''
+    model_gaussian_fm= '''
+            w : amp
+            tau: second
+            omega: 1/second
+            sigma_gaussian : second 
+            dI_gaussian/dt  = (-I_gaussian*t_spike/(sigma_gaussian**2)) :amp (clock-driven)
+            dt_spike/dt = 1 : second (clock-driven) 
+            Iin_ex_post = I_gaussian : amp (summed)
+            '''
+    on_pre_fm = '''
+            t_spike = 0 * ms
+            '''
+    on_pre_expdecay_fm = '''
+            I_expdecay +=w
+            t_spike = 0 * ms
+            '''
+    on_pre_gaussian_fm = '''
+            I_gaussian +=w
+            t_spike = 0 * ms
+            '''
+
+    del(arguments['debug'])
+    del(arguments['kernel'])
+
+    #model_fm = replaceConstants(model_fm, arguments, debug)
+      
+    if kernel == 'alpha':
+        SynDict = dict(model=model_alpha_fm, on_pre=on_pre_fm)
+    elif kernel == 'resonant':
+        SynDict = dict(model=model_resonant_fm, on_pre=on_pre_fm)
+    elif kernel == 'expdecay':
+        SynDict = dict(model=model_expdecay_fm, on_pre=on_pre_expdecay_fm)
+    elif kernel == 'gaussian':
+        SynDict = dict(model=model_gaussian_fm, on_pre=on_pre_gaussian_fm)
+    else:
+        print('Kernel not specified in the function')
+
+    if debug:
+        printeqDict(SynDict)
+
+    return SynDict, arguments
 
 
 

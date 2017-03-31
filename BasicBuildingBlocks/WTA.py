@@ -149,10 +149,10 @@ def gen2dWTA(groupname ,neuronEqsDict = defaultneuronEqDict, neuronParameters = 
         spikemonWTAInp = SpikeMonitor(gWTAInpGroup)
         statemonWTA = StateMonitor(gWTAGroup, ('Vm','Ie','Ii'), record=True)
     else:
-        spikemonWTA = 'not monitored'
-        spikemonWTAInh = 'not monitored'
-        spikemonWTAInp = 'not monitored'
-        statemonWTA = 'not monitored'
+        spikemonWTA = False
+        spikemonWTAInh = False
+        spikemonWTAInp = False
+        statemonWTA = False
     
     end = time.clock()
     print ('creating '+str(nNeurons)+'x'+str(nNeurons)+ ' WTA of '+str(nNeurons**2)+' neurons with name ' + groupname + ' took ' + str(end - start) + ' sec')

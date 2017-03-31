@@ -97,6 +97,15 @@ def fkernel1d(i,j,sigm):
     res = (1+2*exponent)*exp(exponent ) # mexican hat, not normalized
     return res
 
+# function that calculates 1D gaussian kernel
+@implementation('numpy', discard_units=True)
+@check_units(i=1,j=1,sigm=1,result=1)
+def fkernelgauss1d(i,j,sigm):
+    "function that calculates 1D kernel"
+    res = exp(-((i-j)**2)/(2*sigm**2)) # gaussian, not normalized
+    return res
+
+
 # function that calculates 2D kernel
 @implementation('numpy', discard_units=True)
 @check_units(i=1,j=1,sigm=1,n2dNeurons=1,result=1)

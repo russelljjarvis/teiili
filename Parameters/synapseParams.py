@@ -96,3 +96,7 @@ Braderfusi = {
                 "wth" : 0.5,
                 "count_up" : 0,
                 "count_down" : 0} #good default params only for single neuron example!
+KernelP = {
+        "tau" : 40 *msecond,
+        "omega" : 30/second,
+        "sigma_gaussian" : 20 *msecond}

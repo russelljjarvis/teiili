@@ -100,3 +100,14 @@ KernelP = {
         "tau" : 40 *msecond,
         "omega" : 30/second,
         "sigma_gaussian" : 20 *msecond}
+
+SiliconSynP = {
+        "Vth" :  0.8 * volt, #should be close to Vdd
+        "Vtau" : 7* mV, #calculated by assuming a tau ~ 10 * ms
+        "Vdd" : 1.8 * volt,
+        "Csyn" : 0.1 * pF,
+        "Io" : 0.5 * pA,
+        "Ut" : 25 * mV,
+        "kn" : 0.75,
+        "kp" : 0.66,
+        "duration" : 10 *msecond}

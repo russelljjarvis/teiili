@@ -750,3 +750,56 @@ def KernelsSynapses(tau=None,omega=None,sigma_gaussian=None,kernel=None,debug=Fa
 
     return SynDict, arguments
 
+def SiliconSynapses(Vth=None, Vtau=None, Vdd=None,Csyn=None, Io=None,
+                    Ut=None, kn=None,kp=None, duration=None):
+
+    '''
+    Comments:
+    * Weights are not in the default parameters, it must be set by the user
+    and it is the current injected to the synpase when a spike is received
+
+    Author: Karla Burelo 
+    Author mail: burelo.rodriguez.karla@outlook.com
+    Date: 2.04.2017 
+    '''
+
+    arguments = dict(locals())
+
+    model_fm = '''
+            dIsyn / dt = - Isyn / tau * (1-Iin_ex/Itau) : amp (event-driven)
+            tau = Csyn * kappa /(Ut * Itau) : 1/second (clock-driven)
+            Itau = Io * exp((-kappa * Vtau + Vdd)/Ut) : amp 
+            kappa = (kn + kp) / 2 : 1
+
+            Iw = w*(t_spike<duration) + 0*(t_spike>= duration) : amp
+            Iin_ex = Iw / (1+(Isyn/Igain)): amp
+            Igain = Io*exp(-kappa*(Vth-Vdd)/Ut) : amp
+            dt_spike/dt = 1 : second (clock-driven)
+            
+            w      : amp (constant)
+            duration:1 (constant)
+            kn     : 1 (constant)
+            kp     : 1 (constant)
+            Ut     : volt (constant)
+            Io     : amp (constant)
+            Csyn   : farad (constant)
+            Vdd    : volt (constant)
+            Vtau   : volt (constant)
+            Vth    : volt (constant)
+            '''
+    on_pre_fm = '''
+            t_spike = 0 * ms 
+            '''
+
+    del(arguments['debug'])
+    
+    SynDict = dict(model=model_fm, on_pre=on_pre_fm)
+        
+    if debug:
+        printeqDict(SynDict)
+
+    return SynDict, arguments
+
+    #synapses group is called as follow:
+    #S = Synapses(populations1, population2, method = 'euler', **SynDict)
+

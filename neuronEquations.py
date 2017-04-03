@@ -37,6 +37,8 @@ def ExpAdaptIFrev(taugIe = None, taugIi = None, EIe = None, EIi = None, C=None,g
     a : siemens (constant)            # adaptation decay parameter
     b : amp (constant)                # adaptation weight
     Vr : volt (constant)              # reset potential
+    sigma : amp (constant)            # noise parameter
+    Iconst : amp (constant)           # constant input current
     taugIe : second (constant)        # excitatory input time constant
     taugIi : second (constant)        # inhibitory input time constant
     EIe : volt (constant)             # excitatory reversal potential
@@ -47,13 +49,15 @@ def ExpAdaptIFrev(taugIe = None, taugIi = None, EIe = None, EIi = None, C=None,g
     del(arguments['debug'])
     
     modelEq = """
-    dVm/dt = (gL*(EL - Vm) + gL*DeltaT*exp((Vm - VT)/DeltaT) + Iin - wad)/C : volt (unless refractory)
+    dVm/dt = (gL*(EL - Vm) + gL*DeltaT*exp((Vm - VT)/DeltaT) + Iin - wad + sigma*(second**0.5)*xi )/C  : volt (unless refractory)
     dwad/dt = (a*(Vm - EL) - wad)/tauwad : amp
-    Iin = Ii + Ie : amp
+    Iin = Ii + Ie + Iconst : amp
     dgIe/dt = (-gIe/taugIe) : siemens # exponential decay
     dgIi/dt = (-gIi/taugIi) : siemens # exponential decay
     Ie = gIe*(EIe - Vm) :amp
     Ii = gIi*(EIi - Vm) :amp
+    sigma : amp (constant)            # noise parameter
+    Iconst : amp (constant)           # constant input current
     taugIe : second (constant)        # excitatory input time constant
     taugIi : second (constant)        # inhibitory input time constant
     EIe : volt (constant)             # excitatory reversal potential
@@ -83,6 +87,7 @@ def ExpAdaptIFrev(taugIe = None, taugIi = None, EIe = None, EIi = None, C=None,g
         printeqDict(eqDict)
     
     return eqDict, arguments
+
 
 def ExpAdaptIF(C=None,gL=None,EL=None,VT=None,DeltaT=None, 
     tauwad=None,a=None,b=None,Vr=None,taue=None,taui=None,debug=False):

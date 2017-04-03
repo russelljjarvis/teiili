@@ -14,7 +14,7 @@ def plotWTA(name,duration,nWTANeurons,plot2d,spikemonWTA,spikemonWTAInh,spikemon
     nnWTANeurons = nWTANeurons
     if plot2d:
         nnWTANeurons = nnWTANeurons**2
-        
+      
     fig = figure(figsize=(8,10))
     nPlots=3*100
     subplot(nPlots+11)
@@ -36,37 +36,27 @@ def plotWTA(name,duration,nWTANeurons,plot2d,spikemonWTA,spikemonWTAInh,spikemon
     xlim([0,duration/ms])
     #fig.savefig('fig/'+name+'_Spikes.png')
     
-    fig = figure(figsize=(8,10))
-    nPlots=3*100
-    subplot(nPlots+11)
-    for ii in range(nnWTANeurons):
-        plot(statemonWTA.t/ms, statemonWTA.Vm[ii]/mV, label='v')       
-    #ylim([Vr/mV-30,Vt/mV+10])
-    xlabel('Time [ms]')
-    ylabel('V (mV)')
-    subplot(nPlots+12)
-    for ii in range(nnWTANeurons):
-        plot(statemonWTA.t/ms, statemonWTA.Ii[ii]/pA, label='Ii')
-    xlabel('Time [ms]')
-    ylabel('Ii (pA)')
-    subplot(nPlots+13)
-    for ii in range(nnWTANeurons):
-        plot(statemonWTA.t/ms, statemonWTA.Ie[ii]/pA, label='Ie')
-    xlabel('Time [ms]')
-    ylabel('Ie (pA)')
-    #fig.savefig('fig/'+name+'_States.png', dpi=300)
+    if statemonWTA is not False:  
+        fig = figure(figsize=(8,10))
+        nPlots=3*100
+        subplot(nPlots+11)
+        for ii in range(nnWTANeurons):
+            plot(statemonWTA.t/ms, statemonWTA.Vm[ii]/mV, label='v')       
+        #ylim([Vr/mV-30,Vt/mV+10])
+        xlabel('Time [ms]')
+        ylabel('V (mV)')
+        subplot(nPlots+12)
+        for ii in range(nnWTANeurons):
+            plot(statemonWTA.t/ms, statemonWTA.Ii[ii]/pA, label='Ii')
+        xlabel('Time [ms]')
+        ylabel('Ii (pA)')
+        subplot(nPlots+13)
+        for ii in range(nnWTANeurons):
+            plot(statemonWTA.t/ms, statemonWTA.Ie[ii]/pA, label='Ie')
+        xlabel('Time [ms]')
+        ylabel('Ie (pA)')
+        #fig.savefig('fig/'+name+'_States.png', dpi=300)
     
-    if plot2d and False:
-        fig = figure()
-        ax = fig.gca(projection='3d')
-        yp=spikemonWTA.t/ms
-        xp=np.mod(spikemonWTA.i,nWTANeurons)
-        zp=floor(spikemonWTA.i/nWTANeurons)
-        ax.scatter(xp,yp,zp)
-        xlim([0,nWTANeurons])
-        ylim([0,duration/ms])
-        ax.set_zlim(0,nWTANeurons)
-        #fig.savefig('fig/'+name+'_3d.png')
     return
 
 
@@ -115,7 +105,7 @@ def plotWTATiles(name,duration,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCo
         axarr[i//nCol,np.mod(i,nCol)].grid(True,linestyle='-')
         axarr[i//nCol,np.mod(i,nCol)].autoscale(False)
         if len(tilecolors) > 1:
-            axarr[i//nCol,np.mod(i,nCol)].set_axis_bgcolor(tilecolors[int(np.floor(i/2))])
+            axarr[i//nCol,np.mod(i,nCol)].set_axis_bgcolor(tilecolors[i])
         #axarr[i//nCol,np.mod(i,nCol)].imshow(log10(hist2d),cmap=plt.cm.hot,clim=(0,log10(1000)))
         axarr[i//nCol,np.mod(i,nCol)].imshow(hist2d,cmap=plt.cm.jet,clim=(0,300))
     if not savepath:

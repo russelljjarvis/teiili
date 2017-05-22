@@ -20,16 +20,17 @@ import struct
 
 def printStates(briangroup):
     states = briangroup.get_states()
-    print ('\n') 
+    print ('\n')
     print ('-_-_-_-_-_-_-_')
     print(briangroup.name)
     print('list of states and first value:')
     for key in states.keys():
-        if states[key].size>1:
+        if states[key].size > 1:
             print (key, states[key][1])
         else:
             print (key, states[key])
     print ('----------')
+
 
 def setParams(briangroup, params, ndargs=None, debug=False):
     for par in params:
@@ -45,13 +46,13 @@ def setParams(briangroup, params, ndargs=None, debug=False):
     if debug:
         # This fails with synapses coming from SpikeGenerator groups, unidentified bug?
         states = briangroup.get_states()
-        print ('\n' )
+        print ('\n')
         print ('-_-_-_-_-_-_-_', '\n', 'Parameters set')
         print(briangroup.name)
         print('List of first value of each parameter:')
         for key in states.keys():
             if key in params:
-                if states[key].size>1:
+                if states[key].size > 1:
                     print (key, states[key][1])
                 else:
                     print (key, states[key])
@@ -74,53 +75,59 @@ def ind2xy(ind, n2dNeurons):
     return ret
 
 # function that calculates distance in 2D field from 2 1D indices
+
+
 @implementation('numpy', discard_units=True)
-@check_units(i=1,j=1,n2dNeurons=1,result=1)
-def fdist2d(i,j,n2dNeurons):
-    #return sqrt((np.mod(i,n2dNeurons)-np.mod(j,n2dNeurons))**2+(np.floor_divide(i,n2dNeurons)-np.floor_divide(j,n2dNeurons))**2)
-    #print(i)
-    #print(j)
-    #print(n2dNeurons)
-    (ix,iy) = ind2xy(i,n2dNeurons)
-    (jx,jy) = ind2xy(j,n2dNeurons)
-    return np.sqrt((ix-jx)**2+(iy-jy)**2)
+@check_units(i=1, j=1, n2dNeurons=1, result=1)
+def fdist2d(i, j, n2dNeurons):
+    # return sqrt((np.mod(i,n2dNeurons)-np.mod(j,n2dNeurons))**2+(np.floor_divide(i,n2dNeurons)-np.floor_divide(j,n2dNeurons))**2)
+    # print(i)
+    # print(j)
+    # print(n2dNeurons)
+    (ix, iy) = ind2xy(i, n2dNeurons)
+    (jx, jy) = ind2xy(j, n2dNeurons)
+    return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 
 # function that calculates 1D "mexican hat" kernel
 @implementation('numpy', discard_units=True)
-@check_units(i=1,j=1,sigm=1,result=1)
-def fkernel1d(i,j,sigm):
+@check_units(i=1, j=1, sigm=1, result=1)
+def fkernel1d(i, j, sigm):
     "function that calculates 1D kernel"
-    #res = exp(-((i-j)**2)/(2*sigm**2)) # gaussian, not normalized
-    x = i-j
-    exponent = -(x**2)/(2*sigm**2)
-    res = (1+2*exponent)*exp(exponent ) # mexican hat, not normalized
+    # res = exp(-((i-j)**2)/(2*sigm**2)) # gaussian, not normalized
+    x = i - j
+    exponent = -(x**2) / (2 * sigm**2)
+    res = (1 + 2 * exponent) * exp(exponent)  # mexican hat, not normalized
     return res
 
 # function that calculates 1D gaussian kernel
+
+
 @implementation('numpy', discard_units=True)
-@check_units(i=1,j=1,sigm=1,result=1)
-def fkernelgauss1d(i,j,sigm):
+@check_units(i=1, j=1, sigm=1, result=1)
+def fkernelgauss1d(i, j, sigm):
     "function that calculates 1D kernel"
-    res = exp(-((i-j)**2)/(2*sigm**2)) # gaussian, not normalized
+    res = exp(-((i - j)**2) / (2 * sigm**2))  # gaussian, not normalized
     return res
 
 
 # function that calculates 2D kernel
 @implementation('numpy', discard_units=True)
-@check_units(i=1,j=1,sigm=1,n2dNeurons=1,result=1)
-def fkernel2d(i,j,sigm,n2dNeurons):
+@check_units(i=1, j=1, sigm=1, n2dNeurons=1, result=1)
+def fkernel2d(i, j, sigm, n2dNeurons):
     "function that calculates 2D kernel"
     # exponent = -(fdist(i,j,n2dNeurons)**2)/(2*sigm**2) #alternative
-    (ix,iy) = ind2xy(i,n2dNeurons)
-    (jx,jy) = ind2xy(j,n2dNeurons)
-    x = ix-jx
-    y = iy-jy
-    exponent = -(x**2+y**2)/(2*sigm**2)
-    res = (1+exponent) * exp(exponent) #mexican hat / negative Laplacian of Gaussian #not normalized
+    (ix, iy) = ind2xy(i, n2dNeurons)
+    (jx, jy) = ind2xy(j, n2dNeurons)
+    x = ix - jx
+    y = iy - jy
+    exponent = -(x**2 + y**2) / (2 * sigm**2)
+    res = (1 + exponent) * exp(exponent)  # mexican hat / negative Laplacian of Gaussian #not normalized
     return res
 
 # from Brian2 Equations class
+
+
 def replaceEqVar(eq, varname, replacement, debug=False):
     "replaces variables in equations like brian 2, helper for replaceConstants"
     if isinstance(replacement, str):
@@ -275,6 +282,7 @@ Since Brian2 is only able to build 1D neuron population this script transforms i
 The ind2px function are useful to plot recorded spikes in the same coordinate system to compare the original events as proided by the DVS
 '''
 
+
 def aedat2numpy(datafile='/tmp/aerout.dat', length=0, version="aedat", debug=0, camera='DVS128'):
     """
     load AER data file and parse these properties of AE events:
@@ -384,6 +392,7 @@ def aedat2numpy(datafile='/tmp/aerout.dat', length=0, version="aedat", debug=0, 
     Events[3, :] = pol
     return Events
 
+
 def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True):
     '''
     Input:
@@ -397,7 +406,8 @@ def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True)
     '''
     if eventDirectory is not None:
         assert type(eventDirectory) == str, 'eventDirectory must be a string'
-        assert eventDirectory[-4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
+        assert eventDirectory[
+            -4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
         Events = np.load(eventDirectory)
     if Events is not None:
         assert eventDirectory is None, 'Either you specify a path to load Events using eventDirectory. Or you pass the event numpy directly. NOT Both.'

@@ -675,21 +675,21 @@ def KernelsSynapses(tau=None,omega=None,sigma_gaussian=None,kernel=None,debug=Fa
 
     Author: Karla Burelo
     Date: 25.03.2017
+	
+	alpha synapse changed by Alpha on 06.07.2017 (w-->max EPSC)
     '''
     arguments = dict(locals())
 
-
-
-
+	# in the alpha snyapse, w detemines the maximal amplitude of an EPSC
     model_alpha_fm = '''
             w : amp
             tau: second
             omega: 1/second
             sigma_gaussian : second
-            dI_alpha/dt  = -I_alpha/tau+w*exp(-t_spike/tau)/tau: amp (clock-driven)
+            dI_alpha/dt  = -I_alpha/tau+w*exp(1-t_spike/tau)/tau: amp (clock-driven)
             dt_spike/dt = 1 : second (clock-driven)
             Iin_ex_post = I_alpha : amp (summed)
-            '''
+            '''	
     model_resonant_fm= '''
             w : amp
             tau: second

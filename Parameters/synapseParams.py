@@ -11,7 +11,7 @@ Created on 17.12.2016
 
 from brian2 import *
 
-fusiDefault = { "w_plus" : 0.2,
+fusiSyn_default = { "w_plus" : 0.2,
                 "w_minus": 0.2, 
                 "theta_upl" : 180 *mV,
                 "theta_uph" : 1*volt,  
@@ -31,6 +31,18 @@ fusiDefault = { "w_plus" : 0.2,
                 "taugIe" : 5 *ms,
                 "EIe" : 60.0 *mV} #maybe not good default params, just placeholder!
 
+simpleSyn_default = {
+                "tau" : 5 *ms,
+                "Iw"  : 1 *nA}
+
+revSyn_default = {"gIe" : 0 *nS,
+                "gIi" : 0 *nS,
+                "taugIe" : 5 *ms,
+                "taugIi" : 6 *ms,
+                "EIe" : 60.0 *mV,
+                "EIi" : -90.0  *mV,
+                "gWe" : 7 *nS,
+                "gWi" : -3 *nS}
 
 fusiMemristor = { 
                 "Iwca" : 0.25 *pA,
@@ -67,18 +79,7 @@ DefaultTeacherSynapseP = {
                 "taut" : 5 *msecond,
                 "Iw_t"  : 1.0 *namp}
 
-simpleSyndefault = {
-                "tau" : 5 *ms,
-                "Iw"  : 1 *nA}
 
-revSyndefault = {"gIe" : 0 *nS,
-                "gIi" : 0 *nS,
-                "taugIe" : 5 *ms,
-                "taugIi" : 6 *ms,
-                "EIe" : 60.0 *mV,
-                "EIi" : -90.0  *mV,
-                "gWe" : 7 *nS,
-                "gWi" : -3 *nS}
 
 Braderfusi = { 
                 "Iwca" : 0.25 *pA,

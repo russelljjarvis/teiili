@@ -17,10 +17,8 @@ def printeqDict(eqDict):
     print( '-------------')
 
 
-def ExpAdaptIF(numIe = 1, numIi = 1, C=None,gL=None,EL=None,VT=None,DeltaT=None, 
-    tauwad=None,a=None,b=None,Vr=None,debug=False):
+def ExpAdaptIF(numInputs = 1,debug=False):
     '''
-    !!! This Neuron needs a synapse that uses (summed) and should net be used until a bug in Brian2 is fixed
     Brette, Gerstner 2005 Exponential adaptive IF model
     see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
     @return: a dictionary of keyword arguments for NeuronGroup()
@@ -30,6 +28,7 @@ def ExpAdaptIF(numIe = 1, numIi = 1, C=None,gL=None,EL=None,VT=None,DeltaT=None,
     neurongroup = NeuronGroup(nNeurons, **eqDict , refractory = 2*ms, method='euler',name='groupname')
     tools.setParams(neurongroup , equationParams.gerstnerExpAIFdefaultregular)
     @param: 
+    numInputs                         # number of input currents (>0) (they are just numbered: Ie, Ie2, Ie3, ...)
     C : farad (constant)              # membrane capacitance
     gL : siemens (constant)           # leak conductance
     EL : volt (constant)              # leak reversal potential
@@ -60,12 +59,13 @@ def ExpAdaptIF(numIe = 1, numIi = 1, C=None,gL=None,EL=None,VT=None,DeltaT=None,
     Vr : volt (constant)              # reset potential
     """
     # add additional input currents (if you have several input currents)
-    Iesline = ["Ie" + str(i) + " : amp" for i in range(numIe) if i > 0]
-    Iisline = ["Ii" + str(i) + " : amp" for i in range(numIi) if i > 0]
-    modelEq = modelEq + "\n".join(Iesline) + "\n".join(Iisline)  
-    Ies = ["+ Ie" + str(i) + " " for i in range(numIe) if i > 0]
-    Iis = ["+ Ii" + str(i) + " " for i in range(numIi) if i > 0]
-    modelEq = modelEq + "\nIin = Ii + Ie " + "".join(Ies) + "".join(Iis) + " : amp"
+    Ies = ["+ Ie" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
+    Iis = ["+ Ii" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
+    modelEq = modelEq + "Iin = Ii + Ie " + "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
+    Iesline = ["    Ie" + str(i) + " : amp" for i in range(1,numInputs+1) if i > 1]
+    Iisline = ["    Ii" + str(i) + " : amp" for i in range(1,numInputs+1)if i > 1]
+    modelEq = modelEq + "\n".join(Iesline) +"\n" + "\n".join(Iisline)  
+
     
     thresholdEq = "Vm > (VT + 5 * DeltaT)"
     

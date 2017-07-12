@@ -7,27 +7,26 @@ can be used as inspiration for unit test of new neuron equations
 @author: Alpha
 '''
 
-import matplotlib
+#import matplotlib
 import matplotlib.pyplot as plt
+from brian2 import ms,mV,pA,Network,prefs,SpikeGeneratorGroup,NeuronGroup, \
+                   Synapses,SpikeMonitor,StateMonitor,figure, plot,show,xlabel,ylabel
 from brian2 import *
 import numpy as np
 import time
-#from NCSBrian2Lib.neuronEquations import ExpAdaptIF
-import sys
-from os import path
-sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
-from NCSBrian2Lib.neuronEquations import ExpAdaptIFrev as neuronEq
-from NCSBrian2Lib.synapseEquations import fusiSynV as synapseEq # reversalSynV as synapseEq
-from NCSBrian2Lib.tools import setParams
+#import sys
+#from os import path
+#sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+from NCSBrian2Lib.neuronEquations import ExpAdaptIF as neuronEq
+from NCSBrian2Lib.synapseEquations import simpleSyn as synapseEq # reversalSynV as synapseEq
 from NCSBrian2Lib.Parameters.neuronParams import gerstnerExpAIFdefaultregular as neuronPar
-from NCSBrian2Lib.Parameters.synapseParams import fusiDefault as synapsePar # revSyndefault as synapsePar
+from NCSBrian2Lib.Parameters.synapseParams import simpleSyn_default as synapsePar # revSyndefault as synapsePar
 from NCSBrian2Lib.tools import setParams, fkernel1d, printStates
 
 prefs.codegen.target = "numpy" 
 
-#VT1 = -49*mV
-#eqsDict = ExpAdaptIF(tauwad = 120*ms,DeltaT=3*mV,VT='VT1',debug=True)
-eqsDict, args = neuronEq(debug=True)
+
+eqsDict = neuronEq(debug=True)
 
 testNet = Network()
 
@@ -59,7 +58,7 @@ setParams(synInpSeqe ,synapsePar)
 #setParams(synInpSeqe ,fusiDefault, debug=True)
 setParams(gSeqGroup ,neuronPar)
 
-synInpSeqe.w = 1
+#synInpSeqe.w = 1
 
 spikemonSeq = SpikeMonitor(gSeqGroup)
 spikemonSeqInp = SpikeMonitor(gSeqInpGroup)
@@ -117,6 +116,6 @@ plot(statemonSeq.t/ms, statemonSeq.Ii[1]/pA, label='Ii')
 plot(statemonSeq.t/ms, statemonSeq.Ii[2]/pA, label='Ii')
 xlabel('Time [ms]')
 ylabel('Ii (pA)')
-plt.show()#savefig('fig/figSeqIe.png')
+show()#savefig('fig/figSeqIe.png')
 
 

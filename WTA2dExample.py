@@ -4,12 +4,14 @@ Created 03.2017
 '''
 import numpy as np
 import time
+from brian2 import ms, Network, show, prefs
 from brian2 import *
-from os import path
-sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
-from NCSBrian2Lib.BasicBuildingBlocks.WTA import gen2dWTA,gen1dWTA
+#from os import path
+#import sys
+#sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+from NCSBrian2Lib.BasicBuildingBlocks.WTA import gen2dWTA#,gen1dWTA
 from NCSBrian2Lib.Plotting.WTAplot import plotWTA,plotWTATiles
-from tools import xy2ind
+from NCSBrian2Lib.tools import xy2ind
 
 #===============================================================================
 prefs.codegen.target = "numpy" 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from brian2 import *
-from NCSBrian2Lib.tools import *
+#from NCSBrian2Lib.tools import *
 
 def printeqDict(eqDict):
     print( 'Model equation:')
@@ -15,141 +15,6 @@ def printeqDict(eqDict):
         print( eqDict['on_post'])
         print( '-------------')
 
-
-def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
-                          theta_pl=None, theta_pu=None, R_min=None, R0_d=None, R0_p=None,
-                          alpha_d=None, alpha_p=None, beta_p=None, C_p=None, D_p=None, D_d=None,
-                          Iw_fm=None, Iwca=None, tau_fm=None, prop=None, debug=False, plastic=True):
-
-    '''
-    Fusi memristive synapses
-
-    if plastic=True the resistance update is executed
-
-    Memristive update is based on empirical data fitting by CNR Milano on HfO thin film device.
-    Depression equation: R / R0 = 1 + alpha_d * ln(n)
-    Potentiation equation: R / R0 = 1 + alpha_p * (n**-beta_p - 1)
-
-    R0 initial resistance, n pulses nember, alpha_d, alpha_p and beta_p fitting parameters
-
-    Equations for neurons group in input must have defined Imem and Ica variables
-
-    All parameters below are added to the synapse model as internal variable, thus for each synapse
-    in the network a parameter is defined. Imemthr refers to the post-synaptic neuron.
-
-    Inputs:
-        Parameters:         Required parameters for fusi learning and memristive fit
-                            Parameters required:
-                            Imemthr:    spiking threshold for neurons
-                            theta_dl:   calcium lower threshold for depression
-                            theta_du:   calcium upper threshold for depression
-                            theta_pl:   calcium lower threshold for potentiation
-                            theta_pu:   calcium upper threshold for potentiation
-                            R_min:      Minimum resistance reachable for the device
-                            R_max:      Maximum resistance reachable for the device
-                            R0_d:       Pristine resistance for depression (average on experimental data)
-                            R0_p:       Pristine resistance for potentiation (average on experimental data)
-                            alpha_d:    fitting parameter depression
-                            alpha_p:    fitting parameter potentiation
-                            beta_p:     fitting parameter potentiation
-                            C_p:        fitting parameter of value dispersion for potentiation
-                            D_p:        fitting parameter of value dispersion for potentiation
-                            D_d:        fitting parameter of value dispersion for depression
-                            Iw_fm:      synaptic gain
-                            tau_fm:     synaptic time constant
-                            Iwca:       Calcium current gain
-                            count_up:   Auxiliary variable counting LTD transitions
-                            count_down: Auxiliary variable counting LTP transitions
-
-    Output:
-        Dictionary containing model, on_pre and on_post strings for synapses group, dictionary of non-default parameters
-
-    Author: Daniele Conti
-    Author mail: daniele.conti@polito.it
-    Date: 16.12.2016
-    '''
-
-    arguments = dict(locals())
-
-    model_fm = '''
-            w : 1
-            dIsyn / dt = - Isyn / tau_fm : amp (event-driven)
-            Iin_ex_post = Isyn : amp (summed)
-            Iwca : amp (constant)
-            theta_pl : amp (constant)
-            theta_dl : amp (constant)
-            theta_pu : amp (constant)
-            theta_du : amp (constant)
-            Imemthr : amp (constant)
-            Iw_fm : amp (constant)
-            tau_fm : second (constant)
-            prop : 1 (constant)
-            R_min : 1 (constant)
-            R_max : 1 (constant)
-            R0_d : 1 (constant)
-            R0_p : 1 (constant)
-            alpha_p : 1 (constant)
-            alpha_d : 1 (constant)
-            beta_p : 1 (constant)
-            C_p : 1 (constant)
-            D_p : 1 (constant)
-            D_d : 1 (constant)
-            count_up : 1 (constant)
-            count_down : 1 (constant)
-            '''
-    on_pre_fm = '''
-            up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
-            down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
-
-            Rt0 = prop * R_min * R_max / (w * R_max + prop * R_min) # equivalent to w = prop * (R_min / R - R_min / R_max)  Rt0 = prop * R_min / w
-            Gt0 = 1. / Rt0
-
-            sigma_p = C_p / (alpha_p / (Rt0 - R0_p + alpha_p)) + D_p
-            noiseRnewp = sigma_p * randn()               #draw variability for the new memristor resitance
-            C = alpha_p / (Rt0 - R0_p + alpha_p) + 1
-            C = C * (C > 0) + 1000 * (1 - (C > 0))       #check in order to avoid negative value, 1000 is arbitrary value and tuned further
-            B = (alpha_p * beta_p) / C**(1 + 1 / beta_p) #if C negative the denominator becomes imaginary
-            R_new_p = Rt0 - B + noiseRnewp
-
-            R_new_d = Rt0 + alpha_d * e**( - (Rt0 - R0_d) / (alpha_d) + 1) + D_d * randn()
-
-            G_new_d = 1. / R_new_d
-            G_new_p = 1. / R_new_p
-
-            delta_G_p = G_new_p - Gt0
-            delta_G_d = G_new_d - Gt0
-
-            delta_pot = prop * R_min * delta_G_p
-            delta_dep = prop * R_min * delta_G_d
-            w += up * delta_pot + down * delta_dep
-            count_up += up
-            count_down += down
-
-            w = clip(w,0,1)
-            Isyn += Iw_fm * w
-            '''
-
-    on_pre_fm_nonplastic='''
-            Isyn += Iw_fm * w
-            '''
-
-    on_post_fm = '''Ica += Iwca'''
-
-    del(arguments['debug'])
-    del(arguments['plastic'])
-
-    if plastic:
-        SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
-    else:
-        SynDict = dict(model=model_fm, on_pre=on_pre_fm_nonplastic, on_post=on_post_fm)
-
-    if debug:
-        printeqDict(SynDict)
-
-    return SynDict, arguments
-
-    #synapses group is called as follow:
-    #S = Synapses(populations1, population2, method = 'euler', **SynDict)
 
 def DefaultExcitatorySynapses(tauexc=None, Iw_exc=None, debug=False):
 
@@ -172,7 +37,6 @@ def DefaultExcitatorySynapses(tauexc=None, Iw_exc=None, debug=False):
                  w : 1
                  dIsyn_exc/dt = (-Isyn_exc) / tauexc : amp (event-driven)
                  Iin_ex_post = Isyn_exc : amp (summed)
-
                  tauexc : second (constant)
                  Iw_exc : amp (constant)
                  '''
@@ -211,7 +75,6 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=True, debug
               w:1
               dIsyn_inh/dt = (-Isyn_inh) / tauinhib : amp (event-driven)
               Iin_inh_post = Isyn_inh : amp (summed)
-
               tauinhib : second (constant)
               Iw_inh : amp (constant)
               '''
@@ -222,7 +85,6 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=True, debug
     on_pre_inh_out='''
               Isyn_inh -= Iw_inh * w
               '''
-
 
     del(arguments['debug'])
     del(arguments['inh2output'])
@@ -236,8 +98,6 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=True, debug
         printeqDict(SynDict)
 
     return SynDict, arguments
-
-
 
 
 def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
@@ -261,7 +121,6 @@ def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
                  w : 1
                  dIsyn_teach/dt = (-Isyn_teach) / taut : amp (event-driven)
                  Iin_teach_post = Isyn_teach : amp (summed)
-
                  taut : second (constant)
                  Iw_t : amp (constant)
                  '''
@@ -278,68 +137,37 @@ def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
 
     return SynDict, arguments
 
-def simpleSynS(tau=None, Iw=None, debug=False):
+def simpleSyn(inputNumber = 1, debug=False):
     '''
-    !!! This Synapse uses (summed) and should net be used until a bug in Brian2 is fixed
     simple excitatory or inhibitory Synapse with instantaneous rise - exponential decay kernel
-    Input Parameters:
-        tau:    synapse time constant
-        Iw:     synaptic gain
-
-    Author: Alpha
+    Input Arguments:
+        Ie can be Ie or Ie2, Ie3, ... (if there are several Inputs to a post neuron)
+        Ii can be Ii or Ii2, ...
+        debug determines if the equation is printed
     Date: 03.2017
     '''
     arguments = dict(locals())
     del(arguments['debug'])
 
 
-    modelEq='''dIe_syn/dt = (-Ie_syn) / tau : amp (clock-driven)
-dIi_syn/dt = (-Ii_syn) / tau : amp (clock-driven)
-Ie_post = Ie_syn : amp  (summed)
-Ii_post = Ii_syn : amp  (summed)
-weight : 1
-tau : second (constant)
-Iw : amp (constant)
-'''
+    modelEq='''
+            dIe_syn/dt = (-Ie_syn) / tau : amp (clock-driven)
+            dIi_syn/dt = (-Ii_syn) / tau : amp (clock-driven)
+            {Ie}_post = Ie_syn : amp  (summed)
+            {Ii}_post = Ii_syn : amp  (summed)
+            weight : 1
+            tau : second (constant) # synapse time constant
+            Iw : amp (constant)     # synaptic gain
+            '''
+    if inputNumber > 1 :
+        modelEq = modelEq.format(Ie="Ie"+str(inputNumber),Ii="Ii"+str(inputNumber))        
+    else:
+        modelEq = modelEq.format(Ie="Ie",Ii="Ii")  
+    
     preEq='''
-Ie_syn += Iw * weight *(weight>0)
-Ii_syn += Iw * weight * (weight<0)
-'''
-
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    preEq = replaceConstants(preEq,arguments,debug)
-
-    SynDict = dict(model=modelEq, on_pre=preEq)
-
-    if debug:
-        print('arguments of ExpAdaptIF: \n' + str(arguments))
-        printeqDict(SynDict)
-
-    return SynDict
-
-def simpleSyn(Iw=None, debug=False):
-    '''
-    simple excitatory or inhibitory Synapse
-    Input Parameters:
-        Iw:     synaptic gain
-
-    Author: Alpha
-    Date: 03.2017
-    '''
-    arguments = dict(locals())
-    del(arguments['debug'])
-
-
-    modelEq='''weight : 1
-Iw : amp (constant)
-'''
-    preEq='''
-Ie_post += Iw * weight *(weight>0)
-Ii_post += Iw * weight * (weight<0)
-'''
-
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    preEq = replaceConstants(preEq,arguments,debug)
+        Ie_syn += Iw * weight *(weight>0)
+        Ii_syn += Iw * weight * (weight<0)
+        '''
 
     SynDict = dict(model=modelEq, on_pre=preEq)
 
@@ -350,19 +178,14 @@ Ii_post += Iw * weight * (weight<0)
     return SynDict
 
 
-
-def reversalSynV_S(taugIe = None, taugIi = None, EIe = None, EIi = None, gWe = None, gWi = None, debug=False):
+def reversalSynV(inputNumber = 1, debug=False):
     '''
-    !!! This Synapse uses (summed) and should net be used until a bug in Brian2 is fixed
     Synapse with reversal potential and instantaneous rise - exponential decay kernel
     for voltage based neurons!
-    Input Parameters:
-        taugIe : second (constant)        # excitatory input time constant
-        taugIi : second (constant)        # inhibitory input time constant
-        EIe : volt (constant)             # excitatory reversal potential
-        EIi : volt (constant)             # inhibitory reversal potential
-        gWe : siemens (constant)          # excitatory synaptic gain
-        gWi : siemens (constant)          # inhibitory synaptic gain
+    Input Arguments:
+        Ie can be Ie or Ie2, Ie3, ... (if there are several Inputs to a post neuron)
+        Ii can be Ii or Ii2, ...
+        debug determines if the equation is printed
     Author: Alpha Renner
     Date: 03.2017
     '''
@@ -370,61 +193,30 @@ def reversalSynV_S(taugIe = None, taugIi = None, EIe = None, EIi = None, gWe = N
     arguments = dict(locals())
     del(arguments['debug'])
 
-    preEq = '''gIe += weight*gWe*(weight>0)
-gIi += weight*gWi*(weight<0)
-'''
+    preEq = '''
+            gIe += weight*gWe*(weight>0)
+            gIi += weight*gWi*(weight<0)
+            '''
 
-    modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # exponential decay
-dgIi/dt = (-gIi/taugIi) : siemens  (clock-driven) # exponential decay
-Iesyn = gIe*(EIe - Vm_post) :amp
-Iisyn = gIi*(EIi - Vm_post) :amp
-taugIe : second (constant)        # excitatory input time constant
-taugIi : second (constant)        # inhibitory input time constant
-EIe : volt (constant)             # excitatory reversal potential
-EIi : volt (constant)             # inhibitory reversal potential
-gWe : siemens (constant)          # excitatory synaptic gain
-gWi : siemens (constant)          # inhibitory synaptic gain
-weight : 1 (constant)
-Vm_post : volt
-Ie_post = Iesyn : amp  (summed)
-Ii_post = Iisyn : amp  (summed)
-'''
-
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    preEq = replaceConstants(preEq,arguments,debug)
-
-    SynDict = dict(model=modelEq, on_pre=preEq)
-
-    if debug:
-        print('arguments of reversalSynV: \n' + str(arguments))
-        printeqDict(SynDict)
-
-    return SynDict
-
-def reversalSynV(gWe = None, gWi = None, debug=False):
-    '''
-    for voltage based neurons!
-    Input Parameters:
-        gWe : siemens (constant)          # excitatory synaptic gain
-        gWi : siemens (constant)          # inhibitory synaptic gain
-    Author: Alpha Renner
-    Date: 03.2017
-    '''
-
-    arguments = dict(locals())
-    del(arguments['debug'])
-
-    preEq = '''gIe_post += weight*gWe*(weight>0)
-gIi_post += weight*gWi*(weight<0)
-'''
-
-    modelEq = '''gWe : siemens (constant)          # excitatory synaptic gain
-gWi : siemens (constant)          # inhibitory synaptic gain
-weight : 1 (constant)
-'''
-
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    preEq = replaceConstants(preEq,arguments,debug)
+    modelEq = '''
+            dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # exponential decay
+            dgIi/dt = (-gIi/taugIi) : siemens  (clock-driven) # exponential decay
+            Iesyn = gIe*(EIe - Vm_post) :amp
+            Iisyn = gIi*(EIi - Vm_post) :amp
+            taugIe : second (constant)        # excitatory input time constant
+            taugIi : second (constant)        # inhibitory input time constant
+            EIe : volt (constant)             # excitatory reversal potential
+            EIi : volt (constant)             # inhibitory reversal potential
+            gWe : siemens (constant)          # excitatory synaptic gain
+            gWi : siemens (constant)          # inhibitory synaptic gain
+            weight : 1 (constant)
+            {Ie}_post = Iesyn : amp  (summed)
+            {Ii}_post = Iisyn : amp  (summed)
+                '''
+    if inputNumber > 1 :
+        modelEq = modelEq.format(Ie="Ie"+str(inputNumber),Ii="Ii"+str(inputNumber))        
+    else:
+        modelEq = modelEq.format(Ie="Ie",Ii="Ii")
 
     SynDict = dict(model=modelEq, on_pre=preEq)
 
@@ -436,9 +228,7 @@ weight : 1 (constant)
 
 
 
-def fusiSynV_S(taugIe = None, EIe = None, w_plus = None, w_minus= None,
-            theta_upl= None, theta_uph= None, theta_downh = None, theta_downl = None,
-            theta_V = None, alpha = None, beta = None, tau_ca = None, w_ca = None, debug = False):
+def fusiSynV(inputNumber = 1, debug = False):
     ''' This is not yet completely tested and might contain bugs.
     '''
     arguments = dict(locals())
@@ -464,74 +254,25 @@ def fusiSynV_S(taugIe = None, EIe = None, w_plus = None, w_minus= None,
                 w_max: 1 (constant)
                 theta_w: 1 (constant)
                 w_ca: volt (constant)            # Calcium weight
-                Vm_post : volt
-                Ie_post = Ies : amp  (summed)
+                {Ie}_post = Ies : amp  (summed)
                 weight: 1 (constant)
-    '''
+                '''
+    if inputNumber > 1 :
+        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    else:
+        modelEq = modelEq.format(Ie="Ie")
+        
     preEq = '''
-        gIe += floor(w+0.5) * weight *  nS
-        w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   *(w<w_max)
-        w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) *(w>w_min)
-    '''  #  check if correct
-    postEq = '''Ca += w_ca '''
-
-
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    preEq   = replaceConstants(preEq,arguments,debug)
-    postEq  = replaceConstants(postEq,arguments,debug)
+            gIe += floor(w+0.5) * weight *  nS
+            w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   *(w<w_max)
+            w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) *(w>w_min)
+            '''  #  check if correct
+    postEq = '''Ca += w_ca'''
 
     SynDict = dict(model=modelEq, on_pre=preEq, on_post=postEq)
 
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
-        printeqDict(SynDict)
-
-    return SynDict
-
-
-def fusiSynV(w_plus = None, w_minus= None,theta_upl= None, theta_uph= None, theta_downh = None, theta_downl = None,
-            theta_V = None, alpha = None, beta = None, tau_ca = None, w_ca = None,gWe = None, debug = False):
-    ''' This is not yet completely tested and might contain bugs.
-    '''
-    arguments = dict(locals())
-    del(arguments['debug'])
-
-    modelEq = '''dCa/dt = (-Ca/tau_ca) : volt (clock-driven) #Calcium Potential
-dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (clock-driven) # internal weight variable
-w_plus: 1 (constant)
-w_minus: 1 (constant)
-theta_upl: volt (constant)
-theta_uph: volt (constant)
-theta_downh: volt (constant)
-theta_downl: volt (constant)
-theta_V: volt (constant)
-alpha: 1/second (constant)
-beta: 1/second (constant)
-tau_ca: second (constant)
-w_min: 1 (constant)
-w_max: 1 (constant)
-theta_w: 1 (constant)
-w_ca: volt (constant)            # Calcium weight
-Vm_post : volt
-gWe : siemens (constant)          # excitatory synaptic gain
-weight: 1 (constant)
-'''
-
-    preEq  = '''gIe_post += floor(w+0.5) * weight * gWe
-w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   *(w<w_max)
-w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) *(w>w_min)
-''' #  check if correct
-    postEq  = '''Ca += w_ca '''
-
-
-    modelEq = replaceConstants(modelEq,arguments,debug)
-    preEq   = replaceConstants(preEq,arguments,debug)
-    postEq  = replaceConstants(postEq,arguments,debug)
-
-    SynDict = dict(model=modelEq, on_pre=preEq, on_post=postEq)
-
-    if debug:
-        print('arguments of fusiSynV: \n' + str(arguments))
         printeqDict(SynDict)
 
     return SynDict
@@ -751,7 +492,7 @@ def KernelsSynapses(tau=None,omega=None,sigma_gaussian=None,kernel=None,debug=Fa
     return SynDict, arguments
 
 def SiliconSynapses(Vth=None, Vtau=None, Vdd=None,Csyn=None, Io=None,
-                    Ut=None, kn=None,kp=None, duration=None):
+                    Ut=None, kn=None,kp=None, duration=None,debug=False):
 
     '''
     Comments:
@@ -803,3 +544,138 @@ def SiliconSynapses(Vth=None, Vtau=None, Vdd=None,Csyn=None, Io=None,
     #synapses group is called as follow:
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
 
+
+def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
+                          theta_pl=None, theta_pu=None, R_min=None, R0_d=None, R0_p=None,
+                          alpha_d=None, alpha_p=None, beta_p=None, C_p=None, D_p=None, D_d=None,
+                          Iw_fm=None, Iwca=None, tau_fm=None, prop=None, debug=False, plastic=True):
+
+    '''
+    Fusi memristive synapses
+
+    if plastic=True the resistance update is executed
+
+    Memristive update is based on empirical data fitting by CNR Milano on HfO thin film device.
+    Depression equation: R / R0 = 1 + alpha_d * ln(n)
+    Potentiation equation: R / R0 = 1 + alpha_p * (n**-beta_p - 1)
+
+    R0 initial resistance, n pulses nember, alpha_d, alpha_p and beta_p fitting parameters
+
+    Equations for neurons group in input must have defined Imem and Ica variables
+
+    All parameters below are added to the synapse model as internal variable, thus for each synapse
+    in the network a parameter is defined. Imemthr refers to the post-synaptic neuron.
+
+    Inputs:
+        Parameters:         Required parameters for fusi learning and memristive fit
+                            Parameters required:
+                            Imemthr:    spiking threshold for neurons
+                            theta_dl:   calcium lower threshold for depression
+                            theta_du:   calcium upper threshold for depression
+                            theta_pl:   calcium lower threshold for potentiation
+                            theta_pu:   calcium upper threshold for potentiation
+                            R_min:      Minimum resistance reachable for the device
+                            R_max:      Maximum resistance reachable for the device
+                            R0_d:       Pristine resistance for depression (average on experimental data)
+                            R0_p:       Pristine resistance for potentiation (average on experimental data)
+                            alpha_d:    fitting parameter depression
+                            alpha_p:    fitting parameter potentiation
+                            beta_p:     fitting parameter potentiation
+                            C_p:        fitting parameter of value dispersion for potentiation
+                            D_p:        fitting parameter of value dispersion for potentiation
+                            D_d:        fitting parameter of value dispersion for depression
+                            Iw_fm:      synaptic gain
+                            tau_fm:     synaptic time constant
+                            Iwca:       Calcium current gain
+                            count_up:   Auxiliary variable counting LTD transitions
+                            count_down: Auxiliary variable counting LTP transitions
+
+    Output:
+        Dictionary containing model, on_pre and on_post strings for synapses group, dictionary of non-default parameters
+
+    Author: Daniele Conti
+    Author mail: daniele.conti@polito.it
+    Date: 16.12.2016
+    '''
+
+    arguments = dict(locals())
+
+    model_fm = '''
+            w : 1
+            dIsyn / dt = - Isyn / tau_fm : amp (event-driven)
+            Iin_ex_post = Isyn : amp (summed)
+            Iwca : amp (constant)
+            theta_pl : amp (constant)
+            theta_dl : amp (constant)
+            theta_pu : amp (constant)
+            theta_du : amp (constant)
+            Imemthr : amp (constant)
+            Iw_fm : amp (constant)
+            tau_fm : second (constant)
+            prop : 1 (constant)
+            R_min : 1 (constant)
+            R_max : 1 (constant)
+            R0_d : 1 (constant)
+            R0_p : 1 (constant)
+            alpha_p : 1 (constant)
+            alpha_d : 1 (constant)
+            beta_p : 1 (constant)
+            C_p : 1 (constant)
+            D_p : 1 (constant)
+            D_d : 1 (constant)
+            count_up : 1 (constant)
+            count_down : 1 (constant)
+            '''
+    on_pre_fm = '''
+            up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
+            down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
+
+            Rt0 = prop * R_min * R_max / (w * R_max + prop * R_min) # equivalent to w = prop * (R_min / R - R_min / R_max)  Rt0 = prop * R_min / w
+            Gt0 = 1. / Rt0
+
+            sigma_p = C_p / (alpha_p / (Rt0 - R0_p + alpha_p)) + D_p
+            noiseRnewp = sigma_p * randn()               #draw variability for the new memristor resitance
+            C = alpha_p / (Rt0 - R0_p + alpha_p) + 1
+            C = C * (C > 0) + 1000 * (1 - (C > 0))       #check in order to avoid negative value, 1000 is arbitrary value and tuned further
+            B = (alpha_p * beta_p) / C**(1 + 1 / beta_p) #if C negative the denominator becomes imaginary
+            R_new_p = Rt0 - B + noiseRnewp
+
+            R_new_d = Rt0 + alpha_d * e**( - (Rt0 - R0_d) / (alpha_d) + 1) + D_d * randn()
+
+            G_new_d = 1. / R_new_d
+            G_new_p = 1. / R_new_p
+
+            delta_G_p = G_new_p - Gt0
+            delta_G_d = G_new_d - Gt0
+
+            delta_pot = prop * R_min * delta_G_p
+            delta_dep = prop * R_min * delta_G_d
+            w += up * delta_pot + down * delta_dep
+            count_up += up
+            count_down += down
+
+            w = clip(w,0,1)
+            Isyn += Iw_fm * w
+            '''
+
+    on_pre_fm_nonplastic='''
+            Isyn += Iw_fm * w
+            '''
+
+    on_post_fm = '''Ica += Iwca'''
+
+    del(arguments['debug'])
+    del(arguments['plastic'])
+
+    if plastic:
+        SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
+    else:
+        SynDict = dict(model=model_fm, on_pre=on_pre_fm_nonplastic, on_post=on_post_fm)
+
+    if debug:
+        printeqDict(SynDict)
+
+    return SynDict, arguments
+
+    #synapses group is called as follow:
+    #S = Synapses(populations1, population2, method = 'euler', **SynDict)

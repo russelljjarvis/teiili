@@ -128,51 +128,6 @@ def fkernel2d(i, j, sigm, n2dNeurons):
 # from Brian2 Equations class
 
 
-def replaceEqVar(eq, varname, replacement, debug=False):
-    "replaces variables in equations like brian 2, helper for replaceConstants"
-    if isinstance(replacement, str):
-        # replace the name with another name
-        eq = eq.replace(varname, replacement)
-    # else:
-    #     # replace the name with a value
-    #     eq = eq.replace(varname, '(' + repr(replacement) + ')')
-    #     eq = eq.replace(varname, replacement)
-    else:
-        # replace the name with a value
-        eq = eq.replace(varname, '(' + repr(replacement) + ')')
-
-    if debug:
-        print('replaced ' + str(varname) + ' by ' + str(repr(replacement)))
-    return (eq)
-
-
-def replaceConstants(equation, replacedict, debug=False):
-    "replaces constants in equations and deletes the respective definitions, given a dictionary of replacements"
-    for key in replacedict:
-        if replacedict[key] is not None:
-            # delete line from model eq
-            neweq = ''
-            firstline = True
-            for line in equation.splitlines():
-                if not all([kw in line for kw in [key, '(constant)']]):
-                    # This checks which lines contain a constant and delete the line
-                    # such a line must contain the word constant and a ';'
-                    # If someone makes more spaces before the ':' or makes comments that fulfill the conditions, this might fail!
-                    if not (all([kw in line for kw in [key + " :", '(constant)']]) or
-                            all([kw in line for kw in [key + ":", '(constant)']])):
-                        if firstline:
-                            neweq = neweq + line
-                            firstline = False
-                        else:
-                            neweq = neweq + '\n' + line
-                else:
-                    print('deleted the line "' + line + '" from equation constants as it contains ' + str(key))
-            equation = neweq
-            # replace variable in eq with constant
-            equation = replaceEqVar(equation, key, replacedict[key], debug)
-    return (equation)
-
-
 class GenerateWeightMatrix():
     '''
     This module will provide different types of standard weight matrix for 2 neuron population

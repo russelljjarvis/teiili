@@ -16,144 +16,8 @@ def printeqDict(eqDict):
     print( eqDict['reset'])
     print( '-------------')
 
-def ExpAdaptIFrev(taugIe = None, taugIi = None, EIe = None, EIi = None, C=None,gL=None,EL=None,VT=None,DeltaT=None, 
-    tauwad=None,a=None,b=None,Vr=None,debug=False):
-    '''
-    Brette, Gerstner 2005 Exponential adaptive IF model
-    see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
-    @return: a dictionary of keyword arguments for NeuronGroup()
-    @note: you have to set parameters for each NeuronGroup after its creation, synapses have to increment the correct variable: Ie or Ii
-    Neuron group is created and prepared as follows:
-    eqDict = neuronEquatioons.ExpAdaptIF()
-    neurongroup = NeuronGroup(nNeurons, **eqDict , refractory = 2*ms, method='euler',name='groupname')
-    tools.setParams(neurongroup , equationParams.gerstnerExpAIFdefaultregular)
-    @param: 
-    C : farad (constant)              # membrane capacitance
-    gL : siemens (constant)           # leak conductance
-    EL : volt (constant)              # leak reversal potential
-    VT : volt (constant)              # threshold
-    DeltaT : volt (constant)          # slope factor
-    tauwad : second (constant)        # adaptation time constant
-    a : siemens (constant)            # adaptation decay parameter
-    b : amp (constant)                # adaptation weight
-    Vr : volt (constant)              # reset potential
-    sigma : amp (constant)            # noise parameter
-    Iconst : amp (constant)           # constant input current
-    taugIe : second (constant)        # excitatory input time constant
-    taugIi : second (constant)        # inhibitory input time constant
-    EIe : volt (constant)             # excitatory reversal potential
-    EIi : volt (constant)             # inhibitory reversal potential
-    '''
-    
-    arguments = dict(locals())
-    del(arguments['debug'])
-    
-    modelEq = """
-    dVm/dt = (gL*(EL - Vm) + gL*DeltaT*exp((Vm - VT)/DeltaT) + Iin - wad + sigma*(second**0.5)*xi )/C  : volt (unless refractory)
-    dwad/dt = (a*(Vm - EL) - wad)/tauwad : amp
-    Iin = Ii + Ie + Iconst : amp
-    dgIe/dt = (-gIe/taugIe) : siemens # exponential decay
-    dgIi/dt = (-gIi/taugIi) : siemens # exponential decay
-    Ie = gIe*(EIe - Vm) :amp
-    Ii = gIi*(EIi - Vm) :amp
-    sigma : amp (constant)            # noise parameter
-    Iconst : amp (constant)           # constant input current
-    taugIe : second (constant)        # excitatory input time constant
-    taugIi : second (constant)        # inhibitory input time constant
-    EIe : volt (constant)             # excitatory reversal potential
-    EIi : volt (constant)             # inhibitory reversal potential               
-    C : farad (constant)              # membrane capacitance
-    gL : siemens (constant)           # leak conductance
-    EL : volt (constant)              # leak reversal potential
-    VT : volt (constant)              # threshold
-    DeltaT : volt (constant)          # slope factor
-    tauwad : second (constant)        # adaptation time constant
-    a : siemens (constant)            # adaptation decay parameter
-    b : amp (constant)                # adaptation weight
-    Vr : volt (constant)              # reset potential
-    """
 
-
-    thresholdEq = "Vm > (VT + 5 * DeltaT)"
-    
-    resetEq = "Vm = Vr; wad += b"
-    
-    if debug:
-        print('arguments of ExpAdaptIF: \n' + str(arguments))
-    
-    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
-
-    if debug:
-        printeqDict(eqDict)
-    
-    return eqDict, arguments
-
-
-def ExpAdaptIF(C=None,gL=None,EL=None,VT=None,DeltaT=None, 
-    tauwad=None,a=None,b=None,Vr=None,taue=None,taui=None,debug=False):
-    '''
-    Brette, Gerstner 2005 Exponential adaptive IF model
-    see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
-    @return: a dictionary of keyword arguments for NeuronGroup()
-    @note: you have to set parameters for each NeuronGroup after its creation, synapses have to increment the correct variable: Ie or Ii
-    Neuron group is created and prepared as follows:
-    eqDict = neuronEquatioons.ExpAdaptIF()
-    neurongroup = NeuronGroup(nNeurons, **eqDict , refractory = 2*ms, method='euler',name='groupname')
-    tools.setParams(neurongroup , equationParams.gerstnerExpAIFdefaultregular)
-    @param: 
-    C : farad (constant)              # membrane capacitance
-    gL : siemens (constant)           # leak conductance
-    EL : volt (constant)              # leak reversal potential
-    VT : volt (constant)              # threshold
-    DeltaT : volt (constant)          # slope factor
-    tauwad : second (constant)        # adaptation time constant
-    a : siemens (constant)            # adaptation decay parameter
-    b : amp (constant)                # adaptation weight
-    Vr : volt (constant)              # reset potential
-    taue : second (constant)
-    taui : second (constant)
-    '''
-    
-    arguments = dict(locals())
-    del(arguments['debug'])
-    
-    modelEq = """
-    dVm/dt = (gL*(EL - Vm) + gL*DeltaT*exp((Vm - VT)/DeltaT) + Iin - wad)/C : volt (unless refractory)
-    dwad/dt = (a*(Vm - EL) - wad)/tauwad : amp
-    Iin = Ii + Ie : amp
-    dIe/dt = (-Ie) / taue : amp (clock-driven) # exc input current
-    dIi/dt = (-Ii) / taui : amp (clock-driven) # inh input current
-    taue : second (constant)
-    taui : second (constant)                
-    C : farad (constant)              # membrane capacitance
-    gL : siemens (constant)           # leak conductance
-    EL : volt (constant)              # leak reversal potential
-    VT : volt (constant)              # threshold
-    DeltaT : volt (constant)          # slope factor
-    tauwad : second (constant)        # adaptation time constant
-    a : siemens (constant)            # adaptation decay parameter
-    b : amp (constant)                # adaptation weight
-    Vr : volt (constant)              # reset potential
-    """
-
-
-    thresholdEq = "Vm > (VT + 5 * DeltaT)"
-    
-    resetEq = "Vm = Vr; wad += b"
-    
-    if debug:
-        print('arguments of ExpAdaptIF: \n' + str(arguments))
-    
-    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
-
-    if debug:
-        printeqDict(eqDict)
-    
-    return eqDict, arguments
-
-
-
-def ExpAdaptIF_S(C=None,gL=None,EL=None,VT=None,DeltaT=None, 
+def ExpAdaptIF(numIe = 1, numIi = 1, C=None,gL=None,EL=None,VT=None,DeltaT=None, 
     tauwad=None,a=None,b=None,Vr=None,debug=False):
     '''
     !!! This Neuron needs a synapse that uses (summed) and should net be used until a bug in Brian2 is fixed
@@ -183,7 +47,6 @@ def ExpAdaptIF_S(C=None,gL=None,EL=None,VT=None,DeltaT=None,
     modelEq = """
     dVm/dt = (gL*(EL - Vm) + gL*DeltaT*exp((Vm - VT)/DeltaT) + Iin - wad)/C : volt (unless refractory)
     dwad/dt = (a*(Vm - EL) - wad)/tauwad : amp
-    Iin = Ii + Ie : amp
     Ii : amp                          # inh input current
     Ie : amp                          # exc input current
     C : farad (constant)              # membrane capacitance
@@ -196,6 +59,13 @@ def ExpAdaptIF_S(C=None,gL=None,EL=None,VT=None,DeltaT=None,
     b : amp (constant)                # adaptation weight
     Vr : volt (constant)              # reset potential
     """
+    # add additional input currents (if you have several input currents)
+    Iesline = ["Ie" + str(i) + " : amp" for i in range(numIe) if i > 0]
+    Iisline = ["Ii" + str(i) + " : amp" for i in range(numIi) if i > 0]
+    modelEq = modelEq + "\n".join(Iesline) + "\n".join(Iisline)  
+    Ies = ["+ Ie" + str(i) + " " for i in range(numIe) if i > 0]
+    Iis = ["+ Ii" + str(i) + " " for i in range(numIi) if i > 0]
+    modelEq = modelEq + "\nIin = Ii + Ie " + "".join(Ies) + "".join(Iis) + " : amp"
     
     thresholdEq = "Vm > (VT + 5 * DeltaT)"
     
@@ -209,7 +79,7 @@ def ExpAdaptIF_S(C=None,gL=None,EL=None,VT=None,DeltaT=None,
     if debug:
         printeqDict(eqDict)
     
-    return eqDict, arguments
+    return eqDict
 
 
 def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, tauca=None, debug=False, Excitatory=True):
@@ -286,6 +156,6 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, ta
     if debug:
         printeqDict(eqDict)
     
-    return eqDict, arguments
+    return eqDict
 
 

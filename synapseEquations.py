@@ -234,11 +234,11 @@ def fusiSynV(inputNumber = 1, debug = False):
     arguments = dict(locals())
     del(arguments['debug'])
 
-    modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # instantaneous rise, exponential decay
+    modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven)               # instantaneous rise, exponential decay
                 Ies = gIe*(EIe - Vm_post) :amp
-                taugIe : second (constant)        # excitatory input time constant
-                EIe : volt (constant)             # excitatory reversal potential
-                dCa/dt = (-Ca/tau_ca) : volt (clock-driven) #Calcium Potential
+                taugIe : second (constant)                                      # excitatory input time constant
+                EIe : volt (constant)                                           # excitatory reversal potential
+                dCa/dt = (-Ca/tau_ca) : volt (event-driven)                     #Calcium Potential
                 dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (clock-driven) # internal weight variable
                 w_plus: 1 (constant)
                 w_minus: 1 (constant)
@@ -253,7 +253,7 @@ def fusiSynV(inputNumber = 1, debug = False):
                 w_min: 1 (constant)
                 w_max: 1 (constant)
                 theta_w: 1 (constant)
-                w_ca: volt (constant)            # Calcium weight
+                w_ca: volt (constant)                                           # Calcium weight
                 {Ie}_post = Ies : amp  (summed)
                 weight: 1 (constant)
                 '''
@@ -264,8 +264,9 @@ def fusiSynV(inputNumber = 1, debug = False):
         
     preEq = '''
             gIe += floor(w+0.5) * weight *  nS
-            w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   *(w<w_max)
-            w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) *(w>w_min)
+            w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   #*(w<w_max)
+            w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) #*(w>w_min)
+            w = clip(w,w_min,w_max)
             '''  #  check if correct
     postEq = '''Ca += w_ca'''
 
@@ -679,3 +680,53 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
 
     #synapses group is called as follow:
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
+
+
+
+def StdpSynV(inputNumber = 1, debug = False):
+    ''' This an STDP synapse adapted from http://brian2.readthedocs.io/en/latest/examples/synapses.STDP.html
+        after Song, Miller and Abbott (2000) and Song and Abbott (2001)
+    '''
+
+    arguments = dict(locals())
+    del(arguments['debug'])
+
+    modelEq = '''
+            dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # instantaneous rise, exponential decay
+            Ies = gIe*(EIe - Vm_post) :amp
+            taugIe : second (constant)        # excitatory input time constant
+            EIe : volt (constant)             # excitatory reversal potential
+            w : 1
+            weight: 1 (constant)
+            dApre/dt = -Apre / taupre : 1 (event-driven)
+            dApost/dt = -Apost / taupost : 1 (event-driven)
+            w_max: 1 (constant)
+            taupre : second (constant)
+            taupost : second (constant)
+            diffApre : 1 (constant)
+            Q_diffAPrePost : 1 (constant)
+            {Ie}_post = Ies : amp  (summed)
+            '''
+
+    if inputNumber > 1 :
+        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    else:
+        modelEq = modelEq.format(Ie="Ie")
+        
+    preEq = '''
+            gIe += w * weight * nS
+            Apre += diffApre*w_max
+            w = clip(w + Apost, 0, w_max)
+            '''
+    postEq = '''
+            Apost += -diffApre * (taupre / taupost) * Q_diffAPrePost * w_max
+            w = clip(w + Apre, 0, w_max)
+            '''
+
+    SynDict = dict(model=modelEq, on_pre=preEq, on_post=postEq)
+
+    if debug:
+        print('arguments of ExpAdaptIF: \n' + str(arguments))
+        printeqDict(SynDict)
+
+    return SynDict

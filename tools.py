@@ -125,9 +125,23 @@ def fkernel2d(i, j, sigm, n2dNeurons):
     res = (1 + exponent) * exp(exponent)  # mexican hat / negative Laplacian of Gaussian #not normalized
     return res
 
+
+def spikemon2firingRate(spikemon,fromT=0*ms,toT="max"):
+    spiketimes = (spikemon.t/ms)
+    if len(spiketimes)==0:
+        return 0
+    if toT == "max":
+        toT = max(spikemon.t/ms)
+    spiketimes = spiketimes[spiketimes<=toT]
+    spiketimes = spiketimes[spiketimes>=fromT/ms]
+    spiketimes = spiketimes/1000
+    if len(spiketimes)==0:
+        return 0
+    return(mean(1/diff(spiketimes)))
+
+
+
 # from Brian2 Equations class
-
-
 class GenerateWeightMatrix():
     '''
     This module will provide different types of standard weight matrix for 2 neuron population

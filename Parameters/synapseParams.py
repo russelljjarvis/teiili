@@ -44,6 +44,19 @@ revSyn_default = {"gIe" : 0 *nS,
                 "gWe" : 7 *nS,
                 "gWi" : -3 *nS}
 
+StdpSyn_default = {"gIe"    : 0 *nS,
+                "taugIe"    : 5 *ms,
+                "EIe"       : 60.0 *mV,
+                "gWe"       : 7 *nS,
+                "taupre"    : 20*ms,
+                "taupost"   : 20*ms,
+                "w_max"     : 0.01,
+                "diffApre"  : 0.01,
+                "Q_diffAPrePost" : 1.05,
+                "weight" : 1,
+                "w" : 0.005}         
+
+
 fusiMemristor = { 
                 "Iwca" : 0.25 *pA,
                 "theta_pl" : 4 *pA,

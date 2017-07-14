@@ -3,7 +3,7 @@
 from brian2 import *
 #from NCSBrian2Lib.tools import *
 
-def printeqDict(eqDict):
+def printSynDict(eqDict):
     print( 'Model equation:')
     print( eqDict['model'])
     print( '-_-_-_-_-_-_-_-')
@@ -34,22 +34,22 @@ def DefaultExcitatorySynapses(tauexc=None, Iw_exc=None, debug=False):
     arguments = dict(locals())
 
     model_ex='''
-                 w : 1
-                 dIsyn_exc/dt = (-Isyn_exc) / tauexc : amp (event-driven)
-                 Iin_ex_post = Isyn_exc : amp (summed)
-                 tauexc : second (constant)
-                 Iw_exc : amp (constant)
-                 '''
+             w : 1
+             dIsyn_exc/dt = (-Isyn_exc) / tauexc : amp (event-driven)
+             Iin_ex_post = Isyn_exc : amp (summed)
+             tauexc : second (constant)
+             Iw_exc : amp (constant)
+             '''
     on_pre_ex='''
-                 Isyn_exc += Iw_exc * w
-                 '''
+             Isyn_exc += Iw_exc * w
+             '''
 
     del(arguments['debug'])
 
     SynDict = dict(model=model_ex, on_pre=on_pre_ex)
 
     if debug:
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict, arguments
 
@@ -95,7 +95,7 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=True, debug
         SynDict = dict(model=model_inh, on_pre=on_pre_inh)
 
     if debug:
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict, arguments
 
@@ -133,7 +133,7 @@ def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
     SynDict = dict(model=model_teach, on_pre=on_pre_teach)
 
     if debug:
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict, arguments
 
@@ -173,7 +173,7 @@ def simpleSyn(inputNumber = 1, debug=False):
 
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict
 
@@ -212,7 +212,7 @@ def reversalSynV(inputNumber = 1, debug=False):
             weight : 1 (constant)
             {Ie}_post = Iesyn : amp  (summed)
             {Ii}_post = Iisyn : amp  (summed)
-                '''
+            '''
     if inputNumber > 1 :
         modelEq = modelEq.format(Ie="Ie"+str(inputNumber),Ii="Ii"+str(inputNumber))        
     else:
@@ -222,7 +222,7 @@ def reversalSynV(inputNumber = 1, debug=False):
 
     if debug:
         print('arguments of reversalSynV: \n' + str(arguments))
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict
 
@@ -274,7 +274,7 @@ def fusiSynV(inputNumber = 1, debug = False):
 
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict
 
@@ -369,7 +369,7 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
         SynDict = dict(model=model_fm, on_pre=on_pre_fm_nonplastic, on_post=on_post_fm)
 
     if debug:
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict, arguments
 
@@ -488,7 +488,7 @@ def KernelsSynapses(tau=None,omega=None,sigma_gaussian=None,kernel=None,debug=Fa
         print('Kernel not specified in the function')
 
     if debug:
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict, arguments
 
@@ -538,7 +538,7 @@ def SiliconSynapses(Vth=None, Vtau=None, Vdd=None,Csyn=None, Io=None,
     SynDict = dict(model=model_fm, on_pre=on_pre_fm)
 
     if debug:
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict, arguments
 
@@ -674,7 +674,7 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
         SynDict = dict(model=model_fm, on_pre=on_pre_fm_nonplastic, on_post=on_post_fm)
 
     if debug:
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict, arguments
 
@@ -727,6 +727,6 @@ def StdpSynV(inputNumber = 1, debug = False):
 
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
-        printeqDict(SynDict)
+        printSynDict(SynDict)
 
     return SynDict

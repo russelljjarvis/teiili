@@ -73,11 +73,25 @@ def xy2ind(x, y, n2dNeurons):
 def ind2xy(ind, n2dNeurons):
     ret = (np.mod(np.round(ind), n2dNeurons), np.floor_divide(np.round(ind), n2dNeurons))
     return ret
+# Example of indices for n2dNeurons=3
+#__0_1_2
+#0|0 1 2
+#1|3 4 5
+#2|6 7 8 
+#so ind2xy(4,3) --> (1,1)
 
 # function that calculates distance in 2D field from 2 1D indices
 
-
-@implementation('numpy', discard_units=True)
+#@implementation('numpy', discard_units=True)
+@implementation('cpp', '''
+    double fdist2d(int i, int j, int n2dNeurons) {
+    int ix = i % n2dNeurons;
+    int iy = i / n2dNeurons;
+    int jx = j % n2dNeurons;
+    int jy = j / n2dNeurons;
+    return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
+    }
+     ''')
 @check_units(i=1, j=1, n2dNeurons=1, result=1)
 def fdist2d(i, j, n2dNeurons):
     # return sqrt((np.mod(i,n2dNeurons)-np.mod(j,n2dNeurons))**2+(np.floor_divide(i,n2dNeurons)-np.floor_divide(j,n2dNeurons))**2)
@@ -87,7 +101,6 @@ def fdist2d(i, j, n2dNeurons):
     (ix, iy) = ind2xy(i, n2dNeurons)
     (jx, jy) = ind2xy(j, n2dNeurons)
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
-
 
 # function that calculates 1D "mexican hat" kernel
 @implementation('numpy', discard_units=True)
@@ -112,16 +125,28 @@ def fkernelgauss1d(i, j, sigm):
 
 
 # function that calculates 2D kernel
-@implementation('numpy', discard_units=True)
-@check_units(i=1, j=1, sigm=1, n2dNeurons=1, result=1)
-def fkernel2d(i, j, sigm, n2dNeurons):
+#@implementation('numpy', discard_units=True)
+@implementation('cpp', '''
+    double fkernel2d(int i, int j, double gsigma, int n2dNeurons) {
+    int ix = i % n2dNeurons;
+    int iy = i / n2dNeurons;
+    int jx = j % n2dNeurons;
+    int jy = j / n2dNeurons;
+    int x = ix - jx;
+    int y = iy - jy;
+    double exponent = -(pow(x,2) + pow(y,2)) / (2 * pow(gsigma,2));
+    return ((1 + exponent) * exp(exponent));
+    }
+     ''')
+@check_units(i=1, j=1, gsigma=1, n2dNeurons=1, result=1)
+def fkernel2d(i, j, gsigma, n2dNeurons):
     "function that calculates 2D kernel"
-    # exponent = -(fdist(i,j,n2dNeurons)**2)/(2*sigm**2) #alternative
+    # exponent = -(fdist(i,j,n2dNeurons)**2)/(2*gsigma**2) #alternative
     (ix, iy) = ind2xy(i, n2dNeurons)
     (jx, jy) = ind2xy(j, n2dNeurons)
     x = ix - jx
     y = iy - jy
-    exponent = -(x**2 + y**2) / (2 * sigm**2)
+    exponent = -(x**2 + y**2) / (2 * gsigma**2)
     res = (1 + exponent) * exp(exponent)  # mexican hat / negative Laplacian of Gaussian #not normalized
     return res
 

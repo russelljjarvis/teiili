@@ -24,10 +24,6 @@ gerstnerExpAIFdefaultregular = {"C"      : 281   *pF,
                                 "sigma" : 0 *pA,
                                 "taue"  : 5 *ms,
                                 "taui"  : 6 *ms,
-                                "gIe"   : 0 *nS,
-                                "gIi"   : 0 *nS,
-                                "taugIe": 5 *ms,
-                                "taugIi": 6 *ms,
                                 "EIe"   : 60.0 *mV,
                                 "EIi"   : -90.0  *mV}
                

@@ -110,21 +110,22 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
              synEquation=reversalSynV, synParameters=revSyn_default,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, w_lat=1,
              rpWTA=2.5 * ms, rpInh=1 * ms,
-             sigm=2.5, nNeurons=20, nInhNeurons=3, cutoff=9, monitor=True, debug=False):
+             sigm=2.5, nNeurons=20, nInhNeurons=3, cutoff=9, monitor=True, numWtaInputs = 1, debug=False):
     "generates a new WTA"
 
     # time measurement
     start = time.clock()
     
     # Each synapse going to the same NeuronGroup needs a new number
-    neuronEqsDict       = neuronEquation(numInputs = 3,debug=debug)
+    neuronEqsDict_WTA   = neuronEquation(numInputs = 3+numWtaInputs,debug=debug)
+    neuronEqsDict_Inh   = neuronEquation(numInputs = 1,debug=debug)
     synEqsDict1         = synEquation(inputNumber=1,debug=debug)
     synEqsDict2         = synEquation(inputNumber=2,debug=debug)
     synEqsDict3         = synEquation(inputNumber=3,debug=debug)
         
     # create neuron groups
-    gWTAGroup = NeuronGroup(nNeurons**2, refractory=rpWTA, method='euler', name='g' + groupname, **neuronEqsDict)
-    gWTAInhGroup = NeuronGroup(nInhNeurons, refractory=rpInh, method='euler', name='g' + groupname + '_Inh', **neuronEqsDict)
+    gWTAGroup = NeuronGroup(nNeurons**2, refractory=rpWTA, method='euler', name='g' + groupname, **neuronEqsDict_WTA)
+    gWTAInhGroup = NeuronGroup(nInhNeurons, refractory=rpInh, method='euler', name='g' + groupname + '_Inh', **neuronEqsDict_Inh)
 
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms

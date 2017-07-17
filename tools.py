@@ -118,7 +118,12 @@ def fkernel1d(i, j, sigm):
 # function that calculates 1D gaussian kernel
 
 
-@implementation('numpy', discard_units=True)
+#@implementation('numpy', discard_units=True)
+@implementation('cpp', '''
+    double fkernelgauss1d(int i, int j, double gsigma) {
+    return exp(-(pow((i - j),2)) / (2 * pow(sigm,2)));
+    }
+     ''')
 @check_units(i=1, j=1, sigm=1, result=1)
 def fkernelgauss1d(i, j, sigm):
     "function that calculates 1D kernel"

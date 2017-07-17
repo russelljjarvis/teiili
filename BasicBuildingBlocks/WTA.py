@@ -32,21 +32,23 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
              synEquation=reversalSynV, synParameters=revSyn_default,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, w_lat=0.5,
              rpWTA=3 * ms, rpInh=1 * ms,
-             sigm=3, nNeurons=64, nInhNeurons=5, cutoff=10, monitor=True, debug=False):
-    "generates a new WTA"
+             sigm=3, nNeurons=64, nInhNeurons=5, cutoff=10, numWtaInputs = 1, monitor=True, debug=False):
+    '''generates a new WTA
+    3 inputs to the gWTAGroup are used, so start with 4 for additional inputs'''
 
     # time measurement
     start = time.clock()
 
     # Each synapse going to the same NeuronGroup needs a new number
-    neuronEqsDict       = neuronEquation(numInputs = 3,debug=debug)
+    neuronEqsDict_WTA   = neuronEquation(numInputs = 3+numWtaInputs,debug=debug)
+    neuronEqsDict_Inh   = neuronEquation(numInputs = 1,debug=debug)
     synEqsDict1         = synEquation(inputNumber=1,debug=debug)
     synEqsDict2         = synEquation(inputNumber=2,debug=debug)
     synEqsDict3         = synEquation(inputNumber=3,debug=debug)
         
     # create neuron groups
-    gWTAGroup = NeuronGroup(nNeurons, refractory=rpWTA, method='euler', name='g' + groupname, **neuronEqsDict)
-    gWTAInhGroup = NeuronGroup(nInhNeurons, refractory=rpInh, method='euler', name='g' + groupname + '_Inh', **neuronEqsDict)
+    gWTAGroup = NeuronGroup(nNeurons, refractory=rpWTA, method='euler', name='g' + groupname, **neuronEqsDict_WTA)
+    gWTAInhGroup = NeuronGroup(nInhNeurons, refractory=rpInh, method='euler', name='g' + groupname + '_Inh', **neuronEqsDict_Inh)
 
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms
@@ -56,10 +58,11 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
 
     # printStates(gWTAInpGroup)
     # create synapses
-    synInpWTA1e = Synapses(gWTAInpGroup, gWTAGroup, method="euler", name='s' + groupname + '_Inpe', **synEqsDict1)
-    synWTAWTA1e = Synapses(gWTAGroup, gWTAGroup, method="euler", name='s' + groupname + '_e', **synEqsDict2)  # kernel function
-    synWTAInh1e = Synapses(gWTAGroup, gWTAInhGroup, method="euler", name='s' + groupname + '_Inhe', **synEqsDict1)
-    synInhWTA1i = Synapses(gWTAInhGroup, gWTAGroup, method="euler", name='s' + groupname + '_Inhi', **synEqsDict3)
+    synInpWTA1e = Synapses(gWTAInpGroup, gWTAGroup,     method="euler", name='s' + groupname + '_Inpe', **synEqsDict1)
+    synWTAWTA1e = Synapses(gWTAGroup,    gWTAGroup,     method="euler", name='s' + groupname + '_e',    **synEqsDict2)  # kernel function
+    synInhWTA1i = Synapses(gWTAInhGroup, gWTAGroup,     method="euler", name='s' + groupname + '_Inhi', **synEqsDict3)
+    synWTAInh1e = Synapses(gWTAGroup,    gWTAInhGroup,  method="euler", name='s' + groupname + '_Inhe', **synEqsDict1)
+
 
     # connect synapses
     synInpWTA1e.connect('i==j')
@@ -110,8 +113,10 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
              synEquation=reversalSynV, synParameters=revSyn_default,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, w_lat=1,
              rpWTA=2.5 * ms, rpInh=1 * ms,
-             sigm=2.5, nNeurons=20, nInhNeurons=3, cutoff=9, monitor=True, numWtaInputs = 1, debug=False):
-    "generates a new WTA"
+             sigm=2.5, nNeurons=20, nInhNeurons=3, cutoff=9, numWtaInputs = 1, monitor=True,  debug=False):
+    '''generates a new WTA
+    3 inputs to the gWTAGroup are used, so start with 4 for additional inputs'''
+
 
     # time measurement
     start = time.clock()

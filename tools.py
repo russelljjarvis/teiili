@@ -6,7 +6,7 @@ import tempfile
 import getpass
 import scipy as spv
 import struct
-
+import pandas as pd
 
 #===============================================================================
 # def setParams(neurongroup, params, debug=False):
@@ -492,3 +492,85 @@ def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True)
         return indices_on, ts_on
     elif return_off == True:
         return indices_off, ts_off
+    
+def DVScsv2numpy(datafile = 'tmp/aerout.csv', exp_name = 'Experiment', debug = False):
+    
+    """
+    load AER csv logfile and parse these properties of AE events:
+    - timestamps (in us),
+    - x,y-position [0..127]
+    - polarity (0/1)
+    @param datafile - path to the file to read
+    @param debug - 0 = silent, 1 (default) = print summary, >=2 = print all debug
+    @return (ts, xpos, ypos, pol) 4-tuple of lists containing data of all events;
+    """
+   
+    logfile = datafile
+
+    df = pd.read_csv(logfile, header=0)
+
+    df.dropna(inplace=True)
+            # Process timestamps: Start at zero
+    df['timestamp'] = df['timestamp'].astype(int)
+
+    # Safe raw input
+    df['x_raw'] = df['x']
+    df['y_raw'] = df['y']
+    x_list = []
+    y_list = []
+    time_list = []
+    pol_list = []
+    x_list = df['x_raw']
+    y_list = df['y_raw']
+    time_list = df['timestamp']
+    pol_list = df['pol']
+    timestep = time_list[0]
+
+    # Get new coordinates with more useful representation
+    #df['x'] = df['y_raw']
+    #df['y'] = 128 - df['x_raw']
+    #discard every third event
+    #new_ind = 0
+    #Events = np.zeros([4, len(df['timestamp'])/3])
+    Events_x = []
+    Events_y = []
+    Events_time = []
+    Events_pol = []
+    counter = 0
+    for j in range(len(df['timestamp'])):
+        if counter % 3 == 0:
+            if (timestep == time_list[j]):
+                #Events[0, new_ind] = x_list[j]
+                Events_x.append(x_list[j])
+                Events_y.append(y_list[j])
+                Events_time.append(time_list[j])
+                Events_pol.append(pol_list[j])
+                #new_ind += 1
+                timestep = time_list[j]
+            else:
+                counter += 1
+                timestep = time_list[j]
+        elif counter % 3 == 1:
+            if (timestep == time_list[j]):
+                continue
+            else:
+                counter += 1
+                timestep = time_list[j]
+        elif counter % 3 == 2:
+            if (timestep == time_list[j]):
+                continue
+            else:
+                counter+= 1
+                timestep = time_list[j]
+    Events = np.zeros([4, len(Events_time)])
+    Events[0, :] = Events_x
+    Events[1, :] = Events_y
+    Events[2, :] = Events_time
+    Events[3, :] = Events_pol
+    if debug == True:
+        print(Events[0, 0:10])
+        print(Events[1, 0:10])
+        print(Events[2, 0:10])
+        print(Events[3, 0:10])
+    return Events
+

@@ -25,7 +25,7 @@ def ExpAdaptIF(numInputs = 1,debug=False):
     dwad/dt = (a*(Vm - EL) - wad)/tauwad : amp
     Ii      : amp                         # inh input current
     Ie      : amp                         # exc input current
-    Iconst  : amp       (constant)        # constant input current
+    Iconst  : amp                         # constant input current
     C       : farad     (constant)        # membrane capacitance
     gL      : siemens   (constant)        # leak conductance
     EL      : volt      (constant)        # leak reversal potential
@@ -55,7 +55,7 @@ def ExpAdaptIF(numInputs = 1,debug=False):
 
     return eqDict
 
-def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, tauca=None, debug=False, Excitatory=True):
+def Silicon(numInputs = 1, debug=False, Excitatory=True):
     '''Silicon Neuron as in Chicca et al. 2014
     @return: a dictionary of keyword arguments for NeuronGroup()
     @note: you have to set parameters for each NeuronGroup after its creation, synapses have to increment the correct variable: Ie or Ii
@@ -83,10 +83,10 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, ta
     taum = Cmem * Ut / (kappa * Itau) : second
     tauahp = Cahp * Ut / (kappa * Itaua) : second
 
-    Iin = Iin_ex + Iin_inh + Iin_teach : amp
-    Iin_ex : amp
-    Iin_inh : amp
+    Ie : amp
+    Ii : amp
     Iin_teach : amp
+    Iconst  : amp      # constant input current
 
     mu = 0.25 * pA : amp
     sigma = 0.1 * pA : amp
@@ -113,6 +113,15 @@ def Silicon(Ispkthr=None, Ispkthr_inh=None, Ireset=None, Ith=None, Itau=None, ta
     Ith    : amp (constant)
     Itau   : amp (constant)
     """
+    # add additional input currents (if you have several input currents)
+    Ies = ["+ Ie" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
+    Iis = ["+ Ii" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
+    modelEq = modelEq + "Iin = Iconst + Iin_teach + Ii + Ie " + "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
+    Iesline = ["    Ie" + str(i) + " : amp" for i in range(1,numInputs+1) if i > 1]
+    Iisline = ["    Ii" + str(i) + " : amp" for i in range(1,numInputs+1)if i > 1]
+    modelEq = modelEq + "\n".join(Iesline) +"\n" + "\n".join(Iisline)  
+    
+    
     
     if Excitatory:
         thresholdEq = "Imem > Ispkthr"

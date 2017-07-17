@@ -1,3 +1,4 @@
+from brian2 import implementation,check_units,ms,exp,mean,diff
 from brian2 import *
 import numpy as np
 import os
@@ -45,6 +46,7 @@ def setParams(briangroup, params, ndargs=None, debug=False):
                 setattr(briangroup, par, params[par])
     if debug:
         # This fails with synapses coming from SpikeGenerator groups, unidentified bug?
+        # This does not work in standalone mode as values of state variables cannot be retrieveed before the simulation has been run
         states = briangroup.get_states()
         print ('\n')
         print ('-_-_-_-_-_-_-_', '\n', 'Parameters set')

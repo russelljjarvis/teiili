@@ -6,7 +6,7 @@ import tempfile
 import getpass
 import scipy as spv
 import struct
-
+import pandas as pd
 
 #===============================================================================
 # def setParams(neurongroup, params, debug=False):

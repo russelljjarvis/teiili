@@ -105,7 +105,8 @@ def plotWTATiles(name,duration,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCo
         axarr[i//nCol,np.mod(i,nCol)].grid(True,linestyle='-')
         axarr[i//nCol,np.mod(i,nCol)].autoscale(False)
         if len(tilecolors) > 1:
-            axarr[i//nCol,np.mod(i,nCol)].set_axis_bgcolor(tilecolors[i])
+            axarr[i//nCol,np.mod(i,nCol)].set_facecolor(tilecolors[i])
+            #axarr[i//nCol,np.mod(i,nCol)].set_axis_bgcolor(tilecolors[i])
         #axarr[i//nCol,np.mod(i,nCol)].imshow(log10(hist2d),cmap=plt.cm.hot,clim=(0,log10(1000)))
         axarr[i//nCol,np.mod(i,nCol)].imshow(hist2d,cmap=plt.cm.jet,clim=(0,300))
     if not savepath:

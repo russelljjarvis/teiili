@@ -16,7 +16,7 @@ def printSynDict(eqDict):
         print( '-------------')
 
 
-def DefaultExcitatorySynapses(tauexc=None, Iw_exc=None, debug=False):
+def DefaultExcitatorySynapses(inputNumber = 1, debug=False):
 
     '''
     Default Excitatory Synapse with exponentially decaying current in time
@@ -33,20 +33,24 @@ def DefaultExcitatorySynapses(tauexc=None, Iw_exc=None, debug=False):
     '''
     arguments = dict(locals())
 
-    model_ex='''
+    modelEq='''
              w : 1
              dIsyn_exc/dt = (-Isyn_exc) / tauexc : amp (event-driven)
-             Iin_ex_post = Isyn_exc : amp (summed)
+             {Ie}_post = Isyn_exc : amp (summed)
              tauexc : second (constant)
              Iw_exc : amp (constant)
              '''
+    if inputNumber > 1 :
+        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    else:
+        modelEq = modelEq.format(Ie="Ie")  
     on_pre_ex='''
              Isyn_exc += Iw_exc * w
              '''
 
     del(arguments['debug'])
 
-    SynDict = dict(model=model_ex, on_pre=on_pre_ex)
+    SynDict = dict(model=modelEq, on_pre=on_pre_ex)
 
     if debug:
         printSynDict(SynDict)
@@ -54,7 +58,7 @@ def DefaultExcitatorySynapses(tauexc=None, Iw_exc=None, debug=False):
     return SynDict, arguments
 
 
-def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=True, debug=False):
+def DefaultInhibitorySynapses(inputNumber = 1, inh2output=True, debug=False):
 
     '''
     Default Inhibitory Synapse with current decaying in time
@@ -71,13 +75,18 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=True, debug
     '''
     arguments = dict(locals())
 
-    model_inh='''
+    modelEq='''
               w:1
               dIsyn_inh/dt = (-Isyn_inh) / tauinhib : amp (event-driven)
-              Iin_inh_post = Isyn_inh : amp (summed)
+              {Ii}_post = Isyn_inh : amp (summed)
               tauinhib : second (constant)
               Iw_inh : amp (constant)
               '''
+    if inputNumber > 1 :
+        modelEq = modelEq.format(Ie="Ii"+str(inputNumber))        
+    else:
+        modelEq = modelEq.format(Ie="Ii")
+        
     on_pre_inh='''
               Isyn_inh += Iw_inh * w
               '''
@@ -90,9 +99,9 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=True, debug
     del(arguments['inh2output'])
 
     if inh2output:
-        SynDict = dict(model=model_inh, on_pre=on_pre_inh_out)
+        SynDict = dict(model=modelEq, on_pre=on_pre_inh_out)
     else:
-        SynDict = dict(model=model_inh, on_pre=on_pre_inh)
+        SynDict = dict(model=modelEq, on_pre=on_pre_inh)
 
     if debug:
         printSynDict(SynDict)
@@ -100,7 +109,7 @@ def DefaultInhibitorySynapses(tauinhib=None, Iw_inh=None, inh2output=True, debug
     return SynDict, arguments
 
 
-def DefaultTeacherSynapses(taut=None, Iw_t=None, debug=False):
+def DefaultTeacherSynapses(debug=False):
 
     '''
     Default Teacher Synapse with exponentially decaying current in time
@@ -278,9 +287,7 @@ def fusiSynV(inputNumber = 1, debug = False):
 
     return SynDict
 
-def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
-                       theta_pl=None, theta_pu=None,
-                       Iw_fm=None, Iwca=None, tau_fm=None, prop=None, debug=False, plastic=True):
+def BraderFusiSynapses(inputNumber = 1, debug=False, plastic=True):
 
     '''
     Fusi bistable synapses, cfr Brader et al 2007
@@ -321,11 +328,11 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
 
     arguments = dict(locals())
 
-    model_fm = '''
+    modelEq = '''
             dIsyn / dt = - Isyn / tau_fm : amp (event-driven)
             dw / dt = alpha * (w > wth) * (w < 1) - beta * (w <= wth) * (w > 0) : 1 (clock-driven)
 
-            Iin_ex_post = Isyn : amp (summed)
+            {Ie}_post = Isyn : amp (summed)
             Iwca : amp (constant)
             theta_pl : amp (constant)
             theta_dl : amp (constant)
@@ -342,6 +349,11 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             count_up : 1 (constant)
             count_down : 1 (constant)
             '''
+    if inputNumber > 1 :
+        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    else:
+        modelEq = modelEq.format(Ie="Ie")
+        
     on_pre_fm = '''
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
             down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
@@ -364,9 +376,9 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
     del(arguments['plastic'])
 
     if plastic:
-        SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
+        SynDict = dict(model=modelEq, on_pre=on_pre_fm, on_post=on_post_fm)
     else:
-        SynDict = dict(model=model_fm, on_pre=on_pre_fm_nonplastic, on_post=on_post_fm)
+        SynDict = dict(model=modelEq, on_pre=on_pre_fm_nonplastic, on_post=on_post_fm)
 
     if debug:
         printSynDict(SynDict)
@@ -376,7 +388,7 @@ def BraderFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
     #synapses group is called as follow:
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
 
-def KernelsSynapses(tau=None,omega=None,sigma_gaussian=None,kernel=None,debug=False):
+def KernelsSynapses(kernel='alpha',debug=False):
 
     '''
     Kernel Synapse function
@@ -474,7 +486,6 @@ def KernelsSynapses(tau=None,omega=None,sigma_gaussian=None,kernel=None,debug=Fa
     del(arguments['debug'])
     del(arguments['kernel'])
 
-    #model_fm = replaceConstants(model_fm, arguments, debug)
 
     if kernel == 'alpha':
         SynDict = dict(model=model_alpha_fm, on_pre=on_pre_fm)
@@ -485,7 +496,7 @@ def KernelsSynapses(tau=None,omega=None,sigma_gaussian=None,kernel=None,debug=Fa
     elif kernel == 'gaussian':
         SynDict = dict(model=model_gaussian_fm, on_pre=on_pre_gaussian_fm)
     else:
-        print('Kernel not specified in the function')
+        print('Kernel not correctly specified in the function, use: alpha, resonant, expdecay or gaussian')
 
     if debug:
         printSynDict(SynDict)
@@ -546,10 +557,7 @@ def SiliconSynapses(Vth=None, Vtau=None, Vdd=None,Csyn=None, Io=None,
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
 
 
-def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
-                          theta_pl=None, theta_pu=None, R_min=None, R0_d=None, R0_p=None,
-                          alpha_d=None, alpha_p=None, beta_p=None, C_p=None, D_p=None, D_d=None,
-                          Iw_fm=None, Iwca=None, tau_fm=None, prop=None, debug=False, plastic=True):
+def MemristiveFusiSynapses(inputNumber = 1, debug=False, plastic=True):
 
     '''
     Fusi memristive synapses
@@ -601,10 +609,10 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
 
     arguments = dict(locals())
 
-    model_fm = '''
+    modelEq = '''
             w : 1
             dIsyn / dt = - Isyn / tau_fm : amp (event-driven)
-            Iin_ex_post = Isyn : amp (summed)
+            {Ie}_post = Isyn : amp (summed)
             Iwca : amp (constant)
             theta_pl : amp (constant)
             theta_dl : amp (constant)
@@ -627,6 +635,11 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
             count_up : 1 (constant)
             count_down : 1 (constant)
             '''
+    if inputNumber > 1 :
+        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    else:
+        modelEq = modelEq.format(Ie="Ie")
+        
     on_pre_fm = '''
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
             down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
@@ -669,9 +682,9 @@ def MemristiveFusiSynapses(Imemthr=None, theta_dl=None, theta_du=None,
     del(arguments['plastic'])
 
     if plastic:
-        SynDict = dict(model=model_fm, on_pre=on_pre_fm, on_post=on_post_fm)
+        SynDict = dict(model=modelEq, on_pre=on_pre_fm, on_post=on_post_fm)
     else:
-        SynDict = dict(model=model_fm, on_pre=on_pre_fm_nonplastic, on_post=on_post_fm)
+        SynDict = dict(model=modelEq, on_pre=on_pre_fm_nonplastic, on_post=on_post_fm)
 
     if debug:
         printSynDict(SynDict)

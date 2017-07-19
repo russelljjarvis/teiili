@@ -1,9 +1,9 @@
-from brian2 import implementation,check_units,ms,exp,mean,diff
+from brian2 import implementation,check_units,ms,exp,mean,diff,declare_types
 from brian2 import *
 import numpy as np
 import os
 import tempfile
-import getpass
+#import getpass
 import scipy as spv
 import struct
 import pandas as pd
@@ -94,6 +94,7 @@ def ind2xy(ind, n2dNeurons):
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
+@declare_types(i='integer', j='integer',n2dNeurons='integer',result='float')
 @check_units(i=1, j=1, n2dNeurons=1, result=1)
 def fdist2d(i, j, n2dNeurons):
     # return sqrt((np.mod(i,n2dNeurons)-np.mod(j,n2dNeurons))**2+(np.floor_divide(i,n2dNeurons)-np.floor_divide(j,n2dNeurons))**2)
@@ -120,31 +121,33 @@ def fkernel1d(i, j, sigm):
 
 #@implementation('numpy', discard_units=True)
 @implementation('cpp', '''
-    double fkernelgauss1d(int i, int j, double gsigma) {
+    float fkernelgauss1d(int i, int j, float gsigma) {
     return exp(-(pow((i - j),2)) / (2 * pow(sigm,2)));
     }
      ''')
-@check_units(i=1, j=1, sigm=1, result=1)
-def fkernelgauss1d(i, j, sigm):
+@declare_types(i='integer', j='integer',gsigma='float', result='float')
+@check_units(i=1, j=1, gsigma=1, result=1)
+def fkernelgauss1d(i, j, gsigma):
     "function that calculates 1D kernel"
-    res = exp(-((i - j)**2) / (2 * sigm**2))  # gaussian, not normalized
+    res = exp(-((i - j)**2) / (2 * gsigma**2))  # gaussian, not normalized
     return res
 
 
 # function that calculates 2D kernel
 #@implementation('numpy', discard_units=True)
 @implementation('cpp', '''
-    double fkernel2d(int i, int j, double gsigma, int n2dNeurons) {
+    float fkernel2d(int i, int j, float gsigma, int n2dNeurons) {
     int ix = i % n2dNeurons;
     int iy = i / n2dNeurons;
     int jx = j % n2dNeurons;
     int jy = j / n2dNeurons;
     int x = ix - jx;
     int y = iy - jy;
-    double exponent = -(pow(x,2) + pow(y,2)) / (2 * pow(gsigma,2));
+    float exponent = -(pow(x,2) + pow(y,2)) / (2 * pow(gsigma,2));
     return ((1 + exponent) * exp(exponent));
     }
      ''')
+@declare_types(i='integer', j='integer', gsigma='float', n2dNeurons='integer', result='float')
 @check_units(i=1, j=1, gsigma=1, n2dNeurons=1, result=1)
 def fkernel2d(i, j, gsigma, n2dNeurons):
     "function that calculates 2D kernel"

@@ -30,7 +30,7 @@ from NCSBrian2Lib.Parameters.synapseParams import Braderfusi,SiliconSynP
 
 def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpAIFdefaultregular,
              synEquation=reversalSynV, synParameters=revSyn_default,
-             weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, w_lat=0.5,
+             weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5,
              rpWTA=3 * ms, rpInh=1 * ms,
              sigm=3, nNeurons=64, nInhNeurons=5, cutoff=10, numWtaInputs = 1, monitor=True, debug=False):
     '''generates a new WTA
@@ -47,8 +47,8 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     synEqsDict3         = synEquation(inputNumber=3,debug=debug)
         
     # create neuron groups
-    gWTAGroup = NeuronGroup(nNeurons, refractory=rpWTA, method='euler', name='g' + groupname, **neuronEqsDict_WTA)
-    gWTAInhGroup = NeuronGroup(nInhNeurons, refractory=rpInh, method='euler', name='g' + groupname + '_Inh', **neuronEqsDict_Inh)
+    gWTAGroup = NeuronGroup(nNeurons, name='g' + groupname, **neuronEqsDict_WTA)
+    gWTAInhGroup = NeuronGroup(nInhNeurons, name='g' + groupname + '_Inh', **neuronEqsDict_Inh)
 
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms
@@ -75,12 +75,18 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     synWTAInh1e.weight = weWTAInh
     synInhWTA1i.weight = wiInhWTA
     # lateral excitation kernel
-    synWTAWTA1e.weight = 'w_lat * fkernel1d(i,j,sigm)'
+    # we add an additional attribute to that synapse, which allows us to change and retrieve that value more easily
+    synWTAWTA1e.add_attribute('latWeight')
+    synWTAWTA1e.latWeight = weWTAWTA
+    synWTAWTA1e.weight = 'latWeight * fkernel1d(i,j,sigm)'
     # print(synWTAWTA1e.weight)
 
     # set parameters of neuron groups
     setParams(gWTAGroup, neuronParameters, debug=True)
     setParams(gWTAInhGroup, neuronParameters, debug=True)
+    
+    gWTAGroup.refP      = rpWTA
+    gWTAInhGroup.refP   = rpInh
     # printStates(gWTAGroup)
 
     # set parameters of synapses
@@ -111,7 +117,7 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
 
 def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpAIFdefaultregular,
              synEquation=reversalSynV, synParameters=revSyn_default,
-             weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, w_lat=1,
+             weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2,
              rpWTA=2.5 * ms, rpInh=1 * ms,
              sigm=2.5, nNeurons=20, nInhNeurons=3, cutoff=9, numWtaInputs = 1, monitor=True,  debug=False):
     '''generates a new WTA
@@ -125,12 +131,12 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     neuronEqsDict_WTA   = neuronEquation(numInputs = 3+numWtaInputs,debug=debug)
     neuronEqsDict_Inh   = neuronEquation(numInputs = 1,debug=debug)
     synEqsDict1         = synEquation(inputNumber=1,debug=debug)
-    synEqsDict2         = synEquation(inputNumber=2,debug=debug)
+    synEqsDictWTAWTA    = synEquation(inputNumber=2,debug=debug,additionalStatevars = ["latWeight : 1 (constant)"])
     synEqsDict3         = synEquation(inputNumber=3,debug=debug)
         
     # create neuron groups
-    gWTAGroup = NeuronGroup(nNeurons**2, refractory=rpWTA, method='euler', name='g' + groupname, **neuronEqsDict_WTA)
-    gWTAInhGroup = NeuronGroup(nInhNeurons, refractory=rpInh, method='euler', name='g' + groupname + '_Inh', **neuronEqsDict_Inh)
+    gWTAGroup = NeuronGroup(nNeurons**2, name='g' + groupname, **neuronEqsDict_WTA)
+    gWTAInhGroup = NeuronGroup(nInhNeurons, name='g' + groupname + '_Inh', **neuronEqsDict_Inh)
 
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms
@@ -140,10 +146,10 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
 
     # printStates(gWTAInpGroup)
     # create synapses
-    synInpWTA1e = Synapses(gWTAInpGroup,    gWTAGroup,  method="euler",     name='s' + groupname + '_Inpe', **synEqsDict1)
-    synWTAWTA1e = Synapses(gWTAGroup,       gWTAGroup,  method="euler",     name='s' + groupname + '_e',    **synEqsDict2)
-    synInhWTA1i = Synapses(gWTAInhGroup,    gWTAGroup,  method="euler",     name='s' + groupname + '_Inhi', **synEqsDict3)
-    synWTAInh1e = Synapses(gWTAGroup,       gWTAInhGroup, method="euler",   name='s' + groupname + '_Inhe', **synEqsDict1)
+    synInpWTA1e = Synapses(gWTAInpGroup,    gWTAGroup,  method="euler",     name='sInp' + groupname + '1e',         **synEqsDict1)
+    synWTAWTA1e = Synapses(gWTAGroup,       gWTAGroup,  method="euler",     name='s' + groupname + groupname + '1e',**synEqsDictWTAWTA)
+    synInhWTA1i = Synapses(gWTAInhGroup,    gWTAGroup,  method="euler",     name='sInh' + groupname + '1i',         **synEqsDict3)
+    synWTAInh1e = Synapses(gWTAGroup,       gWTAInhGroup, method="euler",   name='s' + groupname + 'Inh1e',         **synEqsDict1)
 
     # connect synapses
     synInpWTA1e.connect('i==j')
@@ -155,13 +161,18 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     synInpWTA1e.weight = weInpWTA
     synWTAInh1e.weight = weWTAInh
     synInhWTA1i.weight = wiInhWTA
+    
     # lateral excitation kernel
-    synWTAWTA1e.weight = 'w_lat * fkernel2d(i,j,sigm,nNeurons)'
+    # we add an additional attribute to that synapse, which allows us to change and retrieve that value more easily
+    synWTAWTA1e.latWeight = weWTAWTA
+    synWTAWTA1e.weight = 'latWeight * fkernel2d(i,j,sigm,nNeurons)'
     # print(synWTAWTA1e.weight)
 
     # set parameters of neuron groups
     setParams(gWTAGroup, neuronParameters, debug=debug)
     setParams(gWTAInhGroup, neuronParameters, debug=debug)
+    gWTAGroup.refP      = rpWTA
+    gWTAInhGroup.refP   = rpInh
     # printStates(gWTAGroup)
 
     # set parameters of synapses

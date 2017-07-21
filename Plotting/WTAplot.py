@@ -4,65 +4,84 @@ This file contains plot functions for WTA circuits
 @author: Alpha
 '''
 
+from brian2 import ms,mV,pA,nS,nA,pF,us,volt,second,Network,prefs,SpikeGeneratorGroup,NeuronGroup,\
+                   Synapses,SpikeMonitor,StateMonitor,figure, plot,show,xlabel,ylabel,\
+                   seed,xlim,ylim,subplot
 from brian2 import *
-import matplotlib
 import matplotlib.pyplot as plt
 from NCSBrian2Lib.tools import xy2ind, ind2xy
+import numpy as np
 
-def plotWTA(name,duration,nWTANeurons,plot2d,spikemonWTA,spikemonWTAInh,spikemonWTAInp,statemonWTA):
+# this is to make plotting that starts at a certain time easier
+def plotSpikemon(startTime,endTime,SpikeMon,nNeurons,ylab='ind'):
+    if len(SpikeMon.t)>1:  
+        indstart = np.abs(SpikeMon.t-startTime).argmin()
+        indend = np.abs(SpikeMon.t-endTime).argmin()
+        plot(SpikeMon.t[indstart:indend]/ms, SpikeMon.i[indstart:indend], '.k')
+        xlabel('Time [ms]')
+        ylabel(ylab)
+        xlim([startTime/ms,endTime/ms])
+        if nNeurons is not None:
+            ylim([0,nNeurons])
+
+def plotStatemon(startTime,endTime,StateMon,neuronInd,variable='Vm', unit=mV):
+    indstart = np.abs(StateMon.t-startTime).argmin()
+    indend = np.abs(StateMon.t-endTime).argmin()
+    plot(StateMon.t[indstart:indend]/ms, StateMon[neuronInd].__getattr__(variable)[indstart:indend]/unit)
+    xlabel('Time [ms]')
+    ylabel(variable+' ['+str(unit)+']')
+    xlim([startTime/ms,endTime/ms])
+
+def plotWTA(name,startTime,endTime,nWTANeurons,plot2d,spikemonWTA,spikemonWTAInh,spikemonWTAInp,statemonWTA):
     
     nnWTANeurons = nWTANeurons
     if plot2d:
         nnWTANeurons = nnWTANeurons**2
-      
-    fig = figure(figsize=(8,10))
-    nPlots=3*100
-    subplot(nPlots+11)
-    plot(spikemonWTA.t/ms, spikemonWTA.i, '.k')
-    xlabel('Time [ms]')
-    ylabel('i_WTA')
-    xlim([0,duration/ms])
-    ylim([0,nnWTANeurons])
-    subplot(nPlots+12)
-    plot(spikemonWTAInp.t/ms, spikemonWTAInp.i, '.k')
-    xlabel('Time [ms]')
-    ylabel('i_WTAInp')
-    xlim([0,duration/ms])
-    ylim([0,nnWTANeurons])
-    subplot(nPlots+13)
-    plot(spikemonWTAInh.t/ms, spikemonWTAInh.i, '.k')
-    xlabel('Time [ms]')
-    ylabel('i_WTAInh')
-    xlim([0,duration/ms])
+   
+    fig = figure(figsize=(8,3))
+    plotSpikemon(startTime,endTime,spikemonWTA,nnWTANeurons,ylab='ind WTA')
+    fig = figure(figsize=(8,3))
+    plotSpikemon(startTime,endTime,spikemonWTAInp,None,ylab='ind WTA')
+    fig = figure(figsize=(8,3))
+    plotSpikemon(startTime,endTime,spikemonWTAInh,None,ylab='ind WTA')
     #fig.savefig('fig/'+name+'_Spikes.png')
     
+    if nnWTANeurons > 20:
+        plotStateNeurons = range(20)
+    else:
+        plotStateNeurons = nnWTANeurons
+        
     if statemonWTA is not False:  
         fig = figure(figsize=(8,10))
         nPlots=3*100
         subplot(nPlots+11)
-        for ii in range(nnWTANeurons):
-            plot(statemonWTA.t/ms, statemonWTA.Vm[ii]/mV, label='v')       
-        #ylim([Vr/mV-30,Vt/mV+10])
-        xlabel('Time [ms]')
-        ylabel('V (mV)')
+        for ii in plotStateNeurons:
+            plotStatemon(startTime,endTime,statemonWTA,ii,variable='Vm',unit=mV)
         subplot(nPlots+12)
-        for ii in range(nnWTANeurons):
-            plot(statemonWTA.t/ms, statemonWTA.Ii[ii]/pA, label='Ii')
-        xlabel('Time [ms]')
-        ylabel('Ii (pA)')
+        for ii in plotStateNeurons:
+            plotStatemon(startTime,endTime,statemonWTA,ii,variable='Ii',unit=pA)
         subplot(nPlots+13)
-        for ii in range(nnWTANeurons):
-            plot(statemonWTA.t/ms, statemonWTA.Ie[ii]/pA, label='Ie')
-        xlabel('Time [ms]')
-        ylabel('Ie (pA)')
+        for ii in plotStateNeurons:
+            plotStatemon(startTime,endTime,statemonWTA,ii,variable='Ie',unit=pA)
         #fig.savefig('fig/'+name+'_States.png', dpi=300)
     
     return
 
 
-def plotWTATiles(name,duration,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCol = 10, showfig = False,savepath=False, tilecolors = []):
+def plotWTATiles(name,startTime,endTime,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCol = 10, showfig = False,savepath=False, tilecolors = []):
     'Plot a 2d WTA as tiles over time'
-    nPlots = int(np.ceil((duration/ms)/(interval/ms))) #division by ms is necessary as brian2's unit division is not precise and it might round up 
+    duration = endTime-startTime
+    
+    indstart = np.abs(spikemonWTA.t-startTime).argmin()
+    indend = np.abs(spikemonWTA.t-endTime).argmin()
+    spikemonWTA_t = (spikemonWTA.t[indstart:indend]-startTime)/ms
+    spikemonWTA_i = spikemonWTA.i[indstart:indend]
+    
+    interval = interval/ms
+    duration = duration/ms
+    #division by ms is done here, as brian2's unit division is not precise (?) and it might give wrong results e.g. with np.ceil()
+    
+    nPlots = int(np.ceil(duration/interval)) 
     nRow = int(np.ceil(nPlots/nCol))
     #print('nPlots: '+str(nPlots))
     #print('nCol: '+str(nCol))
@@ -74,7 +93,7 @@ def plotWTATiles(name,duration,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCo
         fig, axarr = plt.subplots(nRow,nCol,sharex=True,sharey=True,figsize=(nCol,max(1,nPlots//nCol)+1))
         for i in range(nPlots):
             start = i*interval
-            inds1d = spikemonWTA.i[np.logical_and(start<spikemonWTA.t,spikemonWTA.t<(start+interval))]
+            inds1d = spikemonWTA_i[np.logical_and(start<spikemonWTA_t,spikemonWTA_t<(start+interval))]
             inds2d = ind2xy(inds1d,nWTA2dNeurons)
             #print(i//nCol)
             #print(np.mod(i,nCol))
@@ -86,18 +105,13 @@ def plotWTATiles(name,duration,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCo
     fig, axarr = plt.subplots(nRow,nCol,sharex=True,sharey=True,figsize=(nCol,max(1,nPlots//nCol)+1))
     for i in range(nPlots):
         start = i*interval
-        inds1d = spikemonWTA.i[np.logical_and(start<spikemonWTA.t,spikemonWTA.t<(start+interval))]
+        inds1d = spikemonWTA_i[np.logical_and(start<spikemonWTA_t,spikemonWTA_t<(start+interval))]
         hist1d = np.histogram(inds1d,bins=range(nWTA2dNeurons**2+1))[0]
-        hist1d = hist1d/(interval/(1000*ms))
+        hist1d = hist1d/(interval/(1000))
         hist2d = np.reshape(hist1d,(nWTA2dNeurons,nWTA2dNeurons))
         inds2d = ind2xy(inds1d,nWTA2dNeurons)
-        #print(i//nCol)
-        #print(np.mod(i,nCol))
-        #print(col[i])
         axarr[i//nCol,np.mod(i,nCol)].set_xlim(0,nWTA2dNeurons)
         axarr[i//nCol,np.mod(i,nCol)].set_ylim(0,nWTA2dNeurons) 
-        #axarr[i//nCol,np.mod(i,nCol)].axes.get_xaxis().set_visible(False)
-        #axarr[i//nCol,np.mod(i,nCol)].axes.get_yaxis().set_visible(False)
         axarr[i//nCol,np.mod(i,nCol)].set_xticks(np.arange(nWTA2dNeurons)+0.5)
         axarr[i//nCol,np.mod(i,nCol)].set_yticks(np.arange(nWTA2dNeurons)+0.5)
         axarr[i//nCol,np.mod(i,nCol)].set_xticklabels([])
@@ -115,4 +129,39 @@ def plotWTATiles(name,duration,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCo
         fig.savefig(savepath+'/'+name+'_tiles_col.png', dpi = 500)
     if showfig:
         plt.show()
+    return
+
+
+def centerOfMass2dGrid(array2d):
+    xdim = sum(array2d,0)
+    ydim = sum(array2d,1)
+    cgx = np.sum(range(len(xdim))*xdim)/np.sum(xdim)
+    cgy = np.sum(range(len(ydim))*ydim)/np.sum(ydim)
+    return (cgx,cgy)
+
+
+def SomConvergence(startTime,endTime,nWTA2dNeurons, spikemonWTA, interval = 10*ms, tilecolors = []):
+    duration = endTime-startTime
+    
+    indstart = np.abs(spikemonWTA.t-startTime).argmin()
+    indend = np.abs(spikemonWTA.t-endTime).argmin()
+    spikemonWTA_t = (spikemonWTA.t[indstart:indend]-startTime)/ms
+    spikemonWTA_i = spikemonWTA.i[indstart:indend]
+    
+    interval = interval/ms
+    duration = duration/ms
+    #division by ms is done here, as brian2's unit division is not precise (?) and it might give wrong results e.g. with np.ceil()
+    
+    nIntervals = int(np.ceil(duration/interval)) 
+
+    for i in range(nIntervals):
+        start = i*interval
+        inds1d = spikemonWTA_i[np.logical_and(start<spikemonWTA_t,spikemonWTA_t<(start+interval))]
+        hist1d = np.histogram(inds1d,bins=range(nWTA2dNeurons**2+1))[0]
+        hist1d = hist1d/(interval/(1000))
+        hist2d = np.reshape(hist1d,(nWTA2dNeurons,nWTA2dNeurons))
+        color = tilecolors[i]
+        com = centerOfMass2dGrid(hist2d)
+        #imshow(hist2d,cmap=plt.cm.jet,clim=(0,300))
+
     return

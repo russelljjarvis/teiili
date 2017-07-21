@@ -37,7 +37,8 @@ indSeq = np.concatenate((np.zeros(50, dtype=np.int), np.ones(50, dtype=np.int),
 gSeqInpGroup = SpikeGeneratorGroup(3, indices = indSeq, times=tsSeq)
 
 #print(eqsDict['model'])
-gSeqGroup = NeuronGroup(3, refractory=5*ms, method = "euler", **eqsDict)
+gSeqGroup = NeuronGroup(3, **eqsDict)
+#gSeqGroup = NeuronGroup(3, refractory=5*ms, method = "euler", **eqsDict)
 #sDict = fusiSyn(debug = True)
 #sDict = reversalSynV(debug = True)
 sDict = synapseEq(debug = True)
@@ -57,7 +58,7 @@ setParams(synInpSeqe ,synapsePar)
 #setParams(synInpSeqe ,revSyndefault)
 #setParams(synInpSeqe ,fusiDefault, debug=True)
 setParams(gSeqGroup ,neuronPar)
-
+gSeqGroup.refP = 5*ms
 #synInpSeqe.w = 1
 
 spikemonSeq = SpikeMonitor(gSeqGroup)

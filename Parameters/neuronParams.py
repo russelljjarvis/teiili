@@ -7,7 +7,8 @@ Created on 17.12.2016
 @author: Alpha (renner.alpha@gmail.com)
 '''
 
-from brian2 import *
+from brian2 import pf,nS,mV,ms,pA,nA,pF
+#from brian2 import *
 
 
 gerstnerExpAIFdefaultregular = {"C"      : 281   *pF,
@@ -21,11 +22,12 @@ gerstnerExpAIFdefaultregular = {"C"      : 281   *pF,
                                 "Vr"     : -70.6 *mV,
                                 "Vm"     : -70.6 *mV,
                                 "Iconst" : 0 * pA,
-                                "sigma" : 0 *pA,
-                                "taue"  : 5 *ms,
-                                "taui"  : 6 *ms,
-                                "EIe"   : 60.0 *mV,
-                                "EIi"   : -90.0  *mV}
+                                "sigma"  : 0 *pA,
+                                "taue"   : 5 *ms,
+                                "taui"   : 6 *ms,
+                                "EIe"    : 60.0 *mV,
+                                "EIi"    : -90.0  *mV,
+                                "refP"   : 2*ms}
                
 gerstnerExpAIFdefaultbursting ={"C"      : 281   *pF,
                                 "gL"     : 35    *nS,
@@ -68,7 +70,7 @@ SiliconNeuronP = {
 #---------------------------------------------------------
 #Adaptative and Calcium parameters
 #---------------------------------------------------------
-                                "tauca"  : 40 * msecond, #Calcium spike decay rate
+                                "tauca"  : 40 * ms, #Calcium spike decay rate
                                 "Iposa"  : 0.3 * pA,
                                 "Iwa"    : 0 * pA, #Adaptation spike amplitude
                                 "Itaua"  : 1 * pA,

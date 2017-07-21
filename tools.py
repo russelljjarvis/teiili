@@ -106,13 +106,22 @@ def fdist2d(i, j, n2dNeurons):
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 # function that calculates 1D "mexican hat" kernel
-@implementation('numpy', discard_units=True)
-@check_units(i=1, j=1, sigm=1, result=1)
-def fkernel1d(i, j, sigm):
-    "function that calculates 1D kernel"
+#@implementation('numpy', discard_units=True)
+@implementation('cpp', '''
+    float fkernel1d(int i, int j, float gsigma) {
+    x = i - j
+    exponent = -pow(x,2) / (2 * pow(gsigma,2))
+    res = (1 + 2 * exponent) * exp(exponent) 
+    return res;
+    }
+     ''')
+@declare_types(i='integer', j='integer',gsigma='float', result='float')
+@check_units(i=1, j=1, gsigma=1, result=1)
+def fkernel1d(i, j, gsigma):
+    "function that calculates mexican hat 1D kernel"
     # res = exp(-((i-j)**2)/(2*sigm**2)) # gaussian, not normalized
     x = i - j
-    exponent = -(x**2) / (2 * sigm**2)
+    exponent = -(x**2) / (2 * gsigma**2)
     res = (1 + 2 * exponent) * exp(exponent)  # mexican hat, not normalized
     return res
 
@@ -122,7 +131,7 @@ def fkernel1d(i, j, sigm):
 #@implementation('numpy', discard_units=True)
 @implementation('cpp', '''
     float fkernelgauss1d(int i, int j, float gsigma) {
-    return exp(-(pow((i - j),2)) / (2 * pow(sigm,2)));
+    return exp(-(pow((i - j),2)) / (2 * pow(gsigma,2)));
     }
      ''')
 @declare_types(i='integer', j='integer',gsigma='float', result='float')

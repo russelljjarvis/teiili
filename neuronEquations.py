@@ -2,7 +2,9 @@
 from brian2 import *
 from NCSBrian2Lib.tools import *
 
-def ExpAdaptIF(numInputs = 1,debug=False):
+__all__ = ['ExpAdaptIF', 'Silicon']
+
+def ExpAdaptIF(numInputs = 1,debug=False,method='euler'):
     '''
     Brette, Gerstner 2005 Exponential adaptive IF model
     see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
@@ -35,6 +37,7 @@ def ExpAdaptIF(numInputs = 1,debug=False):
     a       : siemens   (constant)        # adaptation decay parameter
     b       : amp       (constant)        # adaptation weight
     Vr      : volt      (constant)        # reset potential
+    refP    : second    (constant)        # refractory period (It is still possible to set it to False)
     """
     # add additional input currents (if you have several input currents)
     Ies = ["+ Ie" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
@@ -47,7 +50,7 @@ def ExpAdaptIF(numInputs = 1,debug=False):
     thresholdEq = "Vm > (VT + 5 * DeltaT)"   
     resetEq     = "Vm = Vr; wad += b"
 
-    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
+    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq, refractory = 'refP' , method=method)
     
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
@@ -149,4 +152,10 @@ def printEqDict(eqDict):
     print( '-_-_-_-_-_-_-_-')
     print( 'reset equation:')
     print( eqDict['reset'])
+    print( '-_-_-_-_-_-_-_-')
+    print( 'refractory variable:')
+    print( eqDict['refractory'])
+    print( '-_-_-_-_-_-_-_-')
+    print( 'method:')
+    print( eqDict['method'])
     print( '-------------')

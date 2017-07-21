@@ -16,7 +16,7 @@ def printSynDict(eqDict):
         print( '-------------')
 
 
-def DefaultExcitatorySynapses(inputNumber = 1, debug=False):
+def DefaultExcitatorySynapses(inputNumber = 1, debug=False, additionalStatevars = None):
 
     '''
     Default Excitatory Synapse with exponentially decaying current in time
@@ -44,6 +44,12 @@ def DefaultExcitatorySynapses(inputNumber = 1, debug=False):
         modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
     else:
         modelEq = modelEq.format(Ie="Ie")  
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
+        
+        
     on_pre_ex='''
              Isyn_exc += Iw_exc * w
              '''
@@ -58,7 +64,7 @@ def DefaultExcitatorySynapses(inputNumber = 1, debug=False):
     return SynDict, arguments
 
 
-def DefaultInhibitorySynapses(inputNumber = 1, inh2output=True, debug=False):
+def DefaultInhibitorySynapses(inputNumber = 1, inh2output=True, debug=False, additionalStatevars = None):
 
     '''
     Default Inhibitory Synapse with current decaying in time
@@ -87,6 +93,11 @@ def DefaultInhibitorySynapses(inputNumber = 1, inh2output=True, debug=False):
     else:
         modelEq = modelEq.format(Ie="Ii")
         
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
+    
     on_pre_inh='''
               Isyn_inh += Iw_inh * w
               '''
@@ -146,7 +157,7 @@ def DefaultTeacherSynapses(debug=False):
 
     return SynDict, arguments
 
-def simpleSyn(inputNumber = 1, debug=False):
+def simpleSyn(inputNumber = 1, debug=False, additionalStatevars = None):
     '''
     simple excitatory or inhibitory Synapse with instantaneous rise - exponential decay kernel
     Input Arguments:
@@ -173,6 +184,11 @@ def simpleSyn(inputNumber = 1, debug=False):
     else:
         modelEq = modelEq.format(Ie="Ie",Ii="Ii")  
     
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
+    
     preEq='''
         Ie_syn += Iw * weight *(weight>0)
         Ii_syn += Iw * weight * (weight<0)
@@ -187,7 +203,7 @@ def simpleSyn(inputNumber = 1, debug=False):
     return SynDict
 
 
-def reversalSynV(inputNumber = 1, debug=False):
+def reversalSynV(inputNumber = 1, debug=False, additionalStatevars = None):
     '''
     Synapse with reversal potential and instantaneous rise - exponential decay kernel
     for voltage based neurons!
@@ -226,6 +242,11 @@ def reversalSynV(inputNumber = 1, debug=False):
         modelEq = modelEq.format(Ie="Ie"+str(inputNumber),Ii="Ii"+str(inputNumber))        
     else:
         modelEq = modelEq.format(Ie="Ie",Ii="Ii")
+    
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
 
     SynDict = dict(model=modelEq, on_pre=preEq)
 
@@ -237,7 +258,7 @@ def reversalSynV(inputNumber = 1, debug=False):
 
 
 
-def fusiSynV(inputNumber = 1, debug = False):
+def fusiSynV(inputNumber = 1, debug = False, additionalStatevars = None):
     ''' This is not yet completely tested and might contain bugs.
     '''
     arguments = dict(locals())
@@ -248,7 +269,7 @@ def fusiSynV(inputNumber = 1, debug = False):
                 taugIe : second (constant)                                      # excitatory input time constant
                 EIe : volt (constant)                                           # excitatory reversal potential
                 dCa/dt = (-Ca/tau_ca) : volt (event-driven)                     #Calcium Potential
-                dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (clock-driven) # internal weight variable
+                dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (event-driven) # internal weight variable
                 w_plus: 1 (constant)
                 w_minus: 1 (constant)
                 theta_upl: volt (constant)
@@ -270,7 +291,12 @@ def fusiSynV(inputNumber = 1, debug = False):
         modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
     else:
         modelEq = modelEq.format(Ie="Ie")
-        
+
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)    
+    
     preEq = '''
             gIe += floor(w+0.5) * weight *  nS
             w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   #*(w<w_max)
@@ -287,7 +313,7 @@ def fusiSynV(inputNumber = 1, debug = False):
 
     return SynDict
 
-def BraderFusiSynapses(inputNumber = 1, debug=False, plastic=True):
+def BraderFusiSynapses(inputNumber = 1, debug=False, plastic=True, additionalStatevars = None):
 
     '''
     Fusi bistable synapses, cfr Brader et al 2007
@@ -353,6 +379,11 @@ def BraderFusiSynapses(inputNumber = 1, debug=False, plastic=True):
         modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
     else:
         modelEq = modelEq.format(Ie="Ie")
+    
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
         
     on_pre_fm = '''
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
@@ -696,7 +727,7 @@ def MemristiveFusiSynapses(inputNumber = 1, debug=False, plastic=True):
 
 
 
-def StdpSynV(inputNumber = 1, debug = False):
+def StdpSynV(inputNumber = 1, debug = False, additionalStatevars = None):
     ''' This an STDP synapse adapted from http://brian2.readthedocs.io/en/latest/examples/synapses.STDP.html
         after Song, Miller and Abbott (2000) and Song and Abbott (2001)
     '''
@@ -725,6 +756,11 @@ def StdpSynV(inputNumber = 1, debug = False):
         modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
     else:
         modelEq = modelEq.format(Ie="Ie")
+    
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
         
     preEq = '''
             gIe += w * weight * nS

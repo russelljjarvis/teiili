@@ -7,7 +7,7 @@ Created on 17.12.2016
 @author: Alpha (renner.alpha@gmail.com)
 '''
 
-from brian2 import pf,nS,mV,ms,pA,nA,pF
+from brian2 import pF,nS,mV,ms,pA,nA
 #from brian2 import *
 
 

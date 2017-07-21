@@ -4,7 +4,7 @@ from NCSBrian2Lib.tools import *
 
 __all__ = ['ExpAdaptIF', 'Silicon']
 
-def ExpAdaptIF(numInputs = 1,debug=False,method='euler'):
+def ExpAdaptIF(numInputs = 1,debug=False,method='euler', additionalStatevars = None):
     '''
     Brette, Gerstner 2005 Exponential adaptive IF model
     see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
@@ -47,6 +47,12 @@ def ExpAdaptIF(numInputs = 1,debug=False,method='euler'):
     Iisline = ["    Ii" + str(i) + " : amp" for i in range(1,numInputs+1)if i > 1]
     modelEq = modelEq + "\n".join(Iesline) +"\n" + "\n".join(Iisline)  
     
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
+        
+    
     thresholdEq = "Vm > (VT + 5 * DeltaT)"   
     resetEq     = "Vm = Vr; wad += b"
 
@@ -58,7 +64,7 @@ def ExpAdaptIF(numInputs = 1,debug=False,method='euler'):
 
     return eqDict
 
-def Silicon(numInputs = 1, debug=False, Excitatory=True):
+def Silicon(numInputs = 1, debug=False, Excitatory=True, method='euler', additionalStatevars = None):
     '''Silicon Neuron as in Chicca et al. 2014
     @return: a dictionary of keyword arguments for NeuronGroup()
     @note: you have to set parameters for each NeuronGroup after its creation, synapses have to increment the correct variable: Ie or Ii
@@ -115,6 +121,7 @@ def Silicon(numInputs = 1, debug=False, Excitatory=True):
     Ireset : amp (constant)
     Ith    : amp (constant)
     Itau   : amp (constant)
+    refP    : second (constant)        # refractory period (It is still possible to set it to False)
     """
     # add additional input currents (if you have several input currents)
     Ies = ["+ Ie" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
@@ -124,6 +131,11 @@ def Silicon(numInputs = 1, debug=False, Excitatory=True):
     Iisline = ["    Ii" + str(i) + " : amp" for i in range(1,numInputs+1)if i > 1]
     modelEq = modelEq + "\n".join(Iesline) +"\n" + "\n".join(Iisline)  
     
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
+        
     
     
     if Excitatory:

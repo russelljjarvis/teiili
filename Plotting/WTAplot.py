@@ -131,37 +131,3 @@ def plotWTATiles(name,startTime,endTime,nWTA2dNeurons, spikemonWTA, interval = 1
         plt.show()
     return
 
-
-def centerOfMass2dGrid(array2d):
-    xdim = sum(array2d,0)
-    ydim = sum(array2d,1)
-    cgx = np.sum(range(len(xdim))*xdim)/np.sum(xdim)
-    cgy = np.sum(range(len(ydim))*ydim)/np.sum(ydim)
-    return (cgx,cgy)
-
-
-def SomConvergence(startTime,endTime,nWTA2dNeurons, spikemonWTA, interval = 10*ms, tilecolors = []):
-    duration = endTime-startTime
-    
-    indstart = np.abs(spikemonWTA.t-startTime).argmin()
-    indend = np.abs(spikemonWTA.t-endTime).argmin()
-    spikemonWTA_t = (spikemonWTA.t[indstart:indend]-startTime)/ms
-    spikemonWTA_i = spikemonWTA.i[indstart:indend]
-    
-    interval = interval/ms
-    duration = duration/ms
-    #division by ms is done here, as brian2's unit division is not precise (?) and it might give wrong results e.g. with np.ceil()
-    
-    nIntervals = int(np.ceil(duration/interval)) 
-
-    for i in range(nIntervals):
-        start = i*interval
-        inds1d = spikemonWTA_i[np.logical_and(start<spikemonWTA_t,spikemonWTA_t<(start+interval))]
-        hist1d = np.histogram(inds1d,bins=range(nWTA2dNeurons**2+1))[0]
-        hist1d = hist1d/(interval/(1000))
-        hist2d = np.reshape(hist1d,(nWTA2dNeurons,nWTA2dNeurons))
-        color = tilecolors[i]
-        com = centerOfMass2dGrid(hist2d)
-        #imshow(hist2d,cmap=plt.cm.jet,clim=(0,300))
-
-    return

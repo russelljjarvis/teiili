@@ -68,8 +68,17 @@ def xy2ind(x, y, n2dNeurons):
     return int(x) + int(y) * n2dNeurons
 
 # function that calculates 2D index from 1D index
-
-
+# please note that the total number of neurons in the square field is n2dNeurons**2
+@implementation('numpy', discard_units=True)
+@check_units(ind=1, n2dNeurons=1, result=1)
+def ind2x(ind, n2dNeurons):
+    ret = np.mod(np.round(ind), n2dNeurons)
+    return ret
+@implementation('numpy', discard_units=True)
+@check_units(ind=1, n2dNeurons=1, result=1)
+def ind2y(ind, n2dNeurons):
+    ret = np.floor_divide(np.round(ind), n2dNeurons)
+    return ret
 @implementation('numpy', discard_units=True)
 @check_units(ind=1, n2dNeurons=1, result=1)
 def ind2xy(ind, n2dNeurons):

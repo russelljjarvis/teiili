@@ -13,7 +13,7 @@ from brian2 import *
 import time
 import numpy as np
 
-from NCSBrian2Lib.tools import setParams, fkernel1d, fkernel2d, fdist2d, printStates
+from NCSBrian2Lib.tools import setParams, fkernel1d, fkernel2d, fdist2d, printStates,ind2xy,ind2x,ind2y
 
 from NCSBrian2Lib.neuronEquations import ExpAdaptIF 
 from NCSBrian2Lib.neuronEquations import Silicon
@@ -120,7 +120,7 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2,
              rpWTA=2.5 * ms, rpInh=1 * ms,
              sigm=2.5, nNeurons=20, nInhNeurons=3, cutoff=9, numWtaInputs = 1, monitor=True,  debug=False):
-    '''generates a new WTA
+    '''generates a new square 2d WTA
     3 inputs to the gWTAGroup are used, so start with 4 for additional inputs'''
 
 
@@ -135,13 +135,17 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     synEqsDict3         = synEquation(inputNumber=3,debug=debug)
         
     # create neuron groups
-    gWTAGroup = NeuronGroup(nNeurons**2, name='g' + groupname, **neuronEqsDict_WTA)
+    n2dNeurons = nNeurons**2
+    gWTAGroup = NeuronGroup(n2dNeurons, name='g' + groupname, **neuronEqsDict_WTA)
     gWTAInhGroup = NeuronGroup(nInhNeurons, name='g' + groupname + '_Inh', **neuronEqsDict_Inh)
-
+    
+    gWTAGroup.x = "ind2x(i, nNeurons)"
+    gWTAGroup.y = "ind2y(i, nNeurons)"
+    
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms
     indWTA = np.asarray([])
-    gWTAInpGroup = SpikeGeneratorGroup(nNeurons**2, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
+    gWTAInpGroup = SpikeGeneratorGroup(n2dNeurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
     #gWTAInpGroup = PoissonGroup(nNeurons, 100 * Hz,name = 'g'+groupname +'_Inp')
 
     # printStates(gWTAInpGroup)
@@ -194,7 +198,7 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
         statemonWTA = False
 
     end = time.clock()
-    print ('creating ' + str(nNeurons) + 'x' + str(nNeurons) + ' WTA of ' + str(nNeurons**2) + ' neurons with name ' + groupname + ' took ' + str(end - start) + ' sec')
+    print ('creating ' + str(nNeurons) + 'x' + str(nNeurons) + ' WTA of ' + str(n2dNeurons) + ' neurons with name ' + groupname + ' took ' + str(end - start) + ' sec')
 
     return((gWTAGroup, gWTAInhGroup, gWTAInpGroup,
             synInpWTA1e, synWTAWTA1e, synWTAInh1e, synInhWTA1i,

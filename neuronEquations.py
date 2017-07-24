@@ -38,6 +38,8 @@ def ExpAdaptIF(numInputs = 1,debug=False,method='euler', additionalStatevars = N
     b       : amp       (constant)        # adaptation weight
     Vr      : volt      (constant)        # reset potential
     refP    : second    (constant)        # refractory period (It is still possible to set it to False)
+    x       : 1         (constant)        # x location on 2d grid (only set it if you need it)
+    y       : 1         (constant)        # y location on 2d grid
     """
     # add additional input currents (if you have several input currents)
     Ies = ["+ Ie" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
@@ -122,6 +124,9 @@ def Silicon(numInputs = 1, debug=False, Excitatory=True, method='euler', additio
     Ith    : amp (constant)
     Itau   : amp (constant)
     refP    : second (constant)        # refractory period (It is still possible to set it to False)
+    
+    x       : 1         (constant)        # x location on 2d grid  (only set it if you need it)
+    y       : 1         (constant)        # y location on 2d grid
     """
     # add additional input currents (if you have several input currents)
     Ies = ["+ Ie" + str(i) + " " for i in range(1,numInputs+1) if i > 1]

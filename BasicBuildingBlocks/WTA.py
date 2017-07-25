@@ -32,19 +32,19 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
              synEquation=reversalSynV, synParameters=revSyn_default,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5,
              rpWTA=3 * ms, rpInh=1 * ms,
-             sigm=3, nNeurons=64, nInhNeurons=5, cutoff=10, numWtaInputs = 1, monitor=True, debug=False):
+             sigm=3, nNeurons=64, nInhNeurons=5, cutoff=10, numWtaInputs = 1, startInputNumbering = 0,  monitor=True, debug=False):
     '''generates a new WTA
-    3 inputs to the gWTAGroup are used, so start with 4 for additional inputs'''
+    3 inputs to the gWTAGroup are used, so start with startInputNumbering+4 for additional inputs'''
 
     # time measurement
     start = time.clock()
 
     # Each synapse going to the same NeuronGroup needs a new number
-    neuronEqsDict_WTA   = neuronEquation(numInputs = 3+numWtaInputs,debug=debug)
+    neuronEqsDict_WTA   = neuronEquation(numInputs = startInputNumbering+3+numWtaInputs,debug=debug)
     neuronEqsDict_Inh   = neuronEquation(numInputs = 1,debug=debug)
-    synEqsDict1         = synEquation(inputNumber=1,debug=debug)
-    synEqsDict2         = synEquation(inputNumber=2,debug=debug)
-    synEqsDict3         = synEquation(inputNumber=3,debug=debug)
+    synEqsDict1         = synEquation(inputNumber=startInputNumbering+1,debug=debug)
+    synEqsDict2         = synEquation(inputNumber=startInputNumbering+2,debug=debug)
+    synEqsDict3         = synEquation(inputNumber=startInputNumbering+3,debug=debug)
         
     # create neuron groups
     gWTAGroup = NeuronGroup(nNeurons, name='g' + groupname, **neuronEqsDict_WTA)
@@ -131,7 +131,8 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     neuronEqsDict_WTA   = neuronEquation(numInputs = 3+numWtaInputs,debug=debug)
     neuronEqsDict_Inh   = neuronEquation(numInputs = 1,debug=debug)
     synEqsDict1         = synEquation(inputNumber=1,debug=debug)
-    synEqsDictWTAWTA    = synEquation(inputNumber=2,debug=debug,additionalStatevars = ["latWeight : 1 (constant)"])
+    synEqsDictWTAWTA    = synEquation(inputNumber=2,debug=debug,
+                          additionalStatevars = ["latWeight : 1 (constant)","latSigma : 1","latSigmaTau : second (constant)"]) # you probably won't need the Tau
     synEqsDict3         = synEquation(inputNumber=3,debug=debug)
         
     # create neuron groups
@@ -160,18 +161,7 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     synWTAWTA1e.connect('fdist2d(i,j,nNeurons)<=cutoff')  # connect the nearest neighbors including itself
     synWTAInh1e.connect('True')  # Generates all to all connectivity
     synInhWTA1i.connect('True')
-
-    # set weights
-    synInpWTA1e.weight = weInpWTA
-    synWTAInh1e.weight = weWTAInh
-    synInhWTA1i.weight = wiInhWTA
     
-    # lateral excitation kernel
-    # we add an additional attribute to that synapse, which allows us to change and retrieve that value more easily
-    synWTAWTA1e.latWeight = weWTAWTA
-    synWTAWTA1e.weight = 'latWeight * fkernel2d(i,j,sigm,nNeurons)'
-    # print(synWTAWTA1e.weight)
-
     # set parameters of neuron groups
     setParams(gWTAGroup, neuronParameters, debug=debug)
     setParams(gWTAInhGroup, neuronParameters, debug=debug)
@@ -184,6 +174,20 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     setParams(synWTAWTA1e, synParameters, debug=debug)
     setParams(synWTAInh1e, synParameters, debug=debug)
     setParams(synInhWTA1i, synParameters, debug=debug)
+
+
+    # set weights
+    synInpWTA1e.weight = weInpWTA
+    synWTAInh1e.weight = weWTAInh
+    synInhWTA1i.weight = wiInhWTA
+    
+    # lateral excitation kernel
+    # we add an additional attribute to that synapse, which allows us to change and retrieve that value more easily
+    synWTAWTA1e.latWeight = weWTAWTA
+    synWTAWTA1e.latSigma = sigm
+    synWTAWTA1e.weight = 'latWeight * fkernel2d(i,j,latSigma,nNeurons)'
+    # print(synWTAWTA1e.weight)
+
 
     # spikemons
     if monitor:

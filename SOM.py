@@ -56,44 +56,44 @@ seed(42)
 rnseed(42)
 
 # network parameters
-duration = 3000 * ms #needs to be a multiple of interval # and needs to be much longer for SOM training, but for debugging and looking at input, keep it short 
+duration = 2500 * ms #needs to be a multiple of interval # and needs to be much longer for SOM training, but for debugging and looking at input, keep it short 
 interval = 20
 nWTA1dNeurons = 64
-nWTA2dNeurons = 8#16
+nWTA2dNeurons = 10#16
 ninputs = 3 # number of Input groups
 # Input inhibition:
-nInhNeurons = 4
-cutoff = 7
+nInhNeuronsSOM = 2
+nInhNeuronsInp = 2
+cutoff = 6
 
 defaultclock.dt = 100 *us
 
 ## tuning parameters:
 ## Important! Some of these parameters might be changed in standalone run (see below) 
 # neuron params
-neuronPar['taui'] = 6*ms   
-neuronPar['a']    = 4*nS
-neuronPar['b']    = 0.0805*nA
+neuronPar['a']    = 0*nS #4*nS #disable adaptation
+neuronPar['b']    = 0*nA #0.0805*nA
 # input params
-sigmGaussInput = 6.0
-inputWeight = 2000
+sigmGaussInput = 6.0 # this is the tau of the gaussian input to the input fields
+inputWeight = 2000 # this is the weight of the gaussian input to the input fields
 # input inh params
-synInpInh1e_weight = 0.6
-synInpInh1i_weight = -0.2           
-synInhInp1i_weight = -1.5
-plasticSynapsePar["taupre" ] = 10 *ms
-plasticSynapsePar["taupost"] = 10 *ms
-plasticSynapsePar["weight"] = 124
-plasticWrand=0.2
+synInpInh1e_weight = 0.6   #changeable in standalone
+synInpInh1i_weight = -0.2  #changeable in standalone         
+synInhInp1i_weight = -1.5  #changeable in standalone
+plasticSynapsePar["taupre" ] = 10 *ms   #changeable in standalone
+plasticSynapsePar["taupost"] = 10 *ms   #changeable in standalone
+plasticSynapsePar["weight"] = 124       #changeable in standalone
+plasticRandomWeightchange=0.1           #changeable in standalone
 # wtaSOM params
-synWTAInh1e_weight = 0.5
-synInhWTA1i_weight = -1.8
-synWTAWTA1e_weight = 0.18 # lateral excitation
-rpWTA = 2*ms
-rpInh = 1*ms
-nInhNeurons = 3
+synWTAInh1e_weight = 0.5                #changeable in standalone
+synInhWTA1i_weight = -1.8               #changeable in standalone
+synWTAWTA1e_weight = 0.18               #changeable in standalone #lateral excitation
+rpWTA = 2*ms                            #changeable in standalone
+rpInh = 1*ms                            #changeable in standalone
+
 # sigm SOM connectivity kernel params 
-sigmnbi = 2.6
-sigmDecayTau = 2*second
+sigmSOMlateralExc = 2.6                           #changeable in standalone
+sigmSOMlateralExc_DecayTau = 2*second
 
 somNet = Network()
 
@@ -103,14 +103,12 @@ somNet = Network()
             spikemonwtaSOM,spikemonwtaSOMInh,spikemonwtaSOMInp,statemonwtaSOM) = gen2dWTA('wtaSOM',
              neuronParameters = neuronPar, synParameters = synapsePar,
              weInpWTA = 0, weWTAInh = synWTAInh1e_weight, wiInhWTA = synInhWTA1i_weight, weWTAWTA = synWTAWTA1e_weight,
-             rpWTA = rpWTA, rpInh = rpInh,sigm = sigmnbi, nNeurons = nWTA2dNeurons,
-             nInhNeurons = nInhNeurons, cutoff = cutoff, monitor = plotting, numWtaInputs = 1, debug=False)
+             rpWTA = rpWTA, rpInh = rpInh,sigm = sigmSOMlateralExc, nNeurons = nWTA2dNeurons,
+             nInhNeurons = nInhNeuronsSOM, cutoff = cutoff, monitor = plotting, numWtaInputs = 1, debug=False)
 
-sigmnb = sigmnbi 
-print("sigm nb: ",sigmnb)
 #decay of kernel sigma ???
-
-synwtaSOMwtaSOM1e.run_regularly('''weight = latWeight * fkernel2d(i,j,sigmnb*exp(-t/sigmDecayTau),nWTA2dNeurons)''',dt=200*ms)
+synwtaSOMwtaSOM1e.latSigmaTau = sigmSOMlateralExc_DecayTau
+synwtaSOMwtaSOM1e.run_regularly('''weight = latWeight * fkernel2d(i,j,latSigma*exp(-t/latSigmaTau),nWTA2dNeurons)''',dt=100*ms)
 
 #===============================================================================
 ## generate input array
@@ -126,7 +124,8 @@ blu = (0.0,0.0,1.0)
 bl2 = (0.0,0.3,1.0)
 bl3 = (0.3,0.2,0.9)
 
-collist = [red,or1,or2,yel,gr1,gr2,blu,bl2,bl3]
+collist = [gr2,red,blu,or1,bl2,or2,bl3,yel,gr1]
+#collist = [red,or1,or2,yel,gr1,gr2,blu,bl2,bl3]
 #collist = [(random(),random(),random()) for ii in range(8)]
 
 nRepet = int((duration/ms) /interval)
@@ -148,10 +147,10 @@ statemonInp = StateMonitor(gInpGroup, ('Vm','Iin','Iconst'), record=range(ninput
 #===============================================================================
 ## create Input Inhibition Inh_u
 
-gInpInhGroup = NeuronGroup(nInhNeurons, name = 'gInpInhGroup', **neuronEqDict)
+gInpInhGroup = NeuronGroup(nInhNeuronsInp, name = 'gInpInhGroup', **neuronEqDict)
 setParams(gInpInhGroup, neuronPar, debug = False)
 spikemonInpInh = SpikeMonitor(gInpInhGroup)
-statemonInpInh = StateMonitor(gInpInhGroup, ('Vm','Iin','Iconst'), record=range(nInhNeurons))
+statemonInpInh = StateMonitor(gInpInhGroup, ('Vm','Iin','Iconst'), record=range(nInhNeuronsInp))
 
 #===============================================================================
 ## create input inhibition synapses
@@ -182,7 +181,7 @@ synInhInp1i.weight = synInhInp1i_weight
 #===============================================================================
 ## create plastic synapses
 
-plasticSynDict = StdpSynapseEq(inputNumber=4,debug=False)
+plasticSynDict = StdpSynapseEq(inputNumber=4,debug=False,additionalStatevars = ["randomWeightchange: 1 (constant)"])
 synInpSom1e = Synapses(gInpGroup, gwtaSOMGroup, method = "euler", name = 'sInpSom1e', **plasticSynDict)    
 
 synInpSom1e.connect(True)
@@ -192,8 +191,8 @@ statemonSynInpSom1e = StateMonitor(synInpSom1e,('w'), record=range(ninputs*nInpN
 #synInpSom1e.weight = '0.1+0.6*rand()' #0.3 # making these random might be a way to get around the binary fusi synapse issue but it might also stop the SOM from working (think about it)  
 synInpSom1e.w = 'w_max*rand()'
 
-
-synInpSom1e.run_regularly('''w = w + plasticWrand*w_max*rand() ''',dt=300*ms)
+synInpSom1e.randomWeightchange = plasticRandomWeightchange
+synInpSom1e.run_regularly('''w = w + randomWeightchange*w_max*rand() ''',dt=300*ms)
 
 #===============================================================================
 # This is just a first idea of a decay of learning rate
@@ -261,6 +260,8 @@ if standalone:
     replaceVars = ['sInpSom1e_weight',
                  'sInpSom1e_taupre',
                  'sInpSom1e_taupost',
+                 'sInpSom1e_diffApre',
+                 'sInpSom1e_Q_diffAPrePost',
                  
                  'sInpInh1e_weight',
                  'sInpInh1i_weight',
@@ -269,8 +270,11 @@ if standalone:
                  'swtaSOMInh1e_weight',
                  'sInhwtaSOM1i_weight',
                  'swtaSOMwtaSOM1e_latWeight',
+                 'swtaSOMwtaSOM1e_latSigma',
+                 'swtaSOMwtaSOM1e_latSigmaTau',
                  'gwtaSOM_refP',
-                 'gwtaSOM_Inh_refP']
+                 'gwtaSOM_Inh_refP',
+                 'sInpSom1e_randomWeightchange']
     
     maincppPath = os.path.expanduser('~/Code/SOM_standalone/main.cpp')
 
@@ -322,9 +326,6 @@ if standalone:
 
 
 #%%
-startSim = time.time()
-
-
 # SET PARAMETERS
 # please note that those parameters have to be neuron or synapse attributes,
 # all other parameters are more complicated to change, as they are replaced by their value in the c++ code (e.g. in run_regularly)
@@ -334,41 +335,37 @@ startSim = time.time()
 
 paramDict = {
     #InpSOM
-    'sInpSom1e_weight'      : 124,
-    'sInpSom1e_taupre'      : 10*ms /second,
-    'sInpSom1e_taupost'     : 10*ms /second,
+    'sInpSom1e_weight'      : 100,
+    'sInpSom1e_taupre'      : 2.5*ms /second,
+    'sInpSom1e_taupost'     : 5.5*ms /second,
+    'sInpSom1e_diffApre'    : 0.01,
+    'sInpSom1e_Q_diffAPrePost' : 1.05,
     #Inp
-    'sInpInh1e_weight'      : 0.6,
-    'sInpInh1i_weight'      : -0.2,
-    'sInhInp1i_weight'      : -1.5,
+    'sInpInh1e_weight'      : 1.2,
+    'sInpInh1i_weight'      : -2.2,
+    'sInhInp1i_weight'      : -1.6,
     #Som
-    'swtaSOMInh1e_weight'   : 0.5,
-    'sInhwtaSOM1i_weight'   : -1.8,
-    'swtaSOMwtaSOM1e_latWeight': 0.18,
+    'swtaSOMInh1e_weight'   : 3,
+    'sInhwtaSOM1i_weight'   : -2.6,
+    'swtaSOMwtaSOM1e_latWeight': 1.4,
+    'swtaSOMwtaSOM1e_latSigma' : 2.6,
+    'swtaSOMwtaSOM1e_latSigmaTau' : 10,
     'gwtaSOM_refP'          : 2 *ms /second,
-    'gwtaSOM_Inh_refP'      : 1 *ms /second,
+    'gwtaSOM_Inh_refP'      : 3 *ms /second,
+    'sInpSom1e_randomWeightchange' : 0.1
 }
 
 print([key for key in paramDict])
 print([paramDict[key] for key in paramDict])
-#add other parameters ...
-#neuronPar['taui'] = 6*ms   
-#neuronPar['a']    = 4*nS
-#neuronPar['b']    = 0.0805*nA
-## input params
-#rpInp = 2*ms
-#sigmGaussInput = 6.0
-#inputWeight = 2000
-#plasticWrand=0.2
-#rpWTA = 2*ms
-#rpInh = 1*ms
-#nInhNeurons = 3
-## sigm SOM connectivity kernel params 
-#sigmnbi = 2.6
-#sigmDecayTau = 2*second
 
 run_args=[str(paramDict[key]) for key in paramDict]
 
+#%%
+x = [109.54052837493545, 0.005211591477891977, 0.005467614951920562, 0.07321851488760335, 1.1485733605175659, 1.2224122151154966, -2.3412286593261258, -1.1394606448723588, 2.8331576255667992, -2.6083976970849285, 1.4377468834338218, 0.0019057157747765588, 0.0033192163721975057]
+x = [121.33526065707038, 0.005862695511547694, 0.004626317658108405, 0.084989802599914024, 1.1437880236678701, 1.741934351623958, -2.0925086799751984, -0.74132371209649028, 2.1717780403490949, -2.4512728343832273, 1.4599227498554253, 0.001722654776429622, 0.003512216213001274]
+run_args=[str(val) for val in x]
+#%%
+startSim = time.time()
 #run simulation
 device.run(directory='SOM_standalone',with_output=True,run_args=run_args)
 end = time.time()
@@ -380,13 +377,13 @@ plotting = True
 
 if plotting:
     start = time.time()
-    dur = 1000 *ms
+    dur = 1800 *ms
     startTime = duration - dur
     endTime = duration 
     #plotWTA('wtaSOM',duration,nWTA2dNeurons,True,spikemonwtaSOM,spikemonwtaSOMInh,spikemonwtaSOMInp,False)
     plotWTA('wtaSOM',startTime,endTime,nWTA2dNeurons,True,spikemonwtaSOM,spikemonwtaSOMInh,spikemonwtaSOMInp,statemonwtaSOM)
     ## WTA plot tiles over time
-    plotWTATiles('wtaSOM',startTime,endTime,nWTA2dNeurons, spikemonwtaSOM,interval=interval*ms, showfig = False, tilecolors=col[(len(col)-int(dur/(interval*ms))):len(col)] )
+    plotWTATiles('wtaSOM',startTime,endTime,nWTA2dNeurons, spikemonwtaSOM,interval=interval*ms, nCol = 9,  showfig = False, tilecolors=col[(len(col)-int(dur/(interval*ms))):len(col)] )
     show()
     #plot(statemonwtaSOM.t/ms, statemonwtaSOM.Vm[0]/mV)
     #xlabel('Time [ms]')

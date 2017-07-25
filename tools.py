@@ -1,4 +1,8 @@
-from brian2 import implementation,check_units,ms,exp,mean,diff,declare_types
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from brian2 import implementation,check_units,ms,exp,mean,diff,declare_types,\
+                    figure,subplot,plot,xlim,ylim,ones,zeros,xticks,xlabel,ylabel
 from brian2 import *
 import numpy as np
 import os
@@ -61,57 +65,94 @@ def setParams(briangroup, params, ndargs=None, debug=False):
         print ('----------')
 
 
+def visualise_connectivity(S):
+    "simple visualization of synapse connectivity (connected dots and connectivity matrix)"
+    Ns = len(S.source)
+    Nt = len(S.target)
+    figure(figsize=(8, 4))
+    subplot(121)
+    plot(zeros(Ns), range(Ns), 'ok', ms=10)
+    plot(ones(Nt), range(Nt), 'ok', ms=10)
+    for i, j in zip(S.i, S.j):
+        plot([0, 1], [i, j], '-k')
+    xticks([0, 1], ['Source', 'Target'])
+    ylabel('Neuron index')
+    xlim(-0.1, 1.1)
+    ylim(-1, max(Ns, Nt))
+    subplot(122)
+    plot(S.i, S.j, 'ok')
+    xlim(-1, Ns)
+    ylim(-1, Nt)
+    xlabel('Source neuron index')
+    ylabel('Target neuron index')
+    
+
 # function that calculates 1D index from 2D index
-@implementation('numpy', discard_units=True)
-@check_units(x=1, y=1, n2dNeurons=1, result=1)
+@implementation( 'numpy', discard_units=True)
+@check_units( x=1, y=1, n2dNeurons=1, result=1)
 def xy2ind(x, y, n2dNeurons):
-    return int(x) + int(y) * n2dNeurons
+    return int(y) + int(x) * n2dNeurons
 
 # function that calculates 2D index from 1D index
 # please note that the total number of neurons in the square field is n2dNeurons**2
-@implementation('numpy', discard_units=True)
-@check_units(ind=1, n2dNeurons=1, result=1)
-def ind2x(ind, n2dNeurons):
-    ret = np.mod(np.round(ind), n2dNeurons)
-    return ret
-@implementation('numpy', discard_units=True)
-@check_units(ind=1, n2dNeurons=1, result=1)
-def ind2y(ind, n2dNeurons):
-    ret = np.floor_divide(np.round(ind), n2dNeurons)
-    return ret
-@implementation('numpy', discard_units=True)
-@check_units(ind=1, n2dNeurons=1, result=1)
-def ind2xy(ind, n2dNeurons):
-    ret = (np.mod(np.round(ind), n2dNeurons), np.floor_divide(np.round(ind), n2dNeurons))
-    return ret
-# Example of indices for n2dNeurons=3
-#__0_1_2
-#0|0 1 2
-#1|3 4 5
-#2|6 7 8 
-#so ind2xy(4,3) --> (1,1)
-
-# function that calculates distance in 2D field from 2 1D indices
-
 #@implementation('numpy', discard_units=True)
 @implementation('cpp', '''
-    double fdist2d(int i, int j, int n2dNeurons) {
-    int ix = i % n2dNeurons;
-    int iy = i / n2dNeurons;
-    int jx = j % n2dNeurons;
-    int jy = j / n2dNeurons;
+    int ind2x(int ind,int n2dNeurons) {
+    return ind / n2dNeurons;
+    }
+     ''')
+@declare_types( ind='integer',n2dNeurons='integer',result='integer')
+@check_units( ind=1, n2dNeurons=1, result=1)
+def ind2x(ind, n2dNeurons):
+    ret = np.floor_divide(np.round(ind), n2dNeurons)
+    return ret
+
+@implementation('cpp', '''
+    int ind2y(int ind,int n2dNeurons) {
+    return ind % n2dNeurons;
+    }
+     ''')
+@declare_types( ind='integer',n2dNeurons='integer',result='integer')
+@check_units( ind=1, n2dNeurons=1, result=1)
+def ind2y(ind, n2dNeurons):
+    ret = np.mod(np.round(ind), n2dNeurons)
+    return ret
+
+@implementation('numpy', discard_units=True)
+@check_units( ind=1, n2dNeurons=1, result=1)
+def ind2xy(ind, n2dNeurons):
+    #ret = (np.floor_divide(np.round(ind), n2dNeurons),np.mod(np.round(ind), n2dNeurons))
+    return np.unravel_index(ind,(n2dNeurons,n2dNeurons))
+
+
+
+# function that calculates distance in 2D field from 2 1D indices
+@implementation('cpp', '''
+    float fdist2d(int i, int j, int n2dNeurons) {
+    int ix = i / n2dNeurons;
+    int iy = i % n2dNeurons;
+    int jx = j / n2dNeurons;
+    int jy = j % n2dNeurons;
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
 @declare_types(i='integer', j='integer',n2dNeurons='integer',result='float')
 @check_units(i=1, j=1, n2dNeurons=1, result=1)
 def fdist2d(i, j, n2dNeurons):
-    # return sqrt((np.mod(i,n2dNeurons)-np.mod(j,n2dNeurons))**2+(np.floor_divide(i,n2dNeurons)-np.floor_divide(j,n2dNeurons))**2)
-    # print(i)
-    # print(j)
-    # print(n2dNeurons)
     (ix, iy) = ind2xy(i, n2dNeurons)
     (jx, jy) = ind2xy(j, n2dNeurons)
+    return np.sqrt((ix - jx)**2 + (iy - jy)**2)
+
+# function that calculates distance in 2D field from 4 2D indices
+#@implementation('numpy', discard_units=True)
+@implementation('cpp', '''
+    float dist2d(int ix, int iy,int jx, int jy) {
+    return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
+    }
+     ''')
+@declare_types(ix='integer', iy='integer',jx='integer', jy='integer',result='float')
+@check_units(ix=1, iy=1, jx=1, jy=1, result=1)
+def dist2d(ix,iy,jx,jy):
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 # function that calculates 1D "mexican hat" kernel
@@ -155,10 +196,10 @@ def fkernelgauss1d(i, j, gsigma):
 #@implementation('numpy', discard_units=True)
 @implementation('cpp', '''
     float fkernel2d(int i, int j, float gsigma, int n2dNeurons) {
-    int ix = i % n2dNeurons;
-    int iy = i / n2dNeurons;
-    int jx = j % n2dNeurons;
-    int jy = j / n2dNeurons;
+    int ix = i / n2dNeurons;
+    int iy = i % n2dNeurons;
+    int jx = j / n2dNeurons;
+    int jy = j % n2dNeurons;
     int x = ix - jx;
     int y = iy - jy;
     float exponent = -(pow(x,2) + pow(y,2)) / (2 * pow(gsigma,2));

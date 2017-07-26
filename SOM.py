@@ -34,6 +34,8 @@ from NCSBrian2Lib.tools import setParams, fkernelgauss1d, printStates, fkernel2d
 from NCSBrian2Lib.BasicBuildingBlocks.WTA import gen2dWTA,gen1dWTA
 from NCSBrian2Lib.Plotting.WTAplot import plotWTA,plotWTATiles
 
+from NCSBrian2Lib.tools import replaceVariablesInCPPcode
+
 start = time.time()
 
 standalone = True
@@ -41,13 +43,14 @@ clean = True
 plotInp = False
 plotting = True
 plotweights = False
+standaloneDir = 'SOM_standalone'
 
 if standalone:
     if "somNet" in globals():
         device.reinit()
-        device.activate(directory='SOM_standalone', build_on_run=False)
+        device.activate(directory=standaloneDir, build_on_run=False)
     else:
-        set_device('cpp_standalone', directory='SOM_standalone', build_on_run=False)
+        set_device('cpp_standalone', directory=standaloneDir, build_on_run=False)
     prefs.devices.cpp_standalone.openmp_threads = 4
 else:
     prefs.codegen.target = "numpy"
@@ -56,7 +59,7 @@ seed(42)
 rnseed(42)
 
 # network parameters
-duration = 2500 * ms #needs to be a multiple of interval # and needs to be much longer for SOM training, but for debugging and looking at input, keep it short 
+duration = 10000 * ms #needs to be a multiple of interval # and needs to be much longer for SOM training, but for debugging and looking at input, keep it short 
 interval = 20
 nWTA1dNeurons = 64
 nWTA2dNeurons = 10#16
@@ -248,7 +251,7 @@ if standalone:
     
     prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++14')
     #prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++11')
-    device.build(compile=False, run = False, directory='SOM_standalone', clean=clean, debug=False)
+    device.build(compile=False, run = False, directory=standaloneDir, clean=clean, debug=False)
     
     end = time.time()
     print ('build took ' + str(end - startBuild) + ' sec')
@@ -257,6 +260,7 @@ if standalone:
     
     #===============================================================================
     # Code that needs to be added to the main.cpp file
+    # you can find the correct name to use here by: Group.name+'_'+stateVariable
     replaceVars = ['sInpSom1e_weight',
                  'sInpSom1e_taupre',
                  'sInpSom1e_taupost',
@@ -276,47 +280,15 @@ if standalone:
                  'gwtaSOM_Inh_refP',
                  'sInpSom1e_randomWeightchange']
     
-    maincppPath = os.path.expanduser('~/Code/SOM_standalone/main.cpp')
-
-    # generate arg code
-    cppArgCode = ""
-    for ivar, rvar in enumerate(replaceVars):
-        cppArgCode += """\n	float {replvar}_p = std::stof(argv[{num}],NULL);
-	std::cout << "variable {replvar} is argument {num} with value " << {replvar}_p << std::endl;\n""".format(num=(ivar+1),replvar=rvar)
-    
-    
-    # read main.cpp
-    f = open(maincppPath, "r")
-    contents = f.readlines()
-    f.close()
-    
-    # insert arg code
-    for i_line, line in enumerate(contents):
-            if "int main(int argc, char **argv)" in line:
-                insertLine = i_line+2
-    contents.insert(insertLine, cppArgCode)
-    
-    # replace var code
-    f = open(maincppPath, "w")
-    for i_line, line in enumerate(contents):
-        replaced = False
-        for rvar in replaceVars:
-            if rvar+"[i]" in line :
-                replaced = True
-                keepFirstPart = line.split('=', 1)[0]
-                f.write(keepFirstPart + '= ' + rvar + '_p;\n')
-                print("replaced " + rvar + " in line " + str(i_line))
-        if not replaced:
-            f.write(line)
-    f.close()
+    cwd = os.getcwd()
+    maincppPath = os.path.join(cwd,standaloneDir,'main.cpp') #this should always be the correct path
+    replaceVariablesInCPPcode(replaceVars,replaceFileLocation=maincppPath)
 
     #===============================================================================
-
     # compile
     startMake = time.time()  
-    #out = check_output(["make","-C","~/Code/SOM_standalone"])
     compiler, args = codegen.cpp_prefs.get_compiler_and_args()
-    device.compile_source(directory='SOM_standalone', compiler=compiler, clean=clean, debug=False)
+    device.compile_source(directory=standaloneDir, compiler=compiler, clean=clean, debug=False)
     #print(out)
     end = time.time()
     print ('make took ' + str(end - startMake) + ' sec')
@@ -361,13 +333,16 @@ print([paramDict[key] for key in paramDict])
 run_args=[str(paramDict[key]) for key in paramDict]
 
 #%%
-x = [109.54052837493545, 0.005211591477891977, 0.005467614951920562, 0.07321851488760335, 1.1485733605175659, 1.2224122151154966, -2.3412286593261258, -1.1394606448723588, 2.8331576255667992, -2.6083976970849285, 1.4377468834338218, 0.0019057157747765588, 0.0033192163721975057]
-x = [121.33526065707038, 0.005862695511547694, 0.004626317658108405, 0.084989802599914024, 1.1437880236678701, 1.741934351623958, -2.0925086799751984, -0.74132371209649028, 2.1717780403490949, -2.4512728343832273, 1.4599227498554253, 0.001722654776429622, 0.003512216213001274]
+#x = [103.77021543197986, 0.0045300966906149445, 0.0056607878621278808, 0.07787122208256457, 1.0508237976283448, 0.65225802671157318, -1.9981797322062949, -1.6563172346279358, 1.0795657749127894, -1.919419096850318, 0.11346390281001328, 1.7022299059810067, 444.80715021750217, 0.003189511728200986, 0.0023813145612986068, 0.0019422506244796134]
+x = [103.77, 0.00453, 0.00566, 0.07787, 1.0508, 0.65225, -1.9982, -1.65631, 1.0795, -1.919, 0.11346, 1.7022, 2000 , 0.003189, 0.002381, 0.00194]
+
+print(list(x))
 run_args=[str(val) for val in x]
+
 #%%
 startSim = time.time()
 #run simulation
-device.run(directory='SOM_standalone',with_output=True,run_args=run_args)
+device.run(directory=standaloneDir,with_output=True,run_args=run_args)
 end = time.time()
 print ('simulation in c++ took ' + str(end - startSim) + ' sec')
 print('simulation done!')
@@ -383,7 +358,7 @@ if plotting:
     #plotWTA('wtaSOM',duration,nWTA2dNeurons,True,spikemonwtaSOM,spikemonwtaSOMInh,spikemonwtaSOMInp,False)
     plotWTA('wtaSOM',startTime,endTime,nWTA2dNeurons,True,spikemonwtaSOM,spikemonwtaSOMInh,spikemonwtaSOMInp,statemonwtaSOM)
     ## WTA plot tiles over time
-    plotWTATiles('wtaSOM',startTime,endTime,nWTA2dNeurons, spikemonwtaSOM,interval=interval*ms, nCol = 9,  showfig = False, tilecolors=col[(len(col)-int(dur/(interval*ms))):len(col)] )
+    plotWTATiles('wtaSOM',startTime,endTime,nWTA2dNeurons, spikemonwtaSOM,interval=interval*ms, nCol = 9,  showfig = False, maxFiringRate=100, tilecolors=col[(len(col)-int(dur/(interval*ms))):len(col)] )
     show()
     #plot(statemonwtaSOM.t/ms, statemonwtaSOM.Vm[0]/mV)
     #xlabel('Time [ms]')

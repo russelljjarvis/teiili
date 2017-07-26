@@ -88,6 +88,7 @@ def visualise_connectivity(S):
     
 
 # function that calculates 1D index from 2D index
+# same as np.ravel_multi_index((x,y),(n2dNeurons,n2dNeurons))
 @implementation( 'numpy', discard_units=True)
 @check_units( x=1, y=1, n2dNeurons=1, result=1)
 def xy2ind(x, y, n2dNeurons):
@@ -641,3 +642,42 @@ def DVScsv2numpy(datafile = 'tmp/aerout.csv', exp_name = 'Experiment', debug = F
         print(Events[3, 0:10])
     return Events
 
+
+
+
+def replaceVariablesInCPPcode(replaceVars,replaceFileLocation):
+    ''' replaces a list of variables in CPP code for standalone code generation with changeable parameters
+    @params:
+        replaceVars : List of strings, variables that are replaced
+        replaceFileLocation : string, location of the file in which the variables are replaced 
+    '''
+    # generate arg code
+    cppArgCode = ""
+    for ivar, rvar in enumerate(replaceVars):
+        cppArgCode += """\n	float {replvar}_p = std::stof(argv[{num}],NULL);
+	std::cout << "variable {replvar} is argument {num} with value " << {replvar}_p << std::endl;\n""".format(num=(ivar+1),replvar=rvar)
+        
+    # read main.cpp
+    f = open(replaceFileLocation, "r")
+    contents = f.readlines()
+    f.close()
+    
+    # insert arg code
+    for i_line, line in enumerate(contents):
+            if "int main(int argc, char **argv)" in line:
+                insertLine = i_line+2
+    contents.insert(insertLine, cppArgCode)
+    
+    # replace var code
+    f = open(replaceFileLocation, "w")
+    for i_line, line in enumerate(contents):
+        replaced = False
+        for rvar in replaceVars:
+            if rvar+"[i]" in line :
+                replaced = True
+                keepFirstPart = line.split('=', 1)[0]
+                f.write(keepFirstPart + '= ' + rvar + '_p;\n')
+                print("replaced " + rvar + " in line " + str(i_line))
+        if not replaced:
+            f.write(line)
+    f.close()

@@ -68,7 +68,7 @@ def plotWTA(name,startTime,endTime,nWTANeurons,plot2d,spikemonWTA,spikemonWTAInh
     return
 
 
-def plotWTATiles(name,startTime,endTime,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCol = 10, showfig = False,savepath=False, tilecolors = []):
+def plotWTATiles(name,startTime,endTime,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCol = 10, showfig = False,savepath=False,maxFiringRate=300, tilecolors = []):
     'Plot a 2d WTA as tiles over time'
     duration = endTime-startTime
     
@@ -122,7 +122,7 @@ def plotWTATiles(name,startTime,endTime,nWTA2dNeurons, spikemonWTA, interval = 1
             axarr[i//nCol,np.mod(i,nCol)].set_facecolor(tilecolors[i])
             #axarr[i//nCol,np.mod(i,nCol)].set_axis_bgcolor(tilecolors[i])
         #axarr[i//nCol,np.mod(i,nCol)].imshow(log10(hist2d),cmap=plt.cm.hot,clim=(0,log10(1000)))
-        axarr[i//nCol,np.mod(i,nCol)].imshow(hist2d,cmap=plt.cm.jet,clim=(0,300))
+        axarr[i//nCol,np.mod(i,nCol)].imshow(hist2d,cmap=plt.cm.jet,clim=(0,maxFiringRate))
     if not savepath:
         pass
     else:

@@ -9,7 +9,7 @@ from brian2 import ms,mV,pA,nS,nA,pF,us,volt,second,Network,prefs,SpikeGenerator
                    seed,xlim,ylim,subplot
 from brian2 import *
 import matplotlib.pyplot as plt
-from NCSBrian2Lib.tools import xy2ind, ind2xy
+from NCSBrian2Lib.Tools.tools import xy2ind, ind2xy
 import numpy as np
 
 # this is to make plotting that starts at a certain time easier
@@ -32,25 +32,26 @@ def plotStatemon(startTime,endTime,StateMon,neuronInd,variable='Vm', unit=mV):
     ylabel(variable+' ['+str(unit)+']')
     xlim([startTime/ms,endTime/ms])
 
-def plotWTA(name,startTime,endTime,nWTANeurons,plot2d,spikemonWTA,spikemonWTAInh,spikemonWTAInp,statemonWTA):
+def plotWTA(name,startTime,endTime,nWTANeurons,plot2d,WTAMonitors):
     
     nnWTANeurons = nWTANeurons
     if plot2d:
         nnWTANeurons = nnWTANeurons**2
    
     fig = figure(figsize=(8,3))
-    plotSpikemon(startTime,endTime,spikemonWTA,nnWTANeurons,ylab='ind WTA')
+    plotSpikemon(startTime,endTime,WTAMonitors['spikemonWTA'],nnWTANeurons,ylab='ind WTA')
     fig = figure(figsize=(8,3))
-    plotSpikemon(startTime,endTime,spikemonWTAInp,None,ylab='ind WTA')
+    plotSpikemon(startTime,endTime,WTAMonitors['spikemonWTAInp'],None,ylab='ind WTA')
     fig = figure(figsize=(8,3))
-    plotSpikemon(startTime,endTime,spikemonWTAInh,None,ylab='ind WTA')
+    plotSpikemon(startTime,endTime,WTAMonitors['spikemonWTAInh'],None,ylab='ind WTA')
     #fig.savefig('fig/'+name+'_Spikes.png')
     
     if nnWTANeurons > 20:
         plotStateNeurons = range(20)
     else:
         plotStateNeurons = nnWTANeurons
-        
+    
+    statemonWTA = WTAMonitors['statemonWTA']    
     if statemonWTA is not False:  
         fig = figure(figsize=(8,10))
         nPlots=3*100

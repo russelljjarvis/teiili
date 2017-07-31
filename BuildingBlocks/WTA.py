@@ -43,7 +43,8 @@ class WTA(BuildingBlock):
     '''a 1 or 2D square WTA'''
     def __init__(self,name,dimensions = 1, neuronEq=ExpAdaptIF,synapseEq=reversalSynV,
              neuronParams=gerstnerExpAIFdefaultregular,synapseParams=revSyn_default,
-             blockParams=wtaParams, numNeurons = 16, numInhNeurons = 2, cutoff=10, numWtaInputs = 1, debug=False):
+             blockParams=wtaParams, numNeurons = 16, numInhNeurons = 2, cutoff=10,
+             additionalStatevars = [], numWtaInputs = 1, debug=False):
         
         self.numNeurons = numNeurons
         self.dimensions = dimensions
@@ -54,11 +55,13 @@ class WTA(BuildingBlock):
             self.Groups,self.Monitors,self.replaceVars = gen1dWTA(name,
                      neuronEq,neuronParams,synapseEq,synapseParams,**blockParams,
                      numNeurons = numNeurons, numInhNeurons = numInhNeurons,
+                     additionalStatevars = additionalStatevars,
                      cutoff=cutoff, numWtaInputs = numWtaInputs, monitor=True, debug=debug)
         elif dimensions==2:
             self.Groups,self.Monitors,self.replaceVars = gen2dWTA(name,
                      neuronEq,neuronParams,synapseEq,synapseParams,**blockParams,
                      numNeurons = numNeurons, numInhNeurons = numInhNeurons,
+                     additionalStatevars = additionalStatevars,
                      cutoff=cutoff, numWtaInputs = numWtaInputs, monitor=True, debug=debug)
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
@@ -81,7 +84,7 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
              synEquation=reversalSynV, synParameters=revSyn_default,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5,
              rpWTA=3 * ms, rpInh=1 * ms,
-             sigm=3, numNeurons=64, numInhNeurons=5, cutoff=10, numWtaInputs = 1, monitor=True, debug=False):
+             sigm=3, numNeurons=64, numInhNeurons=5, cutoff=10, numWtaInputs = 1, monitor=True, additionalStatevars = [], debug=False):
     '''generates a new WTA
     3 inputs to the gWTAGroup are used, so start with startInputNumbering+4 for additional inputs'''
 
@@ -100,7 +103,8 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     # printStates(gWTAInpGroup)
     # create synapses
     synInpWTA1e = Connections(gWTAInpGroup, gWTAGroup,     synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_Inpe')
-    synWTAWTA1e = Connections(gWTAGroup,    gWTAGroup,     synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_e')  # kernel function
+    synWTAWTA1e = Connections(gWTAGroup,    gWTAGroup,     synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_e',
+                              additionalStatevars = ["latWeight : 1 (constant)","latSigma : 1"]+additionalStatevars) # kernel function
     synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup,     synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_Inhi')
     synWTAInh1e = Connections(gWTAGroup,    gWTAInhGroup,  synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_Inhe')
 
@@ -116,9 +120,10 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     synInhWTA1i.weight = wiInhWTA
     # lateral excitation kernel
     # we add an additional attribute to that synapse, which allows us to change and retrieve that value more easily
-    synWTAWTA1e.add_attribute('latWeight')
     synWTAWTA1e.latWeight = weWTAWTA
-    synWTAWTA1e.weight = 'latWeight * fkernel1d(i,j,sigm)'
+    synWTAWTA1e.latSigma = sigm
+    synWTAWTA1e.weight = 'latWeight * fkernel1d(i,j,latSigma)'
+
     # print(synWTAWTA1e.weight)
 
     Groups = {

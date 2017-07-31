@@ -164,7 +164,7 @@ def genSOM( name, #not used at the moment
     nInpNeurons = nWTA1dNeurons
     
     gInpGroup = Neurons(ninputs*nInpNeurons, neuronEq, neuronPar, refractory = rpInp,numInputs = 2,
-                        additionalStatevars = ["inputWeight: 1 (constant)"], name = 'gInpGroup')
+                        additionalStatevars = ["inputWeight : 1 (constant)"],debug=debug, name = 'gInpGroup')
     gInpGroup.inputWeight = inputWeight
     gInpSubgroups = [gInpGroup[(inp*nInpNeurons):((inp+1)*nInpNeurons)] for inp in range(ninputs)]
     #spikemonInp = SpikeMonitor(gInpGroup)

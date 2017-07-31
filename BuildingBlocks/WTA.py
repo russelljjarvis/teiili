@@ -7,7 +7,7 @@ This files contains different WTA circuits
 @author: Alpha
 '''
 
-from brian2 import NeuronGroup,ms,SpikeGeneratorGroup,Synapses,SpikeMonitor,StateMonitor,figure, subplot
+from brian2 import ms,SpikeGeneratorGroup,Synapses,SpikeMonitor,StateMonitor,figure, subplot
 from brian2 import *
 
 import time
@@ -85,8 +85,7 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5,
              rpWTA=3 * ms, rpInh=1 * ms,
              sigm=3, numNeurons=64, numInhNeurons=5, cutoff=10, numWtaInputs = 1, monitor=True, additionalStatevars = [], debug=False):
-    '''generates a new WTA
-    3 inputs to the gWTAGroup are used, so start with startInputNumbering+4 for additional inputs'''
+    '''generates a new WTA'''
 
     # time measurement
     start = time.clock()

@@ -47,6 +47,7 @@ def ExpAdaptIF(numInputs = 1,debug=False,method='euler', additionalStatevars = N
     Iesline = ["    Ie" + str(i) + " : amp" for i in range(1,numInputs+1) if i > 1]
     Iisline = ["    Ii" + str(i) + " : amp" for i in range(1,numInputs+1)if i > 1]
     modelEq = modelEq + "\n".join(Iesline) +"\n" + "\n".join(Iisline)  
+    modelEq += "\n"
     
     if additionalStatevars is not None:
         if debug:

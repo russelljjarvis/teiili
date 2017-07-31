@@ -48,7 +48,7 @@ class Neurons(NeuronGroup):
         self.numSynapses += 1
         if self.debug:
             print('increasing number of registered Synapses of '+ self.name +' to ' , self.numSynapses )
-            print('specified max number of Synapses of '+ self.name +' is ' , self.numInputs )
+            print('specified max number of Synapses of '+ self.name +' is ' , self.__numInputs )
         if self.__numInputs < self.numSynapses:
             raise ValueError ('There seem so be too many connections to '+ self.name + ', please increase numInputs')
         
@@ -68,9 +68,15 @@ class Connections(Synapses):
         
         self.params = params
         self.debug  = debug
+        self.inputNumber = 0
         
+        #target.registerSynapse()
+        #print(target.numSynapses)
+        #self.inputNumber = target.numSynapses
         try:
             target.registerSynapse()
+            if debug: 
+                print(target.numSynapses)
             self.inputNumber = target.numSynapses
         except ValueError as e:
             raise e
@@ -78,10 +84,11 @@ class Connections(Synapses):
             if inputNumber is not None:
                 self.inputNumber = inputNumber
             else:
-                warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons, therefore, please specify an inputNumber')
+                warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for'+
+                              str(target) +', therefore, please specify an inputNumber')
         
         synDict = Equation(inputNumber = self.inputNumber , debug=debug, additionalStatevars = additionalStatevars)
-        
+
         Synapses.__init__(self, source, target=target, **synDict,
              connect=connect, delay=delay, on_event=on_event,
              multisynaptic_index=multisynaptic_index,

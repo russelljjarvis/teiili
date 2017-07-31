@@ -10,20 +10,67 @@ import numpy as np
 
 from brian2 import *
 from brian2 import ms,mV,pA,nS,nA,pF,us,volt,second,Network,prefs,SpikeGeneratorGroup,NeuronGroup,\
-                   Synapses,SpikeMonitor,StateMonitor,figure, plot,show,xlabel,ylabel,\
+                   SpikeMonitor,StateMonitor,figure, plot,show,xlabel,ylabel,\
                    seed,xlim,ylim,subplot,network_operation,set_device,device,TimedArray,\
                    defaultclock,profiling_summary,codegen,floor
 
-from NCSBrian2Lib.Equations.neuronEquations import ExpAdaptIF
-from NCSBrian2Lib.Equations.synapseEquations import reversalSynV
+from NCSBrian2Lib.Equations.neuronEquations import ExpAdaptIF 
+from NCSBrian2Lib.Equations.neuronEquations import Silicon
+
+from NCSBrian2Lib.Equations.synapseEquations import reversalSynV 
+from NCSBrian2Lib.Equations.synapseEquations import BraderFusiSynapses,SiliconSynapses
 
 from NCSBrian2Lib.Parameters.neuronParams import gerstnerExpAIFdefaultregular
-from NCSBrian2Lib.Parameters.synapseParams import revSyn_default
+from NCSBrian2Lib.Parameters.neuronParams import SiliconNeuronP
 
-from NCSBrian2Lib.Tools.tools import setParams
+from NCSBrian2Lib.Parameters.synapseParams import revSyn_default
+from NCSBrian2Lib.Parameters.synapseParams import Braderfusi,SiliconSynP
+
+from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
+from NCSBrian2Lib.Groups.Groups import Neurons, Connections
 
 #%%
 #===============================================================================
+
+slParams = { 'synInpOrd1e_weight'   : 1.3,
+             'synOrdMem1e_weight'   : 1.1,
+             'synMemOrd1e_weight'   : 0.16,
+             #local
+             'synOrdOrd1e_weight'   : 1.04,
+             'synMemMem1e_weight'   : 1.54,
+             #inhibitory
+             'synOrdOrd1i_weight'   : -1.95,
+             'synMemOrd1i_weight'   : -0.384,
+             'synCoSOrd1i_weight'   : -1.14,
+             'synResetOrd1i_weight' : -1.44,
+             'synResetMem1i_weight' : -2.6,
+             #refractory
+             'gOrdGroups_refP'      : 1.7*ms,
+             'gMemGroups_refP'      : 2.3*ms
+             }
+
+
+class SequenceLearning(BuildingBlock):
+    '''a 1 or 2D square WTA'''
+    def __init__(self,name, neuronEq=ExpAdaptIF,synapseEq=reversalSynV,
+             neuronParams=gerstnerExpAIFdefaultregular,synapseParams=revSyn_default,
+             blockParams=slParams,numElements=3,numNeuronsPerGroup=6,additionalInputs=0,debug=False):
+              
+        BuildingBlock.__init__(self,name,neuronEq,synapseEq,neuronParams,synapseParams,blockParams,debug)
+        
+        self.Groups,self.Monitors,self.replaceVars = genSequenceLearning(name,
+                 neuronEq,neuronParams,synapseEq,synapseParams,**blockParams,
+                 numElements = numElements, numNeuronsPerGroup = numNeuronsPerGroup,
+                 additionalInputs=additionalInputs, debug=debug)
+        
+        self.inputGroup = self.Groups['gInputGroup']
+        self.cosGroup   = self.Groups['gCoSGroup']
+        self.resetGroup = self.Groups['gResetGroup']
+        
+    def plot(self):
+
+        plotSequenceLearning(self.Monitors)
+
 
 def genSequenceLearning(groupname = 'Seq',
              neuronEq  = ExpAdaptIF,    neuronPar  = gerstnerExpAIFdefaultregular,
@@ -49,7 +96,6 @@ def genSequenceLearning(groupname = 'Seq',
              debug = False):
     """create Sequence Learning Network after the model from Sandamirskaya and Schoener (2010)"""
 
-
     nOrdNeurons = numNeuronsPerGroup*numElements
     nMemNeurons = numNeuronsPerGroup*numElements
     
@@ -66,38 +112,27 @@ def genSequenceLearning(groupname = 'Seq',
     indReset = np.asarray([])
     gResetGroup = SpikeGeneratorGroup(numNeuronsPerGroup, indices=indReset, times=tsReset, name='spikegenReset_'+ groupname)
 
-    neuronEqsDict_Ord = neuronEq (numInputs   = 7+additionalInputs, debug = debug)
-    neuronEqsDict_Mem = neuronEq (numInputs   = 3, debug = debug)
-    synEqsDict1     = synapseEq(inputNumber = 1, debug = debug)
-    synEqsDict2     = synapseEq(inputNumber = 2, debug = debug)
-    synEqsDict3     = synapseEq(inputNumber = 3, debug = debug)
-    synEqsDict4     = synapseEq(inputNumber = 4, debug = debug)
-    synEqsDict5     = synapseEq(inputNumber = 5, debug = debug)
-    synEqsDict6     = synapseEq(inputNumber = 6, debug = debug)
-    synEqsDict7     = synapseEq(inputNumber = 7, debug = debug)
-
     # Neurongoups
-    gOrdGroups = NeuronGroup(nOrdNeurons,  name='g' +'Ord_'+ groupname, **neuronEqsDict_Ord)
-    gMemGroups = NeuronGroup(nMemNeurons,  name='g' +'Mem_'+ groupname, **neuronEqsDict_Mem)
+    gOrdGroups = Neurons(nOrdNeurons, neuronEq, neuronPar, refractory = gOrdGroups_refP, name='g' +'Ord_'+ groupname, numInputs   = 7+additionalInputs, debug=debug)
+    gMemGroups = Neurons(nMemNeurons, neuronEq, neuronPar, refractory = gMemGroups_refP, name='g' +'Mem_'+ groupname, numInputs   = 3, debug=debug)
     
     # Synapses 
     #excitatory
-    synInpOrd1e   = Synapses(gInputGroup, gOrdGroups, method="euler", name='sInpOrd1e_'+ groupname, **synEqsDict1)
-    synOrdMem1e   = Synapses(gOrdGroups,  gMemGroups, method="euler", name='sOrdMem1e_'+ groupname, **synEqsDict1)
-    synMemOrd1e   = Synapses(gMemGroups,  gOrdGroups, method="euler", name='sMemOrd1e_'+ groupname, **synEqsDict2)
-    #local
-    synOrdOrd1e   = Synapses(gOrdGroups,  gOrdGroups, method="euler", name='sOrdOrd1e_'+ groupname, **synEqsDict3)
-    synMemMem1e   = Synapses(gMemGroups,  gMemGroups, method="euler", name='sMemMem1e_'+ groupname, **synEqsDict2)
+    synInpOrd1e   = Connections(gInputGroup, gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sInpOrd1e_'+ groupname)
+    synOrdMem1e   = Connections(gOrdGroups,  gMemGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sOrdMem1e_'+ groupname)
+    synMemOrd1e   = Connections(gMemGroups,  gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sMemOrd1e_'+ groupname)
+    #local 
+    synOrdOrd1e   = Connections(gOrdGroups,  gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sOrdOrd1e_'+ groupname)
+    synMemMem1e   = Connections(gMemGroups,  gMemGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sMemMem1e_'+ groupname)
     #inhibitory
-    synOrdOrd1i   = Synapses(gOrdGroups,  gOrdGroups, method="euler", name='sOrdOrd1i_'+ groupname, **synEqsDict4)
-    synMemOrd1i   = Synapses(gMemGroups,  gOrdGroups, method="euler", name='sMemOrd1i_'+ groupname, **synEqsDict5)
-    synCoSOrd1i   = Synapses(gCoSGroup,   gOrdGroups, method="euler", name='sCoSOrd1i_'+ groupname, **synEqsDict6)  
-    synResetOrd1i = Synapses(gResetGroup, gOrdGroups, method="euler", name='sResOrd1i_'+ groupname, **synEqsDict7)
-    synResetMem1i = Synapses(gResetGroup, gMemGroups, method="euler", name='sResMem1i_'+ groupname, **synEqsDict3)
-    
+    synOrdOrd1i   = Connections(gOrdGroups,  gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sOrdOrd1i_'+ groupname)
+    synMemOrd1i   = Connections(gMemGroups,  gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sMemOrd1i_'+ groupname)
+    synCoSOrd1i   = Connections(gCoSGroup,   gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sCoSOrd1i_'+ groupname)  
+    synResetOrd1i = Connections(gResetGroup, gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sResOrd1i_'+ groupname)
+    synResetMem1i = Connections(gResetGroup, gMemGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sResMem1i_'+ groupname)
     
     # predefine connections for efficiency reasons
-    iii = []
+    iii= []
     jjj= []
     for ii in range (nOrdNeurons):
         for jj in range (nMemNeurons):
@@ -125,21 +160,6 @@ def genSequenceLearning(groupname = 'Seq',
     #Reset
     synResetOrd1i.connect(True)
     synResetMem1i.connect(True)
-
-    # set parameters of neuron groups
-    setParams(gOrdGroups, neuronPar, debug=debug)
-    setParams(gMemGroups, neuronPar, debug=debug)
-    # set parameters of synapses
-    setParams(synInpOrd1e,   synapsePar, debug=debug)
-    setParams(synOrdMem1e,   synapsePar, debug=debug)
-    setParams(synMemOrd1e,   synapsePar, debug=debug)
-    setParams(synOrdOrd1e,   synapsePar, debug=debug)
-    setParams(synMemMem1e,   synapsePar, debug=debug)
-    setParams(synOrdOrd1i,   synapsePar, debug=debug)
-    setParams(synMemOrd1i,   synapsePar, debug=debug)
-    setParams(synCoSOrd1i,   synapsePar, debug=debug)
-    setParams(synResetOrd1i, synapsePar, debug=debug)
-    setParams(synResetMem1i, synapsePar, debug=debug)  
     
     # change some parameters
     # weights
@@ -156,9 +176,6 @@ def genSequenceLearning(groupname = 'Seq',
     synCoSOrd1i.weight   = synCoSOrd1i_weight
     synResetOrd1i.weight = synResetOrd1i_weight
     synResetMem1i.weight = synResetMem1i_weight
-    # refractory periods
-    gOrdGroups.refP = gOrdGroups_refP
-    gMemGroups.refP = gMemGroups_refP
     
     SLGroups = {
                 'gOrdGroups'  : gOrdGroups,
@@ -210,14 +227,13 @@ def genSequenceLearning(groupname = 'Seq',
     return SLGroups,SLMonitors,replaceVars
 
 
-
 def plotSequenceLearning(SLMonitors):
     
-    spikemonOrd = SLGroups['spikemonOrd']
-    spikemonMem = SLGroups['spikemonMem']
-    spikemonInp = SLGroups['spikemonInp']
-    spikemonCoS = SLGroups['spikemonCoS']
-    spikemonReset = SLGroups['spikemonReset']
+    spikemonOrd = SLMonitors['spikemonOrd']
+    spikemonMem = SLMonitors['spikemonMem']
+    spikemonInp = SLMonitors['spikemonInp']
+    spikemonCoS = SLMonitors['spikemonCoS']
+    spikemonReset = SLMonitors['spikemonReset']
     duration = max(spikemonOrd.t)+10*ms
     print ('plot...')
     figure(figsize=(8,12))

@@ -12,61 +12,6 @@ import matplotlib.pyplot as plt
 from NCSBrian2Lib.Tools.tools import xy2ind, ind2xy
 import numpy as np
 
-# this is to make plotting that starts at a certain time easier
-def plotSpikemon(startTime,endTime,SpikeMon,nNeurons,ylab='ind'):
-    if len(SpikeMon.t)>1:  
-        indstart = np.abs(SpikeMon.t-startTime).argmin()
-        indend = np.abs(SpikeMon.t-endTime).argmin()
-        plot(SpikeMon.t[indstart:indend]/ms, SpikeMon.i[indstart:indend], '.k')
-        xlabel('Time [ms]')
-        ylabel(ylab)
-        xlim([startTime/ms,endTime/ms])
-        if nNeurons is not None:
-            ylim([0,nNeurons])
-
-def plotStatemon(startTime,endTime,StateMon,neuronInd,variable='Vm', unit=mV):
-    indstart = np.abs(StateMon.t-startTime).argmin()
-    indend = np.abs(StateMon.t-endTime).argmin()
-    plot(StateMon.t[indstart:indend]/ms, StateMon[neuronInd].__getattr__(variable)[indstart:indend]/unit)
-    xlabel('Time [ms]')
-    ylabel(variable+' ['+str(unit)+']')
-    xlim([startTime/ms,endTime/ms])
-
-def plotWTA(name,startTime,endTime,nWTANeurons,plot2d,WTAMonitors):
-    
-    nnWTANeurons = nWTANeurons
-    if plot2d:
-        nnWTANeurons = nnWTANeurons**2
-   
-    fig = figure(figsize=(8,3))
-    plotSpikemon(startTime,endTime,WTAMonitors['spikemonWTA'],nnWTANeurons,ylab='ind WTA')
-    fig = figure(figsize=(8,3))
-    plotSpikemon(startTime,endTime,WTAMonitors['spikemonWTAInp'],None,ylab='ind WTA')
-    fig = figure(figsize=(8,3))
-    plotSpikemon(startTime,endTime,WTAMonitors['spikemonWTAInh'],None,ylab='ind WTA')
-    #fig.savefig('fig/'+name+'_Spikes.png')
-    
-    if nnWTANeurons > 20:
-        plotStateNeurons = range(20)
-    else:
-        plotStateNeurons = nnWTANeurons
-    
-    statemonWTA = WTAMonitors['statemonWTA']    
-    if statemonWTA is not False:  
-        fig = figure(figsize=(8,10))
-        nPlots=3*100
-        subplot(nPlots+11)
-        for ii in plotStateNeurons:
-            plotStatemon(startTime,endTime,statemonWTA,ii,variable='Vm',unit=mV)
-        subplot(nPlots+12)
-        for ii in plotStateNeurons:
-            plotStatemon(startTime,endTime,statemonWTA,ii,variable='Ii',unit=pA)
-        subplot(nPlots+13)
-        for ii in plotStateNeurons:
-            plotStatemon(startTime,endTime,statemonWTA,ii,variable='Ie',unit=pA)
-        #fig.savefig('fig/'+name+'_States.png', dpi=300)
-    
-    return
 
 
 def plotWTATiles(name,startTime,endTime,nWTA2dNeurons, spikemonWTA, interval = 10*ms, nCol = 10, showfig = False,savepath=False,maxFiringRate=300, tilecolors = []):
@@ -113,16 +58,15 @@ def plotWTATiles(name,startTime,endTime,nWTA2dNeurons, spikemonWTA, interval = 1
         inds2d = ind2xy(inds1d,nWTA2dNeurons)
         axarr[i//nCol,np.mod(i,nCol)].set_xlim(0,nWTA2dNeurons)
         axarr[i//nCol,np.mod(i,nCol)].set_ylim(0,nWTA2dNeurons) 
-        axarr[i//nCol,np.mod(i,nCol)].set_xticks(np.arange(nWTA2dNeurons)+0.5)
-        axarr[i//nCol,np.mod(i,nCol)].set_yticks(np.arange(nWTA2dNeurons)+0.5)
-        axarr[i//nCol,np.mod(i,nCol)].set_xticklabels([])
-        axarr[i//nCol,np.mod(i,nCol)].set_yticklabels([])
-        axarr[i//nCol,np.mod(i,nCol)].grid(True,linestyle='-')
+        #axarr[i//nCol,np.mod(i,nCol)].set_xticks(np.arange(nWTA2dNeurons)+0.5)
+        #axarr[i//nCol,np.mod(i,nCol)].set_yticks(np.arange(nWTA2dNeurons)+0.5)
+        #axarr[i//nCol,np.mod(i,nCol)].set_xticklabels([])
+        #axarr[i//nCol,np.mod(i,nCol)].set_yticklabels([])
+        
+        #axarr[i//nCol,np.mod(i,nCol)].grid(True,linestyle='-')
         axarr[i//nCol,np.mod(i,nCol)].autoscale(False)
         if len(tilecolors) > 1:
             axarr[i//nCol,np.mod(i,nCol)].set_facecolor(tilecolors[i])
-            #axarr[i//nCol,np.mod(i,nCol)].set_axis_bgcolor(tilecolors[i])
-        #axarr[i//nCol,np.mod(i,nCol)].imshow(log10(hist2d),cmap=plt.cm.hot,clim=(0,log10(1000)))
         axarr[i//nCol,np.mod(i,nCol)].imshow(hist2d,cmap=plt.cm.jet,clim=(0,maxFiringRate))
     if not savepath:
         pass

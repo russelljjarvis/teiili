@@ -79,7 +79,7 @@ def lowPass(population1, population2, kernel, overlap, camera='DVS128', save_pat
             target = target + 1
 
     if check:
-        print 'Visualisation'
+        print ('Visualisation')
         cv.visualise_connectivity(S)
 
     connections = np.zeros([len(connections_source), 2])
@@ -522,7 +522,7 @@ def gabor_on(population1, population2, save_path, save):
 
 
     if save:
-        print 'Saving connection matrix:'
+        print ('Saving connection matrix:')
         np.save(filename1, connection_0)
         np.save(filename2, connection_45)
         np.save(filename3, connection_90)
@@ -641,7 +641,7 @@ def gabor_off(population1, population2, save_path, save):
 
 
     if save:
-        print 'Saving connection matrix:'
+        print ('Saving connection matrix:')
         np.save(filename1, connection_0)
         np.save(filename2, connection_45)
         np.save(filename3, connection_90)

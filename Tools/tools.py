@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from brian2 import implementation,check_units,ms,exp,mean,diff,declare_types,\
-                    figure,subplot,plot,xlim,ylim,ones,zeros,xticks,xlabel,ylabel
+                    figure,subplot,plot,xlim,ylim,ones,zeros,xticks,xlabel,ylabel,device
 from brian2 import *
 import numpy as np
 import os
@@ -34,57 +34,6 @@ def printStates(briangroup):
         else:
             print (key, states[key])
     print ('----------')
-
-
-def setParams(briangroup, params, ndargs=None, debug=False):
-    for par in params:
-        if hasattr(briangroup, par):
-            if ndargs is not None and par in ndargs:
-                if ndargs[par] is None:
-                    setattr(briangroup, par, params[par])
-                else:
-                    print(par, ndargs, ndargs[par])
-                    setattr(briangroup, par, ndargs[par])
-            else:
-                setattr(briangroup, par, params[par])
-    if debug:
-        # This fails with synapses coming from SpikeGenerator groups, unidentified bug?
-        # This does not work in standalone mode as values of state variables cannot be retrieveed before the simulation has been run
-        states = briangroup.get_states()
-        print ('\n')
-        print ('-_-_-_-_-_-_-_', '\n', 'Parameters set')
-        print(briangroup.name)
-        print('List of first value of each parameter:')
-        for key in states.keys():
-            if key in params:
-                if states[key].size > 1:
-                    print (key, states[key][1])
-                else:
-                    print (key, states[key])
-        print ('----------')
-
-
-def visualise_connectivity(S):
-    "simple visualization of synapse connectivity (connected dots and connectivity matrix)"
-    Ns = len(S.source)
-    Nt = len(S.target)
-    figure(figsize=(8, 4))
-    subplot(121)
-    plot(zeros(Ns), range(Ns), 'ok', ms=10)
-    plot(ones(Nt), range(Nt), 'ok', ms=10)
-    for i, j in zip(S.i, S.j):
-        plot([0, 1], [i, j], '-k')
-    xticks([0, 1], ['Source', 'Target'])
-    ylabel('Neuron index')
-    xlim(-0.1, 1.1)
-    ylim(-1, max(Ns, Nt))
-    subplot(122)
-    plot(S.i, S.j, 'ok')
-    xlim(-1, Ns)
-    ylim(-1, Nt)
-    xlabel('Source neuron index')
-    ylabel('Target neuron index')
-    
 
 # function that calculates 1D index from 2D index
 # same as np.ravel_multi_index((x,y),(n2dNeurons,n2dNeurons))
@@ -669,71 +618,3 @@ def DVScsv2numpy(datafile = 'tmp/aerout.csv', exp_name = 'Experiment', debug = F
     return Events
 
 
-def buildCppAndReplace(replaceVars, standaloneDir='output'):
-    
-    startBuild = time.time()
-    prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++14')
-    #prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++11')
-    device.build(compile=False, run = False, directory=standaloneDir, clean=True, debug=False)
-    
-    end = time.time()
-    print ('build took ' + str(end - startBuild) + ' sec')
-    startSim = time.time()
-    
-    #===============================================================================
-    # Code that needs to be added to the main.cpp file
-
-    maincppPath = os.path.join(os.getcwd(),standaloneDir,'main.cpp') #this should always be the correct path
-    replaceVariablesInCPPcode(replaceVars,replaceFileLocation=maincppPath)
-    #===============================================================================
-    # compile
-    startMake = time.time()  
-    #out = check_output(["make","-C","~/Code/SOM_standalone"])
-    compiler, args = codegen.cpp_prefs.get_compiler_and_args()
-    device.compile_source(directory=standaloneDir, compiler=compiler, clean=True, debug=False)
-    #print(out)
-    end = time.time()
-    print ('make took ' + str(end - startMake) + ' sec')
-    print('\n\nstandalone SOM was built and compiled, ready to run!')
-
-def replaceVariablesInCPPcode(replaceVars,replaceFileLocation):
-    ''' replaces a list of variables in CPP code for standalone code generation with changeable parameters
-    @params:
-        replaceVars : List of strings, variables that are replaced
-        replaceFileLocation : string, location of the file in which the variables are replaced 
-    '''
-    # generate arg code
-    cppArgCode = ""
-    for ivar, rvar in enumerate(replaceVars):
-        cppArgCode += """\n	float {replvar}_p = std::stof(argv[{num}],NULL);
-	std::cout << "variable {replvar} is argument {num} with value " << {replvar}_p << std::endl;\n""".format(num=(ivar+1),replvar=rvar)
-        
-    # read main.cpp
-    f = open(replaceFileLocation, "r")
-    contents = f.readlines()
-    f.close()
-    
-    # insert arg code
-    for i_line, line in enumerate(contents):
-            if "int main(int argc, char **argv)" in line:
-                insertLine = i_line+2
-    contents.insert(insertLine, cppArgCode)
-    
-    # replace var code
-    f = open(replaceFileLocation, "w")
-    for i_line, line in enumerate(contents):
-        replaced = False
-        for rvar in replaceVars:
-            if rvar+"[i]" in line :
-                replaced = True
-                keepFirstPart = line.split('=', 1)[0]
-                f.write(keepFirstPart + '= ' + rvar + '_p;\n')
-                print("replaced " + rvar + " in line " + str(i_line))
-        if not replaced:
-            f.write(line)
-    f.close()
-
-def printRunParams(replaceVars,run_args):
-    print('The following parameters are set for this run:')
-    for ii in range(len(run_args)):
-        print(replaceVars[ii],' = ',run_args[ii])

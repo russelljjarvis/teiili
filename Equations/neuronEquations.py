@@ -2,7 +2,6 @@
 from brian2 import *
 from NCSBrian2Lib.Tools.tools import *
 
-__all__ = ['ExpAdaptIF', 'Silicon']
 
 def ExpAdaptIF(numInputs = 1,debug=False,method='euler', additionalStatevars = None):
     '''

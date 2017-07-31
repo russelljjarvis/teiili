@@ -8,8 +8,8 @@ Created on Thu Jul 27 17:41:10 2017
 
 class BuildingBlock:
    
-    def __init__(self,blockName,neuronEq,synapseEq,neuronParams,synapseParams,blockParams,debug):
-        self.blockName      = blockName
+    def __init__(self,name,neuronEq,synapseEq,neuronParams,synapseParams,blockParams,debug):
+        self.name           = name
         self.neuronEq       = neuronEq
         self.synapseEq      = synapseEq
         self.neuronParams   = neuronParams
@@ -19,4 +19,9 @@ class BuildingBlock:
         self.Groups={}
         self.Monitors={}
         self.replaceVars=[]
+                
+        
+        # this allows us to iterate over the BrianObjects and directly add the Block to a Network
+    def __iter__(self):
+        return iter([{**self.Groups,**self.Monitors}[key] for key in {**self.Groups,**self.Monitors}])
         

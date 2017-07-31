@@ -28,11 +28,9 @@ from NCSBrian2Lib.Parameters.neuronParams import gerstnerExpAIFdefaultregular as
 #from NCSBrian2Lib.Parameters.synapseParams import fusiDefault
 from NCSBrian2Lib.Parameters.synapseParams import revSyn_default as synapsePar
 from NCSBrian2Lib.Parameters.synapseParams import StdpSyn_default as plasticSynapsePar
-from NCSBrian2Lib.Tools.tools import setParams, fkernelgauss1d, printStates, fkernel2d, xy2ind
+from NCSBrian2Lib.Tools.tools import fkernelgauss1d, printStates, fkernel2d, xy2ind
 from NCSBrian2Lib.BuildingBlocks.WTA import gen2dWTA,gen1dWTA
-from NCSBrian2Lib.Plotting.WTAplot import plotWTA,plotWTATiles
-
-from NCSBrian2Lib.Tools.tools import buildCppAndReplace,printRunParams
+from NCSBrian2Lib.Plotting.WTAplot import plotWTATiles
 
 
 def genSOM(# network parameters

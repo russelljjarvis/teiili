@@ -37,18 +37,15 @@ wtaParams = {'weInpWTA' : 1.5,
              'weWTAWTA' : 0.5,
              'rpWTA'    : 3 * ms,
              'rpInh'    : 1 * ms,
-             'sigm'     : 3,
-             'numNeurons' : 64,
-             'numInhNeurons': 5}
-
+             'sigm'     : 3}
 
 class WTA(BuildingBlock):
     '''a 1 or 2D square WTA'''
     def __init__(self,name,dimensions = 1, neuronEq=ExpAdaptIF,synapseEq=reversalSynV,
              neuronParams=gerstnerExpAIFdefaultregular,synapseParams=revSyn_default,
-             blockParams=wtaParams, cutoff=10, numWtaInputs = 1, debug=False):
+             blockParams=wtaParams, numNeurons = 16, numInhNeurons = 2, cutoff=10, numWtaInputs = 1, debug=False):
         
-        self.numNeurons = blockParams['numNeurons']
+        self.numNeurons = numNeurons
         self.dimensions = dimensions
         
         BuildingBlock.__init__(self,name,neuronEq,synapseEq,neuronParams,synapseParams,blockParams,debug)
@@ -56,10 +53,12 @@ class WTA(BuildingBlock):
         if dimensions == 1:
             self.Groups,self.Monitors,self.replaceVars = gen1dWTA(name,
                      neuronEq,neuronParams,synapseEq,synapseParams,**blockParams,
+                     numNeurons = numNeurons, numInhNeurons = numInhNeurons,
                      cutoff=cutoff, numWtaInputs = numWtaInputs, monitor=True, debug=debug)
         elif dimensions==2:
             self.Groups,self.Monitors,self.replaceVars = gen2dWTA(name,
-                     neuronEq,neuronParams,synapseEq,synapseParams,**blockParams,   
+                     neuronEq,neuronParams,synapseEq,synapseParams,**blockParams,
+                     numNeurons = numNeurons, numInhNeurons = numInhNeurons,
                      cutoff=cutoff, numWtaInputs = numWtaInputs, monitor=True, debug=debug)
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")

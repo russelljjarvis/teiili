@@ -12,7 +12,7 @@ from brian2 import *
 from brian2 import ms,mV,pA,nS,nA,pF,us,volt,second,Network,prefs,SpikeGeneratorGroup,NeuronGroup,\
                    SpikeMonitor,StateMonitor,figure, plot,show,xlabel,ylabel,\
                    seed,xlim,ylim,subplot,network_operation,set_device,device,TimedArray,\
-                   defaultclock,profiling_summary,codegen,floor
+                   defaultclock,profiling_summary,codegen,floor,title
 
 from NCSBrian2Lib.Equations.neuronEquations import ExpAdaptIF 
 from NCSBrian2Lib.Equations.neuronEquations import Silicon
@@ -58,7 +58,7 @@ class SequenceLearning(BuildingBlock):
               
         BuildingBlock.__init__(self,name,neuronEq,synapseEq,neuronParams,synapseParams,blockParams,debug)
         
-        self.Groups,self.Monitors,self.replaceVars = genSequenceLearning(name,
+        self.Groups,self.Monitors,self.standaloneParams = genSequenceLearning(name,
                  neuronEq,neuronParams,synapseEq,synapseParams,**blockParams,
                  numElements = numElements, numNeuronsPerGroup = numNeuronsPerGroup,
                  additionalInputs=additionalInputs, debug=debug)
@@ -208,23 +208,25 @@ def genSequenceLearning(groupname = 'Seq',
                 'spikemonInp'  : spikemonInp,
                 'spikemonReset': spikemonReset}
     
-    replaceVars = ['sInpOrd1e_'+ groupname +'_weight',
-                   'sOrdMem1e_'+ groupname +'_weight',
-                   'sMemOrd1e_'+ groupname +'_weight',
-                   #local
-                   'sOrdOrd1e_'+ groupname +'_weight',
-                   'sMemMem1e_'+ groupname +'_weight',
-                   #inhibitory
-                   'sOrdOrd1i_'+ groupname +'_weight',
-                   'sMemOrd1i_'+ groupname +'_weight',
-                   'sCoSOrd1i_'+ groupname +'_weight',
-                   'sResetOrd1i_'+ groupname +'_weight',
-                   'sResetMem1i_'+ groupname +'_weight',
-                   #refractory
-                   'gOrd_'+ groupname +'_refP',
-                   'gMem_'+ groupname +'_refP']
+    standaloneParams = {synInpOrd1e.name +'_weight'      : synInpOrd1e_weight,
+                       synOrdMem1e.name +'_weight'       : synOrdMem1e_weight,
+                       synMemOrd1e.name +'_weight'       : synMemOrd1e_weight,
+                       #local
+                       synOrdOrd1e.name +'_weight'       : synOrdOrd1e_weight,
+                       synMemMem1e.name +'_weight'       : synMemMem1e_weight,
+                       #inhibitory
+                       synOrdOrd1i.name +'_weight'       : synOrdOrd1i_weight,
+                       synMemOrd1i.name +'_weight'       : synMemOrd1i_weight,
+                       synCoSOrd1i.name +'_weight'       : synCoSOrd1i_weight,
+                       synResetOrd1i.name +'_weight'     : synResetOrd1i_weight,
+                       synResetMem1i.name +'_weight'     : synResetMem1i_weight,
+                       #refractory
+                       gOrdGroups.name +'_refP'              : gOrdGroups_refP,
+                       gMemGroups.name +'_refP'              : gMemGroups_refP
+                       }
+    
                  
-    return SLGroups,SLMonitors,replaceVars
+    return SLGroups,SLMonitors,standaloneParams
 
 
 def plotSequenceLearning(SLMonitors):

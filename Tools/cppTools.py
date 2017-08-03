@@ -7,13 +7,16 @@ Created on Fri Jul 28 19:02:05 2017
 """
 
 from brian2 import implementation,check_units,ms,exp,mean,diff,declare_types,prefs,\
-                   figure,subplot,plot,xlim,ylim,ones,zeros,xticks,xlabel,ylabel,device
+                   figure,subplot,plot,xlim,ylim,ones,zeros,xticks,xlabel,ylabel,device,codegen,asarray
 from brian2 import *
 import numpy as np
 import os
 import time
+import warnings
+from collections import OrderedDict
 
-def buildCppAndReplace(replaceVars, standaloneDir='output'):
+
+def buildCppAndReplace(standaloneParams, standaloneDir='output'):
     
     startBuild = time.time()
     prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++14')
@@ -27,6 +30,7 @@ def buildCppAndReplace(replaceVars, standaloneDir='output'):
     # Code that needs to be added to the main.cpp file
 
     maincppPath = os.path.join(os.getcwd(),standaloneDir,'main.cpp') #this should always be the correct path
+    replaceVars = [key for key in standaloneParams]
     replaceVariablesInCPPcode(replaceVars,replaceFileLocation=maincppPath)
     #===============================================================================
     # compile
@@ -63,6 +67,7 @@ def replaceVariablesInCPPcode(replaceVars,replaceFileLocation):
     contents.insert(insertLine, cppArgCode)
     
     # replace var code
+    replaceTODOlist = list(replaceVars) # copy replaceVars in order to create a todolist where we can delete elements that are done
     f = open(replaceFileLocation, "w")
     for i_line, line in enumerate(contents):
         replaced = False
@@ -72,11 +77,40 @@ def replaceVariablesInCPPcode(replaceVars,replaceFileLocation):
                 keepFirstPart = line.split('=', 1)[0]
                 f.write(keepFirstPart + '= ' + rvar + '_p;\n')
                 print("replaced " + rvar + " in line " + str(i_line))
+                replaceTODOlist = [elem for elem in replaceTODOlist if not elem==rvar]# check element in todolist
         if not replaced:
             f.write(line)
     f.close()
+    if len(replaceTODOlist)>0:
+        # maybe we should raise an exception here as this is rather serious?
+        warnings.warn("could not find matching variables in cpp code for " + str(replaceTODOlist), Warning)# warning, items left in todolist
+        
 
-def printRunParams(replaceVars,run_args):
+def printDict(pdict):
     print('The following parameters are set for this run:')
-    for ii in range(len(run_args)):
-        print(replaceVars[ii],' = ',run_args[ii])
+    for key in pdict:
+        print(key,' = ',pdict[key])
+
+def params2run_args(standaloneParams):
+        run_args=[str(asarray(standaloneParams[key])) for key in standaloneParams] # asarray is to remove units. It is the way proposed in the tutorial
+        return run_args      
+
+def collectStandaloneParams(*buildingBlocks, params = OrderedDict()):
+    '''This just collect the parameters of all buildingblocks and adds additional parameters (not from buildingblocks) '''
+    standaloneParams = OrderedDict()
+    for block in buildingBlocks:
+        standaloneParams.update(block.standaloneParams)
+        
+    standaloneParams.update(params)    
+    return standaloneParams
+            
+def run_standalone(standaloneParams,standaloneDir):
+    startSim = time.time()
+    #run simulation
+    printDict(standaloneParams)
+    run_args=params2run_args(standaloneParams)
+    device.run(directory=standaloneDir,with_output=True,run_args=run_args)
+    end = time.time()
+    print ('simulation in c++ took ' + str(end - startSim) + ' sec')
+    print('simulation done!')
+

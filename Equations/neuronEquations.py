@@ -3,7 +3,7 @@ from brian2 import *
 from NCSBrian2Lib.Tools.tools import *
 
 
-def ExpAdaptIF(numInputs = 1,debug=False,method='euler', additionalStatevars = None):
+def ExpAdaptIF(numInputs=1, debug=False, method='euler', additionalStatevars=None):
     '''
     Brette, Gerstner 2005 Exponential adaptive IF model
     see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
@@ -13,14 +13,14 @@ def ExpAdaptIF(numInputs = 1,debug=False,method='euler', additionalStatevars = N
     eqDict = neuronEquatioons.ExpAdaptIF()
     neurongroup = NeuronGroup(nNeurons, **eqDict , refractory = 2*ms, method='euler',name='groupname')
     tools.setParams(neurongroup , equationParams.gerstnerExpAIFdefaultregular)
-    @param: 
+    @param:
     numInputs  # number of input currents (>0) (they are just numbered: Ie, Ie2, Ie3, ...)
     debug      # print debug info?
     '''
-    
+
     arguments = dict(locals())
-    #del(arguments['debug'])
-    
+    # del(arguments['debug'])
+
     modelEq = """
     dVm/dt = (gL*(EL - Vm) + gL*DeltaT*exp((Vm - VT)/DeltaT) + Iin - wad)/C : volt (unless refractory)
     dwad/dt = (a*(Vm - EL) - wad)/tauwad : amp
@@ -41,32 +41,32 @@ def ExpAdaptIF(numInputs = 1,debug=False,method='euler', additionalStatevars = N
     y       : 1         (constant)        # y location on 2d grid
     """
     # add additional input currents (if you have several input currents)
-    Ies = ["+ Ie" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
-    Iis = ["+ Ii" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
+    Ies = ["+ Ie" + str(i) + " " for i in range(1, numInputs + 1) if i > 1]
+    Iis = ["+ Ii" + str(i) + " " for i in range(1, numInputs + 1) if i > 1]
     modelEq = modelEq + "Iin = Iconst + Ii + Ie " + "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
-    Iesline = ["    Ie" + str(i) + " : amp" for i in range(1,numInputs+1) if i > 1]
-    Iisline = ["    Ii" + str(i) + " : amp" for i in range(1,numInputs+1)if i > 1]
-    modelEq = modelEq + "\n".join(Iesline) +"\n" + "\n".join(Iisline)  
+    Iesline = ["    Ie" + str(i) + " : amp" for i in range(1, numInputs + 1) if i > 1]
+    Iisline = ["    Ii" + str(i) + " : amp" for i in range(1, numInputs + 1)if i > 1]
+    modelEq = modelEq + "\n".join(Iesline) + "\n" + "\n".join(Iisline)
     modelEq += "\n"
-    
+
     if additionalStatevars is not None:
         if debug:
             print("added to Equation: \n" + "\n".join(additionalStatevars))
         modelEq += "\n            ".join(additionalStatevars)
-        
-    
-    thresholdEq = "Vm > (VT + 5 * DeltaT)"   
-    resetEq     = "Vm = Vr; wad += b"
 
-    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq, refractory = 'refP' , method=method)
-    
+    thresholdEq = "Vm > (VT + 5 * DeltaT)"
+    resetEq = "Vm = Vr; wad += b"
+
+    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq, refractory='refP', method=method)
+
     if debug:
         print('arguments of ExpAdaptIF: \n' + str(arguments))
         printEqDict(eqDict)
 
     return eqDict
 
-def Silicon(numInputs = 1, debug=False, Excitatory=True, method='euler', additionalStatevars = None):
+
+def Silicon(numInputs=1, debug=False, Excitatory=True, method='euler', additionalStatevars=None):
     '''Silicon Neuron as in Chicca et al. 2014
     @return: a dictionary of keyword arguments for NeuronGroup()
     @note: you have to set parameters for each NeuronGroup after its creation, synapses have to increment the correct variable: Ie or Ii
@@ -76,17 +76,17 @@ def Silicon(numInputs = 1, debug=False, Excitatory=True, method='euler', additio
     tools.setParams(neurongroup , equationParams.gerstnerExpAIFdefaultregular)
     @param: see equation below
     '''
-    
+
     arguments = dict(locals())
     del(arguments['debug'])
     del(arguments['Excitatory'])
- 
+
     modelEq = """
     dImem/dt = (Ipos * (Ipos > 1*pamp)  - Imem * (1 + Iahp / Itau)) / ( taum * (1 + Ith / (Imem + noise + Io)) ) : amp (unless refractory)
     Ipos =  ( (Ith / Itau) * (Iin - Iahp - Itau)  + Ifb ) : amp
     Ifb  =  ( (Ia / Itau) * (Imem + Ith) ) : amp
     Ia   =  ( Iagain * 1 / (1 + exp(-(Imem - Iath)/ Ianorm) ) ) : amp
-      
+
     dIahp/dt=(Iposa - Iahp ) / tauahp : amp
     dIca/dt = (Iposa - Ica ) / tauca : amp
 
@@ -124,55 +124,54 @@ def Silicon(numInputs = 1, debug=False, Excitatory=True, method='euler', additio
     Ith    : amp (constant)
     Itau   : amp (constant)
     refP    : second (constant)        # refractory period (It is still possible to set it to False)
-    
+
     x       : 1         (constant)        # x location on 2d grid  (only set it if you need it)
     y       : 1         (constant)        # y location on 2d grid
     """
     # add additional input currents (if you have several input currents)
-    Ies = ["+ Ie" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
-    Iis = ["+ Ii" + str(i) + " " for i in range(1,numInputs+1) if i > 1]
+    Ies = ["+ Ie" + str(i) + " " for i in range(1, numInputs + 1) if i > 1]
+    Iis = ["+ Ii" + str(i) + " " for i in range(1, numInputs + 1) if i > 1]
     modelEq = modelEq + "Iin = Iconst + Iin_teach + Ii + Ie " + "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
-    Iesline = ["    Ie" + str(i) + " : amp" for i in range(1,numInputs+1) if i > 1]
-    Iisline = ["    Ii" + str(i) + " : amp" for i in range(1,numInputs+1)if i > 1]
-    modelEq = modelEq + "\n".join(Iesline) +"\n" + "\n".join(Iisline)  
-    
+    Iesline = ["    Ie" + str(i) + " : amp" for i in range(1, numInputs + 1) if i > 1]
+    Iisline = ["    Ii" + str(i) + " : amp" for i in range(1, numInputs + 1)if i > 1]
+    modelEq = modelEq + "\n".join(Iesline) + "\n" + "\n".join(Iisline)
+
     if additionalStatevars is not None:
         if debug:
             print("added to Equation: \n" + "\n".join(additionalStatevars))
         modelEq += "\n            ".join(additionalStatevars)
-        
-    
-    
+
     if Excitatory:
         thresholdEq = "Imem > Ispkthr"
     else:
         thresholdEq = "Imem > Ispkthr_inh"
-    
+
     resetEq = "Imem = Ireset"
-    
+
     if debug:
         print('arguments of Silicon Neuron: \n' + str(arguments))
-    
+
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
-    
+
     if debug:
         printEqDict(eqDict)
-    
+
     return eqDict
 
+
 def printEqDict(eqDict):
-    print( 'Model equation:')
-    print( eqDict['model'])
-    print( '-_-_-_-_-_-_-_-')
-    print( 'threshold equation:')
-    print( eqDict['threshold'])
-    print( '-_-_-_-_-_-_-_-')
-    print( 'reset equation:')
-    print( eqDict['reset'])
-    print( '-_-_-_-_-_-_-_-')
-    print( 'refractory variable:')
-    print( eqDict['refractory'])
-    print( '-_-_-_-_-_-_-_-')
-    print( 'method:')
-    print( eqDict['method'])
-    print( '-------------')
+    print('Model equation:')
+    print(eqDict['model'])
+    print('-_-_-_-_-_-_-_-')
+    print('threshold equation:')
+    print(eqDict['threshold'])
+    print('-_-_-_-_-_-_-_-')
+    print('reset equation:')
+    print(eqDict['reset'])
+    print('-_-_-_-_-_-_-_-')
+    print('refractory variable:')
+    print(eqDict['refractory'])
+    print('-_-_-_-_-_-_-_-')
+    print('method:')
+    print(eqDict['method'])
+    print('-------------')

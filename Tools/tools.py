@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from brian2 import implementation,check_units,ms,exp,mean,diff,declare_types,\
-                    figure,subplot,plot,xlim,ylim,ones,zeros,xticks,xlabel,ylabel,device
+from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
+    figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel, device
 from brian2 import *
 import numpy as np
 import os
@@ -22,6 +22,7 @@ import time
 #         print ('-_-_-_-_-_-_-_', '\n', 'Parameters set')
 #===============================================================================
 
+
 def printStates(briangroup):
     states = briangroup.get_states()
     print ('\n')
@@ -37,42 +38,47 @@ def printStates(briangroup):
 
 # function that calculates 1D index from 2D index
 # same as np.ravel_multi_index((x,y),(n2dNeurons,n2dNeurons))
-@implementation( 'numpy', discard_units=True)
-@check_units( x=1, y=1, n2dNeurons=1, result=1)
+
+
+@implementation('numpy', discard_units=True)
+@check_units(x=1, y=1, n2dNeurons=1, result=1)
 def xy2ind(x, y, n2dNeurons):
     return int(y) + int(x) * n2dNeurons
 
 # function that calculates 2D index from 1D index
 # please note that the total number of neurons in the square field is n2dNeurons**2
 #@implementation('numpy', discard_units=True)
+
+
 @implementation('cpp', '''
     int ind2x(int ind,int n2dNeurons) {
     return ind / n2dNeurons;
     }
      ''')
-@declare_types( ind='integer',n2dNeurons='integer',result='integer')
-@check_units( ind=1, n2dNeurons=1, result=1)
+@declare_types(ind='integer', n2dNeurons='integer', result='integer')
+@check_units(ind=1, n2dNeurons=1, result=1)
 def ind2x(ind, n2dNeurons):
     ret = np.floor_divide(np.round(ind), n2dNeurons)
     return ret
+
 
 @implementation('cpp', '''
     int ind2y(int ind,int n2dNeurons) {
     return ind % n2dNeurons;
     }
      ''')
-@declare_types( ind='integer',n2dNeurons='integer',result='integer')
-@check_units( ind=1, n2dNeurons=1, result=1)
+@declare_types(ind='integer', n2dNeurons='integer', result='integer')
+@check_units(ind=1, n2dNeurons=1, result=1)
 def ind2y(ind, n2dNeurons):
     ret = np.mod(np.round(ind), n2dNeurons)
     return ret
 
+
 @implementation('numpy', discard_units=True)
-@check_units( ind=1, n2dNeurons=1, result=1)
+@check_units(ind=1, n2dNeurons=1, result=1)
 def ind2xy(ind, n2dNeurons):
     #ret = (np.floor_divide(np.round(ind), n2dNeurons),np.mod(np.round(ind), n2dNeurons))
-    return np.unravel_index(ind,(n2dNeurons,n2dNeurons))
-
+    return np.unravel_index(ind, (n2dNeurons, n2dNeurons))
 
 
 # function that calculates distance in 2D field from 2 1D indices
@@ -85,7 +91,7 @@ def ind2xy(ind, n2dNeurons):
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
-@declare_types(i='integer', j='integer',n2dNeurons='integer',result='float')
+@declare_types(i='integer', j='integer', n2dNeurons='integer', result='float')
 @check_units(i=1, j=1, n2dNeurons=1, result=1)
 def fdist2d(i, j, n2dNeurons):
     (ix, iy) = ind2xy(i, n2dNeurons)
@@ -94,27 +100,31 @@ def fdist2d(i, j, n2dNeurons):
 
 # function that calculates distance in 2D field from 4 2D indices
 #@implementation('numpy', discard_units=True)
+
+
 @implementation('cpp', '''
     float dist2d(int ix, int iy,int jx, int jy) {
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
-@declare_types(ix='integer', iy='integer',jx='integer', jy='integer',result='float')
+@declare_types(ix='integer', iy='integer', jx='integer', jy='integer', result='float')
 @check_units(ix=1, iy=1, jx=1, jy=1, result=1)
-def dist2d(ix,iy,jx,jy):
+def dist2d(ix, iy, jx, jy):
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 # function that calculates 1D "mexican hat" kernel
 #@implementation('numpy', discard_units=True)
+
+
 @implementation('cpp', '''
     float fkernel1d(int i, int j, float gsigma) {
     x = i - j
     exponent = -pow(x,2) / (2 * pow(gsigma,2))
-    res = (1 + 2 * exponent) * exp(exponent) 
+    res = (1 + 2 * exponent) * exp(exponent)
     return res;
     }
      ''')
-@declare_types(i='integer', j='integer',gsigma='float', result='float')
+@declare_types(i='integer', j='integer', gsigma='float', result='float')
 @check_units(i=1, j=1, gsigma=1, result=1)
 def fkernel1d(i, j, gsigma):
     "function that calculates mexican hat 1D kernel"
@@ -133,7 +143,7 @@ def fkernel1d(i, j, gsigma):
     return exp(-(pow((i - j),2)) / (2 * pow(gsigma,2)));
     }
      ''')
-@declare_types(i='integer', j='integer',gsigma='float', result='float')
+@declare_types(i='integer', j='integer', gsigma='float', result='float')
 @check_units(i=1, j=1, gsigma=1, result=1)
 def fkernelgauss1d(i, j, gsigma):
     "function that calculates 1D kernel"
@@ -170,6 +180,8 @@ def fkernel2d(i, j, gsigma, n2dNeurons):
 
 # function that calculates symmetrical gaussian 2D kernel for neuron connectivity
 #@implementation('numpy', discard_units=True)
+
+
 @implementation('cpp', '''
     float fkernel2d(int i, int j, float gsigma, int n2dNeurons) {
     int ix = i / n2dNeurons;
@@ -195,19 +207,18 @@ def fkernelGauss2d(i, j, gsigma, n2dNeurons):
     return res
 
 
-def spikemon2firingRate(spikemon,fromT=0*ms,toT="max"):
-    spiketimes = (spikemon.t/ms)
-    if len(spiketimes)==0:
+def spikemon2firingRate(spikemon, fromT=0 * ms, toT="max"):
+    spiketimes = (spikemon.t / ms)
+    if len(spiketimes) == 0:
         return 0
     if toT == "max":
-        toT = max(spikemon.t/ms)
-    spiketimes = spiketimes[spiketimes<=toT]
-    spiketimes = spiketimes[spiketimes>=fromT/ms]
-    spiketimes = spiketimes/1000
-    if len(spiketimes)==0:
+        toT = max(spikemon.t / ms)
+    spiketimes = spiketimes[spiketimes <= toT]
+    spiketimes = spiketimes[spiketimes >= fromT / ms]
+    spiketimes = spiketimes / 1000
+    if len(spiketimes) == 0:
         return 0
-    return(mean(1/diff(spiketimes)))
-
+    return(mean(1 / diff(spiketimes)))
 
 
 # from Brian2 Equations class
@@ -534,9 +545,9 @@ def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True)
         return indices_on, ts_on
     elif return_off == True:
         return indices_off, ts_off
-    
-def DVScsv2numpy(datafile = 'tmp/aerout.csv', exp_name = 'Experiment', debug = False):
-    
+
+
+def DVScsv2numpy(datafile='tmp/aerout.csv', exp_name='Experiment', debug=False):
     """
     load AER csv logfile and parse these properties of AE events:
     - timestamps (in us),
@@ -547,13 +558,13 @@ def DVScsv2numpy(datafile = 'tmp/aerout.csv', exp_name = 'Experiment', debug = F
     @return (ts, xpos, ypos, pol) 4-tuple of lists containing data of all events;
     """
     import pandas as pd
-    
+
     logfile = datafile
 
     df = pd.read_csv(logfile, header=0)
 
     df.dropna(inplace=True)
-            # Process timestamps: Start at zero
+    # Process timestamps: Start at zero
     df['timestamp'] = df['timestamp'].astype(int)
 
     # Safe raw input
@@ -572,7 +583,7 @@ def DVScsv2numpy(datafile = 'tmp/aerout.csv', exp_name = 'Experiment', debug = F
     # Get new coordinates with more useful representation
     #df['x'] = df['y_raw']
     #df['y'] = 128 - df['x_raw']
-    #discard every third event
+    # discard every third event
     #new_ind = 0
     #Events = np.zeros([4, len(df['timestamp'])/3])
     Events_x = []
@@ -603,7 +614,7 @@ def DVScsv2numpy(datafile = 'tmp/aerout.csv', exp_name = 'Experiment', debug = F
             if (timestep == time_list[j]):
                 continue
             else:
-                counter+= 1
+                counter += 1
                 timestep = time_list[j]
     Events = np.zeros([4, len(Events_time)])
     Events[0, :] = Events_x
@@ -616,5 +627,3 @@ def DVScsv2numpy(datafile = 'tmp/aerout.csv', exp_name = 'Experiment', debug = F
         print(Events[2, 0:10])
         print(Events[3, 0:10])
     return Events
-
-

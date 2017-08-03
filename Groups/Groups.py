@@ -5,11 +5,12 @@ Created on Thu Jul 27 17:28:16 2017
 
 @author: alpha
 """
-from brian2 import NeuronGroup,Synapses,plot,subplot,zeros,ones,xticks,ylabel,xlabel,xlim,ylim,figure
+from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks, ylabel, xlabel, xlim, ylim, figure
 import warnings
 
+
 class Neurons(NeuronGroup):
-    
+
     def __init__(self, N, Equation, params,
                  method='euler',
                  refractory=False,
@@ -21,61 +22,62 @@ class Neurons(NeuronGroup):
                  order=0,
                  name='neurongroup*',
                  codeobj_class=None,
-                 #these are additional:
-                 numInputs = 1,
-                 additionalStatevars = None,
-                 debug = False):
+                 # these are additional:
+                 numInputs=1,
+                 additionalStatevars=None,
+                 debug=False):
         self.debug = debug
         self.__numInputs = numInputs
         self.numSynapses = 0
         # generate the equation in order to pu it into the NeuronGroup constructor
-        eqDict = Equation(numInputs = numInputs,debug=debug,method=method, additionalStatevars = additionalStatevars)
-        
-        NeuronGroup.__init__(self, N, **eqDict,
-                 events=events,
-                 namespace=namespace,
-                 dtype=dtype,
-                 dt=dt,
-                 clock=clock,
-                 order=order,
-                 name=name,
-                 codeobj_class=codeobj_class)
-                
-        setParams(self, params, debug = debug)
+        eqDict = Equation(numInputs=numInputs, debug=debug, method=method, additionalStatevars=additionalStatevars)
+
+        NeuronGroup.__init__(self, N,
+                             events=events,
+                             namespace=namespace,
+                             dtype=dtype,
+                             dt=dt,
+                             clock=clock,
+                             order=order,
+                             name=name,
+                             codeobj_class=codeobj_class, **eqDict)
+
+        setParams(self, params, debug=debug)
         self.refP = refractory
-          
+
     def registerSynapse(self):
         self.numSynapses += 1
         if self.debug:
-            print('increasing number of registered Synapses of '+ self.name +' to ' , self.numSynapses )
-            print('specified max number of Synapses of '+ self.name +' is ' , self.__numInputs )
+            print('increasing number of registered Synapses of ' + self.name + ' to ', self.numSynapses)
+            print('specified max number of Synapses of ' + self.name + ' is ', self.__numInputs)
         if self.__numInputs < self.numSynapses:
-            raise ValueError ('There seem so be too many connections to '+ self.name + ', please increase numInputs')
-        
+            raise ValueError('There seem so be too many connections to ' + self.name + ', please increase numInputs')
+
+
 class Connections(Synapses):
-    
+
     def __init__(self, source, target, Equation, params,
-             connect=None, delay=None, on_event='spike',
-             multisynaptic_index=None,
-             namespace=None, dtype=None,
-             codeobj_class=None,
-             dt=None, clock=None, order=0,
-             method='euler',
-             name='synapses*',
-             additionalStatevars = None,
-             inputNumber = None,
-             debug=False):
-        
+                 connect=None, delay=None, on_event='spike',
+                 multisynaptic_index=None,
+                 namespace=None, dtype=None,
+                 codeobj_class=None,
+                 dt=None, clock=None, order=0,
+                 method='euler',
+                 name='synapses*',
+                 additionalStatevars=None,
+                 inputNumber=None,
+                 debug=False):
+
         self.params = params
-        self.debug  = debug
+        self.debug = debug
         self.inputNumber = 0
-        
-        #target.registerSynapse()
-        #print(target.numSynapses)
+
+        # target.registerSynapse()
+        # print(target.numSynapses)
         #self.inputNumber = target.numSynapses
         try:
             target.registerSynapse()
-            if debug: 
+            if debug:
                 print(target.numSynapses)
             self.inputNumber = target.numSynapses
         except ValueError as e:
@@ -84,33 +86,32 @@ class Connections(Synapses):
             if inputNumber is not None:
                 self.inputNumber = inputNumber
             else:
-                warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for'+
-                              str(target) +', therefore, please specify an inputNumber')
-        
-        synDict = Equation(inputNumber = self.inputNumber , debug=debug, additionalStatevars = additionalStatevars)
+                warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for' +
+                              str(target) + ', therefore, please specify an inputNumber')
 
-        Synapses.__init__(self, source, target=target, **synDict,
-             connect=connect, delay=delay, on_event=on_event,
-             multisynaptic_index=multisynaptic_index,
-             namespace=namespace, dtype=dtype,
-             codeobj_class=codeobj_class,
-             dt=dt, clock=clock, order=order,
-             method=method,
-             name=name)
-        
+        synDict = Equation(inputNumber=self.inputNumber, debug=debug, additionalStatevars=additionalStatevars)
+
+        Synapses.__init__(self, source, target=target,
+                          connect=connect, delay=delay, on_event=on_event,
+                          multisynaptic_index=multisynaptic_index,
+                          namespace=namespace, dtype=dtype,
+                          codeobj_class=codeobj_class,
+                          dt=dt, clock=clock, order=order,
+                          method=method,
+                          name=name, **synDict)
+
     def connect(self, condition=None, i=None, j=None, p=1., n=1,
                 skip_if_invalid=False,
                 namespace=None, level=0):
         Synapses.connect(self, condition=condition, i=i, j=j, p=p, n=n,
-                skip_if_invalid=skip_if_invalid,
-                namespace=namespace, level=level+1)
-        
-        setParams(self,self.params,debug=self.debug)
+                         skip_if_invalid=skip_if_invalid,
+                         namespace=namespace, level=level + 1)
 
-    
+        setParams(self, self.params, debug=self.debug)
+
     def plot(self):
         "simple visualization of synapse connectivity (connected dots and connectivity matrix)"
-        S=self
+        S = self
         Ns = len(S.source)
         Nt = len(S.target)
         fig = figure(figsize=(8, 4))
@@ -130,7 +131,7 @@ class Connections(Synapses):
         xlabel('Source neuron index')
         ylabel('Target neuron index')
 
-    
+
 def setParams(briangroup, params, ndargs=None, debug=False):
     for par in params:
         if hasattr(briangroup, par):

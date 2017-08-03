@@ -3,21 +3,21 @@
 from brian2 import *
 #from NCSBrian2Lib.Tools.tools import *
 
+
 def printSynDict(eqDict):
-    print( 'Model equation:')
-    print( eqDict['model'])
-    print( '-_-_-_-_-_-_-_-')
-    print( 'on pre equation:')
-    print( eqDict['on_pre'])
-    print( '-_-_-_-_-_-_-_-')
+    print('Model equation:')
+    print(eqDict['model'])
+    print('-_-_-_-_-_-_-_-')
+    print('on pre equation:')
+    print(eqDict['on_pre'])
+    print('-_-_-_-_-_-_-_-')
     if any(eqDict.keys() == 'on_post'):
-        print( 'on post equation:')
-        print( eqDict['on_post'])
-        print( '-------------')
+        print('on post equation:')
+        print(eqDict['on_post'])
+        print('-------------')
 
 
-def DefaultExcitatorySynapses(inputNumber = 1, debug=False, additionalStatevars = None):
-
+def DefaultExcitatorySynapses(inputNumber=1, debug=False, additionalStatevars=None):
     '''
     Default Excitatory Synapse with exponentially decaying current in time
     Input Parameters:
@@ -33,24 +33,23 @@ def DefaultExcitatorySynapses(inputNumber = 1, debug=False, additionalStatevars 
     '''
     arguments = dict(locals())
 
-    modelEq='''
+    modelEq = '''
              w : 1
              dIsyn_exc/dt = (-Isyn_exc) / tauexc : amp (event-driven)
              {Ie}_post = Isyn_exc : amp (summed)
              tauexc : second (constant)
              Iw_exc : amp (constant)
              '''
-    if inputNumber > 1 :
-        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    if inputNumber > 1:
+        modelEq = modelEq.format(Ie="Ie" + str(inputNumber))
     else:
-        modelEq = modelEq.format(Ie="Ie")  
+        modelEq = modelEq.format(Ie="Ie")
     if additionalStatevars is not None:
         if debug:
             print("added to Equation: \n" + "\n".join(additionalStatevars))
         modelEq += "\n            ".join(additionalStatevars)
-        
-        
-    on_pre_ex='''
+
+    on_pre_ex = '''
              Isyn_exc += Iw_exc * w
              '''
 
@@ -64,8 +63,7 @@ def DefaultExcitatorySynapses(inputNumber = 1, debug=False, additionalStatevars 
     return SynDict, arguments
 
 
-def DefaultInhibitorySynapses(inputNumber = 1, inh2output=True, debug=False, additionalStatevars = None):
-
+def DefaultInhibitorySynapses(inputNumber=1, inh2output=True, debug=False, additionalStatevars=None):
     '''
     Default Inhibitory Synapse with current decaying in time
     Input Parameters:
@@ -81,28 +79,28 @@ def DefaultInhibitorySynapses(inputNumber = 1, inh2output=True, debug=False, add
     '''
     arguments = dict(locals())
 
-    modelEq='''
+    modelEq = '''
               w:1
               dIsyn_inh/dt = (-Isyn_inh) / tauinhib : amp (event-driven)
               {Ii}_post = Isyn_inh : amp (summed)
               tauinhib : second (constant)
               Iw_inh : amp (constant)
               '''
-    if inputNumber > 1 :
-        modelEq = modelEq.format(Ie="Ii"+str(inputNumber))        
+    if inputNumber > 1:
+        modelEq = modelEq.format(Ie="Ii" + str(inputNumber))
     else:
         modelEq = modelEq.format(Ie="Ii")
-        
+
     if additionalStatevars is not None:
         if debug:
             print("added to Equation: \n" + "\n".join(additionalStatevars))
         modelEq += "\n            ".join(additionalStatevars)
-    
-    on_pre_inh='''
+
+    on_pre_inh = '''
               Isyn_inh += Iw_inh * w
               '''
 
-    on_pre_inh_out='''
+    on_pre_inh_out = '''
               Isyn_inh -= Iw_inh * w
               '''
 
@@ -121,7 +119,6 @@ def DefaultInhibitorySynapses(inputNumber = 1, inh2output=True, debug=False, add
 
 
 def DefaultTeacherSynapses(debug=False):
-
     '''
     Default Teacher Synapse with exponentially decaying current in time
     Input Parameters:
@@ -137,14 +134,14 @@ def DefaultTeacherSynapses(debug=False):
     '''
     arguments = dict(locals())
 
-    model_teach='''
+    model_teach = '''
                  w : 1
                  dIsyn_teach/dt = (-Isyn_teach) / taut : amp (event-driven)
                  Iin_teach_post = Isyn_teach : amp (summed)
                  taut : second (constant)
                  Iw_t : amp (constant)
                  '''
-    on_pre_teach='''
+    on_pre_teach = '''
                  Isyn_teach += Iw_t * w
                  '''
 
@@ -157,7 +154,8 @@ def DefaultTeacherSynapses(debug=False):
 
     return SynDict, arguments
 
-def simpleSyn(inputNumber = 1, debug=False, additionalStatevars = None):
+
+def simpleSyn(inputNumber=1, debug=False, additionalStatevars=None):
     '''
     simple excitatory or inhibitory Synapse with instantaneous rise - exponential decay kernel
     Input Arguments:
@@ -169,8 +167,7 @@ def simpleSyn(inputNumber = 1, debug=False, additionalStatevars = None):
     arguments = dict(locals())
     del(arguments['debug'])
 
-
-    modelEq='''
+    modelEq = '''
             dIe_syn/dt = (-Ie_syn) / tau : amp (clock-driven)
             dIi_syn/dt = (-Ii_syn) / tau : amp (clock-driven)
             {Ie}_post = Ie_syn : amp  (summed)
@@ -179,17 +176,17 @@ def simpleSyn(inputNumber = 1, debug=False, additionalStatevars = None):
             tau : second (constant) # synapse time constant
             Iw : amp (constant)     # synaptic gain
             '''
-    if inputNumber > 1 :
-        modelEq = modelEq.format(Ie="Ie"+str(inputNumber),Ii="Ii"+str(inputNumber))        
+    if inputNumber > 1:
+        modelEq = modelEq.format(Ie="Ie" + str(inputNumber), Ii="Ii" + str(inputNumber))
     else:
-        modelEq = modelEq.format(Ie="Ie",Ii="Ii")  
-    
+        modelEq = modelEq.format(Ie="Ie", Ii="Ii")
+
     if additionalStatevars is not None:
         if debug:
             print("added to Equation: \n" + "\n".join(additionalStatevars))
         modelEq += "\n            ".join(additionalStatevars)
-    
-    preEq='''
+
+    preEq = '''
         Ie_syn += Iw * weight *(weight>0)
         Ii_syn += Iw * weight * (weight<0)
         '''
@@ -203,7 +200,7 @@ def simpleSyn(inputNumber = 1, debug=False, additionalStatevars = None):
     return SynDict
 
 
-def reversalSynV(inputNumber = 1, debug=False, additionalStatevars = None):
+def reversalSynV(inputNumber=1, debug=False, additionalStatevars=None):
     '''
     Synapse with reversal potential and instantaneous rise - exponential decay kernel
     for voltage based neurons!
@@ -238,11 +235,11 @@ def reversalSynV(inputNumber = 1, debug=False, additionalStatevars = None):
             {Ie}_post = Iesyn : amp  (summed)
             {Ii}_post = Iisyn : amp  (summed)
             '''
-    if inputNumber > 1 :
-        modelEq = modelEq.format(Ie="Ie"+str(inputNumber),Ii="Ii"+str(inputNumber))        
+    if inputNumber > 1:
+        modelEq = modelEq.format(Ie="Ie" + str(inputNumber), Ii="Ii" + str(inputNumber))
     else:
-        modelEq = modelEq.format(Ie="Ie",Ii="Ii")
-    
+        modelEq = modelEq.format(Ie="Ie", Ii="Ii")
+
     if additionalStatevars is not None:
         if debug:
             print("added to Equation: \n" + "\n".join(additionalStatevars))
@@ -257,8 +254,7 @@ def reversalSynV(inputNumber = 1, debug=False, additionalStatevars = None):
     return SynDict
 
 
-
-def fusiSynV(inputNumber = 1, debug = False, additionalStatevars = None):
+def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
     ''' This is not yet completely tested and might contain bugs.
     '''
     arguments = dict(locals())
@@ -287,22 +283,22 @@ def fusiSynV(inputNumber = 1, debug = False, additionalStatevars = None):
                 {Ie}_post = Ies : amp  (summed)
                 weight: 1 (constant)
                 '''
-    if inputNumber > 1 :
-        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    if inputNumber > 1:
+        modelEq = modelEq.format(Ie="Ie" + str(inputNumber))
     else:
         modelEq = modelEq.format(Ie="Ie")
 
     if additionalStatevars is not None:
         if debug:
             print("added to Equation: \n" + "\n".join(additionalStatevars))
-        modelEq += "\n            ".join(additionalStatevars)    
-    
+        modelEq += "\n            ".join(additionalStatevars)
+
     preEq = '''
             gIe += floor(w+0.5) * weight *  nS
             w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   #*(w<w_max)
             w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) #*(w>w_min)
             w = clip(w,w_min,w_max)
-            '''  #  check if correct
+            '''  # check if correct
     postEq = '''Ca += w_ca'''
 
     SynDict = dict(model=modelEq, on_pre=preEq, on_post=postEq)
@@ -313,8 +309,8 @@ def fusiSynV(inputNumber = 1, debug = False, additionalStatevars = None):
 
     return SynDict
 
-def BraderFusiSynapses(inputNumber = 1, debug=False, plastic=True, additionalStatevars = None):
 
+def BraderFusiSynapses(inputNumber=1, debug=False, plastic=True, additionalStatevars=None):
     '''
     Fusi bistable synapses, cfr Brader et al 2007
 
@@ -375,16 +371,16 @@ def BraderFusiSynapses(inputNumber = 1, debug=False, plastic=True, additionalSta
             count_up : 1 (constant)
             count_down : 1 (constant)
             '''
-    if inputNumber > 1 :
-        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    if inputNumber > 1:
+        modelEq = modelEq.format(Ie="Ie" + str(inputNumber))
     else:
         modelEq = modelEq.format(Ie="Ie")
-    
+
     if additionalStatevars is not None:
         if debug:
             print("added to Equation: \n" + "\n".join(additionalStatevars))
         modelEq += "\n            ".join(additionalStatevars)
-        
+
     on_pre_fm = '''
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
             down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
@@ -397,7 +393,7 @@ def BraderFusiSynapses(inputNumber = 1, debug=False, plastic=True, additionalSta
             Isyn += Iw_fm * w
             '''
 
-    on_pre_fm_nonplastic='''
+    on_pre_fm_nonplastic = '''
             Isyn += Iw_fm * w
             '''
 
@@ -416,11 +412,11 @@ def BraderFusiSynapses(inputNumber = 1, debug=False, plastic=True, additionalSta
 
     return SynDict, arguments
 
-    #synapses group is called as follow:
+    # synapses group is called as follow:
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
 
-def KernelsSynapses(kernel='alpha',debug=False):
 
+def KernelsSynapses(kernel='alpha', debug=False):
     '''
     Kernel Synapse function
 
@@ -460,12 +456,12 @@ def KernelsSynapses(kernel='alpha',debug=False):
 
     Author: Karla Burelo
     Date: 25.03.2017
-	
-	alpha synapse changed by Alpha on 06.07.2017 (w-->max EPSC)
+
+        alpha synapse changed by Alpha on 06.07.2017 (w-->max EPSC)
     '''
     arguments = dict(locals())
 
-	# in the alpha snyapse, w detemines the maximal amplitude of an EPSC
+    # in the alpha snyapse, w detemines the maximal amplitude of an EPSC
     model_alpha_fm = '''
             w : amp
             tau: second
@@ -474,8 +470,8 @@ def KernelsSynapses(kernel='alpha',debug=False):
             dI_alpha/dt  = -I_alpha/tau+w*exp(1-t_spike/tau)/tau: amp (clock-driven)
             dt_spike/dt = 1 : second (clock-driven)
             Iin_ex_post = I_alpha : amp (summed)
-            '''	
-    model_resonant_fm= '''
+            '''
+    model_resonant_fm = '''
             w : amp
             tau: second
             omega: 1/second
@@ -484,7 +480,7 @@ def KernelsSynapses(kernel='alpha',debug=False):
             dt_spike/dt = 1 : second (clock-driven)
             Iin_ex_post = I_resonant : amp (summed)
             '''
-    model_expdecay_fm= '''
+    model_expdecay_fm = '''
             w : amp
             tau: second
             omega: 1/second
@@ -493,7 +489,7 @@ def KernelsSynapses(kernel='alpha',debug=False):
             dt_spike/dt = 1 : second (clock-driven)
             Iin_ex_post = I_expdecay : amp (summed)
             '''
-    model_gaussian_fm= '''
+    model_gaussian_fm = '''
             w : amp
             tau: second
             omega: 1/second
@@ -517,7 +513,6 @@ def KernelsSynapses(kernel='alpha',debug=False):
     del(arguments['debug'])
     del(arguments['kernel'])
 
-
     if kernel == 'alpha':
         SynDict = dict(model=model_alpha_fm, on_pre=on_pre_fm)
     elif kernel == 'resonant':
@@ -534,9 +529,9 @@ def KernelsSynapses(kernel='alpha',debug=False):
 
     return SynDict, arguments
 
-def SiliconSynapses(Vth=None, Vtau=None, Vdd=None,Csyn=None, Io=None,
-                    Ut=None, kn=None,kp=None, duration=None,debug=False):
 
+def SiliconSynapses(Vth=None, Vtau=None, Vdd=None, Csyn=None, Io=None,
+                    Ut=None, kn=None, kp=None, duration=None, debug=False):
     '''
     Comments:
     * Weights are not in the default parameters, it must be set by the user
@@ -584,12 +579,11 @@ def SiliconSynapses(Vth=None, Vtau=None, Vdd=None,Csyn=None, Io=None,
 
     return SynDict, arguments
 
-    #synapses group is called as follow:
+    # synapses group is called as follow:
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
 
 
-def MemristiveFusiSynapses(inputNumber = 1, debug=False, plastic=True):
-
+def MemristiveFusiSynapses(inputNumber=1, debug=False, plastic=True):
     '''
     Fusi memristive synapses
 
@@ -666,11 +660,11 @@ def MemristiveFusiSynapses(inputNumber = 1, debug=False, plastic=True):
             count_up : 1 (constant)
             count_down : 1 (constant)
             '''
-    if inputNumber > 1 :
-        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    if inputNumber > 1:
+        modelEq = modelEq.format(Ie="Ie" + str(inputNumber))
     else:
         modelEq = modelEq.format(Ie="Ie")
-        
+
     on_pre_fm = '''
             up = 1. * (Imem > Imemthr) * (Ica > theta_pl) * (Ica < theta_pu)
             down = 1. * (Imem < Imemthr) * (Ica > theta_dl) * (Ica < theta_du)
@@ -703,7 +697,7 @@ def MemristiveFusiSynapses(inputNumber = 1, debug=False, plastic=True):
             Isyn += Iw_fm * w
             '''
 
-    on_pre_fm_nonplastic='''
+    on_pre_fm_nonplastic = '''
             Isyn += Iw_fm * w
             '''
 
@@ -722,12 +716,11 @@ def MemristiveFusiSynapses(inputNumber = 1, debug=False, plastic=True):
 
     return SynDict, arguments
 
-    #synapses group is called as follow:
+    # synapses group is called as follow:
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
 
 
-
-def StdpSynV(inputNumber = 1, debug = False, additionalStatevars = None):
+def StdpSynV(inputNumber=1, debug=False, additionalStatevars=None):
     ''' This an STDP synapse adapted from http://brian2.readthedocs.io/en/latest/examples/synapses.STDP.html
         after Song, Miller and Abbott (2000) and Song and Abbott (2001)
     '''
@@ -752,16 +745,16 @@ def StdpSynV(inputNumber = 1, debug = False, additionalStatevars = None):
             {Ie}_post = Ies : amp  (summed)
             '''
 
-    if inputNumber > 1 :
-        modelEq = modelEq.format(Ie="Ie"+str(inputNumber))        
+    if inputNumber > 1:
+        modelEq = modelEq.format(Ie="Ie" + str(inputNumber))
     else:
         modelEq = modelEq.format(Ie="Ie")
-    
+
     if additionalStatevars is not None:
         if debug:
             print("added to Equation: \n" + "\n".join(additionalStatevars))
         modelEq += "\n            ".join(additionalStatevars)
-        
+
     preEq = '''
             gIe += w * weight * nS
             Apre += diffApre*w_max

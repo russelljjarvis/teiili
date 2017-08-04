@@ -41,11 +41,12 @@ def buildCppAndReplace(standaloneParams, standaloneDir='output'):
     # print(out)
     end = time.time()
     print ('make took ' + str(end - startMake) + ' sec')
-    print('\n\nstandalone SOM was built and compiled, ready to run!')
+    print('\n\nstandalone was built and compiled, ready to run!')
 
 
 def replaceVariablesInCPPcode(replaceVars, replaceFileLocation):
     ''' replaces a list of variables in CPP code for standalone code generation with changeable parameters
+    and it adds duration as a changeable parameter (it is always the first argument)
     @params:
         replaceVars : List of strings, variables that are replaced
         replaceFileLocation : string, location of the file in which the variables are replaced
@@ -55,7 +56,10 @@ def replaceVariablesInCPPcode(replaceVars, replaceFileLocation):
     for ivar, rvar in enumerate(replaceVars):
         cppArgCode += """\n float {replvar}_p = std::stof(argv[{num}],NULL);
     std::cout << "variable {replvar} is argument {num} with value " << {replvar}_p << std::endl;\n""".format(num=(ivar + 1), replvar=rvar)
-
+        print("variable {replvar} is main() argument {num}".format(num=(ivar + 1), replvar=rvar))
+    
+    print('\n*********************************\n')
+    
     # read main.cpp
     f = open(replaceFileLocation, "r")
     contents = f.readlines()
@@ -79,13 +83,20 @@ def replaceVariablesInCPPcode(replaceVars, replaceFileLocation):
                 f.write(keepFirstPart + '= ' + rvar + '_p;\n')
                 print("replaced " + rvar + " in line " + str(i_line))
                 replaceTODOlist = [elem for elem in replaceTODOlist if not elem == rvar]  # check element in todolist
+        if 'network.run(' in line:
+            replaced = True
+            keepSecondPart = line.split(',', 1)[1]
+            f.write('network.run(duration_p,'+ keepSecondPart)
+            print("replaced duration in line " + str(i_line))
+            replaceTODOlist = [elem for elem in replaceTODOlist if not elem == 'duration']
         if not replaced:
             f.write(line)
     f.close()
     if len(replaceTODOlist) > 0:
         # maybe we should raise an exception here as this is rather serious?
         warnings.warn("could not find matching variables in cpp code for " + str(replaceTODOlist), Warning)  # warning, items left in todolist
-
+    else:
+        print('\n*********************************\nall variables successfully replaced in cpp code! \n')
 
 def printDict(pdict):
     print('The following parameters are set for this run:')

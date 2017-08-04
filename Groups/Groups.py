@@ -8,6 +8,8 @@ Created on Thu Jul 27 17:28:16 2017
 from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks, ylabel, xlabel, xlim, ylim, figure
 import warnings
 
+#TODO: Add standaloneParams to groups additional to buildingblocks
+
 
 class Neurons(NeuronGroup):
 
@@ -71,10 +73,8 @@ class Connections(Synapses):
         self.params = params
         self.debug = debug
         self.inputNumber = 0
-
-        # target.registerSynapse()
-        # print(target.numSynapses)
-        #self.inputNumber = target.numSynapses
+        self.Equation = Equation
+        
         try:
             target.registerSynapse()
             if debug:

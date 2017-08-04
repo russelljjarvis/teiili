@@ -2,6 +2,7 @@
 from brian2 import *
 from NCSBrian2Lib.Tools.tools import *
 
+# TODO: Make classes, Add plotvars, add replaceVars
 
 def ExpAdaptIF(numInputs=1, debug=False, method='euler', additionalStatevars=None):
     '''

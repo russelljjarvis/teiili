@@ -35,9 +35,10 @@ wtaParams = {'weInpWTA': 1.5,
              'weWTAInh': 1,
              'wiInhWTA': -1,
              'weWTAWTA': 0.5,
+             'sigm': 3,
              'rpWTA': 3 * ms,
-             'rpInh': 1 * ms,
-             'sigm': 3}
+             'rpInh': 1 * ms
+             }
 
 
 class WTA(BuildingBlock):
@@ -54,14 +55,14 @@ class WTA(BuildingBlock):
         BuildingBlock.__init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug)
 
         if dimensions == 1:
-            self.Groups, self.Monitors, self.replaceVars = gen1dWTA(name,
+            self.Groups, self.Monitors, self.standaloneParams = gen1dWTA(name,
                                                                     neuronEq, neuronParams, synapseEq, synapseParams,
                                                                     numNeurons=numNeurons, numInhNeurons=numInhNeurons,
                                                                     additionalStatevars=additionalStatevars,
                                                                     cutoff=cutoff, numWtaInputs=numWtaInputs, monitor=True, debug=debug,
                                                                     **blockParams)
         elif dimensions == 2:
-            self.Groups, self.Monitors, self.replaceVars = gen2dWTA(name,
+            self.Groups, self.Monitors, self.standaloneParams = gen2dWTA(name,
                                                                     neuronEq, neuronParams, synapseEq, synapseParams,
                                                                     numNeurons=numNeurons, numInhNeurons=numInhNeurons,
                                                                     additionalStatevars=additionalStatevars,
@@ -86,9 +87,9 @@ class WTA(BuildingBlock):
 
 def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpAIFdefaultregular,
              synEquation=reversalSynV, synParameters=revSyn_default,
-             weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5,
+             weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5, sigm=3,
              rpWTA=3 * ms, rpInh=1 * ms,
-             sigm=3, numNeurons=64, numInhNeurons=5, cutoff=10, numWtaInputs=1, monitor=True, additionalStatevars=[], debug=False):
+             numNeurons=64, numInhNeurons=5, cutoff=10, numWtaInputs=1, monitor=True, additionalStatevars=[], debug=False):
     '''generates a new WTA'''
 
     # time measurement
@@ -152,30 +153,27 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
 
     # replacevars should be the 'real' names of the parameters, that can be changed by the arguments of this function:
     # in this case: weInpWTA, weWTAInh, wiInhWTA, weWTAWTA,rpWTA, rpInh,sigm
-    replaceVars = [
-        synInpWTA1e.name + '_weight',
-        synWTAInh1e.name + '_weight',
-        synInhWTA1i.name + '_weight',
-        synWTAWTA1e.name + '_latWeight',
-        synWTAWTA1e.name + '_latSigma',
-        gWTAGroup.name + '_refP',
-        gWTAInhGroup.name + '_refP',
-    ]
-
+    standaloneParams = {
+        synInpWTA1e.name + '_weight': weInpWTA,
+        synWTAInh1e.name + '_weight': weWTAInh,
+        synInhWTA1i.name + '_weight': wiInhWTA,
+        synWTAWTA1e.name + '_latWeight': weWTAWTA,
+        synWTAWTA1e.name + '_latSigma': sigm,
+        gWTAGroup.name + '_refP': rpWTA,
+        gWTAInhGroup.name + '_refP': rpInh,
+    }
+    
     end = time.clock()
     print('creating WTA of ' + str(numNeurons) + ' neurons with name ' + groupname + ' took ' + str(end - start) + ' sec')
-    print('The keys of the output dict are:')
-    for key in Groups:
-        print(key)
 
-    return Groups, Monitors, replaceVars
+    return Groups, Monitors, standaloneParams
 
 
 def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpAIFdefaultregular,
              synEquation=reversalSynV, synParameters=revSyn_default,
-             weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2,
+             weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2, sigm=2.5,
              rpWTA=2.5 * ms, rpInh=1 * ms,
-             sigm=2.5, numNeurons=20, numInhNeurons=3, cutoff=9, numWtaInputs=1, monitor=True, additionalStatevars=[], debug=False):
+             numNeurons=20, numInhNeurons=3, cutoff=9, numWtaInputs=1, monitor=True, additionalStatevars=[], debug=False):
     '''generates a new square 2d WTA
     3 inputs to the gWTAGroup are used, so start with 4 for additional inputs'''
 
@@ -243,26 +241,20 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
 
     # replacevars should be the real names of the parameters, that can be changed by the arguments of this function:
     # in this case: weInpWTA, weWTAInh, wiInhWTA, weWTAWTA,rpWTA, rpInh,sigm
-
-    replaceVars = [
-        synInpWTA1e.name + '_weight',
-        synWTAInh1e.name + '_weight',
-        synInhWTA1i.name + '_weight',
-        synWTAWTA1e.name + '_latWeight',
-        synWTAWTA1e.name + '_latSigma',
-        gWTAGroup.name + '_refP',
-        gWTAInhGroup.name + '_refP',
-    ]
-
+    standaloneParams = {
+        synInpWTA1e.name + '_weight': weInpWTA,
+        synWTAInh1e.name + '_weight': weWTAInh,
+        synInhWTA1i.name + '_weight': wiInhWTA,
+        synWTAWTA1e.name + '_latWeight': weWTAWTA,
+        synWTAWTA1e.name + '_latSigma': sigm,
+        gWTAGroup.name + '_refP': rpWTA,
+        gWTAInhGroup.name + '_refP': rpInh,
+    }
+    
     end = time.clock()
     print ('creating WTA of ' + str(numNeurons) + ' x ' + str(numNeurons) + ' neurons with name ' + groupname + ' took ' + str(end - start) + ' sec')
 
-    if True:
-        print('The keys of the output dict are:')
-        for key in Groups:
-            print(key)
-
-    return Groups, Monitors, replaceVars
+    return Groups, Monitors, standaloneParams
 
 
 def plotWTA(name, startTime, endTime, numNeurons, WTAMonitors):

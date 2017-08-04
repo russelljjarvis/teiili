@@ -43,12 +43,14 @@ class StandaloneNetwork(Network):
                 print('added to network building blocks: ' , obj)
                 self.standaloneParams.update(obj.standaloneParams)
 
+        #TODO: automatically add additional namespaces of buildingsblocks to the run call
+
     def build(self, report=None, report_period=10*second,
             namespace=None, profile=True, level=0, recompile=False, standaloneParams=None):
         
         if recompile or not StandaloneNetwork.hasRun:
 
-            print('building network ...')
+            print('building network...')
             Network.run(self, duration = 0*ms, report=report, report_period=report_period,
                         namespace=namespace, profile=profile, level=level+1)
             StandaloneNetwork.hasRun = True
@@ -57,6 +59,9 @@ class StandaloneNetwork(Network):
                 standaloneParams = self.standaloneParams
             
             buildCppAndReplace(standaloneParams, self.standaloneDir)
+        else:
+            print('Network was not recompiled, standaloneParams are changed, but Network structure is not!')
+            print('This might lead to unexpected behaviour.')
 
 
     def run(self, duration = None, standaloneParams=None):

@@ -8,6 +8,8 @@ Created on Thu Jul 27 17:41:10 2017
 from brian2 import device, asarray
 from collections import OrderedDict
 
+#TODO: There is a problem, when 2 BBs of the same kind are added to another BB, as the names collide.
+# We could use a hierarchy of blocks
 
 class BuildingBlock:
 

@@ -1,13 +1,18 @@
 # coding: utf-8
 #===============================================================================
+"""
+This is a simple chain of neurons
+"""
+
 #from brian2 import *
-from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs, SpikeGeneratorGroup, NeuronGroup,\
-    Synapses, SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
-    seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray,\
-    defaultclock, codegen
-import numpy as np
 import os
+import numpy as np
 from datetime import datetime
+
+from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
+    SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
+    seed, xlim, ylim, subplot, network_operation, TimedArray,\
+    defaultclock, SpikeGeneratorGroup
 
 from NCSBrian2Lib.Equations.neuronEquations import ExpAdaptIF
 from NCSBrian2Lib.Equations.synapseEquations import reversalSynV
@@ -40,11 +45,13 @@ class Chain(BuildingBlock):
         BuildingBlock.__init__(self, name, neuronEq, synapseEq, neuronParams,
                                synapseParams, blockParams, debug)
 
-        self.Groups, self.Monitors, self.replaceVars = genChain(name,
-                            neuronEq, neuronParams, synapseEq, synapseParams,
-                            self.numChains, self.numNeuronsPerChain,
-                            self.synChaCha1e_weight, self.synInpCha1e_weight,
-                            self.gChaGroup_refP, self.debug)
+        self.Groups, self.Monitors,\
+        self.replaceVars = genChain(name,
+                                    neuronEq, neuronParams,
+                                    synapseEq, synapseParams,
+                                    self.numChains, self.numNeuronsPerChain,
+                                    self.synChaCha1e_weight, self.synInpCha1e_weight,
+                                    self.gChaGroup_refP, self.debug)
 
         self.inputGroup = self.Groups['gChaInpGroup']
         self.chainGroup = self.Groups['gChaGroup']

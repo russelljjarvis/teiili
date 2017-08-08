@@ -6,12 +6,12 @@ This files contains different WTA circuits
 
 @author: Alpha
 '''
-
-from brian2 import ms, SpikeGeneratorGroup, Synapses, SpikeMonitor, StateMonitor, figure, subplot
-from brian2 import *
-
 import time
 import numpy as np
+
+from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
+    StateMonitor, figure, subplot, mV, pA
+#from brian2 import *
 
 from NCSBrian2Lib.Tools.tools import fkernel1d, fkernel2d, fdist2d, printStates, ind2xy, ind2x, ind2y
 from NCSBrian2Lib.Tools.plotTools import plotSpikemon, plotStatemon
@@ -38,7 +38,7 @@ wtaParams = {'weInpWTA': 1.5,
              'sigm': 3,
              'rpWTA': 3 * ms,
              'rpInh': 1 * ms
-             }
+            }
 
 
 class WTA(BuildingBlock):
@@ -52,22 +52,31 @@ class WTA(BuildingBlock):
         self.numNeurons = numNeurons
         self.dimensions = dimensions
 
-        BuildingBlock.__init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug)
+        BuildingBlock.__init__(self, name, neuronEq, synapseEq,
+                               neuronParams, synapseParams, blockParams, debug)
 
         if dimensions == 1:
-            self.Groups, self.Monitors, self.standaloneParams = gen1dWTA(name,
-                                                                    neuronEq, neuronParams, synapseEq, synapseParams,
-                                                                    numNeurons=numNeurons, numInhNeurons=numInhNeurons,
-                                                                    additionalStatevars=additionalStatevars,
-                                                                    cutoff=cutoff, numWtaInputs=numWtaInputs, monitor=True, debug=debug,
-                                                                    **blockParams)
+            self.Groups, self.Monitors,\
+                self.standaloneParams = gen1dWTA(name,
+                                                 neuronEq, neuronParams,
+                                                 synapseEq, synapseParams,
+                                                 numNeurons=numNeurons,
+                                                 numInhNeurons=numInhNeurons,
+                                                 additionalStatevars=additionalStatevars,
+                                                 cutoff=cutoff, numWtaInputs=numWtaInputs,
+                                                 monitor=True, debug=debug,
+                                                 **blockParams)
         elif dimensions == 2:
-            self.Groups, self.Monitors, self.standaloneParams = gen2dWTA(name,
-                                                                    neuronEq, neuronParams, synapseEq, synapseParams,
-                                                                    numNeurons=numNeurons, numInhNeurons=numInhNeurons,
-                                                                    additionalStatevars=additionalStatevars,
-                                                                    cutoff=cutoff, numWtaInputs=numWtaInputs, monitor=True, debug=debug,
-                                                                    **blockParams)
+            self.Groups, self.Monitors,\
+                self.standaloneParams = gen2dWTA(name,
+                                                 neuronEq, neuronParams,
+                                                 synapseEq, synapseParams,
+                                                 numNeurons=numNeurons,
+                                                 numInhNeurons=numInhNeurons,
+                                                 additionalStatevars=additionalStatevars,
+                                                 cutoff=cutoff, numWtaInputs=numWtaInputs,
+                                                 monitor=True, debug=debug,
+                                                 **blockParams)
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 
@@ -77,44 +86,57 @@ class WTA(BuildingBlock):
         self.spikemonWTA = self.Monitors['spikemonWTA']
 
     def plot(self, startTime=0 * ms, endTime=None):
+        "Simple plot for WTA"
 
         if endTime is None:
             endTime = max(self.spikemonWTA.t)
-        plotWTA(self.name, startTime, endTime, self.numNeurons**self.dimensions, self.Monitors)
+        plotWTA(self.name, startTime, endTime, self.numNeurons **
+                self.dimensions, self.Monitors)
 
 # TODO: Generalize for n dimensions
 
 
-def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpAIFdefaultregular,
+def gen1dWTA(groupname, neuronEquation=ExpAdaptIF,
+             neuronParameters=gerstnerExpAIFdefaultregular,
              synEquation=reversalSynV, synParameters=revSyn_default,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5, sigm=3,
              rpWTA=3 * ms, rpInh=1 * ms,
-             numNeurons=64, numInhNeurons=5, cutoff=10, numWtaInputs=1, monitor=True, additionalStatevars=[], debug=False):
+             numNeurons=64, numInhNeurons=5, cutoff=10, numWtaInputs=1,
+             monitor=True, additionalStatevars=[], debug=False):
     '''generates a new WTA'''
 
     # time measurement
     start = time.clock()
 
     # create neuron groups
-    gWTAGroup = Neurons(numNeurons, neuronEquation, neuronParameters, refractory=rpWTA, name='g' + groupname, numInputs=3 + numWtaInputs, debug=debug)
-    gWTAInhGroup = Neurons(numInhNeurons, neuronEquation, neuronParameters, refractory=rpInh, name='g' + groupname + '_Inh', numInputs=1, debug=debug)
+    gWTAGroup = Neurons(numNeurons, neuronEquation, neuronParameters, refractory=rpWTA,
+                        name='g' + groupname, numInputs=3 + numWtaInputs, debug=debug)
+    gWTAInhGroup = Neurons(numInhNeurons, neuronEquation, neuronParameters,
+                           refractory=rpInh, name='g' + groupname + '_Inh',
+                           numInputs=1, debug=debug)
 
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms
     indWTA = np.asarray([])
-    gWTAInpGroup = SpikeGeneratorGroup(numNeurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
+    gWTAInpGroup = SpikeGeneratorGroup(
+        numNeurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
 
     # printStates(gWTAInpGroup)
     # create synapses
-    synInpWTA1e = Connections(gWTAInpGroup, gWTAGroup, synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_Inpe')
-    synWTAWTA1e = Connections(gWTAGroup, gWTAGroup, synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_e',
+    synInpWTA1e = Connections(gWTAInpGroup, gWTAGroup, synEquation, synParameters,
+                              method="euler", debug=debug, name='s' + groupname + '_Inpe')
+    synWTAWTA1e = Connections(gWTAGroup, gWTAGroup, synEquation, synParameters,
+                              method="euler", debug=debug, name='s' + groupname + '_e',
                               additionalStatevars=["latWeight : 1 (constant)", "latSigma : 1"] + additionalStatevars)  # kernel function
-    synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup, synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_Inhi')
-    synWTAInh1e = Connections(gWTAGroup, gWTAInhGroup, synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_Inhe')
+    synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup, synEquation, synParameters,
+                              method="euler", debug=debug, name='s' + groupname + '_Inhi')
+    synWTAInh1e = Connections(gWTAGroup, gWTAInhGroup, synEquation, synParameters,
+                              method="euler", debug=debug, name='s' + groupname + '_Inhe')
 
     # connect synapses
     synInpWTA1e.connect('i==j')
-    synWTAWTA1e.connect('abs(i-j)<=cutoff')  # connect the nearest neighbors including itself
+    # connect the nearest neighbors including itself
+    synWTAWTA1e.connect('abs(i-j)<=cutoff')
     synWTAInh1e.connect('True')  # Generates all to all connectivity
     synInhWTA1i.connect('True')
 
@@ -123,7 +145,8 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     synWTAInh1e.weight = weWTAInh
     synInhWTA1i.weight = wiInhWTA
     # lateral excitation kernel
-    # we add an additional attribute to that synapse, which allows us to change and retrieve that value more easily
+    # we add an additional attribute to that synapse, which allows us to change
+    # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
     synWTAWTA1e.weight = 'latWeight * fkernel1d(i,j,latSigma)'
@@ -151,7 +174,8 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
             'spikemonWTAInp': spikemonWTAInp,
             'statemonWTA': statemonWTA}
 
-    # replacevars should be the 'real' names of the parameters, that can be changed by the arguments of this function:
+    # replacevars should be the 'real' names of the parameters, that can be
+    # changed by the arguments of this function:
     # in this case: weInpWTA, weWTAInh, wiInhWTA, weWTAWTA,rpWTA, rpInh,sigm
     standaloneParams = {
         synInpWTA1e.name + '_weight': weInpWTA,
@@ -162,18 +186,21 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
         gWTAGroup.name + '_refP': rpWTA,
         gWTAInhGroup.name + '_refP': rpInh,
     }
-    
+
     end = time.clock()
-    print('creating WTA of ' + str(numNeurons) + ' neurons with name ' + groupname + ' took ' + str(end - start) + ' sec')
+    print('creating WTA of ' + str(numNeurons) + ' neurons with name ' +
+          groupname + ' took ' + str(end - start) + ' sec')
 
     return Groups, Monitors, standaloneParams
 
 
-def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpAIFdefaultregular,
+def gen2dWTA(groupname, neuronEquation=ExpAdaptIF,
+             neuronParameters=gerstnerExpAIFdefaultregular,
              synEquation=reversalSynV, synParameters=revSyn_default,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2, sigm=2.5,
              rpWTA=2.5 * ms, rpInh=1 * ms,
-             numNeurons=20, numInhNeurons=3, cutoff=9, numWtaInputs=1, monitor=True, additionalStatevars=[], debug=False):
+             numNeurons=20, numInhNeurons=3, cutoff=9, numWtaInputs=1,
+             monitor=True, additionalStatevars=[], debug=False):
     '''generates a new square 2d WTA
     3 inputs to the gWTAGroup are used, so start with 4 for additional inputs'''
 
@@ -182,8 +209,10 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
 
     # create neuron groups
     num2dNeurons = numNeurons**2
-    gWTAGroup = Neurons(num2dNeurons, neuronEquation, neuronParameters, refractory=rpWTA, name='g' + groupname, numInputs=3 + numWtaInputs, debug=debug)
-    gWTAInhGroup = Neurons(numInhNeurons, neuronEquation, neuronParameters, refractory=rpInh, name='g' + groupname + '_Inh', numInputs=1, debug=debug)
+    gWTAGroup = Neurons(num2dNeurons, neuronEquation, neuronParameters, refractory=rpWTA,
+                        name='g' + groupname, numInputs=3 + numWtaInputs, debug=debug)
+    gWTAInhGroup = Neurons(numInhNeurons, neuronEquation, neuronParameters,
+                           refractory=rpInh, name='g' + groupname + '_Inh', numInputs=1, debug=debug)
 
     gWTAGroup.x = "ind2x(i, numNeurons)"
     gWTAGroup.y = "ind2y(i, numNeurons)"
@@ -191,19 +220,25 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms
     indWTA = np.asarray([])
-    gWTAInpGroup = SpikeGeneratorGroup(num2dNeurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
+    gWTAInpGroup = SpikeGeneratorGroup(
+        num2dNeurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
 
     # printStates(gWTAInpGroup)
     # create synapses
-    synInpWTA1e = Connections(gWTAInpGroup, gWTAGroup, synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_Inpe')
-    synWTAWTA1e = Connections(gWTAGroup, gWTAGroup, synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_e',
+    synInpWTA1e = Connections(gWTAInpGroup, gWTAGroup, synEquation, synParameters,
+                              method="euler", debug=debug, name='s' + groupname + '_Inpe')
+    synWTAWTA1e = Connections(gWTAGroup, gWTAGroup, synEquation, synParameters,
+                              method="euler", debug=debug, name='s' + groupname + '_e',
                               additionalStatevars=["latWeight : 1 (constant)", "latSigma : 1"] + additionalStatevars)  # kernel function
-    synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup, synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_Inhi')
-    synWTAInh1e = Connections(gWTAGroup, gWTAInhGroup, synEquation, synParameters, method="euler", debug=debug, name='s' + groupname + '_Inhe')
+    synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup, synEquation, synParameters,
+                              method="euler", debug=debug, name='s' + groupname + '_Inhi')
+    synWTAInh1e = Connections(gWTAGroup, gWTAInhGroup, synEquation, synParameters,
+                              method="euler", debug=debug, name='s' + groupname + '_Inhe')
 
     # connect synapses
     synInpWTA1e.connect('i==j')
-    synWTAWTA1e.connect('fdist2d(i,j,numNeurons)<=cutoff')  # connect the nearest neighbors including itself
+    # connect the nearest neighbors including itself
+    synWTAWTA1e.connect('fdist2d(i,j,numNeurons)<=cutoff')
     synWTAInh1e.connect('True')  # Generates all to all connectivity
     synInhWTA1i.connect('True')
 
@@ -213,7 +248,8 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
     synInhWTA1i.weight = wiInhWTA
 
     # lateral excitation kernel
-    # we add an additional attribute to that synapse, which allows us to change and retrieve that value more easily
+    # we add an additional attribute to that synapse, which allows us to change
+    # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
     synWTAWTA1e.weight = 'latWeight * fkernel2d(i,j,latSigma,numNeurons)'
@@ -239,7 +275,8 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
         'spikemonWTAInp': spikemonWTAInp,
         'statemonWTA': statemonWTA}
 
-    # replacevars should be the real names of the parameters, that can be changed by the arguments of this function:
+    # replacevars should be the real names of the parameters,
+    # that can be changed by the arguments of this function:
     # in this case: weInpWTA, weWTAInh, wiInhWTA, weWTAWTA,rpWTA, rpInh,sigm
     standaloneParams = {
         synInpWTA1e.name + '_weight': weInpWTA,
@@ -250,9 +287,10 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
         gWTAGroup.name + '_refP': rpWTA,
         gWTAInhGroup.name + '_refP': rpInh,
     }
-    
+
     end = time.clock()
-    print ('creating WTA of ' + str(numNeurons) + ' x ' + str(numNeurons) + ' neurons with name ' + groupname + ' took ' + str(end - start) + ' sec')
+    print('creating WTA of ' + str(numNeurons) + ' x ' + str(numNeurons) +
+          ' neurons with name ' + groupname + ' took ' + str(end - start) + ' sec')
 
     return Groups, Monitors, standaloneParams
 
@@ -260,11 +298,14 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpA
 def plotWTA(name, startTime, endTime, numNeurons, WTAMonitors):
 
     fig = figure(figsize=(8, 3))
-    plotSpikemon(startTime, endTime, WTAMonitors['spikemonWTA'], numNeurons, ylab='ind WTA')
+    plotSpikemon(startTime, endTime,
+                 WTAMonitors['spikemonWTA'], numNeurons, ylab='ind WTA')
     fig = figure(figsize=(8, 3))
-    plotSpikemon(startTime, endTime, WTAMonitors['spikemonWTAInp'], None, ylab='ind WTA')
+    plotSpikemon(startTime, endTime,
+                 WTAMonitors['spikemonWTAInp'], None, ylab='ind WTA')
     fig = figure(figsize=(8, 3))
-    plotSpikemon(startTime, endTime, WTAMonitors['spikemonWTAInh'], None, ylab='ind WTA')
+    plotSpikemon(startTime, endTime,
+                 WTAMonitors['spikemonWTAInh'], None, ylab='ind WTA')
     # fig.savefig('fig/'+name+'_Spikes.png')
 
     if numNeurons > 20:
@@ -278,11 +319,14 @@ def plotWTA(name, startTime, endTime, numNeurons, WTAMonitors):
         nPlots = 3 * 100
         subplot(nPlots + 11)
         for ii in plotStateNeurons:
-            plotStatemon(startTime, endTime, statemonWTA, ii, variable='Vm', unit=mV)
+            plotStatemon(startTime, endTime, statemonWTA,
+                         ii, variable='Vm', unit=mV)
         subplot(nPlots + 12)
         for ii in plotStateNeurons:
-            plotStatemon(startTime, endTime, statemonWTA, ii, variable='Ii', unit=pA)
+            plotStatemon(startTime, endTime, statemonWTA,
+                         ii, variable='Ii', unit=pA)
         subplot(nPlots + 13)
         for ii in plotStateNeurons:
-            plotStatemon(startTime, endTime, statemonWTA, ii, variable='Ie', unit=pA)
+            plotStatemon(startTime, endTime, statemonWTA,
+                         ii, variable='Ie', unit=pA)
         #fig.savefig('fig/'+name+'_States.png', dpi=300)

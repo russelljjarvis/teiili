@@ -8,11 +8,11 @@ Created on Mon Jul 24 17:45:09 2017
 
 import numpy as np
 
-from brian2 import *
-from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs, SpikeGeneratorGroup, NeuronGroup,\
-    SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
+#from brian2 import *
+from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
+    SpikeGeneratorGroup, NeuronGroup, SpikeMonitor, StateMonitor, figure, plot,\
     seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray,\
-    defaultclock, profiling_summary, codegen, floor, title
+    defaultclock, profiling_summary, floor, title, xlabel, ylabel
 
 from NCSBrian2Lib.Equations.neuronEquations import ExpAdaptIF
 from NCSBrian2Lib.Equations.neuronEquations import Silicon
@@ -55,14 +55,20 @@ class SequenceLearning(BuildingBlock):
 
     def __init__(self, name, neuronEq=ExpAdaptIF, synapseEq=reversalSynV,
                  neuronParams=gerstnerExpAIFdefaultregular, synapseParams=revSyn_default,
-                 blockParams=slParams, numElements=3, numNeuronsPerGroup=6, additionalInputs=0, debug=False):
+                 blockParams=slParams, numElements=3, numNeuronsPerGroup=6,
+                 additionalInputs=0, debug=False):
 
-        BuildingBlock.__init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug)
+        BuildingBlock.__init__(self, name, neuronEq, synapseEq,
+                               neuronParams, synapseParams, blockParams, debug)
 
-        self.Groups, self.Monitors, self.standaloneParams = genSequenceLearning(name,
-                                                                                neuronEq, neuronParams, synapseEq, synapseParams,
-                                                                                numElements=numElements, numNeuronsPerGroup=numNeuronsPerGroup,
-                                                                                additionalInputs=additionalInputs, debug=debug, **blockParams)
+        self.Groups, self.Monitors,\
+            self.standaloneParams = genSequenceLearning(name,
+                                                        neuronEq, neuronParams,
+                                                        synapseEq, synapseParams,
+                                                        numElements=numElements,
+                                                        numNeuronsPerGroup=numNeuronsPerGroup,
+                                                        additionalInputs=additionalInputs,
+                                                        debug=debug, **blockParams)
 
         self.inputGroup = self.Groups['gInputGroup']
         self.cosGroup = self.Groups['gCoSGroup']
@@ -103,41 +109,56 @@ def genSequenceLearning(groupname='Seq',
     # Input to start sequence manually
     tsInput = np.asarray([]) * ms
     indInput = np.asarray([])
-    gInputGroup = SpikeGeneratorGroup(numNeuronsPerGroup, indices=indInput, times=tsInput, name='spikegenInp_' + groupname)
+    gInputGroup = SpikeGeneratorGroup(
+        numNeuronsPerGroup, indices=indInput, times=tsInput, name='spikegenInp_' + groupname)
     # CoS Input #TODO: CoS as NeuronGroup
     tsCoS = np.asarray([]) * ms
     indCoS = np.asarray([])
-    gCoSGroup = SpikeGeneratorGroup(numNeuronsPerGroup, indices=indCoS, times=tsCoS, name='spikegenCoS_' + groupname)
+    gCoSGroup = SpikeGeneratorGroup(
+        numNeuronsPerGroup, indices=indCoS, times=tsCoS, name='spikegenCoS_' + groupname)
     # reset group #TODO: Reset as NeuronGroup
     tsReset = np.asarray([]) * ms
     indReset = np.asarray([])
-    gResetGroup = SpikeGeneratorGroup(numNeuronsPerGroup, indices=indReset, times=tsReset, name='spikegenReset_' + groupname)
+    gResetGroup = SpikeGeneratorGroup(
+        numNeuronsPerGroup, indices=indReset, times=tsReset, name='spikegenReset_' + groupname)
 
     # Neurongoups
-    gOrdGroups = Neurons(nOrdNeurons, neuronEq, neuronPar, refractory=gOrdGroups_refP, name='g' + 'Ord_' + groupname, numInputs=7 + additionalInputs, debug=debug)
-    gMemGroups = Neurons(nMemNeurons, neuronEq, neuronPar, refractory=gMemGroups_refP, name='g' + 'Mem_' + groupname, numInputs=3, debug=debug)
+    gOrdGroups = Neurons(nOrdNeurons, neuronEq, neuronPar, refractory=gOrdGroups_refP,
+                         name='g' + 'Ord_' + groupname, numInputs=7 + additionalInputs, debug=debug)
+    gMemGroups = Neurons(nMemNeurons, neuronEq, neuronPar, refractory=gMemGroups_refP,
+                         name='g' + 'Mem_' + groupname, numInputs=3, debug=debug)
 
     # Synapses
     # excitatory
-    synInpOrd1e = Connections(gInputGroup, gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sInpOrd1e_' + groupname)
-    synOrdMem1e = Connections(gOrdGroups, gMemGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sOrdMem1e_' + groupname)
-    synMemOrd1e = Connections(gMemGroups, gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sMemOrd1e_' + groupname)
+    synInpOrd1e = Connections(gInputGroup, gOrdGroups, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sInpOrd1e_' + groupname)
+    synOrdMem1e = Connections(gOrdGroups, gMemGroups, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sOrdMem1e_' + groupname)
+    synMemOrd1e = Connections(gMemGroups, gOrdGroups, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sMemOrd1e_' + groupname)
     # local
-    synOrdOrd1e = Connections(gOrdGroups, gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sOrdOrd1e_' + groupname)
-    synMemMem1e = Connections(gMemGroups, gMemGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sMemMem1e_' + groupname)
+    synOrdOrd1e = Connections(gOrdGroups, gOrdGroups, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sOrdOrd1e_' + groupname)
+    synMemMem1e = Connections(gMemGroups, gMemGroups, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sMemMem1e_' + groupname)
     # inhibitory
-    synOrdOrd1i = Connections(gOrdGroups, gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sOrdOrd1i_' + groupname)
-    synMemOrd1i = Connections(gMemGroups, gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sMemOrd1i_' + groupname)
-    synCoSOrd1i = Connections(gCoSGroup, gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sCoSOrd1i_' + groupname)
-    synResetOrd1i = Connections(gResetGroup, gOrdGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sResOrd1i_' + groupname)
-    synResetMem1i = Connections(gResetGroup, gMemGroups, synapseEq, synapsePar, method="euler", debug=debug, name='sResMem1i_' + groupname)
+    synOrdOrd1i = Connections(gOrdGroups, gOrdGroups, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sOrdOrd1i_' + groupname)
+    synMemOrd1i = Connections(gMemGroups, gOrdGroups, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sMemOrd1i_' + groupname)
+    synCoSOrd1i = Connections(gCoSGroup, gOrdGroups, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sCoSOrd1i_' + groupname)
+    synResetOrd1i = Connections(gResetGroup, gOrdGroups, synapseEq, synapsePar,
+                                method="euler", debug=debug, name='sResOrd1i_' + groupname)
+    synResetMem1i = Connections(gResetGroup, gMemGroups, synapseEq, synapsePar,
+                                method="euler", debug=debug, name='sResMem1i_' + groupname)
 
     # predefine connections for efficiency reasons
     iii = []
     jjj = []
     for ii in range(nOrdNeurons):
         for jj in range(nMemNeurons):
-            if ((floor(ii / numNeuronsPerGroup) == floor(jj / numNeuronsPerGroup)) & (ii != jj)):
+            if (floor(ii / numNeuronsPerGroup) == floor(jj / numNeuronsPerGroup)) & (ii != jj):
                 iii.append(ii)
                 jjj.append(jj)
 
@@ -149,12 +170,16 @@ def genSequenceLearning(groupname='Seq',
                 iiMemOrd.append(ii)
                 jjMemOrd.append(jj)
 
-    synInpOrd1e.connect(i=np.arange(numNeuronsPerGroup), j=np.arange(numNeuronsPerGroup))  # Input to first OG
+    synInpOrd1e.connect(i=np.arange(numNeuronsPerGroup), j=np.arange(
+        numNeuronsPerGroup))  # Input to first OG
     synOrdMem1e.connect(i=iii, j=jjj)
     synMemOrd1e.connect(i=iiMemOrd, j=jjMemOrd)
-    synOrdOrd1e.connect(i=iii, j=jjj)  # i=j is also connected, exclude if necessary
-    synMemMem1e.connect(i=iii, j=jjj)  # i=j is also connected, exclude if necessary
-    synOrdOrd1i.connect('floor(i/numNeuronsPerGroup)!=floor(j/numNeuronsPerGroup) and (i!=j)')
+    # i=j is also connected, exclude if necessary
+    synOrdOrd1e.connect(i=iii, j=jjj)
+    # i=j is also connected, exclude if necessary
+    synMemMem1e.connect(i=iii, j=jjj)
+    synOrdOrd1i.connect(
+        'floor(i/numNeuronsPerGroup)!=floor(j/numNeuronsPerGroup) and (i!=j)')
     synMemOrd1i.connect(i=iii, j=jjj)
     # CoS
     synCoSOrd1i.connect(True)
@@ -237,7 +262,7 @@ def plotSequenceLearning(SLMonitors):
     spikemonCoS = SLMonitors['spikemonCoS']
     spikemonReset = SLMonitors['spikemonReset']
     duration = max(spikemonOrd.t) + 10 * ms
-    print ('plot...')
+    print('plot...')
     figure(figsize=(8, 12))
     title('sequence learning')
     nPlots = 5 * 100

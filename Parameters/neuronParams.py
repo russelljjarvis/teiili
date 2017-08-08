@@ -50,6 +50,12 @@ gerstnerExpAIFdefaultfast = {"C": 281 * pF,
                              "b": 0 * nA,
                              "Vr": -70.6 * mV,
                              "Vm": -70.6 * mV}
+SimpleIFdefault = {"Gm" : 4.3 * nS,
+                   "Vrest" : -55 * mV,
+                   "Vthr" : -40 * mV,
+                   "Cm" : 0.135 * pF,
+                   "Vm" : -55 * mV
+                   }
 
 SiliconNeuronP = {
     #--------------------------------------------------------

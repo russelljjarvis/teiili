@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from brian2 import *
+#from brian2 import *
 #from NCSBrian2Lib.Tools.tools import *
 
 
@@ -25,7 +25,8 @@ def DefaultExcitatorySynapses(inputNumber=1, debug=False, additionalStatevars=No
         Iw_exc:    synaptic gain
 
     Output:
-        Dictionary containing model, on_pre and on_post strings for synapses group, dictionary of non-default parameters
+        Dictionary containing model, on_pre and on_post strings for synapses
+        group, dictionary of non-default parameters
 
     Author: Daniele Conti
     Author mail: daniele.conti@polito.it
@@ -63,7 +64,8 @@ def DefaultExcitatorySynapses(inputNumber=1, debug=False, additionalStatevars=No
     return SynDict, arguments
 
 
-def DefaultInhibitorySynapses(inputNumber=1, inh2output=True, debug=False, additionalStatevars=None):
+def DefaultInhibitorySynapses(inputNumber=1, inh2output=True,
+                              debug=False, additionalStatevars=None):
     '''
     Default Inhibitory Synapse with current decaying in time
     Input Parameters:
@@ -126,7 +128,8 @@ def DefaultTeacherSynapses(debug=False):
         Iw_t:    synaptic gain
 
     Output:
-        Dictionary containing model, on_pre and on_post strings for synapses group, dictionary of non-default parameters
+        Dictionary containing model, on_pre and on_post strings for synapses
+        group, dictionary of non-default parameters
 
     Author: Daniele Conti
     Author mail: daniele.conti@polito.it
@@ -412,8 +415,52 @@ def BraderFusiSynapses(inputNumber=1, debug=False, plastic=True, additionalState
 
     return SynDict, arguments
 
-    # synapses group is called as follow:
-    #S = Synapses(populations1, population2, method = 'euler', **SynDict)
+
+def alphaSynapse(inputNumber=1, debug=False, additionalStatevars=None):
+    '''
+    Comments:
+    * t_spike must be set to 1 second as initial value to avoid kernel function at time zero (when no spike is received)
+    Inputs:
+        Parameters:         Required parameters for kernel function
+                            tau: time constant
+                            t_spike: time when a spike occurs will be reset to zero
+
+                            weight determines if the synapse is excitatory or inhibitory
+    Output:
+        Dictionary containing model and on_pre strings for synapses group
+        Arguments that pass the non-default parameters
+    '''
+
+    arguments = dict(locals())
+    modelEq = """
+            dG_alpha/dt  = -G_alpha/tau+weight*gWe*exp(1-t_spike/tau)/tau: siemens (clock-driven)
+            dt_spike/dt = 1 : second (clock-driven)
+            gWe : siemens (constant)          # excitatory synaptic gain
+            weight : 1 (constant)
+            tau: second (constant)
+            Vrev  : volt (constant)
+            {Ii}_post = -G_alpha*(Vm_post-Vrev)*(weight<0) : amp (summed)
+            {Ie}_post = -G_alpha*(Vm_post-Vrev)*(weight>0) : amp (summed)"""
+
+    if inputNumber > 1:
+        modelEq = modelEq.format(Ie="Ie" + str(inputNumber), Ii="Ii" + str(inputNumber))
+    else:
+        modelEq = modelEq.format(Ie="Ie", Ii="Ii")
+
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
+
+    preEq = '''t_spike = 0 * ms'''
+
+    SynDict = dict(model=modelEq, on_pre=preEq)
+
+    if debug:
+        print('arguments of reversalSynV: \n' + str(arguments))
+        printSynDict(SynDict)
+
+    return SynDict
 
 
 def KernelsSynapses(kernel='alpha', debug=False):
@@ -426,28 +473,30 @@ def KernelsSynapses(kernel='alpha', debug=False):
     kernel= gaussian; for a gaussian function
     kernel= resonant; for resosnant function
 
-    In the Synaptic Kernel Method from Tapson et al.(2013), There is a input layer that connects to
-    a hidden layer that represents the synapses, each of these synapses implements a synaptic kernel
-    filter. The kernel function simply represents the response of the synapse due to an input. The three
-    important properties of these filters are:
+    In the Synaptic Kernel Method from Tapson et al.(2013),
+    There is a input layer that connects to a hidden layer that represents
+    the synapses, each of these synapses implements a synaptic kernel
+    filter. The kernel function simply represents the response of the
+    synapse due to an input. The three important properties of these filters are:
     * Convert spikes into continuos signal
     * Project the input into a higher-dimensional space
     * Implement a short-time memory of past events
 
     Comments:
     * Weights are not in the default parameters.
-    * t_spike must be set to 1 second as initial value to avoid kernel function at time zero (when no spike is received)
-    * Equations for neurons group in input must have defined Iin_ex, in order to pass information from
-        synapse to neuron.
-    * All parameters below are added to the synapse model as internal variable, thus for each synapse
-    in the network a parameter is defined.
+    * t_spike must be set to 1 second as initial value to avoid kernel function
+    at time zero (when no spike is received)
+    * Equations for neurons group in input must have defined Iin_ex, in order
+    to pass information from synapse to neuron.
+    * All parameters below are added to the synapse model as internal variable,
+    thus for each synapse in the network a parameter is defined.
 
     Inputs:
-        Parameters:         Required parameters for kernel function
-                            tau: time constant
-                            t_spike: time when a spike occurs will be reset to zero
-                            omega: for the resonant function
-                            sigma: standard deviation for gaussian function
+        Parameters:     Required parameters for kernel function
+                        tau: time constant
+                        t_spike: time when a spike occurs will be reset to zero
+                        omega: for the resonant function
+                        sigma: standard deviation for gaussian function
 
 
     Output:
@@ -530,8 +579,7 @@ def KernelsSynapses(kernel='alpha', debug=False):
     return SynDict, arguments
 
 
-def SiliconSynapses(Vth=None, Vtau=None, Vdd=None, Csyn=None, Io=None,
-                    Ut=None, kn=None, kp=None, duration=None, debug=False):
+def SiliconSynapses(debug=False):
     '''
     Comments:
     * Weights are not in the default parameters, it must be set by the user
@@ -601,31 +649,33 @@ def MemristiveFusiSynapses(inputNumber=1, debug=False, plastic=True):
     in the network a parameter is defined. Imemthr refers to the post-synaptic neuron.
 
     Inputs:
-        Parameters:         Required parameters for fusi learning and memristive fit
-                            Parameters required:
-                            Imemthr:    spiking threshold for neurons
-                            theta_dl:   calcium lower threshold for depression
-                            theta_du:   calcium upper threshold for depression
-                            theta_pl:   calcium lower threshold for potentiation
-                            theta_pu:   calcium upper threshold for potentiation
-                            R_min:      Minimum resistance reachable for the device
-                            R_max:      Maximum resistance reachable for the device
-                            R0_d:       Pristine resistance for depression (average on experimental data)
-                            R0_p:       Pristine resistance for potentiation (average on experimental data)
-                            alpha_d:    fitting parameter depression
-                            alpha_p:    fitting parameter potentiation
-                            beta_p:     fitting parameter potentiation
-                            C_p:        fitting parameter of value dispersion for potentiation
-                            D_p:        fitting parameter of value dispersion for potentiation
-                            D_d:        fitting parameter of value dispersion for depression
-                            Iw_fm:      synaptic gain
-                            tau_fm:     synaptic time constant
-                            Iwca:       Calcium current gain
-                            count_up:   Auxiliary variable counting LTD transitions
-                            count_down: Auxiliary variable counting LTP transitions
+    @Params:
+        Required parameters for fusi learning and memristive fit
+        Parameters required:
+        Imemthr:    spiking threshold for neurons
+        theta_dl:   calcium lower threshold for depression
+        theta_du:   calcium upper threshold for depression
+        theta_pl:   calcium lower threshold for potentiation
+        theta_pu:   calcium upper threshold for potentiation
+        R_min:      Minimum resistance reachable for the device
+        R_max:      Maximum resistance reachable for the device
+        R0_d:       Pristine resistance for depression (average on experimental data)
+        R0_p:       Pristine resistance for potentiation (average on experimental data)
+        alpha_d:    fitting parameter depression
+        alpha_p:    fitting parameter potentiation
+        beta_p:     fitting parameter potentiation
+        C_p:        fitting parameter of value dispersion for potentiation
+        D_p:        fitting parameter of value dispersion for potentiation
+        D_d:        fitting parameter of value dispersion for depression
+        Iw_fm:      synaptic gain
+        tau_fm:     synaptic time constant
+        Iwca:       Calcium current gain
+        count_up:   Auxiliary variable counting LTD transitions
+        count_down: Auxiliary variable counting LTP transitions
 
     Output:
-        Dictionary containing model, on_pre and on_post strings for synapses group, dictionary of non-default parameters
+        Dictionary containing model, on_pre and on_post strings for synapses group,
+        dictionary of non-default parameters
 
     Author: Daniele Conti
     Author mail: daniele.conti@polito.it
@@ -721,7 +771,8 @@ def MemristiveFusiSynapses(inputNumber=1, debug=False, plastic=True):
 
 
 def StdpSynV(inputNumber=1, debug=False, additionalStatevars=None):
-    ''' This an STDP synapse adapted from http://brian2.readthedocs.io/en/latest/examples/synapses.STDP.html
+    ''' This an STDP synapse adapted from
+        http://brian2.readthedocs.io/en/latest/examples/synapses.STDP.html
         after Song, Miller and Abbott (2000) and Song and Abbott (2001)
     '''
 

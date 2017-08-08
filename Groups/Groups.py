@@ -5,8 +5,10 @@ Created on Thu Jul 27 17:28:16 2017
 
 @author: alpha
 """
-from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks, ylabel, xlabel, xlim, ylim, figure
+from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
+                     ylabel, xlabel, xlim, ylim, figure
 import warnings
+from NCSBrian2Lib.Equations import neuronEquations, synapseEquations
 
 #TODO: Add standaloneParams to groups additional to buildingblocks
 
@@ -33,6 +35,7 @@ class Neurons(NeuronGroup):
         self.numSynapses = 0
         # generate the equation in order to pu it into the NeuronGroup constructor
         eqDict = Equation(numInputs=numInputs, debug=debug, method=method, additionalStatevars=additionalStatevars)
+        self.eqDict = eqDict
 
         NeuronGroup.__init__(self, N,
                              events=events,
@@ -55,6 +58,9 @@ class Neurons(NeuronGroup):
         if self.__numInputs < self.numSynapses:
             raise ValueError('There seem so be too many connections to ' + self.name + ', please increase numInputs')
 
+    def print(self):
+        neuronEquations.printEqDict(self.eqDict)
+
 
 class Connections(Synapses):
 
@@ -74,7 +80,7 @@ class Connections(Synapses):
         self.debug = debug
         self.inputNumber = 0
         self.Equation = Equation
-        
+
         try:
             target.registerSynapse()
             if debug:
@@ -90,8 +96,10 @@ class Connections(Synapses):
                               str(target) + ', therefore, please specify an inputNumber')
 
         synDict = Equation(inputNumber=self.inputNumber, debug=debug, additionalStatevars=additionalStatevars)
+        self.eqDict = synDict
 
-        Synapses.__init__(self, source, target=target,
+        try:
+            Synapses.__init__(self, source, target=target,
                           connect=connect, delay=delay, on_event=on_event,
                           multisynaptic_index=multisynaptic_index,
                           namespace=namespace, dtype=dtype,
@@ -99,6 +107,10 @@ class Connections(Synapses):
                           dt=dt, clock=clock, order=order,
                           method=method,
                           name=name, **synDict)
+        except Exception as e:
+            import sys
+            raise type(e)(str(e) + '\n\nCheck Equation for errors!\n'+
+                       'e.g. are all units specified correctly at the end of every line?').with_traceback(sys.exc_info()[2])
 
     def connect(self, condition=None, i=None, j=None, p=1., n=1,
                 skip_if_invalid=False,
@@ -131,6 +143,8 @@ class Connections(Synapses):
         xlabel('Source neuron index')
         ylabel('Target neuron index')
 
+    def print(self):
+        synapseEquations.printSynDict(self.eqDict)
 
 def setParams(briangroup, params, ndargs=None, debug=False):
     for par in params:

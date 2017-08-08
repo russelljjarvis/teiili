@@ -4,12 +4,14 @@ from NCSBrian2Lib.Tools.tools import *
 
 # TODO: Make classes, Add plotvars, add replaceVars
 
+
 def ExpAdaptIF(numInputs=1, debug=False, method='euler', additionalStatevars=None):
     '''
     Brette, Gerstner 2005 Exponential adaptive IF model
     see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
     @return: a dictionary of keyword arguments for NeuronGroup()
-    @note: you have to set parameters for each NeuronGroup after its creation, synapses have to increment the correct variable: Ie or Ii
+    @note: you have to set parameters for each NeuronGroup after its creation,
+    synapses have to increment the correct variable: Ie or Ii
     Neuron group is created and prepared as follows:
     eqDict = neuronEquatioons.ExpAdaptIF()
     neurongroup = NeuronGroup(nNeurons, **eqDict , refractory = 2*ms, method='euler',name='groupname')
@@ -65,6 +67,55 @@ def ExpAdaptIF(numInputs=1, debug=False, method='euler', additionalStatevars=Non
         printEqDict(eqDict)
 
     return eqDict
+
+
+def SimpleIF(numInputs=1, debug=False, method='euler', additionalStatevars=None):
+    '''
+    @param:
+    numInputs  # number of input currents (>0) (they are just numbered: Ie, Ie2, Ie3, ...)
+    debug      # print debug info?
+    '''
+
+    arguments = dict(locals())
+    # del(arguments['debug'])
+
+    modelEq = """
+    dVm/dt = (Iin - Gm*(Vm-Vrest) )/Cm : volt (unless refractory)
+    Gm      : siemens (constant)
+    Vrest   : volt (constant)
+    Vthr    : volt (constant)
+    Cm      : farad (constant)
+    refP    : second (constant) # refractory period (It is still possible to set it to False)
+    Iconst  : amp                         # constant input current
+    Ii      : amp                         # inh input current
+    Ie      : amp                         # exc input current
+    """
+    # add additional input currents (if you have several input currents)
+    Ies = ["+ Ie" + str(i) + " " for i in range(1, numInputs + 1) if i > 1]
+    Iis = ["+ Ii" + str(i) + " " for i in range(1, numInputs + 1) if i > 1]
+    modelEq = modelEq + "Iin = Iconst + Ii + Ie " + "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
+    Iesline = ["    Ie" + str(i) + " : amp" for i in range(1, numInputs + 1) if i > 1]
+    Iisline = ["    Ii" + str(i) + " : amp" for i in range(1, numInputs + 1)if i > 1]
+    modelEq = modelEq + "\n".join(Iesline) + "\n" + "\n".join(Iisline)
+    modelEq += "\n"
+
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
+
+    thresholdEq = 'Vm > Vthr'
+    resetEq = """Vm = Vrest"""
+
+    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq, refractory='refP', method=method)
+
+    if debug:
+        print('arguments of ExpAdaptIF: \n' + str(arguments))
+        printEqDict(eqDict)
+
+    return eqDict
+
+
 
 
 def Silicon(numInputs=1, debug=False, Excitatory=True, method='euler', additionalStatevars=None):

@@ -37,13 +37,14 @@ class Chain(BuildingBlock):
         self.synInpCha1e_weight = blockParams['synInpCha1e_weight']
         self.gChaGroup_refP = blockParams['gChaGroup_refP']
 
-        BuildingBlock.__init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug)
+        BuildingBlock.__init__(self, name, neuronEq, synapseEq, neuronParams,
+                               synapseParams, blockParams, debug)
 
         self.Groups, self.Monitors, self.replaceVars = genChain(name,
-                                                                neuronEq, neuronParams, synapseEq, synapseParams,
-                                                                self.numChains, self.numNeuronsPerChain,
-                                                                self.synChaCha1e_weight, self.synInpCha1e_weight,
-                                                                self.gChaGroup_refP, self.debug)
+                            neuronEq, neuronParams, synapseEq, synapseParams,
+                            self.numChains, self.numNeuronsPerChain,
+                            self.synChaCha1e_weight, self.synInpCha1e_weight,
+                            self.gChaGroup_refP, self.debug)
 
         self.inputGroup = self.Groups['gChaInpGroup']
         self.chainGroup = self.Groups['gChaGroup']
@@ -73,7 +74,8 @@ class Chain(BuildingBlock):
         # ylim([0,0])
         xlim([0, duration / ms])
         if savedir is not None:
-            fig.savefig(os.path.join(savedir, self.blockName + '_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.png'))
+            fig.savefig(os.path.join(savedir, self.name + '_' +
+                                     datetime.now().strftime('%Y%m%d_%H%M%S') + '.png'))
 
 
 def genChain(groupname='Cha',
@@ -88,14 +90,19 @@ def genChain(groupname='Cha',
     # empty input SpikeGenerator
     tsChaInp = np.asarray([]) * ms
     indChaInp = np.asarray([])
-    gChaInpGroup = SpikeGeneratorGroup(numChains, indices=indChaInp, times=tsChaInp, name='g' + groupname + 'Inp')
+    gChaInpGroup = SpikeGeneratorGroup(numChains, indices=indChaInp,
+                                       times=tsChaInp, name='g' + groupname + 'Inp')
 
-    gChaGroup = Neurons(numNeuronsPerChain * numChains, neuronEq, neuronPar, refractory=gChaGroup_refP, name='g' + groupname, numInputs=2, debug=debug)
+    gChaGroup = Neurons(numNeuronsPerChain * numChains, neuronEq, neuronPar,
+                        refractory=gChaGroup_refP, name='g' + groupname, numInputs=2, debug=debug)
 
-    synChaCha1e = Connections(gChaGroup, gChaGroup, synapseEq, synapsePar, method='euler', name='s' + groupname + '' + groupname + '1e')
+    synChaCha1e = Connections(gChaGroup, gChaGroup, synapseEq, synapsePar,
+                              method='euler', name='s' + groupname + '' + groupname + '1e')
     synChaCha1e.connect('i+1==j and (j%numNeuronsPerChain)!=0')
 
-    synInpCha1e = Connections(gChaInpGroup, gChaGroup, synapseEq, synapsePar, method='euler', name='sInp' + groupname + '1e')
+    synInpCha1e = Connections(gChaInpGroup, gChaGroup, synapseEq, synapsePar,
+                              method='euler', name='sInp' + groupname + '1e')
+
     for i_cha in range(numChains):
         synInpCha1e.connect(i=i_cha, j=i_cha * numNeuronsPerChain)
 

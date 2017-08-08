@@ -32,8 +32,8 @@ fusiSyn_default = {"w_plus": 0.2,
                    "EIe": 60.0 * mV}  # maybe not good default params, just placeholder!
 
 simpleSyn_default = {
-    "tau": 5 * ms,
-    "Iw": 1 * nA}
+                    "tau": 5 * ms,
+                    "Iw": 1 * nA}
 
 revSyn_default = {"gIe": 0 * nS,
                   "gIi": 0 * nS,
@@ -43,6 +43,13 @@ revSyn_default = {"gIe": 0 * nS,
                   "EIi": -90.0 * mV,
                   "gWe": 7 * nS,
                   "gWi": -3 * nS}
+
+alphaSynapse_default = {"gWe": 0.7 * nS, #EPSG peak amplitude
+                  "tau": 2 * ms,
+                  "Vrev" : 0 * mV,
+                  "t_spike" : 1*second
+                  }
+
 
 StdpSyn_default = {"gIe": 0 * nS,
                    "taugIe": 5 * ms,

@@ -433,15 +433,21 @@ def alphaSynapse(inputNumber=1, debug=False, additionalStatevars=None):
 
     arguments = dict(locals())
     modelEq = """
-            dG_alpha/dt  = -G_alpha/tau+weight*gWe*exp(1-t_spike/tau)/tau: siemens (clock-driven)
-            dt_spike/dt = 1 : second (clock-driven)
+            dgIe/dt = (-gIe/taugIe)+gWe*(weight>0)*weight*exp(1-t_spike/taugIe)/taugIe : siemens (clock-driven)
+            dgIi/dt = (-gIi/taugIi)+gWe*(weight<0)*weight*exp(1-t_spike/taugIi)/taugIi : siemens  (clock-driven)
+            Iesyn = gIe*(EIe - Vm_post) :amp
+            Iisyn = gIi*(EIi - Vm_post) :amp
+            taugIe : second (constant)        # excitatory input time constant
+            taugIi : second (constant)        # inhibitory input time constant
+            EIe : volt (constant)             # excitatory reversal potential
+            EIi : volt (constant)             # inhibitory reversal potential
             gWe : siemens (constant)          # excitatory synaptic gain
+            gWi : siemens (constant)          # inhibitory synaptic gain
             weight : 1 (constant)
-            tau: second (constant)
-            Vrev  : volt (constant)
-            {Ii}_post = -G_alpha*(Vm_post-Vrev)*(weight<0) : amp (summed)
-            {Ie}_post = -G_alpha*(Vm_post-Vrev)*(weight>0) : amp (summed)"""
-
+            {Ie}_post = Iesyn : amp  (summed)
+            {Ii}_post = Iisyn : amp  (summed)
+            dt_spike/dt = 1 : second (clock-driven)
+            """
     if inputNumber > 1:
         modelEq = modelEq.format(Ie="Ie" + str(inputNumber), Ii="Ii" + str(inputNumber))
     else:

@@ -80,8 +80,8 @@ def SimpleIF(numInputs=1, debug=False, method='euler', additionalStatevars=None)
     # del(arguments['debug'])
 
     modelEq = """
-    dVm/dt = (Iin - Gm*(Vm-Vrest) )/Cm : volt (unless refractory)
-    Gm      : siemens (constant)
+    dVm/dt = (Iin - gL*(Vm-Vrest) )/Cm : volt (unless refractory)
+    gL      : siemens   (constant)        # leak conductance
     Vrest   : volt (constant)
     Vthr    : volt (constant)
     Cm      : farad (constant)

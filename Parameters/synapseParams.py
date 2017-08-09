@@ -44,12 +44,7 @@ revSyn_default = {"gIe": 0 * nS,
                   "gWe": 7 * nS,
                   "gWi": -3 * nS}
 
-alphaSynapse_default = {"gWe": 0.7 * nS, #EPSG peak amplitude
-                  "tau": 2 * ms,
-                  "Vrev" : 0 * mV,
-                  "t_spike" : 1*second
-                  }
-
+alphaSynapse_default = revSyn_default.update({"t_spike" : 1*second})
 
 StdpSyn_default = {"gIe": 0 * nS,
                    "taugIe": 5 * ms,

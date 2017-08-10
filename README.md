@@ -50,6 +50,16 @@ Please look at the Examples here: https://code.ini.uzh.ch/ncs/NCSBrian2Examples
 You can also use them to test your installation
 
 
+## Brian2 debugging tips
+Simulation is not going as expected
+* Restart Python kernel
+* Are all groups added to the network?
+* Are all statevars initialized with the correct value? (e.g. Membrane potential with resting potential, not 0)
+* Use group.print() in order to see the equations
+* Use connections.plot() in order to get a visualization
+
+
+
 ## Authors
 
 * **Moritz Milde** - *Initial work* -

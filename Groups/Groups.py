@@ -11,7 +11,7 @@ from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
 from NCSBrian2Lib.Equations import neuronEquations, synapseEquations
 
 # TODO: Add standaloneParams to groups additional to buildingblocks
-
+# TODO: maybe offer a network argument in order to automatically add the group to the network
 
 class Neurons(NeuronGroup):
 
@@ -137,7 +137,7 @@ class Connections(Synapses):
         plot(ones(targetNeuron), range(targetNeuron), 'ok', ms=10)
         for i, j in zip(S.i, S.j):
             plot([0, 1], [i, j], '-k')
-        xticks([0, 1], ['Source', 'Target'])
+        xticks([0, 1], [self.source.name, self.target.name])
         ylabel('Neuron index')
         xlim(-0.1, 1.1)
         ylim(-1, max(sourceNeuron, targetNeuron))

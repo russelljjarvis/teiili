@@ -80,15 +80,18 @@ def SimpleIF(numInputs=1, debug=False, method='euler', additionalStatevars=None)
     # del(arguments['debug'])
 
     modelEq = """
-    dVm/dt = (Iin - gL*(Vm-Vrest) )/Cm : volt (unless refractory)
+    dVm/dt = (gL*(EL-Vm) + Iin)/C : volt (unless refractory)
     gL      : siemens   (constant)        # leak conductance
-    Vrest   : volt (constant)
+    Vr      : volt (constant)
     Vthr    : volt (constant)
-    Cm      : farad (constant)
+    EL      : volt      (constant)        # leak reversal potential
+    C       : farad     (constant)        # membrane capacitance
     refP    : second (constant) # refractory period (It is still possible to set it to False)
     Iconst  : amp                         # constant input current
     Ii      : amp                         # inh input current
     Ie      : amp                         # exc input current
+    x       : 1         (constant)        # x location on 2d grid (only set it if you need it)
+    y       : 1         (constant)        # y location on 2d grid
     """
     # add additional input currents (if you have several input currents)
     Ies = ["+ Ie" + str(i) + " " for i in range(1, numInputs + 1) if i > 1]
@@ -105,7 +108,7 @@ def SimpleIF(numInputs=1, debug=False, method='euler', additionalStatevars=None)
         modelEq += "\n            ".join(additionalStatevars)
 
     thresholdEq = 'Vm > Vthr'
-    resetEq = """Vm = Vrest"""
+    resetEq = """Vm = Vr"""
 
     eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq, refractory='refP', method=method)
 

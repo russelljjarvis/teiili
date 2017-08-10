@@ -11,7 +11,7 @@ def printSynDict(eqDict):
     print('on pre equation:')
     print(eqDict['on_pre'])
     print('-_-_-_-_-_-_-_-')
-    if any(eqDict.keys() == 'on_post'):
+    if any(key  == 'on_post' for key in eqDict):
         print('on post equation:')
         print(eqDict['on_post'])
         print('-------------')
@@ -434,7 +434,7 @@ def alphaSynapse(inputNumber=1, debug=False, additionalStatevars=None):
     arguments = dict(locals())
     modelEq = """
             dgIe/dt = (-gIe/taugIe)+gWe*(weight>0)*weight*exp(1-t_spike/taugIe)/taugIe : siemens (clock-driven)
-            dgIi/dt = (-gIi/taugIi)+gWe*(weight<0)*weight*exp(1-t_spike/taugIi)/taugIi : siemens  (clock-driven)
+            dgIi/dt = (-gIi/taugIi)+gWi*(weight<0)*weight*exp(1-t_spike/taugIi)/taugIi : siemens  (clock-driven)
             Iesyn = gIe*(EIe - Vm_post) :amp
             Iisyn = gIi*(EIi - Vm_post) :amp
             taugIe : second (constant)        # excitatory input time constant

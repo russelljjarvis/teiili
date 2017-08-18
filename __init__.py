@@ -11,4 +11,4 @@ from NCSBrian2Lib.BuildingBlocks.WTA import *
 from NCSBrian2Lib.BuildingBlocks.SOM import *
 from NCSBrian2Lib.BuildingBlocks.Chain import *
 from NCSBrian2Lib.Plotting.WTAplot import *
-
+from NCSBrian2Lib.Groups.Network import *

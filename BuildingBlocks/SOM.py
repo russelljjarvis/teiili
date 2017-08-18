@@ -166,7 +166,7 @@ def genSOM(name,
     wtaSOM = WTA('wtaSOM', dimensions=2,
                  neuronParams=neuronPar, synapseParams=synapsePar, blockParams=wtaParams,
                  numNeurons=nWTA2dNeurons, numInhNeurons=nInhNeuronsSOM,
-                 cutoff=cutoff, numWtaInputs=1,
+                 cutoff=cutoff, numInputs=1,
                  additionalStatevars=["latSigmaTau : second (constant)"], debug=debug)
 
     # decay of kernel sigma ???

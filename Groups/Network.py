@@ -13,6 +13,8 @@ from NCSBrian2Lib.Tools.cppTools import buildCppAndReplace, collectStandalonePar
 from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
 import time
 from collections import OrderedDict
+import pprint
+
 
 class StandaloneNetwork(Network):
 
@@ -40,16 +42,21 @@ class StandaloneNetwork(Network):
         Network.add(self, *objs)
 
         for obj in objs:
-            #TODO: Collect all groups with standaloneParams, not only BBs
             if isinstance(obj, BuildingBlock):
                 self.blocks.append(obj)
                 print('added to network building blocks: ' , obj)
-                self.standaloneParams.update(obj.standaloneParams)
+
+        try:
+            self.standaloneParams.update(obj.standaloneParams)
+        except AttributeError:
+            pass
 
         #TODO: automatically add additional namespaces of buildingsblocks to the run call
+        # OR can we do it via Group namespaces?
+
 
     def build(self, report=None, report_period=10*second,
-            namespace=None, profile=True, level=0, recompile=False, standaloneParams=None):
+            namespace=None, profile=True, level=0, recompile=False, standaloneParams=None, clean=True):
 
         if recompile or not StandaloneNetwork.hasRun:
 
@@ -61,7 +68,7 @@ class StandaloneNetwork(Network):
             if standaloneParams is None:
                 standaloneParams = self.standaloneParams
 
-            buildCppAndReplace(standaloneParams, self.standaloneDir)
+            buildCppAndReplace(standaloneParams, self.standaloneDir, clean=clean)
         else:
             print('Network was not recompiled, standaloneParams are changed, but Network structure is not!')
             print('This might lead to unexpected behaviour.')
@@ -84,3 +91,6 @@ class StandaloneNetwork(Network):
         print ('simulation in c++ took ' + str(end - startSim) + ' sec')
         print('simulation done!')
 
+    def printParams(self):
+        pp = pprint.PrettyPrinter()
+        pp.pprint(self.standaloneParams)

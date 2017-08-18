@@ -47,7 +47,7 @@ class WTA(BuildingBlock):
     def __init__(self, name, dimensions=1, neuronEq=ExpAdaptIF, synapseEq=reversalSynV,
                  neuronParams=gerstnerExpAIFdefaultregular, synapseParams=revSyn_default,
                  blockParams=wtaParams, numNeurons=16, numInhNeurons=2, cutoff=10,
-                 additionalStatevars=[], numWtaInputs=1, debug=False):
+                 additionalStatevars=[], numInputs=1, debug=False):
 
         self.numNeurons = numNeurons
         self.dimensions = dimensions
@@ -63,7 +63,7 @@ class WTA(BuildingBlock):
                                                  numNeurons=numNeurons,
                                                  numInhNeurons=numInhNeurons,
                                                  additionalStatevars=additionalStatevars,
-                                                 cutoff=cutoff, numWtaInputs=numWtaInputs,
+                                                 cutoff=cutoff, numInputs=numInputs,
                                                  monitor=True, debug=debug,
                                                  **blockParams)
         elif dimensions == 2:
@@ -74,14 +74,14 @@ class WTA(BuildingBlock):
                                                  numNeurons=numNeurons,
                                                  numInhNeurons=numInhNeurons,
                                                  additionalStatevars=additionalStatevars,
-                                                 cutoff=cutoff, numWtaInputs=numWtaInputs,
+                                                 cutoff=cutoff, numInputs=numInputs,
                                                  monitor=True, debug=debug,
                                                  **blockParams)
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 
         self.inputGroup = self.Groups['gWTAInpGroup']
-        self.wtaGroup = self.Groups['gWTAGroup']
+        self.group = self.Groups['gWTAGroup']
 
         self.spikemonWTA = self.Monitors['spikemonWTA']
 
@@ -89,7 +89,10 @@ class WTA(BuildingBlock):
         "Simple plot for WTA"
 
         if endTime is None:
-            endTime = max(self.spikemonWTA.t)
+            if len(self.spikemonWTA.t) > 0:
+                endTime = max(self.spikemonWTA.t)
+            else:
+                endTime = 0 *ms
         plotWTA(self.name, startTime, endTime, self.numNeurons **
                 self.dimensions, self.Monitors)
 
@@ -101,7 +104,7 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF,
              synEquation=reversalSynV, synParameters=revSyn_default,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5, sigm=3,
              rpWTA=3 * ms, rpInh=1 * ms,
-             numNeurons=64, numInhNeurons=5, cutoff=10, numWtaInputs=1,
+             numNeurons=64, numInhNeurons=5, cutoff=10, numInputs=1,
              monitor=True, additionalStatevars=[], debug=False):
     '''generates a new WTA'''
 
@@ -110,7 +113,7 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF,
 
     # create neuron groups
     gWTAGroup = Neurons(numNeurons, neuronEquation, neuronParameters, refractory=rpWTA,
-                        name='g' + groupname, numInputs=3 + numWtaInputs, debug=debug)
+                        name='g' + groupname, numInputs=3 + numInputs, debug=debug)
     gWTAInhGroup = Neurons(numInhNeurons, neuronEquation, neuronParameters,
                            refractory=rpInh, name='g' + groupname + '_Inh',
                            numInputs=1, debug=debug)
@@ -164,10 +167,10 @@ def gen1dWTA(groupname, neuronEquation=ExpAdaptIF,
 
     # spikemons
     if monitor:
-        spikemonWTA = SpikeMonitor(gWTAGroup)
-        spikemonWTAInh = SpikeMonitor(gWTAInhGroup)
-        spikemonWTAInp = SpikeMonitor(gWTAInpGroup)
-        statemonWTA = StateMonitor(gWTAGroup, ('Vm', 'Ie', 'Ii'), record=True)
+        spikemonWTA = SpikeMonitor(gWTAGroup, name='spikemon' + groupname + '_WTA')
+        spikemonWTAInh = SpikeMonitor(gWTAInhGroup, name='spikemon' + groupname + '_WTAInh')
+        spikemonWTAInp = SpikeMonitor(gWTAInpGroup, name='spikemon' + groupname + '_WTAInp')
+        statemonWTA = StateMonitor(gWTAGroup, ('Vm', 'Ie', 'Ii'), record=True, name = 'statemon' + groupname + '_WTA')
         Monitors = {
             'spikemonWTA': spikemonWTA,
             'spikemonWTAInh': spikemonWTAInh,
@@ -199,7 +202,7 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF,
              synEquation=reversalSynV, synParameters=revSyn_default,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2, sigm=2.5,
              rpWTA=2.5 * ms, rpInh=1 * ms,
-             numNeurons=20, numInhNeurons=3, cutoff=9, numWtaInputs=1,
+             numNeurons=20, numInhNeurons=3, cutoff=9, numInputs=1,
              monitor=True, additionalStatevars=[], debug=False):
     '''generates a new square 2d WTA
     3 inputs to the gWTAGroup are used, so start with 4 for additional inputs'''
@@ -210,10 +213,14 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF,
     # create neuron groups
     num2dNeurons = numNeurons**2
     gWTAGroup = Neurons(num2dNeurons, neuronEquation, neuronParameters, refractory=rpWTA,
-                        name='g' + groupname, numInputs=3 + numWtaInputs, debug=debug)
+                        name='g' + groupname, numInputs=3 + numInputs, debug=debug)
     gWTAInhGroup = Neurons(numInhNeurons, neuronEquation, neuronParameters,
                            refractory=rpInh, name='g' + groupname + '_Inh', numInputs=1, debug=debug)
 
+
+    gWTAGroup.addAttr('numNeurons',numNeurons)
+    gWTAGroup.addAttr('ind2x',ind2x)
+    gWTAGroup.addAttr('ind2y',ind2y)
     gWTAGroup.x = "ind2x(i, numNeurons)"
     gWTAGroup.y = "ind2y(i, numNeurons)"
 
@@ -252,6 +259,8 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF,
     # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
+    synWTAWTA1e.addAttr('fkernel2d',fkernel2d)
+    synWTAWTA1e.addAttr('numNeurons',numNeurons)
     synWTAWTA1e.weight = 'latWeight * fkernel2d(i,j,latSigma,numNeurons)'
     # print(synWTAWTA1e.weight)
 
@@ -265,10 +274,10 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF,
         'synInhWTA1i': synInhWTA1i}
 
     # spikemons
-    spikemonWTA = SpikeMonitor(gWTAGroup)
-    spikemonWTAInh = SpikeMonitor(gWTAInhGroup)
-    spikemonWTAInp = SpikeMonitor(gWTAInpGroup)
-    statemonWTA = StateMonitor(gWTAGroup, ('Vm', 'Ie', 'Ii'), record=True)
+    spikemonWTA = SpikeMonitor(gWTAGroup, name='spikemon' + groupname + '_WTA')
+    spikemonWTAInh = SpikeMonitor(gWTAInhGroup, name='spikemon' + groupname + '_WTAInh')
+    spikemonWTAInp = SpikeMonitor(gWTAInpGroup, name='spikemon' + groupname + '_WTAInp')
+    statemonWTA = StateMonitor(gWTAGroup, ('Vm', 'Ie', 'Ii'), record=True, name = 'statemon' + groupname + '_WTA')
     Monitors = {
         'spikemonWTA': spikemonWTA,
         'spikemonWTAInh': spikemonWTAInh,
@@ -299,13 +308,13 @@ def plotWTA(name, startTime, endTime, numNeurons, WTAMonitors):
 
     fig = figure(figsize=(8, 3))
     plotSpikemon(startTime, endTime,
-                 WTAMonitors['spikemonWTA'], numNeurons, ylab='ind WTA')
+                 WTAMonitors['spikemonWTA'], numNeurons, ylab='ind WTA_'+name)
     fig = figure(figsize=(8, 3))
     plotSpikemon(startTime, endTime,
-                 WTAMonitors['spikemonWTAInp'], None, ylab='ind WTA')
+                 WTAMonitors['spikemonWTAInp'], None, ylab='ind WTAInp_'+name)
     fig = figure(figsize=(8, 3))
     plotSpikemon(startTime, endTime,
-                 WTAMonitors['spikemonWTAInh'], None, ylab='ind WTA')
+                 WTAMonitors['spikemonWTAInh'], None, ylab='ind WTAInp_'+name)
     # fig.savefig('fig/'+name+'_Spikes.png')
 
     if numNeurons > 20:
@@ -314,7 +323,7 @@ def plotWTA(name, startTime, endTime, numNeurons, WTAMonitors):
         plotStateNeurons = numNeurons
 
     statemonWTA = WTAMonitors['statemonWTA']
-    if statemonWTA is not False:
+    if len(statemonWTA.t)>0:
         fig = figure(figsize=(8, 10))
         nPlots = 3 * 100
         subplot(nPlots + 11)

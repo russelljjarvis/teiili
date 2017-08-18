@@ -16,12 +16,12 @@ import warnings
 from collections import OrderedDict
 
 
-def buildCppAndReplace(standaloneParams, standaloneDir='output'):
+def buildCppAndReplace(standaloneParams, standaloneDir='output', clean=True):
 
     startBuild = time.time()
     prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++14')
     # prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++11')
-    device.build(compile=False, run=False, directory=standaloneDir, clean=True, debug=False)
+    device.build(compile=False, run=False, directory=standaloneDir, clean=clean, debug=False)
 
     end = time.time()
     print ('build took ' + str(end - startBuild) + ' sec')
@@ -37,7 +37,7 @@ def buildCppAndReplace(standaloneParams, standaloneDir='output'):
     startMake = time.time()
     #out = check_output(["make","-C","~/Code/SOM_standalone"])
     compiler, args = codegen.cpp_prefs.get_compiler_and_args()
-    device.compile_source(directory=standaloneDir, compiler=compiler, clean=True, debug=False)
+    device.compile_source(directory=standaloneDir, compiler=compiler, clean=clean, debug=False)
     # print(out)
     end = time.time()
     print ('make took ' + str(end - startMake) + ' sec')
@@ -57,9 +57,9 @@ def replaceVariablesInCPPcode(replaceVars, replaceFileLocation):
         cppArgCode += """\n float {replvar}_p = std::stof(argv[{num}],NULL);
     std::cout << "variable {replvar} is argument {num} with value " << {replvar}_p << std::endl;\n""".format(num=(ivar + 1), replvar=rvar)
         print("variable {replvar} is main() argument {num}".format(num=(ivar + 1), replvar=rvar))
-    
+
     print('\n*********************************\n')
-    
+
     # read main.cpp
     f = open(replaceFileLocation, "r")
     contents = f.readlines()

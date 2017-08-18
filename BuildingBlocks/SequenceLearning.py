@@ -56,7 +56,7 @@ class SequenceLearning(BuildingBlock):
     def __init__(self, name, neuronEq=ExpAdaptIF, synapseEq=reversalSynV,
                  neuronParams=gerstnerExpAIFdefaultregular, synapseParams=revSyn_default,
                  blockParams=slParams, numElements=3, numNeuronsPerGroup=6,
-                 additionalInputs=0, debug=False):
+                 numInputs=1, debug=False):
 
         BuildingBlock.__init__(self, name, neuronEq, synapseEq,
                                neuronParams, synapseParams, blockParams, debug)
@@ -67,16 +67,16 @@ class SequenceLearning(BuildingBlock):
                                                         synapseEq, synapseParams,
                                                         numElements=numElements,
                                                         numNeuronsPerGroup=numNeuronsPerGroup,
-                                                        additionalInputs=additionalInputs,
+                                                        numInputs=numInputs,
                                                         debug=debug, **blockParams)
-
+        self.group = self.Groups['gOrdGroups']
         self.inputGroup = self.Groups['gInputGroup']
         self.cosGroup = self.Groups['gCoSGroup']
         self.resetGroup = self.Groups['gResetGroup']
 
     def plot(self):
 
-        plotSequenceLearning(self.Monitors)
+        return plotSequenceLearning(self.Monitors)
 
 
 def genSequenceLearning(groupname='Seq',
@@ -99,7 +99,7 @@ def genSequenceLearning(groupname='Seq',
                         gOrdGroups_refP=1.7 * ms,
                         gMemGroups_refP=2.3 * ms,
                         #
-                        additionalInputs=0,
+                        numInputs=1,
                         debug=False):
     """create Sequence Learning Network after the model from Sandamirskaya and Schoener (2010)"""
 
@@ -124,7 +124,7 @@ def genSequenceLearning(groupname='Seq',
 
     # Neurongoups
     gOrdGroups = Neurons(nOrdNeurons, neuronEq, neuronPar, refractory=gOrdGroups_refP,
-                         name='g' + 'Ord_' + groupname, numInputs=7 + additionalInputs, debug=debug)
+                         name='g' + 'Ord_' + groupname, numInputs=7 + numInputs, debug=debug)
     gMemGroups = Neurons(nMemNeurons, neuronEq, neuronPar, refractory=gMemGroups_refP,
                          name='g' + 'Mem_' + groupname, numInputs=3, debug=debug)
 
@@ -234,21 +234,21 @@ def genSequenceLearning(groupname='Seq',
         'spikemonInp': spikemonInp,
         'spikemonReset': spikemonReset}
 
-    standaloneParams = {synInpOrd1e.name + '_weight': synInpOrd1e_weight,
-                        synOrdMem1e.name + '_weight': synOrdMem1e_weight,
-                        synMemOrd1e.name + '_weight': synMemOrd1e_weight,
+    standaloneParams = {#synInpOrd1e.name + '_weight': synInpOrd1e_weight,
+                        #synOrdMem1e.name + '_weight': synOrdMem1e_weight,
+                        #synMemOrd1e.name + '_weight': synMemOrd1e_weight,
                         # local
-                        synOrdOrd1e.name + '_weight': synOrdOrd1e_weight,
-                        synMemMem1e.name + '_weight': synMemMem1e_weight,
+                        #synOrdOrd1e.name + '_weight': synOrdOrd1e_weight,
+                        #synMemMem1e.name + '_weight': synMemMem1e_weight,
                         # inhibitory
-                        synOrdOrd1i.name + '_weight': synOrdOrd1i_weight,
-                        synMemOrd1i.name + '_weight': synMemOrd1i_weight,
-                        synCoSOrd1i.name + '_weight': synCoSOrd1i_weight,
-                        synResetOrd1i.name + '_weight': synResetOrd1i_weight,
-                        synResetMem1i.name + '_weight': synResetMem1i_weight,
+                        #synOrdOrd1i.name + '_weight': synOrdOrd1i_weight,
+                        #synMemOrd1i.name + '_weight': synMemOrd1i_weight,
+                        #synCoSOrd1i.name + '_weight': synCoSOrd1i_weight,
+                        #synResetOrd1i.name + '_weight': synResetOrd1i_weight,
+                        #synResetMem1i.name + '_weight': synResetMem1i_weight,
                         # refractory
-                        gOrdGroups.name + '_refP': gOrdGroups_refP,
-                        gMemGroups.name + '_refP': gMemGroups_refP
+                        #gOrdGroups.name + '_refP': gOrdGroups_refP,
+                        #gMemGroups.name + '_refP': gMemGroups_refP
                         }
 
     return SLGroups, SLMonitors, standaloneParams
@@ -263,7 +263,7 @@ def plotSequenceLearning(SLMonitors):
     spikemonReset = SLMonitors['spikemonReset']
     duration = max(spikemonOrd.t) + 10 * ms
     print('plot...')
-    figure(figsize=(8, 12))
+    fig = figure(figsize=(8, 12))
     title('sequence learning')
     nPlots = 5 * 100
     subplot(nPlots + 11)
@@ -296,3 +296,5 @@ def plotSequenceLearning(SLMonitors):
     ylabel('i_Reset')
     # ylim([0,nPerGroup])
     xlim([0, duration / ms])
+
+    return fig

@@ -61,7 +61,8 @@ def DefaultExcitatorySynapses(inputNumber=1, debug=False, additionalStatevars=No
     if debug:
         printSynDict(SynDict)
 
-    return SynDict, arguments
+    standaloneVars = []
+    return SynDict, standaloneVars
 
 
 def DefaultInhibitorySynapses(inputNumber=1, inh2output=True,
@@ -117,7 +118,8 @@ def DefaultInhibitorySynapses(inputNumber=1, inh2output=True,
     if debug:
         printSynDict(SynDict)
 
-    return SynDict, arguments
+    standaloneVars = []
+    return SynDict, standaloneVars
 
 
 def DefaultTeacherSynapses(debug=False):
@@ -155,7 +157,8 @@ def DefaultTeacherSynapses(debug=False):
     if debug:
         printSynDict(SynDict)
 
-    return SynDict, arguments
+    standaloneVars = []
+    return SynDict, standaloneVars
 
 
 def simpleSyn(inputNumber=1, debug=False, additionalStatevars=None):
@@ -200,7 +203,8 @@ def simpleSyn(inputNumber=1, debug=False, additionalStatevars=None):
         print('arguments of ExpAdaptIF: \n' + str(arguments))
         printSynDict(SynDict)
 
-    return SynDict
+    standaloneVars = ['weight']
+    return SynDict, standaloneVars
 
 
 def reversalSynV(inputNumber=1, debug=False, additionalStatevars=None):
@@ -254,7 +258,8 @@ def reversalSynV(inputNumber=1, debug=False, additionalStatevars=None):
         print('arguments of reversalSynV: \n' + str(arguments))
         printSynDict(SynDict)
 
-    return SynDict
+    standaloneVars = ['weight']
+    return SynDict, standaloneVars
 
 
 def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
@@ -268,7 +273,7 @@ def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
                 taugIe : second (constant)                                      # excitatory input time constant
                 EIe : volt (constant)                                           # excitatory reversal potential
                 dCa/dt = (-Ca/tau_ca) : volt (event-driven)                     #Calcium Potential
-                dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (event-driven) # internal weight variable
+                dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (clock-driven) # internal weight variable
                 w_plus: 1 (constant)
                 w_minus: 1 (constant)
                 theta_upl: volt (constant)
@@ -310,7 +315,8 @@ def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
         print('arguments of ExpAdaptIF: \n' + str(arguments))
         printSynDict(SynDict)
 
-    return SynDict
+    standaloneVars = ['weight','w_plus','w_minus']
+    return SynDict, standaloneVars
 
 
 def BraderFusiSynapses(inputNumber=1, debug=False, plastic=True, additionalStatevars=None):
@@ -466,7 +472,8 @@ def alphaSynapse(inputNumber=1, debug=False, additionalStatevars=None):
         print('arguments of reversalSynV: \n' + str(arguments))
         printSynDict(SynDict)
 
-    return SynDict
+    standaloneVars = []
+    return SynDict, standaloneVars
 
 
 def KernelsSynapses(kernel='alpha', debug=False):
@@ -631,7 +638,8 @@ def SiliconSynapses(debug=False):
     if debug:
         printSynDict(SynDict)
 
-    return SynDict, arguments
+    standaloneVars = []
+    return SynDict, standaloneVars
 
     # synapses group is called as follow:
     #S = Synapses(populations1, population2, method = 'euler', **SynDict)
@@ -828,4 +836,5 @@ def StdpSynV(inputNumber=1, debug=False, additionalStatevars=None):
         print('arguments of ExpAdaptIF: \n' + str(arguments))
         printSynDict(SynDict)
 
-    return SynDict
+    standaloneVars = ['weight']
+    return SynDict, standaloneVars

@@ -66,7 +66,8 @@ def ExpAdaptIF(numInputs=1, debug=False, method='euler', additionalStatevars=Non
         print('arguments of ExpAdaptIF: \n' + str(arguments))
         printEqDict(eqDict)
 
-    return eqDict
+    standaloneVars = ['refP']
+    return eqDict, standaloneVars
 
 
 def SimpleIF(numInputs=1, debug=False, method='euler', additionalStatevars=None):
@@ -116,7 +117,8 @@ def SimpleIF(numInputs=1, debug=False, method='euler', additionalStatevars=None)
         print('arguments of ExpAdaptIF: \n' + str(arguments))
         printEqDict(eqDict)
 
-    return eqDict
+    standaloneVars = ['refP']
+    return eqDict, standaloneVars
 
 
 
@@ -211,7 +213,8 @@ def Silicon(numInputs=1, debug=False, Excitatory=True, method='euler', additiona
     if debug:
         printEqDict(eqDict)
 
-    return eqDict
+    standaloneVars = []
+    return eqDict, standaloneVars
 
 
 def printEqDict(eqDict):

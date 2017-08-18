@@ -11,6 +11,10 @@ from collections import OrderedDict
 # TODO: There is a problem, when 2 BBs of the same kind are added to another BB, as the names collide.
 # We could use a hierarchy of blocks
 
+
+# TODO: Important all Monitors of Building blocks have to be named and named uniquely!
+# Otherwise they will not be found, when a Network is rerun in standalone mode after rebuild without recompile
+
 class BuildingBlock:
 
     def __init__(self, name, neuronEq, synapseEq,

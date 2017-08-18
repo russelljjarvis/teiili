@@ -7,10 +7,10 @@ Created on Thu Jul 27 17:28:16 2017
 """
 import warnings
 from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
-    ylabel, xlabel, xlim, ylim, figure
+    ylabel, xlabel, xlim, ylim, figure, asarray
 from NCSBrian2Lib.Equations import neuronEquations, synapseEquations
+from collections import OrderedDict
 
-# TODO: Add standaloneParams to groups additional to buildingblocks
 # TODO: maybe offer a network argument in order to automatically add the group to the network
 
 class Neurons(NeuronGroup):
@@ -31,13 +31,19 @@ class Neurons(NeuronGroup):
                  additionalStatevars=None,
                  debug=False):
         self.debug = debug
-        self.__numInputs = numInputs
+        self.numInputs = numInputs
         self.numSynapses = 0
+
         # generate the equation in order to pu it into the NeuronGroup constructor
-        eqDict = Equation(numInputs=numInputs, debug=debug,
+        eqDict, standaloneVars = Equation(numInputs=numInputs, debug=debug,
                           method=method, additionalStatevars=additionalStatevars)
         self.eqDict = eqDict
 
+        self.standaloneVars = standaloneVars
+
+        self.standaloneParams = OrderedDict()
+
+        self.initialized=True
         NeuronGroup.__init__(self, N,
                              events=events,
                              namespace=namespace,
@@ -51,14 +57,30 @@ class Neurons(NeuronGroup):
         setParams(self, params, debug=debug)
         self.refP = refractory
 
+    def addAttr(self, key, value):
+        """with this method, we can explicitly set variables that are used in
+        string expressions (they are added to the namespace of the group and
+        used for code generation). Otherwise brian2 will search for those varialbles
+        automatically, but only a number of levels upwards, which is not enough sometimes"""
+        self.namespace.update({key:value})
+
+    def __setattr__(self, key, value):
+        NeuronGroup.__setattr__(self, key, value)
+        if hasattr(self, 'name'):
+            if key in self.standaloneVars and type(value) != str :
+                # we have to check if the variable has a value assigned or
+                # is assigned a string that is evaluated by brian2 later
+                # as in that case we do not want it here
+                self.standaloneParams.update({self.name+'_'+key : value})
+
     def registerSynapse(self):
         self.numSynapses += 1
         if self.debug:
             print('increasing number of registered Synapses of ' +
                   self.name + ' to ', self.numSynapses)
             print('specified max number of Synapses of ' +
-                  self.name + ' is ', self.__numInputs)
-        if self.__numInputs < self.numSynapses:
+                  self.name + ' is ', self.numInputs)
+        if self.numInputs < self.numSynapses:
             raise ValueError('There seem so be too many connections to ' +
                              self.name + ', please increase numInputs')
 
@@ -69,7 +91,7 @@ class Neurons(NeuronGroup):
 class Connections(Synapses):
 
     def __init__(self, source, target, Equation, params,
-                 connect=None, delay=None, on_event='spike',
+                 delay=None, on_event='spike',
                  multisynaptic_index=None,
                  namespace=None, dtype=None,
                  codeobj_class=None,
@@ -85,10 +107,21 @@ class Connections(Synapses):
         self.inputNumber = 0
         self.Equation = Equation
 
+        # check if it is a building block, if yes, set bb.group as source/target
         try:
-            target.registerSynapse()
+            target = target.group
+        except:
+            pass
+        try:
+            source = source.group
+        except:
+            pass
+
+        try:
             if debug:
-                print(target.numSynapses)
+                print(name, ': target',target.name,'has',target.numSynapses,'of',target.numInputs,'synapses')
+                print('trying to add one more...')
+            target.registerSynapse()
             self.inputNumber = target.numSynapses
         except ValueError as e:
             raise e
@@ -99,13 +132,16 @@ class Connections(Synapses):
                 warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for' +
                               str(target) + ', therefore, please specify an inputNumber')
 
-        synDict = Equation(inputNumber=self.inputNumber,
+        synDict, standaloneVars = Equation(inputNumber=self.inputNumber,
                            debug=debug, additionalStatevars=additionalStatevars)
         self.eqDict = synDict
+        self.standaloneVars = standaloneVars
+
+        self.standaloneParams = OrderedDict()
 
         try:
             Synapses.__init__(self, source, target=target,
-                              connect=connect, delay=delay, on_event=on_event,
+                              delay=delay, on_event=on_event,
                               multisynaptic_index=multisynaptic_index,
                               namespace=namespace, dtype=dtype,
                               codeobj_class=codeobj_class,
@@ -116,6 +152,20 @@ class Connections(Synapses):
             import sys
             raise type(e)(str(e) + '\n\nCheck Equation for errors!\n' +
                           'e.g. are all units specified correctly at the end of every line?').with_traceback(sys.exc_info()[2])
+
+    def addAttr(self, key, value):
+        self.namespace.update({key:value})
+
+
+    def __setattr__(self, key, value):
+        Synapses.__setattr__(self, key, value)
+        if hasattr(self, 'name'):
+            if key in self.standaloneVars and type(value) != str :
+                # we have to check if the variable has a value assigned or
+                # is assigned a string that is evaluated by brian2 later
+                # as in that case we do not want it here
+                self.standaloneParams.update({self.name+'_'+key : value})
+
 
     def connect(self, condition=None, i=None, j=None, p=1., n=1,
                 skip_if_invalid=False,

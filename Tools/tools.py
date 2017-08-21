@@ -40,8 +40,8 @@ def printStates(briangroup):
 # This function is a workaround to allow if statements in run_regularly code
 # It is e.g. necessary in order to set values conditional on the current time
 @implementation('cpp', '''
-int returnValueIf(float testVal, float greaterThanVal, float smallerThanVal, float returnValTrue, float returnValFalse) {
-    if (testVal > greaterThanVal  && testVal < smallerThanVal)
+float returnValueIf(float testVal, float greaterThanVal, float smallerThanVal, float returnValTrue, float returnValFalse) {
+    if ((testVal > greaterThanVal) && (testVal < smallerThanVal))
         return returnValTrue;
     else
         return returnValFalse;
@@ -56,9 +56,6 @@ def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, return
         return returnValTrue
     else:
         return returnValFalse
-
-
-
 
 
 

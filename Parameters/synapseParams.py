@@ -11,8 +11,8 @@ Created on 17.12.2016
 
 from brian2 import *
 
-fusiSyn_default = {"w_plus": 0.2,
-                   "w_minus": 0.2,
+fusiSyn_default = {"wplus": 0.2,
+                   "wminus": 0.2,
                    "theta_upl": 180 * mV,
                    "theta_uph": 1 * volt,
                    "theta_downh": 90 * mV,

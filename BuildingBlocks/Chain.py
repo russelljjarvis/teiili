@@ -55,6 +55,7 @@ class Chain(BuildingBlock):
 
         self.inputGroup = self.Groups['gChaInpGroup']
         self.group = self.Groups['gChaGroup']
+        self.synapse=self.Groups['synChaCha1e']
 
         self.spikemonCha = self.Monitors['spikemonCha']
         self.spikemonChaInp = self.Monitors['spikemonChaInp']

@@ -232,13 +232,13 @@ def reversalSynV(inputNumber=1, debug=False, additionalStatevars=None):
             dgIi/dt = (-gIi/taugIi) : siemens  (clock-driven) # exponential decay
             Iesyn = gIe*(EIe - Vm_post) :amp
             Iisyn = gIi*(EIi - Vm_post) :amp
-            taugIe : second (constant)        # excitatory input time constant
-            taugIi : second (constant)        # inhibitory input time constant
-            EIe : volt (constant)             # excitatory reversal potential
-            EIi : volt (constant)             # inhibitory reversal potential
-            gWe : siemens (constant)          # excitatory synaptic gain
-            gWi : siemens (constant)          # inhibitory synaptic gain
-            weight : 1 (constant)
+            taugIe : second (shared,constant)         # excitatory input time constant
+            taugIi : second (shared,constant)          # inhibitory input time constant
+            EIe : volt (shared,constant)             # excitatory reversal potential
+            EIi : volt (shared,constant)               # inhibitory reversal potential
+            gWe : siemens (shared,constant)           # excitatory synaptic gain
+            gWi : siemens (shared,constant)           # inhibitory synaptic gain
+            weight : 1
             {Ie}_post = Iesyn : amp  (summed)
             {Ii}_post = Iisyn : amp  (summed)
             '''
@@ -270,26 +270,26 @@ def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
 
     modelEq = '''dgIe/dt = (-gIe/taugIe) : siemens (clock-driven)               # instantaneous rise, exponential decay
                 Ies = gIe*(EIe - Vm_post) :amp
-                taugIe : second (constant)                                      # excitatory input time constant
-                EIe : volt (constant)                                           # excitatory reversal potential
-                dCa/dt = (-Ca/tau_ca) : volt (event-driven)                     #Calcium Potential
+                taugIe : second (shared, constant)                                      # excitatory input time constant
+                EIe : volt (shared, constant)                                           # excitatory reversal potential
+                dCa/dt = (-Ca/tau_ca) : volt (clock-driven)                     #Calcium Potential
                 dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (clock-driven) # internal weight variable
-                w_plus: 1 (constant)
-                w_minus: 1 (constant)
-                theta_upl: volt (constant)
-                theta_uph: volt (constant)
-                theta_downh: volt (constant)
-                theta_downl: volt (constant)
-                theta_V: volt (constant)
-                alpha: 1/second (constant)
-                beta: 1/second (constant)
-                tau_ca: second (constant)
-                w_min: 1 (constant)
-                w_max: 1 (constant)
-                theta_w: 1 (constant)
-                w_ca: volt (constant)                                           # Calcium weight
+                wplus: 1 (constant)
+                wminus: 1 (constant)
+                theta_upl: volt (shared, constant)
+                theta_uph: volt (shared, constant)
+                theta_downh: volt (shared, constant)
+                theta_downl: volt (shared, constant)
+                theta_V: volt (shared, constant)
+                alpha: 1/second (shared,constant)
+                beta: 1/second (shared, constant)
+                tau_ca: second (shared, constant)
+                w_min: 1 (shared, constant)
+                w_max: 1 (shared, constant)
+                theta_w: 1 (shared, constant)
+                w_ca: volt (shared, constant)                                           # Calcium weight
                 {Ie}_post = Ies : amp  (summed)
-                weight: 1 (constant)
+                weight: 1
                 '''
     if inputNumber > 1:
         modelEq = modelEq.format(Ie="Ie" + str(inputNumber))
@@ -301,12 +301,12 @@ def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
             print("added to Equation: \n" + "\n".join(additionalStatevars))
         modelEq += "\n            ".join(additionalStatevars)
 
-    preEq = '''
-            gIe += floor(w+0.5) * weight *  nS
-            w += w_plus  * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)   #*(w<w_max)
-            w -= w_minus * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh) #*(w>w_min)
-            w = clip(w,w_min,w_max)
-            '''  # check if correct
+    preEq = '''gIe += floor(w+0.5) * weight *  nS
+            up = 1. * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)
+            down = 1. * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh)
+            w += wplus * up - wminus * down
+            w = clip(w,w_min,w_max)'''  # check if correct
+
     postEq = '''Ca += w_ca'''
 
     SynDict = dict(model=modelEq, on_pre=preEq, on_post=postEq)
@@ -315,11 +315,11 @@ def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
         print('arguments of ExpAdaptIF: \n' + str(arguments))
         printSynDict(SynDict)
 
-    standaloneVars = ['weight','w_plus','w_minus']
+    standaloneVars = ['weight','wplus','wminus','theta_V','theta_upl','theta_downh','theta_downl']
     return SynDict, standaloneVars
 
 
-def BraderFusiSynapses(inputNumber=1, debug=False, plastic=True, additionalStatevars=None):
+def BraderFusiSynapses(debug=False, plastic=True, additionalStatevars=None):
     '''
     Fusi bistable synapses, cfr Brader et al 2007
 
@@ -380,10 +380,6 @@ def BraderFusiSynapses(inputNumber=1, debug=False, plastic=True, additionalState
             count_up : 1 (constant)
             count_down : 1 (constant)
             '''
-    if inputNumber > 1:
-        modelEq = modelEq.format(Ie="Ie" + str(inputNumber))
-    else:
-        modelEq = modelEq.format(Ie="Ie")
 
     if additionalStatevars is not None:
         if debug:

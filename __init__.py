@@ -1,4 +1,5 @@
 from NCSBrian2Lib.Tools.tools import *
+from NCSBrian2Lib.Tools.plotTools import *
 from NCSBrian2Lib.Equations.neuronEquations import *
 from NCSBrian2Lib.Equations.synapseEquations import *
 from NCSBrian2Lib.Parameters.neuronParams import *

@@ -30,16 +30,16 @@ def ExpAdaptIF(numInputs=1, debug=False, method='euler', additionalStatevars=Non
     Ii      : amp                         # inh input current
     Ie      : amp                         # exc input current
     Iconst  : amp                         # constant input current
-    C       : farad     (constant)        # membrane capacitance
-    gL      : siemens   (constant)        # leak conductance
-    EL      : volt      (constant)        # leak reversal potential
-    VT      : volt      (constant)        # threshold
-    DeltaT  : volt      (constant)        # slope factor
-    tauwad  : second    (constant)        # adaptation time constant
-    a       : siemens   (constant)        # adaptation decay parameter
-    b       : amp       (constant)        # adaptation weight
-    Vr      : volt      (constant)        # reset potential
-    refP    : second    (constant)        # refractory period (It is still possible to set it to False)
+    C       : farad     (shared, constant)        # membrane capacitance
+    gL      : siemens   (shared, constant)        # leak conductance
+    EL      : volt      (shared, constant)        # leak reversal potential
+    VT      : volt      (shared, constant)        # threshold
+    DeltaT  : volt      (shared, constant)        # slope factor
+    tauwad  : second    (shared, constant)        # adaptation time constant
+    a       : siemens   (shared, constant)        # adaptation decay parameter
+    b       : amp       (shared, constant)        # adaptation weight
+    Vr      : volt      (shared, constant)        # reset potential
+    refP    : second    (shared, constant)        # refractory period (It is still possible to set it to False)
     x       : 1         (constant)        # x location on 2d grid (only set it if you need it)
     y       : 1         (constant)        # y location on 2d grid
     """
@@ -82,12 +82,12 @@ def SimpleIF(numInputs=1, debug=False, method='euler', additionalStatevars=None)
 
     modelEq = """
     dVm/dt = (gL*(EL-Vm) + Iin)/C : volt (unless refractory)
-    gL      : siemens   (constant)        # leak conductance
-    Vr      : volt (constant)
-    Vthr    : volt (constant)
-    EL      : volt      (constant)        # leak reversal potential
-    C       : farad     (constant)        # membrane capacitance
-    refP    : second (constant) # refractory period (It is still possible to set it to False)
+    gL      : siemens   (shared, constant)        # leak conductance
+    Vr      : volt (shared, constant)
+    Vthr    : volt (shared, constant)
+    EL      : volt      (shared, constant)        # leak reversal potential
+    C       : farad     (shared, constant)        # membrane capacitance
+    refP    : second (shared, constant) # refractory period (It is still possible to set it to False)
     Iconst  : amp                         # constant input current
     Ii      : amp                         # inh input current
     Ie      : amp                         # exc input current

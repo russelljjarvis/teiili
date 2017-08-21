@@ -46,13 +46,11 @@ class StandaloneNetwork(Network):
                 self.blocks.append(obj)
                 print('added to network building blocks: ' , obj)
 
-        try:
-            self.standaloneParams.update(obj.standaloneParams)
-        except AttributeError:
-            pass
-
-        #TODO: automatically add additional namespaces of buildingsblocks to the run call
-        # OR can we do it via Group namespaces?
+            try:
+                # add all standaloneParams from BBs, neurons and synapses to Network.standaloneParams
+                self.standaloneParams.update(obj.standaloneParams)
+            except AttributeError:
+                pass
 
 
     def build(self, report=None, report_period=10*second,

@@ -77,11 +77,17 @@ def replaceVariablesInCPPcode(replaceVars, replaceFileLocation):
     for i_line, line in enumerate(contents):
         replaced = False
         for rvar in replaceVars:
-            if rvar + "[i]" in line:
+            if rvar + "[i]" in line: # for array variables
                 replaced = True
                 keepFirstPart = line.split('=', 1)[0]
                 f.write(keepFirstPart + '= ' + rvar + '_p;\n')
-                print("replaced " + rvar + " in line " + str(i_line))
+                print("replaced array " + rvar + " in line " + str(i_line))
+                replaceTODOlist = [elem for elem in replaceTODOlist if not elem == rvar]  # check element in todolist
+            if rvar + "[0]" in line: # for scalar (shared) variables
+                replaced = True
+                keepFirstPart = line.split('=', 1)[0]
+                f.write(keepFirstPart + '= ' + rvar + '_p;\n')
+                print("replaced scalar " + rvar + " in line " + str(i_line))
                 replaceTODOlist = [elem for elem in replaceTODOlist if not elem == rvar]  # check element in todolist
         if 'network.run(' in line:
             replaced = True
@@ -96,6 +102,7 @@ def replaceVariablesInCPPcode(replaceVars, replaceFileLocation):
         # maybe we should raise an exception here as this is rather serious?
         warnings.warn("could not find matching variables in cpp code for " + str(replaceTODOlist), Warning)  # warning, items left in todolist
         print('\n* * * * * * * * * * * * * * * * *\n NOT all variables successfully replaced in cpp code! \n')
+        print("could not find matching variables in cpp code for " + str(replaceTODOlist))
     else:
         print('\n*********************************\nall variables successfully replaced in cpp code! \n')
 

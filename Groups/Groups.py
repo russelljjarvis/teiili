@@ -57,13 +57,6 @@ class Neurons(NeuronGroup):
         setParams(self, params, debug=debug)
         self.refP = refractory
 
-    def addAttr(self, key, value):
-        """with this method, we can explicitly set variables that are used in
-        string expressions (they are added to the namespace of the group and
-        used for code generation). Otherwise brian2 will search for those varialbles
-        automatically, but only a number of levels upwards, which is not enough sometimes"""
-        self.namespace.update({key:value})
-
     def __setattr__(self, key, value):
         NeuronGroup.__setattr__(self, key, value)
         if hasattr(self, 'name'):
@@ -72,6 +65,34 @@ class Neurons(NeuronGroup):
                 # is assigned a string that is evaluated by brian2 later
                 # as in that case we do not want it here
                 self.standaloneParams.update({self.name+'_'+key : value})
+
+    def addStateVariable(self, name, value, constant = False, changeInStandalone=True):
+        """this method allows you to add a state variable
+        (usually defined in equations), that is changeable in standalone mode"""
+        try:
+            if len(value) == 1: #this will probably never happen
+                shared = True
+                size = 1
+            else:
+                shared = False
+                size = len(value)
+                if size != self.N:
+                    print('The value of '+ name +' needs to be a scalar or a vector of\
+                          length N (number of neurons in Group)') # exception will be raised later
+        except TypeError: # then it is probably a scalar
+            shared = True
+            size = 1
+
+        try:
+            self.variables.add_array(name, size = size, dimensions = value.dim,
+                                     constant = constant, scalar = shared)
+        except AttributeError: #value.dim will throw an exception, if it has no unit
+            self.variables.add_array(name, size = size,
+                                     constant = constant, scalar = shared) #dimensionless
+
+        if changeInStandalone:
+            self.standaloneVars += [name]
+            self.__setattr__(name, value)
 
     def registerSynapse(self):
         self.numSynapses += 1
@@ -153,10 +174,6 @@ class Connections(Synapses):
             raise type(e)(str(e) + '\n\nCheck Equation for errors!\n' +
                           'e.g. are all units specified correctly at the end of every line?').with_traceback(sys.exc_info()[2])
 
-    def addAttr(self, key, value):
-        self.namespace.update({key:value})
-
-
     def __setattr__(self, key, value):
         Synapses.__setattr__(self, key, value)
         if hasattr(self, 'name'):
@@ -166,6 +183,33 @@ class Connections(Synapses):
                 # as in that case we do not want it here
                 self.standaloneParams.update({self.name+'_'+key : value})
 
+    def addStateVariable(self, name, value, constant = False, changeInStandalone=True):
+        """this method allows you to add a state variable
+        (usually defined in equations), that is changeable in standalone mode"""
+        try:
+            if len(value) == 1: #this will probably never happen
+                shared = True
+                size = 1
+            else:
+                shared = False
+                size = len(value)
+                if size != self.N:
+                    print('The value of '+ name +' needs to be a scalar or a vector of\
+                          length N (number of neurons in Group)') # exception will be raised later
+        except TypeError: # then it is probably a scalar
+            shared = True
+            size = 1
+
+        try:
+            self.variables.add_array(name, size = size, dimensions = value.dim,
+                                     constant = constant, scalar = shared)
+        except AttributeError: #value.dim will throw an exception, if it has no unit
+            self.variables.add_array(name, size = size,
+                                     constant = constant, scalar = shared) #dimensionless
+
+        if changeInStandalone:
+            self.standaloneVars += [name]
+            self.__setattr__(name, value)
 
     def connect(self, condition=None, i=None, j=None, p=1., n=1,
                 skip_if_invalid=False,

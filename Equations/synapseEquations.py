@@ -273,9 +273,11 @@ def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
                 taugIe : second (shared, constant)                                      # excitatory input time constant
                 EIe : volt (shared, constant)                                           # excitatory reversal potential
                 dCa/dt = (-Ca/tau_ca) : volt (clock-driven)                     #Calcium Potential
-                dw/dt = (alpha*(w>theta_w)*(w<w_max))-(beta*(w<=theta_w)*(w>w_min)) : 1 (clock-driven) # internal weight variable
-                wplus: 1 (constant)
-                wminus: 1 (constant)
+                updrift = 1.0*(w>theta_w) : 1
+                downdrift = 1.0*(w<=theta_w) : 1
+                dw/dt = (alpha*updrift)-(beta*downdrift) : 1 (event-driven) # internal weight variable
+                wplus: 1 (shared)
+                wminus: 1 (shared)
                 theta_upl: volt (shared, constant)
                 theta_uph: volt (shared, constant)
                 theta_downh: volt (shared, constant)
@@ -301,11 +303,13 @@ def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
             print("added to Equation: \n" + "\n".join(additionalStatevars))
         modelEq += "\n            ".join(additionalStatevars)
 
-    preEq = '''gIe += floor(w+0.5) * weight *  nS
+    preEq = '''
             up = 1. * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)
             down = 1. * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh)
             w += wplus * up - wminus * down
-            w = clip(w,w_min,w_max)'''  # check if correct
+            w = clip(w,w_min,w_max)
+            gIe += floor(w+0.5) * weight *  nS
+            '''  # check if correct
 
     postEq = '''Ca += w_ca'''
 
@@ -792,17 +796,17 @@ def StdpSynV(inputNumber=1, debug=False, additionalStatevars=None):
     modelEq = '''
             dgIe/dt = (-gIe/taugIe) : siemens (clock-driven) # instantaneous rise, exponential decay
             Ies = gIe*(EIe - Vm_post) :amp
-            taugIe : second (constant)        # excitatory input time constant
-            EIe : volt (constant)             # excitatory reversal potential
+            taugIe : second (shared, constant)        # excitatory input time constant
+            EIe : volt (shared, constant)             # excitatory reversal potential
             w : 1
-            weight: 1 (constant)
+            weight: 1
             dApre/dt = -Apre / taupre : 1 (event-driven)
             dApost/dt = -Apost / taupost : 1 (event-driven)
-            w_max: 1 (constant)
-            taupre : second (constant)
-            taupost : second (constant)
-            diffApre : 1 (constant)
-            Q_diffAPrePost : 1 (constant)
+            w_max: 1 (shared, constant)
+            taupre : second (shared, constant)
+            taupost : second (shared, constant)
+            diffApre : 1 (shared, constant)
+            Q_diffAPrePost : 1 (shared, constant)
             {Ie}_post = Ies : amp  (summed)
             '''
 

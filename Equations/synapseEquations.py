@@ -272,7 +272,7 @@ def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
                 Ies = gIe*(EIe - Vm_post) :amp
                 taugIe : second (shared, constant)                                      # excitatory input time constant
                 EIe : volt (shared, constant)                                           # excitatory reversal potential
-                dCa/dt = (-Ca/tau_ca) : volt (clock-driven)                     #Calcium Potential
+                dCa/dt = (-Ca/tau_ca) : volt (event-driven)                     #Calcium Potential
                 updrift = 1.0*(w>theta_w) : 1
                 downdrift = 1.0*(w<=theta_w) : 1
                 dw/dt = (alpha*updrift)-(beta*downdrift) : 1 (event-driven) # internal weight variable
@@ -304,7 +304,7 @@ def fusiSynV(inputNumber=1, debug=False, additionalStatevars=None):
         modelEq += "\n            ".join(additionalStatevars)
 
     preEq = '''
-            up = 1. * (Vm_post>theta_V) * (Ca>theta_upl)   * (Ca<theta_uph)
+            up = 1. * (Vm_post>theta_V) * (Ca>theta_upl) * (Ca<theta_uph)
             down = 1. * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh)
             w += wplus * up - wminus * down
             w = clip(w,w_min,w_max)

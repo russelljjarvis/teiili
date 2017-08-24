@@ -208,7 +208,7 @@ def Silicon(numInputs=1, debug=False, Excitatory=True, method='euler', additiona
     if debug:
         print('arguments of Silicon Neuron: \n' + str(arguments))
 
-    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
+    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq, refractory='refP', method=method)
 
     if debug:
         printEqDict(eqDict)

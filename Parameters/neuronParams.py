@@ -51,6 +51,14 @@ gerstnerExpAIFdefaultfast = {"C": 281 * pF,
                              "Vr": -70.6 * mV,
                              "Vm": -70.6 * mV}
 
+SimpleIFdefault = {"gL" : 4.3 * nS,
+                   "Vr" : -55 * mV,
+                   "EL" : -55 * mV,
+                   "Vthr" : -40 * mV,
+                   "C" : 0.135 * pF,
+                   "Vm" : -55 * mV
+                   }
+
 SiliconNeuronP = {
     #--------------------------------------------------------
     # VLSI process parameters

@@ -3,7 +3,7 @@
 
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
     figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel, device
-from brian2 import *
+#from brian2 import *
 import numpy as np
 import os
 import tempfile
@@ -36,10 +36,31 @@ def printStates(briangroup):
             print (key, states[key])
     print ('----------')
 
+
+# This function is a workaround to allow if statements in run_regularly code
+# It is e.g. necessary in order to set values conditional on the current time
+@implementation('cpp', '''
+float returnValueIf(float testVal, float greaterThanVal, float smallerThanVal, float returnValTrue, float returnValFalse) {
+    if ((testVal > greaterThanVal) && (testVal < smallerThanVal))
+        return returnValTrue;
+    else
+        return returnValFalse;
+}
+''')
+#@declare_types(testVal = 'float', greaterThanVal = 'float', smallerThanVal = 'float',\
+#               returnValTrue = 'float', returnValFalse = 'float', result='float')
+#@implementation('numpy', discard_units=True)
+@check_units(testVal = 1, greaterThanVal = 1, smallerThanVal = 1, returnValTrue = 1, returnValFalse = 1, result=1)
+def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, returnValFalse):
+    if (testVal > greaterThanVal and testVal < smallerThanVal):
+        return returnValTrue
+    else:
+        return returnValFalse
+
+
+
 # function that calculates 1D index from 2D index
 # same as np.ravel_multi_index((x,y),(n2dNeurons,n2dNeurons))
-
-
 @implementation('numpy', discard_units=True)
 @check_units(x=1, y=1, n2dNeurons=1, result=1)
 def xy2ind(x, y, n2dNeurons):

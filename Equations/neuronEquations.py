@@ -2,13 +2,16 @@
 from brian2 import *
 from NCSBrian2Lib.Tools.tools import *
 
+# TODO: Make classes, Add plotvars, add replaceVars
+
 
 def ExpAdaptIF(numInputs=1, debug=False, method='euler', additionalStatevars=None):
     '''
     Brette, Gerstner 2005 Exponential adaptive IF model
     see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
     @return: a dictionary of keyword arguments for NeuronGroup()
-    @note: you have to set parameters for each NeuronGroup after its creation, synapses have to increment the correct variable: Ie or Ii
+    @note: you have to set parameters for each NeuronGroup after its creation,
+    synapses have to increment the correct variable: Ie or Ii
     Neuron group is created and prepared as follows:
     eqDict = neuronEquatioons.ExpAdaptIF()
     neurongroup = NeuronGroup(nNeurons, **eqDict , refractory = 2*ms, method='euler',name='groupname')
@@ -27,16 +30,16 @@ def ExpAdaptIF(numInputs=1, debug=False, method='euler', additionalStatevars=Non
     Ii      : amp                         # inh input current
     Ie      : amp                         # exc input current
     Iconst  : amp                         # constant input current
-    C       : farad     (constant)        # membrane capacitance
-    gL      : siemens   (constant)        # leak conductance
-    EL      : volt      (constant)        # leak reversal potential
-    VT      : volt      (constant)        # threshold
-    DeltaT  : volt      (constant)        # slope factor
-    tauwad  : second    (constant)        # adaptation time constant
-    a       : siemens   (constant)        # adaptation decay parameter
-    b       : amp       (constant)        # adaptation weight
-    Vr      : volt      (constant)        # reset potential
-    refP    : second    (constant)        # refractory period (It is still possible to set it to False)
+    C       : farad     (shared, constant)        # membrane capacitance
+    gL      : siemens   (shared, constant)        # leak conductance
+    EL      : volt      (shared, constant)        # leak reversal potential
+    VT      : volt      (shared, constant)        # threshold
+    DeltaT  : volt      (shared, constant)        # slope factor
+    tauwad  : second    (shared, constant)        # adaptation time constant
+    a       : siemens   (shared, constant)        # adaptation decay parameter
+    b       : amp       (shared, constant)        # adaptation weight
+    Vr      : volt      (shared, constant)        # reset potential
+    refP    : second    (shared, constant)        # refractory period (It is still possible to set it to False)
     x       : 1         (constant)        # x location on 2d grid (only set it if you need it)
     y       : 1         (constant)        # y location on 2d grid
     """
@@ -63,7 +66,61 @@ def ExpAdaptIF(numInputs=1, debug=False, method='euler', additionalStatevars=Non
         print('arguments of ExpAdaptIF: \n' + str(arguments))
         printEqDict(eqDict)
 
-    return eqDict
+    standaloneVars = ['refP']
+    return eqDict, standaloneVars
+
+
+def SimpleIF(numInputs=1, debug=False, method='euler', additionalStatevars=None):
+    '''
+    @param:
+    numInputs  # number of input currents (>0) (they are just numbered: Ie, Ie2, Ie3, ...)
+    debug      # print debug info?
+    '''
+
+    arguments = dict(locals())
+    # del(arguments['debug'])
+
+    modelEq = """
+    dVm/dt = (gL*(EL-Vm) + Iin)/C : volt (unless refractory)
+    gL      : siemens   (shared, constant)        # leak conductance
+    Vr      : volt (shared, constant)
+    Vthr    : volt (shared, constant)
+    EL      : volt      (shared, constant)        # leak reversal potential
+    C       : farad     (shared, constant)        # membrane capacitance
+    refP    : second (shared, constant) # refractory period (It is still possible to set it to False)
+    Iconst  : amp                         # constant input current
+    Ii      : amp                         # inh input current
+    Ie      : amp                         # exc input current
+    x       : 1         (constant)        # x location on 2d grid (only set it if you need it)
+    y       : 1         (constant)        # y location on 2d grid
+    """
+    # add additional input currents (if you have several input currents)
+    Ies = ["+ Ie" + str(i) + " " for i in range(1, numInputs + 1) if i > 1]
+    Iis = ["+ Ii" + str(i) + " " for i in range(1, numInputs + 1) if i > 1]
+    modelEq = modelEq + "Iin = Iconst + Ii + Ie " + "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
+    Iesline = ["    Ie" + str(i) + " : amp" for i in range(1, numInputs + 1) if i > 1]
+    Iisline = ["    Ii" + str(i) + " : amp" for i in range(1, numInputs + 1)if i > 1]
+    modelEq = modelEq + "\n".join(Iesline) + "\n" + "\n".join(Iisline)
+    modelEq += "\n"
+
+    if additionalStatevars is not None:
+        if debug:
+            print("added to Equation: \n" + "\n".join(additionalStatevars))
+        modelEq += "\n            ".join(additionalStatevars)
+
+    thresholdEq = 'Vm > Vthr'
+    resetEq = """Vm = Vr"""
+
+    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq, refractory='refP', method=method)
+
+    if debug:
+        print('arguments of ExpAdaptIF: \n' + str(arguments))
+        printEqDict(eqDict)
+
+    standaloneVars = ['refP']
+    return eqDict, standaloneVars
+
+
 
 
 def Silicon(numInputs=1, debug=False, Excitatory=True, method='euler', additionalStatevars=None):
@@ -151,12 +208,13 @@ def Silicon(numInputs=1, debug=False, Excitatory=True, method='euler', additiona
     if debug:
         print('arguments of Silicon Neuron: \n' + str(arguments))
 
-    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq)
+    eqDict = dict(model=modelEq, threshold=thresholdEq, reset=resetEq, refractory='refP', method=method)
 
     if debug:
         printEqDict(eqDict)
 
-    return eqDict
+    standaloneVars = []
+    return eqDict, standaloneVars
 
 
 def printEqDict(eqDict):

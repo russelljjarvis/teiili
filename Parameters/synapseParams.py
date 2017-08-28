@@ -11,8 +11,8 @@ Created on 17.12.2016
 
 from brian2 import *
 
-fusiSyn_default = {"w_plus": 0.2,
-                   "w_minus": 0.2,
+fusiSyn_default = {"wplus": 0.2,
+                   "wminus": 0.2,
                    "theta_upl": 180 * mV,
                    "theta_uph": 1 * volt,
                    "theta_downh": 90 * mV,
@@ -29,11 +29,13 @@ fusiSyn_default = {"w_plus": 0.2,
                    "gWe": 7 * nS,
                    "gIe": 0 * nS,
                    "taugIe": 5 * ms,
-                   "EIe": 60.0 * mV}  # maybe not good default params, just placeholder!
+                   "EIe": 60.0 * mV,
+                   "weight": 1}  # maybe not good default params, just placeholder!
 
 simpleSyn_default = {
-    "tau": 5 * ms,
-    "Iw": 1 * nA}
+                    "tau": 5 * ms,
+                    "Iw": 1 * nA,
+                    "weight": 1}
 
 revSyn_default = {"gIe": 0 * nS,
                   "gIi": 0 * nS,
@@ -42,7 +44,10 @@ revSyn_default = {"gIe": 0 * nS,
                   "EIe": 60.0 * mV,
                   "EIi": -90.0 * mV,
                   "gWe": 7 * nS,
-                  "gWi": -3 * nS}
+                  "gWi": -3 * nS,
+                  "weight": 1}
+
+alphaSynapse_default = revSyn_default.update({"t_spike" : 1*second})
 
 StdpSyn_default = {"gIe": 0 * nS,
                    "taugIe": 5 * ms,

@@ -11,14 +11,11 @@ This is an attempt to implement a spiking SOM inspired by Rumbell et al. 2014
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-import os
-from random import randrange, random
-from random import seed as rnseed
 from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
-    SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
+    SpikeMonitor, StateMonitor, figure, show, xlabel, ylabel,\
     seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray,\
     defaultclock, profiling_summary, codegen
-from brian2 import *
+#from brian2 import *
 
 from NCSBrian2Lib.Equations.neuronEquations import ExpAdaptIF
 #from NCSBrian2Lib.Equations.synapseEquations import fusiSynV as fusiSynapseEq
@@ -76,19 +73,37 @@ class SOM(BuildingBlock):
                  neuronParams=gerstnerExpAIFdefaultregular, synapseParams=revSyn_default,
                  blockParams=somParams, debug=False):
 
-        BuildingBlock.__init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug)
+        BuildingBlock.__init__(self, name, neuronEq, synapseEq,
+                               neuronParams, synapseParams, blockParams, debug)
 
-        self.Groups, self.Monitors, self.replaceVars = genSOM(name, SOMinput,
-                                                              interval, nWTA1dNeurons=nWTA1dNeurons, nWTA2dNeurons=nWTA2dNeurons,
-                                                              ninputs=ninputs, cutoff=cutoff, nInhNeuronsSOM=nInhNeuronsSOM,
-                                                              nInhNeuronsInp=nInhNeuronsInp,
-                                                              neuronEq=neuronEq, neuronPar=neuronParams,
-                                                              synapseEq=synapseEq, synapsePar=synapseParams,
-                                                              monitor=True, debug=debug,
-                                                              **blockParams)
+        self.nWTA2dNeurons = nWTA2dNeurons
+
+        self.Groups, self.Monitors, self.standaloneParams,\
+            self.namespace = genSOM(name, SOMinput, interval,
+                                    nWTA1dNeurons=nWTA1dNeurons, nWTA2dNeurons=nWTA2dNeurons,
+                                    ninputs=ninputs, cutoff=cutoff, nInhNeuronsSOM=nInhNeuronsSOM,
+                                    nInhNeuronsInp=nInhNeuronsInp,
+                                    neuronEq=neuronEq, neuronPar=neuronParams,
+                                    synapseEq=synapseEq, synapsePar=synapseParams,
+                                    monitor=True, debug=debug,
+                                    **blockParams)
+
+    def plot(self, duration, plotdur, interval, col):
+        # plots the part at the end
+        start = time.time()
+        startTime = duration - plotdur
+        endTime = duration
+        # plotWTA('wtaSOM',startTime,endTime,self.nWTA2dNeurons,True,self.Monitors)
+        # WTA plot tiles over time
+        plotWTATiles('wtaSOM', startTime, endTime, self.nWTA2dNeurons,
+                     self.Monitors['spikemonWTA'], interval=interval * ms,
+                     nCol=9, showfig=False, maxFiringRate=100,
+                     tilecolors=col[(len(col) - int(plotdur / (interval * ms))):len(col)])
+        end = time.time()
+        print('plot took ' + str(end - start) + ' sec')
 
 
-def genSOM(name,  # not used at the moment
+def genSOM(name,
            # network parameters
            SOMinput,
            interval,
@@ -147,42 +162,50 @@ def genSOM(name,  # not used at the moment
                  'rpWTA': rpWTA,
                  'rpInh': rpInh,
                  'sigm': sigmSOMlateralExc
-                 }
+                }
     wtaSOM = WTA('wtaSOM', dimensions=2,
                  neuronParams=neuronPar, synapseParams=synapsePar, blockParams=wtaParams,
                  numNeurons=nWTA2dNeurons, numInhNeurons=nInhNeuronsSOM,
-                 cutoff=cutoff, numWtaInputs=1,
+                 cutoff=cutoff, numInputs=1,
                  additionalStatevars=["latSigmaTau : second (constant)"], debug=debug)
 
     # decay of kernel sigma ???
     synwtaSOMwtaSOM1e = wtaSOM.Groups['synWTAWTA1e']
     synwtaSOMwtaSOM1e.latSigmaTau = sigmSOMlateralExc_DecayTau
-    synwtaSOMwtaSOM1e.run_regularly('''weight = latWeight * fkernel2d(i,j,latSigma*exp(-t/latSigmaTau),nWTA2dNeurons)''', dt=100 * ms)
+    synwtaSOMwtaSOM1e.run_regularly(
+        '''weight = latWeight * fkernel2d(i,j,latSigma*exp(-t/latSigmaTau),nWTA2dNeurons)''', dt=100 * ms)
 
     #===============================================================================
     # create Input groups u
 
     nInpNeurons = nWTA1dNeurons
 
-    gInpGroup = Neurons(ninputs * nInpNeurons, neuronEq, neuronPar, refractory=rpInp, numInputs=2,
-                        additionalStatevars=["inputWeight : 1 (constant)"], debug=debug, name='gInpGroup')
+    gInpGroup = Neurons(ninputs * nInpNeurons, neuronEq, neuronPar,
+                        refractory=rpInp, numInputs=2,
+                        additionalStatevars=["inputWeight : 1 (constant)"],
+                        debug=debug, name='gInpGroup')
     gInpGroup.inputWeight = inputWeight
-    gInpSubgroups = [gInpGroup[(inp * nInpNeurons):((inp + 1) * nInpNeurons)] for inp in range(ninputs)]
+    gInpSubgroups = [
+        gInpGroup[(inp * nInpNeurons):((inp + 1) * nInpNeurons)] for inp in range(ninputs)]
     #spikemonInp = SpikeMonitor(gInpGroup)
     #statemonInp = StateMonitor(gInpGroup, ('Vm','Iin','Iconst'), record=range(ninputs*nInpNeurons))
 
     #===============================================================================
     # create Input Inhibition Inh_u
-    gInpInhGroup = Neurons(nInhNeuronsInp, neuronEq, neuronPar, refractory=rpInh, debug=debug, numInputs=2, name='gInpInhGroup')
+    gInpInhGroup = Neurons(nInhNeuronsInp, neuronEq, neuronPar,
+                           refractory=rpInh, debug=debug, numInputs=2, name='gInpInhGroup')
     #spikemonInpInh = SpikeMonitor(gInpInhGroup)
     #statemonInpInh = StateMonitor(gInpInhGroup, ('Vm','Iin','Iconst'), record=range(nInhNeuronsInp))
 
     #===============================================================================
     # create input inhibition synapses
 
-    synInpInh1e = Connections(gInpGroup, gInpInhGroup, synapseEq, synapsePar, method="euler", debug=debug, name='sInpInh1e')
-    synInpInh1i = Connections(gInpGroup, gInpInhGroup, synapseEq, synapsePar, method="euler", debug=debug, name='sInpInh1i')
-    synInhInp1i = Connections(gInpInhGroup, gInpGroup, synapseEq, synapsePar, method="euler", debug=debug, name='sInhInp1i')
+    synInpInh1e = Connections(gInpGroup, gInpInhGroup, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sInpInh1e')
+    synInpInh1i = Connections(gInpGroup, gInpInhGroup, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sInpInh1i')
+    synInhInp1i = Connections(gInpInhGroup, gInpGroup, synapseEq, synapsePar,
+                              method="euler", debug=debug, name='sInhInp1i')
 
     synInpInh1e.connect(True)
     synInpInh1i.connect(True)
@@ -200,7 +223,8 @@ def genSOM(name,  # not used at the moment
     #===============================================================================
     # create plastic synapses
 
-    synInpSom1e = Connections(gInpGroup, wtaSOM.Groups['gWTAGroup'], StdpSynapseEq, plasticSynapsePar, debug=debug,
+    synInpSom1e = Connections(gInpGroup, wtaSOM.Groups['gWTAGroup'],
+                              StdpSynapseEq, plasticSynapsePar, debug=debug,
                               additionalStatevars=["LRdecay: 1 (constant)"], name='sInpSom1e')
 
     synInpSom1e.connect(True)
@@ -217,11 +241,21 @@ def genSOM(name,  # not used at the moment
     meangaussind = [TimedArray([int(sigmGaussInput + (nInpNeurons - 2 * sigmGaussInput) *
                                     SOMinput[int(np.floor(stimTime / interval))][inp]) for stimTime in stimTimes], dt=interval * ms) for inp in range(ninputs)]
 
+    # all variables from run_regularly statements have to be added here in oder to make them available to the run call
+    # TODO: They should have unique names, if several blocks of the same kind are used
+    blockNamespace = {'sigmGaussInput': sigmGaussInput,
+                      'fkernelgauss1d': fkernelgauss1d,
+                      'fkernel2d': fkernel2d,
+                      'nWTA2dNeurons': nWTA2dNeurons}
+
     for ii in range(len(meangaussind)):
-        exec('meangaussind' + str(ii) + '=meangaussind[ii]')  # sorry for that. Please tell me, if you find a better way
+        # exec('meangaussind' + name + str(ii) + '=meangaussind[ii]')  # sorry for that. Please tell me, if you find a better way
+        blockNamespace.update(
+            {'meangaussind' + name + str(ii): meangaussind[ii]})
 
     for inp in range(ninputs):
-        gInpSubgroups[inp].run_regularly('''Iconst = inputWeight * fkernelgauss1d(int(meangaussind{inp}(t)),i,sigmGaussInput)*pA'''.format(inp=inp), dt=interval * ms)
+        gInpSubgroups[inp].run_regularly(
+            '''Iconst = inputWeight * fkernelgauss1d(int(meangaussind{inp}(t)),i,sigmGaussInput)*pA'''.format(inp=name + str(inp)), dt=interval * ms)
 
     #===============================================================================
 
@@ -235,7 +269,7 @@ def genSOM(name,  # not used at the moment
         'gInpGroup': gInpGroup,
         'gInpSubgroups': gInpSubgroups,
 
-        'synwtaSOMwtaSOM1e': synwtaSOMwtaSOM1e,
+        #'synwtaSOMwtaSOM1e': synwtaSOMwtaSOM1e,
 
         'synInpSom1e': synInpSom1e,
         'gInpInhGroup': gInpInhGroup,
@@ -249,35 +283,33 @@ def genSOM(name,  # not used at the moment
     if monitor:
         SOMMonitors = wtaSOM.Monitors
 
-    # replacevars should be the real names of the parameters, that can be changed by the arguments of this function:
+    # replacevars should be the real names of the parameters,
+    # that can be changed by the arguments of this function:
     # in this case: weInpWTA, weWTAInh, wiInhWTA, weWTAWTA,rpWTA, rpInh,sigm
-    replaceVars = wtaSOM.replaceVars
-    replaceVars += [
-        gInpGroup.name + '_inputWeight',
-        gInpGroup.name + '_refP',
-        gInpInhGroup.name + '_refP',
+    standaloneParams = wtaSOM.standaloneParams
+    standaloneParams.update({
+        gInpGroup.name + '_inputWeight': inputWeight,
 
-        synInpSom1e.name + '_weight',
-        synInpSom1e.name + '_taupre',
-        synInpSom1e.name + '_taupost',
-        synInpSom1e.name + '_diffApre',
-        synInpSom1e.name + '_Q_diffAPrePost',
-        synInpSom1e.name + '_LRdecay',
-        synInpInh1e.name + '_weight',
-        synInpInh1i.name + '_weight',
-        synInhInp1i.name + '_weight',
+        synInpInh1e.name + '_weight': synInpInh1e_weight,
+        synInpInh1i.name + '_weight': synInpInh1i_weight,
+        synInhInp1i.name + '_weight': synInhInp1i_weight,
 
-        synwtaSOMwtaSOM1e.name + '_weight',
-        synwtaSOMwtaSOM1e.name + '_latSigmaTau',
-    ]
+        synInpSom1e.name + '_taupre': plasticSynapse_taupre,
+        synInpSom1e.name + '_taupost': plasticSynapse_taupost,
+        synInpSom1e.name + '_weight': plasticSynapse_weight,
+        synInpSom1e.name + '_LRdecay': plasticSynapse_LRdecay,
 
-    if True:
-        print('The keys of the output dict are:')
-        for key in SOMGroups:
-            if key not in wtaSOM.Groups:
-                print(key)
+        synwtaSOMwtaSOM1e.name + '_latSigmaTau': sigmSOMlateralExc_DecayTau,
+
+        # additional learning params
+        synInpSom1e.name + '_diffApre': plasticSynapsePar['diffApre'],
+        synInpSom1e.name + '_Q_diffAPrePost': plasticSynapsePar['Q_diffAPrePost'],
+
+        gInpGroup.name + '_refP': rpInp,
+        gInpInhGroup.name + '_refP': rpInh
+    })
 
     end = time.time()
-    print ('setting up took ' + str(end - start) + ' sec')
+    print('setting up took ' + str(end - start) + ' sec')
 
-    return SOMGroups, SOMMonitors, replaceVars
+    return SOMGroups, SOMMonitors, standaloneParams, blockNamespace

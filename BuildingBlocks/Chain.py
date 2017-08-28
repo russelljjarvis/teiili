@@ -1,13 +1,17 @@
 # coding: utf-8
 #===============================================================================
-#from brian2 import *
-from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs, SpikeGeneratorGroup, NeuronGroup,\
-    Synapses, SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
-    seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray,\
-    defaultclock, codegen
-import numpy as np
+"""
+This is a simple chain of neurons
+"""
 import os
+import numpy as np
 from datetime import datetime
+
+#from brian2 import *
+from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
+    SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
+    seed, xlim, ylim, subplot, network_operation, TimedArray,\
+    defaultclock, SpikeGeneratorGroup
 
 from NCSBrian2Lib.Equations.neuronEquations import ExpAdaptIF
 from NCSBrian2Lib.Equations.synapseEquations import reversalSynV
@@ -30,23 +34,28 @@ chainParams = {'numChains': 4,
 class Chain(BuildingBlock):
     def __init__(self, name, neuronEq=ExpAdaptIF, synapseEq=reversalSynV,
                  neuronParams=gerstnerExpAIFdefaultregular, synapseParams=revSyn_default,
-                 blockParams=chainParams, debug=False):
+                 blockParams=chainParams, numInputs=1, debug=False):
         self.numChains = blockParams['numChains']
         self.numNeuronsPerChain = blockParams['numNeuronsPerChain']
         self.synChaCha1e_weight = blockParams['synChaCha1e_weight']
         self.synInpCha1e_weight = blockParams['synInpCha1e_weight']
         self.gChaGroup_refP = blockParams['gChaGroup_refP']
 
-        BuildingBlock.__init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug)
+        BuildingBlock.__init__(self, name, neuronEq, synapseEq, neuronParams,
+                               synapseParams, blockParams, debug)
 
-        self.Groups, self.Monitors, self.replaceVars = genChain(name,
-                                                                neuronEq, neuronParams, synapseEq, synapseParams,
-                                                                self.numChains, self.numNeuronsPerChain,
-                                                                self.synChaCha1e_weight, self.synInpCha1e_weight,
-                                                                self.gChaGroup_refP, self.debug)
+        self.Groups, self.Monitors,\
+            self.replaceVars = genChain(name,
+                                        neuronEq, neuronParams,
+                                        synapseEq, synapseParams,
+                                        self.numChains, self.numNeuronsPerChain,
+                                        self.synChaCha1e_weight, self.synInpCha1e_weight,
+                                        self.gChaGroup_refP, numInputs=numInputs,
+                                        debug=self.debug)
 
         self.inputGroup = self.Groups['gChaInpGroup']
-        self.chainGroup = self.Groups['gChaGroup']
+        self.group = self.Groups['gChaGroup']
+        self.synapse=self.Groups['synChaCha1e']
 
         self.spikemonCha = self.Monitors['spikemonCha']
         self.spikemonChaInp = self.Monitors['spikemonChaInp']
@@ -54,7 +63,8 @@ class Chain(BuildingBlock):
     def plot(self, savedir=None):
 
         if len(self.spikemonCha.t) < 1:
-            print('Monitor is empty, have you run the Network?')
+            print(
+                'Monitor is empty, have you run the Network and added the monitor to the Network?')
             return
 
         duration = max(self.spikemonCha.t + 10 * ms)
@@ -73,7 +83,9 @@ class Chain(BuildingBlock):
         # ylim([0,0])
         xlim([0, duration / ms])
         if savedir is not None:
-            fig.savefig(os.path.join(savedir, self.blockName + '_' + datetime.now().strftime('%Y%m%d_%H%M%S') + '.png'))
+            fig.savefig(os.path.join(savedir, self.name + '_' +
+                                     datetime.now().strftime('%Y%m%d_%H%M%S') + '.png'))
+        return fig
 
 
 def genChain(groupname='Cha',
@@ -81,21 +93,27 @@ def genChain(groupname='Cha',
              synapseEq=reversalSynV, synapsePar=revSyn_default,
              numChains=4, numNeuronsPerChain=15,
              synChaCha1e_weight=4, synInpCha1e_weight=1,
-             gChaGroup_refP=1 * ms,
+             gChaGroup_refP=1 * ms, numInputs=1,
              debug=False):
     """create chains of neurons"""
 
     # empty input SpikeGenerator
     tsChaInp = np.asarray([]) * ms
     indChaInp = np.asarray([])
-    gChaInpGroup = SpikeGeneratorGroup(numChains, indices=indChaInp, times=tsChaInp, name='g' + groupname + 'Inp')
+    gChaInpGroup = SpikeGeneratorGroup(numChains, indices=indChaInp,
+                                       times=tsChaInp, name='g' + groupname + 'Inp')
 
-    gChaGroup = Neurons(numNeuronsPerChain * numChains, neuronEq, neuronPar, refractory=gChaGroup_refP, name='g' + groupname, numInputs=2, debug=debug)
+    gChaGroup = Neurons(numNeuronsPerChain * numChains, neuronEq, neuronPar,
+                        refractory=gChaGroup_refP, name='g' + groupname,
+                        numInputs=2 + numInputs, debug=debug)
 
-    synChaCha1e = Connections(gChaGroup, gChaGroup, synapseEq, synapsePar, method='euler', name='s' + groupname + '' + groupname + '1e')
+    synChaCha1e = Connections(gChaGroup, gChaGroup, synapseEq, synapsePar,
+                              method='euler', name='s' + groupname + '' + groupname + '1e')
     synChaCha1e.connect('i+1==j and (j%numNeuronsPerChain)!=0')
 
-    synInpCha1e = Connections(gChaInpGroup, gChaGroup, synapseEq, synapsePar, method='euler', name='sInp' + groupname + '1e')
+    synInpCha1e = Connections(gChaInpGroup, gChaGroup, synapseEq, synapsePar,
+                              method='euler', name='sInp' + groupname + '1e')
+
     for i_cha in range(numChains):
         synInpCha1e.connect(i=i_cha, j=i_cha * numNeuronsPerChain)
 
@@ -103,8 +121,8 @@ def genChain(groupname='Cha',
     synChaCha1e.weight = synChaCha1e_weight
     synInpCha1e.weight = synInpCha1e_weight
 
-    spikemonChaInp = SpikeMonitor(gChaInpGroup)
-    spikemonCha = SpikeMonitor(gChaGroup)
+    spikemonChaInp = SpikeMonitor(gChaInpGroup, name='spikemon' + groupname + 'ChaInp')
+    spikemonCha = SpikeMonitor(gChaGroup, name='spikemon' + groupname + 'Cha')
 
     Monitors = {
         'spikemonChaInp': spikemonChaInp,

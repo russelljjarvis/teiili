@@ -11,22 +11,27 @@ from collections import OrderedDict
 
 class BuildingBlock:
 
-    def __init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug):
+    def __init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug, monitor=False):
         self.name = name
         self.neuronEq = neuronEq
         self.synapseEq = synapseEq
         self.neuronParams = neuronParams
         self.synapseParams = synapseParams
+        # self.plasticSynEq = plasticSynEq
+        # self.plasticSynParams = plasticSynParams
         self.params = blockParams
         self.debug = debug
+        # self.plastic = plastic
         self.Groups = {}
         self.Monitors = {}
+        self.monitor = monitor
         self.standaloneParams = OrderedDict()
 
         # this allows us to iterate over the BrianObjects and directly add the Block to a Network
     def __iter__(self):
         allBrianObjects = self.Groups
-        allBrianObjects.update(self.Monitors)
+        if self.monitor:
+            allBrianObjects.update(self.Monitors)
         # return iter([{**self.Groups,**self.Monitors}[key] for key in {**self.Groups,**self.Monitors}]) #not Python 2 compatible
         return iter([allBrianObjects[key] for key in allBrianObjects])
 

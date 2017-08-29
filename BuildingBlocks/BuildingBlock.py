@@ -17,13 +17,8 @@ from collections import OrderedDict
 
 class BuildingBlock:
 
-<<<<<<< HEAD
     def __init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug, monitor=False):
-=======
-    def __init__(self, name, neuronEq, synapseEq,
-                 neuronParams, synapseParams, blockParams, debug):
 
->>>>>>> a20435ab0ab9a8f5312688271792b32d626816d2
         self.name = name
         self.neuronEq = neuronEq
         self.synapseEq = synapseEq

@@ -243,8 +243,8 @@ class Connections(Synapses):
         xlabel('Source neuron index')
         ylabel('Target neuron index')
 
-    def print(self):
-        synapseEquations.printSynDict(self.eqDict)
+    # def print(self):
+    #     synapseEquations.printSynDict(self.eqDict)
 
 
 def setParams(briangroup, params, ndargs=None, debug=False):

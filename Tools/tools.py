@@ -648,3 +648,19 @@ def DVScsv2numpy(datafile='tmp/aerout.csv', exp_name='Experiment', debug=False):
         print(Events[2, 0:10])
         print(Events[3, 0:10])
     return Events
+
+
+
+def makeGaussian(squareSize, sigma = 1, mu=None):
+    """ Make a square gaussian kernel"""
+
+    x = np.arange(0, squareSize)
+    y = x[:,np.newaxis]
+
+    if mu is None:
+        x0 = y0 = squareSize // 2
+    else:
+        x0 = mu[0]
+        y0 = mu[1]
+
+    return (1/np.sqrt(2*np.pi*sigma**2)) * np.exp( -( (x-x0)**2 + (y-y0)**2 ) / (2*sigma**2) )

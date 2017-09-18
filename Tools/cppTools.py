@@ -6,8 +6,9 @@ Created on Fri Jul 28 19:02:05 2017
 @author: alpha
 """
 
-from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types, prefs,\
-    figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel, device, codegen, asarray
+from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
+     prefs, figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel,\
+     device, codegen, asarray, set_device
 from brian2 import *
 import numpy as np
 import os
@@ -15,6 +16,15 @@ import time
 import warnings
 from collections import OrderedDict
 
+
+def activate_standalone(directory='Brian2Network_standalone', build_on_run=False):
+    set_device('cpp_standalone', directory=directory, build_on_run=build_on_run)
+#print('Network has been built already, rebuild it...')
+    device.reinit()
+    device.activate(directory=directory, build_on_run=build_on_run)
+
+def deactivate_standalone():
+    set_device('runtime')
 
 def buildCppAndReplace(standaloneParams, standaloneDir='output', clean=True):
 
@@ -89,10 +99,11 @@ def replaceVariablesInCPPcode(replaceVars, replaceFileLocation):
                 f.write(keepFirstPart + '= ' + rvar + '_p;\n')
                 print("replaced scalar " + rvar + " in line " + str(i_line))
                 replaceTODOlist = [elem for elem in replaceTODOlist if not elem == rvar]  # check element in todolist
-        if 'network.run(' in line:
+        if '.run(' in line:
             replaced = True
+            keepNetworkName = line.split('.', 1)[0] #this is actually the same as net.name
             keepSecondPart = line.split(',', 1)[1]
-            f.write('network.run(duration_p,'+ keepSecondPart)
+            f.write(keepNetworkName + '.run(duration_p,'+ keepSecondPart)
             print("replaced duration in line " + str(i_line))
             replaceTODOlist = [elem for elem in replaceTODOlist if not elem == 'duration']
         if not replaced:

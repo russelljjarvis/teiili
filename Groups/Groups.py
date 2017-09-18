@@ -13,6 +13,7 @@ from collections import OrderedDict
 
 # TODO: maybe offer a network argument in order to automatically add the group to the network
 
+
 class Neurons(NeuronGroup):
 
     def __init__(self, N, Equation, params,
@@ -36,14 +37,14 @@ class Neurons(NeuronGroup):
 
         # generate the equation in order to pu it into the NeuronGroup constructor
         eqDict, standaloneVars = Equation(numInputs=numInputs, debug=debug,
-                          method=method, additionalStatevars=additionalStatevars)
+                                          method=method, additionalStatevars=additionalStatevars)
         self.eqDict = eqDict
 
         self.standaloneVars = standaloneVars
 
         self.standaloneParams = OrderedDict()
 
-        self.initialized=True
+        self.initialized = True
         NeuronGroup.__init__(self, N,
                              events=events,
                              namespace=namespace,
@@ -60,35 +61,35 @@ class Neurons(NeuronGroup):
     def __setattr__(self, key, value):
         NeuronGroup.__setattr__(self, key, value)
         if hasattr(self, 'name'):
-            if key in self.standaloneVars and type(value) != str :
+            if key in self.standaloneVars and type(value) != str:
                 # we have to check if the variable has a value assigned or
                 # is assigned a string that is evaluated by brian2 later
                 # as in that case we do not want it here
-                self.standaloneParams.update({self.name+'_'+key : value})
+                self.standaloneParams.update({self.name + '_' + key: value})
 
-    def addStateVariable(self, name, value, constant = False, changeInStandalone=True):
+    def addStateVariable(self, name, value, constant=False, changeInStandalone=True):
         """this method allows you to add a state variable
         (usually defined in equations), that is changeable in standalone mode"""
         try:
-            if len(value) == 1: #this will probably never happen
+            if len(value) == 1:  # this will probably never happen
                 shared = True
                 size = 1
             else:
                 shared = False
                 size = len(value)
                 if size != self.N:
-                    print('The value of '+ name +' needs to be a scalar or a vector of\
-                          length N (number of neurons in Group)') # exception will be raised later
-        except TypeError: # then it is probably a scalar
+                    print('The value of ' + name + ' needs to be a scalar or a vector of\
+                          length N (number of neurons in Group)')  # exception will be raised later
+        except TypeError:  # then it is probably a scalar
             shared = True
             size = 1
 
         try:
-            self.variables.add_array(name, size = size, dimensions = value.dim,
-                                     constant = constant, scalar = shared)
-        except AttributeError: #value.dim will throw an exception, if it has no unit
-            self.variables.add_array(name, size = size,
-                                     constant = constant, scalar = shared) #dimensionless
+            self.variables.add_array(name, size=size, dimensions=value.dim,
+                                     constant=constant, scalar=shared)
+        except AttributeError:  # value.dim will throw an exception, if it has no unit
+            self.variables.add_array(name, size=size,
+                                     constant=constant, scalar=shared)  # dimensionless
 
         if changeInStandalone:
             self.standaloneVars += [name]
@@ -105,8 +106,8 @@ class Neurons(NeuronGroup):
             raise ValueError('There seem so be too many connections to ' +
                              self.name + ', please increase numInputs')
 
-    def print(self):
-        neuronEquations.printEqDict(self.eqDict)
+    # def print(self):
+    #     neuronEquations.printEqDict(self.eqDict)
 
 
 class Connections(Synapses):
@@ -140,7 +141,7 @@ class Connections(Synapses):
 
         try:
             if debug:
-                print(name, ': target',target.name,'has',target.numSynapses,'of',target.numInputs,'synapses')
+                print(name, ': target', target.name, 'has', target.numSynapses, 'of', target.numInputs, 'synapses')
                 print('trying to add one more...')
             target.registerSynapse()
             self.inputNumber = target.numSynapses
@@ -154,7 +155,7 @@ class Connections(Synapses):
                               str(target) + ', therefore, please specify an inputNumber')
 
         synDict, standaloneVars = Equation(inputNumber=self.inputNumber,
-                           debug=debug, additionalStatevars=additionalStatevars)
+                                           debug=debug, additionalStatevars=additionalStatevars)
         self.eqDict = synDict
         self.standaloneVars = standaloneVars
 
@@ -177,35 +178,35 @@ class Connections(Synapses):
     def __setattr__(self, key, value):
         Synapses.__setattr__(self, key, value)
         if hasattr(self, 'name'):
-            if key in self.standaloneVars and type(value) != str :
+            if key in self.standaloneVars and type(value) != str:
                 # we have to check if the variable has a value assigned or
                 # is assigned a string that is evaluated by brian2 later
                 # as in that case we do not want it here
-                self.standaloneParams.update({self.name+'_'+key : value})
+                self.standaloneParams.update({self.name + '_' + key: value})
 
-    def addStateVariable(self, name, value, constant = False, changeInStandalone=True):
+    def addStateVariable(self, name, value, constant=False, changeInStandalone=True):
         """this method allows you to add a state variable
         (usually defined in equations), that is changeable in standalone mode"""
         try:
-            if len(value) == 1: #this will probably never happen
+            if len(value) == 1:  # this will probably never happen
                 shared = True
                 size = 1
             else:
                 shared = False
                 size = len(value)
                 if size != self.N:
-                    print('The value of '+ name +' needs to be a scalar or a vector of\
-                          length N (number of neurons in Group)') # exception will be raised later
-        except TypeError: # then it is probably a scalar
+                    print('The value of ' + name + ' needs to be a scalar or a vector of\
+                          length N (number of neurons in Group)')  # exception will be raised later
+        except TypeError:  # then it is probably a scalar
             shared = True
             size = 1
 
         try:
-            self.variables.add_array(name, size = size, dimensions = value.dim,
-                                     constant = constant, scalar = shared)
-        except AttributeError: #value.dim will throw an exception, if it has no unit
-            self.variables.add_array(name, size = size,
-                                     constant = constant, scalar = shared) #dimensionless
+            self.variables.add_array(name, size=size, dimensions=value.dim,
+                                     constant=constant, scalar=shared)
+        except AttributeError:  # value.dim will throw an exception, if it has no unit
+            self.variables.add_array(name, size=size,
+                                     constant=constant, scalar=shared)  # dimensionless
 
         if changeInStandalone:
             self.standaloneVars += [name]
@@ -242,8 +243,8 @@ class Connections(Synapses):
         xlabel('Source neuron index')
         ylabel('Target neuron index')
 
-    def print(self):
-        synapseEquations.printSynDict(self.eqDict)
+    # def print(self):
+    #     synapseEquations.printSynDict(self.eqDict)
 
 
 def setParams(briangroup, params, ndargs=None, debug=False):

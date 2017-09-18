@@ -128,7 +128,7 @@ def params2run_args(standaloneParams):
     return run_args
 
 
-def collectStandaloneParams(*buildingBlocks, params=OrderedDict()):
+def collectStandaloneParams(params=OrderedDict(), *buildingBlocks):
     '''This just collect the parameters of all buildingblocks and adds additional parameters (not from buildingblocks) '''
     standaloneParams = OrderedDict()
     for block in buildingBlocks:

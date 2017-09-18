@@ -64,7 +64,7 @@ def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, return
 @implementation('numpy', discard_units=True)
 @check_units(x=1, y=1, n2dNeurons=1, result=1)
 def xy2ind(x, y, n2dNeurons):
-    return int(y) + int(x) * n2dNeurons
+    return int(x) + int(y) * n2dNeurons
 
 # function that calculates 2D index from 1D index
 # please note that the total number of neurons in the square field is n2dNeurons**2
@@ -353,7 +353,7 @@ The ind2px function are useful to plot recorded spikes in the same coordinate sy
 '''
 
 
-def aedat2numpy(datafile='/tmp/aerout.dat', length=0, version="aedat", debug=0, camera='DVS128'):
+def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, camera='DVS128'):
     """
     load AER data file and parse these properties of AE events:
     - timestamps (in us),
@@ -393,7 +393,7 @@ def aedat2numpy(datafile='/tmp/aerout.dat', length=0, version="aedat", debug=0, 
         eventtypeshift = 31
     else:
         raise ValueError("Unsupported camera: %s" % (camera))
-    if (version == V1):
+    if (version == 'V1'):
         print ("using the old .dat format")
         aeLen = 6
         readMode = '>HI'  # ushot, ulong = 2B+4B

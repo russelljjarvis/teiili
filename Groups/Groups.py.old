@@ -7,20 +7,16 @@ Created on Thu Jul 27 17:28:16 2017
 """
 import warnings
 from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
-    ylabel, xlabel, xlim, ylim, figure
+    ylabel, xlabel, xlim, ylim, figure, asarray
+from NCSBrian2Lib.Equations import neuronEquations, synapseEquations
 from collections import OrderedDict
 
 # TODO: maybe offer a network argument in order to automatically add the group to the network
 
-# TODO: Change this back to the correct files:
-from NCSBrian2Lib.Equations.synapseEquations import SynapseEquation
-from NCSBrian2Lib.Equations.neuronEquations import NeuronEquation
-
 
 class Neurons(NeuronGroup):
 
-    def __init__(self, N, equation=None,
-                 params='default',
+    def __init__(self, N, Equation, params,
                  method='euler',
                  refractory=False,
                  events=None,
@@ -34,23 +30,19 @@ class Neurons(NeuronGroup):
                  # these are additional:
                  numInputs=1,
                  additionalStatevars=None,
-                 debug=False, **equationKwargs):
+                 debug=False):
         self.debug = debug
         self.numInputs = numInputs
         self.numSynapses = 0
 
-        # generate the equation in order to put it into the NeuronGroup constructor
-        if equation is not None:
-            self.equation = equation
-        else:
-            self.equation = NeuronEquation(numInputs=numInputs, additionalStatevars=additionalStatevars, **equationKwargs)
+        # generate the equation in order to pu it into the NeuronGroup constructor
+        eqDict, standaloneVars = Equation(numInputs=numInputs, debug=debug,
+                                          method=method, additionalStatevars=additionalStatevars)
+        self.eqDict = eqDict
 
-        #self.standaloneVars = eq.changeableParameters
-        self.standaloneVars = self.equation.standaloneVars
+        self.standaloneVars = standaloneVars
+
         self.standaloneParams = OrderedDict()
-        self.strParams = {}
-
-#        print(self.equation.model) for debugging porpouses
 
         self.initialized = True
         NeuronGroup.__init__(self, N,
@@ -61,38 +53,19 @@ class Neurons(NeuronGroup):
                              clock=clock,
                              order=order,
                              name=name,
-                             codeobj_class=codeobj_class, method=method, **self.equation.keywords)
-        if params == 'default':
+                             codeobj_class=codeobj_class, **eqDict)
 
-            #            self.parameters= self.equation.parameters
-            tmp = self.equation.parameters
-
-        else:
-            #            self.parameters = params
-            tmp = params
-
-        setParams(self, tmp, debug=debug)
-        #self.refP = refractory
+        setParams(self, params, debug=debug)
+        self.refP = refractory
 
     def __setattr__(self, key, value):
         NeuronGroup.__setattr__(self, key, value)
         if hasattr(self, 'name'):
-            if key in self.standaloneVars and not isinstance(value, str):
+            if key in self.standaloneVars and type(value) != str:
                 # we have to check if the variable has a value assigned or
                 # is assigned a string that is evaluated by brian2 later
                 # as in that case we do not want it here
                 self.standaloneParams.update({self.name + '_' + key: value})
-
-            if isinstance(value, str) and value != 'name' and value != 'when':
-                # store this for later update
-                self.strParams.update({key: value})
-
-    def updateParam(self, parname):
-        "this is used to update string based params during run (e.g. with gui)"
-
-        for strPar in self.strParams:
-            if parname in self.strParams[strPar]:
-                self.__setattr__(strPar, self.strParams[strPar])
 
     def addStateVariable(self, name, value, constant=False, changeInStandalone=True):
         """this method allows you to add a state variable
@@ -134,13 +107,12 @@ class Neurons(NeuronGroup):
                              self.name + ', please increase numInputs')
 
     # def print(self):
-    #     self.equation.print()
+    #     neuronEquations.printEqDict(self.eqDict)
 
 
 class Connections(Synapses):
 
-    def __init__(self, source, target, equation=None,
-                 params='default',
+    def __init__(self, source, target, Equation, params,
                  delay=None, on_event='spike',
                  multisynaptic_index=None,
                  namespace=None, dtype=None,
@@ -150,10 +122,12 @@ class Connections(Synapses):
                  name='synapses*',
                  additionalStatevars=None,
                  inputNumber=None,
-                 debug=False, **equationKwargs):
+                 debug=False):
 
+        self.params = params
         self.debug = debug
         self.inputNumber = 0
+        self.Equation = Equation
 
         # check if it is a building block, if yes, set bb.group as source/target
         try:
@@ -167,8 +141,7 @@ class Connections(Synapses):
 
         try:
             if debug:
-                print(name, ': target', target.name, 'has',
-                      target.numSynapses, 'of', target.numInputs, 'synapses')
+                print(name, ': target', target.name, 'has', target.numSynapses, 'of', target.numInputs, 'synapses')
                 print('trying to add one more...')
             target.registerSynapse()
             self.inputNumber = target.numSynapses
@@ -181,21 +154,12 @@ class Connections(Synapses):
                 warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for' +
                               str(target) + ', therefore, please specify an inputNumber')
 
-        if equation is not None:
-            self.equation = equation
-        else:
-            self.equation = SynapseEquation(inputNumber=self.inputNumber, additionalStatevars=additionalStatevars, **equationKwargs)
+        synDict, standaloneVars = Equation(inputNumber=self.inputNumber,
+                                           debug=debug, additionalStatevars=additionalStatevars)
+        self.eqDict = synDict
+        self.standaloneVars = standaloneVars
 
-#        print(self.equation.model) for debugging porpouses
-
-        self.standaloneVars = self.equation.standaloneVars
         self.standaloneParams = OrderedDict()
-        self.strParams = {}
-
-        if params == 'default':
-            self.parameters = self.equation.parameters
-        else:
-            self.parameters = params
 
         try:
             Synapses.__init__(self, source, target=target,
@@ -205,7 +169,7 @@ class Connections(Synapses):
                               codeobj_class=codeobj_class,
                               dt=dt, clock=clock, order=order,
                               method=method,
-                              name=name, **self.equation.keywords)
+                              name=name, **synDict)
         except Exception as e:
             import sys
             raise type(e)(str(e) + '\n\nCheck Equation for errors!\n' +
@@ -214,22 +178,11 @@ class Connections(Synapses):
     def __setattr__(self, key, value):
         Synapses.__setattr__(self, key, value)
         if hasattr(self, 'name'):
-            if key in self.standaloneVars and not isinstance(value, str):
+            if key in self.standaloneVars and type(value) != str:
                 # we have to check if the variable has a value assigned or
                 # is assigned a string that is evaluated by brian2 later
                 # as in that case we do not want it here
                 self.standaloneParams.update({self.name + '_' + key: value})
-
-            if isinstance(value, str) and value != 'name' and value != 'when':
-                # store this for later update
-                self.strParams.update({key: value})
-
-    def updateParam(self, parname):
-        "this is used to update string based params during run (e.g. with gui)"
-
-        for strPar in self.strParams:
-            if parname in self.strParams[strPar]:
-                self.__setattr__(strPar, self.strParams[strPar])
 
     def addStateVariable(self, name, value, constant=False, changeInStandalone=True):
         """this method allows you to add a state variable
@@ -266,7 +219,7 @@ class Connections(Synapses):
                          skip_if_invalid=skip_if_invalid,
                          namespace=namespace, level=level + 1)
 
-        setParams(self, self.parameters, debug=self.debug)
+        setParams(self, self.params, debug=self.debug)
 
     def plot(self):
         "simple visualization of synapse connectivity (connected dots and connectivity matrix)"
@@ -291,7 +244,7 @@ class Connections(Synapses):
         ylabel('Target neuron index')
 
     # def print(self):
-    #     self.equation.print()
+    #     synapseEquations.printSynDict(self.eqDict)
 
 
 def setParams(briangroup, params, ndargs=None, debug=False):

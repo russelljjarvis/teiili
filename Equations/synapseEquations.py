@@ -104,6 +104,7 @@ class SynapseEquation():
 
                 The second entry is the kernel of the synapse
                 can be one of those : 'exponential', 'alpha', 'resonant' or 'gassian'
+                and 'silicon' for current type of synapse only
 
                 The third entry is the plasticity of the synapse
                 can be : 'nonplastic', 'fusi' or 'stdp'
@@ -112,12 +113,15 @@ class SynapseEquation():
 
         try:
             modes[mode]
-            kernels[kernel]
+            if mode == 'current' :
+                currentkernels[kernel]
+            else :
+                conductancekernels[kernel]
             plasticitymodels[plasticity]
         except KeyError as e:
             print(ERRValue)
         if modes[mode] == 'current':
-            eqDict, varSet = combineEquations_syn(template, kernels[kernel], plasticitymodels[plasticity])
+            eqDict, varSet = combineEquations_syn(template, currentkernels[kernel], plasticitymodels[plasticity])
             eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
                                                      Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
             eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
@@ -133,7 +137,7 @@ class SynapseEquation():
             eqDict['parameters'] = combineParDictionaries(varSet, current_Parameters[mode], current_Parameters[kernel], current_Parameters[plasticity])
 
         if modes[mode] == 'conductance':
-            eqDict, varSet = combineEquations_syn(template, reversalsyn, kernels[kernel], plasticitymodels[plasticity])
+            eqDict, varSet = combineEquations_syn(template, reversalsyn, conductancekernels[kernel], plasticitymodels[plasticity])
             eqDict['model'] = eqDict['model'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
                                                      Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
             eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
@@ -175,8 +179,8 @@ class SynapseEquation():
         print("added to Equation: \n" + "\n".join(stateVars))
         self.modelEq += "\n            ".join(stateVars)
 
-    # def print(self):
-    #     printEqDict_syn(self.keywords, self.parameters)
+    def printAll(self):
+        printEqDict_syn(self.keywords, self.parameters)
 
 
 ############################################################################################
@@ -407,7 +411,7 @@ resonantkernel = {'model': '''
                 omega: 1/second
                 sigma_gaussian : second
                 %kernel_e  = baseweight_e*(weight>0)*wPlast*(weight*exp(-t_spike/tausyne)*cos(omega*t_spike)*omega) : {unit}* second **-1
-                %kernel_i  = baseweight_i*(weight<0)*wPla st*(weight*exp(-t_spike/tausyni)*cos(omega*t_spike)*omega) : {unit}* second **-1
+                %kernel_i  = baseweight_i*(weight<0)*wPlast*(weight*exp(-t_spike/tausyni)*cos(omega*t_spike)*omega) : {unit}* second **-1
                 dt_spike/dt = 1 : second (clock-driven)
                 ''',
 
@@ -452,12 +456,68 @@ gaussianPara_conductance = {"sigma_gaussian_e": 20 * msecond,
                             "sigma_gaussian_i": 20 * msecond}
 
 
+                               ##Silicon Kernel##     
+                        #only for current based synapsis#
+
+siliconkernel = {'model' : '''
+                 %kernel_e  = {synvar_e}*(weight>0)*(Iw / (1+(Isyn/Igain)))/tausyne : {unit}* second **-1  
+                 %kernel_i  = {synvar_i}*(weight<0)*(Iw / (1+(Isyn/Igain)))/tausyni : {unit}* second **-1
+
+                 %tausyne = Csyn * kappa /(Ut * Itau_e) : 1/second (clock-driven)
+                 %tausyni = Csyn * kappa /(Ut * Itau_i) : 1/second (clock-driven)
+
+                 
+                 kappa = (kn + kp) / 2 : 1
+                 
+                 Itau_e : amp
+                 Itau_i : amp
+
+                 Iw = weight*(t_spike<duration) + 0*(t_spike>= duration) : amp
+                 Iin_ex = Iw / (1+(Isyn/Igain)): amp
+                 Igain = Io*exp(-kappa*(Vth-Vdd)/Ut) : amp
+                 dt_spike/dt = 1 : second (clock-driven)
+                 
+                 %weight      : amp (constant)
+                 duration:1 (constant)
+                 kn     : 1 (constant)
+                 kp     : 1 (constant)
+                 Ut     : volt (constant)
+                 Io     : amp (constant)
+                 Csyn   : farad (constant)
+                 Vdd    : volt (constant)
+                 Vth    : volt (constant)
+                 ''',
+                 
+                 'on_pre' : '''
+                 %{synvar_e}
+                 %{synvar_i}
+                 t_spike = 0 * ms
+                 ''',
+                 
+                 'on_post' : ''' '''}
+
+siliconPara = {"Vth" : 0.8 * volt,  # should be close to Vdd
+               "Vdd" : 1.8 * volt,
+               "Csyn" : 0.1 * pF,
+               "Io" : 0.5 * pA,
+               "Ut" : 25 * mV,
+               "kn" : 0.75,
+               "kp" : 0.66,
+               "duration" : 10 * msecond,
+               "Itau_e" : 100 * pA,
+               "Itau_i" : 100 * pA
+               }   
+
 nonePara = {}
+
+
 ########_____Dictionary of keywords_____#########################################################
 # These dictionaries contains keyword and models and parameters names useful for the __init__ subroutine
 # Every new block dictionaries must be added to these definitions
 
-kernels = {'exponential': none, 'alpha': alphakernel, 'resonant': resonantkernel, 'gaussian': gaussiankernel}
+conductancekernels = {'exponential': none, 'alpha': alphakernel, 'resonant': resonantkernel, 'gaussian': gaussiankernel}
+
+currentkernels = {'exponential': none, 'alpha': alphakernel, 'resonant': resonantkernel, 'gaussian': gaussiankernel, 'silicon' : siliconkernel}
 
 plasticitymodels = {'nonplastic': none, 'fusi': fusi, 'stdp': stdp}
 
@@ -466,7 +526,7 @@ modes = {'current': 'current', 'conductance': 'conductance'}
 
 current_Parameters = {'current': currentPara, 'nonplastic': nonePara, 'fusi': fusiPara_current,
                       'stdp': stdpPara_current, 'exponential': nonePara, 'alpha': alphaPara_current,
-                      'resonant': resonantPara_current, 'gaussian': gaussianPara_current}
+                      'resonant': resonantPara_current, 'gaussian': gaussianPara_current, 'silicon' : siliconPara}
 
 conductance_Parameters = {'conductance': reversalPara, 'nonplastic': nonePara, 'fusi': fusiPara_conductance,
                           'stdp': stdpPara_conductance, 'exponential': nonePara, 'alpha': alphaPara_conductance,

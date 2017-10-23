@@ -169,8 +169,8 @@ class NeuronEquation():
         print("added to Equation: \n" + "\n".join(stateVars))
         self.model += "\n            ".join(stateVars)
 
-    # def print(self):
-    #     printEqDict(self.keywords, self.parameters)
+    def printAll(self):
+        printEqDict(self.keywords, self.parameters)
 
     def Brian2Eq(self):
         tmp = {'model': self.model,

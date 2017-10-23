@@ -81,6 +81,7 @@ def deleteVar(firstEq, secondEq, var):
 def combineParDictionaries(varSet, *args):
     ParametersDict = {}
     for tmpDict in args:
+        # OverrideList = list(ParametersDict.keys() & tmpDict.keys())
         # OverrideList = list(set(ParametersDict.keys()) & set(tmpDict.keys()))
         # OverrideList = list(ParametersDict.keys().intersection(tmpDict.keys()))
         OverrideList = list(set(ParametersDict.keys()).intersection(tmpDict.keys()))
@@ -414,27 +415,27 @@ i_ahp = {'model': """
          'threshold': '',
          'reset': ''}
 
-i_ahpPara = {"tauca": 40 * ms,  # Calcium spike decay rate
-             "Iposa": 0.3 * pA,
-             "Iwa": 0 * pA,  # Adaptation spike amplitude
-             "Itaua": 1 * pA}
+i_ahpPara = {"Itaua": 100 * pA,
+             "Ica": 30 * pA,
+             "Itauahp": 100 * pA,
+             "Ithahp": 20 * nA,}
 
 # need to test it
 i_exponentialPara = {"Ith": 10 * pA}
 
 # need to test it
-i_leakPara = {"Ttau": 112 * pA}
+i_leakPara = {"Itau": 112 * pA}
 
 nonePara = {}
 
 modes = {'current': i_model_template, 'voltage': v_model_template}
 
-currentEquationsets = {'adaptation': i_ahp, 'exponential': none, 'leak': none, 'spatial': spatial, 'noise': i_noise, 'none': none}
+currentEquationsets = {'adaptation': i_ahp, 'exponential': none, 'leak': none, 'spatial': spatial, 'noise': i_noise, 'none': none, 'linear': none}
 
-voltageEquationsets = {'adaptation': v_adapt, 'exponential': v_expCurrent, 'leak': v_leak, 'spatial': spatial, 'noise': v_noise, 'none': none}
+voltageEquationsets = {'adaptation': v_adapt, 'exponential': v_expCurrent, 'leak': v_leak, 'spatial': spatial, 'noise': v_noise, 'none': none, 'linear': none}
 
 currentParameters = {'current': i_model_templatePara, 'adaptation': i_ahpPara,
-                     'exponential': i_exponentialPara, 'leak': i_leakPara, 'noise': i_noisePara, 'none': nonePara}
+                     'exponential': i_exponentialPara, 'leak': i_leakPara, 'noise': i_noisePara, 'none': nonePara, 'linear': nonePara}
 
 voltageParameters = {}
 

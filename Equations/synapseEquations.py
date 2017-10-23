@@ -217,6 +217,7 @@ template = {'model': '''
 # standard parameters for current based models
 currentPara = {"tausyne": 5 * ms,
                "tausyni": 5 * ms,
+               "wPlast": 1,
                "baseweight_e": 1 * nA,
                "baseweight_i": 1 * nA,
                "kernel_e": 0 * nA * ms**-1,
@@ -243,6 +244,7 @@ reversalPara = {"Ige": 0 * nS,
                 "tausyni": 6 * ms,  # We define tausyn again here since its different from current base, is this a problem?
                 "EIe": 60.0 * mV,
                 "EIi": -90.0 * mV,
+                "wPlast": 1,
                 "baseweight_e": 7 * nS,  # should we find the way to replace baseweight_e/i, since we already defined it in template?
                 "baseweight_i": 3 * nS,
                 "kernel_e": 0 * nS,

@@ -387,49 +387,57 @@ stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to rep
 # Alpha kernel ##
 
 alphakernel = {'model': '''
-             %kernel_e = baseweight_e*(weight>0)*wPlast*weight*exp(1-t_spike/tausyne)/tausyne : {unit}* second **-1 
-             %kernel_i = baseweight_i*(weight<0)*wPlast*weight*exp(1-t_spike/tausyni)/tausyni : {unit}* second **-1 
+             %kernel_e = baseweight_e*(weight>0)*wPlast*weight*exp(1-t_spike/tausyne_rise)/tausyne : {unit}* second **-1 
+             %kernel_i = baseweight_i*(weight<0)*wPlast*weight*exp(1-t_spike/tausyni_rise)/tausyni : {unit}* second **-1 
              dt_spike/dt = 1 : second (clock-driven)
+             tausyne_rise : second
+             tausyni_rise : second  
              ''',
 
                'on_pre': '''
-             %{synvar_e}
-             %{synvar_i}
+
              t_spike = 0 * ms
              ''',
 
                'on_post': ''' '''}
 
-alphaPara_current = {"tausyne": 5 * ms,
-                     "tausyni": 5 * ms}
+alphaPara_current = {"tausyne": 2 * ms,
+                     "tausyni": 2 * ms,
+                     "tausyne_rise": 0.5 * ms,
+                     "tausyni_rise": 0.5 * ms,}
 
-alphaPara_conductance = {"tausyne": 5 * ms,
-                         "tausyni": 5 * ms}
+alphaPara_conductance = {"tausyne": 2 * ms,
+                         "tausyni": 2 * ms,
+                         "tausyne_rise": 1 * ms,
+                         "tausyni_rise": 1 * ms}
 
 # Resonant kernel ##
 resonantkernel = {'model': '''
                 omega: 1/second
                 sigma_gaussian : second
-                %kernel_e  = baseweight_e*(weight>0)*wPlast*(weight*exp(-t_spike/tausyne)*cos(omega*t_spike)*omega) : {unit}* second **-1
-                %kernel_i  = baseweight_i*(weight<0)*wPlast*(weight*exp(-t_spike/tausyni)*cos(omega*t_spike)*omega) : {unit}* second **-1
+                %kernel_e  = baseweight_e*(weight>0)*wPlast*(weight*exp(-t_spike/tausyne_rise)*cos(omega*t_spike))/tausyne : {unit}* second **-1
+                %kernel_i  = baseweight_i*(weight<0)*wPlast*(weight*exp(-t_spike/tausyni_rise)*cos(omega*t_spike))/tausyni : {unit}* second **-1
                 dt_spike/dt = 1 : second (clock-driven)
+                tausyne_rise : second
+                tausyni_rise : second 
                 ''',
 
                   'on_pre': '''
-                %{synvar_e}
-                %{synvar_i}
+
                 t_spike = 0 * ms
                 ''',
 
                   'on_post': ''' '''}
 
-resonantPara_current = {"tausyne": 5 * ms,
-                        "tausyni": 5 * ms,
-                        "omega": 5 / ms}
+resonantPara_current = {"tausyne": 2 * ms,
+                        "tausyni": 2 * ms,
+                        "omega": 7 / ms,
+                        "tausyne_rise": 0.5 * ms,
+                        "tausyni_rise": 0.5 * ms}
 
-resonantPara_conductance = {"tausyne": 5 * ms,
-                            "tausyni": 5 * ms,
-                            "omega": 5 / ms}
+resonantPara_conductance = {"tausyne": 2 * ms,
+                            "tausyni": 2 * ms,
+                            "omega": 1 / ms}
 
 
 #  Gaussian kernel ##

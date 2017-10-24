@@ -397,7 +397,8 @@ i_a = {'model': """
          """,
        'threshold': '',
        'reset': ''}
-i_aPara = {"Iagain": 1 * nA,
+
+i_aPara = {"Iagain": 20 * nA,
            "Iath": 20 * nA,
            "Ianorm": 1 * nA}
 
@@ -407,24 +408,29 @@ i_ahp = {'model': """
           tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
           Iahpmax = (Ica / Itauahp) * Ithahp : amp # Ratio of currents through diffpair and adaptation block
           Ithahp : amp (constant)
-          Ica : amp (constant) # current through MG2 transistor set by V
+          # Ica : amp (constant) # current through MG2 transistor set by V
+          dIca/dt = (Iahpmax-Ica) / tauca : amp
           Itauahp : amp (constant)
-          Cahp : farad (constant, shared)
-
+          Cahp : farad (constant)
+          tauca : second (constant)
          """,
          'threshold': '',
-         'reset': ''}
+         'reset': '''
+                  Ica += 30 * pA
+                  '''}
 
-i_ahpPara = {"Itaua": 100 * pA,
-             "Ica": 30 * pA,
-             "Itauahp": 100 * pA,
-             "Ithahp": 20 * nA,}
+i_ahpPara = {"tauca": 20 * ms,
+             "Itauahp": 120 * pA,
+             "Ithahp": 20 * pA,
+             "Cahp": 0.5 * pF}
 
-# need to test it
-i_exponentialPara = {"Ith": 10 * pA}
+i_leakPara = {"Itau": 4.3 * pA}
 
-# need to test it
-i_leakPara = {"Itau": 112 * pA}
+i_exponentialPara = {"Ith": 0.9 * pA,
+                     "Iath": 80 * pA,
+                     "Iagain": 30 * pA,
+                     "Ianorm": 1 * pA,
+                     "Itau": 13 * pA}
 
 nonePara = {}
 

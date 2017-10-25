@@ -470,11 +470,18 @@ gaussianPara_conductance = {"sigma_gaussian_e": 6 * ms,
                         #only for current based synapsis#
 
 siliconkernel = {'model' : '''
+<<<<<<< HEAD
                  %kernel_e  = {synvar_e}*(weight>0)*(Iw_e / (1+(Isyn/Igain)))/tausyne : {unit}* second **-1
                  %kernel_i  = {synvar_i}*(weight<0)*(Iw_i / (1+(Isyn/Igain)))/tausyni : {unit}* second **-1
 
                  %tausyne = Csyn * kappa_syn /(Ut_syn * Itau_e) : 1/second
                  %tausyni = Csyn * kappa_syn /(Ut_syn * Itau_i) : 1/second
+=======
+                 
+
+                 %tausyne = Csyn * Ut_syn /(kappa_syn * Itau_e) : second 
+                 %tausyni = Csyn * Ut_syn /(kappa_syn * Itau_i) : second 
+>>>>>>> 43058117f1a00226d1c6088f2dd648d72cc7dbca
 
 
                  kappa_syn = (kn_syn + kp_syn) / 2 : 1
@@ -482,9 +489,10 @@ siliconkernel = {'model' : '''
                  Itau_e : amp
                  Itau_i : amp
 
-                 Iw_e = weight*baseweight_e*(t_spike<duration_syn) + 0*(t_spike>= duration_syn) : amp
-                 Iw_i = weight*baseweight_i*(t_spike<duration_syn) + 0*(t_spike>= duration_syn) : amp
+                 Iw_e = weight*baseweight_e  : amp
+                 Iw_i = weight*baseweight_i  : amp
 
+<<<<<<< HEAD
 
                  Iin_ex = Iw / (1+(Isyn/Igain)): amp
                  Igain = Io*exp(-kappa_syn*(Vth_syn-Vdd_syn)/Ut_syn) : amp
@@ -494,6 +502,15 @@ siliconkernel = {'model' : '''
                  # still need to add baseweight_e and i
 
                  %weight      : unit (constant)
+=======
+                 
+                 Igain = Io*exp(-kappa_syn*(Vth_syn-Vdd_syn)/Ut_syn) : amp
+                 
+                 
+                 # still need to add baseweight_e and i
+                 
+                 %weight      : 1 (constant)
+>>>>>>> 43058117f1a00226d1c6088f2dd648d72cc7dbca
                  duration_syn : second (constant)
                  kn_syn       : 1 (constant)
                  kp_syn       : 1 (constant)
@@ -505,15 +522,16 @@ siliconkernel = {'model' : '''
                  ''',
 
                  'on_pre' : '''
-                 %{synvar_e}
-                 %{synvar_i}
+                 %{synvar_e} += Iw_e*Igain*wPlast*(weight>0)/Itau_e
+                 %{synvar_i} += Iw_i*Igain*wPlast*(weight<0)/Itau_i
                  t_spike = 0 * ms
                  ''',
 
                  'on_post' : ''' '''}
 
-siliconPara = {"Vth_syn" : 0.8 * volt,  # should be close to Vdd
+siliconPara = {"Vth_syn" : 1.7 * volt,  # should be close to Vdd
                "Vdd_syn" : 1.8 * volt,
+<<<<<<< HEAD
                "Csyn" : 0.1 * pF,
                "Io_syn" : 0.5 * pA,
                "Ut_syn" : 25 * mV,
@@ -523,6 +541,19 @@ siliconPara = {"Vth_syn" : 0.8 * volt,  # should be close to Vdd
                "Itau_e" : 100 * pA,
                "Itau_i" : 100 * pA
                }
+=======
+               "Csyn"    : 0.1 * pF, #check it later it was 0.1 before
+               "Io_syn"  : 0.5 * pA,
+               "Ut_syn"  : 25 * mV, #costant related to room temperature (ambient temperature)
+               "kn_syn"  : 0.75,
+               "kp_syn"  : 0.66,
+               "Itau_e" : 0.1 * pA,
+               "Itau_i" : 0.1 * pA,
+               "baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
+               "baseweight_i": 3 * pA
+               }   
+>>>>>>> 43058117f1a00226d1c6088f2dd648d72cc7dbca
+
 
 nonePara = {}
 

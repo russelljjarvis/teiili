@@ -363,7 +363,7 @@ i_model_templatePara = {
     #    "Ispkthr": 6 * pA,  # Spike threshold of excitatory neurons
     "Ireset": 1 * pA,  # Reset Imem to Ireset after each spike
     "Ith": 0.5 * pA,
-    "Itau": 0.5 * pA,
+    "Itau": 4.3 * pA,
     "refP": 1 * ms,
     #---------------------------------------------------------
     # Noise parameters
@@ -424,24 +424,28 @@ i_ahpPara = {"tauca": 20 * ms,
              "Ithahp": 20 * pA,
              "Cahp": 0.5 * pF}
 
-i_leakPara = {"Itau": 4.3 * pA}
 
 i_exponentialPara = {"Ith": 0.9 * pA,
                      "Iath": 80 * pA,
-                     "Iagain": 30 * pA,
-                     "Ianorm": 1 * pA,
+                     "Iagain": 20 * pA,
+                     "Ianorm": 7 * pA,
                      "Itau": 13 * pA}
+
+i_nonLeakyPara = {"Itau": 0.5 * pA}
 
 nonePara = {}
 
 modes = {'current': i_model_template, 'voltage': v_model_template}
 
-currentEquationsets = {'adaptation': i_ahp, 'exponential': none, 'leak': none, 'spatial': spatial, 'noise': i_noise, 'none': none, 'linear': none}
+currentEquationsets = {'adaptive': i_ahp, 'exponential': none, 'leaky': none, 'non-leaky': none,
+                       'spatial': spatial, 'noise': i_noise, 'none': none, 'linear': none}
 
-voltageEquationsets = {'adaptation': v_adapt, 'exponential': v_expCurrent, 'leak': v_leak, 'spatial': spatial, 'noise': v_noise, 'none': none, 'linear': none}
+voltageEquationsets = {'adaptive': v_adapt, 'exponential': v_expCurrent, 'leaky': v_leak, 'non-leaky': none,
+                       'spatial': spatial, 'noise': v_noise, 'none': none, 'linear': none}
 
-currentParameters = {'current': i_model_templatePara, 'adaptation': i_ahpPara,
-                     'exponential': i_exponentialPara, 'leak': i_leakPara, 'noise': i_noisePara, 'none': nonePara, 'linear': nonePara}
+currentParameters = {'current': i_model_templatePara, 'adaptive': i_ahpPara,
+                     'exponential': i_exponentialPara, 'leaky': none, 'non-leaky': i_nonLeakyPara,
+                     'noise': i_noisePara, 'none': nonePara, 'linear': nonePara}
 
 voltageParameters = {}
 

@@ -369,7 +369,8 @@ stdpPara_current = {"baseweight_e": 7 * nA,  # should we find the way to replace
                     "w_max": 0.01,
                     "diffApre": 0.01,
                     "Q_diffAPrePost": 1.05,
-                    "w": 0.005}
+                    "w": 0,
+                    "wPlast": 0}
 
 stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to replace since we would define it twice
                         "baseweight_i": 3 * nS,
@@ -378,7 +379,8 @@ stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to rep
                         "w_max": 0.01,
                         "diffApre": 0.01,
                         "Q_diffAPrePost": 1.05,
-                        "w": 0.005}
+                        "w": 0,
+                        "wPlast": 0}
 
 ########_____Kernels Blocks_____#########################################################
 # you need to declare two set of parameters for every block : (one for current based models and one for conductance based models)
@@ -387,11 +389,11 @@ stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to rep
 # Alpha kernel ##
 
 alphakernel = {'model': '''
-             %kernel_e = baseweight_e*(weight>0)*wPlast*weight*exp(1-t_spike/tausyne_rise)/tausyne : {unit}* second **-1 
-             %kernel_i = baseweight_i*(weight<0)*wPlast*weight*exp(1-t_spike/tausyni_rise)/tausyni : {unit}* second **-1 
+             %kernel_e = baseweight_e*(weight>0)*wPlast*weight*exp(1-t_spike/tausyne_rise)/tausyne : {unit}* second **-1
+             %kernel_i = baseweight_i*(weight<0)*wPlast*weight*exp(1-t_spike/tausyni_rise)/tausyni : {unit}* second **-1
              dt_spike/dt = 1 : second (clock-driven)
              tausyne_rise : second
-             tausyni_rise : second  
+             tausyni_rise : second
              ''',
 
                'on_pre': '''
@@ -404,7 +406,7 @@ alphakernel = {'model': '''
 alphaPara_current = {"tausyne": 2 * ms,
                      "tausyni": 2 * ms,
                      "tausyne_rise": 0.5 * ms,
-                     "tausyni_rise": 0.5 * ms,}
+                     "tausyni_rise": 0.5 * ms}
 
 alphaPara_conductance = {"tausyne": 2 * ms,
                          "tausyni": 2 * ms,
@@ -419,7 +421,7 @@ resonantkernel = {'model': '''
                 %kernel_i  = baseweight_i*(weight<0)*wPlast*(weight*exp(-t_spike/tausyni_rise)*cos(omega*t_spike))/tausyni : {unit}* second **-1
                 dt_spike/dt = 1 : second (clock-driven)
                 tausyne_rise : second
-                tausyni_rise : second 
+                tausyni_rise : second
                 ''',
 
                   'on_pre': '''
@@ -464,33 +466,33 @@ gaussianPara_conductance = {"sigma_gaussian_e": 6 * ms,
                             "sigma_gaussian_i": 6 * ms}
 
 
-                               ##Silicon Kernel##     
+                               ##Silicon Kernel##
                         #only for current based synapsis#
 
 siliconkernel = {'model' : '''
-                 %kernel_e  = {synvar_e}*(weight>0)*(Iw_e / (1+(Isyn/Igain)))/tausyne : {unit}* second **-1  
+                 %kernel_e  = {synvar_e}*(weight>0)*(Iw_e / (1+(Isyn/Igain)))/tausyne : {unit}* second **-1
                  %kernel_i  = {synvar_i}*(weight<0)*(Iw_i / (1+(Isyn/Igain)))/tausyni : {unit}* second **-1
 
-                 %tausyne = Csyn * kappa_syn /(Ut_syn * Itau_e) : 1/second 
+                 %tausyne = Csyn * kappa_syn /(Ut_syn * Itau_e) : 1/second
                  %tausyni = Csyn * kappa_syn /(Ut_syn * Itau_i) : 1/second
 
-                 
+
                  kappa_syn = (kn_syn + kp_syn) / 2 : 1
-                 
+
                  Itau_e : amp
                  Itau_i : amp
 
                  Iw_e = weight*baseweight_e*(t_spike<duration_syn) + 0*(t_spike>= duration_syn) : amp
                  Iw_i = weight*baseweight_i*(t_spike<duration_syn) + 0*(t_spike>= duration_syn) : amp
 
-                 
+
                  Iin_ex = Iw / (1+(Isyn/Igain)): amp
                  Igain = Io*exp(-kappa_syn*(Vth_syn-Vdd_syn)/Ut_syn) : amp
                  dt_spike/dt = 1 : second (clock-driven)
-                 
-                 
+
+
                  # still need to add baseweight_e and i
-                 
+
                  %weight      : unit (constant)
                  duration_syn : second (constant)
                  kn_syn       : 1 (constant)
@@ -501,13 +503,13 @@ siliconkernel = {'model' : '''
                  Vdd_syn      : volt (constant)
                  Vth_syn      : volt (constant)
                  ''',
-                 
+
                  'on_pre' : '''
                  %{synvar_e}
                  %{synvar_i}
                  t_spike = 0 * ms
                  ''',
-                 
+
                  'on_post' : ''' '''}
 
 siliconPara = {"Vth_syn" : 0.8 * volt,  # should be close to Vdd
@@ -520,7 +522,7 @@ siliconPara = {"Vth_syn" : 0.8 * volt,  # should be close to Vdd
                "duration_syn" : 10 * ms,
                "Itau_e" : 100 * pA,
                "Itau_i" : 100 * pA
-               }   
+               }
 
 nonePara = {}
 

@@ -469,11 +469,7 @@ gaussianPara_conductance = {"sigma_gaussian_e": 6 * ms,
                         #only for current based synapsis#
 
 siliconkernel = {'model': '''
-                 %kernel_e  = {synvar_e}*(weight>0)*(Iw_e / (1+(Isyn/Igain)))/tausyne : {unit}* second **-1
-                 %kernel_i  = {synvar_i}*(weight<0)*(Iw_i / (1+(Isyn/Igain)))/tausyni : {unit}* second **-1
 
-                 %tausyne = Csyn * kappa_syn /(Ut_syn * Itau_e) : 1/second
-                 %tausyni = Csyn * kappa_syn /(Ut_syn * Itau_i) : 1/second
 
 
                  %tausyne = Csyn * Ut_syn /(kappa_syn * Itau_e) : second
@@ -487,21 +483,12 @@ siliconkernel = {'model': '''
                  Iw_e = weight*baseweight_e  : amp
                  Iw_i = weight*baseweight_i  : amp
 
-                 Iin_ex = Iw / (1+(Isyn/Igain)): amp
-                 Igain = Io*exp(-kappa_syn*(Vth_syn-Vdd_syn)/Ut_syn) : amp
-                 dt_spike/dt = 1 : second (clock-driven)
-
-
-                 # still need to add baseweight_e and i
-
-                 %weight      : unit (constant)
-
                  Igain = Io*exp(-kappa_syn*(Vth_syn-Vdd_syn)/Ut_syn) : amp
 
 
-                 # still need to add baseweight_e and i
 
-                 %weight      : 1 (constant)
+
+
                  duration_syn : second (constant)
                  kn_syn       : 1 (constant)
                  kp_syn       : 1 (constant)
@@ -526,10 +513,9 @@ siliconPara = {"Vth_syn": 1.7 * volt,  # should be close to Vdd
                "Io_syn": 0.5 * pA,
                "kn_syn": 0.75,
                "kp_syn": 0.66,
-               "duration_syn": 10 * ms,
                "Ut_syn": 25 * mV,  # costant related to room temperature (ambient temperature)
-               "Itau_e": 0.1 * pA,
-               "Itau_i": 0.1 * pA,
+               "Itau_e": 1 * pA,
+               "Itau_i": 1 * pA,
                "baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
                "baseweight_i": 3 * pA
                }

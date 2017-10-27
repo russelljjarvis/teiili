@@ -96,7 +96,7 @@ def combineParDictionaries(varSet, *args):
 
 class NeuronEquation():
 
-    def __init__(self, mode='current', adaptation='adaptation', transfer='exponential', leak='leak', position='spatial', noise='noise', numInputs=1, additionalStatevars=None):
+    def __init__(self, mode='current', adaptation='adaptive', transfer='exponential', leak='leaky', position='spatial', noise='noise', numInputs=1, additionalStatevars=None):
 
         ERRValue = """
                             ---Model not present in dictionaries---

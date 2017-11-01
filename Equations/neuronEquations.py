@@ -96,7 +96,7 @@ def combineParDictionaries(varSet, *args):
 
 class NeuronEquation():
 
-    def __init__(self, mode='current', adaptation='adaptive', transfer='exponential', leak='leaky', position='spatial', noise='noise', numInputs=1, additionalStatevars=None):
+    def __init__(self, baseUnit='current', adaptation='calciumFeedback', integrationMode='exponential', leak='leaky', position='spatial', noise='gaussianNoise',refractory = False , numInputs=1, additionalStatevars=None):
 
         ERRValue = """
                             ---Model not present in dictionaries---
@@ -106,33 +106,46 @@ class NeuronEquation():
                 choice between : 'current' or 'voltage'
 
                 you can choose then what module load for you neuron,
-                the entries are 'adaptation', 'exponential', 'leak', 'spatial', 'noise'
+                the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussianNoise'
                 if you don't want to load a module just use the keyword 'none'
                 example: NeuronEquation('current','none','expnential','leak','none','none'.....)
 
                 """
 
         try:
-            modes[mode]
+            modes[baseUnit]
             currentEquationsets[adaptation]
-            currentEquationsets[transfer]
+            currentEquationsets[integrationMode]
             currentEquationsets[leak]
             currentEquationsets[position]
             currentEquationsets[noise]
         except KeyError as e:
             print(ERRValue)
 
-        if mode == 'current':
-            eqDict, varSet = combineEquations(modes[mode], currentEquationsets[adaptation], i_a, currentEquationsets[transfer],
+        if baseUnit == 'current':
+            eqDict, varSet = combineEquations(modes[baseUnit], currentEquationsets[adaptation], i_a, currentEquationsets[integrationMode],
                                               currentEquationsets[leak], currentEquationsets[position], currentEquationsets[noise])
-            paraDict = combineParDictionaries(varSet, currentParameters[mode], currentParameters[adaptation],
-                                              currentParameters[transfer], currentParameters[leak], currentParameters[noise])
+            paraDict = combineParDictionaries(varSet, currentParameters[baseUnit], currentParameters[adaptation],
+                                              currentParameters[integrationMode], currentParameters[leak], currentParameters[noise])
 
-        if mode == 'voltage':
-            eqDict, varSet = combineEquations(modes[mode], voltageEquationsets[adaptation], voltageEquationsets[transfer],
+        if baseUnit == 'voltage':
+            eqDict, varSet = combineEquations(modes[baseUnit], voltageEquationsets[adaptation], voltageEquationsets[integrationMode],
                                               voltageEquationsets[leak], voltageEquationsets[position], voltageEquationsets[noise])
-#            eqDict['parameters'] = combineParDictionaries(varSet,voltageParameters[mode],voltageParameters[adaptation],voltageParameters[transfer],voltageParameters[leak],voltageParameters[position],voltageParameters[noise])
-            paraDict = {}  # until we have parameters for voltage based equations
+            paraDict = combineParDictionaries(varSet, voltageParameters[baseUnit], voltageParameters[adaptation], 
+                                              voltageParameters[integrationMode], voltageParameters[leak], voltageParameters[position], voltageParameters[noise])
+            #paraDict = {}  # until we have parameters for voltage based equations
+
+        if refractory is not False:
+            refDict  = {"refP": refractory}
+            paraDict = combineParDictionaries([],paraDict,refDict)
+        else:
+            print("""
+                  Refractory period has been set using a default value, 
+                  if you don't want a refractory period in your model just specify 'refractory=0*ms' in the constructor 
+                  """)
+
+
+
 
         self.model = eqDict['model']
         self.threshold = eqDict['threshold']
@@ -141,8 +154,12 @@ class NeuronEquation():
         self.parameters = paraDict
 
         self.changeableParameters = ['refP']
-
+        
         self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
+
+ 
+
+
 
         if additionalStatevars is not None:
             self.addStateVars(additionalStatevars)
@@ -155,8 +172,8 @@ class NeuronEquation():
     def addInputCurrents(self, numInputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)
         it also adds all thise input currents as statevariables"""
-        Ies = ["+ Ie" + str(i) + " " for i in range(numInputs)]
-        Iis = ["+ Ii" + str(i) + " " for i in range(numInputs)]
+        Ies = ["Ie0"] + ["+ Ie" + str(i+1) + " " for i in range(numInputs-1)]
+        Iis = ["+Ii0"] + ["+ Ii" + str(i+1) + " " for i in range(numInputs-1)]
         self.model = self.model + "Iin = " + "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
         Iesline = ["    Ie" + str(i) + " : amp" for i in range(numInputs)]
         Iisline = ["    Ii" + str(i) + " : amp" for i in range(numInputs)]
@@ -193,8 +210,34 @@ v_model_template = {'model': """
          Vthr               : volt      (shared)
          Vres               : volt      (shared, constant)        # reset potential
          """,
-                    'threshold': "Vm > Vthr; ",
-                    'reset': "Vm = Vres; "}
+                    'threshold': "Vm > Vthr ",
+                    'reset': "Vm = Vres "}
+
+v_model_templatePara = {"Cm": 281 * pF,
+                        "refP": 2 * ms,
+                        "Ileak" : 0 *pA,
+                        "Iexp"  : 0 *pA,                            
+                        "Iadapt"  : 0 *pA,                            
+                        "Inoise"  : 0 *pA,                           
+                        "Iconst"  : 0 *pA,
+                        "Vthr": -50.4 * mV,
+                        "Vres": -70.6 * mV
+
+                       }
+                            
+#                        "gL": 35 * nS,
+#                        "EL": -70.6 * mV,
+#                        "DeltaT": 2 * mV,
+#                        "tauwad": 144 * ms,
+#                        "a": 4 * nS,
+#                        "b": 0.0805 * nA,
+#                        "Vm": -70.6 * mV,
+#                        "Iconst": 0 * pA,
+#                        "sigma": 0 * pA,
+#                        "taue": 5 * ms,
+#                        "taui": 6 * ms,
+#                        "EIe": 60.0 * mV,
+#                        "EIi": -90.0 * mV
 
 # exponential current (see exponential I&F Model)
 v_expCurrent = {'model': """
@@ -437,17 +480,19 @@ nonePara = {}
 
 modes = {'current': i_model_template, 'voltage': v_model_template}
 
-currentEquationsets = {'adaptive': i_ahp, 'exponential': none, 'leaky': none, 'non-leaky': none,
-                       'spatial': spatial, 'noise': i_noise, 'none': none, 'linear': none}
+currentEquationsets = {'calciumFeedback': i_ahp, 'exponential': none, 'leaky': none, 'non-leaky': none,
+                       'spatial': spatial, 'gaussianNoise': i_noise, 'none': none, 'linear': none}
 
-voltageEquationsets = {'adaptive': v_adapt, 'exponential': v_expCurrent, 'leaky': v_leak, 'non-leaky': none,
-                       'spatial': spatial, 'noise': v_noise, 'none': none, 'linear': none}
+voltageEquationsets = {'calciumFeedback': v_adapt, 'exponential': v_expCurrent, 'leaky': v_leak, 'non-leaky': none,
+                       'spatial': spatial, 'gaussianNoise': v_noise, 'none': none, 'linear': none}
 
-currentParameters = {'current': i_model_templatePara, 'adaptive': i_ahpPara,
-                     'exponential': i_exponentialPara, 'leaky': none, 'non-leaky': i_nonLeakyPara,
-                     'noise': i_noisePara, 'none': nonePara, 'linear': nonePara}
+currentParameters = {'current': i_model_templatePara, 'calciumFeedback': i_ahpPara,
+                     'exponential': i_exponentialPara, 'leaky': nonePara, 'non-leaky': i_nonLeakyPara,
+                     'gaussianNoise': i_noisePara, 'none': nonePara, 'linear': nonePara}
 
-voltageParameters = {}
+voltageParameters = {'voltage': v_model_templatePara, 'calciumFeedback': nonePara,
+                     'exponential': nonePara, 'leaky': nonePara, 'non-leaky': nonePara,
+                     'gaussianNoise': nonePara, 'none': nonePara, 'linear': nonePara}
 
 
 # simple leaky IF model

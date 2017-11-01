@@ -93,7 +93,7 @@ def combineParDictionaries(varSet, *args):
 
 class SynapseEquation():
 
-    def __init__(self, mode='current', kernel='exponential', plasticity='nonplastic', inputNumber=1, additionalStatevars=None):
+    def __init__(self, baseUnit='current', kernel='exponential', plasticity='nonplastic', inputNumber=1, additionalStatevars=None):
 
         ERRValue = """
                                 ---Model not present in dictionaries---
@@ -112,15 +112,15 @@ class SynapseEquation():
                 """
 
         try:
-            modes[mode]
-            if mode == 'current':
+            modes[baseUnit]
+            if baseUnit == 'current':
                 currentkernels[kernel]
             else:
                 conductancekernels[kernel]
             plasticitymodels[plasticity]
         except KeyError as e:
             print(ERRValue)
-        if modes[mode] == 'current':
+        if modes[baseUnit] == 'current':
             eqDict, varSet = combineEquations_syn(template, currentkernels[kernel], plasticitymodels[plasticity])
             eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
                                                      Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
@@ -134,9 +134,9 @@ class SynapseEquation():
             if '{synvar_i}' in varSet:
                 varSet.remove('{synvar_i}')
                 varSet.add('Ii_syn')
-            eqDict['parameters'] = combineParDictionaries(varSet, current_Parameters[mode], current_Parameters[kernel], current_Parameters[plasticity])
+            eqDict['parameters'] = combineParDictionaries(varSet, current_Parameters[baseUnit], current_Parameters[kernel], current_Parameters[plasticity])
 
-        if modes[mode] == 'conductance':
+        if modes[baseUnit] == 'conductance':
             eqDict, varSet = combineEquations_syn(template, reversalsyn, conductancekernels[kernel], plasticitymodels[plasticity])
             eqDict['model'] = eqDict['model'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
                                                      Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
@@ -150,7 +150,7 @@ class SynapseEquation():
             if '{synvar_i}' in varSet:
                 varSet.remove('{synvar_i}')
                 varSet.add('gIi')
-            eqDict['parameters'] = combineParDictionaries(varSet, conductance_Parameters[mode], conductance_Parameters[kernel], conductance_Parameters[plasticity])
+            eqDict['parameters'] = combineParDictionaries(varSet, conductance_Parameters[baseUnit], conductance_Parameters[kernel], conductance_Parameters[plasticity])
 
         self.changeableParameters = ['weight']
 
@@ -251,8 +251,8 @@ reversalPara = {"Ige": 0 * nS,
                 "wPlast": 1,
                 "baseweight_e": 7 * nS,  # should we find the way to replace baseweight_e/i, since we already defined it in template?
                 "baseweight_i": 3 * nS,
-                "kernel_e": 0 * nS,
-                "kernel_i": 0 * nS
+                "kernel_e": 0 * nS*ms**-1,
+                "kernel_i": 0 * nS*ms**-1
                 }
 
 

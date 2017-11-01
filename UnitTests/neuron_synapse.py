@@ -19,7 +19,7 @@ from brian2 import *
 
 #from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
-from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone
+from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone, NeuronEquation
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 10 * us
@@ -36,14 +36,15 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 
 Net = StandaloneNetwork()
 
-testNeurons = Neurons(2, mode='current', adaptation='adaptive', transfer='linear', leak='leaky',
-                      position='none', noise='none', refractory=2 * ms, name="testNeuron")
+eq = NeuronEquation(baseUnit='current', adaptation='calciumFeedback', integrationMode='linear', leak='leaky',
+                      position='none', noise='none')
 
-testNeurons2 = Neurons(2, mode='current', adaptation='adaptive', transfer='exponential', leak='leaky',
-                       position='none', noise='none', refractory=3 * ms, name="testNeuron2")
+testNeurons = Neurons(2, equation = eq, name="testNeuron")
+
+testNeurons2 = Neurons(2, equation = eq,  name="testNeuron2")
 
 InpSyn = Connections(gInpGroup, testNeurons,
-                     name="sInpTest_e", mode='current',
+                     name="sInpTest_e", baseUnit='current',
                      kernel='alpha', plasticity='nonplastic')
 InpSyn.connect(True)
 
@@ -53,7 +54,7 @@ InpSyn.weight = 3
 #testInpSyn.Iw_exc = [100*pamp,50*pamp]
 
 Syn = Connections(testNeurons, testNeurons2,
-                  name="testSyn", mode='current',
+                  name="testSyn", baseUnit='current',
                   kernel='exponential', plasticity='nonplastic')
 
 Syn.connect(True)
@@ -117,7 +118,7 @@ p1.plot(x=np.asarray(spikemonInp.t / ms), y=np.asarray(spikemonInp.i),
 # Input synapses
 for i, data in enumerate(np.asarray(statemonInpSyn.Ie_syn)):
     name = 'Syn_{}'.format(i)
-    print name, i, colors[i]
+    print (name, i, colors[i])
     p2.plot(x=np.asarray(statemonInpSyn.t / ms), y=data,
             pen=pg.mkPen(colors[3], width=2), name=name)
 
@@ -129,7 +130,7 @@ for i, data in enumerate(np.asarray(statemonNeuIn.Imem)):
 # Output synapses
 for i, data in enumerate(np.asarray(statemonSynOut.Ie_syn)):
     name = 'Syn_{}'.format(i)
-    print name, i, colors[i]
+    print (name, i, colors[i])
     p4.plot(x=np.asarray(statemonSynOut.t / ms), y=data,
             pen=pg.mkPen(colors[1], width=2), name=name)
 

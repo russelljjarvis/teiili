@@ -96,7 +96,7 @@ def combineParDictionaries(varSet, *args):
 
 class NeuronEquation():
 
-    def __init__(self, baseUnit='current', adaptation='calciumFeedback', integrationMode='exponential', leak='leaky', position='spatial', noise='gaussianNoise',refractory = False , numInputs=1, additionalStatevars=None):
+    def __init__(self, baseUnit='current', adaptation='calciumFeedback', integrationMode='exponential', leak='leaky', position='spatial', noise='gaussianNoise', refractory=False, numInputs=1, additionalStatevars=None):
 
         ERRValue = """
                             ---Model not present in dictionaries---
@@ -131,21 +131,18 @@ class NeuronEquation():
         if baseUnit == 'voltage':
             eqDict, varSet = combineEquations(modes[baseUnit], voltageEquationsets[adaptation], voltageEquationsets[integrationMode],
                                               voltageEquationsets[leak], voltageEquationsets[position], voltageEquationsets[noise])
-            paraDict = combineParDictionaries(varSet, voltageParameters[baseUnit], voltageParameters[adaptation], 
+            paraDict = combineParDictionaries(varSet, voltageParameters[baseUnit], voltageParameters[adaptation],
                                               voltageParameters[integrationMode], voltageParameters[leak], voltageParameters[position], voltageParameters[noise])
-            #paraDict = {}  # until we have parameters for voltage based equations
+            # paraDict = {}  # until we have parameters for voltage based equations
 
         if refractory is not False:
-            refDict  = {"refP": refractory}
-            paraDict = combineParDictionaries([],paraDict,refDict)
+            refDict = {"refP": refractory}
+            paraDict = combineParDictionaries([], paraDict, refDict)
         else:
             print("""
-                  Refractory period has been set using a default value, 
-                  if you don't want a refractory period in your model just specify 'refractory=0*ms' in the constructor 
+                  Refractory period has been set using a default value,
+                  if you don't want a refractory period in your model just specify 'refractory=0*ms' in the constructor
                   """)
-
-
-
 
         self.model = eqDict['model']
         self.threshold = eqDict['threshold']
@@ -154,12 +151,8 @@ class NeuronEquation():
         self.parameters = paraDict
 
         self.changeableParameters = ['refP']
-        
+
         self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
-
- 
-
-
 
         if additionalStatevars is not None:
             self.addStateVars(additionalStatevars)
@@ -172,8 +165,8 @@ class NeuronEquation():
     def addInputCurrents(self, numInputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)
         it also adds all thise input currents as statevariables"""
-        Ies = ["Ie0"] + ["+ Ie" + str(i+1) + " " for i in range(numInputs-1)]
-        Iis = ["+Ii0"] + ["+ Ii" + str(i+1) + " " for i in range(numInputs-1)]
+        Ies = ["Ie0"] + ["+ Ie" + str(i + 1) + " " for i in range(numInputs - 1)]
+        Iis = ["+Ii0"] + ["+ Ii" + str(i + 1) + " " for i in range(numInputs - 1)]
         self.model = self.model + "Iin = " + "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
         Iesline = ["    Ie" + str(i) + " : amp" for i in range(numInputs)]
         Iisline = ["    Ii" + str(i) + " : amp" for i in range(numInputs)]
@@ -215,16 +208,16 @@ v_model_template = {'model': """
 
 v_model_templatePara = {"Cm": 281 * pF,
                         "refP": 2 * ms,
-                        "Ileak" : 0 *pA,
-                        "Iexp"  : 0 *pA,                            
-                        "Iadapt"  : 0 *pA,                            
-                        "Inoise"  : 0 *pA,                           
-                        "Iconst"  : 0 *pA,
+                        "Ileak": 0 * pA,
+                        "Iexp": 0 * pA,
+                        "Iadapt": 0 * pA,
+                        "Inoise": 0 * pA,
+                        "Iconst": 0 * pA,
                         "Vthr": -50.4 * mV,
                         "Vres": -70.6 * mV
 
-                       }
-                            
+                        }
+
 #                        "gL": 35 * nS,
 #                        "EL": -70.6 * mV,
 #                        "DeltaT": 2 * mV,
@@ -451,7 +444,6 @@ i_ahp = {'model': """
           tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
           Iahpmax = (Ica / Itauahp) * Ithahp : amp # Ratio of currents through diffpair and adaptation block
           Ithahp : amp (constant)
-          # Ica : amp (constant) # current through MG2 transistor set by V
           dIca/dt = (Iahpmax-Ica) / tauca : amp
           Itauahp : amp (constant)
           Cahp : farad (constant)

@@ -43,7 +43,8 @@ class Neurons(NeuronGroup):
         if equation is not None:
             self.equation = equation
         else:
-            self.equation = NeuronEquation(numInputs=numInputs, additionalStatevars=additionalStatevars, **equationKwargs)
+            self.equation = NeuronEquation(refractory=refractory, numInputs=numInputs,
+                                           additionalStatevars=additionalStatevars, **equationKwargs)
 
         #self.standaloneVars = eq.changeableParameters
         self.standaloneVars = self.equation.standaloneVars
@@ -184,7 +185,8 @@ class Connections(Synapses):
         if equation is not None:
             self.equation = equation
         else:
-            self.equation = SynapseEquation(inputNumber=self.inputNumber, additionalStatevars=additionalStatevars, **equationKwargs)
+            self.equation = SynapseEquation(inputNumber=self.inputNumber,
+                                            additionalStatevars=additionalStatevars, **equationKwargs)
 
 #        print(self.equation.model) for debugging porpouses
 

@@ -7,6 +7,7 @@ Email: mmilde@ini.uzh.ch
 Date: 13.06.2017
 '''
 from brian2 import *
+from NCSBrian2Lib.Tools.tools import dvs2ind
 import numpy as np
 import operator
 
@@ -55,7 +56,7 @@ class octa_testbench():
         self.DVS_SHAPE = DVS_SHAPE
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
 
-    def bar(self):
+    def bar(self, events):
         '''
         This function returns a single spikegenerator group (brian object)
         The scope of this function is to provide a simple test stimulus
@@ -118,7 +119,14 @@ class octa_testbench():
             events[1, :] = np.asarray(y_coord)
             events[2, :] = np.asarray(ts)
             events[3, :] = np.asarray(pol)
-            return events
+
+            if returnEvents:
+                return events
+            else:
+                ind, ts = dvs2ind(events, scale=False)
+                nPixel = np.max(ind)
+                gInpGroup = SpikeGeneratorGroup(nPixel, indices=ind, times=ts * ms, name='bar')
+                return gInpGroup
 
     def rotating_bar_infinity(self, length=10, orthogonal=False, shift=32, ts_offset=10, artifical_stimulus=True):
         if not artifical_stimulus:

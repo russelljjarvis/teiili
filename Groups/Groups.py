@@ -13,8 +13,8 @@ from collections import OrderedDict
 # TODO: maybe offer a network argument in order to automatically add the group to the network
 
 # TODO: Change this back to the correct files:
-from NCSBrian2Lib.Equations.synapseEquations import SynapseEquation
-from NCSBrian2Lib.Equations.neuronEquations import NeuronEquation
+from NCSBrian2Lib.Equations.SynapseEquation import SynapseEquation
+from NCSBrian2Lib.Equations.NeuronEquation import NeuronEquation
 
 
 class Neurons(NeuronGroup):
@@ -87,6 +87,9 @@ class Neurons(NeuronGroup):
             if isinstance(value, str) and value != 'name' and value != 'when':
                 # store this for later update
                 self.strParams.update({key: value})
+
+    def setParams(self, params, **kwargs):
+        return setParams(self, params, **kwargs)
 
     def updateParam(self, parname):
         "this is used to update string based params during run (e.g. with gui)"
@@ -225,6 +228,9 @@ class Connections(Synapses):
             if isinstance(value, str) and value != 'name' and value != 'when':
                 # store this for later update
                 self.strParams.update({key: value})
+
+    def setParams(self, params, **kwargs):
+        return setParams(self, params, **kwargs)
 
     def updateParam(self, parname):
         "this is used to update string based params during run (e.g. with gui)"

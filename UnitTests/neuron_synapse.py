@@ -19,7 +19,10 @@ from brian2 import *
 
 #from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
+from NCSBrian2Lib.Equations.NeuronEquation import NeuronEquation
 from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone, NeuronEquation
+from NCSBrian2Lib.Models.ExpAdapIF_chip import ExpAdapIF_chip
+from NCSBrian2Lib.Parameters.ExpAdapIF_chip_param import parameters
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 10 * us
@@ -36,12 +39,12 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 
 Net = StandaloneNetwork()
 
-eq = NeuronEquation(baseUnit='current', adaptation='calciumFeedback', integrationMode='linear', leak='leaky',
-                      position='none', noise='none')
 
-testNeurons = Neurons(2, equation = eq, name="testNeuron")
+testNeurons = Neurons(2, model=ExpAdapIF_chip, name="testNeuron")
 
-testNeurons2 = Neurons(2, equation = eq,  name="testNeuron2")
+testNeurons2 = Neurons(2, model=ExpAdapIF_chip, numInputs=2, name="testNeuron2")
+testNeurons2.setParams(parameters)
+
 
 InpSyn = Connections(gInpGroup, testNeurons,
                      name="sInpTest_e", baseUnit='current',
@@ -101,7 +104,7 @@ p6 = win.addPlot(title="Output membrane current")
 
 # p1.addLegend()
 p2.addLegend()
-#p3.addLegend()
+# p3.addLegend()
 p4.addLegend()
 colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
           (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
@@ -117,26 +120,26 @@ p1.plot(x=np.asarray(spikemonInp.t / ms), y=np.asarray(spikemonInp.i),
 
 # Input synapses
 for i, data in enumerate(np.asarray(statemonInpSyn.Ie_syn)):
-    name = 'Syn_{}'.format(i)
-    print (name, i, colors[i])
-    p2.plot(x=np.asarray(statemonInpSyn.t / ms), y=data,
-            pen=pg.mkPen(colors[3], width=2), name=name)
+  name = 'Syn_{}'.format(i)
+  print (name, i, colors[i])
+  p2.plot(x=np.asarray(statemonInpSyn.t / ms), y=data,
+          pen=pg.mkPen(colors[3], width=2), name=name)
 
 # Intermediate neurons
 for i, data in enumerate(np.asarray(statemonNeuIn.Imem)):
-    p3.plot(x=np.asarray(statemonNeuIn.t / ms), y=data,
-            pen=pg.mkPen(colors[6], width=2))
+  p3.plot(x=np.asarray(statemonNeuIn.t / ms), y=data,
+          pen=pg.mkPen(colors[6], width=2))
 
 # Output synapses
 for i, data in enumerate(np.asarray(statemonSynOut.Ie_syn)):
-    name = 'Syn_{}'.format(i)
-    print (name, i, colors[i])
-    p4.plot(x=np.asarray(statemonSynOut.t / ms), y=data,
-            pen=pg.mkPen(colors[1], width=2), name=name)
+  name = 'Syn_{}'.format(i)
+  print (name, i, colors[i])
+  p4.plot(x=np.asarray(statemonSynOut.t / ms), y=data,
+          pen=pg.mkPen(colors[1], width=2), name=name)
 
 for data in np.asarray(statemonNeuOut.Imem):
-    p6.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
-            pen=pg.mkPen(colors[5], width=3))
+  p6.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
+          pen=pg.mkPen(colors[5], width=3))
 
 p5.plot(x=np.asarray(spikemonOut.t / ms), y=np.asarray(spikemonOut.i),
         pen=None, symbol='o', symbolPen=None,
@@ -171,7 +174,6 @@ p6.getAxis('left').tickFont = b
 
 
 QtGui.QApplication.instance().exec_()
-
 
 
 # fig = figure()

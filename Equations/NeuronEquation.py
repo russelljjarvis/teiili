@@ -96,71 +96,90 @@ def combineParDictionaries(varSet, *args):
 
 class NeuronEquation():
 
-    def __init__(self, baseUnit='current', adaptation='calciumFeedback', integrationMode='exponential', leak='leaky', position='spatial', noise='gaussianNoise', refractory=False, numInputs=1, additionalStatevars=None):
+    def __init__(self, model=None, baseUnit='current', adaptation='calciumFeedback', integrationMode='exponential', leak='leaky', position='spatial', noise='gaussianNoise', refractory=False, numInputs=1, additionalStatevars=None):
+        if model is not None:
+            eqDict = model
+            self.model = eqDict['model']
+            self.threshold = eqDict['threshold']
+            self.reset = eqDict['reset']
+            self.refractory = 'refP'
+            self.parameters = eqDict['parameters']
 
-        ERRValue = """
-                            ---Model not present in dictionaries---
-                This class constructor build a model for a neuron using pre-existent blocks.
+            self.changeableParameters = ['refP']
 
-                The first entry is the model type,
-                choice between : 'current' or 'voltage'
+            self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
-                you can choose then what module load for you neuron,
-                the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussianNoise'
-                if you don't want to load a module just use the keyword 'none'
-                example: NeuronEquation('current','none','expnential','leak','none','none'.....)
+            if additionalStatevars is not None:
+                self.addStateVars(additionalStatevars)
 
-                """
+            self.addInputCurrents(numInputs)
 
-        try:
-            modes[baseUnit]
-            currentEquationsets[adaptation]
-            currentEquationsets[integrationMode]
-            currentEquationsets[leak]
-            currentEquationsets[position]
-            currentEquationsets[noise]
-        except KeyError as e:
-            print(ERRValue)
-
-        if baseUnit == 'current':
-            eqDict, varSet = combineEquations(modes[baseUnit], currentEquationsets[adaptation], i_a, currentEquationsets[integrationMode],
-                                              currentEquationsets[leak], currentEquationsets[position], currentEquationsets[noise])
-            paraDict = combineParDictionaries(varSet, currentParameters[baseUnit], currentParameters[adaptation],
-                                              currentParameters[integrationMode], currentParameters[leak], currentParameters[noise])
-
-        if baseUnit == 'voltage':
-            eqDict, varSet = combineEquations(modes[baseUnit], voltageEquationsets[adaptation], voltageEquationsets[integrationMode],
-                                              voltageEquationsets[leak], voltageEquationsets[position], voltageEquationsets[noise])
-            paraDict = combineParDictionaries(varSet, voltageParameters[baseUnit], voltageParameters[adaptation],
-                                              voltageParameters[integrationMode], voltageParameters[leak], voltageParameters[position], voltageParameters[noise])
-            # paraDict = {}  # until we have parameters for voltage based equations
-
-        if refractory is not False:
-            refDict = {"refP": refractory}
-            paraDict = combineParDictionaries([], paraDict, refDict)
+            self.keywords = {'model': self.model, 'threshold': self.threshold,
+                             'reset': self.reset, 'refractory': self.refractory}
         else:
-            print("""
-                  Refractory period has been set using a default value,
-                  if you don't want a refractory period in your model just specify 'refractory=0*ms' in the constructor
-                  """)
+            ERRValue = """
+                                ---Model not present in dictionaries---
+                    This class constructor build a model for a neuron using pre-existent blocks.
 
-        self.model = eqDict['model']
-        self.threshold = eqDict['threshold']
-        self.reset = eqDict['reset']
-        self.refractory = 'refP'
-        self.parameters = paraDict
+                    The first entry is the model type,
+                    choice between : 'current' or 'voltage'
 
-        self.changeableParameters = ['refP']
+                    you can choose then what module load for you neuron,
+                    the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussianNoise'
+                    if you don't want to load a module just use the keyword 'none'
+                    example: NeuronEquation('current','none','expnential','leak','none','none'.....)
 
-        self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
+                    """
 
-        if additionalStatevars is not None:
-            self.addStateVars(additionalStatevars)
+            try:
+                modes[baseUnit]
+                currentEquationsets[adaptation]
+                currentEquationsets[integrationMode]
+                currentEquationsets[leak]
+                currentEquationsets[position]
+                currentEquationsets[noise]
+            except KeyError as e:
+                print(ERRValue)
 
-        self.addInputCurrents(numInputs)
+            if baseUnit == 'current':
+                eqDict, varSet = combineEquations(modes[baseUnit], currentEquationsets[adaptation], i_a, currentEquationsets[integrationMode],
+                                                  currentEquationsets[leak], currentEquationsets[position], currentEquationsets[noise])
+                paraDict = combineParDictionaries(varSet, currentParameters[baseUnit], currentParameters[adaptation],
+                                                  currentParameters[integrationMode], currentParameters[leak], currentParameters[noise])
 
-        self.keywords = {'model': self.model, 'threshold': self.threshold,
-                         'reset': self.reset, 'refractory': self.refractory}
+            if baseUnit == 'voltage':
+                eqDict, varSet = combineEquations(modes[baseUnit], voltageEquationsets[adaptation], voltageEquationsets[integrationMode],
+                                                  voltageEquationsets[leak], voltageEquationsets[position], voltageEquationsets[noise])
+                paraDict = combineParDictionaries(varSet, voltageParameters[baseUnit], voltageParameters[adaptation],
+                                                  voltageParameters[integrationMode], voltageParameters[leak], voltageParameters[position], voltageParameters[noise])
+                # paraDict = {}  # until we have parameters for voltage based equations
+
+            if refractory is not False:
+                refDict = {"refP": refractory}
+                paraDict = combineParDictionaries([], paraDict, refDict)
+            else:
+                print("""
+                      Refractory period has been set using a default value,
+                      if you don't want a refractory period in your model just specify 'refractory=0*ms' in the constructor
+                      """)
+
+            self.model = eqDict['model']
+            self.threshold = eqDict['threshold']
+            self.reset = eqDict['reset']
+            self.refractory = 'refP'
+            self.parameters = paraDict
+
+            self.changeableParameters = ['refP']
+
+            self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
+
+            if additionalStatevars is not None:
+                self.addStateVars(additionalStatevars)
+
+            self.addInputCurrents(numInputs)
+
+            self.keywords = {'model': self.model, 'threshold': self.threshold,
+                             'reset': self.reset, 'refractory': self.refractory}
 
     def addInputCurrents(self, numInputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)
@@ -239,7 +258,7 @@ v_expCurrent = {'model': """
             VT      : volt      (shared, constant)        #
             DeltaT  : volt      (shared, constant)        # slope factor
 
-            Vthr = (VT + 5 * DeltaT) : volt  (shared)
+            %Vthr = (VT + 5 * DeltaT) : volt  (shared)
             """,
                 'threshold': '',
                 'reset': ''}

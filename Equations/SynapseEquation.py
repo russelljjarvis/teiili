@@ -93,86 +93,107 @@ def combineParDictionaries(varSet, *args):
 
 class SynapseEquation():
 
-    def __init__(self, baseUnit='current', kernel='exponential', plasticity='nonplastic', inputNumber=1, additionalStatevars=None):
+    def __init__(self, model=None, baseUnit='current', kernel='exponential', plasticity='nonplastic', inputNumber=1, additionalStatevars=None):
+        if model is not None:
+            eqDict = model
 
-        ERRValue = """
-                                ---Model not present in dictionaries---
-                This class constructor build a model for a synapse using pre-existent blocks.
+            self.model = eqDict['model']
+            self.on_pre = eqDict['on_pre']
+            self.on_post = eqDict['on_post']
+            self.parameters = eqDict['parameters']
 
-                The first entry is the type of model,
-                choice between : 'current' or 'conductance'
+    #       self.parameters = eqDict['default']
 
-                The second entry is the kernel of the synapse
-                can be one of those : 'exponential', 'alpha', 'resonant' or 'gassian'
-                and 'silicon' for current type of synapse only
+            if additionalStatevars is not None:
+                self.addStateVars(additionalStatevars)
+            self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
-                The third entry is the plasticity of the synapse
-                can be : 'nonplastic', 'fusi' or 'stdp'
+    #        self.addInputCurrents(inputNumber)
 
-                """
+    #        self.keywords = {'modelEq':self.modelEq, 'preEq':self.preEq,
+    #                         'postEq':self.postEq, 'parameters' : self.parameters}
 
-        try:
-            modes[baseUnit]
-            if baseUnit == 'current':
-                currentkernels[kernel]
-            else:
-                conductancekernels[kernel]
-            plasticitymodels[plasticity]
-        except KeyError as e:
-            print(ERRValue)
-        if modes[baseUnit] == 'current':
-            eqDict, varSet = combineEquations_syn(template, currentkernels[kernel], plasticitymodels[plasticity])
-            eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
-                                                     Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-            eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
-                                                       Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-            eqDict['on_post'] = eqDict['on_post'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
+            self.keywords = {'model': self.model, 'on_pre': self.on_pre,
+                             'on_post': self.on_post}
+        else:
+            ERRValue = """
+                                    ---Model not present in dictionaries---
+                    This class constructor build a model for a synapse using pre-existent blocks.
+
+                    The first entry is the type of model,
+                    choice between : 'current' or 'conductance'
+
+                    The second entry is the kernel of the synapse
+                    can be one of those : 'exponential', 'alpha', 'resonant' or 'gassian'
+                    and 'silicon' for current type of synapse only
+
+                    The third entry is the plasticity of the synapse
+                    can be : 'nonplastic', 'fusi' or 'stdp'
+
+                    """
+
+            try:
+                modes[baseUnit]
+                if baseUnit == 'current':
+                    currentkernels[kernel]
+                else:
+                    conductancekernels[kernel]
+                plasticitymodels[plasticity]
+            except KeyError as e:
+                print(ERRValue)
+            if modes[baseUnit] == 'current':
+                eqDict, varSet = combineEquations_syn(template, currentkernels[kernel], plasticitymodels[plasticity])
+                eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
                                                          Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-            if '{synvar_e}' in varSet:
-                varSet.remove('{synvar_e}')
-                varSet.add('Ie_syn')
-            if '{synvar_i}' in varSet:
-                varSet.remove('{synvar_i}')
-                varSet.add('Ii_syn')
-            eqDict['parameters'] = combineParDictionaries(varSet, current_Parameters[baseUnit], current_Parameters[kernel], current_Parameters[plasticity])
+                eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
+                                                           Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                eqDict['on_post'] = eqDict['on_post'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
+                                                             Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                if '{synvar_e}' in varSet:
+                    varSet.remove('{synvar_e}')
+                    varSet.add('Ie_syn')
+                if '{synvar_i}' in varSet:
+                    varSet.remove('{synvar_i}')
+                    varSet.add('Ii_syn')
+                eqDict['parameters'] = combineParDictionaries(varSet, current_Parameters[baseUnit], current_Parameters[kernel], current_Parameters[plasticity])
 
-        if modes[baseUnit] == 'conductance':
-            eqDict, varSet = combineEquations_syn(template, reversalsyn, conductancekernels[kernel], plasticitymodels[plasticity])
-            eqDict['model'] = eqDict['model'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
-                                                     Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-            eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
-                                                       Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-            eqDict['on_post'] = eqDict['on_post'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
+            if modes[baseUnit] == 'conductance':
+                eqDict, varSet = combineEquations_syn(template, reversalsyn, conductancekernels[kernel], plasticitymodels[plasticity])
+                eqDict['model'] = eqDict['model'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
                                                          Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-            if '{synvar_e}' in varSet:
-                varSet.remove('{synvar_e}')
-                varSet.add('gIe')
-            if '{synvar_i}' in varSet:
-                varSet.remove('{synvar_i}')
-                varSet.add('gIi')
-            eqDict['parameters'] = combineParDictionaries(varSet, conductance_Parameters[baseUnit], conductance_Parameters[kernel], conductance_Parameters[plasticity])
+                eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
+                                                           Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                eqDict['on_post'] = eqDict['on_post'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
+                                                             Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                if '{synvar_e}' in varSet:
+                    varSet.remove('{synvar_e}')
+                    varSet.add('gIe')
+                if '{synvar_i}' in varSet:
+                    varSet.remove('{synvar_i}')
+                    varSet.add('gIi')
+                eqDict['parameters'] = combineParDictionaries(varSet, conductance_Parameters[baseUnit], conductance_Parameters[kernel], conductance_Parameters[plasticity])
 
-        self.changeableParameters = ['weight']
+            self.changeableParameters = ['weight']
 
-        self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
+            self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
-        self.model = eqDict['model']
-        self.on_pre = eqDict['on_pre']
-        self.on_post = eqDict['on_post']
-        self.parameters = eqDict['parameters']
+            self.model = eqDict['model']
+            self.on_pre = eqDict['on_pre']
+            self.on_post = eqDict['on_post']
+            self.parameters = eqDict['parameters']
 
-#       self.parameters = eqDict['default']
+    #       self.parameters = eqDict['default']
 
-        if additionalStatevars is not None:
-            self.addStateVars(additionalStatevars)
+            if additionalStatevars is not None:
+                self.addStateVars(additionalStatevars)
 
-#        self.addInputCurrents(inputNumber)
+    #        self.addInputCurrents(inputNumber)
 
-#        self.keywords = {'modelEq':self.modelEq, 'preEq':self.preEq,
-#                         'postEq':self.postEq, 'parameters' : self.parameters}
+    #        self.keywords = {'modelEq':self.modelEq, 'preEq':self.preEq,
+    #                         'postEq':self.postEq, 'parameters' : self.parameters}
 
-        self.keywords = {'model': self.model, 'on_pre': self.on_pre,
-                         'on_post': self.on_post}
+            self.keywords = {'model': self.model, 'on_pre': self.on_pre,
+                             'on_post': self.on_post}
 
     def addStateVars(self, stateVars):
         "just adds a line to the model equation"

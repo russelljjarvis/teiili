@@ -51,7 +51,7 @@ class WTA(BuildingBlock):
                  neuronParams=gerstnerExpAIFdefaultregular, synapseParams=revSyn_default,
                  plasticSynapseEq=StdpSynV, plasticSynapseParams=StdpSyn_default,
                  blockParams=wtaParams, numInpNeurons=10, numNeurons=16, numInhNeurons=2, cutoff=10,
-                 additionalStatevars=[], numWtaInputs=1, plastic=False, debug=False, monitor=True):
+                 additionalStatevars=[], numInputs=1, plastic=False, debug=False, monitor=True):
 
         self.numNeurons = numNeurons
         self.dimensions = dimensions
@@ -70,31 +70,31 @@ class WTA(BuildingBlock):
                                              **blockParams)
         elif dimensions == 2:
             if not plastic:
-                self.Groups, self.Monitors, self.replaceVars = gen2dWTA(name,
+                self.Groups, self.Monitors, self.standaloneParams = gen2dWTA(name,
                                                                         neuronEq, neuronParams, synapseEq, synapseParams,
                                                                         numNeurons=numNeurons, numInhNeurons=numInhNeurons,
                                                                         additionalStatevars=additionalStatevars,
-                                                                        cutoff=cutoff, numWtaInputs=numWtaInputs, monitor=True, debug=debug,
+                                                                        cutoff=cutoff, numInputs=numInputs, monitor=True, debug=debug,
                                                                         **blockParams)
             else:
-                self.Groups, self.Monitors, self.replaceVars = gen2dWTA_plastic(name,
+                self.Groups, self.Monitors, self.standaloneParams = gen2dWTA_plastic(name,
                                                                                 neuronEq, neuronParams, synapseEq, synapseParams,
                                                                                 plasticSynapseEq, plasticSynapseParams,
                                                                                 numInpNeurons=numInpNeurons,
                                                                                 numNeurons=numNeurons, numInhNeurons=numInhNeurons,
                                                                                 additionalStatevars=additionalStatevars,
-                                                                                cutoff=cutoff, numWtaInputs=numWtaInputs, monitor=True, debug=debug,
+                                                                                cutoff=cutoff, numInputs=numInputs, monitor=True, debug=debug,
                                                                                 **blockParams)
-            self.Groups, self.Monitors,
-            self.standaloneParams = gen2dWTA(name,
-                                             neuronEq, neuronParams,
-                                             synapseEq, synapseParams,
-                                             numNeurons=numNeurons,
-                                             numInhNeurons=numInhNeurons,
-                                             additionalStatevars=additionalStatevars,
-                                             cutoff=cutoff, numInputs=numInputs,
-                                             monitor=True, debug=debug,
-                                             **blockParams)
+            # self.Groups, self.Monitors,
+            # self.standaloneParams = gen2dWTA(name,
+            #                                  neuronEq, neuronParams,
+            #                                  synapseEq, synapseParams,
+            #                                  numNeurons=numNeurons,
+            #                                  numInhNeurons=numInhNeurons,
+            #                                  additionalStatevars=additionalStatevars,
+            #                                  cutoff=cutoff, numInputs=numInputs,
+            #                                  monitor=True, debug=debug,
+            #                                  **blockParams)
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 
@@ -332,7 +332,7 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF,
         for key in Groups:
             print(key)
 
-    return Groups, Monitors, replaceVars
+    return Groups, Monitors, standaloneParams
 
 
 def gen2dWTA_plastic(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpAIFdefaultregular,
@@ -341,7 +341,7 @@ def gen2dWTA_plastic(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gers
                      weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2,
                      rpWTA=2.5 * ms, rpInh=1 * ms,
                      numInpNeurons=10,
-                     sigm=2.5, numNeurons=20, numInhNeurons=3, cutoff=9, numWtaInputs=1, monitor=True, additionalStatevars=[], debug=False):
+                     sigm=2.5, numNeurons=20, numInhNeurons=3, cutoff=9, numInputs=1, monitor=True, additionalStatevars=[], debug=False):
     '''generates a new square 2d WTA
     3 inputs to the gWTAGroup are used, so start with 4 for additional inputs'''
 
@@ -352,10 +352,13 @@ def gen2dWTA_plastic(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gers
     num2dNeurons = numNeurons**2
     num2dInpNeurons = numInpNeurons**2
     gWTAGroup = Neurons(num2dNeurons, neuronEquation, neuronParameters, refractory=rpWTA, name='g' + groupname,
-                        numInputs=3 + numWtaInputs, debug=debug)
+                        numInputs=3 + numInputs, debug=debug)
     gWTAInhGroup = Neurons(numInhNeurons, neuronEquation, neuronParameters, refractory=rpInh, name='g' + groupname + '_Inh',
                            numInputs=1, debug=debug)
 
+    gWTAGroup.namespace['numNeurons'] = numNeurons
+    gWTAGroup.namespace['ind2x'] = ind2x
+    gWTAGroup.namespace['ind2y'] = ind2y
     gWTAGroup.x = "ind2x(i, numNeurons)"
     gWTAGroup.y = "ind2y(i, numNeurons)"
 
@@ -393,6 +396,8 @@ def gen2dWTA_plastic(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gers
     # we add an additional attribute to that synapse, which allows us to change and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
+    synWTAWTA1e.namespace['fkernel2d'] = fkernel2d
+    synWTAWTA1e.namespace['numNeurons'] = numNeurons
     synWTAWTA1e.weight = 'latWeight * fkernel2d(i,j,latSigma,numNeurons)'
     # print(synWTAWTA1e.weight)
 

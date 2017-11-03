@@ -21,8 +21,8 @@ from brian2 import *
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
 from NCSBrian2Lib.Equations.NeuronEquation import NeuronEquation
 from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone, NeuronEquation
-from NCSBrian2Lib.Models.ExpAdapIF_chip import ExpAdapIF_chip
-from NCSBrian2Lib.Parameters.ExpAdapIF_chip_param import parameters
+from NCSBrian2Lib.Models.Neurons.ExpAdapIF_chip import ExpAdapIF_chip
+from NCSBrian2Lib.Parameters.Neurons.ExpAdapIF_chip_param import parameters
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 10 * us
@@ -85,7 +85,7 @@ Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon
 Net.run(100 * ms)
 
 # Visualize simulation results
-app = QtGui.QApplication([])
+#app = QtGui.QApplication([])
 pg.setConfigOptions(antialias=True)
 
 labelStyle = {'color': '#FFF', 'font-size': '12pt'}
@@ -173,7 +173,7 @@ p6.getAxis('bottom').tickFont = b
 p6.getAxis('left').tickFont = b
 
 
-QtGui.QApplication.instance().exec_()
+#QtGui.QApplication.instance().exec_()
 
 
 # fig = figure()

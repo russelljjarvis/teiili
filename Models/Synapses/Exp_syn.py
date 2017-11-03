@@ -1,4 +1,4 @@
-from NCSBrian2Lib.Parameters.Exp_syn_param import parameters
+from NCSBrian2Lib.Parameters.Synapses.Exp_syn_param import parameters
 
 model= {'model': """
             dIe_syn/dt = (-Ie_syn) / tausyne + kernel_e: amp (clock-driven)

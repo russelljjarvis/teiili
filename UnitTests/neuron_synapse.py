@@ -21,8 +21,13 @@ from brian2 import *
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
 from NCSBrian2Lib.Equations.NeuronEquation import NeuronEquation
 from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone, NeuronEquation
-from NCSBrian2Lib.Models.Neurons.ExpAdapIF_chip import ExpAdapIF_chip
-from NCSBrian2Lib.Parameters.Neurons.ExpAdapIF_chip_param import parameters
+from NCSBrian2Lib.Models.ExpAdapIF_chip import ExpAdapIF_chip
+from NCSBrian2Lib.Parameters.ExpAdapIF_chip_param import parameters
+from NCSBrian2Lib.Models.ExpAdapIF_chip import ExpAdapIF_chip
+from NCSBrian2Lib.Models.Exp_chip_stdp_syn import Exp_chip_stdp_syn
+from NCSBrian2Lib.Models.Exp_chip_syn import Exp_chip_syn
+from NCSBrian2Lib.Models.Exp_syn import Exp_syn
+
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 10 * us
@@ -56,9 +61,19 @@ InpSyn.weight = 3
 # You can also give different weigths to different synapses of the group:
 #testInpSyn.Iw_exc = [100*pamp,50*pamp]
 
+
+
+#Syn = Connections(testNeurons, testNeurons2,
+#                  name="testSyn", baseUnit='current',
+#                  kernel='exponential', plasticity='nonplastic')
+
+
+
 Syn = Connections(testNeurons, testNeurons2,
-                  name="testSyn", baseUnit='current',
-                  kernel='exponential', plasticity='nonplastic')
+                  model=Exp_chip_syn)
+
+
+
 
 Syn.connect(True)
 # you can change all the parameters like this after creation of the neurongroup:

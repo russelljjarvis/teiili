@@ -1,6 +1,6 @@
-from NCSBrian2Lib.Parameters.Synapses.Exp_chip_syn_param import parameters
+from NCSBrian2Lib.Parameters.Exp_chip_syn_param import parameters
 
-model= {'model': """
+Exp_chip_syn = {'model': """
             dIe_syn/dt = (-Ie_syn) / tausyne + kernel_e: amp (clock-driven)
             dIi_syn/dt = (-Ii_syn) / tausyni + kernel_i : amp (clock-driven)
 

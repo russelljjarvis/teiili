@@ -1,4 +1,4 @@
-from NCSBrian2Lib.Parameters.Neurons.ExpAdapIF_chip_param import parameters
+from NCSBrian2Lib.Parameters.ExpAdapIF_chip_param import parameters
 
 
 ExpAdapIF_chip = {'model': '''

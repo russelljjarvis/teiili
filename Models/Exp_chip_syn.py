@@ -4,11 +4,10 @@ Exp_chip_syn = {'model': """
             dIe_syn/dt = (-Ie_syn) / tausyne + kernel_e: amp (clock-driven)
             dIi_syn/dt = (-Ii_syn) / tausyni + kernel_i : amp (clock-driven)
 
-            kernel_e : amp* second **-1
-            kernel_i : amp* second **-1
+            %kernel_e = -{synvar_e}**2/(Igain*tausyne) + Igain*{synvar_e}*(Iw_e-Itau_e)/(tausyne*Itau_e*(Igain + {synvar_e})) : amp * second **-1
+            %kernel_i = +{synvar_i}**2/(Igain*tausyni) + Igain*{synvar_i}*(Iw_i+Itau_i)/(tausyni*Itau_i*(-Igain + {synvar_i})) : amp * second **-1
 
-            Ie0_post = Ie_syn : amp  (summed)
-            Ii0_post = Ii_syn : amp  (summed)
+
             weight : 1
             wPlast : 1
 
@@ -23,7 +22,7 @@ Exp_chip_syn = {'model': """
             Iw_e = weight*baseweight_e  : amp
             Iw_i = weight*baseweight_i  : amp
 
-            Igain = Io*exp(-kappa_syn*(Vth_syn-Vdd_syn)/Ut_syn) : amp
+            Igain : amp
 
             duration_syn : second (constant)
             kn_syn       : 1 (constant)

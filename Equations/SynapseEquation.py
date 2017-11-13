@@ -198,7 +198,7 @@ class SynapseEquation():
     def addStateVars(self, stateVars):
         "just adds a line to the model equation"
         print("added to Equation: \n" + "\n".join(stateVars))
-        self.modelEq += "\n            ".join(stateVars)
+        self.model += "\n            ".join(stateVars)
 
     def printAll(self):
         printEqDict_syn(self.keywords, self.parameters)
@@ -486,12 +486,11 @@ gaussianPara_current = {"sigma_gaussian_e": 6 * ms,
 gaussianPara_conductance = {"sigma_gaussian_e": 6 * ms,
                             "sigma_gaussian_i": 6 * ms}
 
+
                                ##Silicon Kernel##
                         #only for current based synapsis#
 
 siliconkernel = {'model': '''
-
-
 
                  %tausyne = Csyn * Ut_syn /(kappa_syn * Itau_e) : second
                  %tausyni = Csyn * Ut_syn /(kappa_syn * Itau_i) : second
@@ -504,10 +503,10 @@ siliconkernel = {'model': '''
                  Iw_e = weight*baseweight_e  : amp
                  Iw_i = weight*baseweight_i  : amp
 
-                 Igain = Io*exp(-kappa_syn*(Vth_syn-Vdd_syn)/Ut_syn) : amp
-
-
-
+                 Igain : amp
+                 
+                 %kernel_e = -{synvar_e}**2/(Igain*tausyne) + Igain*{synvar_e}*(Iw_e-Itau_e)/(tausyne*Itau_e*(Igain + {synvar_e})) : amp * second **-1
+                 %kernel_i = +{synvar_i}**2/(Igain*tausyni) + Igain*{synvar_i}*(Iw_i+Itau_i)/(tausyni*Itau_i*(-Igain + {synvar_i})) : amp * second **-1
 
 
                  duration_syn : second (constant)
@@ -538,7 +537,8 @@ siliconPara = {"Vth_syn": 1.7 * volt,  # should be close to Vdd
                "Itau_e": 1 * pA,
                "Itau_i": 1 * pA,
                "baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
-               "baseweight_i": 3 * pA
+               "baseweight_i": 7 * pA,
+               "Igain" : 100 * pA
                }
 
 

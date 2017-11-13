@@ -9,10 +9,11 @@ parameters={
         'Vdd_syn': 1.8 * volt,
         'Vth_syn': 1.7 * volt,
         'baseweight_e': 7. * pA,
-        'baseweight_i': 3. * pA,
+        'baseweight_i': 7. * pA,
         'kernel_e': 0. * second ** -1 * pA,
         'kernel_i': 0. * second ** -1 * pA,
         'kn_syn': 0.75,
         'kp_syn': 0.66,
-        'wPlast': 1
+        'wPlast': 1,
+	"Igain" : 100 * pA 
         }

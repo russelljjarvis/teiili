@@ -10,7 +10,7 @@ parameters={
         'Vdd_syn': 1.8 * volt,
         'Vth_syn': 1.7 * volt,
         'baseweight_e': 7. * nA,
-        'baseweight_i': 3. * nA,
+        'baseweight_i': 7. * nA,
         'diffApre': 0.01,
         'kernel_e': 0. * second ** -1 * pA,
         'kernel_i': 0. * second ** -1 * pA,
@@ -20,5 +20,6 @@ parameters={
         'taupre': 20. * ms,
         'w': 0,
         'wPlast': 0,
-        'w_max': 0.01
+        'w_max': 0.01,
+	"Igain" : 100 * pA 
         }

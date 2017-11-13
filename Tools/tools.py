@@ -227,6 +227,32 @@ def fkernelGauss2d(i, j, gsigma, n2dNeurons):
     res = exp(exponent)  # mexican hat / negative Laplacian of Gaussian #not normalized
     return res
 
+# function that calculates symmetrical gabor 2D kernel for neuron connectivity
+#@implementation('numpy', discard_units=True)
+
+
+@implementation('cpp', '''
+
+     ''')
+@declare_types(i='integer', j='integer',theta='float', sigmax='float', sigmay='float',freq='float', InputSize='integer', WindowSize='integer', result='float')
+@check_units(i=1, j=1,theta=1, sigmax=1, sigmay=1, freq=1, InputSize=1, WindowSize=1, result=1)
+def fkernelGabor2d(i, j, theta, sigmax, sigmay, freq, InputSize, WindowSize):
+    "function that calculates Gabor 2D kernel, only works with odd windows"
+    (ix, iy) = ind2xy(i, InputSize)
+    (x0, y0) = ind2xy(j, InputSize-(WindowSize-1))
+    x0 = x0 + ((WindowSize-1)/2)
+    y0 = y0 + ((WindowSize-1)/2) 
+    x =  (ix - x0)*np.cos(theta) + (iy - y0)*np.sin(theta)
+    y = -(ix - x0)*np.sin(theta) + (iy - y0)*np.cos(theta)
+    print(x)
+    print(y)
+    exponent = -((x**2)/2*sigmax**2 + (y**2)/2*sigmay**2)
+    res = exp(exponent)*np.cos(2*np.pi*x/freq)
+    print(res)
+    res = res*(abs(ix.any() - x0.any())<WindowSize/2) *(abs(iy.any() - y0.any())<WindowSize/2)
+    print(res)
+    return res
+
 
 def spikemon2firingRate(spikemon, fromT=0 * ms, toT="max"):
     spiketimes = (spikemon.t / ms)

@@ -96,6 +96,8 @@ class SynapseEquation():
     def __init__(self, model=None, baseUnit='current', kernel='exponential', plasticity='nonplastic', inputNumber=1, additionalStatevars=None):
         if model is not None:
             eqDict = model
+            eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
+                                                     Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
 
             self.model = eqDict['model']
             self.on_pre = eqDict['on_pre']
@@ -504,7 +506,7 @@ siliconkernel = {'model': '''
                  Iw_i = weight*baseweight_i  : amp
 
                  Igain : amp
-                 
+
                  %kernel_e = -{synvar_e}**2/(Igain*tausyne) + Igain*{synvar_e}*(Iw_e-Itau_e)/(tausyne*Itau_e*(Igain + {synvar_e})) : amp * second **-1
                  %kernel_i = +{synvar_i}**2/(Igain*tausyni) + Igain*{synvar_i}*(Iw_i+Itau_i)/(tausyni*Itau_i*(-Igain + {synvar_i})) : amp * second **-1
 

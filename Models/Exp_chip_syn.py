@@ -26,7 +26,6 @@ Exp_chip_syn = {'model': """
 
             Igain : amp
 
-            #duration_syn : second (constant)
             kn_syn       : 1 (constant)
             kp_syn       : 1 (constant)
             Ut_syn       : volt (constant)

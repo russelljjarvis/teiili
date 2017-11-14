@@ -18,6 +18,7 @@ parameters = {"kn": 0.75,
               "Iagain": 20. * pA,
               "Ianorm": 7. * pA,
               "Itau": 13. * pA,
+              "Ishunt": 0.5 * pA,
               "mu": 0.25 * pA,
               "sigma": 0.1 * pA
               }

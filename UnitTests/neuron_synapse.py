@@ -46,6 +46,7 @@ Net = StandaloneNetwork()
 
 
 testNeurons = Neurons(2, model=ExpAdapIF_chip, name="testNeuron")
+testNeurons.setParams(parameters)
 
 testNeurons2 = Neurons(2, model=ExpAdapIF_chip, numInputs=2, name="testNeuron2")
 testNeurons2.setParams(parameters)
@@ -53,7 +54,7 @@ testNeurons2.setParams(parameters)
 
 InpSyn = Connections(gInpGroup, testNeurons,
                      name="sInpTest_e", baseUnit='current',
-                     kernel='alpha', plasticity='nonplastic')
+                     kernel='exponential', plasticity='nonplastic')
 InpSyn.connect(True)
 
 #testInpSyn.Iw_exc =100*pamp
@@ -61,13 +62,9 @@ InpSyn.weight = 3
 # You can also give different weigths to different synapses of the group:
 #testInpSyn.Iw_exc = [100*pamp,50*pamp]
 
-
-
 #Syn = Connections(testNeurons, testNeurons2,
 #                  name="testSyn", baseUnit='current',
 #                  kernel='exponential', plasticity='nonplastic')
-
-
 
 Syn = Connections(testNeurons, testNeurons2,
                   model=Exp_chip_syn)

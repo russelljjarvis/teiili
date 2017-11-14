@@ -35,11 +35,11 @@ Exp_chip_syn = {'model': """
             Vdd_syn      : volt (constant)
             Vth_syn      : volt (constant)
             """,
-        'on_pre': """
-                 Ie_syn += Iw_e*Igain*wPlast*(weight>0)/Itau_e 
-                 Ii_syn += Iw_i*Igain*wPlast*(weight<0)/Itau_i 
-                 t_spike = 0 * ms 
-                  """,
-        'on_post': """ """,
-        'parameters': parameters
-        }
+            'on_pre': """
+             Ie_syn += Iw_e*Igain*wPlast*(weight>0)/Itau_e
+             Ii_syn += Iw_i*Igain*wPlast*(weight<0)/Itau_i
+             t_spike = 0 * ms
+              """,
+            'on_post': """ """,
+            'parameters': parameters
+                }

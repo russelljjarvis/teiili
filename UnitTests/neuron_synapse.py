@@ -97,7 +97,7 @@ Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon
 Net.run(100 * ms)
 
 # Visualize simulation results
-app = QtGui.QApplication([])
+#app = QtGui.QApplication([])
 pg.setConfigOptions(antialias=True)
 
 labelStyle = {'color': '#FFF', 'font-size': '12pt'}
@@ -185,7 +185,7 @@ p6.getAxis('bottom').tickFont = b
 p6.getAxis('left').tickFont = b
 
 
-QtGui.QApplication.instance().exec_()
+#QtGui.QApplication.instance().exec_()
 
 
 # fig = figure()

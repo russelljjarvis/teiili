@@ -7,6 +7,8 @@ Exp_chip_syn = {'model': """
             kernel_e = -Ie_syn**2/(Igain*tausyne) + Igain*Ie_syn*(Iw_e-Itau_e)/(tausyne*Itau_e*(Igain + Ie_syn)) : amp * second **-1
             kernel_i = +Ii_syn**2/(Igain*tausyni) + Igain*Ii_syn*(Iw_i+Itau_i)/(tausyni*Itau_i*(-Igain + Ii_syn)) : amp * second **-1
 
+            {Ie}_post = Ie_syn : amp  (summed)
+            {Ii}_post = Ii_syn : amp  (summed)
 
             weight : 1
             wPlast : 1
@@ -24,7 +26,7 @@ Exp_chip_syn = {'model': """
 
             Igain : amp
 
-            duration_syn : second (constant)
+            #duration_syn : second (constant)
             kn_syn       : 1 (constant)
             kp_syn       : 1 (constant)
             Ut_syn       : volt (constant)
@@ -34,9 +36,9 @@ Exp_chip_syn = {'model': """
             Vth_syn      : volt (constant)
             """,
         'on_pre': """
-                 Ie_syn += Iw_e*Igain*wPlast*(weight>0)/Itau_e : amp
-                 Ii_syn += Iw_i*Igain*wPlast*(weight<0)/Itau_i : amp
-                 t_spike = 0 * ms : second
+                 Ie_syn += Iw_e*Igain*wPlast*(weight>0)/Itau_e 
+                 Ii_syn += Iw_i*Igain*wPlast*(weight<0)/Itau_i 
+                 t_spike = 0 * ms 
                   """,
         'on_post': """ """,
         'parameters': parameters

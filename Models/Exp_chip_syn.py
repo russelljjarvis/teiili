@@ -1,11 +1,8 @@
 from NCSBrian2Lib.Parameters.Exp_chip_syn_param import parameters
 
 Exp_chip_syn = {'model': """
-            dIe_syn/dt = (-Ie_syn) / tausyne + kernel_e: amp (clock-driven)
-            dIi_syn/dt = (-Ii_syn) / tausyni + kernel_i : amp (clock-driven)
-
-            kernel_e = -Ie_syn**2/(Igain*tausyne) + Igain*Ie_syn*(Iw_e-Itau_e)/(tausyne*Itau_e*(Igain + Ie_syn)) : amp * second **-1
-            kernel_i = +Ii_syn**2/(Igain*tausyni) + Igain*Ii_syn*(Iw_i+Itau_i)/(tausyni*Itau_i*(-Igain + Ii_syn)) : amp * second **-1
+            dIe_syn/dt = (-Ie_syn) /(tausyne*((Igain/Ie_syn)+1)) - (Igain/(tausyne*((Igain/Ie_syn)+1)))*(Ie_syn>=Io_syn): amp (clock-driven)
+     	    dIi_syn/dt = (-Ii_syn) /(tausyni*((-Igain/Ii_syn)+1)) + (Igain/(tausyni*((-Igain/Ii_syn)+1)))*(Ii_syn<=-Io_syn): amp (clock-driven)
 
             {Ie}_post = Ie_syn : amp  (summed)
             {Ii}_post = Ii_syn : amp  (summed)
@@ -26,7 +23,6 @@ Exp_chip_syn = {'model': """
 
             Igain : amp
 
-            #duration_syn : second (constant)
             kn_syn       : 1 (constant)
             kp_syn       : 1 (constant)
             Ut_syn       : volt (constant)
@@ -36,8 +32,8 @@ Exp_chip_syn = {'model': """
             Vth_syn      : volt (constant)
             """,
             'on_pre': """
-             Ie_syn += Iw_e*Igain*wPlast*(weight>0)/Itau_e
-             Ii_syn += Iw_i*Igain*wPlast*(weight<0)/Itau_i
+             Ie_syn += Iw_e*Igain*wPlast*(weight>0)/(Itau_e*((Igain/Ie_syn)+1))
+             Ii_syn -= Iw_i*Igain*wPlast*(weight<0)/(Itau_i*((Igain/Ii_syn)+1))
              t_spike = 0 * ms
               """,
             'on_post': """ """,

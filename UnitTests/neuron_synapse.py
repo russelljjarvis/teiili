@@ -53,12 +53,13 @@ testNeurons2.setParams(parameters)
 
 
 InpSyn = Connections(gInpGroup, testNeurons,
-                     name="sInpTest_e", baseUnit='current',
-                     kernel='exponential', plasticity='nonplastic')
+                     model=Exp_chip_syn)
+                     # name="sInpTest_e", baseUnit='current',
+                     # kernel='exponential', plasticity='nonplastic')
 InpSyn.connect(True)
 
 #testInpSyn.Iw_exc =100*pamp
-InpSyn.weight = 3
+InpSyn.weight = 1.0
 # You can also give different weigths to different synapses of the group:
 #testInpSyn.Iw_exc = [100*pamp,50*pamp]
 
@@ -74,9 +75,9 @@ Syn = Connections(testNeurons, testNeurons2,
 
 Syn.connect(True)
 # you can change all the parameters like this after creation of the neurongroup:
-Syn.weight = 0.5
+Syn.weight = 0.4
 
-testNeurons2.Iconst = 1.5 * nA
+testNeurons2.Iconst = 300 * pA
 # testNeurons2.Itau = 13 * pA
 # testNeurons2.Iath = 80 * pA
 # testNeurons2.Iagain = 20 * pA
@@ -94,7 +95,7 @@ statemonSynOut = StateMonitor(Syn, variables='Ie_syn', record=True, name='statem
 Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon,
         spikemonOut, statemonNeuIn, statemonNeuOut, statemonSynOut, statemonInpSyn)
 
-Net.run(100 * ms)
+Net.run(500 * ms)
 
 # Visualize simulation results
 app = QtGui.QApplication([])
@@ -133,7 +134,6 @@ p1.plot(x=np.asarray(spikemonInp.t / ms), y=np.asarray(spikemonInp.i),
 # Input synapses
 for i, data in enumerate(np.asarray(statemonInpSyn.Ie_syn)):
   name = 'Syn_{}'.format(i)
-  print (name, i, colors[i])
   p2.plot(x=np.asarray(statemonInpSyn.t / ms), y=data,
           pen=pg.mkPen(colors[3], width=2), name=name)
 
@@ -145,7 +145,6 @@ for i, data in enumerate(np.asarray(statemonNeuIn.Imem)):
 # Output synapses
 for i, data in enumerate(np.asarray(statemonSynOut.Ie_syn)):
   name = 'Syn_{}'.format(i)
-  print (name, i, colors[i])
   p4.plot(x=np.asarray(statemonSynOut.t / ms), y=data,
           pen=pg.mkPen(colors[1], width=2), name=name)
 

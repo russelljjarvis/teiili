@@ -12,8 +12,6 @@ parameters={
         'baseweight_e': 7. * nA,
         'baseweight_i': 7. * nA,
         'diffApre': 0.01,
-        'kernel_e': 0. * second ** -1 * pA,
-        'kernel_i': 0. * second ** -1 * pA,
         'kn_syn': 0.75,
         'kp_syn': 0.66,
         'taupost': 20. * ms,
@@ -21,5 +19,7 @@ parameters={
         'w': 0,
         'wPlast': 0,
         'w_max': 0.01,
-	"Igain" : 100 * pA 
+	"Igain" : 100 * pA,
+        "Ie_syn" : 0.5 * pA,
+        "Ii_syn" : -0.5 * pA 
         }

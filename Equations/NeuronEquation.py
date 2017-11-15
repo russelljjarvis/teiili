@@ -353,8 +353,8 @@ none = {'model': '',
 # Code partially adapted from Daniele Conti and Llewyn Salt
 # Email: mmilde@ini.uzh.chs
 i_model_template = {'model': '''
-         dImem/dt  = ((Ia/Itau) * (Imem + Ith) + ((Ith / Itau) * ((Iin + Iconst) - Iahp - Itau)) - Imem * (1 + Iahp / Itau)) / (tau * (1 + (Ith / (Imem + Inoise + Io)))) : amp (unless refractory)
-
+         # dImem/dt  = ((Ia/Itau) * (Imem + Ith) + ((Ith / Itau) * ((Iin + Iconst) - Iahp - Itau)) - Imem * (1 + Iahp / Itau)) / (tau * (1 + (Ith / (Imem + Inoise + Io)))) : amp (unless refractory)
+         dImem/dt = (((Ith * (Iin + Iconst)) / Itau) - Ith - ((Ith / Itau) * Ishunt) + ((Iahp * Ith)/ Itau) + ((Ia * Ith) / Itau) - ((1+ (Ishunt + Iahp - Ia)/ Itau) * Imem) ) / (tau * (Ith/(Imem + Io))) : amp (unless refractory)
          tau = (Cmem * Ut) / (kappa * Itau) : second      # Membrane time constant
 
          kappa = (kn + kp) / 2 : 1
@@ -376,6 +376,7 @@ i_model_template = {'model': '''
          Ith     : amp (constant)                         # DPI threshold (low pass filter).
          Itau    : amp (constant)                         # Leakage current
          Iconst  : amp (constant)                         # Additional input current similar to constant current injection
+         Ishunt  : amp (constant)                         # Shunting inhibitory current (directly affects soma)
          ''',
                     'threshold': "Imem > Ispkthr",
                     'reset': "Imem = Ireset"}
@@ -411,6 +412,10 @@ i_model_templatePara = {
     "Ica": 0.5 * pA,
     "Itauahp": 0.5 * pA,
     "Ithahp": 0.5 * pA,
+    #---------------------------------------------------------
+    # Shunting inhibition
+    #---------------------------------------------------------
+    "Ishunt": 0. * pA,
     #---------------------------------------------------------
     # Neuron parameters
     #---------------------------------------------------------

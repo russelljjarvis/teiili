@@ -13,5 +13,11 @@ parameters = {
     'kn_syn': 0.75,
     'kp_syn': 0.66,
     'wPlast': 1,
+<<<<<<< HEAD
     "Igain": 15 * pA
+=======
+    "Igain": 100 * pA,
+    "Ie_syn" : 0.5 * pA,
+    "Ii_syn" : -0.5 * pA 
+>>>>>>> e84cfd33dba2402d7b78c48f694d97c977edf0f5
 }

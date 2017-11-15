@@ -7,6 +7,9 @@ Exp_syn = {'model': """
             kernel_e : amp* second **-1
             kernel_i : amp* second **-1
 
+            {Ie}_post = Ie_syn : amp  (summed)
+            {Ii}_post = Ii_syn : amp  (summed)
+
             weight : 1
             tausyne : second (constant) # synapse time constant
             tausyni : second (constant) # synapse time constant

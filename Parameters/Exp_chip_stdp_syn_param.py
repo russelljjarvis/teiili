@@ -19,5 +19,7 @@ parameters={
         'w': 0,
         'wPlast': 0,
         'w_max': 0.01,
-	"Igain" : 100 * pA 
+	"Igain" : 100 * pA,
+        "Ie_syn" : 0.5 * pA,
+        "Ii_syn" : -0.5 * pA 
         }

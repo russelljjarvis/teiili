@@ -13,5 +13,7 @@ parameters = {
     'kn_syn': 0.75,
     'kp_syn': 0.66,
     'wPlast': 1,
-    "Igain": 100 * pA
+    "Igain": 100 * pA,
+    "Ie_syn" : 0.5 * pA,
+    "Ii_syn" : -0.5 * pA 
 }

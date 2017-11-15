@@ -59,7 +59,7 @@ InpSyn = Connections(gInpGroup, testNeurons,
 InpSyn.connect(True)
 
 #testInpSyn.Iw_exc =100*pamp
-InpSyn.weight = 1.0
+InpSyn.weight = 10
 # You can also give different weigths to different synapses of the group:
 #testInpSyn.Iw_exc = [100*pamp,50*pamp]
 
@@ -75,9 +75,9 @@ Syn = Connections(testNeurons, testNeurons2,
 
 Syn.connect(True)
 # you can change all the parameters like this after creation of the neurongroup:
-Syn.weight = 0.4
+Syn.weight = 2.0
 
-testNeurons2.Iconst = 300 * pA
+# testNeurons2.Iconst = 80 * pA
 # testNeurons2.Itau = 13 * pA
 # testNeurons2.Iath = 80 * pA
 # testNeurons2.Iagain = 20 * pA

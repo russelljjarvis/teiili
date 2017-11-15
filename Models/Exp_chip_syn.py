@@ -2,7 +2,7 @@ from NCSBrian2Lib.Parameters.Exp_chip_syn_param import parameters
 
 Exp_chip_syn = {'model': """
             dIe_syn/dt = (-Ie_syn) /(tausyne*((Igain/Ie_syn)+1)) - (Igain/(tausyne*((Igain/Ie_syn)+1)))*(Ie_syn>=Io_syn): amp (clock-driven)
-     	    dIi_syn/dt = (-Ii_syn) /(tausyni*((-Igain/Ii_syn)+1)) + (Igain/(tausyni*((-Igain/Ii_syn)+1)))*(Ii_syn<=-Io_syn): amp (clock-driven)
+            dIi_syn/dt = (-Ii_syn) /(tausyni*((-Igain/Ii_syn)+1)) + (Igain/(tausyni*((-Igain/Ii_syn)+1)))*(Ii_syn<=-Io_syn): amp (clock-driven)
 
             {Ie}_post = Ie_syn : amp  (summed)
             {Ii}_post = Ii_syn : amp  (summed)
@@ -28,14 +28,11 @@ Exp_chip_syn = {'model': """
             Ut_syn       : volt (constant)
             Io_syn       : amp (constant)
             Csyn         : farad (constant)
-            Vdd_syn      : volt (constant)
-            Vth_syn      : volt (constant)
             """,
             'on_pre': """
-             Ie_syn += Iw_e*Igain*wPlast*(weight>0)/(Itau_e*((Igain/Ie_syn)+1))
-             Ii_syn -= Iw_i*Igain*wPlast*(weight<0)/(Itau_i*((Igain/Ii_syn)+1))
-             t_spike = 0 * ms
-              """,
+            Ie_syn += Iw_e*Igain*wPlast*(weight>0)/(Itau_e*((Igain/Ie_syn)+1))
+            Ii_syn -= Iw_i*Igain*wPlast*(weight<0)/(Itau_i*((Igain/Ii_syn)+1))
+            """,
             'on_post': """ """,
             'parameters': parameters
                 }

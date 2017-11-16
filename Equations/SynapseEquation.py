@@ -490,66 +490,6 @@ gaussianPara_conductance = {"sigma_gaussian_e": 6 * ms,
 
 
 
-
-                               ##Shunting Silicon Kernel##
-                        #only for current based synapsis#
-
-shuntkernel = {'model': '''
-
-                 %tausyne = Csyn * Ut_syn /(kappa_syn * Itau_e) : second
-                 %tausyni = Csyn * Ut_syn /(kappa_syn * Itau_i) : second
-
-                 kappa_syn = (kn_syn + kp_syn) / 2 : 1
-
-                 Itau_e : amp
-                 Itau_i : amp
-                 
-                 %{Ie}_post = Ie_syn : amp  (summed)
-                 %{Ii}_post = Ii_syn : amp  (summed)
-                 
-                 Ishunt_post = Ii_syn : amp (summed)
-
-                 Iw_e = weight*baseweight_e  : amp
-                 Iw_i = weight*baseweight_i  : amp
-
-                 Igain : amp
-
-                 %kernel_e = -{synvar_e}**2/(Igain*tausyne) + Igain*{synvar_e}*(Iw_e-Itau_e)/(tausyne*Itau_e*(Igain + {synvar_e})) : amp * second **-1
-                 %kernel_i = +{synvar_i}**2/(Igain*tausyni) + Igain*{synvar_i}*(Iw_i+Itau_i)/(tausyni*Itau_i*(-Igain + {synvar_i})) : amp * second **-1
-
-
-                 duration_syn : second (constant)
-                 kn_syn       : 1 (constant)
-                 kp_syn       : 1 (constant)
-                 Ut_syn       : volt (constant)
-                 Io_syn       : amp (constant)
-                 Csyn         : farad (constant)
-                 Vdd_syn      : volt (constant)
-                 Vth_syn      : volt (constant)
-                 ''',
-
-                 'on_pre': '''
-                 %{synvar_e} += Iw_e*Igain*wPlast*(weight>0)/Itau_e
-                 %{synvar_i} += Iw_i*Igain*wPlast*(weight<0)/Itau_i
-                 t_spike = 0 * ms
-                 ''',
-
-                 'on_post': ''' '''}
-
-shuntPara =   {"Vth_syn": 1.7 * volt,  # should be close to Vdd
-               "Vdd_syn": 1.8 * volt,
-               "Csyn": 0.1 * pF,
-               "Io_syn": 0.5 * pA,
-               "kn_syn": 0.75,
-               "kp_syn": 0.66,
-               "Ut_syn": 25 * mV,  # costant related to room temperature (ambient temperature)
-               "Itau_e": 1 * pA,
-               "Itau_i": 1 * pA,
-               "baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
-               "baseweight_i": 7 * pA,
-               "Igain" : 100 * pA
-               }
-
 nonePara = {}
 
 

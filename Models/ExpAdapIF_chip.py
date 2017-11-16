@@ -2,8 +2,6 @@ from NCSBrian2Lib.Parameters.ExpAdapIF_chip_param import parameters
 
 
 ExpAdapIF_chip = {'model': '''
-            #dImem/dt = ((Ia/Itau) * (Imem + Ith) + ((Ith / Itau) * ((Iin + Iconst) - Iahp - Itau)) - Imem * (1 + Iahp / Itau)) / (tau * (1 + (Ith / (Imem + Io)))) : amp (unless refractory)
-            #dImem/dt = ((Ith / Itau) * (Iin + Iconst) - Ith - ((Ith / Itau) * Ishunt) + ((Iahp * Ith)/ Itau) + ((Ia * Ith) / Itau) - ((1+ (Ishunt + Iahp - Ia)/ Itau) * Imem) ) / (tau * (Ith/(Imem + Io))) : amp (unless refractory)
             dImem/dt = (((Ith / Itau) * (Iin + Iconst + Ia - Ishunt - Iahp)) - Ith - ((1 + ((Ishunt - Iahp - Ia) / Itau)) * Imem)) / (tau * ((Ith/(Imem + Io)) + 1)) : amp (unless refractory)
             
             dIahp/dt = (-Iahp + Iahpmax) / tauahp : amp             # adaptation current

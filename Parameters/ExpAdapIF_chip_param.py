@@ -10,14 +10,14 @@ parameters = {"kn": 0.75,
               "Ireset": 0.5 * pA,
               "Iconst": 0.5 * pA,
               ##################
-              "Itau": 20. * pA,  #
+              "Itau": 60. * pA,  #
               "Ishunt": 0.5 * pA,  #
-              "Ith": 0.4 * nA,  #
+              "Ith": 0.3 * nA,  #
               #  ADAPTATION  #################
-              "Ica": 50. * nA,
+              "Ica": 20. * nA,
               "tauca": 1. * ms,
               ##################
-              "Itauahp": 20.5 * pA,
+              "Itauahp": 10.0 * pA,
               "Ithahp": 0.5 * pA,
               "Cahp": 0.15 * pF,
               #  POSTIVE FEEDBACK #################

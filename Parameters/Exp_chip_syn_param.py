@@ -13,5 +13,5 @@ parameters = {
     'wPlast': 1,
     "Igain": 15 * pA,
     "Ie_syn": 0.5 * pA,
-    "Ii_syn": -0.5 * pA
+    "Ii_syn": 0.5 * pA
 }

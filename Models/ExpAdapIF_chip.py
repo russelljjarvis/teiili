@@ -3,11 +3,14 @@ from NCSBrian2Lib.Parameters.ExpAdapIF_chip_param import parameters
 
 ExpAdapIF_chip = {'model': '''
             #dImem/dt = ((Ia/Itau) * (Imem + Ith) + ((Ith / Itau) * ((Iin + Iconst) - Iahp - Itau)) - Imem * (1 + Iahp / Itau)) / (tau * (1 + (Ith / (Imem + Io)))) : amp (unless refractory)
-            dImem/dt = (((Ith * (Iin + Iconst)) / Itau) - Ith - ((Ith / Itau) * Ishunt) + ((Iahp * Ith)/ Itau) + ((Ia * Ith) / Itau) - ((1+ (Ishunt + Iahp - Ia)/ Itau) * Imem) ) / (tau * (Ith/(Imem + Io))) : amp (unless refractory)
+            #dImem/dt = ((Ith / Itau) * (Iin + Iconst) - Ith - ((Ith / Itau) * Ishunt) + ((Iahp * Ith)/ Itau) + ((Ia * Ith) / Itau) - ((1+ (Ishunt + Iahp - Ia)/ Itau) * Imem) ) / (tau * (Ith/(Imem + Io))) : amp (unless refractory)
+            dImem/dt = (((Ith / Itau) * (Iin + Iconst + Ia - Ishunt - Iahp)) - Ith - ((1 + ((Ishunt - Iahp - Ia) / Itau)) * Imem)) / (tau * ((Ith/(Imem + Io)) + 1)) : amp (unless refractory)
+            
             dIahp/dt = (-Iahp + Iahpmax) / tauahp : amp             # adaptation current
             dIca/dt = (Iahpmax-Ica) / tauca : amp
             Iahpmax = (Ica / Itauahp) * Ithahp : amp                # Ratio of currents through diffpair and adaptation block
             Ia = Iagain / (1 + exp(-(Imem - Iath) / Ianorm)) : amp  # postive feedback current
+            
             tauahp = (Cahp * Ut) / (kappa * Itauahp) : second       # time constant of adaptation
             tau = (Cmem * Ut) / (kappa * Itau) : second             # Membrane time constant
             kappa = (kn + kp) / 2 : 1

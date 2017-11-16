@@ -35,8 +35,6 @@ Exp_chip_syn = {'model': """
             Ut_syn       : volt (constant)
             Io_syn       : amp (constant)
             Csyn         : farad (constant)
-            Vdd_syn      : volt (constant)
-            Vth_syn      : volt (constant)
             """,
             'on_pre': """
              Ie_syn += Iw_e*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))

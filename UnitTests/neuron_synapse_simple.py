@@ -11,16 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
-    SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
-    seed, xlim, ylim, subplot, network_operation, TimedArray,\
-    defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
-
 from brian2 import *
-
-#from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
-from NCSBrian2Lib.Equations.NeuronEquation import NeuronEquation
 from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone, NeuronEquation
 from NCSBrian2Lib.Models.ExpAdapIF_chip import ExpAdapIF_chip
 from NCSBrian2Lib.Parameters.ExpAdapIF_chip_param import parameters
@@ -31,11 +23,6 @@ from NCSBrian2Lib.Models.Exp_syn import Exp_syn
 
 
 prefs.codegen.target = "numpy"
-# defaultclock.dt = 10 * us
-#set_device('cpp_standalone', directory='Tutorial_standalone', build_on_run=True)
-
-# activate_standalone(directory='Tutorial_standalone', build_on_run=True) #this is the Lib function to activate standalone mode (c++ code generation)
-# deactivate_standalone()
 
 tsInp = asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 indInp = asarray([0, 0, 0, 0, 0, 0, 0, 0])
@@ -55,34 +42,17 @@ testNeurons2.setParams(parameters)
 
 InpSyn = Connections(gInpGroup, testNeurons,
                      model=Exp_chip_syn)
-                     # name="sInpTest_e", baseUnit='current',
-                     # kernel='exponential', plasticity='nonplastic')
+
 InpSyn.connect(True)
-
-#testInpSyn.Iw_exc =100*pamp
-InpSyn.weight = 10.0
-# You can also give different weigths to different synapses of the group:
-#testInpSyn.Iw_exc = [100*pamp,50*pamp]
-
-#Syn = Connections(testNeurons, testNeurons2,
-#                  name="testSyn", baseUnit='current',
-#                  kernel='exponential', plasticity='nonplastic')
+InpSyn.weight = 400.0
 
 Syn = Connections(testNeurons, testNeurons2,
                   model=Exp_chip_syn)
 
-
-
-
 Syn.connect(True)
-# you can change all the parameters like this after creation of the neurongroup:
 Syn.weight = 9.
 
-testNeurons2.Iconst = 200 * pA
-# testNeurons2.Itau = 13 * pA
-# testNeurons2.Iath = 80 * pA
-# testNeurons2.Iagain = 20 * pA
-# testNeurons2.Ianorm = 8 * pA
+testNeurons2.Iconst = 30 * nA
 
 spikemonInp = SpikeMonitor(gInpGroup, name='spikemonInp')
 spikemon = SpikeMonitor(testNeurons, name='spikemon')
@@ -91,7 +61,6 @@ statemonInpSyn = StateMonitor(InpSyn, variables='Ie_syn', record=True, name='sta
 statemonNeuOut = StateMonitor(testNeurons2, variables=['Imem'], record=0, name='statemonNeuOut')
 statemonNeuIn = StateMonitor(testNeurons, variables=["Iin", "Imem"], record=[0, 1], name='statemonNeu')
 statemonSynOut = StateMonitor(Syn, variables='Ie_syn', record=True, name='statemonSynOut')
-# statemonSynTest=StateMonitor(testInpSyn,variables=["Isyn_exc"],record=[0],name='statemonSyn')
 
 Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon,
         spikemonOut, statemonNeuIn, statemonNeuOut, statemonSynOut, statemonInpSyn)

@@ -353,30 +353,36 @@ none = {'model': '',
 # Code partially adapted from Daniele Conti and Llewyn Salt
 # Email: mmilde@ini.uzh.chs
 i_model_template = {'model': '''
-         # dImem/dt  = ((Ia/Itau) * (Imem + Ith) + ((Ith / Itau) * ((Iin + Iconst) - Iahp - Itau)) - Imem * (1 + Iahp / Itau)) / (tau * (1 + (Ith / (Imem + Inoise + Io)))) : amp (unless refractory)
-         dImem/dt = (((Ith * (Iin + Iconst)) / Itau) - Ith - ((Ith / Itau) * Ishunt) + ((Iahp * Ith)/ Itau) + ((Ia * Ith) / Itau) - ((1+ (Ishunt + Iahp - Ia)/ Itau) * Imem) ) / (tau * (Ith/(Imem + Io))) : amp (unless refractory)
-         tau = (Cmem * Ut) / (kappa * Itau) : second      # Membrane time constant
+            dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt - Iahp_clip - Ia_clip) / Itau_clip)) * Imem)   ) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
 
-         kappa = (kn + kp) / 2 : 1
+            Iahp : amp
 
-         Ia      : amp                                    # Feedback current
+            Itau_clip = Itau*(Imem>Io) + Io*(Imem<=Io)  : amp
+            Ith_clip = Ith*(Imem>Io) + Io*(Imem<=Io)    : amp
+            Iin_clip = clip(Iin1+Iin2+Iin3+Iin4+Iconst,Io, 1*amp) : amp
+            Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
+            Ia_clip = Ia*(Imem>Io) + 2*Io*(Imem<=Io)    : amp
 
-         Iahp    : amp                                    # Adaptation current
 
-         Inoise  : amp                                    # Noise due to mismatch
 
-         kn      : 1 (shared, constant)                   # subthreshold slope factor for nFETs
-         kp      : 1 (shared, constant)                   # subthreshold slope factor for pFETs
-         Ut      : volt (shared, constant)                # Thermal voltage
-         Io      : amp (shared, constant)                 # Dark current
-         Cmem    : farad (shared, constant)               # Membrane capacitance
-         Ispkthr : amp (constant)                         # Spiking threshold
-         Ireset  : amp (shared, constant)                 # Reset current
-         refP    : second    (shared, constant)           # refractory period (It is still possible to set it to False)
-         Ith     : amp (constant)                         # DPI threshold (low pass filter).
-         Itau    : amp (constant)                         # Leakage current
-         Iconst  : amp (constant)                         # Additional input current similar to constant current injection
-         Ishunt  : amp (constant)                         # Shunting inhibitory current (directly affects soma)
+
+            tau = (Cmem * Ut) / (kappa * Itau_clip) : second        # Membrane time constant
+            kappa = (kn + kp) / 2 : 1
+
+            Inoise  : amp                                    # Noise due to mismatch
+
+            kn      : 1 (shared, constant)                   # subthreshold slope factor for nFETs
+            kp      : 1 (shared, constant)                   # subthreshold slope factor for pFETs
+            Ut      : volt (shared, constant)                # Thermal voltage
+            Io      : amp (shared, constant)                 # Dark current
+            Cmem    : farad (shared, constant)               # Membrane capacitance
+            Ispkthr : amp (constant)                         # Spiking threshold
+            Ireset  : amp (shared, constant)                 # Reset current
+            refP    : second    (shared, constant)           # refractory period (It is still possible to set it to False)
+            Ith     : amp (constant)                         # DPI threshold (low pass filter).
+            Itau    : amp (constant)                         # Leakage current
+            Iconst  : amp (constant)                         # Additional input current similar to constant current injection
+            Ishunt  : amp (constant)                         # Shunting inhibitory current (directly affects soma)
          ''',
                     'threshold': "Imem > Ispkthr",
                     'reset': "Imem = Ireset"}
@@ -420,7 +426,6 @@ i_model_templatePara = {
     # Neuron parameters
     #---------------------------------------------------------
     "Ispkthr": 0.15 * nA,  # Spike threshold of excitatory neurons
-    #    "Ispkthr": 6 * pA,  # Spike threshold of excitatory neurons
     "Ireset": 1 * pA,  # Reset Imem to Ireset after each spike
     "Ith": 0.5 * pA,
     "Itau": 4.3 * pA,
@@ -449,10 +454,10 @@ i_noisePara = {"mu": 0.25 * pA,
 
 # feedback
 i_a = {'model': """
-          %Ia = Iagain / (1 + exp(-(Imem - Iath) / Ianorm)) : amp  # postive feedback current
-          Iagain : amp (shared, constant)
-          Iath : amp (shared, constant)
-          Ianorm : amp (shared, constant)
+        %Ia = Iagain / (1 + exp(-(Imem - Iath) / Ianorm)) : amp  # postive feedback current
+        Iagain : amp (constant)
+        Iath : amp (constant)
+        Ianorm : amp (constant)
 
          """,
        'threshold': '',
@@ -464,23 +469,23 @@ i_aPara = {"Iagain": 20 * nA,
 
 # adaptation
 i_ahp = {'model': """
-          %dIahp/dt = (-Iahp + Iahpmax) / tauahp : amp # adaptation current
+          %dIahp/dt = (Ithahp * Ica / Itauahp - Ithahp - Iahp) / (tauahp * (Ithahp / Iahp + 1)) : amp # adaptation current
           tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
           Iahpmax = (Ica / Itauahp) * Ithahp : amp # Ratio of currents through diffpair and adaptation block
           Ithahp : amp (constant)
-          dIca/dt = (Iahpmax-Ica) / tauca : amp
           Itauahp : amp (constant)
           Cahp : farad (constant)
           tauca : second (constant)
          """,
          'threshold': '',
          'reset': '''
-                  Ica += 30 * pA
+                  Iahp += Iahpmax
                   '''}
 
 i_ahpPara = {"tauca": 20 * ms,
              "Itauahp": 120 * pA,
              "Ithahp": 20 * pA,
+             "Ica": 30 * pA,
              "Cahp": 0.5 * pF}
 
 

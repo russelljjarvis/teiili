@@ -355,16 +355,14 @@ none = {'model': '',
 i_model_template = {'model': '''
             dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt - Iahp_clip - Ia_clip) / Itau_clip)) * Imem)   ) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
 
-            Iahp : amp
+            Iahp      : amp
+            Ia        : amp
+            Ia_clip   : amp
+            Iahp_clip : amp
 
             Itau_clip = Itau*(Imem>Io) + Io*(Imem<=Io)  : amp
             Ith_clip = Ith*(Imem>Io) + Io*(Imem<=Io)    : amp
-            Iin_clip = clip(Iin1+Iin2+Iin3+Iin4+Iconst,Io, 1*amp) : amp
-            Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
-            Ia_clip = Ia*(Imem>Io) + 2*Io*(Imem<=Io)    : amp
-
-
-
+            Iin_clip = clip(Iin+Iconst,Io, 1*amp)       : amp
 
             tau = (Cmem * Ut) / (kappa * Itau_clip) : second        # Membrane time constant
             kappa = (kn + kp) / 2 : 1
@@ -455,6 +453,7 @@ i_noisePara = {"mu": 0.25 * pA,
 # feedback
 i_a = {'model': """
         %Ia = Iagain / (1 + exp(-(Imem - Iath) / Ianorm)) : amp  # postive feedback current
+        %Ia_clip = Ia*(Imem>Io) + 2*Io*(Imem<=Io)    : amp
         Iagain : amp (constant)
         Iath : amp (constant)
         Ianorm : amp (constant)
@@ -470,6 +469,7 @@ i_aPara = {"Iagain": 20 * nA,
 # adaptation
 i_ahp = {'model': """
           %dIahp/dt = (Ithahp * Ica / Itauahp - Ithahp - Iahp) / (tauahp * (Ithahp / Iahp + 1)) : amp # adaptation current
+          %Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
           tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
           Iahpmax = (Ica / Itauahp) * Ithahp : amp # Ratio of currents through diffpair and adaptation block
           Ithahp : amp (constant)

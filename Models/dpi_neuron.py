@@ -47,8 +47,9 @@ dpi_neuron_eq = {'model': '''
                         ''',
                  'threshold': '''Imem > Ispkthr''',
                  'reset': '''
-                            Imem = Ireset
-                            Iahp += Iahpmax
-                            ''',
+                        Imem = Ireset
+                        Iahp += Iahpmax
+                        ''',
                  'refractory': 'refP',
-                 'method': 'euler'}
+                 'method': 'euler',
+                 'parameters': parameters}

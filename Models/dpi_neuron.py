@@ -1,4 +1,4 @@
-from NCSBrian2Lib.Parameters.ExpAdapIF_chip_param import parameters
+from NCSBrian2Lib.Parameters.dpi_neuron_param import parameters
 
 
 dpi_neuron_eq = {'model': '''

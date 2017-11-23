@@ -1,21 +1,21 @@
-from NCSBrian2Lib.Parameters.Exp_chip_syn_param import parameters
+from NCSBrian2Lib.Parameters.dpi_synapse_param import parameters
 
-Exp_chip_syn = {'model': """
+dpi_syn_eq = {'model': """
             dIe_syn/dt = -Ie_syn /(tausyne*((Ie_gain/Ie_syn)+1)) - Ie_gain/(tausyne*((Ie_gain/Ie_syn)+1)) +2*Io_syn/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
-     	       dIi_syn/dt = -Ii_syn /(tausyni*((Ii_gain/Ii_syn)+1)) - Ii_gain/(tausyni*((Ii_gain/Ii_syn)+1)) +2*Io_syn/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
+            dIi_syn/dt = -Ii_syn /(tausyni*((Ii_gain/Ii_syn)+1)) - Ii_gain/(tausyni*((Ii_gain/Ii_syn)+1)) +2*Io_syn/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
 
             {Ie}_post = Ie_syn : amp  (summed)
             {Ii}_post = -Ii_syn : amp  (summed)
 
             weight : 1
             wPlast : 1
-            
+
             Ie_gain = Io_syn*(Ie_syn<=Io_syn) + Ie_th*(Ie_syn>Io_syn) : amp
             Ii_gain = Io_syn*(Ii_syn<=Io_syn) + Ii_th*(Ii_syn>Io_syn) : amp
-            
+
             Itau_e = Io_syn*(Ie_syn<=Io_syn) + Ie_tau*(Ie_syn>Io_syn) : amp
             Itau_i = Io_syn*(Ii_syn<=Io_syn) + Ii_tau*(Ii_syn>Io_syn) : amp
-            
+
             baseweight_e : amp (constant)     # synaptic gain
             baseweight_i : amp (constant)     # synaptic gain
             tausyne = Csyn * Ut_syn /(kappa_syn * Itau_e) : second
@@ -42,4 +42,4 @@ Exp_chip_syn = {'model': """
               """,
             'on_post': """ """,
             'parameters': parameters
-                }
+              }

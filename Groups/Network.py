@@ -6,17 +6,16 @@ Created on Wed Aug  2 18:16:28 2017
 @author: alpha
 """
 
-#todo function that plots the whole network
+# todo function that plots the whole network
 import os
 import time
 from collections import OrderedDict
 import pprint
 
-from brian2 import Network, second, device, set_device, prefs, get_device,ms, all_devices
+from brian2 import Network, second, device, set_device, prefs, get_device, ms, all_devices
 from NCSBrian2Lib.Tools.cppTools import buildCppAndReplace, collectStandaloneParams,\
-                                        run_standalone, printDict, params2run_args
+    run_standalone, printDict, params2run_args
 from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
-
 
 
 class StandaloneNetwork(Network):
@@ -27,9 +26,10 @@ class StandaloneNetwork(Network):
 
         self.blocks = []
         self.standaloneParams = OrderedDict()
-        self.standaloneParams['duration'] = 0 *ms
+        self.standaloneParams['duration'] = 0 * ms
 
-        Network.__init__(self, *objs, **kwds)
+        # Network.__init__(self, *objs, **kwds)
+        Network.__init__(self)
 
     def add_standaloneParams(self, **params):
 
@@ -43,7 +43,7 @@ class StandaloneNetwork(Network):
         for obj in objs:
             if isinstance(obj, BuildingBlock):
                 self.blocks.append(obj)
-                print('added to network building blocks: ' , obj)
+                print('added to network building blocks: ', obj)
 
             try:
                 # add all standaloneParams from BBs, neurons and synapses to Network.standaloneParams
@@ -51,16 +51,15 @@ class StandaloneNetwork(Network):
             except AttributeError:
                 pass
 
-
-    def build(self, report=None, report_period=10*second,
-            namespace=None, profile=True, level=0, recompile=False, standaloneParams=None, clean=True):
+    def build(self, report=None, report_period=10 * second,
+              namespace=None, profile=True, level=0, recompile=False, standaloneParams=None, clean=True):
 
         if get_device() == all_devices['cpp_standalone']:
             if recompile or not StandaloneNetwork.hasRun:
 
                 print('building network...')
-                Network.run(self, duration = 0*ms, report=report, report_period=report_period,
-                            namespace=namespace, profile=profile, level=level+1)
+                Network.run(self, duration=0 * ms, report=report, report_period=report_period,
+                            namespace=namespace, profile=profile, level=level + 1)
                 StandaloneNetwork.hasRun = True
 
                 if standaloneParams is None:
@@ -74,10 +73,9 @@ class StandaloneNetwork(Network):
             print('Network was compiled, as you have not set the device to \
                   cpp_standalone, you can still run() it using numpy code generation')
 
-    def run(self, duration = None, standaloneParams={}, **kwargs):
+    def run(self, duration=None, standaloneParams={}, **kwargs):
         # kwargs are if you want to use the StandaloneNetwork as a simple brian2
         # network with numpy code generation
-
 
         if get_device() == all_devices['cpp_standalone']:
 

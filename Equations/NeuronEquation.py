@@ -381,6 +381,7 @@ i_model_template = {'model': '''
             Itau    : amp (constant)                         # Leakage current
             Iconst  : amp (constant)                         # Additional input current similar to constant current injection
             Ishunt  : amp (constant)                         # Shunting inhibitory current (directly affects soma)
+            Ica     : amp (constant)
          ''',
                     'threshold': "Imem > Ispkthr",
                     'reset': "Imem = Ireset"}

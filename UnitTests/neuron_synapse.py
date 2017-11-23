@@ -22,12 +22,9 @@ from brian2 import *
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
 from NCSBrian2Lib.Equations.NeuronEquation import NeuronEquation
 from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone, NeuronEquation
-from NCSBrian2Lib.Models.ExpAdapIF_chip import ExpAdapIF_chip
-from NCSBrian2Lib.Parameters.ExpAdapIF_chip_param import parameters
-from NCSBrian2Lib.Models.ExpAdapIF_chip import ExpAdapIF_chip
-from NCSBrian2Lib.Models.Exp_chip_stdp_syn import Exp_chip_stdp_syn
-from NCSBrian2Lib.Models.Exp_chip_syn import Exp_chip_syn
-from NCSBrian2Lib.Models.Exp_syn import Exp_syn
+from NCSBrian2Lib.Parameters.dpi_neuron_param import parameters
+from NCSBrian2Lib.Models.dpi_neuron import dpi_neuron_eq
+from NCSBrian2Lib.Models.dpi_synapse import dpi_syn_eq
 
 
 prefs.codegen.target = "numpy"
@@ -46,20 +43,16 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 Net = StandaloneNetwork()
 
 
-testNeurons = Neurons(2, model=ExpAdapIF_chip, name="testNeuron")
+testNeurons = Neurons(2, model=dpi_neuron_eq, name="testNeuron")
 testNeurons.setParams(parameters)
 
-testNeurons2 = Neurons(2, model=ExpAdapIF_chip, numInputs=2, name="testNeuron2")
+testNeurons2 = Neurons(2, model=dpi_neuron_eq, numInputs=2, name="testNeuron2")
 testNeurons2.setParams(parameters)
 
 
-InpSyn = Connections(gInpGroup, testNeurons,
-                     model=Exp_chip_syn)
-                     # name="sInpTest_e", baseUnit='current',
-                     # kernel='exponential', plasticity='nonplastic')
+InpSyn = Connections(gInpGroup, testNeurons, name="sInpTest_e", baseUnit='DPI', plasticity='nonplastic')
 InpSyn.connect(True)
 
-#testInpSyn.Iw_exc =100*pamp
 InpSyn.weight = 10.0
 # You can also give different weigths to different synapses of the group:
 #testInpSyn.Iw_exc = [100*pamp,50*pamp]
@@ -69,7 +62,7 @@ InpSyn.weight = 10.0
 #                  kernel='exponential', plasticity='nonplastic')
 
 Syn = Connections(testNeurons, testNeurons2,
-                  model=Exp_chip_syn)
+                  model=dpi_syn_eq)
 
 
 
@@ -78,7 +71,7 @@ Syn.connect(True)
 # you can change all the parameters like this after creation of the neurongroup:
 Syn.weight = 9.
 
-testNeurons2.Iconst = 200 * pA
+testNeurons.Iconst = 200 * pA
 # testNeurons2.Itau = 13 * pA
 # testNeurons2.Iath = 80 * pA
 # testNeurons2.Iagain = 20 * pA
@@ -204,6 +197,3 @@ plt.show()
 
 
 # QtGui.QApplication.instance().exec_()
-
-
-

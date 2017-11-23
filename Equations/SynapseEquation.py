@@ -143,6 +143,7 @@ class SynapseEquation():
                 plasticitymodels[plasticity]
             except KeyError as e:
                 print(ERRValue)
+
             if modes[baseUnit] == 'current':
                 eqDict, varSet = combineEquations_syn(template, currentkernels[kernel], plasticitymodels[plasticity])
                 eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
@@ -174,6 +175,22 @@ class SynapseEquation():
                     varSet.remove('{synvar_i}')
                     varSet.add('gIi')
                 eqDict['parameters'] = combineParDictionaries(varSet, conductance_Parameters[baseUnit], conductance_Parameters[kernel], conductance_Parameters[plasticity])
+
+            if modes[baseUnit] == 'DPI':
+                eqDict, varSet = combineEquations_syn(Dpi, plasticitymodels[plasticity])
+                eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
+                                                         Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
+                                                           Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                eqDict['on_post'] = eqDict['on_post'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
+                                                             Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                if '{synvar_e}' in varSet:
+                    varSet.remove('{synvar_e}')
+                    varSet.add('Ie_syn')
+                if '{synvar_i}' in varSet:
+                    varSet.remove('{synvar_i}')
+                    varSet.add('Ii_syn')
+                eqDict['parameters'] = combineParDictionaries(varSet, DPI_Parameters[baseUnit], DPI_Parameters[plasticity])
 
             self.changeableParameters = ['weight']
 
@@ -277,6 +294,69 @@ reversalPara = {"Ige": 0 * nS,
                 "kernel_e": 0 * nS*ms**-1,
                 "kernel_i": 0 * nS*ms**-1
                 }
+
+# Dpi type model
+Dpi = {'model': '''
+        dIe_syn/dt = -Ie_syn /(tausyne*((Ie_gain/Ie_syn)+1)) - Ie_gain/(tausyne*((Ie_gain/Ie_syn)+1)) +2*Io_syn*(Ie_syn<=Io_syn)/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
+        dIi_syn/dt = -Ii_syn /(tausyni*((Ii_gain/Ii_syn)+1)) - Ii_gain/(tausyni*((Ii_gain/Ii_syn)+1)) +2*Io_syn*(Ii_syn<=Io_syn)/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
+
+        {Ie}_post = Ie_syn : amp  (summed)
+        {Ii}_post = -Ii_syn : amp  (summed)
+
+        weight : 1
+        wPlast : 1
+
+        Ie_gain = Io_syn*(Ie_syn<=Io_syn) + Ie_th*(Ie_syn>Io_syn) : amp
+        Ii_gain = Io_syn*(Ii_syn<=Io_syn) + Ii_th*(Ii_syn>Io_syn) : amp
+
+        Itau_e = Io_syn*(Ie_syn<=Io_syn) + Ie_tau*(Ie_syn>Io_syn) : amp
+        Itau_i = Io_syn*(Ii_syn<=Io_syn) + Ii_tau*(Ii_syn>Io_syn) : amp
+
+        baseweight_e : amp (constant)     # synaptic gain
+        baseweight_i : amp (constant)     # synaptic gain
+        tausyne = Csyn * Ut_syn /(kappa_syn * Itau_e) : second
+        tausyni = Csyn * Ut_syn /(kappa_syn * Itau_i) : second
+        kappa_syn = (kn_syn + kp_syn) / 2 : 1
+
+
+        Iw_e = weight*baseweight_e  : amp
+        Iw_i = weight*baseweight_i  : amp
+
+        Ie_tau       : amp (constant)
+        Ii_tau       : amp (constant)
+        Ie_th        : amp (constant)
+        Ii_th        : amp (constant)
+        kn_syn       : 1 (constant)
+        kp_syn       : 1 (constant)
+        Ut_syn       : volt (constant)
+        Io_syn       : amp (constant)
+        Csyn         : farad (constant)
+        ''',
+        'on_pre': '''
+        Ie_syn += Iw_e*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))
+        Ii_syn += Iw_i*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
+        ''',
+        'on_post': ''' ''',
+        }
+
+# standard parameters for Dpi models
+DpiPara = {
+    'Csyn': 0.100 * pF,
+    'Io_syn': 0.5 * pA,
+    'Ie_tau': 1. * pA,
+    'Ii_tau': 1. * pA,
+    'Ut_syn': 25. * mV,
+    'baseweight_e': 7. * pA,
+    'baseweight_i': 7. * pA,
+    'kn_syn': 0.75,
+    'kp_syn': 0.66,
+    'wPlast': 1,
+    "Igain": 15 * pA,
+    'Ie_th': 1 * pA,
+    'Ii_th': 1 * pA,
+    'Ie_syn': 0.5 * pA,
+    'Ii_syn': 0.5 * pA
+               }
 
 
 ############################################################################################
@@ -503,7 +583,7 @@ currentkernels = {'exponential': none, 'alpha': alphakernel, 'resonant': resonan
 
 plasticitymodels = {'nonplastic': none, 'fusi': fusi, 'stdp': stdp}
 
-modes = {'current': 'current', 'conductance': 'conductance'}
+modes = {'current': 'current', 'conductance': 'conductance', 'DPI': 'DPI'}
 
 
 current_Parameters = {'current': currentPara, 'nonplastic': nonePara, 'fusi': fusiPara_current,
@@ -514,6 +594,8 @@ conductance_Parameters = {'conductance': reversalPara, 'nonplastic': nonePara, '
                           'stdp': stdpPara_conductance, 'exponential': nonePara, 'alpha': alphaPara_conductance,
                           'resonant': resonantPara_conductance, 'gaussian': gaussianPara_conductance}
 
+DPI_Parameters = {'DPI': DpiPara, 'nonplastic': nonePara, 'fusi': fusiPara_conductance,
+                          'stdp': stdpPara_conductance}
 
 def printDictionaries(Dict):
     for keys, values in Dict.items():

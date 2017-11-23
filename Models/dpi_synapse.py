@@ -1,8 +1,8 @@
 from NCSBrian2Lib.Parameters.dpi_synapse_param import parameters
 
 dpi_syn_eq = {'model': """
-            dIe_syn/dt = -Ie_syn /(tausyne*((Ie_gain/Ie_syn)+1)) - Ie_gain/(tausyne*((Ie_gain/Ie_syn)+1)) +2*Io_syn/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
-            dIi_syn/dt = -Ii_syn /(tausyni*((Ii_gain/Ii_syn)+1)) - Ii_gain/(tausyni*((Ii_gain/Ii_syn)+1)) +2*Io_syn/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
+            dIe_syn/dt = -Ie_syn /(tausyne*((Ie_gain/Ie_syn)+1)) - Ie_gain/(tausyne*((Ie_gain/Ie_syn)+1)) +2*Io_syn*(Ie_syn<=Io_syn)/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
+            dIi_syn/dt = -Ii_syn /(tausyni*((Ii_gain/Ii_syn)+1)) - Ii_gain/(tausyni*((Ii_gain/Ii_syn)+1)) +2*Io_syn*(Ii_syn<=Io_syn)/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
 
             {Ie}_post = Ie_syn : amp  (summed)
             {Ii}_post = -Ii_syn : amp  (summed)

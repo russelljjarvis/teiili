@@ -424,10 +424,10 @@ i_model_templatePara = {
     #---------------------------------------------------------
     # Neuron parameters
     #---------------------------------------------------------
-    "Ispkthr": 0.15 * nA,  # Spike threshold of excitatory neurons
+    "Ispkthr": 150. * pA,  # Spike threshold of excitatory neurons
     "Ireset": 1 * pA,  # Reset Imem to Ireset after each spike
     "Ith": 0.5 * pA,
-    "Itau": 4.3 * pA,
+    "Itau": 10 * pA,
     "refP": 1 * ms,
     #---------------------------------------------------------
     # Noise parameters
@@ -494,7 +494,7 @@ i_exponentialPara = {"Ith": 0.9 * pA,
                      "Iath": 80 * pA,
                      "Iagain": 20 * pA,
                      "Ianorm": 7 * pA,
-                     "Itau": 13 * pA}
+                     "Itau": 20 * pA}
 
 i_nonLeakyPara = {"Itau": 0.5 * pA}
 

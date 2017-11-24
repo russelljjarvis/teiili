@@ -174,7 +174,8 @@ class SynapseEquation():
                 if '{synvar_i}' in varSet:
                     varSet.remove('{synvar_i}')
                     varSet.add('gIi')
-                eqDict['parameters'] = combineParDictionaries(varSet, conductance_Parameters[baseUnit], conductance_Parameters[kernel], conductance_Parameters[plasticity])
+                eqDict['parameters'] = combineParDictionaries(varSet, conductance_Parameters[baseUnit],
+                                                              conductance_Parameters[kernel], conductance_Parameters[plasticity])
 
             if modes[baseUnit] == 'DPI':
                 eqDict, varSet = combineEquations_syn(Dpi, plasticitymodels[plasticity])
@@ -291,8 +292,8 @@ reversalPara = {"Ige": 0 * nS,
                 "wPlast": 1,
                 "baseweight_e": 7 * nS,  # should we find the way to replace baseweight_e/i, since we already defined it in template?
                 "baseweight_i": 3 * nS,
-                "kernel_e": 0 * nS*ms**-1,
-                "kernel_i": 0 * nS*ms**-1
+                "kernel_e": 0 * nS * ms**-1,
+                "kernel_i": 0 * nS * ms**-1
                 }
 
 # Dpi type model
@@ -332,19 +333,19 @@ Dpi = {'model': '''
         Io_syn       : amp (constant)
         Csyn         : farad (constant)
         ''',
-        'on_pre': '''
+       'on_pre': '''
         Ie_syn += Iw_e*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))
         Ii_syn += Iw_i*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
         ''',
-        'on_post': ''' ''',
-        }
+       'on_post': ''' ''',
+       }
 
 # standard parameters for Dpi models
 DpiPara = {
-    'Csyn': 0.100 * pF,
+    'Csyn': 0.5 * pF,
     'Io_syn': 0.5 * pA,
-    'Ie_tau': 1. * pA,
-    'Ii_tau': 1. * pA,
+    'Ie_tau': 7. * pA,
+    'Ii_tau': 7. * pA,
     'Ut_syn': 25. * mV,
     'baseweight_e': 7. * pA,
     'baseweight_i': 7. * pA,
@@ -352,11 +353,11 @@ DpiPara = {
     'kp_syn': 0.66,
     'wPlast': 1,
     "Igain": 15 * pA,
-    'Ie_th': 1 * pA,
-    'Ii_th': 1 * pA,
+    'Ie_th': 10 * pA,
+    'Ii_th': 10 * pA,
     'Ie_syn': 0.5 * pA,
     'Ii_syn': 0.5 * pA
-               }
+}
 
 
 ############################################################################################
@@ -465,8 +466,8 @@ stdp = {'model': '''
       Apost += -diffApre * (taupre / taupost) * Q_diffAPrePost * w_max
       w = clip(w + Apre, 0, w_max) '''}
 
-stdpPara_current = {"baseweight_e": 7 * nA,  # should we find the way to replace since we would define it twice
-                    "baseweight_i": 3 * nA,
+stdpPara_current = {"baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
+                    "baseweight_i": 7 * pA,
                     "taupre": 20 * ms,
                     "taupost": 20 * ms,
                     "w_max": 0.01,
@@ -569,7 +570,6 @@ gaussianPara_conductance = {"sigma_gaussian_e": 6 * ms,
                             "sigma_gaussian_i": 6 * ms}
 
 
-
 nonePara = {}
 
 
@@ -594,8 +594,9 @@ conductance_Parameters = {'conductance': reversalPara, 'nonplastic': nonePara, '
                           'stdp': stdpPara_conductance, 'exponential': nonePara, 'alpha': alphaPara_conductance,
                           'resonant': resonantPara_conductance, 'gaussian': gaussianPara_conductance}
 
-DPI_Parameters = {'DPI': DpiPara, 'nonplastic': nonePara, 'fusi': fusiPara_conductance,
-                          'stdp': stdpPara_conductance}
+DPI_Parameters = {'DPI': DpiPara, 'nonplastic': nonePara, 'fusi': fusiPara_current,
+                  'stdp': stdpPara_current}
+
 
 def printDictionaries(Dict):
     for keys, values in Dict.items():

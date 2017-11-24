@@ -8,7 +8,7 @@ dpi_neuron_eq = {'model': '''
 
                         Itau_clip = Itau*(Imem>Io) + Io*(Imem<=Io)  : amp
                         Ith_clip = Ith*(Imem>Io) + Io*(Imem<=Io)    : amp
-                        Iin_clip = clip(Iin1+Iin2+Iin3+Iin4+Iconst,Io, 1*amp) : amp
+                        Iin_clip = clip(Iin+Iconst,Io, 1*amp) : amp
                         Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
                         Ia_clip = Ia*(Imem>Io) + 2*Io*(Imem<=Io)    : amp
 
@@ -20,10 +20,6 @@ dpi_neuron_eq = {'model': '''
                         kappa = (kn + kp) / 2 : 1
 
                         Inoise  : amp                                    # Noise due to mismatch
-                        Iin1      : amp                                  # Input current 1
-                        Iin2      : amp                                  # Input current 2
-                        Iin3      : amp                                  # Input current 3
-                        Iin4      : amp                                  # Input current 4
                         kn      : 1 (shared, constant)                   # subthreshold slope factor for nFETs
                         kp      : 1 (shared, constant)                   # subthreshold slope factor for pFETs
                         Ut      : volt (shared, constant)                # Thermal voltage

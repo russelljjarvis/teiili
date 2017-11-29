@@ -237,13 +237,17 @@ def fkernelGauss2d(i, j, gsigma, n2dNeurons):
 @declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float',freq='float', InputSizeX='integer', InputSizeY='integer', WindowSizeX='integer', WindowSizeY='integer', RFSize='integer', result='float')
 @check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, InputSizeX=1, InputSizeY=1, WindowSizeX=1, WindowSizeY=1, RFSize=1, result=1)
 def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, InputSizeY, WindowSizeX, WindowSizeY, RFSize):
-    "function that calculates Gabor 2D kernel, only works with odd Receptive Field kernels"
+    "function that calculates Gabor 2D kernel, only works with odd square Receptive Fields"
     
-    (ix, iy) = ind2xy(i, (InputSizeX, InputSizeY))
-    if (WindowSizeX + abs(offx) < (InputSizeX-(RFSize-1))) & (WindowSizeY + abs(offy) < (InputSizeY-(RFSize-1))):
-        (x0, y0) = ind2xy(j, (WindowSizeX, WindowSizeY))
-        x0 = x0 - int((InputSizeX-WindowSizeX+1)/2) + offx
-        y0 = y0 - int((InputSizeY-WindowSizeY+1)/2) - offy 
+    (ix, iy) = np.unravel_index(i, (InputSizeX, InputSizeY))
+    if (WindowSizeX + abs(offx) <= (InputSizeX-(RFSize-1))) & (WindowSizeY + abs(offy) <= (InputSizeY-(RFSize-1))):
+        (x0, y0) = np.unravel_index(j, (WindowSizeX, WindowSizeY))
+        print(x0)
+        print(y0)
+        x0 = x0 + int((InputSizeX-WindowSizeX+1)/2) + offx
+        y0 = y0 + int((InputSizeY-WindowSizeY+1)/2) - offy 
+        print(x0)
+        print(y0)
         x =  (ix - x0)*np.cos(theta) + (iy - y0)*np.sin(theta)
         y = -(ix - x0)*np.sin(theta) + (iy - y0)*np.cos(theta)
         print(x)
@@ -251,7 +255,7 @@ def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, In
         exponent = -((x**2)/2*sigmax**2 + (y**2)/2*sigmay**2)
         res = exp(exponent)*np.cos(2*np.pi*x/freq)
         print(res)
-        res = res*(abs(ix.any() - x0.any())<WindowSize/2) *(abs(iy.any() - y0.any())<WindowSize/2)
+        res = res*(abs(ix.any() - x0.any())<RFSize/2) *(abs(iy.any() - y0.any())<RFSize/2)
         print(res)
         return res
     else:

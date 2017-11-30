@@ -1,8 +1,9 @@
 from brian2 import pF, nS, mV, ms, pA, nA
+from NCSBrian2Lib.Parameters import constants
 
-parameters = {"kn": 0.75,
-              "kp": 0.66,
-              "Ut": 25. * mV,
+parameters = {"kn": constants.kappa_n,
+              "kp": constants.kappa_p,
+              "Ut": constants.Ut,
               "Io": 0.5 * pA,
               "Cmem": 0.5 * pF,
               "Ispkthr": 150. * pA,

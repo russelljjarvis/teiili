@@ -46,14 +46,14 @@ Net = StandaloneNetwork()
 testNeurons = Neurons(2, model=dpi_neuron_eq, name="testNeuron")
 testNeurons.setParams(parameters)
 
-testNeurons2 = Neurons(2, model=dpi_neuron_eq, numInputs=2, name="testNeuron2")
+testNeurons2 = Neurons(2, model=dpi_neuron_eq, name="testNeuron2")
 testNeurons2.setParams(parameters)
 
 
 InpSyn = Connections(gInpGroup, testNeurons, name="sInpTest_e", baseUnit='DPI', plasticity='nonplastic')
 InpSyn.connect(True)
 
-InpSyn.weight = 10.0
+InpSyn.weight = 20
 # You can also give different weigths to different synapses of the group:
 #testInpSyn.Iw_exc = [100*pamp,50*pamp]
 
@@ -69,9 +69,9 @@ Syn = Connections(testNeurons, testNeurons2,
 
 Syn.connect(True)
 # you can change all the parameters like this after creation of the neurongroup:
-Syn.weight = 9.
+Syn.weight = 20
 
-testNeurons.Iconst = 200 * pA
+#testNeurons.Iconst = 3 * nA
 # testNeurons2.Itau = 13 * pA
 # testNeurons2.Iath = 80 * pA
 # testNeurons2.Iagain = 20 * pA

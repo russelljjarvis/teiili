@@ -17,29 +17,29 @@ class stdp_testbench():
         self.N = N  # Number of Neurons per input group
         self.stimulusLength = stimulusLength
 
-    def stimuli(self):
+    def stimuli(self, isi=10):
         '''
         This function returns two brian2 objects.
         Both are Spikegeneratorgroups which hold a single index each
         and varying spike times.
         The protocol follows homoeostasis, weak LTP, weak LTD, strong LTP, strong LTD, homoeostasis
         '''
-        t_pre_homoeotasis_1 = np.arange(1, 202, 10)
-        t_pre_weakLTP = np.arange(301, 502, 10)
-        t_pre_weakLTD = np.arange(601, 802, 10)
-        t_pre_strongLTP = np.arange(901, 1102, 10)
-        t_pre_strongLTD = np.arange(1201, 1402, 10)
-        t_pre_homoeotasis_2 = np.arange(1501, 1702, 10)
+        t_pre_homoeotasis_1 = np.arange(1, 202, isi)
+        t_pre_weakLTP = np.arange(301, 502, isi)
+        t_pre_weakLTD = np.arange(601, 802, isi)
+        t_pre_strongLTP = np.arange(901, 1102, isi)
+        t_pre_strongLTD = np.arange(1201, 1402, isi)
+        t_pre_homoeotasis_2 = np.arange(1501, 1702, isi)
         t_pre = np.hstack((t_pre_homoeotasis_1, t_pre_weakLTP, t_pre_weakLTD,
                            t_pre_strongLTP, t_pre_strongLTD, t_pre_homoeotasis_2))
 
         # Normal distributed shift of spike times to ensure homoeotasis
-        t_post_homoeotasis_1 = t_pre_homoeotasis_1 + np.random.rand(len(t_pre_homoeotasis_1))
-        t_post_weakLTP = t_pre_weakLTP + 7   # post neuron spikes 7 ms after pre
-        t_post_weakLTD = t_pre_weakLTD - 7   # post neuron spikes 7 ms before pre
+        t_post_homoeotasis_1 = t_pre_homoeotasis_1 + np.clip(np.random.randn(len(t_pre_homoeotasis_1)), -1, 1)
+        t_post_weakLTP = t_pre_weakLTP + 5   # post neuron spikes 7 ms after pre
+        t_post_weakLTD = t_pre_weakLTD - 5   # post neuron spikes 7 ms before pre
         t_post_strongLTP = t_pre_strongLTP + 1  # post neurons spikes 1 ms after pre
         t_post_strongLTD = t_pre_strongLTD - 1  # post neurons spikes 1 ms before pre
-        t_post_homoeotasis_2 = t_pre_homoeotasis_2 + np.random.randn(len(t_pre_homoeotasis_2))
+        t_post_homoeotasis_2 = t_pre_homoeotasis_2 + np.clip(np.random.randn(len(t_pre_homoeotasis_2)), -1, 1)
 
         t_post = np.hstack((t_post_homoeotasis_1, t_post_weakLTP, t_post_weakLTD,
                             t_post_strongLTP, t_post_strongLTD, t_post_homoeotasis_2))
@@ -50,21 +50,59 @@ class stdp_testbench():
         post = SpikeGeneratorGroup(self.N, indices=ind_post, times=t_post * ms, name='gPost')
         return pre, post
 
+    def kernel(self, N=100, tmax=30):
+        spiketimes = np.arange(N)
+        t_pre = spiketimes * tmax / (N - 1)
+        t_post = (N - 1 - spiketimes) * tmax / (N - 1)
+        ind_pre = spiketimes
+        ind_post = spiketimes[::-1]
+        pre = SpikeGeneratorGroup(N, indices=ind_pre, times=t_pre * ms, name='gPre')
+        post = SpikeGeneratorGroup(N, indices=ind_post, times=t_post * ms, name='gPost')
+        return pre, post
+
 
 class octa_testbench():
     def __init__(DVS_SHAPE=(240, 180)):
         self.DVS_SHAPE = DVS_SHAPE
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
 
-    def bar(self, events):
-        '''
-        This function returns a single spikegenerator group (brian object)
+    def bar(self, length=10, orientation='vertical', ts_offset=10):
+        """
+        This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
-        A bar is moving in 4 directions. The goal is to learn neccessary
-        spatiotemporal feature of the mnoving bar and be able to make predictions
+        A bar is moving in 4 directions. The goal is to learn necessary
+        spatio-temporal feature of the moving bar and be able to make predictions
         where the bar will move
-        '''
-        pass
+
+        Args:
+            length (int): `length` of the bar in pixel.
+            orientation (str): `orientation` of the bar. Can either be 'vertical'
+                or 'horizontal'
+            ts_offset (int): time between two pixel location
+
+        Returns:
+            SpikeGenerator obj: Brian2 objects which holds the spiketimes as well
+                as the respective neuron indices
+        """
+        if not artifical_stimulus:
+            fname = 'rec/bar.aedat'
+            events = aedat2numpy(datafile=fname, camera='DVS240')
+        else:
+            x_coord = []
+            y_coord = []
+            pol = []
+            ts = []
+
+            events = np.zeros((4, len(x_coord)))
+            events[0, :] = np.asarray(x_coord)
+            events[1, :] = np.asarray(y_coord)
+            events[2, :] = np.asarray(ts)
+            events[3, :] = np.asarray(pol)
+
+        ind, ts = dvs2ind(events, scale=False)
+        nPixel = np.max(ind)
+        gInpGroup = SpikeGeneratorGroup(nPixel, indices=ind, times=ts * ms, name='bar')
+        return gInpGroup
 
     def infinity(t):
         return np.cos(t), np.sin(t) * np.cos(t)
@@ -72,7 +110,19 @@ class octa_testbench():
     def dda_round(x):
         return (x + 0.5).astype(int)
 
-    def translating_bar_infinity(self, length=10, orientation='vertical', shift=32, ts_offset=10, artifical_stimulus=True):
+    def translating_bar_infinity(self, length=10, orientation='vertical', shift=32,
+                                 ts_offset=10, artifical_stimulus=True, orthogonal=0,
+                                 returnEvents=False):
+        """
+        This function will either load recorded DAVIS/DVS recordings or generate artificial events
+        of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
+        In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
+        Input:
+        :param length:
+        :param orientation:
+        :param shift:
+
+        """
         if not artifical_stimulus:
             if orthogonal == 0:
                 fname = 'rec/Inifity_aligned_bar.aedat'

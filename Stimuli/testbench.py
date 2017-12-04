@@ -7,7 +7,7 @@ Email: mmilde@ini.uzh.ch
 Date: 13.06.2017
 '''
 from brian2 import *
-from NCSBrian2Lib.Tools.tools import dvs2ind
+from NCSBrian2Lib.Tools.tools import dvs2ind, xy2ind
 import numpy as np
 import operator
 
@@ -50,27 +50,24 @@ class stdp_testbench():
         post = SpikeGeneratorGroup(self.N, indices=ind_post, times=t_post * ms, name='gPost')
         return pre, post
 
-    def kernel(self, N=100, tmax=30):
-        spiketimes = np.arange(N)
-        t_pre = spiketimes * tmax / (N - 1)
-        t_post = (N - 1 - spiketimes) * tmax / (N - 1)
-        ind_pre = spiketimes
-        ind_post = spiketimes[::-1]
-        pre = SpikeGeneratorGroup(N, indices=ind_pre, times=t_pre * ms, name='gPre')
-        post = SpikeGeneratorGroup(N, indices=ind_post, times=t_post * ms, name='gPost')
-        return pre, post
-
 
 class octa_testbench():
-    def __init__(DVS_SHAPE=(240, 180)):
+    def __init__(self, DVS_SHAPE=(240, 180)):
         self.DVS_SHAPE = DVS_SHAPE
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
 
-    def bar(self, length=10, orientation='vertical', ts_offset=10):
+    def infinity(self, t):
+        return np.cos(t), np.sin(t) * np.cos(t)
+
+    def dda_round(self, x):
+        return (x + 0.5).astype(int)
+
+    def bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
+            angle_step=10, artifical_stimulus=True):
         """
         This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
-        A bar is moving in 4 directions. The goal is to learn necessary
+        A bar is rotating in the center. The goal is to learn necessary
         spatio-temporal feature of the moving bar and be able to make predictions
         where the bar will move
 
@@ -92,23 +89,38 @@ class octa_testbench():
             y_coord = []
             pol = []
             ts = []
-
+            center = (n2dNeurons / 2, n2dNeurons / 2)
+            self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, np.radians(angle_step))
+            for i, cAngle in enumerate(self.angles):
+                endy_1 = center[1] + ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                endx_1 = center[0] + ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                endy_2 = center[1] - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                endx_2 = center[0] - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                self.start = np.asarray((endx_1, endy_1))
+                self.end = np.asarray((endx_2, endy_2))
+                self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
+                                                          key=operator.itemgetter(1))
+                self.dv = (self.end - self.start) / self.max_length
+                self.line = [self.dda_round(self.start)]
+                for step in range(int(self.max_length)):
+                    self.line.append(self.dda_round((step + 1) * self.dv + self.start))
+                for coord in self.line:
+                    x_coord.append(coord[0])
+                    y_coord.append(coord[1])
+                    ts.append(i * ts_offset)
+                    pol.append(1)
             events = np.zeros((4, len(x_coord)))
             events[0, :] = np.asarray(x_coord)
             events[1, :] = np.asarray(y_coord)
             events[2, :] = np.asarray(ts)
             events[3, :] = np.asarray(pol)
 
-        ind, ts = dvs2ind(events, scale=False)
+        # ind, ts = dvs2ind(events, scale=False)
+        ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
         nPixel = np.max(ind)
         gInpGroup = SpikeGeneratorGroup(nPixel, indices=ind, times=ts * ms, name='bar')
-        return gInpGroup
+        return gInpGroup, events
 
-    def infinity(t):
-        return np.cos(t), np.sin(t) * np.cos(t)
-
-    def dda_round(x):
-        return (x + 0.5).astype(int)
 
     def translating_bar_infinity(self, length=10, orientation='vertical', shift=32,
                                  ts_offset=10, artifical_stimulus=True, orthogonal=0,
@@ -137,7 +149,7 @@ class octa_testbench():
             y_coord = []
             pol = []
             ts = []
-            for cAngle in self.angles:
+            for i, cAngle in enumerate(self.angles):
                 x, y = self.infinity(cAngle)
                 ax.set_xlim((-1.5, 1.5))
                 ax.set_ylim((-1.5, 1.5))
@@ -151,13 +163,13 @@ class octa_testbench():
                     endx_1 = x + ((length / 2) * np.cos(np.pi))
                     endy_2 = y - ((length / 2) * np.sin(np.pi))
                     endx_2 = x - ((length / 2) * np.cos(np.pi))
-                self.start = (endx_1, endy_1)
-                self.end = (endx_2, endy_2)
+                self.start = np.asarray(endx_1, endy_1)
+                self.end = np.asarray(endx_2, endy_2)
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)), key=operator.itemgetter(1))
                 self.dv = (self.end - self.start) / self.max_length
-                self.line = [dda_round(self.start)]
+                self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
-                    self.line.append(dda_round((step + 1) * self.dv + self.start))
+                    self.line.append(self.dda_round((step + 1) * self.dv + self.start))
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])
@@ -220,13 +232,13 @@ class octa_testbench():
                     endy_2 = y - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
                     endx_2 = x - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
 
-                self.start = (endx_1, endy_1)
-                self.end = (endx_2, endy_2)
+                self.start = np.asarray(endx_1, endy_1)
+                self.end = np.asarray(endx_2, endy_2)
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)), key=operator.itemgetter(1))
                 self.dv = (self.end - self.start) / self.max_length
-                self.line = [dda_round(self.start)]
+                self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
-                    self.line.append(dda_round((step + 1) * self.dv + self.start))
+                    self.line.append(self.dda_round((step + 1) * self.dv + self.start))
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])

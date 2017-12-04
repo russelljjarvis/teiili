@@ -53,7 +53,7 @@ testNeurons2.setParams(parameters)
 InpSyn = Connections(gInpGroup, testNeurons, name="sInpTest_e", baseUnit='DPI', plasticity='nonplastic')
 InpSyn.connect(True)
 
-InpSyn.weight = 20
+InpSyn.weight = 0
 # You can also give different weigths to different synapses of the group:
 #testInpSyn.Iw_exc = [100*pamp,50*pamp]
 
@@ -69,9 +69,9 @@ Syn = Connections(testNeurons, testNeurons2,
 
 Syn.connect(True)
 # you can change all the parameters like this after creation of the neurongroup:
-Syn.weight = 20
+Syn.weight = 0
 
-#testNeurons.Iconst = 3 * nA
+testNeurons.Iconst = 7 * nA
 # testNeurons2.Itau = 13 * pA
 # testNeurons2.Iath = 80 * pA
 # testNeurons2.Iagain = 20 * pA
@@ -93,15 +93,16 @@ Net.run(100 * ms)
 
 # Visualize simulation results
 
-fig = figure()
-plot(statemonInpSyn.t / ms, statemonInpSyn.Ie_syn[0])
+#fig = figure()
+#plot(statemonInpSyn.t / ms, statemonInpSyn.Ie_syn[0])
 fig2 = figure()
 plot(statemonNeuIn.t / ms, statemonNeuIn.Imem[0])
 
-fig3 = figure()
-plot(statemonSynOut.t / ms, statemonSynOut.Ie_syn[0])
-fig4 = figure()
-plot(statemonNeuOut.t / ms, statemonNeuOut.Imem[0])
+
+#fig3 = figure()
+#plot(statemonSynOut.t / ms, statemonSynOut.Ie_syn[0])
+#fig4 = figure()
+#plot(statemonNeuOut.t / ms, statemonNeuOut.Imem[0])
 
 plt.show()
 # fig3 = figure()

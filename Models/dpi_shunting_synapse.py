@@ -1,7 +1,7 @@
 from NCSBrian2Lib.Parameters.Shunt_syn_param import parameters
 
 Shunt_syn = {'model': """
-     	       dIi_syn/dt = -Ii_syn /(tausyni*((Ii_gain/Ii_syn)+1)) - Ii_gain/(tausyni*((Ii_gain/Ii_syn)+1)) +2*Io_syn*(Ii_syn<=Io_syn)/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
+     	       dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
 
             Ishunt_post = -Ii_syn : amp  (summed)
 

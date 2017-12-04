@@ -4,15 +4,15 @@ from NCSBrian2Lib.Parameters import constants
 parameters = {"kn": constants.kappa_n,
               "kp": constants.kappa_p,
               "Ut": constants.Ut,
-              "Io": 0.5 * pA,
+              "Io": constants.Io,
               "Cmem": 1.5 * pF,
               "Ispkthr": 1. * nA,
               "refP": 1. * ms,
               "Ireset": 0.6 * pA,
-              "Iconst": 0.5 * pA,
+              "Iconst": constants.Io,
               ##################
               "Itau": 8. * pA,  #
-              "Ishunt": 0.5 * pA,  #
+              "Ishunt": constants.Io,  #
               "Ith": 0.9 * pA,  #
               #  ADAPTATION  #################
               "Ica": 0. * pA,

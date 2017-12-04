@@ -3,7 +3,7 @@ from NCSBrian2Lib.Parameters import constants
 
 parameters = {
     'Csyn': 1.5 * pF,
-    'Io_syn': 0.5 * pA,
+    'Io_syn': constants.Io,
     'Ii_tau': 10. * pA,
     'Ut_syn': constants.Ut,
     'baseweight_i': 50. * pA,
@@ -11,5 +11,5 @@ parameters = {
     'kp_syn': constants.kappa_p,
     'wPlast': 1,
     'Ii_th': 10 * pA,
-    'Ii_syn': 0.5 * pA
+    'Ii_syn': constants.Io
 }

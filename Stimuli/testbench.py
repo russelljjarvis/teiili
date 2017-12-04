@@ -7,7 +7,7 @@ Email: mmilde@ini.uzh.ch
 Date: 13.06.2017
 '''
 from brian2 import *
-from NCSBrian2Lib.Tools.tools import dvs2ind
+from NCSBrian2Lib.Tools.tools import dvs2ind, xy2ind
 import numpy as np
 import operator
 
@@ -17,29 +17,29 @@ class stdp_testbench():
         self.N = N  # Number of Neurons per input group
         self.stimulusLength = stimulusLength
 
-    def stimuli(self):
+    def stimuli(self, isi=10):
         '''
         This function returns two brian2 objects.
         Both are Spikegeneratorgroups which hold a single index each
         and varying spike times.
         The protocol follows homoeostasis, weak LTP, weak LTD, strong LTP, strong LTD, homoeostasis
         '''
-        t_pre_homoeotasis_1 = np.arange(1, 202, 10)
-        t_pre_weakLTP = np.arange(301, 502, 10)
-        t_pre_weakLTD = np.arange(601, 802, 10)
-        t_pre_strongLTP = np.arange(901, 1102, 10)
-        t_pre_strongLTD = np.arange(1201, 1402, 10)
-        t_pre_homoeotasis_2 = np.arange(1501, 1702, 10)
+        t_pre_homoeotasis_1 = np.arange(1, 202, isi)
+        t_pre_weakLTP = np.arange(301, 502, isi)
+        t_pre_weakLTD = np.arange(601, 802, isi)
+        t_pre_strongLTP = np.arange(901, 1102, isi)
+        t_pre_strongLTD = np.arange(1201, 1402, isi)
+        t_pre_homoeotasis_2 = np.arange(1501, 1702, isi)
         t_pre = np.hstack((t_pre_homoeotasis_1, t_pre_weakLTP, t_pre_weakLTD,
                            t_pre_strongLTP, t_pre_strongLTD, t_pre_homoeotasis_2))
 
         # Normal distributed shift of spike times to ensure homoeotasis
-        t_post_homoeotasis_1 = t_pre_homoeotasis_1 + np.random.rand(len(t_pre_homoeotasis_1))
-        t_post_weakLTP = t_pre_weakLTP + 7   # post neuron spikes 7 ms after pre
-        t_post_weakLTD = t_pre_weakLTD - 7   # post neuron spikes 7 ms before pre
+        t_post_homoeotasis_1 = t_pre_homoeotasis_1 + np.clip(np.random.randn(len(t_pre_homoeotasis_1)), -1, 1)
+        t_post_weakLTP = t_pre_weakLTP + 5   # post neuron spikes 7 ms after pre
+        t_post_weakLTD = t_pre_weakLTD - 5   # post neuron spikes 7 ms before pre
         t_post_strongLTP = t_pre_strongLTP + 1  # post neurons spikes 1 ms after pre
         t_post_strongLTD = t_pre_strongLTD - 1  # post neurons spikes 1 ms before pre
-        t_post_homoeotasis_2 = t_pre_homoeotasis_2 + np.random.randn(len(t_pre_homoeotasis_2))
+        t_post_homoeotasis_2 = t_pre_homoeotasis_2 + np.clip(np.random.randn(len(t_pre_homoeotasis_2)), -1, 1)
 
         t_post = np.hstack((t_post_homoeotasis_1, t_post_weakLTP, t_post_weakLTD,
                             t_post_strongLTP, t_post_strongLTD, t_post_homoeotasis_2))
@@ -52,27 +52,89 @@ class stdp_testbench():
 
 
 class octa_testbench():
-    def __init__(DVS_SHAPE=(240, 180)):
+    def __init__(self, DVS_SHAPE=(240, 180)):
         self.DVS_SHAPE = DVS_SHAPE
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
 
-    def bar(self, events):
-        '''
-        This function returns a single spikegenerator group (brian object)
-        The scope of this function is to provide a simple test stimulus
-        A bar is moving in 4 directions. The goal is to learn neccessary
-        spatiotemporal feature of the mnoving bar and be able to make predictions
-        where the bar will move
-        '''
-        pass
-
-    def infinity(t):
+    def infinity(self, t):
         return np.cos(t), np.sin(t) * np.cos(t)
 
-    def dda_round(x):
+    def dda_round(self, x):
         return (x + 0.5).astype(int)
 
-    def translating_bar_infinity(self, length=10, orientation='vertical', shift=32, ts_offset=10, artifical_stimulus=True):
+    def bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
+            angle_step=10, artifical_stimulus=True):
+        """
+        This function returns a single spikegenerator group (Brian object)
+        The scope of this function is to provide a simple test stimulus
+        A bar is rotating in the center. The goal is to learn necessary
+        spatio-temporal feature of the moving bar and be able to make predictions
+        where the bar will move
+
+        Args:
+            length (int): `length` of the bar in pixel.
+            orientation (str): `orientation` of the bar. Can either be 'vertical'
+                or 'horizontal'
+            ts_offset (int): time between two pixel location
+
+        Returns:
+            SpikeGenerator obj: Brian2 objects which holds the spiketimes as well
+                as the respective neuron indices
+        """
+        if not artifical_stimulus:
+            fname = 'rec/bar.aedat'
+            events = aedat2numpy(datafile=fname, camera='DVS240')
+        else:
+            x_coord = []
+            y_coord = []
+            pol = []
+            ts = []
+            center = (n2dNeurons / 2, n2dNeurons / 2)
+            self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, np.radians(angle_step))
+            for i, cAngle in enumerate(self.angles):
+                endy_1 = center[1] + ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                endx_1 = center[0] + ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                endy_2 = center[1] - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                endx_2 = center[0] - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                self.start = np.asarray((endx_1, endy_1))
+                self.end = np.asarray((endx_2, endy_2))
+                self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
+                                                          key=operator.itemgetter(1))
+                self.dv = (self.end - self.start) / self.max_length
+                self.line = [self.dda_round(self.start)]
+                for step in range(int(self.max_length)):
+                    self.line.append(self.dda_round((step + 1) * self.dv + self.start))
+                for coord in self.line:
+                    x_coord.append(coord[0])
+                    y_coord.append(coord[1])
+                    ts.append(i * ts_offset)
+                    pol.append(1)
+            events = np.zeros((4, len(x_coord)))
+            events[0, :] = np.asarray(x_coord)
+            events[1, :] = np.asarray(y_coord)
+            events[2, :] = np.asarray(ts)
+            events[3, :] = np.asarray(pol)
+
+        # ind, ts = dvs2ind(events, scale=False)
+        ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
+        nPixel = np.max(ind)
+        gInpGroup = SpikeGeneratorGroup(nPixel, indices=ind, times=ts * ms, name='bar')
+        return gInpGroup, events
+
+
+    def translating_bar_infinity(self, length=10, orientation='vertical', shift=32,
+                                 ts_offset=10, artifical_stimulus=True, orthogonal=0,
+                                 returnEvents=False):
+        """
+        This function will either load recorded DAVIS/DVS recordings or generate artificial events
+        of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
+        In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
+        Input:
+        :param length:
+        :param orientation:
+        :param shift:
+
+        """
         if not artifical_stimulus:
             if orthogonal == 0:
                 fname = 'rec/Inifity_aligned_bar.aedat'
@@ -87,7 +149,7 @@ class octa_testbench():
             y_coord = []
             pol = []
             ts = []
-            for cAngle in self.angles:
+            for i, cAngle in enumerate(self.angles):
                 x, y = self.infinity(cAngle)
                 ax.set_xlim((-1.5, 1.5))
                 ax.set_ylim((-1.5, 1.5))
@@ -101,13 +163,13 @@ class octa_testbench():
                     endx_1 = x + ((length / 2) * np.cos(np.pi))
                     endy_2 = y - ((length / 2) * np.sin(np.pi))
                     endx_2 = x - ((length / 2) * np.cos(np.pi))
-                self.start = (endx_1, endy_1)
-                self.end = (endx_2, endy_2)
+                self.start = np.asarray(endx_1, endy_1)
+                self.end = np.asarray(endx_2, endy_2)
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)), key=operator.itemgetter(1))
                 self.dv = (self.end - self.start) / self.max_length
-                self.line = [dda_round(self.start)]
+                self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
-                    self.line.append(dda_round((step + 1) * self.dv + self.start))
+                    self.line.append(self.dda_round((step + 1) * self.dv + self.start))
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])
@@ -170,13 +232,13 @@ class octa_testbench():
                     endy_2 = y - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
                     endx_2 = x - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
 
-                self.start = (endx_1, endy_1)
-                self.end = (endx_2, endy_2)
+                self.start = np.asarray(endx_1, endy_1)
+                self.end = np.asarray(endx_2, endy_2)
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)), key=operator.itemgetter(1))
                 self.dv = (self.end - self.start) / self.max_length
-                self.line = [dda_round(self.start)]
+                self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
-                    self.line.append(dda_round((step + 1) * self.dv + self.start))
+                    self.line.append(self.dda_round((step + 1) * self.dv + self.start))
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])

@@ -64,7 +64,10 @@ def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, return
 @implementation('numpy', discard_units=True)
 @check_units(x=1, y=1, n2dNeurons=1, result=1)
 def xy2ind(x, y, n2dNeurons):
-    return int(x) + int(y) * n2dNeurons
+    if isinstance(x, np.ndarray):
+        return x + y * n2dNeurons
+    else:
+        return int(x) + int(y) * n2dNeurons
 
 # function that calculates 2D index from 1D index
 # please note that the total number of neurons in the square field is n2dNeurons**2
@@ -238,14 +241,14 @@ def fkernelGauss2d(i, j, gsigma, n2dNeurons):
 @check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, InputSizeX=1, InputSizeY=1, WindowSizeX=1, WindowSizeY=1, RFSize=1, result=1)
 def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, InputSizeY, WindowSizeX, WindowSizeY, RFSize):
     "function that calculates Gabor 2D kernel, only works with odd square Receptive Fields"
-    
+
     (ix, iy) = np.unravel_index(i, (InputSizeX, InputSizeY))
     if (WindowSizeX + abs(offx) <= (InputSizeX-(RFSize-1))) & (WindowSizeY + abs(offy) <= (InputSizeY-(RFSize-1))):
         (x0, y0) = np.unravel_index(j, (WindowSizeX, WindowSizeY))
         print(x0)
         print(y0)
         x0 = x0 + int((InputSizeX-WindowSizeX+1)/2) + offx
-        y0 = y0 + int((InputSizeY-WindowSizeY+1)/2) - offy 
+        y0 = y0 + int((InputSizeY-WindowSizeY+1)/2) - offy
         print(x0)
         print(y0)
         x =  (ix - x0)*np.cos(theta) + (iy - y0)*np.sin(theta)
@@ -260,7 +263,7 @@ def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, In
         return res
     else:
         print("The kernel window it's bigger than InputSize-(RFSize-1)")
-        return 0 
+        return 0
 
 def spikemon2firingRate(spikemon, fromT=0 * ms, toT="max"):
     spiketimes = (spikemon.t / ms)

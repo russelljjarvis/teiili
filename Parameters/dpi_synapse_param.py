@@ -2,6 +2,7 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second
 from NCSBrian2Lib.Parameters import constants
 
 parameters = {
+    "Igain": 15 * pA,
     'Csyn': 1.5 * pF,
     'Io_syn': 0.5 * pA,
     'Ie_tau': 10. * pA,
@@ -15,5 +16,5 @@ parameters = {
     'Ie_th': 10 * pA,
     'Ii_th': 10 * pA,
     'Ie_syn': 0.5 * pA,
-    'Ii_syn': 0.5 * pA
+    'Ii_syn': 0.5 * pA,
 }

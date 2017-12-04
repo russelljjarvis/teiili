@@ -334,28 +334,29 @@ Dpi = {'model': '''
         Csyn         : farad (constant)
         ''',
        'on_pre': '''
-        Ie_syn += Iw_e*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))
-        Ii_syn += Iw_i*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
+        Ie_syn += Iw_e*wPlast*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))
+        Ii_syn += Iw_i*wPlast*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
         ''',
        'on_post': ''' ''',
        }
 
 # standard parameters for Dpi models
 DpiPara = {
-    'Csyn': 1.5 * pF,
     'Io_syn': 0.5 * pA,
-    'Ie_tau': 10. * pA,
-    'Ii_tau': 10. * pA,
-    'Ut_syn': 25. * mV,
-    'baseweight_e': 50. * pA,
-    'baseweight_i': 50. * pA,
     'kn_syn': 0.75,
     'kp_syn': 0.66,
-    'wPlast': 1,
+    'Ut_syn': 25. * mV,
+    "Igain": 15 * pA,
+    'Csyn': 1.5 * pF,
+    'Ie_tau': 10. * pA,
+    'Ii_tau': 10. * pA,
     'Ie_th': 10 * pA,
     'Ii_th': 10 * pA,
     'Ie_syn': 0.5 * pA,
-    'Ii_syn': 0.5 * pA
+    'Ii_syn': 0.5 * pA,
+    'wPlast': 1,
+    'baseweight_e': 50. * pA,
+    'baseweight_i': 50. * pA
 }
 
 
@@ -452,25 +453,25 @@ stdp = {'model': '''
       w_max: 1 (shared, constant)
       taupre : second (shared, constant)
       taupost : second (shared, constant)
-      diffApre : 1 (shared, constant)
+      dApre : 1 (shared, constant)
       Q_diffAPrePost : 1 (shared, constant)
       ''',
 
         'on_pre': '''
       wPlast = w
-      Apre += diffApre*w_max
+      Apre += dApre*w_max
       w = clip(w + Apost, 0, w_max) ''',
 
         'on_post': '''
-      Apost += -diffApre * (taupre / taupost) * Q_diffAPrePost * w_max
+      Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
       w = clip(w + Apre, 0, w_max) '''}
 
 stdpPara_current = {"baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
                     "baseweight_i": 7 * pA,
-                    "taupre": 20 * ms,
-                    "taupost": 20 * ms,
-                    "w_max": 0.01,
-                    "diffApre": 0.01,
+                    "taupre": 10 * ms,
+                    "taupost": 10 * ms,
+                    "w_max": 1.,
+                    "dApre": 0.1,
                     "Q_diffAPrePost": 1.05,
                     "w": 0,
                     "wPlast": 0}

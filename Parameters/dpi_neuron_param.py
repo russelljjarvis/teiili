@@ -11,7 +11,7 @@ parameters = {"kn": constants.kappa_n,
               "Ireset": 0.6 * pA,
               "Iconst": 0.5 * pA,
               ##################
-              "Itau": 13. * pA,  #
+              "Itau": 8. * pA,  #
               "Ishunt": 0.5 * pA,  #
               "Ith": 0.9 * pA,  #
               #  ADAPTATION  #################

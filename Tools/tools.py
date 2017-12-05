@@ -245,21 +245,13 @@ def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, In
     (ix, iy) = np.unravel_index(i, (InputSizeX, InputSizeY))
     if (WindowSizeX + abs(offx) <= (InputSizeX-(RFSize-1))) & (WindowSizeY + abs(offy) <= (InputSizeY-(RFSize-1))):
         (x0, y0) = np.unravel_index(j, (WindowSizeX, WindowSizeY))
-        print(x0)
-        print(y0)
         x0 = x0 + int((InputSizeX-WindowSizeX+1)/2) + offx
         y0 = y0 + int((InputSizeY-WindowSizeY+1)/2) - offy
-        print(x0)
-        print(y0)
         x =  (ix - x0)*np.cos(theta) + (iy - y0)*np.sin(theta)
         y = -(ix - x0)*np.sin(theta) + (iy - y0)*np.cos(theta)
-        print(x)
-        print(y)
         exponent = -((x**2)/2*sigmax**2 + (y**2)/2*sigmay**2)
         res = exp(exponent)*np.cos(2*np.pi*x/freq)
-        print(res)
-        res = res*(abs(ix.any() - x0.any())<RFSize/2) *(abs(iy.any() - y0.any())<RFSize/2)
-        print(res)
+        res = res*(abs(ix - x0)<RFSize/2) *(abs(iy - y0)<RFSize/2)
         return res
     else:
         print("The kernel window it's bigger than InputSize-(RFSize-1)")

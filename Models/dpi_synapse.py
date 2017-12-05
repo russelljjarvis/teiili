@@ -24,7 +24,7 @@ dpi_syn_eq = {'model': """
 
 
             Iw_e = weight*baseweight_e  : amp
-            Iw_i = weight*baseweight_i  : amp
+            Iw_i = -weight*baseweight_i  : amp
 
             Ie_tau       : amp (constant)
             Ii_tau       : amp (constant)

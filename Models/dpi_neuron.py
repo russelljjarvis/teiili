@@ -4,15 +4,16 @@ from NCSBrian2Lib.Parameters.dpi_neuron_param import parameters
 dpi_neuron_eq = {'model': '''
                         dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt + Iahp_clip - Ia_clip) / Itau_clip)) * Imem)   ) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
 
-                        dIahp/dt = (- Ithahp - Iahp + 2*Io*(Iahp<=Io)) / (tauahp * (Ithahp / Iahp + 1)) : amp # adaptation current
+                        dIahp/dt = (- Ithahp_clip - Iahp + 2*Io*(Iahp<=Io)) / (tauahp * (Ithahp_clip / Iahp + 1)) : amp # adaptation current
 
                         Itau_clip = Itau*(Imem>Io) + Io*(Imem<=Io)  : amp
                         Ith_clip = Ith*(Imem>Io) + Io*(Imem<=Io)    : amp
                         Iin_clip = clip(Iin+Iconst,Io, 1*amp) : amp
                         Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
                         Ia_clip = Ia*(Imem>Io) + 2*Io*(Imem<=Io)    : amp
+			Ithahp_clip = Ithahp*(Iahp>Io) + Io*(Iahp<=Io) : amp
 
-                        Iahpmax = (Ica / Itauahp) * Ithahp : amp                # Ratio of currents through diffpair and adaptation block
+                        Iahpmax = (Ica / Itauahp) * Ithahp_clip : amp                # Ratio of currents through diffpair and adaptation block
                         Ia = Iagain / (1 + exp(-(Imem - Iath) / Ianorm)) : amp  # postive feedback current
 
                         tauahp = (Cahp * Ut) / (kappa * Itauahp) : second       # time constant of adaptation

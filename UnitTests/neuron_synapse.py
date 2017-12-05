@@ -82,7 +82,7 @@ spikemon = SpikeMonitor(testNeurons, name='spikemon')
 spikemonOut = SpikeMonitor(testNeurons2, name='spikemonOut')
 statemonInpSyn = StateMonitor(InpSyn, variables='Ie_syn', record=True, name='statemonInpSyn')
 statemonNeuOut = StateMonitor(testNeurons2, variables=['Imem'], record=0, name='statemonNeuOut')
-statemonNeuIn = StateMonitor(testNeurons, variables=["Iin", "Imem"], record=[0, 1], name='statemonNeu')
+statemonNeuIn = StateMonitor(testNeurons, variables=["Iin", "Imem","Iahp"], record=[0, 1], name='statemonNeu')
 statemonSynOut = StateMonitor(Syn, variables='Ie_syn', record=True, name='statemonSynOut')
 # statemonSynTest=StateMonitor(testInpSyn,variables=["Isyn_exc"],record=[0],name='statemonSyn')
 
@@ -97,6 +97,8 @@ Net.run(100 * ms)
 #plot(statemonInpSyn.t / ms, statemonInpSyn.Ie_syn[0])
 fig2 = figure()
 plot(statemonNeuIn.t / ms, statemonNeuIn.Imem[0])
+fig3 = figure()
+plot(statemonNeuIn.t / ms, statemonNeuIn.Iahp[0])
 
 
 #fig3 = figure()

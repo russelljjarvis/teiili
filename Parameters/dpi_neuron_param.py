@@ -15,10 +15,11 @@ parameters = {"kn": constants.kappa_n,
               "Ishunt": constants.Io,  #
               "Ith": 0.9 * pA,  #
               #  ADAPTATION  #################
-              "Ica": 0. * pA,
-              "Itauahp": 120.0 * pA,
-              "Ithahp": 20 * pA,
-              "Cahp": 0.5 * pF,
+              "Ica": 2. * pA,
+              "Itauahp": 1 * pA,
+              "Ithahp": 1 * pA,
+              "Cahp": 1 * pF,
+	      "Iahp":constants.Io,
               #  POSTIVE FEEDBACK #################
               "Iath": 0.5 * nA,
               "Iagain": 50. * pA,

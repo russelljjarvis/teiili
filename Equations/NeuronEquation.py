@@ -353,16 +353,19 @@ none = {'model': '',
 # Code partially adapted from Daniele Conti and Llewyn Salt
 # Email: mmilde@ini.uzh.chs
 i_model_template = {'model': '''
-            dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt - Iahp_clip - Ia_clip) / Itau_clip)) * Imem)   ) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
+            dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt + Iahp_clip - Ia_clip) / Itau_clip)) * Imem)   ) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
 
             Iahp      : amp
             Ia        : amp
-            Ia_clip   : amp
+            # Ia_clip   : amp
             Iahp_clip : amp
 
             Itau_clip = Itau*(Imem>Io) + Io*(Imem<=Io)  : amp
             Ith_clip = Ith*(Imem>Io) + Io*(Imem<=Io)    : amp
-            Iin_clip = clip(Iin+Iconst,Io, 1*amp)       : amp
+            Iin_clip = clip(Iin+Iconst,Io, 1*amp) : amp
+            Ia_clip = Ia*(Imem>Io) + 2*Io*(Imem<=Io)    : amp
+            Ithahp_clip = Ithahp*(Iahp>Io) + Io*(Iahp<=Io) : amp
+            Ishunt_clip = clip(Ishunt, Io, Imem) : amp
 
             tau = (Cmem * Ut) / (kappa * Itau_clip) : second        # Membrane time constant
             kappa = (kn + kp) / 2 : 1
@@ -390,9 +393,8 @@ i_model_templatePara = {
     #--------------------------------------------------------
     # Default equations disabled
     #--------------------------------------------------------
-    "Ia": 0.5 * pA,                                # Feedback current
-    "Iahp": 0.5 * pA,                                # Adaptation current
     "Inoise": 0.5 * pA,                                # Noise due to mismatch
+    "Iconst": 0.5 * pA,
     #--------------------------------------------------------
     # VLSI process parameters
     #--------------------------------------------------------
@@ -403,31 +405,33 @@ i_model_templatePara = {
     #---------------------------------------------------------
     # Silicon neuron parameters
     #---------------------------------------------------------
-    "Cmem": 0.5 * pF,
-    #    "Cahp": 0.5 * pF,
+    "Cmem": 1.5 * pF,
     #---------------------------------------------------------
     # Positive feedback parameters
     #---------------------------------------------------------
-    "Iagain": 1 * nA,
-    "Iath": 20 * nA,
-    "Ianorm": 1 * nA,
+    "Ia": 0.5 * pA,                                # Feedback current
+    "Iath": 0.5 * nA,
+    "Iagain": 50. * pA,
+    "Ianorm": 10. * pA,
     #---------------------------------------------------------
     # Adaptative and Calcium parameters
     #---------------------------------------------------------
     "Ica": 0.5 * pA,
     "Itauahp": 0.5 * pA,
     "Ithahp": 0.5 * pA,
+    "Cahp": 0.5 * pF,
+    "Iahp": 0.5 * pA,                                # Adaptation current
     #---------------------------------------------------------
     # Shunting inhibition
     #---------------------------------------------------------
-    "Ishunt": 0. * pA,
+    "Ishunt": 0.5 * pA,
     #---------------------------------------------------------
     # Neuron parameters
     #---------------------------------------------------------
-    "Ispkthr": 150. * pA,  # Spike threshold of excitatory neurons
-    "Ireset": 1 * pA,  # Reset Imem to Ireset after each spike
-    "Ith": 0.5 * pA,
-    "Itau": 10 * pA,
+    "Ispkthr": 1. * nA,  # Spike threshold of excitatory neurons
+    "Ireset": 0.6 * pA,  # Reset Imem to Ireset after each spike
+    "Ith": 0.9 * pA,
+    "Itau": 8 * pA,
     "refP": 1 * ms,
     #---------------------------------------------------------
     # Noise parameters
@@ -463,38 +467,36 @@ i_a = {'model': """
        'threshold': '',
        'reset': ''}
 
-i_aPara = {"Iagain": 20 * nA,
-           "Iath": 20 * nA,
-           "Ianorm": 1 * nA}
+i_aPara = {"Iath": 0.5 * nA,
+           "Iagain": 50. * pA,
+           "Ianorm": 10. * pA}
 
 # adaptation
 i_ahp = {'model': """
-          %dIahp/dt = (Ithahp * Ica / Itauahp - Ithahp - Iahp) / (tauahp * (Ithahp / Iahp + 1)) : amp # adaptation current
+          %dIahp/dt = (- Ithahp_clip - Iahp + 2*Io*(Iahp<=Io)) / (tauahp * (Ithahp_clip / Iahp + 1)) : amp # adaptation current
           %Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
           tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
-          Iahpmax = (Ica / Itauahp) * Ithahp : amp # Ratio of currents through diffpair and adaptation block
+          Iahpmax = (Ica / Itauahp) * Ithahp_clip : amp     # Ratio of currents through diffpair and adaptation block
           Ithahp : amp (constant)
           Itauahp : amp (constant)
           Cahp : farad (constant)
-          tauca : second (constant)
          """,
          'threshold': '',
          'reset': '''
                   Iahp += Iahpmax
                   '''}
 
-i_ahpPara = {"tauca": 20 * ms,
-             "Itauahp": 120 * pA,
-             "Ithahp": 20 * pA,
-             "Ica": 30 * pA,
-             "Cahp": 0.5 * pF}
+i_ahpPara = {"Itauahp": 1 * pA,
+             "Ithahp": 1 * pA,
+             "Ica": 2 * pA,
+             "Cahp": 1 * pF}
 
 
 i_exponentialPara = {"Ith": 0.9 * pA,
-                     "Iath": 80 * pA,
-                     "Iagain": 20 * pA,
-                     "Ianorm": 7 * pA,
-                     "Itau": 20 * pA}
+                     "Iath": 0.5 * nA,
+                     "Iagain": 50 * pA,
+                     "Ianorm": 10 * pA,
+                     "Itau": 8 * pA}
 
 i_nonLeakyPara = {"Itau": 0.5 * pA}
 

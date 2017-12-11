@@ -9,7 +9,7 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, TimedArray,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
-from brian2 import *
+# from brian2 import *
 
 #from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
@@ -17,7 +17,7 @@ from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_stan
 from NCSBrian2Lib.Stimuli.testbench import stdp_testbench
 
 prefs.codegen.target = "numpy"
-defaultclock.dt = 10 * us
+defaultclock.dt = 50 * us
 Net = StandaloneNetwork()
 
 stdp = stdp_testbench()
@@ -43,10 +43,10 @@ pre.Itau = 6 * pA
 post.Itau = 6 * pA
 
 SynPre.connect(True)
-SynPre.weight = 10.
+SynPre.weight = 80.
 
 SynPost.connect(True)
-SynPost.weight = 10.
+SynPost.weight = 80.
 
 SynSTDP.connect("i==j")
 SynSTDP.weight = 10.
@@ -65,7 +65,8 @@ statemonWeight = StateMonitor(SynSTDP, variables=['Ie_syn', 'wPlast', 'w'], reco
 Net.add(gPre, gPost, pre, post, SynPre, SynPost, SynSTDP, statemonSynPre,
         statemonPre, statemonPost, spikemonPre, spikemonPost, statemonWeight)
 
-Net.run(2000 * ms)
+duration = 2000
+Net.run(duration * ms)
 
 # Visualize
 app = QtGui.QApplication([])
@@ -99,7 +100,13 @@ pSpikes.plot(x=np.asarray(spikemonPre.t / ms), y=np.asarray(spikemonPre.i),
              pen=None, symbol='o', symbolPen=None,
              symbolSize=7, symbolBrush=(255, 255, 255),
              name='Pre synaptic neuron')
-pSpikes.setXRange(0, 2000, padding=0)
+pImemPre.setXRange(0, duration, padding=0)
+pImemPost.setXRange(0, duration, padding=0)
+pWeight1.setXRange(0, duration, padding=0)
+pWeight2.setXRange(0, duration, padding=0)
+pSyn.setXRange(0, duration, padding=0)
+pSpikes.setXRange(0, duration, padding=0)
+pSpikes.setYRange(-0.1, 1.1, padding=0)
 
 text1 = pg.TextItem(text='Homoeostasis', anchor=(-0.3, 0.5))
 text2 = pg.TextItem(text='Weak Pot.', anchor=(-0.3, 0.5))
@@ -114,12 +121,12 @@ pSpikes.addItem(text4)
 pSpikes.addItem(text5)
 pSpikes.addItem(text6)
 
-text1.setPos(1, 0.5)
-text2.setPos(300, 0.5)
-text3.setPos(600, 0.5)
-text4.setPos(900, 0.5)
-text5.setPos(1200, 0.5)
-text6.setPos(1500, 0.5)
+text1.setPos(0, 0.5)
+text2.setPos(250, 0.5)
+text3.setPos(550, 0.5)
+text4.setPos(850, 0.5)
+text5.setPos(1150, 0.5)
+text6.setPos(1450, 0.5)
 
 
 pSpikes.plot(x=np.asarray(spikemonPost.t / ms), y=np.asarray(spikemonPost.i),
@@ -147,9 +154,9 @@ pImemPost.setLabel('left', "Post Imem", units="A", **labelStyle)
 pImemPost.setLabel('bottom', "Time (ms)", **labelStyle)
 pSyn.setLabel('left', "Synapic current Ie", units='A', **labelStyle)
 pSyn.setLabel('bottom', "Time (ms)", **labelStyle)
-pWeight1.setLabel('left', "Synpatic weight", **labelStyle)
+pWeight1.setLabel('left', "Synpatic weight w", **labelStyle)
 pWeight1.setLabel('bottom', "Time (ms)", **labelStyle)
-pWeight2.setLabel('left', "Synpatic weight", **labelStyle)
+pWeight2.setLabel('left', "Synpatic weight wPlast", **labelStyle)
 pWeight2.setLabel('bottom', "Time (ms)", **labelStyle)
 
 b = QtGui.QFont("Sans Serif", 10)

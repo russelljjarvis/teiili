@@ -2,6 +2,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import pyqtgraph.exporters
 import numpy as np
+import os
 
 
 from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
@@ -43,13 +44,13 @@ pre.Itau = 6 * pA
 post.Itau = 6 * pA
 
 SynPre.connect(True)
-SynPre.weight = 80.
+SynPre.weight = 400.
 
 SynPost.connect(True)
-SynPost.weight = 80.
+SynPost.weight = 400.
 
 SynSTDP.connect("i==j")
-SynSTDP.weight = 10.
+SynSTDP.weight = 100.
 SynSTDP.Ie_tau = 2 * pA
 
 # pre.Iconst = 1 * nA
@@ -174,7 +175,7 @@ pWeight2.getAxis('bottom').tickFont = b
 pWeight2.getAxis('left').tickFont = b
 
 QtGui.QApplication.processEvents()
-plot_dir = '/home/moritz/Repositories/OCTA/plots/'
+plot_dir = os.getcwd()
 exp = pg.exporters.SVGExporter(win_stdp.scene())
 exp_img = pg.exporters.ImageExporter(win_stdp.scene())
 exp.export(plot_dir + 'stdp_test.svg')

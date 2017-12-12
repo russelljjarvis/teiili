@@ -21,11 +21,13 @@ from brian2 import *
 #from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
 from NCSBrian2Lib.Equations.NeuronEquation import NeuronEquation
-from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone, NeuronEquation
+from NCSBrian2Lib.Equations.SynapseEquation import SynapseEquation
+from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone
 from NCSBrian2Lib.Parameters.dpi_neuron_param import parameters
 from NCSBrian2Lib.Models.dpi_neuron import dpi_neuron_eq
 from NCSBrian2Lib.Models.dpi_synapse import dpi_syn_eq
 from NCSBrian2Lib.Equations.NeuronModels import Silicon
+from NCSBrian2Lib.Equations.SynapseModels import SiliconSynapses
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us
@@ -50,8 +52,8 @@ DPIEq = NeuronEquation(model=dpi_neuron_eq)
 testNeurons2 = Neurons(2, **DPIEq.keywords, name="testNeuron2")
 testNeurons2.setParams(parameters)
 
-
-InpSyn = Connections(gInpGroup, testNeurons, name="sInpTest_e", baseUnit='DPI', plasticity='nonplastic')
+SiliconSynEq, SiliconSynparam = SiliconSynapses(1)
+InpSyn = Connections(gInpGroup, testNeurons, **SiliconSynEq, params=SiliconSynparam, name="testSyn")
 InpSyn.connect(True)
 
 InpSyn.weight = 10
@@ -62,15 +64,16 @@ InpSyn.weight = 10
 #                  name="testSyn", baseUnit='current',
 #                  kernel='exponential', plasticity='nonplastic')
 
+DPISynEq = SynapseEquation(model=dpi_syn_eq)
 Syn = Connections(testNeurons, testNeurons2,
-                  model=dpi_syn_eq)
+                  **DPISynEq.keywords, params=DPISynEq.parameters, name="testSyn2")
 
 
 
 
 Syn.connect(True)
 # you can change all the parameters like this after creation of the neurongroup:
-Syn.weight = 10
+Syn.weight = 100
 
 testNeurons.Iconst = 7 * nA
 # testNeurons2.Itau = 13 * pA
@@ -114,7 +117,7 @@ Net.run(100 * ms)
 # plot(statemonSynTest.t,statemonSynTest.Isyn_exc[0]/pA)
 
 
-#app = QtGui.QApplication([])
+app = QtGui.QApplication([])
 pg.setConfigOptions(antialias=True)
 
 labelStyle = {'color': '#FFF', 'font-size': '12pt'}
@@ -200,4 +203,4 @@ p6.getAxis('bottom').tickFont = b
 p6.getAxis('left').tickFont = b
 
 
-#QtGui.QApplication.instance().exec_()
+QtGui.QApplication.instance().exec_()

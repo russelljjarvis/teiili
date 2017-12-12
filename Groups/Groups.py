@@ -181,7 +181,7 @@ class Connections(Synapses):
 
 
         if params is not None:
-            setParams(self, params, debug=debug)
+            self.parameters = params
 
         try:
             Synapses.__init__(self, source, target=target,
@@ -254,7 +254,7 @@ class Connections(Synapses):
         Synapses.connect(self, condition=condition, i=i, j=j, p=p, n=n,
                          skip_if_invalid=skip_if_invalid,
                          namespace=namespace, level=level + 1)
-
+        setParams(self, self.parameters, debug=self.debug)
 
 
     def plot(self):

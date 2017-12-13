@@ -180,6 +180,7 @@ class NeuronEquation():
 
             self.keywords = {'model': self.model, 'threshold': self.threshold,
                              'reset': self.reset, 'refractory': self.refractory}
+            self.printAll()
 
     def addInputCurrents(self, numInputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)

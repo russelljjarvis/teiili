@@ -19,8 +19,8 @@ from NCSBrian2Lib.Equations.NeuronEquation import NeuronEquation
 
 class Neurons(NeuronGroup):
 
-    def __init__(self, N, equation=None,
-                 params='default',
+    def __init__(self, N,
+                 params=None,
                  method='euler',
                  refractory=False,
                  events=None,
@@ -34,20 +34,13 @@ class Neurons(NeuronGroup):
                  # these are additional:
                  numInputs=1,
                  additionalStatevars=None,
-                 debug=False, **equationKwargs):
+                 debug=False, **Kwargs):
         self.debug = debug
         self.numInputs = numInputs
         self.numSynapses = 0
 
-        # generate the equation in order to put it into the NeuronGroup constructor
-        if equation is not None:
-            self.equation = equation
-        else:
-            self.equation = NeuronEquation(refractory=refractory, numInputs=numInputs,
-                                           additionalStatevars=additionalStatevars, **equationKwargs)
 
-        #self.standaloneVars = eq.changeableParameters
-        self.standaloneVars = self.equation.standaloneVars
+        self.standaloneVars = []
         self.standaloneParams = OrderedDict()
         self.strParams = {}
 
@@ -62,17 +55,10 @@ class Neurons(NeuronGroup):
                              clock=clock,
                              order=order,
                              name=name,
-                             codeobj_class=codeobj_class, method=method, **self.equation.keywords)
-        if params == 'default':
+                             codeobj_class=codeobj_class, method=method, **Kwargs)
 
-            #            self.parameters= self.equation.parameters
-            tmp = self.equation.parameters
-
-        else:
-            #            self.parameters = params
-            tmp = params
-
-        setParams(self, tmp, debug=debug)
+        if params is not None:
+            setParams(self, params, debug=debug)
         #self.refP = refractory
 
     def __setattr__(self, key, value):
@@ -143,8 +129,8 @@ class Neurons(NeuronGroup):
 
 class Connections(Synapses):
 
-    def __init__(self, source, target, equation=None,
-                 params='default',
+    def __init__(self, source, target, 
+                 params=None,
                  delay=None, on_event='spike',
                  multisynaptic_index=None,
                  namespace=None, dtype=None,
@@ -154,7 +140,7 @@ class Connections(Synapses):
                  name='synapses*',
                  additionalStatevars=None,
                  inputNumber=None,
-                 debug=False, **equationKwargs):
+                 debug=False, **Kwargs):
 
         self.debug = debug
         self.inputNumber = 0
@@ -185,21 +171,16 @@ class Connections(Synapses):
                 warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for' +
                               str(target) + ', therefore, please specify an inputNumber')
 
-        if equation is not None:
-            self.equation = equation
-        else:
-            self.equation = SynapseEquation(inputNumber=self.inputNumber,
-                                            additionalStatevars=additionalStatevars, **equationKwargs)
+
 
 #        print(self.equation.model) for debugging porpouses
 
-        self.standaloneVars = self.equation.standaloneVars
+        self.standaloneVars = {}
         self.standaloneParams = OrderedDict()
         self.strParams = {}
 
-        if params == 'default':
-            self.parameters = self.equation.parameters
-        else:
+
+        if params is not None:
             self.parameters = params
 
         try:
@@ -210,7 +191,7 @@ class Connections(Synapses):
                               codeobj_class=codeobj_class,
                               dt=dt, clock=clock, order=order,
                               method=method,
-                              name=name, **self.equation.keywords)
+                              name=name, **Kwargs)
         except Exception as e:
             import sys
             raise type(e)(str(e) + '\n\nCheck Equation for errors!\n' +
@@ -273,8 +254,8 @@ class Connections(Synapses):
         Synapses.connect(self, condition=condition, i=i, j=j, p=p, n=n,
                          skip_if_invalid=skip_if_invalid,
                          namespace=namespace, level=level + 1)
-
         setParams(self, self.parameters, debug=self.debug)
+
 
     def plot(self):
         "simple visualization of synapse connectivity (connected dots and connectivity matrix)"

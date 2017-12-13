@@ -3,8 +3,8 @@ Created 03.2017
 This files contains different WTA circuits
 1dWTA
 2dWTA
-
-@author: Alpha
+2dplasticWTA
+@author: Alpha, Moritz
 '''
 import time
 import numpy as np
@@ -16,23 +16,14 @@ from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
 from NCSBrian2Lib.Tools.tools import fkernel1d, fkernel2d, fdist2d, printStates, ind2xy, ind2x, ind2y
 from NCSBrian2Lib.Tools.plotTools import plotSpikemon, plotStatemon
 
-from NCSBrian2Lib.Equations.neuronEquations import ExpAdaptIF
-from NCSBrian2Lib.Equations.neuronEquations import Silicon
-
-from NCSBrian2Lib.Equations.synapseEquations import reversalSynV
-from NCSBrian2Lib.Equations.synapseEquations import BraderFusiSynapses, SiliconSynapses
-
-from NCSBrian2Lib.Parameters.neuronParams import gerstnerExpAIFdefaultregular
-from NCSBrian2Lib.Parameters.neuronParams import SiliconNeuronP
-
-from NCSBrian2Lib.Parameters.synapseParams import revSyn_default
-from NCSBrian2Lib.Parameters.synapseParams import Braderfusi, SiliconSynP
-
-from NCSBrian2Lib.Equations.synapseEquations import StdpSynV
-from NCSBrian2Lib.Parameters.synapseParams import StdpSyn_default
-
 from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
+
+from NCSBrian2Lib.Models.dpi_neuron import dpi_neuron_eq
+from NCSBrian2Lib.Models.dpi_synapse import dpi_syn_eq
+
+from NCSBrian2Lib.Parameters.dpi_neuron_param import parameters
+from NCSBrian2Lib.Parameters.dpi_synapse_param import parameters as parameters_syn
 
 wtaParams = {'weInpWTA': 1.5,
              'weWTAInh': 1,
@@ -71,20 +62,20 @@ class WTA(BuildingBlock):
         elif dimensions == 2:
             if not plastic:
                 self.Groups, self.Monitors, self.standaloneParams = gen2dWTA(name,
-                                                                        neuronEq, neuronParams, synapseEq, synapseParams,
-                                                                        numNeurons=numNeurons, numInhNeurons=numInhNeurons,
-                                                                        additionalStatevars=additionalStatevars,
-                                                                        cutoff=cutoff, numInputs=numInputs, monitor=True, debug=debug,
-                                                                        **blockParams)
+                                                                             neuronEq, neuronParams, synapseEq, synapseParams,
+                                                                             numNeurons=numNeurons, numInhNeurons=numInhNeurons,
+                                                                             additionalStatevars=additionalStatevars,
+                                                                             cutoff=cutoff, numInputs=numInputs, monitor=True, debug=debug,
+                                                                             **blockParams)
             else:
                 self.Groups, self.Monitors, self.standaloneParams = gen2dWTA_plastic(name,
-                                                                                neuronEq, neuronParams, synapseEq, synapseParams,
-                                                                                plasticSynapseEq, plasticSynapseParams,
-                                                                                numInpNeurons=numInpNeurons,
-                                                                                numNeurons=numNeurons, numInhNeurons=numInhNeurons,
-                                                                                additionalStatevars=additionalStatevars,
-                                                                                cutoff=cutoff, numInputs=numInputs, monitor=True, debug=debug,
-                                                                                **blockParams)
+                                                                                     neuronEq, neuronParams, synapseEq, synapseParams,
+                                                                                     plasticSynapseEq, plasticSynapseParams,
+                                                                                     numInpNeurons=numInpNeurons,
+                                                                                     numNeurons=numNeurons, numInhNeurons=numInhNeurons,
+                                                                                     additionalStatevars=additionalStatevars,
+                                                                                     cutoff=cutoff, numInputs=numInputs, monitor=True, debug=debug,
+                                                                                     **blockParams)
             # self.Groups, self.Monitors,
             # self.standaloneParams = gen2dWTA(name,
             #                                  neuronEq, neuronParams,
@@ -335,8 +326,8 @@ def gen2dWTA(groupname, neuronEquation=ExpAdaptIF,
     return Groups, Monitors, standaloneParams
 
 
-def gen2dWTA_plastic(groupname, neuronEquation=ExpAdaptIF, neuronParameters=gerstnerExpAIFdefaultregular,
-                     synEquation=reversalSynV, synParameters=revSyn_default,
+def gen2dWTA_plastic(groupname, neuronEquation=dpi_neuron_eq, neuronParameters=parameters,
+                     synEquation=dpi_syn_eq, synParameters=parameters_syn,
                      plasticSynapseEq=StdpSynV, plasticSynapseParams=StdpSyn_default,
                      weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2,
                      rpWTA=2.5 * ms, rpInh=1 * ms,

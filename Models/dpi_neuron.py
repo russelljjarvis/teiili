@@ -11,7 +11,7 @@ dpi_neuron_eq = {'model': '''
                         Iin_clip = clip(Iin+Iconst,Io, 1*amp) : amp
                         Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
                         Ia_clip = Ia*(Imem>Io) + 2*Io*(Imem<=Io)    : amp
-			Ithahp_clip = Ithahp*(Iahp>Io) + Io*(Iahp<=Io) : amp
+                        Ithahp_clip = Ithahp*(Iahp>Io) + Io*(Iahp<=Io) : amp
 
                         Iahpmax = (Ica / Itauahp) * Ithahp_clip : amp                # Ratio of currents through diffpair and adaptation block
                         Ia = Iagain / (1 + exp(-(Imem - Iath) / Ianorm)) : amp  # postive feedback current

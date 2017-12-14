@@ -7,9 +7,11 @@ Email: mmilde@ini.uzh.ch
 Date: 13.06.2017
 '''
 from brian2 import *
-from NCSBrian2Lib.Tools.tools import dvs2ind, xy2ind
+from NCSBrian2Lib.Tools.tools import dvs2ind, xy2ind, aedat2numpy
 import numpy as np
 import operator
+from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph as pg
 
 
 class stdp_testbench():
@@ -56,6 +58,12 @@ class octa_testbench():
         self.DVS_SHAPE = DVS_SHAPE
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
 
+    def convertAEDAT(self, rec, camera='DVS128', returnEvents=False):
+        events = aedat2numpy(datafile=rec, camera=camera)
+        np.save(rec[:-5] + 'npy', events)
+        if returnEvents:
+            return events
+
     def infinity(self, t):
         return np.cos(t), np.sin(t) * np.cos(t)
 
@@ -63,7 +71,7 @@ class octa_testbench():
         return (x + 0.5).astype(int)
 
     def bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
-            angle_step=10, artifical_stimulus=True):
+            angle_step=10, artifical_stimulus=True, fname=False):
         """
         This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
@@ -82,7 +90,8 @@ class octa_testbench():
                 as the respective neuron indices
         """
         if not artifical_stimulus:
-            fname = 'rec/bar.aedat'
+            if not fname:
+                raise UserWarning('No filename was provided')
             events = aedat2numpy(datafile=fname, camera='DVS240')
         else:
             x_coord = []
@@ -267,3 +276,56 @@ class octa_testbench():
         input_off = SpikeGeneratorGroup(N=self.DVS_SHAPE[0] * self.DVS_SHAPE[1],
                                         indices=ind_off, times=ts_off, name='input_off*')
         return input_on, input_off
+
+
+class visualize():
+    def __init__(self):
+        app = QtGui.QApplication([])
+        pg.setConfigOptions(antialias=True)
+
+        self.colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
+                  (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
+        self.labelStyle = {'color': '#FFF', 'font-size': '12pt'}
+        self.win = pg.GraphicsWindow(title="Stimuli visualization")
+        self.win.resize(1024, 768)
+        self.eventPlot = self.win.addPlot(title="Input events in ")
+        self.eventPlot.addLegend()
+
+    def plot(self, events, time_window=35):
+        if type(events) == str:
+            events = np.load(events)
+        self.eventPlot = self.win.addPlot(title="Input events with size {}x{}".format(np.max(events[0, :]), np.max(events[1, :])))
+        self.eventPlot.addLegend()
+
+        self.eventPlot.setLabel('left', "Y", **labelStyle)
+        self.eventPlot.setLabel('bottom', "X", **labelStyle)
+
+        b = QtGui.QFont("Sans Serif", 10)
+        self.eventPlot.getAxis('bottom').tickFont = b
+        self.eventPlot.getAxis('left').tickFont = b
+
+        # start visualizing
+        start = 0
+        for i in range(0, np.max(events[2, :]), time_window * 10**3):
+            cIndTS = np.logical_and(events[2, :] >= start, events[2, :] <= start + time_window * 10**3)
+            cIndON = np.logical_and(cIndTS, events[3, :] == 1)
+            cIndOFF = np.logical_and(cIndTS, events[3, :] == 0)
+
+            xData = events[0, cIndON]
+            yData = events[1, cIndON]
+            # plot on events in red
+            self.eventPlot.plot(x=xData, y=yData,
+                 pen=None, symbol='o', symbolPen=None,
+                 symbolSize=7, symbolBrush=self.colors[0],
+                 name='ON Events')
+
+            if cIndOFF.any():
+                xData = events[0, cIndOFF]
+                yData = events[1, cIndOFF]
+                # plot off events in blue
+                self.eventPlot.plot(x=xData, y=yData,
+                     pen=None, symbol='o', symbolPen=None,
+                     symbolSize=7, symbolBrush=self.colors[2],
+                     name='OFF Events')
+
+            start += time_window * 10**3

@@ -92,10 +92,10 @@ class octa_testbench():
             center = (n2dNeurons / 2, n2dNeurons / 2)
             self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, np.radians(angle_step))
             for i, cAngle in enumerate(self.angles):
-                endy_1 = center[1] + ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                endx_1 = center[0] + ((length / 2) * np.cos((np.pi / 2 * cAngle)))
-                endy_2 = center[1] - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                endx_2 = center[0] - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                endy_1 = center[1] + ((length / 2.) * np.sin((np.pi / 2 + cAngle)))
+                endx_1 = center[0] + ((length / 2.) * np.cos((np.pi / 2 + cAngle)))
+                endy_2 = center[1] - ((length / 2.) * np.sin((np.pi / 2 + cAngle)))
+                endx_2 = center[0] - ((length / 2.) * np.cos((np.pi / 2 + cAngle)))
                 self.start = np.asarray((endx_1, endy_1))
                 self.end = np.asarray((endx_2, endy_2))
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
@@ -114,13 +114,14 @@ class octa_testbench():
             events[1, :] = np.asarray(y_coord)
             events[2, :] = np.asarray(ts)
             events[3, :] = np.asarray(pol)
-
-        # ind, ts = dvs2ind(events, scale=False)
-        ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
-        nPixel = np.max(ind)
-        gInpGroup = SpikeGeneratorGroup(nPixel, indices=ind, times=ts * ms, name='bar')
+        if not artifical_stimulus:
+            ind, ts = dvs2ind(events, scale=False)
+        else:
+            ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
+            print(np.max(ind), np.min(ind))
+        nPixel = np.int(np.max(ind))
+        gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=ind, times=ts * ms, name='bar')
         return gInpGroup, events
-
 
     def translating_bar_infinity(self, length=10, orientation='vertical', shift=32,
                                  ts_offset=10, artifical_stimulus=True, orthogonal=0,
@@ -151,8 +152,6 @@ class octa_testbench():
             ts = []
             for i, cAngle in enumerate(self.angles):
                 x, y = self.infinity(cAngle)
-                ax.set_xlim((-1.5, 1.5))
-                ax.set_ylim((-1.5, 1.5))
                 if orientation == 'vertical':
                     endy_1 = y + ((length / 2) * np.sin(np.pi / 2))
                     endx_1 = x + ((length / 2) * np.cos(np.pi / 2))
@@ -163,9 +162,10 @@ class octa_testbench():
                     endx_1 = x + ((length / 2) * np.cos(np.pi))
                     endy_2 = y - ((length / 2) * np.sin(np.pi))
                     endx_2 = x - ((length / 2) * np.cos(np.pi))
-                self.start = np.asarray(endx_1, endy_1)
-                self.end = np.asarray(endx_2, endy_2)
-                self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)), key=operator.itemgetter(1))
+                self.start = np.asarray((endx_1, endy_1))
+                self.end = np.asarray((endx_2, endy_2))
+                self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
+                                                          key=operator.itemgetter(1))
                 self.dv = (self.end - self.start) / self.max_length
                 self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
@@ -232,8 +232,8 @@ class octa_testbench():
                     endy_2 = y - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
                     endx_2 = x - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
 
-                self.start = np.asarray(endx_1, endy_1)
-                self.end = np.asarray(endx_2, endy_2)
+                self.start = np.asarray((endx_1, endy_1))
+                self.end = np.asarray((endx_2, endy_2))
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)), key=operator.itemgetter(1))
                 self.dv = (self.end - self.start) / self.max_length
                 self.line = [self.dda_round(self.start)]

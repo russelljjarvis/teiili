@@ -26,11 +26,11 @@ def activate_standalone(directory='Brian2Network_standalone', build_on_run=False
 def deactivate_standalone():
     set_device('runtime')
 
-def buildCppAndReplace(standaloneParams, standaloneDir='output', clean=True):
+def buildCppAndReplace(standaloneParams, standaloneDir='output', clean=True, do_compile=True):
 
     startBuild = time.time()
     prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++14')
-    # prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++11')
+    #prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++11')
     device.build(compile=False, run=False, directory=standaloneDir, clean=clean, debug=False)
 
     end = time.time()
@@ -44,14 +44,17 @@ def buildCppAndReplace(standaloneParams, standaloneDir='output', clean=True):
     replaceVariablesInCPPcode(replaceVars, replaceFileLocation=maincppPath)
     #===============================================================================
     # compile
-    startMake = time.time()
-    #out = check_output(["make","-C","~/Code/SOM_standalone"])
-    compiler, args = codegen.cpp_prefs.get_compiler_and_args()
-    device.compile_source(directory=standaloneDir, compiler=compiler, clean=clean, debug=False)
-    # print(out)
-    end = time.time()
-    print ('make took ' + str(end - startMake) + ' sec')
-    print('\n\nstandalone was built and compiled, ready to run!')
+    if do_compile:
+        startMake = time.time()
+        #out = check_output(["make","-C","~/Code/SOM_standalone"])
+        compiler, args = codegen.cpp_prefs.get_compiler_and_args()
+        device.compile_source(directory=standaloneDir, compiler=compiler, clean=clean, debug=False)
+        # print(out)
+        end = time.time()
+        print ('make took ' + str(end - startMake) + ' sec')
+        print('\n\nstandalone was built and compiled, ready to run!')
+    else:
+        print('\n\nstandalone was built, ready to compile!')
 
 
 def replaceVariablesInCPPcode(replaceVars, replaceFileLocation):

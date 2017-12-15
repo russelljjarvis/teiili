@@ -35,9 +35,11 @@ Net = StandaloneNetwork()
 DPIEq, DPIparam = DPI(1)
 testNeurons = Neurons(2, **DPIEq, name="testNeuron")
 testNeurons.setParams(DPIparam)
+testNeurons.refP = 3 * ms
 
 testNeurons2 = Neurons(2, **DPIEq, name="testNeuron2")
 testNeurons2.setParams(DPIparam)
+testNeurons2.refP = 3 * ms
 
 DPISynEq, DPISynparam = DPISyn(1)
 InpSyn = Connections(gInpGroup, testNeurons, **DPISynEq, params=DPISynparam, name="testSyn")
@@ -70,31 +72,10 @@ statemonSynOut = StateMonitor(Syn, variables='Ie_syn', record=True, name='statem
 Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon,
         spikemonOut, statemonNeuIn, statemonNeuOut, statemonSynOut, statemonInpSyn)
 
-Net.run(100 * ms)
+duration = 500
+Net.run(duration * ms)
 
 # Visualize simulation results
-
-#fig = figure()
-#plot(statemonInpSyn.t / ms, statemonInpSyn.Ie_syn[0])
-#fig2 = figure()
-#plot(statemonNeuIn.t / ms, statemonNeuIn.Imem[0])
-#fig3 = figure()
-#plot(statemonNeuIn.t / ms, statemonNeuIn.Iahp[0])
-
-
-#fig3 = figure()
-#plot(statemonSynOut.t / ms, statemonSynOut.Ie_syn[0])
-#fig4 = figure()
-#plot(statemonNeuOut.t / ms, statemonNeuOut.Imem[0])
-
-# plt.show()
-# fig3 = figure()
-# plot(statemonTest.t, statemonTest.Iin[0] / pA)
-# plot(statemonTest.t, statemonTest.Imem[0] / pA)
-# plot(statemonSynTest.t,statemonSynTest.Isyn_exc[0]/pA)
-
-
-app = QtGui.QApplication([])
 pg.setConfigOptions(antialias=True)
 
 labelStyle = {'color': '#FFF', 'font-size': '12pt'}
@@ -111,21 +92,21 @@ win.nextRow()
 p5 = win.addPlot(title="Output spikes")
 p6 = win.addPlot(title="Output membrane current")
 
-# p1.addLegend()
-p2.addLegend()
-# p3.addLegend()
-p4.addLegend()
 colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
           (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
+
+
+p1.setXRange(0, duration, padding=0)
+p2.setXRange(0, duration, padding=0)
+p3.setXRange(0, duration, padding=0)
+p4.setXRange(0, duration, padding=0)
+p5.setXRange(0, duration, padding=0)
+p6.setXRange(0, duration, padding=0)
 
 # Spike generator
 p1.plot(x=np.asarray(spikemonInp.t / ms), y=np.asarray(spikemonInp.i),
         pen=None, symbol='o', symbolPen=None,
         symbolSize=7, symbolBrush=(255, 255, 255))
-
-# p2.plot(x=np.asarray(spikemon.t / ms), y=np.asarray(spikemon.i),
-#         pen=None, symbol='o', symbolPen=None,
-#         symbolSize=7, symbolBrush=(255, 255, 255))
 
 # Input synapses
 for i, data in enumerate(np.asarray(statemonInpSyn.Ie_syn)):

@@ -1,6 +1,3 @@
-from NCSBrian2Lib.Parameters.dpi_neuron_param import parameters
-
-
 dpi_neuron_eq = {'model': '''
                         dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt + Iahp_clip - Ia_clip) / Itau_clip)) * Imem)   ) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
 
@@ -49,4 +46,4 @@ dpi_neuron_eq = {'model': '''
                         ''',
                  'refractory': 'refP',
                  'method': 'euler',
-                 'parameters': parameters}
+                 }

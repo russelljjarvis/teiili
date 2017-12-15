@@ -1,5 +1,3 @@
-from NCSBrian2Lib.Parameters.dpi_synapse_param import parameters
-
 dpi_syn_eq = {'model': """
             dIe_syn/dt = (-Ie_syn - Ie_gain + 2*Io_syn*(Ie_syn<=Io_syn))/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
             dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
@@ -41,5 +39,4 @@ dpi_syn_eq = {'model': """
              Ii_syn += Iw_i*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
               """,
             'on_post': """ """,
-            'parameters': parameters
               }

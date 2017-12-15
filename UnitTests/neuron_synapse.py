@@ -16,25 +16,13 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, TimedArray,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
-from brian2 import *
-
-#from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
-from NCSBrian2Lib.Equations.NeuronEquation import NeuronEquation
-from NCSBrian2Lib.Equations.SynapseEquation import SynapseEquation
 from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone
-from NCSBrian2Lib.Parameters.dpi_neuron_param import parameters
-from NCSBrian2Lib.Models.dpi_neuron import dpi_neuron_eq
-from NCSBrian2Lib.Models.dpi_synapse import dpi_syn_eq
-from NCSBrian2Lib.Equations.NeuronModels import Silicon
-from NCSBrian2Lib.Equations.SynapseModels import SiliconSynapses
+from NCSBrian2Lib.Models.NeuronModels import DPI
+from NCSBrian2Lib.Models.SynapseModels import DPISyn
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us
-#set_device('cpp_standalone', directory='Tutorial_standalone', build_on_run=True)
-
-# activate_standalone(directory='Tutorial_standalone', build_on_run=True) #this is the Lib function to activate standalone mode (c++ code generation)
-# deactivate_standalone()
 
 tsInp = asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 indInp = asarray([0, 0, 0, 0, 0, 0, 0, 0])
@@ -44,31 +32,20 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 
 Net = StandaloneNetwork()
 
-SiliconEq, Siliconparam = Silicon(1)
-testNeurons = Neurons(2, **SiliconEq, name="testNeuron")
-testNeurons.setParams(Siliconparam)
+DPIEq, DPIparam = DPI(1)
+testNeurons = Neurons(2, **DPIEq, name="testNeuron")
+testNeurons.setParams(DPIparam)
 
-DPIEq = NeuronEquation(model=dpi_neuron_eq)
-testNeurons2 = Neurons(2, **DPIEq.keywords, name="testNeuron2")
-testNeurons2.setParams(parameters)
+testNeurons2 = Neurons(2, **DPIEq, name="testNeuron2")
+testNeurons2.setParams(DPIparam)
 
-SiliconSynEq, SiliconSynparam = SiliconSynapses(1)
-InpSyn = Connections(gInpGroup, testNeurons, **SiliconSynEq, params=SiliconSynparam, name="testSyn")
+DPISynEq, DPISynparam = DPISyn(1)
+InpSyn = Connections(gInpGroup, testNeurons, **DPISynEq, params=DPISynparam, name="testSyn")
 InpSyn.connect(True)
 
 InpSyn.weight = 10
-# You can also give different weigths to different synapses of the group:
-#testInpSyn.Iw_exc = [100*pamp,50*pamp]
-
-#Syn = Connections(testNeurons, testNeurons2,
-#                  name="testSyn", baseUnit='current',
-#                  kernel='exponential', plasticity='nonplastic')
-
-DPISynEq = SynapseEquation(model=dpi_syn_eq)
 Syn = Connections(testNeurons, testNeurons2,
-                  **DPISynEq.keywords, params=DPISynEq.parameters, name="testSyn2")
-
-
+                  **DPISynEq, params=DPISynparam, name="testSyn2")
 
 
 Syn.connect(True)
@@ -86,7 +63,7 @@ spikemon = SpikeMonitor(testNeurons, name='spikemon')
 spikemonOut = SpikeMonitor(testNeurons2, name='spikemonOut')
 statemonInpSyn = StateMonitor(InpSyn, variables='Ie_syn', record=True, name='statemonInpSyn')
 statemonNeuOut = StateMonitor(testNeurons2, variables=['Imem'], record=0, name='statemonNeuOut')
-statemonNeuIn = StateMonitor(testNeurons, variables=["Iin", "Imem","Iahp"], record=[0, 1], name='statemonNeu')
+statemonNeuIn = StateMonitor(testNeurons, variables=["Iin", "Imem", "Iahp"], record=[0, 1], name='statemonNeu')
 statemonSynOut = StateMonitor(Syn, variables='Ie_syn', record=True, name='statemonSynOut')
 # statemonSynTest=StateMonitor(testInpSyn,variables=["Isyn_exc"],record=[0],name='statemonSyn')
 
@@ -152,24 +129,24 @@ p1.plot(x=np.asarray(spikemonInp.t / ms), y=np.asarray(spikemonInp.i),
 
 # Input synapses
 for i, data in enumerate(np.asarray(statemonInpSyn.Ie_syn)):
-  name = 'Syn_{}'.format(i)
-  p2.plot(x=np.asarray(statemonInpSyn.t / ms), y=data,
-          pen=pg.mkPen(colors[3], width=2), name=name)
+    name = 'Syn_{}'.format(i)
+    p2.plot(x=np.asarray(statemonInpSyn.t / ms), y=data,
+            pen=pg.mkPen(colors[3], width=2), name=name)
 
 # Intermediate neurons
 for i, data in enumerate(np.asarray(statemonNeuIn.Imem)):
-  p3.plot(x=np.asarray(statemonNeuIn.t / ms), y=data,
-           pen=pg.mkPen(colors[6], width=2))
+    p3.plot(x=np.asarray(statemonNeuIn.t / ms), y=data,
+            pen=pg.mkPen(colors[6], width=2))
 
 # Output synapses
 for i, data in enumerate(np.asarray(statemonSynOut.Ie_syn)):
-  name = 'Syn_{}'.format(i)
-  p4.plot(x=np.asarray(statemonSynOut.t / ms), y=data,
-          pen=pg.mkPen(colors[1], width=2), name=name)
+    name = 'Syn_{}'.format(i)
+    p4.plot(x=np.asarray(statemonSynOut.t / ms), y=data,
+            pen=pg.mkPen(colors[1], width=2), name=name)
 
 for data in np.asarray(statemonNeuOut.Imem):
-  p6.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
-          pen=pg.mkPen(colors[5], width=3))
+    p6.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
+            pen=pg.mkPen(colors[5], width=3))
 
 p5.plot(x=np.asarray(spikemonOut.t / ms), y=np.asarray(spikemonOut.i),
         pen=None, symbol='o', symbolPen=None,

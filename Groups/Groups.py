@@ -22,7 +22,6 @@ class Neurons(NeuronGroup):
     def __init__(self, N,
                  params=None,
                  method='euler',
-                 refractory=False,
                  events=None,
                  namespace=None,
                  dtype=None,
@@ -45,7 +44,6 @@ class Neurons(NeuronGroup):
         self.strParams = {}
 
 #        print(self.equation.model) for debugging porpouses
-
         self.initialized = True
         NeuronGroup.__init__(self, N,
                              events=events,
@@ -129,7 +127,7 @@ class Neurons(NeuronGroup):
 
 class Connections(Synapses):
 
-    def __init__(self, source, target, 
+    def __init__(self, source, target,
                  params=None,
                  delay=None, on_event='spike',
                  multisynaptic_index=None,

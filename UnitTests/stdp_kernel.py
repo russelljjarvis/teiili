@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from NCSBrian2Lib.Groups.Groups import Connections
+from NCSBrian2Lib.Models.SynapseModels import DPI_stdp
 
 prefs.codegen.target = "numpy"
 
@@ -42,8 +43,9 @@ H = NeuronGroup(N, '''
 G.tspike = 'i*tmax/(N-1)'
 H.tspike = '(N-1-i)*tmax/(N-1)'
 
+DPISynEq, DPISynparam = DPI_stdp(1)
 S = Connections(G, H,
-                baseUnit='DPI', plasticity='stdp', inputNumber=1)
+                **DPISynEq, params=DPISynparam)
 S.connect('i==j')
 S.w = 0.5
 S.taupre = 5 * ms

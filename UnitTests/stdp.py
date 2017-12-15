@@ -10,10 +10,9 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, TimedArray,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
-# from brian2 import *
-
-#from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
 from NCSBrian2Lib.Groups.Groups import Neurons, Connections
+from NCSBrian2Lib.Models.NeuronModels import DPI
+from NCSBrian2Lib.Models.SynapseModels import DPISyn, DPI_stdp
 from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone
 from NCSBrian2Lib.Stimuli.testbench import stdp_testbench
 
@@ -24,24 +23,33 @@ Net = StandaloneNetwork()
 stdp = stdp_testbench()
 gPre, gPost = stdp.stimuli(isi=30)
 
-pre = Neurons(2, baseUnit='current', adaptation='calciumFeedback', integrationMode='exponential', leak='leaky',
-              position='none', noise='none', refractory=3 * ms, name="pre", numInputs=2)
+DPIEq, DPIparam = DPI(1)
 
-post = Neurons(2, baseUnit='current', adaptation='calciumFeedback', integrationMode='exponential', leak='leaky',
-               position='none', noise='none', refractory=3 * ms, name="post", numInputs=2)
+preSTDP = Neurons(1, **DPIEq, name='preSTDP')
+preSTDP.setParams(DPIparam)
+preSTDP.refP = 3 * ms
 
-SynPre = Connections(gPre, pre,
-                     baseUnit='DPI', plasticity='nonplastic', name='SynPre')
+DPIEq, DPIparam = DPI(1)
+postSTDP = Neurons(1, **DPIEq, name='postSTDP')
+postSTDP.setParams(DPIparam)
+postSTDP.refP = 3 * ms
 
-SynPost = Connections(gPost, post,
-                      baseUnit='DPI', plasticity='nonplastic', name='SynPost')
 
-SynSTDP = Connections(pre, post,
-                      baseUnit='DPI', plasticity='stdp', name='SynSTDP')
+DPISynEq, DPISynparam = DPISyn()
+SynPre = Connections(gPre, preSTDP,
+                     **DPISynEq, params=DPISynparam, name='SynPre')
+
+SynPost = Connections(gPost, postSTDP,
+                      **DPISynEq, params=DPISynparam, name='SynPost')
+
+
+DPISynSTDPEq, DPISynSTDPparam = DPI_stdp()
+SynSTDP = Connections(preSTDP, postSTDP,
+                      **DPISynSTDPEq, params=DPISynSTDPparam, name='SynSTDP')
 
 # Set parameters:
-pre.Itau = 6 * pA
-post.Itau = 6 * pA
+preSTDP.Itau = 6 * pA
+postSTDP.Itau = 6 * pA
 
 SynPre.connect(True)
 SynPre.weight = 400.
@@ -53,17 +61,15 @@ SynSTDP.connect("i==j")
 SynSTDP.weight = 100.
 SynSTDP.Ie_tau = 2 * pA
 
-# pre.Iconst = 1 * nA
-# post.Iconst = 1.2 * nA
 
-spikemonPre = SpikeMonitor(pre, name='spikemonPre')
-statemonPre = StateMonitor(pre, variables='Imem', record=0, name='statemonPre')
+spikemonPre = SpikeMonitor(preSTDP, name='spikemonPre')
+statemonPre = StateMonitor(preSTDP, variables='Imem', record=0, name='statemonPre')
 statemonSynPre = StateMonitor(SynPre, variables=['Ie_syn'], record=0, name='statemonSynPre')
-spikemonPost = SpikeMonitor(post, name='spikemonPost')
-statemonPost = StateMonitor(post, variables='Imem', record=0, name='statemonPost')
+spikemonPost = SpikeMonitor(postSTDP, name='spikemonPost')
+statemonPost = StateMonitor(postSTDP, variables='Imem', record=0, name='statemonPost')
 statemonWeight = StateMonitor(SynSTDP, variables=['Ie_syn', 'wPlast', 'w'], record=True, name='statemonWeight')
 
-Net.add(gPre, gPost, pre, post, SynPre, SynPost, SynSTDP, statemonSynPre,
+Net.add(gPre, gPost, preSTDP, postSTDP, SynPre, SynPost, SynSTDP, statemonSynPre,
         statemonPre, statemonPost, spikemonPre, spikemonPost, statemonWeight)
 
 duration = 2000

@@ -15,7 +15,21 @@ import pyqtgraph as pg
 
 
 class stdp_testbench():
+
+    """This class provides a stimuli to test your spike-time depenendent plasticity algorithm
+
+    Attributes:
+        N (int): Size of the pre and post neuronal population
+        stimulusLength (int): Length of stimuli in ms
+    """
+
     def __init__(self, N=1, stimulusLength=1200):
+        """Summary
+
+        Args:
+            N (int, optional): Size of the pre and post neuronal population
+            stimulusLength (int, optional): Length of stimuli in ms
+        """
         self.N = N  # Number of Neurons per input group
         self.stimulusLength = stimulusLength
 
@@ -25,6 +39,13 @@ class stdp_testbench():
         Both are Spikegeneratorgroups which hold a single index each
         and varying spike times.
         The protocol follows homoeostasis, weak LTP, weak LTD, strong LTP, strong LTD, homoeostasis
+
+        Args:
+            isi (int, optional): Interspike Inerval. How many spikes per stimulus phase
+
+        Returns:
+            SpikeGeneratorGroup (brian2.obj: rian2 objects which holds the spiketimes as well
+                as the respective neuron indices
         '''
         t_pre_homoeotasis_1 = np.arange(1, 202, isi)
         t_pre_weakLTP = np.arange(301, 502, isi)
@@ -54,20 +75,67 @@ class stdp_testbench():
 
 
 class octa_testbench():
+
+    """This class holds all relevant stimuli to test modules provided with the
+    Online Clustering of Temporal Activity (OCTA) framework
+
+    Attributes:
+        angles (TYPE): List of angles of orientation
+        dv (TYPE): Description
+        DVS_SHAPE (TYPE): Input shape of the simulated DVS/DAVIS vision sensor
+        end (TYPE): Description
+        line (TYPE): Description
+        start (TYPE): Description
+    """
+
     def __init__(self, DVS_SHAPE=(240, 180)):
+        """Summary
+
+        Args:
+            DVS_SHAPE (tuple, optional): Dimension of pixel array of the simulated DVS/DAVIS vision sensor
+        """
         self.DVS_SHAPE = DVS_SHAPE
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
 
     def convertAEDAT(self, rec, camera='DVS128', returnEvents=False):
+        """Wrapper function of the original aedat2numpy function in NCSBrian2Lib.Tools.tools
+
+        Args:
+            rec (str): Path to stored .aedat file
+            camera (str, optional): Can either be string ('DAVIS240') or int 240, which specifies
+                the larger of the 2 pixel dimension to unravel the coordinates into indices
+            returnEvents (bool, optional): Recording is saved by default. This flag lets you return
+                the converted numpy array
+
+        Returns:
+            events (np.ndarray): 4D numpy array with #events entries. Array is organized as x, y, ts, pol
+                see aedat2numpy for more details
+        """
         events = aedat2numpy(datafile=rec, camera=camera)
         np.save(rec[:-5] + 'npy', events)
         if returnEvents:
             return events
 
-    def infinity(self, t):
-        return np.cos(t), np.sin(t) * np.cos(t)
+    def infinity(self, cAngle):
+        """Given an angle cAngle this function returns the current postion on an infinity trajectory
+
+        Args:
+            cAngle (int): current angle which determines postion on inifinity trajectory
+
+        Returns:
+            position (tuple): Postion in x, y coordinates
+        """
+        return np.cos(cAngle), np.sin(cAngle) * np.cos(cAngle)
 
     def dda_round(self, x):
+        """Simple round funcion
+
+        Args:
+            x (float): Value to be rounded
+
+        Returns:
+            (int): Ceiled value of x
+        """
         return (x + 0.5).astype(int)
 
     def bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
@@ -81,13 +149,20 @@ class octa_testbench():
 
         Args:
             length (int): `length` of the bar in pixel.
+            n2dNeurons (int, optional): Description
             orientation (str): `orientation` of the bar. Can either be 'vertical'
                 or 'horizontal'
             ts_offset (int): time between two pixel location
+            angle_step (int, optional): Description
+            artifical_stimulus (bool, optional): Description
+            fname (bool, optional): Path to aedat reacording, only used if arificial_stimulus=False
 
         Returns:
             SpikeGenerator obj: Brian2 objects which holds the spiketimes as well
                 as the respective neuron indices
+
+        Raises:
+            UserWarning: If no filename is given but aedat reacording should be loaded
         """
         if not artifical_stimulus:
             if not fname:
@@ -139,10 +214,19 @@ class octa_testbench():
         This function will either load recorded DAVIS/DVS recordings or generate artificial events
         of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
         In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
-        Input:
-        :param length:
-        :param orientation:
-        :param shift:
+
+        Args:
+            length (int, optional): length of the bar in pixel
+            orientation (str, optional): Description
+            shift (int, optional): offset in x where the stimulus will start
+            ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
+            artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
+            orthogonal (int, optional): Flag which determines if bar is orientated orthogonal or aligned with
+                trajectory
+            returnEvents (bool, optional): Description
+
+        Returns:
+            TYPE: SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes
 
         """
         if not artifical_stimulus:
@@ -200,6 +284,20 @@ class octa_testbench():
                 return gInpGroup
 
     def rotating_bar_infinity(self, length=10, orthogonal=False, shift=32, ts_offset=10, artifical_stimulus=True):
+        """This function will either load recorded DAVIS/DVS recordings or generate artificial events
+        of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
+        In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
+
+        Args:
+            length (int, optional): Length of the bar in pixel
+            orthogonal (bool, optional): Description
+            shift (int, optional): Description
+            ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
+            artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
+
+        Returns:
+            TYPE: Description
+        """
         if not artifical_stimulus:
             if orthogonal == 0:
                 fname = 'rec/Inifity_aligned_bar.aedat'
@@ -267,6 +365,9 @@ class octa_testbench():
         The idea is to test the Online Clustering and Prediction module of OCTAPUS
         The aim is to learn spatio-temporal features based on the ball's trajectory
         and learn to predict its movement
+
+        Returns:
+            TYPE: Description
         '''
         events = np.load('rec/ball.npy')
         ind_on, ts_on, ind_off, ts_off = dvs2ind(Events=events, resolution=max(self.DVS_SHAPE), scale=True)
@@ -279,7 +380,19 @@ class octa_testbench():
 
 
 class visualize():
+
+    """Summary
+
+    Attributes:
+        colors (TYPE): Description
+        eventPlot (TYPE): Description
+        labelStyle (dict): Description
+        win (TYPE): Description
+    """
+
     def __init__(self):
+        """Summary
+        """
         app = QtGui.QApplication([])
         pg.setConfigOptions(antialias=True)
 
@@ -292,6 +405,12 @@ class visualize():
         self.eventPlot.addLegend()
 
     def plot(self, events, time_window=35):
+        """Summary
+
+        Args:
+            events (TYPE): Description
+            time_window (int, optional): Description
+        """
         if type(events) == str:
             events = np.load(events)
         self.eventPlot = self.win.addPlot(title="Input events with size {}x{}".format(np.max(events[0, :]), np.max(events[1, :])))

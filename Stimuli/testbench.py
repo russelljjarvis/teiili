@@ -33,7 +33,7 @@ class stdp_testbench():
         self.stimulusLength = stimulusLength
 
     def stimuli(self, isi=10):
-        '''
+        """
         This function returns two brian2 objects.
         Both are Spikegeneratorgroups which hold a single index each
         and varying spike times.
@@ -45,7 +45,7 @@ class stdp_testbench():
         Returns:
             SpikeGeneratorGroup (brian2.obj: rian2 objects which holds the spiketimes as well
                 as the respective neuron indices
-        '''
+        """
         t_pre_homoeotasis_1 = np.arange(1, 202, isi)
         t_pre_weakLTP = np.arange(301, 502, isi)
         t_pre_weakLTD = np.arange(601, 802, isi)
@@ -139,8 +139,7 @@ class octa_testbench():
 
     def bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
             angle_step=10, artifical_stimulus=True, rec_path=None):
-        """
-        This function returns a single spikegenerator group (Brian object)
+        """This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
         A bar is rotating in the center. The goal is to learn necessary
         spatio-temporal feature of the moving bar and be able to make predictions

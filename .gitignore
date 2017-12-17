@@ -99,6 +99,7 @@ ENV/
 .pydevproject
 .settings/
 
-.png
-.jpg
-.gif
+*.png
+*.jpg
+*.gif
+*.svg

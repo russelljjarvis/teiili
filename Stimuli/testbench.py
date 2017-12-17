@@ -1,11 +1,14 @@
-'''
+# -*- coding: utf-8 -*-
+# @Author: Moritz Milde
+# @Date:   2017-12-17 13:22:16
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2017-12-17 14:04:19
+# @EMail: mmilde@ini.uzh.ch
+"""
 This class holds different pre-defined testbench stimuli.
 The idea is to test certain aspects of you network with common stimuli.
 
-Author: Moritz Milde
-Email: mmilde@ini.uzh.ch
-Date: 13.06.2017
-'''
+"""
 from brian2 import *
 from NCSBrian2Lib.Tools.tools import dvs2ind, xy2ind, aedat2numpy
 import numpy as np

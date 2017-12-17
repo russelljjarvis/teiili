@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Summary
+"""
 
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
     figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel, device
@@ -24,6 +26,11 @@ import time
 
 
 def printStates(briangroup):
+    """Summary
+
+    Args:
+        briangroup (TYPE): Description
+    """
     states = briangroup.get_states()
     print ('\n')
     print ('-_-_-_-_-_-_-_')
@@ -52,6 +59,18 @@ float returnValueIf(float testVal, float greaterThanVal, float smallerThanVal, f
 #@implementation('numpy', discard_units=True)
 @check_units(testVal = 1, greaterThanVal = 1, smallerThanVal = 1, returnValTrue = 1, returnValFalse = 1, result=1)
 def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, returnValFalse):
+    """Summary
+
+    Args:
+        testVal (TYPE): Description
+        greaterThanVal (TYPE): Description
+        smallerThanVal (TYPE): Description
+        returnValTrue (TYPE): Description
+        returnValFalse (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     if (testVal > greaterThanVal and testVal < smallerThanVal):
         return returnValTrue
     else:
@@ -64,6 +83,16 @@ def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, return
 @implementation('numpy', discard_units=True)
 @check_units(x=1, y=1, n2dNeurons=1, result=1)
 def xy2ind(x, y, n2dNeurons):
+    """Summary
+
+    Args:
+        x (TYPE): Description
+        y (TYPE): Description
+        n2dNeurons (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     if isinstance(x, np.ndarray):
         return x + y * n2dNeurons
     else:
@@ -82,6 +111,15 @@ def xy2ind(x, y, n2dNeurons):
 @declare_types(ind='integer', n2dNeurons='integer', result='integer')
 @check_units(ind=1, n2dNeurons=1, result=1)
 def ind2x(ind, n2dNeurons):
+    """Summary
+
+    Args:
+        ind (TYPE): Description
+        n2dNeurons (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     ret = np.floor_divide(np.round(ind), n2dNeurons)
     return ret
 
@@ -94,6 +132,15 @@ def ind2x(ind, n2dNeurons):
 @declare_types(ind='integer', n2dNeurons='integer', result='integer')
 @check_units(ind=1, n2dNeurons=1, result=1)
 def ind2y(ind, n2dNeurons):
+    """Summary
+
+    Args:
+        ind (TYPE): Description
+        n2dNeurons (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     ret = np.mod(np.round(ind), n2dNeurons)
     return ret
 
@@ -101,6 +148,15 @@ def ind2y(ind, n2dNeurons):
 @implementation('numpy', discard_units=True)
 @check_units(ind=1, n2dNeurons=1, result=1)
 def ind2xy(ind, n2dNeurons):
+    """Summary
+
+    Args:
+        ind (TYPE): Description
+        n2dNeurons (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     #ret = (np.floor_divide(np.round(ind), n2dNeurons),np.mod(np.round(ind), n2dNeurons))
     return np.unravel_index(ind, (n2dNeurons, n2dNeurons))
 
@@ -118,6 +174,16 @@ def ind2xy(ind, n2dNeurons):
 @declare_types(i='integer', j='integer', n2dNeurons='integer', result='float')
 @check_units(i=1, j=1, n2dNeurons=1, result=1)
 def fdist2d(i, j, n2dNeurons):
+    """Summary
+
+    Args:
+        i (TYPE): Description
+        j (TYPE): Description
+        n2dNeurons (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     (ix, iy) = ind2xy(i, n2dNeurons)
     (jx, jy) = ind2xy(j, n2dNeurons)
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
@@ -134,6 +200,17 @@ def fdist2d(i, j, n2dNeurons):
 @declare_types(ix='integer', iy='integer', jx='integer', jy='integer', result='float')
 @check_units(ix=1, iy=1, jx=1, jy=1, result=1)
 def dist2d(ix, iy, jx, jy):
+    """Summary
+
+    Args:
+        ix (TYPE): Description
+        iy (TYPE): Description
+        jx (TYPE): Description
+        jy (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 # function that calculates 1D "mexican hat" kernel
@@ -151,7 +228,16 @@ def dist2d(ix, iy, jx, jy):
 @declare_types(i='integer', j='integer', gsigma='float', result='float')
 @check_units(i=1, j=1, gsigma=1, result=1)
 def fkernel1d(i, j, gsigma):
-    "function that calculates mexican hat 1D kernel"
+    """Summary: function that calculates mexican hat 1D kernel
+
+    Args:
+        i (TYPE): Description
+        j (TYPE): Description
+        gsigma (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     # res = exp(-((i-j)**2)/(2*sigm**2)) # gaussian, not normalized
     x = i - j
     exponent = -(x**2) / (2 * gsigma**2)
@@ -170,7 +256,16 @@ def fkernel1d(i, j, gsigma):
 @declare_types(i='integer', j='integer', gsigma='float', result='float')
 @check_units(i=1, j=1, gsigma=1, result=1)
 def fkernelgauss1d(i, j, gsigma):
-    "function that calculates 1D kernel"
+    """Summary: function that calculates 1D kernel
+
+    Args:
+        i (TYPE): Description
+        j (TYPE): Description
+        gsigma (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     res = exp(-((i - j)**2) / (2 * gsigma**2))  # gaussian, not normalized
     return res
 
@@ -192,7 +287,17 @@ def fkernelgauss1d(i, j, gsigma):
 @declare_types(i='integer', j='integer', gsigma='float', n2dNeurons='integer', result='float')
 @check_units(i=1, j=1, gsigma=1, n2dNeurons=1, result=1)
 def fkernel2d(i, j, gsigma, n2dNeurons):
-    "function that calculates 2D kernel"
+    """Summary: function that calculates 2D kernel
+
+    Args:
+        i (TYPE): Description
+        j (TYPE): Description
+        gsigma (TYPE): Description
+        n2dNeurons (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     # exponent = -(fdist(i,j,n2dNeurons)**2)/(2*gsigma**2) #alternative
     (ix, iy) = ind2xy(i, n2dNeurons)
     (jx, jy) = ind2xy(j, n2dNeurons)
@@ -221,7 +326,17 @@ def fkernel2d(i, j, gsigma, n2dNeurons):
 @declare_types(i='integer', j='integer', gsigma='float', n2dNeurons='integer', result='float')
 @check_units(i=1, j=1, gsigma=1, n2dNeurons=1, result=1)
 def fkernelGauss2d(i, j, gsigma, n2dNeurons):
-    "function that calculates gaussian 2D kernel"
+    """Summary: function that calculates gaussian 2D kernel
+
+    Args:
+        i (TYPE): Description
+        j (TYPE): Description
+        gsigma (TYPE): Description
+        n2dNeurons (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     (ix, iy) = ind2xy(i, n2dNeurons)
     (jx, jy) = ind2xy(j, n2dNeurons)
     x = ix - jx
@@ -240,7 +355,26 @@ def fkernelGauss2d(i, j, gsigma, n2dNeurons):
 @declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float',freq='float', InputSizeX='integer', InputSizeY='integer', WindowSizeX='integer', WindowSizeY='integer', RFSize='integer', result='float')
 @check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, InputSizeX=1, InputSizeY=1, WindowSizeX=1, WindowSizeY=1, RFSize=1, result=1)
 def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, InputSizeY, WindowSizeX, WindowSizeY, RFSize):
-    "function that calculates Gabor 2D kernel, only works with odd square Receptive Fields"
+    """Summary: function that calculates Gabor 2D kernel, only works with odd square Receptive Fields
+
+    Args:
+        i (TYPE): Description
+        j (TYPE): Description
+        offx (TYPE): Description
+        offy (TYPE): Description
+        theta (TYPE): Description
+        sigmax (TYPE): Description
+        sigmay (TYPE): Description
+        freq (TYPE): Description
+        InputSizeX (TYPE): Description
+        InputSizeY (TYPE): Description
+        WindowSizeX (TYPE): Description
+        WindowSizeY (TYPE): Description
+        RFSize (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
 
     (ix, iy) = np.unravel_index(i, (InputSizeX, InputSizeY))
     if (WindowSizeX + abs(offx) <= (InputSizeX-(RFSize-1))) & (WindowSizeY + abs(offy) <= (InputSizeY-(RFSize-1))):
@@ -258,6 +392,16 @@ def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, In
         return 0
 
 def spikemon2firingRate(spikemon, fromT=0 * ms, toT="max"):
+    """Summary
+
+    Args:
+        spikemon (TYPE): Description
+        fromT (TYPE, optional): Description
+        toT (str, optional): Description
+
+    Returns:
+        TYPE: Description
+    """
     spiketimes = (spikemon.t / ms)
     if len(spiketimes) == 0:
         return 0
@@ -275,39 +419,48 @@ def spikemon2firingRate(spikemon, fromT=0 * ms, toT="max"):
 class GenerateWeightMatrix():
     '''
     This module will provide different types of standard weight matrix for 2 neuron population
+
     Type of weight matrices which are supported:
 
     Inputs:
-        save_path:          Path where to store the weightMatrix. If not set explicitly matrix stored
-                            in your temporary folder depending on you OS
-        population1:        Brian2 neurongroup
-        population2:        Brian2 neurongroup
-        mode:               Specifies from which type of distribution weights are sampled
-                            Mode can be set to 'normal', 'exponential', 'int', 'uniform'
-                            Default: 'normal'
-        mu:                 Mean of distribution needed for 'normal' distributed random weights.
-                            Default: 0
-        sigma:              Standard deviation of distribution needed for 'normal' distributed random weights.
-                            Default: 0.25.
-        weightRange:        Maximum and minimum value th weights can get. Used by 'int' and 'uniform' mode
-        connectionType:     Specifies which type of connectivity is between two populations desired. \
-                            Can be either 'fully' (fully connected) or 'sparse'
-        connectivityMatrix: If connectionType is sparse, the actual connectivityMatrix needs to be passed to this function
-        save:               Flag whether to save created weightMatrix in predefined save_path (see above).
-                            If not set weightMatrix will be returned
+            save_path:          Path where to store the weightMatrix. If not set explicitly matrix stored
+                                in your temporary folder depending on you OS
+            population1:        Brian2 neurongroup
+            population2:        Brian2 neurongroup
+            mode:               Specifies from which type of distribution weights are sampled
+                                Mode can be set to 'normal', 'exponential', 'int', 'uniform'
+                                Default: 'normal'
+            mu:                 Mean of distribution needed for 'normal' distributed random weights.
+                                Default: 0
+            sigma:              Standard deviation of distribution needed for 'normal' distributed random weights.
+                                Default: 0.25.
+            weightRange:        Maximum and minimum value th weights can get. Used by 'int' and 'uniform' mode
+            connectionType:     Specifies which type of connectivity is between two populations desired. \
+                                Can be either 'fully' (fully connected) or 'sparse'
+            connectivityMatrix: If connectionType is sparse, the actual connectivityMatrix needs to be passed to this function
+            save:               Flag whether to save created weightMatrix in predefined save_path (see above).
+                                If not set weightMatrix will be returned
 
 
-    Output: If save is set:
-                    Weight matrix will be stored in save_path
-            if not:
-                    Weight matrix will be returned
+        Output: If save is set:
+                        Weight matrix will be stored in save_path
+                if not:
+                        Weight matrix will be returned
 
-    Random weight matrix
-    Uniformly distributed
-    differentiate between fully connected and sparsely connected populations
+        Random weight matrix
+        Uniformly distributed
+        differentiate between fully connected and sparsely connected populations
 
-    Author: Moritz Milde
-    Date: 02.12.2016
+        Author: Moritz Milde
+        Date: 02.12.2016
+
+    Attributes:
+        matrixSize (TYPE): Description
+        mode (TYPE): Description
+        mu (int): Description
+        save_path (TYPE): Description
+        sigma (float): Description
+        weightRange (int): Description
     '''
 
     def __init__(self, save_path=None):
@@ -315,6 +468,9 @@ class GenerateWeightMatrix():
         Init function of the class
         If save_path is not specified but save flag is set (see below) weight matrix
         will be stored in your temporary directory
+
+        Args:
+            save_path (None, optional): Description
         '''
         if save_path is not None:
             self.save_path = save_path
@@ -332,11 +488,18 @@ class GenerateWeightMatrix():
         '''
         This function generates random weights between two neuron populations specified outside
         Based on the selected mode the random distribution is differently initialized
+
         Supported modes:
             - 'normal' normal distributed
             - 'int' randomly distributed integers from -range to range
             - 'exponential' weights are sampled from an exponential distribution
             - 'uniform' uniformly spaced weights between -range and range
+
+        Returns:
+            TYPE: Description
+
+        Raises:
+            Exception: Description
         '''
         if self.mode == 'normal':
             weightMatrix = np.random.normal(self.mu, self.sigma, size=self.matrixSize)
@@ -352,6 +515,22 @@ class GenerateWeightMatrix():
 
     def randomWeightMatrix(self, population1, population2, mode='normal', mu=None, sigma=None, weightRange=None,
                            connectionType='fully', connectivityMatrix=None, save=False):
+        """Summary
+
+        Args:
+            population1 (TYPE): Description
+            population2 (TYPE): Description
+            mode (str, optional): Description
+            mu (None, optional): Description
+            sigma (None, optional): Description
+            weightRange (None, optional): Description
+            connectionType (str, optional): Description
+            connectivityMatrix (None, optional): Description
+            save (bool, optional): Description
+
+        Returns:
+            TYPE: Description
+        """
         if mu is not None:
             self.mu = mu
         if sigma is not None:
@@ -376,24 +555,31 @@ class GenerateWeightMatrix():
             return weightMatrix
 
 
-'''
-Since Brian2 is only able to build 1D neuron population this script transforms indices to pixel location of the 128x128 DVS and vice versa.
-The ind2px function are useful to plot recorded spikes in the same coordinate system to compare the original events as proided by the DVS
-'''
-
-
 def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, camera='DVS128'):
     """
     load AER data file and parse these properties of AE events:
-    - timestamps (in us),
-    - x,y-position [0..127]
-    - polarity (0/1)
-    @param datafile - path to the file to read
-    @param length - how many bytes(B) should be read; default 0=whole file
-    @param version - which file format version is used: "aedat" = v2, "dat" = v1 (old)
-    @param debug - 0 = silent, 1 (default) = print summary, >=2 = print all debug
-    @param camera='DVS128' or 'DAVIS240'
-    @return (ts, xpos, ypos, pol) 4-tuple of lists containing data of all events;
+        - timestamps (in us),
+        - x,y-position [0..127]
+        - polarity (0/1)
+        @param datafile - path to the file to read
+        @param length - how many bytes(B) should be read; default 0=whole file
+        @param version - which file format version is used: "aedat" = v2, "dat" = v1 (old)
+        @param debug - 0 = silent, 1 (default) = print summary, >=2 = print all debug
+        @param camera='DVS128' or 'DAVIS240'
+        @return (ts, xpos, ypos, pol) 4-tuple of lists containing data of all events;
+
+    Args:
+        datafile (str, optional): Description
+        length (int, optional): Description
+        version (str, optional): Description
+        debug (int, optional): Description
+        camera (str, optional): Description
+
+    Returns:
+        TYPE: Description
+
+    Raises:
+        ValueError: Description
     """
     # constants
     # V3 = "aedat3"
@@ -493,16 +679,22 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
 
 
 def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True):
-    '''
-    Input:
-        - Events: A numpy array (x, y, ts, pol)
-        - eventDirectory: A str containing the path to a .npy file to which holds the 4 x # Events numpy array (x, y, ts, pol)
-        - resolution: Specifies the x dimension of the DVS based on the model (e.g. DVS128 or DAVIS240) can be string such as 'DVS128'
-          or an integer such as 128
-        - scale: A flog to prevent rescaling of timestamps from micro to milliseconds if time stamps are already in milliseconds
-    Output:
-        - returns a vector of unique indices which maps the pixel location of the camera to the 1D neuron population in brian
-    '''
+    """Summary Function which converts events extracted from an aedat file using aedat2numpy
+    into 1D vectors of neuron indices and timestamps. Funcion only returns index and timestamp
+    list for existing types (e.g. On & Off events)
+
+    Args:
+        Events (None, optional): 4D numpd.ndarray which contains pixel location (x,y), timestamps and polarity ((4,#events))
+        eventDirectory (None, optional): Path to stored events
+        resolution (str/int, optional): Resolution of the camera.
+        scale (bool, optional): Flag to rescale the timestampts from micro- to milliseconds
+
+    Returns:
+        indices_on (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of ON events
+        ts_on (1d numpy.array):  Unique timestamps of active indices of ON events
+        indices_off (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of OFF events
+        ts_off (1d numpy.array):  Unique timestamps of active indices of OFF events
+    """
     if eventDirectory is not None:
         assert type(eventDirectory) == str, 'eventDirectory must be a string'
         assert eventDirectory[
@@ -600,12 +792,20 @@ def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True)
 def DVScsv2numpy(datafile='tmp/aerout.csv', exp_name='Experiment', debug=False):
     """
     load AER csv logfile and parse these properties of AE events:
-    - timestamps (in us),
-    - x,y-position [0..127]
-    - polarity (0/1)
-    @param datafile - path to the file to read
-    @param debug - 0 = silent, 1 (default) = print summary, >=2 = print all debug
-    @return (ts, xpos, ypos, pol) 4-tuple of lists containing data of all events;
+        - timestamps (in us),
+        - x,y-position [0..127]
+        - polarity (0/1)
+        @param datafile - path to the file to read
+        @param debug - 0 = silent, 1 (default) = print summary, >=2 = print all debug
+        @return (ts, xpos, ypos, pol) 4-tuple of lists containing data of all events;
+
+    Args:
+        datafile (str, optional): Description
+        exp_name (str, optional): Description
+        debug (bool, optional): Description
+
+    Returns:
+        TYPE: Description
     """
     import pandas as pd
 
@@ -681,10 +881,19 @@ def DVScsv2numpy(datafile='tmp/aerout.csv', exp_name='Experiment', debug=False):
 
 
 def makeGaussian(squareSize, sigma = 1, mu=None):
-    """ Make a square gaussian kernel"""
+    """Make a square gaussian kernel
+
+    Args:
+        squareSize (TYPE): Description
+        sigma (int, optional): Description
+        mu (None, optional): Description
+
+    Returns:
+        TYPE: Description
+    """
 
     x = np.arange(0, squareSize)
-    y = x[:,np.newaxis]
+    y = x[:, np.newaxis]
 
     if mu is None:
         x0 = y0 = squareSize // 2

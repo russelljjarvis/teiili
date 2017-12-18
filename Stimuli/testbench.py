@@ -2,7 +2,7 @@
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2017-12-17 14:04:19
+# @Last Modified time: 2017-12-18 19:22:07
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -113,7 +113,8 @@ class octa_testbench():
             events (np.ndarray): 4D numpy array with #events entries. Array is organized as x, y, ts, pol
                 see aedat2numpy for more details
         """
-        assert(type(rec) == str), "rec has to be a string"
+        assert(type(rec) == str), "rec has to be a string."
+        assert(os.path.isfile(rec)), "File does not exist."
         events = aedat2numpy(datafile=rec, camera=camera)
         np.save(rec[:-5] + 'npy', events)
         return events
@@ -122,7 +123,7 @@ class octa_testbench():
         """Given an angle cAngle this function returns the current postion on an infinity trajectory
 
         Args:
-            cAngle (int): current angle which determines postion on inifinity trajectory
+            cAngle (float): current angle in rad which determines postion on inifinity trajectory
 
         Returns:
             position (tuple): Postion in x, y coordinates
@@ -138,9 +139,9 @@ class octa_testbench():
         Returns:
             (int): Ceiled value of x
         """
-        return (x + 0.5).astype(int)
+        return int(x + 0.5)
 
-    def bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
+    def rotating_bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
             angle_step=10, artifical_stimulus=True, rec_path=None):
         """This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
@@ -168,7 +169,7 @@ class octa_testbench():
         if not artifical_stimulus:
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
-            assert(os.path.isfile(fname)), "No recording exists. Please record the respective stimulus first."
+            assert(os.path.isfile(rec_path + 'bar.aedat')), "No recording exists. Please record the respective stimulus first."
             events = aedat2numpy(datafile=rec_path + 'bar.aedat', camera='DVS240')
         else:
             x_coord = []

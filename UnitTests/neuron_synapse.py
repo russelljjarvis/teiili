@@ -41,7 +41,7 @@ testNeurons2 = Neurons(2, **DPIEq, name="testNeuron2")
 testNeurons2.setParams(DPIparam)
 testNeurons2.refP = 3 * ms
 
-DPISynEq, DPISynparam = DPISyn(1)
+DPISynEq, DPISynparam = DPISyn()
 InpSyn = Connections(gInpGroup, testNeurons, **DPISynEq, params=DPISynparam, name="testSyn")
 InpSyn.connect(True)
 

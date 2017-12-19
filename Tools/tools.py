@@ -1,15 +1,14 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Summary
-"""
+# @Author: mmilde, alpren
+# @Date:   2017-12-19 12:55:15
+# @Last Modified by:   mmilde
+# @Last Modified time: 2017-12-19 13:14:55
 
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
     figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel, device
-#from brian2 import *
 import numpy as np
 import os
 import tempfile
-#import getpass
 import scipy as spv
 import struct
 import time
@@ -26,11 +25,15 @@ import time
 
 
 def printStates(briangroup):
-    """Summary
+    """Given a NeuronGroup this function will print all its
+    states based on the last spiking activity
 
     Args:
-        briangroup (TYPE): Description
+        briangroup (brian2.object): The briangroup, such as NeuronGroup
     """
+    # assert(type(briangroup)== )
+    if not hasattr(briangroup, 'get_states'):
+        raise UserWarning('Object does not have the attribute get_states')
     states = briangroup.get_states()
     print ('\n')
     print ('-_-_-_-_-_-_-_')
@@ -57,25 +60,30 @@ float returnValueIf(float testVal, float greaterThanVal, float smallerThanVal, f
 #@declare_types(testVal = 'float', greaterThanVal = 'float', smallerThanVal = 'float',\
 #               returnValTrue = 'float', returnValFalse = 'float', result='float')
 #@implementation('numpy', discard_units=True)
-@check_units(testVal = 1, greaterThanVal = 1, smallerThanVal = 1, returnValTrue = 1, returnValFalse = 1, result=1)
+@check_units(testVal=1, greaterThanVal=1, smallerThanVal=1, returnValTrue=1, returnValFalse=1, result=1)
 def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, returnValFalse):
-    """Summary
+    """This function test a value to lay in a specific range. Dependent on the case (interval)
+    another value is returned
 
     Args:
-        testVal (TYPE): Description
-        greaterThanVal (TYPE): Description
-        smallerThanVal (TYPE): Description
-        returnValTrue (TYPE): Description
-        returnValFalse (TYPE): Description
+        testVal (float, required): Value to test for
+        greaterThanVal (int, required): Lower bound of interval
+        smallerThanVal (int, required): Upper bound of interval
+        returnValTrue (float, required): If testVal lays between lower and upper bound this
+            value will be returned
+        returnValFalse (TYPE): If testVal lays outside of lower and upper bound this
+            value will be returned
 
     Returns:
-        TYPE: Description
+        returnValTrue (float): If testVal lays between lower and upper bound this
+            value will be returned
+        returnValFalse (float): If testVal lays outside of lower and upper bound this
+            value will be returned
     """
     if (testVal > greaterThanVal and testVal < smallerThanVal):
         return returnValTrue
     else:
         return returnValFalse
-
 
 
 # function that calculates 1D index from 2D index
@@ -236,18 +244,18 @@ def fkernel1d(i, j, gsigma):
     """Summary:function that calculates mexican hat 1D kernel
 
     Args:
-        i (TYPE): Description
-        j (TYPE): Description
-        gsigma (TYPE): Description
+        i (int, required): Pre-synaptic neuron (source)
+        j (int, required): Post-synaptic neuron (target)
+        gsigma (float, required): Standard deviation
 
     Returns:
         TYPE: Description
     """
     # res = exp(-((i-j)**2)/(2*sigm**2)) # gaussian, not normalized
-    x = i - j
+    x = i - j  # Given the postion we can calculate the strength of connection
     exponent = -(x**2) / (2 * gsigma**2)
-    res = (1 + 2 * exponent) * exp(exponent)  # mexican hat, not normalized
-    return res
+    return (1 + 2 * exponent) * np.exp(exponent)  # mexican hat, not normalized
+
 
 # function that calculates 1D gaussian kernel
 
@@ -261,18 +269,17 @@ def fkernel1d(i, j, gsigma):
 @declare_types(i='integer', j='integer', gsigma='float', result='float')
 @check_units(i=1, j=1, gsigma=1, result=1)
 def fkernelgauss1d(i, j, gsigma):
-    """Summary: function that calculates 1D kernel
+    """Summary: function that calculates 1D gaussian kernel
 
     Args:
-        i (TYPE): Description
-        j (TYPE): Description
-        gsigma (TYPE): Description
+        i (int, required): Pre-synaptic neuron (source)
+        j (int, required): Post-synaptic neuron (target)
+        gsigma (float, required): Standard deviation
 
     Returns:
         TYPE: Description
     """
-    res = exp(-((i - j)**2) / (2 * gsigma**2))  # gaussian, not normalized
-    return res
+    return np.exp(-((i - j)**2) / (2 * gsigma**2))  # gaussian, not normalized
 
 
 # function that calculates 2D kernel
@@ -357,7 +364,7 @@ def fkernelGauss2d(i, j, gsigma, n2dNeurons):
 @implementation('cpp', '''
 
      ''')
-@declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float',freq='float', InputSizeX='integer', InputSizeY='integer', WindowSizeX='integer', WindowSizeY='integer', RFSize='integer', result='float')
+@declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float', freq='float', InputSizeX='integer', InputSizeY='integer', WindowSizeX='integer', WindowSizeY='integer', RFSize='integer', result='float')
 @check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, InputSizeX=1, InputSizeY=1, WindowSizeX=1, WindowSizeY=1, RFSize=1, result=1)
 def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, InputSizeY, WindowSizeX, WindowSizeY, RFSize):
     """Summary: function that calculates Gabor 2D kernel, only works with odd square Receptive Fields
@@ -882,7 +889,6 @@ def DVScsv2numpy(datafile='tmp/aerout.csv', exp_name='Experiment', debug=False):
         print(Events[2, 0:10])
         print(Events[3, 0:10])
     return Events
-
 
 
 def makeGaussian(squareSize, sigma = 1, mu=None):

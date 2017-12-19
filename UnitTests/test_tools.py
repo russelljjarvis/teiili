@@ -1,18 +1,36 @@
 # -*- coding: utf-8 -*-
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:06:18
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2017-12-18 18:01:28
+# @Last Modified by:   mmilde
+# @Last Modified time: 2017-12-19 13:13:42
 """
 This file contains unittest for tools.py
 """
 
 import unittest
 import numpy as np
+import os
 from NCSBrian2Lib.Tools import tools
 
 
 class TestTools(unittest.TestCase):
+
+    def test_printStates(self):
+        self.assertRaises(UserWarning, tools.printStates, 5)
+
+    def test_returnValueIf(self):
+        testVal = 3.7
+        greaterThanVal = 2.5
+        smallerThanVal = 10.
+        returnValTrue = 1337
+        returnValFalse = 42
+        returnVal = tools.returnValueIf(testVal, greaterThanVal, smallerThanVal,
+                                        returnValTrue, returnValFalse)
+        self.assertEqual(returnVal, 1337)
+        testVal = 2.4
+        returnVal = tools.returnValueIf(testVal, greaterThanVal, smallerThanVal,
+                                        returnValTrue, returnValFalse)
+        self.assertEqual(returnVal, 42)
 
     def test_xy2ind_single(self):
         x = 127
@@ -56,9 +74,37 @@ class TestTools(unittest.TestCase):
     def test_fdist2d(self):
         pass
 
+    def test_dist2d(self):
+        pass
+
+    def test_fkernel1d(self):
+        w = tools.fkernel1d(3, 5, 0.7)
+        x = 3 - 5
+        exponent = -(x**2) / (2 * 0.7**2)
+        self.assertEqual(w, (1 + 2 * exponent) * np.exp(exponent))
+
+    def test_fkernelgauss1d(self):
+        i = 3
+        j = 5
+        gsigma = 0.7
+        w = tools.fkernelgauss1d(i, j, gsigma)
+        self.assertEqual(w, np.exp(-((i - j)**2) / (2 * gsigma**2)))
+
     def test_makeGaussian(self):
         pass
 
+    def test_aedat2numpy(self):
+        self.assertRaises(ValueError, tools.aedat2numpy, camera='DAVIS128')
+        # Create a small/simple aedat file to test all functions which rely on edat2numpy
+
+    def test_dvs2ind(self):
+        self.assertRaises(AssertionError, tools.dvs2ind, eventDirectory=1337)
+        self.assertRaises(AssertionError, tools.dvs2ind,
+                          eventDirectory='/These/Are/Not/Events.txt')
+        # os.command('touch /tmp/Events.npy')
+        # self.assertRaises(AssertionError, tools.dvs2ind, Events=np.zeros((4, 100)),
+        #                   eventDirectory='/tmp/Events.npy')
+        # os.command('rm /tmp/Events.npy')
 
 
 if __name__ == '__main__':

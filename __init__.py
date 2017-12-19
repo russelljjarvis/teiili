@@ -1,14 +1,26 @@
-from NCSBrian2Lib.Tools.tools import *
-from NCSBrian2Lib.Tools.plotTools import *
-from NCSBrian2Lib.Tools.cppTools import *
-from NCSBrian2Lib.Equations.NeuronEquation import *
-from NCSBrian2Lib.Equations.SynapseEquation import *
-from NCSBrian2Lib.Groups.Groups import *
-# from NCSBrian2Lib.BuildingBlocks.BuildingBlock import *
-# from NCSBrian2Lib.BuildingBlocks.Chain import *
-# from NCSBrian2Lib.BuildingBlocks.SequenceLearning import *
-# from NCSBrian2Lib.BuildingBlocks.WTA import *
-# from NCSBrian2Lib.BuildingBlocks.SOM import *
-# from NCSBrian2Lib.BuildingBlocks.Chain import *
-from NCSBrian2Lib.Plotting.WTAplot import *
-from NCSBrian2Lib.Groups.Network import *
+#first import all the tools
+from NCSBrian2Lib.tools.converter import *
+from NCSBrian2Lib.tools.cpptools import *
+from NCSBrian2Lib.tools.indexing import *
+from NCSBrian2Lib.tools.misc import *
+from NCSBrian2Lib.tools.plotting import *
+from NCSBrian2Lib.tools.synaptic_kernel import *
+
+from NCSBrian2Lib.models.parameters import constants
+
+# then the core modules
+from NCSBrian2Lib.core.groups import *
+from NCSBrian2Lib.core.network import *
+
+
+from NCSBrian2Lib.models.builder.neuron_equation_builder import *
+from NCSBrian2Lib.equations.builder.synapse_equation_builder import *
+
+# At some point we also might want to import the building blocks
+# from NCSBrian2Lib.building_blocks.building_block import *
+# from NCSBrian2Lib.building_blocks.chain import *
+# from NCSBrian2Lib.building_blocks.sequence_learning import *
+# from NCSBrian2Lib.building_blocks.wta import *
+
+
+

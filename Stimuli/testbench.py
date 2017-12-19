@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2017-12-18 19:22:07
+# @Last Modified by:   mmilde
+# @Last Modified time: 2017-12-19 12:04:04
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -295,7 +295,7 @@ class octa_testbench():
             return gInpGroup
 
     def rotating_bar_infinity(self, length=10, n2dNeurons=64, orthogonal=False, shift=32,
-                              ts_offset=10, artifical_stimulus=True, rec_pah=None,
+                              ts_offset=10, artifical_stimulus=True, rec_path=None,
                               returnEvents=False):
         """This function will either load recorded DAVIS/DVS recordings or generate artificial events
         of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
@@ -323,11 +323,11 @@ class octa_testbench():
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
             if orthogonal == 0:
-                fname = 'rec/Inifity_aligned_bar.aedat'
+                fname = rec_path + 'Inifity_aligned_bar.aedat'
             elif orthogonal == 1:
-                fname = 'rec/Infinity_orthogonal_bar.aedat'
+                fname = rec_path + 'Infinity_orthogonal_bar.aedat'
             elif orthogonal == 2:
-                fname = 'rec/Infinity_orthogonal_aligned_bar.aedat'
+                fname = rec_path + 'Infinity_orthogonal_aligned_bar.aedat'
             assert(os.path.isfile(fname)), "No recording exists. Please record the respective stimulus first."
             events = aedat2numpy(datafile=fname, camera='DVS240')
             return events

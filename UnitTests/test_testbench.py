@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Moritz Milde
 # @Date:   2017-12-18 18:02:30
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2017-12-18 19:21:09
+# @Last Modified by:   mmilde
+# @Last Modified time: 2017-12-19 12:03:41
 """
 This file contains unittest for testbench.py
 """
@@ -34,6 +34,17 @@ class TestTestbench(unittest.TestCase):
     def test_rotating_bar(self):
         self.assertRaises(UserWarning, octa_testbench.rotating_bar, artifical_stimulus=False)
         self.assertRaises(AssertionError, octa_testbench.rotating_bar, artifical_stimulus=False, rec_path='/tmp/')
+
+    def test_translating_bar_infinity(self):
+        self.assertRaises(UserWarning, octa_testbench.translating_bar_infinity, artifical_stimulus=False)
+        self.assertRaises(AssertionError, octa_testbench.translating_bar_infinity, artifical_stimulus=False, rec_path='/tmp/')
+
+    def test_rotating_bar_infinity(self):
+        self.assertRaises(UserWarning, octa_testbench.rotating_bar_infinity, artifical_stimulus=False)
+        self.assertRaises(AssertionError, octa_testbench.rotating_bar_infinity, artifical_stimulus=False, rec_path='/tmp/')
+
+    def test_ball(self):
+        self.assertRaises(AssertionError, octa_testbench.ball, rec_path='/tmp/')
 
 
 if __name__ == '__main__':

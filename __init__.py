@@ -14,7 +14,7 @@ from NCSBrian2Lib.core.network import *
 
 
 from NCSBrian2Lib.models.builder.neuron_equation_builder import *
-from NCSBrian2Lib.equations.builder.synapse_equation_builder import *
+from NCSBrian2Lib.models.builder.synapse_equation_builder import *
 
 # At some point we also might want to import the building blocks
 # from NCSBrian2Lib.building_blocks.building_block import *

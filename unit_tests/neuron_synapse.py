@@ -16,10 +16,10 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, TimedArray,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
-from NCSBrian2Lib.Groups.Groups import Neurons, Connections
-from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone
-from NCSBrian2Lib.Models.NeuronModels import DPI
-from NCSBrian2Lib.Models.SynapseModels import DPISyn
+from NCSBrian2Lib.core.groups import Neurons, Connections
+from NCSBrian2Lib import NCSNetwork, activate_standalone, deactivate_standalone
+from NCSBrian2Lib.models.neuron_models import DPI
+from NCSBrian2Lib.models.synapse_models import DPISyn
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us
@@ -30,27 +30,23 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
                                 times=tsInp, name='gtestInp')
 
 
-Net = StandaloneNetwork()
+Net = NCSNetwork()
 
-DPIEq, DPIparam = DPI(1)
-testNeurons = Neurons(2, **DPIEq, name="testNeuron")
-testNeurons.setParams(DPIparam)
+testNeurons = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron")
+# testNeurons.setParams(DPIparam)
 testNeurons.refP = 3 * ms
 
-testNeurons2 = Neurons(2, **DPIEq, name="testNeuron2")
-testNeurons2.setParams(DPIparam)
+testNeurons2 = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron2")
+# testNeurons2.setParams(DPIparam)
 testNeurons2.refP = 3 * ms
 
-DPISynEq, DPISynparam = DPISyn(1)
-InpSyn = Connections(gInpGroup, testNeurons, **DPISynEq, params=DPISynparam, name="testSyn")
+InpSyn = Connections(gInpGroup, testNeurons, equation_builder=DPISyn(), name="testSyn", verbose=True)
 InpSyn.connect(True)
 
 InpSyn.weight = 10
-Syn = Connections(testNeurons, testNeurons2,
-                  **DPISynEq, params=DPISynparam, name="testSyn2")
-
-
+Syn = Connections(testNeurons, testNeurons2, equation_builder=DPISyn(), name="testSyn2")
 Syn.connect(True)
+
 # you can change all the parameters like this after creation of the neurongroup:
 Syn.weight = 100
 
@@ -63,10 +59,14 @@ testNeurons.Iconst = 7 * nA
 spikemonInp = SpikeMonitor(gInpGroup, name='spikemonInp')
 spikemon = SpikeMonitor(testNeurons, name='spikemon')
 spikemonOut = SpikeMonitor(testNeurons2, name='spikemonOut')
-statemonInpSyn = StateMonitor(InpSyn, variables='Ie_syn', record=True, name='statemonInpSyn')
-statemonNeuOut = StateMonitor(testNeurons2, variables=['Imem'], record=0, name='statemonNeuOut')
-statemonNeuIn = StateMonitor(testNeurons, variables=["Iin", "Imem", "Iahp"], record=[0, 1], name='statemonNeu')
-statemonSynOut = StateMonitor(Syn, variables='Ie_syn', record=True, name='statemonSynOut')
+statemonInpSyn = StateMonitor(
+    InpSyn, variables='Ie_syn', record=True, name='statemonInpSyn')
+statemonNeuOut = StateMonitor(testNeurons2, variables=[
+                              'Imem'], record=0, name='statemonNeuOut')
+statemonNeuIn = StateMonitor(testNeurons, variables=[
+                             "Iin", "Imem", "Iahp"], record=[0, 1], name='statemonNeu')
+statemonSynOut = StateMonitor(
+    Syn, variables='Ie_syn', record=True, name='statemonSynOut')
 # statemonSynTest=StateMonitor(testInpSyn,variables=["Isyn_exc"],record=[0],name='statemonSyn')
 
 Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon,

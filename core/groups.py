@@ -6,6 +6,7 @@ Created on Thu Jul 27 17:28:16 2017
 @author: alpha
 """
 import warnings
+import inspect
 from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
     ylabel, xlabel, xlim, ylim, figure, Group
 from collections import OrderedDict
@@ -50,19 +51,6 @@ class NCSGroup(Group):
             self.standaloneVars += [name]
             self.__setattr__(name, value) #TODO: Maybe do that always?
 
-    def __setattr__(self, key, value):
-        super(NCSGroup, self).__setattr__(self, key, value)
-        if hasattr(self, 'name'):
-            if key in self.standaloneVars and not isinstance(value, str):
-                # we have to check if the variable has a value assigned or
-                # is assigned a string that is evaluated by brian2 later
-                # as in that case we do not want it here
-                self.standaloneParams.update({self.name + '_' + key: value})
-
-            if isinstance(value, str) and value != 'name' and value != 'when':
-                # store this for later update
-                self.strParams.update({key: value})
-
     def setParams(self, params, **kwargs):
         return setParams(self, params, **kwargs)
 
@@ -74,56 +62,84 @@ class NCSGroup(Group):
 
 
 class Neurons(NeuronGroup, NCSGroup):
-
-    def __init__(self, N,
+    """
+    This class is a subclass of NeuronGroup
+    You can use it as a NeuronGroup, and everything will be passed to NeuronGroup.
+    Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters
+    """
+    def __init__(self, N, equation_builder = None,
                  params=None,
-                 model=None,
                  method='euler',
-                 numInputs=2,
+                 num_inputs=3,
                  verbose=False, **Kwargs):
 
         self.verbose = verbose
-        self.numInputs = numInputs
+        self.num_inputs = num_inputs
         self.numSynapses = 0
 
-        try:
-            model = model.addInputs(numInputs)
-        except:
-            warnings.warn(
-                'model does not have an addInputs method!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        if equation_builder is not None:
+            if inspect.isclass(equation_builder):
+                raise Exception("don't pass the NeuronEquationBuilder class but an object to Neurons()")
+            self.equation_builder=equation_builder
+            self.equation_builder.addInputCurrents(num_inputs)
+            Kwargs.update(self.equation_builder.keywords)
+            if params is not None:
+                print("parameters you provided overwrite parameters from EquationBuilder ")
+            else:
+                params = self.equation_builder.parameters
 
         self.initialized = True
         NCSGroup.__init__(self)
-        NeuronGroup.__init__(self, N, method=method, model=model, **Kwargs)
+        NeuronGroup.__init__(self, N, method=method, **Kwargs)
 
         if params is not None:
             setParams(self, params, verbose=verbose)
 
+
     def registerSynapse(self):
         self.numSynapses += 1
-        if self.debug:
+        if self.verbose:
             print('increasing number of registered Synapses of ' +
                   self.name + ' to ', self.numSynapses)
             print('specified max number of Synapses of ' +
-                  self.name + ' is ', self.numInputs)
-        if self.numInputs < self.numSynapses:
+                  self.name + ' is ', self.num_inputs)
+        if self.num_inputs < self.numSynapses:
             raise ValueError('There seem so be too many connections to ' +
-                             self.name + ', please increase numInputs')
+                             self.name + ', please increase num_inputs')
+
+    def __setattr__(self, key, value):
+        NeuronGroup.__setattr__(self, key, value)
+        if hasattr(self, 'name'):
+            if key in self.standaloneVars and not isinstance(value, str):
+                # we have to check if the variable has a value assigned or
+                # is assigned a string that is evaluated by brian2 later
+                # as in that case we do not want it here
+                self.standaloneParams.update({self.name + '_' + key: value})
+
+            if isinstance(value, str) and value != 'name' and value != 'when':
+                # store this for later update
+                self.strParams.update({key: value})
 
 
+#TODO: find out, if it is possible to have delay as statevariable
 class Connections(Synapses, NCSGroup):
-
+    """
+    This class is a subclass of Synapses
+    You can use it as a Synapses, and everything will be passed to Synapses.
+    Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters
+    """
     def __init__(self, source, target,
+                 equation_builder = None,
                  params=None,
                  method='euler',
-                 inputNumber=None,
+                 input_number=None,
                  name='synapses*',
                  verbose=False, **Kwargs):
 
         NCSGroup.__init__(self)
 
         self.verbose = verbose
-        self.inputNumber = 0
+        self.input_number = 0
 
         # check if it is a building block, if yes, set bb.group as source/target
         try:
@@ -138,25 +154,35 @@ class Connections(Synapses, NCSGroup):
         try:
             if verbose:
                 print(name, ': target', target.name, 'has',
-                      target.numSynapses, 'of', target.numInputs, 'synapses')
+                      target.numSynapses, 'of', target.num_inputs, 'synapses')
                 print('trying to add one more...')
             target.registerSynapse()
-            self.inputNumber = target.numSynapses
+            self.input_number = target.numSynapses
+            print('OK!')
         except ValueError as e:
             raise e
-        except:
-            if inputNumber is not None:
-                self.inputNumber = inputNumber
+        except AttributeError as e:
+            if input_number is not None:
+                self.input_number = input_number
             else:
-                warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for' +
-                              str(target) + ', therefore, please specify an inputNumber yourself')
+                warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for ' +
+                              str(target.name) + ', therefore, please specify an input_number yourself')
+                raise e
 
-        if params is not None:
-            self.parameters = params
+        if equation_builder is not None:
+            if inspect.isclass(equation_builder):
+                raise Exception("don't pass the NeuronEquationBuilder class but an object to Neurons()")
+            self.equation_builder=equation_builder
+            self.equation_builder.set_inputnumber(self.input_number)
+            Kwargs.update(self.equation_builder.keywords)
+            if params is not None:
+                self.parameters = params
+                print("parameters you provided overwrite parameters from EquationBuilder ")
+            else:
+                self.parameters = self.equation_builder.parameters
 
         try:
             Synapses.__init__(self, source, target=target,
-                              delay='delay',
                               method=method,
                               name=name, **Kwargs)
         except Exception as e:
@@ -171,6 +197,20 @@ class Connections(Synapses, NCSGroup):
                          skip_if_invalid=skip_if_invalid,
                          namespace=namespace, level=level + 1, **Kwargs)
         setParams(self, self.parameters, verbose=self.verbose)
+
+
+    def __setattr__(self, key, value):
+        Synapses.__setattr__(self, key, value)
+        if hasattr(self, 'name'):
+            if key in self.standaloneVars and not isinstance(value, str):
+                # we have to check if the variable has a value assigned or
+                # is assigned a string that is evaluated by brian2 later
+                # as in that case we do not want it here
+                self.standaloneParams.update({self.name + '_' + key: value})
+
+            if isinstance(value, str) and value != 'name' and value != 'when':
+                # store this for later update
+                self.strParams.update({key: value})
 
     def plot(self):
         "simple visualization of synapse connectivity (connected dots and connectivity matrix)"

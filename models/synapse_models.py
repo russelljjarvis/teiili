@@ -1,32 +1,38 @@
 # -*- coding: utf-8 -*-
+""" This contains subclasses of SynapseEquationBuilder with predefined common parameters"""
 from NCSBrian2Lib.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
 
-def reversalSynV():
-    SynEq = SynapseEquationBuilder(model=None, baseUnit='conductance',
-                                   kernel='exponential', plasticity='nonplastic')
-    return SynEq.keywords, SynEq.parameters
+class ReversalSynV(SynapseEquationBuilder):
+    """ """
+    def __init__(self):
+        SynapseEquationBuilder.__init__(self,model=None, baseUnit='conductance',
+                                        kernel='exponential', plasticity='nonplastic')
 
 
-def BraderFusiSynapses():
-    SynEq = SynapseEquationBuilder(model=None, baseUnit='current',
-                                   kernel='exponential', plasticity='fusi')
-    return SynEq.keywords, SynEq.parameters
+class BraderFusiSynapses(SynapseEquationBuilder):
+    """ """
+    def __init__(self):
+        SynapseEquationBuilder.__init__(self,model=None, baseUnit='current',
+                                        kernel='exponential', plasticity='fusi')
 
 
-def DPISyn():
-    SynEq = SynapseEquationBuilder(model=None, baseUnit='DPI',
-                                   plasticity='nonplastic')
-    return SynEq.keywords, SynEq.parameters
+class DPISyn(SynapseEquationBuilder):
+    """ """
+    def __init__(self):
+        SynapseEquationBuilder.__init__(self,model=None, baseUnit='DPI',
+                                        plasticity='nonplastic')
 
 
-def DPI_stdp():
-    SynEq = SynapseEquationBuilder(model=None, baseUnit='DPI',
-                                   plasticity='stdp')
-    return SynEq.keywords, SynEq.parameters
+class DPIstdp(SynapseEquationBuilder):
+    """ """
+    def __init__(self):
+        SynapseEquationBuilder.__init__(self,model=None, baseUnit='DPI',
+                                        plasticity='stdp')
 
 
-def StdpSynV():
-    SynEq = SynapseEquationBuilder(model=None, baseUnit='conductance',
-                                   kernel='exponential', plasticity='stdp')
-    return SynEq.keywords, SynEq.parameters
+class StdpSynV(SynapseEquationBuilder):
+    """ """
+    def __init__(self):
+        SynapseEquationBuilder.__init__(self,model=None, baseUnit='conductance',
+                                        kernel='exponential', plasticity='stdp')

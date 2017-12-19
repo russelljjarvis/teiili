@@ -96,19 +96,13 @@ class SynapseEquationBuilder():
     def __init__(self, model=None, baseUnit='current', kernel='exponential', plasticity='nonplastic', inputNumber=1):
         if model is not None:
             eqDict = model
-            eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
+            eqDict['model'] = eqDict['model'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
                                                      Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
 
             self.model = eqDict['model']
             self.on_pre = eqDict['on_pre']
             self.on_post = eqDict['on_post']
             self.parameters = eqDict['parameters']
-
-    #       self.parameters = eqDict['default']
-    #        self.addInputCurrents(inputNumber)
-
-    #        self.keywords = {'modelEq':self.modelEq, 'preEq':self.preEq,
-    #                         'postEq':self.postEq, 'parameters' : self.parameters}
 
             self.keywords = {'model': self.model, 'on_pre': self.on_pre,
                              'on_post': self.on_post}
@@ -142,12 +136,9 @@ class SynapseEquationBuilder():
             if modes[baseUnit] == 'current':
                 eqDict, varSet = combineEquations_syn(
                     template, currentkernels[kernel], plasticitymodels[plasticity])
-                eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
-                                                         Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-                eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
-                                                           Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-                eqDict['on_post'] = eqDict['on_post'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
-                                                             Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                eqDict['model'] = eqDict['model'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['on_pre'] = eqDict['on_pre'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['on_post'] = eqDict['on_post'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
                 if '{synvar_e}' in varSet:
                     varSet.remove('{synvar_e}')
                     varSet.add('Ie_syn')
@@ -160,12 +151,9 @@ class SynapseEquationBuilder():
             if modes[baseUnit] == 'conductance':
                 eqDict, varSet = combineEquations_syn(
                     template, reversalsyn, conductancekernels[kernel], plasticitymodels[plasticity])
-                eqDict['model'] = eqDict['model'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
-                                                         Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-                eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
-                                                           Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-                eqDict['on_post'] = eqDict['on_post'].format(synvar_e='gIe', synvar_i='gIi', unit='siemens',
-                                                             Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                eqDict['model'] = eqDict['model'].format(inputnumber = "{inputnumber}", synvar_e='gIe', synvar_i='gIi', unit='siemens')
+                eqDict['on_pre'] = eqDict['on_pre'].format(inputnumber = "{inputnumber}", synvar_e='gIe', synvar_i='gIi', unit='siemens')
+                eqDict['on_post'] = eqDict['on_post'].format(inputnumber = "{inputnumber}", synvar_e='gIe', synvar_i='gIi', unit='siemens')
                 if '{synvar_e}' in varSet:
                     varSet.remove('{synvar_e}')
                     varSet.add('gIe')
@@ -178,12 +166,11 @@ class SynapseEquationBuilder():
             if modes[baseUnit] == 'DPI':
                 eqDict, varSet = combineEquations_syn(
                     Dpi, plasticitymodels[plasticity])
-                eqDict['model'] = eqDict['model'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
-                                                         Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-                eqDict['on_pre'] = eqDict['on_pre'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
-                                                           Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
-                eqDict['on_post'] = eqDict['on_post'].format(synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
-                                                             Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+
+                eqDict['model'] = eqDict['model'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['on_pre'] = eqDict['on_pre'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['on_post'] = eqDict['on_post'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+
                 if '{synvar_e}' in varSet:
                     varSet.remove('{synvar_e}')
                     varSet.add('Ie_syn')
@@ -197,9 +184,9 @@ class SynapseEquationBuilder():
 
             self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
-            self.model = eqDict['model']
-            self.on_pre = eqDict['on_pre']
-            self.on_post = eqDict['on_post']
+            #self.model = eqDict['model']
+            #self.on_pre = eqDict['on_pre']
+            #self.on_post = eqDict['on_post']
             self.parameters = eqDict['parameters']
 
     #       self.parameters = eqDict['default']
@@ -208,11 +195,16 @@ class SynapseEquationBuilder():
     #        self.keywords = {'modelEq':self.modelEq, 'preEq':self.preEq,
     #                         'postEq':self.postEq, 'parameters' : self.parameters}
 
-            self.keywords = {'model': self.model, 'on_pre': self.on_pre,
-                             'on_post': self.on_post}
+            self.keywords = {'model': eqDict['model'], 'on_pre': eqDict['on_pre'],
+                             'on_post': eqDict['on_post']}
 
     def printAll(self):
         printEqDict_syn(self.keywords, self.parameters)
+
+    def set_inputnumber(self, inputnumber):
+            self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber - 1))
+            self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber - 1))
+            self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber - 1))
 
 
 ############################################################################################
@@ -231,8 +223,8 @@ template = {'model': '''
             kernel_e : {unit}* second **-1
             kernel_i : {unit}* second **-1
 
-            {Ie}_post = Ie_syn : amp  (summed)
-            {Ii}_post = Ii_syn : amp  (summed)
+            Ie{inputnumber}_post = Ie_syn : amp  (summed)
+            Ii{inputnumber}_post = Ii_syn : amp  (summed)
             weight : 1
             tausyne : second (constant) # synapse time constant
             tausyni : second (constant) # synapse time constant
@@ -293,8 +285,8 @@ Dpi = {'model': '''
         dIe_syn/dt = (-Ie_syn - Ie_gain + 2*Io_syn*(Ie_syn<=Io_syn))/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
         dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
 
-        {Ie}_post = Ie_syn : amp  (summed)
-        {Ii}_post = -Ii_syn : amp  (summed)
+        Ie{inputnumber}_post = Ie_syn : amp  (summed)
+        Ii{inputnumber}_post = -Ii_syn : amp  (summed)
 
         weight : 1
         wPlast : 1

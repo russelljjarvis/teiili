@@ -97,20 +97,18 @@ class NeuronEquationBuilder():
 
     def __init__(self, model=None, baseUnit='current', adaptation='calciumFeedback',
                  integrationMode='exponential', leak='leaky', position='spatial',
-                 noise='gaussianNoise', refractory='refP', numInputs=1):
+                 noise='gaussianNoise', refractory='refP'):
         if model is not None:
-            eqDict = model
-            self.model = eqDict['model']
-            self.threshold = eqDict['threshold']
-            self.reset = eqDict['reset']
+            keywords = model
+            self.model = keywords['model']
+            self.threshold = keywords['threshold']
+            self.reset = keywords['reset']
             self.refractory = refractory
-            self.parameters = eqDict['parameters']
+            self.parameters = keywords['parameters']
 
             self.changeableParameters = ['refP']
 
             self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
-
-            self.addInputCurrents(numInputs)
 
             self.keywords = {'model': self.model, 'threshold': self.threshold,
                              'reset': self.reset, 'refractory': self.refractory}
@@ -140,7 +138,7 @@ class NeuronEquationBuilder():
                 print(ERRValue)
 
             if baseUnit == 'current':
-                eqDict, var_set = combineEquations(modes[baseUnit],
+                keywords, var_set = combineEquations(modes[baseUnit],
                                                   currentEquationsets[adaptation],
                                                   i_a, currentEquationsets[integrationMode],
                                                   currentEquationsets[leak],
@@ -153,7 +151,7 @@ class NeuronEquationBuilder():
                                                   currentParameters[noise])
 
             if baseUnit == 'voltage':
-                eqDict, var_set = combineEquations(modes[baseUnit],
+                keywords, var_set = combineEquations(modes[baseUnit],
                                                   voltageEquationsets[adaptation],
                                                   voltageEquationsets[integrationMode],
                                                   voltageEquationsets[leak],
@@ -167,7 +165,7 @@ class NeuronEquationBuilder():
                                                   voltageParameters[noise])
                 # paraDict = {}  # until we have parameters for voltage based equations
 
-            if refractory is not False:
+            if refractory != "refP":
                 refDict = {"refP": refractory}
                 paraDict = combineParDictionaries([], paraDict, refDict)
             else:
@@ -177,21 +175,19 @@ class NeuronEquationBuilder():
                       just specify 'refractory=0*ms' in the constructor
                       """)
 
-            self.model = eqDict['model']
-            self.threshold = eqDict['threshold']
-            self.reset = eqDict['reset']
-            self.refractory = 'refP'
+            #self.model = keywords['model']
+            #self.threshold = keywords['threshold']
+            #self.reset = keywords['reset']
+            #self.refractory = 'refP'
             self.parameters = paraDict
 
             self.changeableParameters = ['refP']
 
             self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
-            self.addInputCurrents(numInputs)
-
-            self.keywords = {'model': self.model, 'threshold': self.threshold,
-                             'reset': self.reset, 'refractory': self.refractory}
-            self.printAll()
+            self.keywords = {'model':  keywords['model'], 'threshold': keywords['threshold'],
+                             'reset': keywords['reset'], 'refractory': refractory}
+            #self.printAll()
 
     def addInputCurrents(self, numInputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)
@@ -200,19 +196,19 @@ class NeuronEquationBuilder():
                          str(i + 1) + " " for i in range(numInputs - 1)]
         Iis = ["+Ii0"] + ["+ Ii" +
                           str(i + 1) + " " for i in range(numInputs - 1)]
-        self.model = self.model + "Iin = " + \
+        self.keywords['model'] = self.keywords['model'] + "Iin = " + \
             "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
         Iesline = ["    Ie" + str(i) + " : amp" for i in range(numInputs)]
         Iisline = ["    Ii" + str(i) + " : amp" for i in range(numInputs)]
         self.addStateVars(Iesline)
-        self.model += "\n"
+        self.keywords['model']  += "\n"
         self.addStateVars(Iisline)
-        self.model += "\n"
+        self.keywords['model']  += "\n"
 
     def addStateVars(self, stateVars):
         "just adds a line to the model equation"
         print("added to Equation: \n" + "\n".join(stateVars))
-        self.model += "\n            ".join(stateVars)
+        self.keywords['model'] += "\n            ".join(stateVars)
 
     def printAll(self):
         printEqDict(self.keywords, self.parameters)

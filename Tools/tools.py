@@ -127,14 +127,26 @@ def fdist2d(i, j, n2dNeurons):
 
 
 @implementation('cpp', '''
-    float dist2d(int ix, int iy,int jx, int jy) {
+    float dist2dind(int ix, int iy,int jx, int jy) {
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
 @declare_types(ix='integer', iy='integer', jx='integer', jy='integer', result='float')
 @check_units(ix=1, iy=1, jx=1, jy=1, result=1)
+def dist2dint(ix, iy, jx, jy):
+    return np.sqrt((ix - jx)**2 + (iy - jy)**2)
+
+
+@implementation('cpp', '''
+    float dist2d(float ix, float iy,float jx, float jy) {
+    return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
+    }
+     ''')
+@declare_types(ix='float', iy='float', jx='float', jy='float', result='float')
+@check_units(ix=1, iy=1, jx=1, jy=1, result=1)
 def dist2d(ix, iy, jx, jy):
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
+
 
 # function that calculates 1D "mexican hat" kernel
 #@implementation('numpy', discard_units=True)

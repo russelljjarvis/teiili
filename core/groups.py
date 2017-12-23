@@ -11,6 +11,9 @@ from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
     ylabel, xlabel, xlim, ylim, figure, Group
 from collections import OrderedDict
 
+from NCSBrian2Lib.models import neuron_models
+from NCSBrian2Lib.models import synapse_models
+
 
 class NCSGroup(Group):
     """just a bunch of methods that are shared between neurons and connections
@@ -20,6 +23,8 @@ class NCSGroup(Group):
         self.standaloneVars = []
         self.standaloneParams = OrderedDict()
         self.strParams = {}
+
+
 
     def addStateVariable(self, name, value=None, constant=False, changeInStandalone=True):
         """this method allows you to add a state variable
@@ -49,7 +54,7 @@ class NCSGroup(Group):
 
         if changeInStandalone:
             self.standaloneVars += [name]
-            self.__setattr__(name, value) #TODO: Maybe do that always?
+            self.__setattr__(name, value)  # TODO: Maybe do that always?
 
     def setParams(self, params, **kwargs):
         return setParams(self, params, **kwargs)
@@ -67,7 +72,8 @@ class Neurons(NeuronGroup, NCSGroup):
     You can use it as a NeuronGroup, and everything will be passed to NeuronGroup.
     Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters
     """
-    def __init__(self, N, equation_builder = None,
+
+    def __init__(self, N, equation_builder=None,
                  params=None,
                  method='euler',
                  num_inputs=3,
@@ -77,14 +83,22 @@ class Neurons(NeuronGroup, NCSGroup):
         self.num_inputs = num_inputs
         self.numSynapses = 0
 
+        
+
         if equation_builder is not None:
             if inspect.isclass(equation_builder):
-                raise Exception("don't pass the NeuronEquationBuilder class but an object to Neurons()")
-            self.equation_builder=equation_builder
+                self.equation_builder = equation_builder()
+            elif isinstance(equation_builder, str):
+                equation_builder = getattr(
+                    neuron_models, equation_builder)
+                self.equation_builder = equation_builder()
+            else:
+                self.equation_builder = equation_builder
             self.equation_builder.addInputCurrents(num_inputs)
             Kwargs.update(self.equation_builder.keywords)
             if params is not None:
-                print("parameters you provided overwrite parameters from EquationBuilder ")
+                print(
+                    "parameters you provided overwrite parameters from EquationBuilder ")
             else:
                 params = self.equation_builder.parameters
 
@@ -94,7 +108,6 @@ class Neurons(NeuronGroup, NCSGroup):
 
         if params is not None:
             setParams(self, params, verbose=verbose)
-
 
     def registerSynapse(self):
         self.numSynapses += 1
@@ -121,15 +134,16 @@ class Neurons(NeuronGroup, NCSGroup):
                 self.strParams.update({key: value})
 
 
-#TODO: find out, if it is possible to have delay as statevariable
+# TODO: find out, if it is possible to have delay as statevariable
 class Connections(Synapses, NCSGroup):
     """
     This class is a subclass of Synapses
     You can use it as a Synapses, and everything will be passed to Synapses.
     Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters
     """
+
     def __init__(self, source, target,
-                 equation_builder = None,
+                 equation_builder=None,
                  params=None,
                  method='euler',
                  input_number=None,
@@ -171,13 +185,19 @@ class Connections(Synapses, NCSGroup):
 
         if equation_builder is not None:
             if inspect.isclass(equation_builder):
-                raise Exception("don't pass the NeuronEquationBuilder class but an object to Neurons()")
-            self.equation_builder=equation_builder
+                self.equation_builder = equation_builder()
+            elif isinstance(equation_builder, str):
+                equation_builder = getattr(
+                    synapse_models, equation_builder)
+                self.equation_builder = equation_builder()
+            else:
+                self.equation_builder = equation_builder
             self.equation_builder.set_inputnumber(self.input_number)
             Kwargs.update(self.equation_builder.keywords)
             if params is not None:
                 self.parameters = params
-                print("parameters you provided overwrite parameters from EquationBuilder ")
+                print(
+                    "parameters you provided overwrite parameters from EquationBuilder ")
             else:
                 self.parameters = self.equation_builder.parameters
 
@@ -188,7 +208,8 @@ class Connections(Synapses, NCSGroup):
         except Exception as e:
             import sys
             raise type(e)(str(e) + '\n\nCheck Equation for errors!\n' +
-                          'e.g. are all units specified correctly at the end of every line?').with_traceback(sys.exc_info()[2])
+                          'e.g. are all units specified correctly at the end \
+                          of every line?').with_traceback(sys.exc_info()[2])
 
     def connect(self, condition=None, i=None, j=None, p=1., n=1,
                 skip_if_invalid=False,
@@ -197,7 +218,6 @@ class Connections(Synapses, NCSGroup):
                          skip_if_invalid=skip_if_invalid,
                          namespace=namespace, level=level + 1, **Kwargs)
         setParams(self, self.parameters, verbose=self.verbose)
-
 
     def __setattr__(self, key, value):
         Synapses.__setattr__(self, key, value)

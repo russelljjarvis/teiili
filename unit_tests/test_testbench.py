@@ -2,14 +2,14 @@
 # @Author: Moritz Milde
 # @Date:   2017-12-18 18:02:30
 # @Last Modified by:   mmilde
-# @Last Modified time: 2017-12-19 12:03:41
+# @Last Modified time: 2017-12-27 11:40:55
 """
 This file contains unittest for testbench.py
 """
 
 import unittest
 import numpy as np
-from NCSBrian2Lib.Stimuli.testbench import octa_testbench, stdp_testbench
+from NCSBrian2Lib.stimuli.testbench import octa_testbench, stdp_testbench
 
 octa_testbench = octa_testbench()
 stdp_testbench = stdp_testbench()

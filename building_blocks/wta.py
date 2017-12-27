@@ -1,17 +1,21 @@
-'''
-Created 03.2017
+# -*- coding: utf-8 -*-
+# @Author: mmilde, alpren
+# @Date:   2017-12-27 10:46:44
+# @Last Modified by:   mmilde
+# @Last Modified time: 2017-12-27 12:20:18
+
+"""
 This files contains different WTA circuits
 1dWTA
 2dWTA
 2dplasticWTA
-@author: Alpha, Moritz
-'''
+"""
+
 import time
 import numpy as np
 
 from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
-# from brian2 import *
 
 from NCSBrian2Lib.Tools.tools import fkernel1d, fkernel2d, fdist2d, printStates, ind2xy, ind2x, ind2y
 from NCSBrian2Lib.Tools.plotTools import plotSpikemon, plotStatemon

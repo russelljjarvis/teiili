@@ -10,42 +10,36 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, TimedArray,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
-from NCSBrian2Lib.Groups.Groups import Neurons, Connections
-from NCSBrian2Lib.Models.NeuronModels import DPI
-from NCSBrian2Lib.Models.SynapseModels import DPISyn, DPI_stdp
-from NCSBrian2Lib import StandaloneNetwork, activate_standalone, deactivate_standalone
-from NCSBrian2Lib.Stimuli.testbench import stdp_testbench
+from NCSBrian2Lib.core.groups import Neurons, Connections
+from NCSBrian2Lib import NCSNetwork, activate_standalone, deactivate_standalone
+from NCSBrian2Lib.models.neuron_models import DPI
+from NCSBrian2Lib.models.synapse_models import DPISyn, DPIstdp
+from NCSBrian2Lib.stimuli.testbench import stdp_testbench
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 50 * us
-Net = StandaloneNetwork()
+Net = NCSNetwork()
 
 stdp = stdp_testbench()
 gPre, gPost = stdp.stimuli(isi=30)
 
-DPIEq, DPIparam = DPI(1)
-
-preSTDP = Neurons(1, **DPIEq, name='preSTDP',numInputs=2)
-preSTDP.setParams(DPIparam)
+preSTDP = Neurons(2, equation_builder=DPI(), num_inputs=1, name='preSTDP')
+# preSTDP.setParams(DPIparam)
 preSTDP.refP = 3 * ms
 
-DPIEq, DPIparam = DPI(1)
-postSTDP = Neurons(1, **DPIEq, name='postSTDP',numInputs=2)
-postSTDP.setParams(DPIparam)
-postSTDP.refP = 3 * ms
+postSTDP = Neurons(2, equation_builder=DPI(), num_inputs=2, name='postSTDP')
+# postSTDP.setParams(DPIparam)
 
 
-DPISynEq, DPISynparam = DPISyn()
 SynPre = Connections(gPre, preSTDP,
-                     **DPISynEq, params=DPISynparam, name='SynPre')
+                     equation_builder=DPISyn(), name='SynPre')
 
 SynPost = Connections(gPost, postSTDP,
-                      **DPISynEq, params=DPISynparam, name='SynPost')
+                      equation_builder=DPISyn(), name='SynPost')
 
 
-DPISynSTDPEq, DPISynSTDPparam = DPI_stdp()
 SynSTDP = Connections(preSTDP, postSTDP,
-                      **DPISynSTDPEq, params=DPISynSTDPparam, name='SynSTDP')
+                      equation_builder=DPIstdp(), name='SynSTDP')
 
 # Set parameters:
 preSTDP.Itau = 6 * pA

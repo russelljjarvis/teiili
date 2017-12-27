@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# @Author: mmilde, alpren
+# @Date:   2017-12-27 11:54:09
+# @Last Modified by:   mmilde
+# @Last Modified time: 2017-12-27 12:13:11
 """A collection of helpful functions when working with brian2
 
 """
 
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
     figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel, device
-#from brian2 import *
 import numpy as np
 
 
@@ -51,15 +54,15 @@ float returnValueIf(float testVal, float greaterThanVal, float smallerThanVal, f
         return returnValFalse;
 }
 ''')
-@declare_types(testVal = 'float', greaterThanVal = 'float', smallerThanVal = 'float',\
-               returnValTrue = 'float', returnValFalse = 'float', result='float')
-@check_units(testVal = 1, greaterThanVal = 1, smallerThanVal = 1, returnValTrue = 1, returnValFalse = 1, result=1)
+@declare_types(testVal='float', greaterThanVal='float', smallerThanVal='float',
+               returnValTrue='float', returnValFalse='float', result='float')
+@check_units(testVal=1, greaterThanVal=1, smallerThanVal=1, returnValTrue=1, returnValFalse=1, result=1)
 def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, returnValFalse):
     """Summary
-	This function is a workaround to allow if statements in run_regularly code
-	It is e.g. necessary in order to set values conditional on the current time
-	it returns a value (returnValTrue or returnValFalse) depending on whether testVal is between
-	smallerThanVal and greaterThanVal or not
+    This function is a workaround to allow if statements in run_regularly code
+    It is e.g. necessary in order to set values conditional on the current time
+    it returns a value (returnValTrue or returnValFalse) depending on whether testVal is between
+    smallerThanVal and greaterThanVal or not
     Args:
         testVal (TYPE): the value that is tested
         greaterThanVal (TYPE): upper bound of the value
@@ -69,13 +72,12 @@ def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, return
 
     Returns:
         float: returns a specified value (returnValTrue or returnValFalse) depending on whether testVal is between
-	smallerThanVal and greaterThanVal
+    smallerThanVal and greaterThanVal
     """
     if (testVal > greaterThanVal and testVal < smallerThanVal):
         return returnValTrue
     else:
         return returnValFalse
-
 
 
 @implementation('cpp', '''
@@ -122,7 +124,6 @@ def dist2d(ix, iy, jx, jy):
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 
-
 def spikemon2firingRate(spikemon, fromT=0 * ms, toT="max"):
     """Summary
 
@@ -147,9 +148,7 @@ def spikemon2firingRate(spikemon, fromT=0 * ms, toT="max"):
     return(mean(1 / diff(spiketimes)))
 
 
-
-
-def gaussian(squareSize, sigma = 1, mu=None):
+def gaussian(squareSize, sigma=1, mu=None):
     """Make a square gaussian kernel
 
     Args:
@@ -170,4 +169,4 @@ def gaussian(squareSize, sigma = 1, mu=None):
         x0 = mu[0]
         y0 = mu[1]
 
-    return (1/np.sqrt(2*np.pi*sigma**2)) * np.exp( -( (x-x0)**2 + (y-y0)**2 ) / (2*sigma**2) )
+    return (1 / np.sqrt(2 * np.pi * sigma**2)) * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * sigma**2))

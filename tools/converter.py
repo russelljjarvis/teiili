@@ -332,5 +332,3 @@ def DVScsv2numpy(datafile='tmp/aerout.csv', exp_name='Experiment', debug=False):
         print(Events[2, 0:10])
         print(Events[3, 0:10])
     return Events
-
-

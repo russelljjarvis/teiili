@@ -103,10 +103,6 @@ def kernel_mexican_2d(i, j, gsigma, n2dNeurons):
     return res
 
 
-
-
-
-
 @implementation('cpp', '''
     float fkernel2d(int i, int j, float gsigma, int n2dNeurons) {
     int ix = i / n2dNeurons;

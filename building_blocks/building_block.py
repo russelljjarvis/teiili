@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# @Author: alpren, mmilde
+# @Date:   2017-07-27 10:46:44
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-08 16:11:13
 """
-Created on Thu Jul 27 17:41:10 2017
+This class ???
+"""
 
-@author: alpha
-"""
 from brian2 import asarray
 from collections import OrderedDict
 
@@ -17,18 +20,13 @@ from collections import OrderedDict
 
 class BuildingBlock:
 
-    def __init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug, monitor=False):
+    def __init__(self, name, neuron_eq_builder, synapse_eq_builder, blockParams, debug, monitor=False):
 
         self.name = name
-        self.neuronEq = neuronEq
-        self.synapseEq = synapseEq
-        self.neuronParams = neuronParams
-        self.synapseParams = synapseParams
-        # self.plasticSynEq = plasticSynEq
-        # self.plasticSynParams = plasticSynParams
+        self.neuron_eq_builder = neuron_eq_builder
+        self.synapse_eq_builder = synapse_eq_builder
         self.params = blockParams
         self.debug = debug
-        # self.plastic = plastic
         self.Groups = {}
         self.Monitors = {}
         self.monitor = monitor

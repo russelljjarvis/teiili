@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-09 11:42:17
+# @Last Modified time: 2018-01-09 15:09:09
 
 """
 This files contains different WTA circuits
@@ -200,10 +200,10 @@ def gen1dWTA(groupname,
                               method="euler", name='s' + groupname + '_Inpe')
     synWTAWTA1e = Connections(gWTAGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_e',
-                              additionalStatevars=["latWeight : 1 (shared, constant)",
-                                                   "latSigma : 1 (shared,constant)"] +
-                              additional_statevars)  # kernel function
+                              method="euler", name='s' + groupname + '_e')  # ,
+                              # additionalStatevars=["latWeight : 1 (shared, constant)",
+                              #                      "latSigma : 1 (shared,constant)"] +
+                              # additional_statevars)  # kernel function
     synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
                               method="euler", name='s' + groupname + '_Inhi')
@@ -217,6 +217,9 @@ def gen1dWTA(groupname,
     synWTAWTA1e.connect('abs(i-j)<=cutoff')
     synWTAInh1e.connect('True')  # Generates all to all connectivity
     synInhWTA1i.connect('True')
+
+    synWTAWTA1e.addStateVariable(name='latWeight', shared=False, constant=True)
+    synWTAWTA1e.addStateVariable(name='latSigma', shared=False, constant=True)
 
     # set weights
     synInpWTA1e.weight = weInpWTA
@@ -340,8 +343,8 @@ def gen2dWTA(groupname,
                               method="euler", name='s' + groupname + '_Inpe')
     synWTAWTA1e = Connections(gWTAGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_e',
-                              additional_statevars=["latWeight : 1 (constant)", "latSigma : 1"] + additional_statevars)  # kernel function
+                              method="euler", name='s' + groupname + '_e')  # ,
+                              #additional_statevars=["latWeight : 1 (constant)", "latSigma : 1"] + additional_statevars)  # kernel function
     synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
                               method="euler", name='s' + groupname + '_Inhi')
@@ -355,6 +358,9 @@ def gen2dWTA(groupname,
     synWTAWTA1e.connect('fdist2d(i,j,numNeurons)<=cutoff')
     synWTAInh1e.connect('True')  # Generates all to all connectivity
     synInhWTA1i.connect('True')
+
+    synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
+    synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)
 
     # set weights
     synInpWTA1e.weight = weInpWTA

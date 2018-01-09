@@ -2,7 +2,7 @@
 # @Author: mmilde
 # @Date:   2018-01-08 14:53:11
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-08 14:56:27
+# @Last Modified time: 2018-01-09 16:21:16
 
 """ This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
 
@@ -17,7 +17,7 @@ class ExpAdaptIF(NeuronEquationBuilder):
     def __init__(self):
         NeuronEquationBuilder.__init__(self, baseUnit='voltage', adaptation='calciumFeedback',
                                        integrationMode='exponential', leak='non-leaky',
-                                       position='none', noise='none')
+                                       position='spatial', noise='none')
 
 
 class DPI(NeuronEquationBuilder):
@@ -29,5 +29,5 @@ class DPI(NeuronEquationBuilder):
 
     def __init__(self):
         NeuronEquationBuilder.__init__(self, baseUnit='current', adaptation='calciumFeedback',
-                                       integrationMode='exponential', leak='leaky', position='none',
+                                       integrationMode='exponential', leak='leaky', position='spatial',
                                        noise='none')

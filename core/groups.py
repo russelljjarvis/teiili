@@ -29,19 +29,6 @@ class NCSGroup(Group):
         (usually defined in equations), that is changeable in standalone mode
         If you pass a value, it will directly set it and decide based on that value,
         if the variable should be shared (scalar) or not (vector)"""
-        # try:
-        #     if len(value) == 1:  # this will probably never happen
-        #         shared = True
-        #         size = 1
-        #     else:
-        #         shared = False
-        #         size = len(value)
-        #         if size != self.N:
-        #             print('The value of ' + name + ' needs to be a scalar or a vector of\
-        #                   lengh N (number of neurons in Group)')  # exception will be raised later
-        # except TypeError:  # then it is probably a scalar
-        #     shared = True
-        #     size = 1
         if shared:
             size = 1
         else:

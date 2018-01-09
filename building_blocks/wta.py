@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-08 16:45:03
+# @Last Modified time: 2018-01-09 11:42:17
 
 """
 This files contains different WTA circuits
@@ -17,8 +17,8 @@ from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
 
 # from NCSBrian2Lib.tools.tools import fkernel1d, fkernel2d, fdist2d,
-from NCSBrian2Lib.tools.misc import printStates,
-from NCSBrian2Lib.tool.indexing import ind2xy, ind2x, ind2y
+from NCSBrian2Lib.tools.misc import printStates
+from NCSBrian2Lib.tools.indexing import ind2xy, ind2x, ind2y
 from NCSBrian2Lib.tools.plotting import plotSpikemon, plotStatemon
 
 from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
@@ -54,13 +54,13 @@ class WTA(BuildingBlock):
                  dimensions=1,
                  neuron_eq_builder=DPI,
                  synapse_eq_builder=DPISyn,
-                 blockParams=wtaParams,
-                 numInpNeurons=10,
-                 numNeurons=16,
-                 numInhNeurons=2,
+                 block_params=wtaParams,
+                 num_inp_neurons=10,
+                 num_neurons=16,
+                 num_inh_neurons=2,
                  cutoff=10,
-                 additionalStatevars=[],
-                 numInputs=1,
+                 additional_statevars=[],
+                 num_inputs=1,
                  monitor=True,
                  debug=False):
         """Summary
@@ -70,25 +70,25 @@ class WTA(BuildingBlock):
             dimensions (int, optional): Description
             neuron_eq_builder (TYPE, optional): Description
             synapse_eq_builder (TYPE, optional): Description
-            blockParams (TYPE, optional): Description
-            numInpNeurons (int, optional): Description
-            numNeurons (int, optional): Description
-            numInhNeurons (int, optional): Description
+            block_params (TYPE, optional): Description
+            num_inp_neurons (int, optional): Description
+            num_neurons (int, optional): Description
+            num_inh_neurons (int, optional): Description
             cutoff (int, optional): Description
-            additionalStatevars (list, optional): Description
-            numInputs (int, optional): Description
+            additional_statevars (list, optional): Description
+            num_inputs (int, optional): Description
             monitor (bool, optional): Description
             debug (bool, optional): Description
 
         Raises:
             NotImplementedError: Description
         """
-        self.numNeurons = numNeurons
+        self.num_neurons = num_neurons
         self.dimensions = dimensions
         BuildingBlock.__init__(self, name,
                                neuron_eq_builder,
                                synapse_eq_builder,
-                               blockParams,
+                               block_params,
                                debug,
                                monitor)
 
@@ -97,27 +97,27 @@ class WTA(BuildingBlock):
             self.standaloneParams = gen1dWTA(name,
                                              neuron_eq_builder,
                                              synapse_eq_builder,
-                                             numNeurons=numNeurons,
-                                             numInhNeurons=numInhNeurons,
-                                             additionalStatevars=additionalStatevars,
+                                             num_neurons=num_neurons,
+                                             num_inh_neurons=num_inh_neurons,
+                                             additional_statevars=additional_statevars,
                                              cutoff=cutoff,
-                                             numInputs=numInputs,
+                                             num_inputs=num_inputs,
                                              monitor=True,
                                              debug=debug,
-                                             **blockParams)
+                                             **block_params)
         elif dimensions == 2:
             self.Groups, self.Monitors,
             self.standaloneParams = gen2dWTA(name,
                                              neuron_eq_builder,
                                              synapse_eq_builder,
-                                             numNeurons=numNeurons,
-                                             numInhNeurons=numInhNeurons,
-                                             additionalStatevars=additionalStatevars,
+                                             num_neurons=num_neurons,
+                                             num_inh_neurons=num_inh_neurons,
+                                             additional_statevars=additional_statevars,
                                              cutoff=cutoff,
-                                             numInputs=numInputs,
+                                             num_inputs=num_inputs,
                                              monitor=True,
                                              debug=debug,
-                                             **blockParams)
+                                             **block_params)
 
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
@@ -151,8 +151,8 @@ def gen1dWTA(groupname,
              synapse_eq_builder=DPISyn,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5, sigm=3,
              rpWTA=3 * ms, rpInh=1 * ms,
-             numNeurons=64, numInhNeurons=5, cutoff=10, numInputs=1,
-             monitor=True, additionalStatevars=[], debug=False):
+             num_neurons=64, num_inh_neurons=5, cutoff=10, num_inputs=1,
+             monitor=True, additional_statevars=[], debug=False):
     """Summary
 
     Args:
@@ -166,12 +166,12 @@ def gen1dWTA(groupname,
         sigm (int, optional): Description
         rpWTA (TYPE, optional): Description
         rpInh (TYPE, optional): Description
-        numNeurons (int, optional): Description
-        numInhNeurons (int, optional): Description
+        num_neurons (int, optional): Description
+        num_inh_neurons (int, optional): Description
         cutoff (int, optional): Description
-        numInputs (int, optional): Description
+        num_inputs (int, optional): Description
         monitor (bool, optional): Description
-        additionalStatevars (list, optional): Description
+        additional_statevars (list, optional): Description
         debug (bool, optional): Description
 
     Returns:
@@ -181,35 +181,35 @@ def gen1dWTA(groupname,
     start = time.clock()
 
     # create neuron groups
-    gWTAGroup = Neurons(numNeurons, equation_builder=neuron_eq_builder(),
+    gWTAGroup = Neurons(num_neurons, equation_builder=neuron_eq_builder(),
                         refractory=rpWTA, name='g' + groupname,
-                        numInputs=3 + numInputs, debug=debug)
-    gWTAInhGroup = Neurons(numInhNeurons, equation_builder=neuron_eq_builder(),
+                        num_inputs=3 + num_inputs)
+    gWTAInhGroup = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(),
                            refractory=rpInh, name='g' + groupname + '_Inh',
-                           numInputs=1, debug=debug)
+                           num_inputs=1)
 
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms
     indWTA = np.asarray([])
     gWTAInpGroup = SpikeGeneratorGroup(
-        numNeurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
+        num_neurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
 
     # create synapses
     synInpWTA1e = Connections(gWTAInpGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", debug=debug, name='s' + groupname + '_Inpe')
+                              method="euler", name='s' + groupname + '_Inpe')
     synWTAWTA1e = Connections(gWTAGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", debug=debug, name='s' + groupname + '_e',
+                              method="euler", name='s' + groupname + '_e',
                               additionalStatevars=["latWeight : 1 (shared, constant)",
                                                    "latSigma : 1 (shared,constant)"] +
-                              additionalStatevars)  # kernel function
+                              additional_statevars)  # kernel function
     synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", debug=debug, name='s' + groupname + '_Inhi')
+                              method="euler", name='s' + groupname + '_Inhi')
     synWTAInh1e = Connections(gWTAGroup, gWTAInhGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", debug=debug, name='s' + groupname + '_Inhe')
+                              method="euler", name='s' + groupname + '_Inhe')
 
     # connect synapses
     synInpWTA1e.connect('i==j')
@@ -267,7 +267,7 @@ def gen1dWTA(groupname,
     }
 
     end = time.clock()
-    print('creating WTA of ' + str(numNeurons) + ' neurons with name ' +
+    print('creating WTA of ' + str(num_neurons) + ' neurons with name ' +
           groupname + ' took ' + str(end - start) + ' sec')
 
     return Groups, Monitors, standaloneParams
@@ -278,8 +278,8 @@ def gen2dWTA(groupname,
              synapse_eq_builder=DPISyn,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2, sigm=2.5,
              rpWTA=2.5 * ms, rpInh=1 * ms,
-             numNeurons=20, numInhNeurons=3, cutoff=9, numInputs=1,
-             monitor=True, additionalStatevars=[], debug=False):
+             num_neurons=20, num_inh_neurons=3, cutoff=9, num_inputs=1,
+             monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA
 
     Args:
@@ -293,12 +293,12 @@ def gen2dWTA(groupname,
         sigm (float, optional): Description
         rpWTA (TYPE, optional): Description
         rpInh (TYPE, optional): Description
-        numNeurons (int, optional): Description
-        numInhNeurons (int, optional): Description
+        num_neurons (int, optional): Description
+        num_inh_neurons (int, optional): Description
         cutoff (int, optional): Description
-        numInputs (int, optional): Description
+        num_inputs (int, optional): Description
         monitor (bool, optional): Description
-        additionalStatevars (list, optional): Description
+        additional_statevars (list, optional): Description
         debug (bool, optional): Description
 
     Returns:
@@ -309,19 +309,19 @@ def gen2dWTA(groupname,
     start = time.clock()
 
     # create neuron groups
-    num2dNeurons = numNeurons**2
+    num2dNeurons = num_neurons**2
     # gWTAGroup = Neurons(num2dNeurons, neuronEquation, neuronParameters, refractory=rpWTA, name='g' + groupname,
     #                     numInputs=3 + numWtaInputs, debug=debug)
     # gWTAInhGroup = Neurons(numInhNeurons, neuronEquation, neuronParameters, refractory=rpInh, name='g' + groupname + '_Inh',
     #                        numInputs=1, debug=debug)
     gWTAGroup = Neurons(num2dNeurons, equation_builder=neuron_eq_builder(),
                         refractory=rpWTA, name='g' + groupname,
-                        numInputs=3 + numInputs, debug=debug)
-    gWTAInhGroup = Neurons(numInhNeurons, equation_builder=neuron_eq_builder(),
+                        num_inputs=3 + num_inputs)
+    gWTAInhGroup = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(),
                            refractory=rpInh, name='g' + groupname + '_Inh',
-                           numInputs=1, debug=debug)
+                           num_inputs=1)
 
-    gWTAGroup.namespace['numNeurons'] = numNeurons
+    gWTAGroup.namespace['numNeurons'] = num_neurons
     gWTAGroup.namespace['ind2x'] = ind2x
     gWTAGroup.namespace['ind2y'] = ind2y
     gWTAGroup.x = "ind2x(i, numNeurons)"
@@ -337,17 +337,17 @@ def gen2dWTA(groupname,
     # create synapses
     synInpWTA1e = Connections(gWTAInpGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", debug=debug, name='s' + groupname + '_Inpe')
+                              method="euler", name='s' + groupname + '_Inpe')
     synWTAWTA1e = Connections(gWTAGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", debug=debug, name='s' + groupname + '_e',
-                              additionalStatevars=["latWeight : 1 (constant)", "latSigma : 1"] + additionalStatevars)  # kernel function
+                              method="euler", name='s' + groupname + '_e',
+                              additional_statevars=["latWeight : 1 (constant)", "latSigma : 1"] + additional_statevars)  # kernel function
     synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", debug=debug, name='s' + groupname + '_Inhi')
+                              method="euler", name='s' + groupname + '_Inhi')
     synWTAInh1e = Connections(gWTAGroup, gWTAInhGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", debug=debug, name='s' + groupname + '_Inhe')
+                              method="euler", name='s' + groupname + '_Inhe')
 
     # connect synapses
     synInpWTA1e.connect('i==j')
@@ -405,7 +405,7 @@ def gen2dWTA(groupname,
     }
 
     end = time.clock()
-    print ('creating WTA of ' + str(numNeurons) + ' x ' + str(numNeurons) + ' neurons with name ' +
+    print ('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
            groupname + ' took ' + str(end - start) + ' sec')
 
     if True:

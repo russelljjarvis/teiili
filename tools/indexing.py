@@ -1,6 +1,14 @@
+# -*- coding: utf-8 -*-
+# @Author: mmilde, alpren
+# @Date:   2018-01-09 17:26:00
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-09 17:27:25
+
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types
 import numpy as np
-
+"""
+Collections of functions which convert indices to x, y coordinates and vice versa
+"""
 
 # function that calculates 1D index from 2D index
 # same as np.ravel_multi_index((x,y),(n2dNeurons,n2dNeurons))
@@ -88,31 +96,3 @@ def ind2xy(ind, n2dNeurons):
         return np.unravel_index(ind, (n2dNeurons[0], n2dNeurons[1]))
     elif type(n2dNeurons) == int:
         return np.unravel_index(ind, (n2dNeurons, n2dNeurons))
-
-
-# function that calculates distance in 2D field from 2 1D indices
-@implementation('cpp', '''
-    float fdist2d(int i, int j, int n2dNeurons) {
-    int ix = i / n2dNeurons;
-    int iy = i % n2dNeurons;
-    int jx = j / n2dNeurons;
-    int jy = j % n2dNeurons;
-    return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
-    }
-     ''')
-@declare_types(i='integer', j='integer', n2dNeurons='integer', result='float')
-@check_units(i=1, j=1, n2dNeurons=1, result=1)
-def fdist2d(i, j, n2dNeurons):
-    """Summary
-
-    Args:
-        i (TYPE): Description
-        j (TYPE): Description
-        n2dNeurons (TYPE): Description
-
-    Returns:
-        TYPE: Description
-    """
-    (ix, iy) = ind2xy(i, n2dNeurons)
-    (jx, jy) = ind2xy(j, n2dNeurons)
-    return np.sqrt((ix - jx)**2 + (iy - jy)**2)

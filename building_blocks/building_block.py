@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Summary
-"""
 # @Author: alpren, mmilde
 # @Date:   2017-07-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-09 15:20:42
-"""
-This class ???
-"""
+# @Last Modified time: 2018-01-09 17:23:11
 
 from brian2 import asarray
 from collections import OrderedDict
@@ -22,30 +17,30 @@ from collections import OrderedDict
 
 class BuildingBlock:
 
-    """Summary
+    """This class is the parent class to all building blocks such as WTA, SOM etc.
 
     Attributes:
-        debug (TYPE): Description
-        Groups (dict): Description
-        monitor (TYPE): Description
-        Monitors (dict): Description
-        name (TYPE): Description
-        neuron_eq_builder (TYPE): Description
+        debug (bool, optional): Flag to gain additional information
+        Groups (dictionary): Keys to all neuron and synapse groups
+        monitor (bool, optional): Flag to auto-generate spike and statemonitors
+        Monitors (dictionary): Keys to all spike- and statemonitors
+        name (str, required): Name of the building_block population
+        neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
         params (TYPE): Description
-        standaloneParams (TYPE): Description
-        synapse_eq_builder (TYPE): Description
+        standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
+        synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
     """
 
     def __init__(self, name, neuron_eq_builder, synapse_eq_builder, blockParams, debug, monitor=False):
         """Summary
 
         Args:
-            name (TYPE): Description
-            neuron_eq_builder (TYPE): Description
-            synapse_eq_builder (TYPE): Description
-            blockParams (TYPE): Description
-            debug (TYPE): Description
-            monitor (bool, optional): Description
+            name (str, required): Name of the building_block population
+            neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
+            synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
+            blockParams (dict): Dictionary which holds building_block specific parameters
+            debug (bool, optional): Flag to gain additional information
+            monitor (bool, optional): Flag to auto-generate spike and statemonitors
         """
         self.name = name
         self.neuron_eq_builder = neuron_eq_builder

@@ -8,7 +8,7 @@ Created on Thu Jul 27 17:28:16 2017
 import warnings
 import inspect
 from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
-    ylabel, xlabel, xlim, ylim, figure, Group
+    ylabel, xlabel, xlim, ylim, figure, Group, Subgroup
 from collections import OrderedDict
 
 from NCSBrian2Lib.models import neuron_models
@@ -81,9 +81,6 @@ class Neurons(NeuronGroup, NCSGroup):
 
         self.verbose = verbose
         self.num_inputs = num_inputs
-        self.numSynapses = 0
-
-        
 
         if equation_builder is not None:
             if inspect.isclass(equation_builder):
@@ -105,6 +102,9 @@ class Neurons(NeuronGroup, NCSGroup):
         self.initialized = True
         NCSGroup.__init__(self)
         NeuronGroup.__init__(self, N, method=method, **Kwargs)
+
+        self.add_attribute('numSynapses')
+        self.numSynapses = 0
 
         if params is not None:
             setParams(self, params, verbose=verbose)
@@ -132,6 +132,21 @@ class Neurons(NeuronGroup, NCSGroup):
             if isinstance(value, str) and value != 'name' and value != 'when':
                 # store this for later update
                 self.strParams.update({key: value})
+
+
+    def __getitem__(self, item):
+        """this is from brian2/brian2/groups/neurongroup.py
+        """
+        if not isinstance(item, slice):
+            raise TypeError('Subgroups can only be constructed using slicing syntax')
+        start, stop, step = item.indices(self._N)
+        if step != 1:
+            raise IndexError('Subgroups have to be contiguous')
+        if start >= stop:
+            raise IndexError('Illegal start/end values for subgroup, %d>=%d' %
+                             (start, stop))
+
+        return NCSSubgroup(self, start, stop)
 
 
 # TODO: find out, if it is possible to have delay as statevariable
@@ -172,7 +187,9 @@ class Connections(Synapses, NCSGroup):
                 print('trying to add one more...')
             target.registerSynapse()
             self.input_number = target.numSynapses
-            print('OK!')
+            if verbose:
+                print('OK!')
+                print('input number is: '+ str(self.input_number))
         except ValueError as e:
             raise e
         except AttributeError as e:
@@ -194,6 +211,7 @@ class Connections(Synapses, NCSGroup):
                 self.equation_builder = equation_builder
             self.equation_builder.set_inputnumber(self.input_number)
             Kwargs.update(self.equation_builder.keywords)
+
             if params is not None:
                 self.parameters = params
                 print(
@@ -283,3 +301,22 @@ def setParams(briangroup, params, ndargs=None, verbose=False):
                 else:
                     print(key, states[key])
         print('----------')
+
+
+
+class NCSSubgroup(Subgroup):
+    """this helps to make Subgroups compatible, otherwise the same as Subgroup
+    TODO: Some functionality of the package is not compatible with subgroups yet!!!
+    """
+
+    def __init__(self, source, start, stop, name=None):
+        warnings.warn('Some functionality of this package is not compatible with subgroups yet')
+        self.numSynapses = 0 #just initialization to avoid having to initialize it with brian2
+        self.num_inputs = 0
+        self.registerSynapse = None
+        Subgroup.__init__(self, source, start, stop, name)
+        self.numSynapses = self.source.numSynapses
+        self.num_inputs = self.source.num_inputs
+        self.registerSynapse = self.source.registerSynapse #TODO: this is not ideal, as it is not necessary to register a synapse for subgroups!
+
+

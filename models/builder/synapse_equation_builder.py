@@ -189,6 +189,9 @@ class SynapseEquationBuilder():
             #self.on_post = eqDict['on_post']
             self.parameters = eqDict['parameters']
 
+            self.model = eqDict['model']
+            self.on_pre = eqDict['on_pre']
+            self.on_post = eqDict['on_post']
     #       self.parameters = eqDict['default']
     #        self.addInputCurrents(inputNumber)
 
@@ -202,9 +205,9 @@ class SynapseEquationBuilder():
         printEqDict_syn(self.keywords, self.parameters)
 
     def set_inputnumber(self, inputnumber):
-            self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber - 1))
-            self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber - 1))
-            self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber - 1))
+            self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber)) #inputnumber-1 ???
+            self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber))
+            self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber))
 
 
 ############################################################################################

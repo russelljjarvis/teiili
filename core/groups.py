@@ -157,13 +157,14 @@ class Connections(Synapses, NCSGroup):
             pass
 
         try:
-            if verbose:
+            if self.verbose:
                 print(name, ': target', target.name, 'has',
                       target.numSynapses, 'of', target.num_inputs, 'synapses')
                 print('trying to add one more...')
             target.registerSynapse()
             self.input_number = target.numSynapses
-            print('OK!')
+            if self.verbose:
+                print('OK!')
         except ValueError as e:
             raise e
         except AttributeError as e:

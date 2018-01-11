@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-09 17:22:11
+# @Last Modified time: 2018-01-11 11:29:45
 
 """
 This files contains different WTA circuits
@@ -55,7 +55,6 @@ class WTA(BuildingBlock):
                  neuron_eq_builder=DPI,
                  synapse_eq_builder=DPISyn,
                  block_params=wtaParams,
-                 num_inp_neurons=10,
                  num_neurons=16,
                  num_inh_neurons=2,
                  cutoff=10,
@@ -71,7 +70,6 @@ class WTA(BuildingBlock):
             neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
             synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
             block_params (dict, optional): Parameter for neuron populations
-            num_inp_neurons (int, optional): Size of input population
             num_neurons (int, optional): Size of WTA neuron population
             num_inh_neurons (int, optional): Size of inhibitory interneuron population
             cutoff (int, optional): Radius of self-excitation
@@ -270,8 +268,12 @@ def gen1dWTA(groupname,
     }
 
     end = time.clock()
-    print('creating WTA of ' + str(num_neurons) + ' neurons with name ' +
-          groupname + ' took ' + str(end - start) + ' sec')
+    if debug:
+        print('creating WTA of ' + str(num_neurons) + ' neurons with name ' +
+              groupname + ' took ' + str(end - start) + ' sec')
+        print('The keys of the output dict are:')
+        for key in Groups:
+            print(key)
 
     return Groups, Monitors, standaloneParams
 
@@ -371,7 +373,6 @@ def gen2dWTA(groupname,
     synWTAWTA1e.namespace['kernel_mexican_2d'] = kernel_mexican_2d
     synWTAWTA1e.namespace['num_neurons'] = num_neurons
     synWTAWTA1e.weight = 'latWeight * kernel_mexican_2d(i,j,latSigma,num_neurons)'
-    # print(synWTAWTA1e.weight)
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -412,10 +413,9 @@ def gen2dWTA(groupname,
     }
 
     end = time.clock()
-    print ('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
-           groupname + ' took ' + str(end - start) + ' sec')
-
-    if True:
+    if debug:
+        print ('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
+               groupname + ' took ' + str(end - start) + ' sec')
         print('The keys of the output dict are:')
         for key in Groups:
             print(key)

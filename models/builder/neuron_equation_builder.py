@@ -97,7 +97,8 @@ class NeuronEquationBuilder():
 
     def __init__(self, model=None, baseUnit='current', adaptation='calciumFeedback',
                  integrationMode='exponential', leak='leaky', position='spatial',
-                 noise='gaussianNoise', refractory='refP'):
+                 noise='gaussianNoise', refractory='refP', verbose=False):
+        self.verbose = verbose
         if model is not None:
             keywords = model
             self.model = keywords['model']
@@ -206,8 +207,9 @@ class NeuronEquationBuilder():
         self.keywords['model']  += "\n"
 
     def addStateVars(self, stateVars):
-        "just adds a line to the model equation"
-        print("added to Equation: \n" + "\n".join(stateVars))
+        """just adds a line to the model equation"""
+        if self.verbose:
+            print("added to Equation: \n" + "\n".join(stateVars))
         self.keywords['model'] += "\n            ".join(stateVars)
 
     def printAll(self):

@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
+# @Author: mmilde
+# @Date:   2017-25-08 13:43:10
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-11 09:55:16
+# -*- coding: utf-8 -*-
+
 """
 This is a tutorial example used to learn the basics of the Brian2 INI library.
-
-Created on 25.8.2017
 """
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
-import matplotlib.pyplot as plt
-
 
 from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
@@ -17,9 +19,10 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
 from NCSBrian2Lib.core.groups import Neurons, Connections
-from NCSBrian2Lib import NCSNetwork, activate_standalone, deactivate_standalone
+from NCSBrian2Lib import NCSNetwork
 from NCSBrian2Lib.models.neuron_models import DPI
 from NCSBrian2Lib.models.synapse_models import DPISyn
+from NCSBrian2Lib.models.parameters.dpi_neuron_param import parameters as DPIparam
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us
@@ -33,7 +36,8 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 Net = NCSNetwork()
 
 testNeurons = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron")
-# testNeurons.setParams(DPIparam)
+# Example of how to set parameters, saved as a dictionary
+testNeurons.setParams(DPIparam)
 testNeurons.refP = 3 * ms
 
 testNeurons2 = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron2")
@@ -51,6 +55,7 @@ Syn.connect(True)
 # you can change all the parameters like this after creation of the neurongroup:
 Syn.weight = 100
 
+# Example of how to set single parameters, rather than using an entire dictionary
 testNeurons.Iconst = 7 * nA
 # testNeurons2.Itau = 13 * pA
 # testNeurons2.Iath = 80 * pA
@@ -68,7 +73,6 @@ statemonNeuIn = StateMonitor(testNeurons, variables=[
                              "Iin", "Imem", "Iahp"], record=[0, 1], name='statemonNeu')
 statemonSynOut = StateMonitor(
     Syn, variables='Ie_syn', record=True, name='statemonSynOut')
-# statemonSynTest=StateMonitor(testInpSyn,variables=["Isyn_exc"],record=[0],name='statemonSyn')
 
 Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon,
         spikemonOut, statemonNeuIn, statemonNeuOut, statemonSynOut, statemonInpSyn)

@@ -19,7 +19,7 @@ parameters = {"kn": constants.KAPPA_N,
               "Itauahp": 1 * pA,
               "Ithahp": 1 * pA,
               "Cahp": 1 * pF,
-	      "Iahp":constants.I0,
+              "Iahp": constants.I0,
               #  POSTIVE FEEDBACK #################
               "Iath": 0.5 * nA,
               "Iagain": 50. * pA,

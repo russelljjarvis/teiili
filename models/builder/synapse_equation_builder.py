@@ -9,7 +9,8 @@ It also provides a funtion to add lines to the model
 
 """
 from brian2 import pF, nS, mV, ms, pA, nA, second, volt
-#TODO: Take parameters from parameter files
+# TODO: Take parameters from parameter files
+
 
 def combineEquations_syn(*args):
     model = ''
@@ -93,10 +94,12 @@ def combineParDictionaries(varSet, *args):
 
 class SynapseEquationBuilder():
 
-    def __init__(self, model=None, baseUnit='current', kernel='exponential', plasticity='nonplastic', inputNumber=1):
+    def __init__(self, model=None, baseUnit='current', kernel='exponential',
+                 plasticity='nonplastic', inputNumber=1, verbose=False):
+        self.verbose = verbose
         if model is not None:
             eqDict = model
-            eqDict['model'] = eqDict['model'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
+            eqDict['model'] = eqDict['model'].format(inputnumber="{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
                                                      Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
 
             self.model = eqDict['model']
@@ -136,9 +139,9 @@ class SynapseEquationBuilder():
             if modes[baseUnit] == 'current':
                 eqDict, varSet = combineEquations_syn(
                     template, currentkernels[kernel], plasticitymodels[plasticity])
-                eqDict['model'] = eqDict['model'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
-                eqDict['on_pre'] = eqDict['on_pre'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
-                eqDict['on_post'] = eqDict['on_post'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['model'] = eqDict['model'].format(inputnumber="{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['on_pre'] = eqDict['on_pre'].format(inputnumber="{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['on_post'] = eqDict['on_post'].format(inputnumber="{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
                 if '{synvar_e}' in varSet:
                     varSet.remove('{synvar_e}')
                     varSet.add('Ie_syn')
@@ -151,9 +154,9 @@ class SynapseEquationBuilder():
             if modes[baseUnit] == 'conductance':
                 eqDict, varSet = combineEquations_syn(
                     template, reversalsyn, conductancekernels[kernel], plasticitymodels[plasticity])
-                eqDict['model'] = eqDict['model'].format(inputnumber = "{inputnumber}", synvar_e='gIe', synvar_i='gIi', unit='siemens')
-                eqDict['on_pre'] = eqDict['on_pre'].format(inputnumber = "{inputnumber}", synvar_e='gIe', synvar_i='gIi', unit='siemens')
-                eqDict['on_post'] = eqDict['on_post'].format(inputnumber = "{inputnumber}", synvar_e='gIe', synvar_i='gIi', unit='siemens')
+                eqDict['model'] = eqDict['model'].format(inputnumber="{inputnumber}", synvar_e='gIe', synvar_i='gIi', unit='siemens')
+                eqDict['on_pre'] = eqDict['on_pre'].format(inputnumber="{inputnumber}", synvar_e='gIe', synvar_i='gIi', unit='siemens')
+                eqDict['on_post'] = eqDict['on_post'].format(inputnumber="{inputnumber}", synvar_e='gIe', synvar_i='gIi', unit='siemens')
                 if '{synvar_e}' in varSet:
                     varSet.remove('{synvar_e}')
                     varSet.add('gIe')
@@ -167,9 +170,9 @@ class SynapseEquationBuilder():
                 eqDict, varSet = combineEquations_syn(
                     Dpi, plasticitymodels[plasticity])
 
-                eqDict['model'] = eqDict['model'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
-                eqDict['on_pre'] = eqDict['on_pre'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
-                eqDict['on_post'] = eqDict['on_post'].format(inputnumber = "{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['model'] = eqDict['model'].format(inputnumber="{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['on_pre'] = eqDict['on_pre'].format(inputnumber="{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
+                eqDict['on_post'] = eqDict['on_post'].format(inputnumber="{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp')
 
                 if '{synvar_e}' in varSet:
                     varSet.remove('{synvar_e}')
@@ -205,9 +208,10 @@ class SynapseEquationBuilder():
         printEqDict_syn(self.keywords, self.parameters)
 
     def set_inputnumber(self, inputnumber):
-            self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber)) #inputnumber-1 ???
-            self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber))
-            self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber))
+        self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber)) #inputnumber-1 ???
+        self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber))
+        self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber))
+
 
 
 ############################################################################################

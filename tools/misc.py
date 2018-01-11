@@ -3,7 +3,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 11:54:09
 # @Last Modified by:   mmilde
-# @Last Modified time: 2017-12-27 12:13:11
+# @Last Modified time: 2018-01-09 16:45:16
 """A collection of helpful functions when working with brian2
 
 """
@@ -11,6 +11,7 @@
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
     figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel, device
 import numpy as np
+from NCSBrian2Lib.tools.indexing import ind2xy
 
 
 #===============================================================================
@@ -81,23 +82,77 @@ def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, return
 
 
 @implementation('cpp', '''
+    float dist1d2dfloat(float i, float j, int n2dNeurons) {
+    int ix = i / n2dNeurons;
+    int iy = i % n2dNeurons;
+    int jx = j / n2dNeurons;
+    int jy = j % n2dNeurons;
+    return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
+    }
+     ''')
+@declare_types(i='float', j='float', n2dNeurons='integer', result='float')
+@check_units(i=1, j=1, n2dNeurons=1, result=1)
+def dist1d2dfloat(i, j, n2dNeurons):
+    """function that calculates distance in 2D field from 2 1D indices
+
+    Args:
+        i (float, required): 1D index of source neuron
+        j (float, required): 1D index of target neuron
+        n2dNeurons (int, required): Size of neuron population
+
+    Returns:
+        float: Distance in 2D field
+    """
+    (ix, iy) = ind2xy(i, n2dNeurons)
+    (jx, jy) = ind2xy(j, n2dNeurons)
+    return np.sqrt((ix - jx)**2 + (iy - jy)**2)
+
+
+@implementation('cpp', '''
+    float dist1d2dint(int i, int j, int n2dNeurons) {
+    int ix = i / n2dNeurons;
+    int iy = i % n2dNeurons;
+    int jx = j / n2dNeurons;
+    int jy = j % n2dNeurons;
+    return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
+    }
+     ''')
+@declare_types(i='integer', j='integer', n2dNeurons='integer', result='float')
+@check_units(i=1, j=1, n2dNeurons=1, result=1)
+def dist1d2dint(i, j, n2dNeurons):
+    """function that calculates distance in 2D field from 2 1D indices
+
+    Args:
+        i (int, required): 1D index of source neuron
+        j (int, required): 1D index of target neuron
+        n2dNeurons (int, required): Size of neuron population
+
+    Returns:
+        int: Distance in 2D field
+    """
+    (ix, iy) = ind2xy(i, n2dNeurons)
+    (jx, jy) = ind2xy(j, n2dNeurons)
+    return np.sqrt((ix - jx)**2 + (iy - jy)**2)
+
+
+@implementation('cpp', '''
     float dist2dind(int ix, int iy,int jx, int jy) {
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
 @declare_types(ix='integer', iy='integer', jx='integer', jy='integer', result='float')
 @check_units(ix=1, iy=1, jx=1, jy=1, result=1)
-def dist2dint(ix, iy, jx, jy):
+def dist2d2dint(ix, iy, jx, jy):
     """Summary: function that calculates distance in 2D field from 4 integer 2D indices
 
     Args:
-        ix (TYPE): Description
-        iy (TYPE): Description
-        jx (TYPE): Description
-        jy (TYPE): Description
+        ix (int, required): x component of 2D source neuron coordinate
+        iy (int, required): y component of 2D source neuron coordinate
+        jx (int, required): x component of 2D target neuron coordinate
+        jy (int, required): y component of 2D target neuron coordinate
 
     Returns:
-        TYPE: Description
+        int: Distance in 2D field
     """
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
@@ -109,17 +164,17 @@ def dist2dint(ix, iy, jx, jy):
      ''')
 @declare_types(ix='float', iy='float', jx='float', jy='float', result='float')
 @check_units(ix=1, iy=1, jx=1, jy=1, result=1)
-def dist2d(ix, iy, jx, jy):
+def dist2d2dfloat(ix, iy, jx, jy):
     """Summary: function that calculates distance in 2D field from 4 2D position values
 
     Args:
-        ix (TYPE): Description
-        iy (TYPE): Description
-        jx (TYPE): Description
-        jy (TYPE): Description
+        ix (float, required): x component of 2D source neuron coordinate
+        iy (float, required): y component of 2D source neuron coordinate
+        jx (float, required): x component of 2D target neuron coordinate
+        jy (float, required): y component of 2D target neuron coordinate
 
     Returns:
-        TYPE: Description
+        float: Distance in 2D field
     """
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 

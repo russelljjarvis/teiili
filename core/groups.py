@@ -24,29 +24,20 @@ class NCSGroup(Group):
         self.standaloneParams = OrderedDict()
         self.strParams = {}
 
-
-
-    def addStateVariable(self, name, value=None, constant=False, changeInStandalone=True):
+    def addStateVariable(self, name, unit=1, shared=False, constant=False, changeInStandalone=True):
         """this method allows you to add a state variable
         (usually defined in equations), that is changeable in standalone mode
         If you pass a value, it will directly set it and decide based on that value,
         if the variable should be shared (scalar) or not (vector)"""
-        try:
-            if len(value) == 1:  # this will probably never happen
-                shared = True
-                size = 1
-            else:
-                shared = False
-                size = len(value)
-                if size != self.N:
-                    print('The value of ' + name + ' needs to be a scalar or a vector of\
-                          length N (number of neurons in Group)')  # exception will be raised later
-        except TypeError:  # then it is probably a scalar
-            shared = True
+        if shared:
             size = 1
+        else:
+            # TODO: Check if this works for neuron as well
+            # TODO: Raise error (understandable) if addStateVariable is called before synapses are connected
+            size = self.variables['N'].get_value()
 
         try:
-            self.variables.add_array(name, size=size, dimensions=value.dim,
+            self.variables.add_array(name, size=size, dimensions=unit.dim,
                                      constant=constant, scalar=shared)
         except AttributeError:  # value.dim will throw an exception, if it has no unit
             self.variables.add_array(name, size=size,
@@ -54,7 +45,7 @@ class NCSGroup(Group):
 
         if changeInStandalone:
             self.standaloneVars += [name]
-            self.__setattr__(name, value)  # TODO: Maybe do that always?
+            # self.__setattr__(name, value)  # TODO: Maybe do that always?
 
     def setParams(self, params, **kwargs):
         return setParams(self, params, **kwargs)
@@ -81,6 +72,7 @@ class Neurons(NeuronGroup, NCSGroup):
 
         self.verbose = verbose
         self.num_inputs = num_inputs
+        self.numSynapses = 0
 
         if equation_builder is not None:
             if inspect.isclass(equation_builder):
@@ -102,9 +94,6 @@ class Neurons(NeuronGroup, NCSGroup):
         self.initialized = True
         NCSGroup.__init__(self)
         NeuronGroup.__init__(self, N, method=method, **Kwargs)
-
-        self.add_attribute('numSynapses')
-        self.numSynapses = 0
 
         if params is not None:
             setParams(self, params, verbose=verbose)
@@ -181,15 +170,16 @@ class Connections(Synapses, NCSGroup):
             pass
 
         try:
-            if verbose:
+            if self.verbose:
                 print(name, ': target', target.name, 'has',
                       target.numSynapses, 'of', target.num_inputs, 'synapses')
                 print('trying to add one more...')
             target.registerSynapse()
             self.input_number = target.numSynapses
-            if verbose:
+            if self.verbose:
                 print('OK!')
                 print('input number is: '+ str(self.input_number))
+
         except ValueError as e:
             raise e
         except AttributeError as e:

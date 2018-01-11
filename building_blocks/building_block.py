@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jul 27 17:41:10 2017
+# @Author: alpren, mmilde
+# @Date:   2017-07-27 10:46:44
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-09 17:23:11
 
-@author: alpha
-"""
 from brian2 import asarray
 from collections import OrderedDict
 
@@ -17,25 +17,47 @@ from collections import OrderedDict
 
 class BuildingBlock:
 
-    def __init__(self, name, neuronEq, synapseEq, neuronParams, synapseParams, blockParams, debug, monitor=False):
+    """This class is the parent class to all building blocks such as WTA, SOM etc.
 
+    Attributes:
+        debug (bool, optional): Flag to gain additional information
+        Groups (dictionary): Keys to all neuron and synapse groups
+        monitor (bool, optional): Flag to auto-generate spike and statemonitors
+        Monitors (dictionary): Keys to all spike- and statemonitors
+        name (str, required): Name of the building_block population
+        neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
+        params (TYPE): Description
+        standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
+        synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
+    """
+
+    def __init__(self, name, neuron_eq_builder, synapse_eq_builder, blockParams, debug, monitor=False):
+        """Summary
+
+        Args:
+            name (str, required): Name of the building_block population
+            neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
+            synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
+            blockParams (dict): Dictionary which holds building_block specific parameters
+            debug (bool, optional): Flag to gain additional information
+            monitor (bool, optional): Flag to auto-generate spike and statemonitors
+        """
         self.name = name
-        self.neuronEq = neuronEq
-        self.synapseEq = synapseEq
-        self.neuronParams = neuronParams
-        self.synapseParams = synapseParams
-        # self.plasticSynEq = plasticSynEq
-        # self.plasticSynParams = plasticSynParams
+        self.neuron_eq_builder = neuron_eq_builder
+        self.synapse_eq_builder = synapse_eq_builder
         self.params = blockParams
         self.debug = debug
-        # self.plastic = plastic
         self.Groups = {}
         self.Monitors = {}
         self.monitor = monitor
         self.standaloneParams = OrderedDict()
 
     def __iter__(self):
-        "this allows us to iterate over the BrianObjects and directly add the Block to a Network"
+        """this allows us to iterate over the BrianObjects and directly add the Block to a Network
+
+        Returns:
+            TYPE: Description
+        """
         allBrianObjects = self.Groups
         if self.monitor:
             allBrianObjects.update(self.Monitors)
@@ -43,7 +65,11 @@ class BuildingBlock:
         return iter([allBrianObjects[key] for key in allBrianObjects])
 
     def get_run_args(self):
-        "this collects the arguments to cpp main() for stadalone run"
+        """this collects the arguments to cpp main() for stadalone run
+
+        Returns:
+            TYPE: Description
+        """
         # asarray is to remove units. It is the way proposed in the tutorial
         run_args = [str(asarray(self.standaloneParams[key]))
                     for key in self.standaloneParams]

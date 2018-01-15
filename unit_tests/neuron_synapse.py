@@ -2,7 +2,7 @@
 # @Author: mmilde
 # @Date:   2017-25-08 13:43:10
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-11 09:55:16
+# @Last Modified time: 2018-01-15 14:04:55
 # -*- coding: utf-8 -*-
 
 """
@@ -56,7 +56,7 @@ Syn.connect(True)
 Syn.weight = 100
 
 # Example of how to set single parameters, rather than using an entire dictionary
-testNeurons.Iconst = 7 * nA
+testNeurons.Iconst = 10 * nA
 # testNeurons2.Itau = 13 * pA
 # testNeurons2.Iath = 80 * pA
 # testNeurons2.Iagain = 20 * pA

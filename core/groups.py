@@ -73,6 +73,7 @@ class Neurons(NeuronGroup, NCSGroup):
         self.verbose = verbose
         self.num_inputs = num_inputs
         self.numSynapses = 0
+        self.synapses_dict = {}
 
         if equation_builder is not None:
             if inspect.isclass(equation_builder):
@@ -98,8 +99,10 @@ class Neurons(NeuronGroup, NCSGroup):
         if params is not None:
             setParams(self, params, verbose=verbose)
 
-    def registerSynapse(self):
-        self.numSynapses += 1
+    def registerSynapse(self, synapsename):
+        if synapsename not in self.synapses_dict:
+            self.numSynapses += 1
+            self.synapses_dict[synapsename] = self.numSynapses
         if self.verbose:
             print('increasing number of registered Synapses of ' +
                   self.name + ' to ', self.numSynapses)
@@ -108,6 +111,7 @@ class Neurons(NeuronGroup, NCSGroup):
         if self.num_inputs < self.numSynapses:
             raise ValueError('There seem so be too many connections to ' +
                              self.name + ', please increase num_inputs')
+        return self.synapses_dict[synapsename]
 
     def __setattr__(self, key, value):
         NeuronGroup.__setattr__(self, key, value)
@@ -174,8 +178,7 @@ class Connections(Synapses, NCSGroup):
                 print(name, ': target', target.name, 'has',
                       target.numSynapses, 'of', target.num_inputs, 'synapses')
                 print('trying to add one more...')
-            target.registerSynapse()
-            self.input_number = target.numSynapses
+            self.input_number = target.registerSynapse(name)
             if self.verbose:
                 print('OK!')
                 print('input number is: '+ str(self.input_number))
@@ -301,12 +304,16 @@ class NCSSubgroup(Subgroup):
 
     def __init__(self, source, start, stop, name=None):
         warnings.warn('Some functionality of this package is not compatible with subgroups yet')
-        self.numSynapses = 0 #just initialization to avoid having to initialize it with brian2
-        self.num_inputs = 0
         self.registerSynapse = None
         Subgroup.__init__(self, source, start, stop, name)
-        self.numSynapses = self.source.numSynapses
-        self.num_inputs = self.source.num_inputs
         self.registerSynapse = self.source.registerSynapse #TODO: this is not ideal, as it is not necessary to register a synapse for subgroups!
+
+    @property
+    def numSynapses(self):
+        return self.source.numSynapses
+
+    @property
+    def num_inputs(self):
+        return self.source.num_inputs
 
 

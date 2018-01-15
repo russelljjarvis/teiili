@@ -95,12 +95,12 @@ def combineParDictionaries(varSet, *args):
 class SynapseEquationBuilder():
 
     def __init__(self, model=None, baseUnit='current', kernel='exponential',
-                 plasticity='nonplastic', inputNumber=1, verbose=False):
+                 plasticity='nonplastic', inputnumber=1, verbose=False):
         self.verbose = verbose
         if model is not None:
             eqDict = model
             eqDict['model'] = eqDict['model'].format(inputnumber="{inputnumber}", synvar_e='Ie_syn', synvar_i='Ii_syn', unit='amp',
-                                                     Ie="Ie" + str(inputNumber - 1), Ii="Ii" + str(inputNumber - 1))
+                                                     Ie="Ie" + str(inputnumber - 1), Ii="Ii" + str(inputnumber - 1))
 
             self.model = eqDict['model']
             self.on_pre = eqDict['on_pre']
@@ -208,9 +208,9 @@ class SynapseEquationBuilder():
         printEqDict_syn(self.keywords, self.parameters)
 
     def set_inputnumber(self, inputnumber):
-        self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber)) #inputnumber-1 ???
-        self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber))
-        self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber))
+        self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber - 1))  # inputnumber-1 ???
+        self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber - 1))
+        self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber - 1))
 
 
 

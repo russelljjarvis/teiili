@@ -3,7 +3,7 @@
 # @Author: alpren, mmilde
 # @Date:   2017-27-07 17:28:16
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-12 11:41:48
+# @Last Modified time: 2018-01-15 14:13:36
 """
 Summary
 """
@@ -259,7 +259,7 @@ class Connections(Synapses, NCSGroup):
             self.input_number = target.numSynapses
             if self.verbose:
                 print('OK!')
-                print('input number is: '+ str(self.input_number))
+                print('input number is: ' + str(self.input_number))
 
         except ValueError as e:
             raise e

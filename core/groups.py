@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# @Author: alpren, mmilde
+# @Date:   2017-27-07 17:28:16
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-15 14:13:36
 """
-Created on Thu Jul 27 17:28:16 2017
-
-@author: alpha
+Summary
 """
 import warnings
 import inspect
@@ -17,9 +19,17 @@ from NCSBrian2Lib.models import synapse_models
 
 class NCSGroup(Group):
     """just a bunch of methods that are shared between neurons and connections
-    class Group is already used by brian2"""
+    class Group is already used by brian2
+
+    Attributes:
+        standaloneParams (TYPE): Description
+        standaloneVars (list): Description
+        strParams (dict): Description
+    """
 
     def __init__(self):
+        """Summary
+        """
         self.standaloneVars = []
         self.standaloneParams = OrderedDict()
         self.strParams = {}
@@ -28,7 +38,15 @@ class NCSGroup(Group):
         """this method allows you to add a state variable
         (usually defined in equations), that is changeable in standalone mode
         If you pass a value, it will directly set it and decide based on that value,
-        if the variable should be shared (scalar) or not (vector)"""
+        if the variable should be shared (scalar) or not (vector)
+
+        Args:
+            name (TYPE): Description
+            unit (int, optional): Description
+            shared (bool, optional): Description
+            constant (bool, optional): Description
+            changeInStandalone (bool, optional): Description
+        """
         if shared:
             size = 1
         else:
@@ -48,10 +66,23 @@ class NCSGroup(Group):
             # self.__setattr__(name, value)  # TODO: Maybe do that always?
 
     def setParams(self, params, **kwargs):
+        """Summary
+
+        Args:
+            params (TYPE): Description
+            **kwargs: Description
+
+        Returns:
+            TYPE: Description
+        """
         return setParams(self, params, **kwargs)
 
     def updateParam(self, parname):
-        "this is used to update string based params during run (e.g. with gui)"
+        """this is used to update string based params during run (e.g. with gui)
+
+        Args:
+            parname (TYPE): Description
+        """
         for strPar in self.strParams:
             if parname in self.strParams[strPar]:
                 self.__setattr__(strPar, self.strParams[strPar])
@@ -62,6 +93,13 @@ class Neurons(NeuronGroup, NCSGroup):
     This class is a subclass of NeuronGroup
     You can use it as a NeuronGroup, and everything will be passed to NeuronGroup.
     Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters
+
+    Attributes:
+        equation_builder (TYPE): Description
+        initialized (bool): Description
+        num_inputs (TYPE): Description
+        numSynapses (int): Description
+        verbose (TYPE): Description
     """
 
     def __init__(self, N, equation_builder=None,
@@ -69,7 +107,17 @@ class Neurons(NeuronGroup, NCSGroup):
                  method='euler',
                  num_inputs=3,
                  verbose=False, **Kwargs):
+        """Summary
 
+        Args:
+            N (TYPE): Description
+            equation_builder (None, optional): Description
+            params (None, optional): Description
+            method (str, optional): Description
+            num_inputs (int, optional): Description
+            verbose (bool, optional): Description
+            **Kwargs: Description
+        """
         self.verbose = verbose
         self.num_inputs = num_inputs
         self.numSynapses = 0
@@ -100,6 +148,13 @@ class Neurons(NeuronGroup, NCSGroup):
             setParams(self, params, verbose=verbose)
 
     def registerSynapse(self, synapsename):
+        """Summary
+        Registers a Synapse so we know the input number.
+        It counts all synapses conected with one neurongroup
+
+        Raises:
+            ValueError: Description
+        """
         if synapsename not in self.synapses_dict:
             self.numSynapses += 1
             self.synapses_dict[synapsename] = self.numSynapses
@@ -114,6 +169,12 @@ class Neurons(NeuronGroup, NCSGroup):
         return self.synapses_dict[synapsename]
 
     def __setattr__(self, key, value):
+        """Summary
+
+        Args:
+            key (TYPE): Description
+            value (TYPE): Description
+        """
         NeuronGroup.__setattr__(self, key, value)
         if hasattr(self, 'name'):
             if key in self.standaloneVars and not isinstance(value, str):
@@ -148,6 +209,12 @@ class Connections(Synapses, NCSGroup):
     This class is a subclass of Synapses
     You can use it as a Synapses, and everything will be passed to Synapses.
     Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters
+
+    Attributes:
+        equation_builder (TYPE): Description
+        input_number (int): Description
+        parameters (TYPE): Description
+        verbose (TYPE): Description
     """
 
     def __init__(self, source, target,
@@ -157,7 +224,23 @@ class Connections(Synapses, NCSGroup):
                  input_number=None,
                  name='synapses*',
                  verbose=False, **Kwargs):
+        """Summary
 
+        Args:
+            source (TYPE): Description
+            target (TYPE): Description
+            equation_builder (None, optional): Description
+            params (None, optional): Description
+            method (str, optional): Description
+            input_number (None, optional): Description
+            name (str, optional): Description
+            verbose (bool, optional): Description
+            **Kwargs: Description
+
+        Raises:
+            e: Description
+            type: Description
+        """
         NCSGroup.__init__(self)
 
         self.verbose = verbose
@@ -181,7 +264,7 @@ class Connections(Synapses, NCSGroup):
             self.input_number = target.registerSynapse(name)
             if self.verbose:
                 print('OK!')
-                print('input number is: '+ str(self.input_number))
+                print('input number is: ' + str(self.input_number))
 
         except ValueError as e:
             raise e
@@ -225,12 +308,31 @@ class Connections(Synapses, NCSGroup):
     def connect(self, condition=None, i=None, j=None, p=1., n=1,
                 skip_if_invalid=False,
                 namespace=None, level=0, **Kwargs):
+        """Summary
+
+        Args:
+            condition (None, optional): Description
+            i (None, optional): Description
+            j (None, optional): Description
+            p (float, optional): Description
+            n (int, optional): Description
+            skip_if_invalid (bool, optional): Description
+            namespace (None, optional): Description
+            level (int, optional): Description
+            **Kwargs: Description
+        """
         Synapses.connect(self, condition=condition, i=i, j=j, p=p, n=n,
                          skip_if_invalid=skip_if_invalid,
                          namespace=namespace, level=level + 1, **Kwargs)
         setParams(self, self.parameters, verbose=self.verbose)
 
     def __setattr__(self, key, value):
+        """Summary
+
+        Args:
+            key (TYPE): Description
+            value (TYPE): Description
+        """
         Synapses.__setattr__(self, key, value)
         if hasattr(self, 'name'):
             if key in self.standaloneVars and not isinstance(value, str):
@@ -244,7 +346,8 @@ class Connections(Synapses, NCSGroup):
                 self.strParams.update({key: value})
 
     def plot(self):
-        "simple visualization of synapse connectivity (connected dots and connectivity matrix)"
+        """simple visualization of synapse connectivity (connected dots and connectivity matrix)
+        """
         S = self
         sourceNeuron = len(S.source)
         targetNeuron = len(S.target)
@@ -267,7 +370,14 @@ class Connections(Synapses, NCSGroup):
 
 
 def setParams(briangroup, params, ndargs=None, verbose=False):
-    """This function takes a params dictionary and sets the parameters of a briangroup"""
+    """This function takes a params dictionary and sets the parameters of a briangroup
+
+    Args:
+        briangroup (TYPE): Description
+        params (TYPE): Description
+        ndargs (None, optional): Description
+        verbose (bool, optional): Description
+    """
     for par in params:
         if hasattr(briangroup, par):
             if ndargs is not None and par in ndargs:

@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
+"""Summary
+"""
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
 # @Last Modified by:   mmilde
-# @Last Modified time: 2017-12-19 12:04:04
+# @Last Modified time: 2018-01-11 15:39:59
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
 The idea is to test certain aspects of you network with common stimuli.
 
 """
-from brian2 import SpikeGeneratorGroup, ms
+from brian2 import SpikeGeneratorGroup, PoissonGroup
+from brian2 import ms, Hz
 from NCSBrian2Lib.tools.converter import dvs2ind, aedat2numpy
 from NCSBrian2Lib.tools.indexing import xy2ind
 import numpy as np
@@ -101,7 +104,7 @@ class octa_testbench():
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
 
     def aedat2events(self, rec, camera='DVS128'):
-        """Wrapper function of the original aedat2numpy function in NCSBrian2Lib.Tools.tools.
+        """Wrapper function of the original aedat2numpy function in NCSBrian2Lib.tools.converter.
         This funcion will save events for later usage and will directly return them if no
         SpikeGeneratorGroup is needed.
 
@@ -310,7 +313,7 @@ class octa_testbench():
             shift (int, optional): offset in x where the stimulus will start
             ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
-            rec_pah (None, optional): Path to recordings
+            rec_path (None, optional): Description
             returnEvents (bool, optional): Flag to return events instead of SpikeGenerator
 
         Returns:
@@ -319,6 +322,9 @@ class octa_testbench():
 
         Raises:
             UserWarning: If no filename is given but aedat reacording should be loaded
+
+        Deleted Parameters:
+            rec_pah (None, optional): Path to recordings
         """
         if not artifical_stimulus:
             if rec_path is None:
@@ -423,6 +429,55 @@ class octa_testbench():
         input_off = SpikeGeneratorGroup(N=self.DVS_SHAPE[0] * self.DVS_SHAPE[1],
                                         indices=ind_off, times=ts_off, name='input_off*')
         return input_on, input_off
+
+
+class wta_testbench():
+
+    """Collection of functions to test the computational properties of the WTA building_block
+
+    Attributes:
+        indices (numpy.ndarray): Array with neuron indices
+        times (numpy.ndarray): Array with neuron spike timestimes
+        noise_input (brian2.PoissionGroup): PoissionGroup which provides noise events
+    """
+
+    def __init(self):
+        """Summary
+        """
+        pass
+
+    def stimuli(self, num_neurons=16, dimensions=2, start_time=10, end_time=500, isi=2):
+        """This function provides simple test stimuli to test the selection mechanism
+        of a WTA population
+
+        Args:
+            num_neurons (int, optional): 1D size of WTA population
+            dimension (int, optional): Dimension of WTA. Can either be 1 or 2
+            start_time (int, optional): Description
+            end_time (int, optional): Description
+            isi (int, optional): Description
+
+        Raises:
+            NotImplementedError: If dimension is set larger than 2 error is raised
+
+        """
+        self.times = np.arange(start_time, end_time + 1, isi)
+        if dimensions == 1:
+            self.indices = np.round(np.linspace(0, num_neurons, len(self.times)))
+        elif dimensions == 2:
+            self.indices = np.round(np.linspace(0, num_neurons, len(self.times))) + (num_neurons**2 / 2)
+        else:
+            raise NotImplementedError("only 1 and 2 d WTA available, sorry")
+
+    def background_noise(self, num_neurons=10, rate=10):
+        """Provides background noise as poisson spike trains
+
+        Args:
+            num_neurons (int, optional): 1D size of WTA population
+            rate (int, optional): Spike frequency f posssion noise process
+
+        """
+        self.noise_input = PoissonGroup(num_neurons, rate * Hz)
 
 
 # class visualize():

@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-11 11:29:45
+# @Last Modified time: 2018-01-12 15:24:44
 
 """
 This files contains different WTA circuits
@@ -12,6 +12,9 @@ This files contains different WTA circuits
 
 import time
 import numpy as np
+# import matplotlib.pyplot as plt
+from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph as pg
 
 from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
@@ -19,7 +22,7 @@ from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
 from NCSBrian2Lib.tools.synaptic_kernel import kernel_mexican_1d, kernel_mexican_2d
 from NCSBrian2Lib.tools.misc import printStates, dist1d2dint
 from NCSBrian2Lib.tools.indexing import ind2x, ind2y
-from NCSBrian2Lib.tools.plotting import plotSpikemon, plotStatemon
+from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 
 from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
 from NCSBrian2Lib.core.groups import Neurons, Connections
@@ -135,7 +138,7 @@ class WTA(BuildingBlock):
             if len(self.spikemonWTA.t) > 0:
                 end_time = max(self.spikemonWTA.t)
             else:
-                end_time = 0 * ms
+                end_time = end_time * ms
         plotWTA(self.name, start_time, end_time, self.numNeurons **
                 self.dimensions, self.Monitors)
 
@@ -424,45 +427,84 @@ def gen2dWTA(groupname,
 
 
 def plotWTA(name, start_time, end_time, num_neurons, WTAMonitors):
-    """Summary
+    """Function to easily visualize WTA activity.
 
     Args:
-        name (TYPE): Description
-        startTime (TYPE): Description
-        endTime (TYPE): Description
-        numNeurons (TYPE): Description
-        WTAMonitors (TYPE): Description
+        name (str, required): Name of the WTA population
+        start_time (brian2.units.fundamentalunits.Quantity, required): Start time in ms
+            from when network activity should be plotted.
+        end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
+            Can be smaller than simulation time but not larger
+        num_neurons (int, required): 1D number of neurons in WTA populations
+        WTAMonitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors
     """
-    fig = figure(figsize=(8, 3))
-    plotSpikemon(start_time, end_time,
-                 WTAMonitors['spikemonWTA'], num_neurons, ylab='ind WTA_' + name)
-    fig = figure(figsize=(8, 3))
-    plotSpikemon(start_time, end_time,
-                 WTAMonitors['spikemonWTAInp'], None, ylab='ind WTAInp_' + name)
-    fig = figure(figsize=(8, 3))
-    plotSpikemon(start_time, end_time,
-                 WTAMonitors['spikemonWTAInh'], None, ylab='ind WTAInh_' + name)
-    # fig.savefig('fig/'+name+'_Spikes.png')
+    pg.setConfigOptions(antialias=True)
 
-    if num_neurons > 20:
-        plot_state_neurons = range(20)
-    else:
-        plotStateNeurons = num_neurons
+    win_raster = pg.GraphicsWindow(title='Winner-Take-All Test Simulation: Raster plots')
+    win_states = pg.GraphicsWindow(title='Winner-Take-All Test Simulation:State plots')
+    win_raster.resize(1000, 1800)
+    win_states.resize(1000, 1800)
+    win_raster.setWindowTitle('Winner-Take-All Test Simulation: Raster plots')
+    win_states.setWindowTitle('Winner-Take-All Test Simulation:State plots')
 
-    statemonWTA = WTAMonitors['statemonWTA']
-    if len(statemonWTA.t) > 0:
-        fig = figure(figsize=(8, 10))
-        nPlots = 3 * 100
-        subplot(nPlots + 11)
-        for ii in plot_state_neurons:
-            plot_state_neurons(start_time, end_time, statemonWTA,
-                         ii, variable='Vm', unit=mV, name=name)
-        subplot(nPlots + 12)
-        for ii in plotStateNeurons:
-            plot_state_neurons(start_time, end_time, statemonWTA,
-                         ii, variable='Ii', unit=pA, name=name)
-        subplot(nPlots + 13)
-        for ii in plotStateNeurons:
-            plot_state_neurons(start_time, end_time, statemonWTA,
-                         ii, variable='Ie', unit=pA, name=name)
-        # fig.savefig('fig/'+name+'_States.png', dpi=300)
+    raster_input = win_raster.addPlot(title="SpikeGenerator input")
+    win_raster.nextRow()
+    raster_wta = win_raster.addPlot(title="SpikeMonitor WTA")
+    win_raster.nextRow()
+    raster_inh = win_raster.addPlot(title="SpikeMonitor inhibitory interneurons")
+
+    state_membrane = win_states.addPlot(title='StateMonitor membrane potential')
+    win_states.nextRow()
+    state_syn_input = win_states.addPlot(title="StateMonitor synaptic input")
+
+    plot_spikemon_qt(start_time=start_time, end_time=end_time,
+                     num_neurons=16, monitor=WTAMonitors['spikemonWTAInp'], window=raster_input)
+    plot_spikemon_qt(start_time=start_time, end_time=end_time,
+                     num_neurons=16, monitor=WTAMonitors['spikemonWTA'], window=raster_wta)
+    plot_spikemon_qt(start_time=start_time, end_time=end_time,
+                     num_neurons=16, monitor=WTAMonitors['spikemonWTAInh'], window=raster_inh)
+
+    plot_statemon_qt(start_time=start_time, end_time=end_time,
+                     monitor=WTAMonitors['statemonWTA'], neuron_id=128,
+                     variable="Imem", unit=pA, window=state_membrane, name=name)
+    plot_statemon_qt(start_time=start_time, end_time=end_time,
+                     monitor=WTAMonitors['statemonWTA'], neuron_id=128,
+                     variable="Iin", unit=pA, window=state_syn_input, name=name)
+
+    QtGui.QApplication.instance().exec_()
+
+    # fig = figure(figsize=(8, 3))
+    # plotSpikemon(start_time, end_time,
+    #              WTAMonitors['spikemonWTA'], num_neurons, ylab='ind WTA_' + name)
+    # fig = figure(figsize=(8, 3))
+    # plotSpikemon(start_time, end_time,
+    #              WTAMonitors['spikemonWTAInp'], None, ylab='ind WTAInp_' + name)
+    # fig = figure(figsize=(8, 3))
+    # plotSpikemon(start_time, end_time,
+    #              WTAMonitors['spikemonWTAInh'], None, ylab='ind WTAInh_' + name)
+    # # fig.savefig('fig/'+name+'_Spikes.png')
+
+    # if num_neurons > 20:
+    #     plot_state_neurons = range(20)
+    # else:
+    #     plot_state_neurons = range(num_neurons)
+
+    # statemonWTA = WTAMonitors['statemonWTA']
+    # if len(statemonWTA.t) > 0:
+    #     fig = figure(figsize=(8, 10))
+    #     nPlots = 3 * 100
+    #     subplot(nPlots + 11)
+    #     for ii in plot_state_neurons:
+    #         plotStatemon(start_time, end_time, statemonWTA,
+    #                      ii, variable='Imem', unit=pA, name=name)
+    #     subplot(nPlots + 12)
+    #     for ii in plot_state_neurons:
+    #         plotStatemon(start_time, end_time, statemonWTA,
+    #                      ii, variable='Iin', unit=pA, name=name)
+    #     # subplot(nPlots + 13)
+    #     # for ii in plot_state_neurons:
+    #     #     plotStatemon(start_time, end_time, statemonWTA,
+    #     #                  ii, variable='Ie1', unit=pA, name=name)
+    #     # fig.savefig('fig/'+name+'_States.png', dpi=300)
+    # plt.draw()
+    # plt.show()

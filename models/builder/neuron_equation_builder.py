@@ -58,7 +58,7 @@ def deleteVar(firstEq, secondEq, var):
                 if (var2 in line2) or (diffvar2 in line2):
 
                     if (var2 == line2.replace(':', '=').split('=', 1)[0].split()[0]) or\
-                    (diffvar2 in line2.replace(':', '=').split('=', 1)[0].split()[0]):
+                            (diffvar2 in line2.replace(':', '=').split('=', 1)[0].split()[0]):
                         var_set.add(var2)
                     else:
                         resultfirstEq += line2 + "\n"
@@ -140,11 +140,11 @@ class NeuronEquationBuilder():
 
             if baseUnit == 'current':
                 keywords, var_set = combineEquations(modes[baseUnit],
-                                                  currentEquationsets[adaptation],
-                                                  i_a, currentEquationsets[integrationMode],
-                                                  currentEquationsets[leak],
-                                                  currentEquationsets[position],
-                                                  currentEquationsets[noise])
+                                                     currentEquationsets[adaptation],
+                                                     i_a, currentEquationsets[integrationMode],
+                                                     currentEquationsets[leak],
+                                                     currentEquationsets[position],
+                                                     currentEquationsets[noise])
                 paraDict = combineParDictionaries(var_set, currentParameters[baseUnit],
                                                   currentParameters[adaptation],
                                                   currentParameters[integrationMode],
@@ -153,11 +153,11 @@ class NeuronEquationBuilder():
 
             if baseUnit == 'voltage':
                 keywords, var_set = combineEquations(modes[baseUnit],
-                                                  voltageEquationsets[adaptation],
-                                                  voltageEquationsets[integrationMode],
-                                                  voltageEquationsets[leak],
-                                                  voltageEquationsets[position],
-                                                  voltageEquationsets[noise])
+                                                     voltageEquationsets[adaptation],
+                                                     voltageEquationsets[integrationMode],
+                                                     voltageEquationsets[leak],
+                                                     voltageEquationsets[position],
+                                                     voltageEquationsets[noise])
                 paraDict = combineParDictionaries(var_set, voltageParameters[baseUnit],
                                                   voltageParameters[adaptation],
                                                   voltageParameters[integrationMode],
@@ -170,11 +170,12 @@ class NeuronEquationBuilder():
                 refDict = {"refP": refractory}
                 paraDict = combineParDictionaries([], paraDict, refDict)
             else:
-                print("""
-                      Refractory period has been set using a default value,
-                      if you don't want a refractory period in your model
-                      just specify 'refractory=0*ms' in the constructor
-                      """)
+                if verbose:
+                    print("""
+                          Refractory period has been set using a default value,
+                          if you don't want a refractory period in your model
+                          just specify 'refractory=0*ms' in the constructor
+                          """)
 
             #self.model = keywords['model']
             #self.threshold = keywords['threshold']
@@ -186,9 +187,9 @@ class NeuronEquationBuilder():
 
             self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
-            self.keywords = {'model':  keywords['model'], 'threshold': keywords['threshold'],
+            self.keywords = {'model': keywords['model'], 'threshold': keywords['threshold'],
                              'reset': keywords['reset'], 'refractory': refractory}
-            #self.printAll()
+            # self.printAll()
 
     def addInputCurrents(self, numInputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)
@@ -202,9 +203,9 @@ class NeuronEquationBuilder():
         Iesline = ["    Ie" + str(i) + " : amp" for i in range(numInputs)]
         Iisline = ["    Ii" + str(i) + " : amp" for i in range(numInputs)]
         self.addStateVars(Iesline)
-        self.keywords['model']  += "\n"
+        self.keywords['model'] += "\n"
         self.addStateVars(Iisline)
-        self.keywords['model']  += "\n"
+        self.keywords['model'] += "\n"
 
     def addStateVars(self, stateVars):
         """just adds a line to the model equation"""
@@ -248,7 +249,7 @@ v_model_templatePara = {"Cm": 281 * pF,
                         "Vthr": -50.4 * mV,
                         "Vres": -70.6 * mV
 
-                       }
+                        }
 
 #                        "gL": 35 * nS,
 #                        "EL": -70.6 * mV,

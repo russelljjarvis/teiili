@@ -1,11 +1,51 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
+"""Summary
+
+Attributes:
+    alphakernel (TYPE): Description
+    alphaPara_conductance (TYPE): Description
+    alphaPara_current (TYPE): Description
+    conductance_Parameters (TYPE): Description
+    conductancekernels (TYPE): Description
+    current_Parameters (TYPE): Description
+    currentkernels (TYPE): Description
+    currentPara (TYPE): Description
+    Dpi (TYPE): Description
+    DPI_Parameters (TYPE): Description
+    DpiPara (TYPE): Description
+    fusi (TYPE): Description
+    fusiPara_conductance (TYPE): Description
+    fusiPara_current (TYPE): Description
+    gaussiankernel (TYPE): Description
+    gaussianPara_conductance (TYPE): Description
+    gaussianPara_current (TYPE): Description
+    modes (dict): Description
+    none (dict): Description
+    nonePara (dict): Description
+    plasticitymodels (TYPE): Description
+    resonantkernel (TYPE): Description
+    resonantPara_conductance (TYPE): Description
+    resonantPara_current (TYPE): Description
+    reversalPara (TYPE): Description
+    reversalsyn (TYPE): Description
+    stdp (TYPE): Description
+    stdpPara_conductance (TYPE): Description
+    stdpPara_current (TYPE): Description
+    template (TYPE): Description
+"""
+# @Author: mrax, alpren, mmilde
+# @Date:   2018-01-15 17:53:31
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-17 15:36:54
+
+
 """
 This file contains a class that manages a synapse equation
 
 It automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 ...
 And it prepares a dictionary of keywords for easy neurongroup creation
 
-It also provides a funtion to add lines to the model
+It also provides a function to add lines to the model
 
 """
 from brian2 import pF, nS, mV, ms, pA, nA, second, volt
@@ -13,6 +53,14 @@ from brian2 import pF, nS, mV, ms, pA, nA, second, volt
 
 
 def combineEquations_syn(*args):
+    """Function to combine equations into a single synapse equation
+
+    Args:
+        *args: Dictionary of equations to be combined
+
+    Returns:
+        dict: brian2-like dictionary to describe synapse model
+    """
     model = ''
     on_pre = ''
     on_post = ''
@@ -42,6 +90,16 @@ def combineEquations_syn(*args):
 
 
 def deleteVar(firstEq, secondEq, var):
+    """Summary
+
+    Args:
+        firstEq (TYPE): Description
+        secondEq (TYPE): Description
+        var (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     varSet = {}
     varSet = set()
     resultfirstEq = ''
@@ -73,11 +131,19 @@ def deleteVar(firstEq, secondEq, var):
         else:
             resultsecondEq += line + "\n"
     resultEq = firstEq + resultsecondEq
-#    print(resultEq)
     return resultEq, varSet
 
 
 def combineParDictionaries(varSet, *args):
+    """Function to combine parameter dictionary
+
+    Args:
+        var_set (TYPE): Description
+        *args: Description
+
+    Returns:
+        dict: Combined parameter dictionary
+    """
     ParametersDict = {}
     for tmpDict in args:
         # OverrideList = list(ParametersDict.keys() & tmpDict.keys())
@@ -94,8 +160,34 @@ def combineParDictionaries(varSet, *args):
 
 class SynapseEquationBuilder():
 
+    """Class which builds synapse equation
+
+    Attributes:
+        changeableParameters (list): Description
+        model (dict): Actually neuron model differential equation
+        on_post (dict): Dictionary with equations specifying behaviour of synapse to
+            post-synaptic spike
+        on_pre (TYPE): Dictionary with equations specifying behaviour of synapse to
+            pre-synaptic spike
+        parameters (dict): Dictionary of parameters
+        standaloneVars (dict): Dictionary of standalone variables
+        verbose (bool): Flag to print more detailed output of neuron equation builder
+    """
+
     def __init__(self, model=None, baseUnit='current', kernel='exponential',
                  plasticity='nonplastic', inputnumber=1, verbose=False):
+        """Summary
+
+        Args:
+            model (dict, optional): Brian2 like model
+            baseUnit (str, optional): Indicates if neuron is current- or conductance-based
+            kernel (str, optional): Specifying temporal kernel with which each spike gets convolved, i.e.
+                exponential decay or alpha function
+            plasticity (str, optional): Plasticity algorithm for the synaptic weight. Can either be
+                'nonplastic', 'fusi' or 'stdp'
+            inputnumber (int, optional): Synapse's input number
+            verbose (bool, optional): Flag to print more detailed output of neuron equation builder
+        """
         self.verbose = verbose
         if model is not None:
             eqDict = model
@@ -205,9 +297,17 @@ class SynapseEquationBuilder():
                              'on_post': eqDict['on_post']}
 
     def printAll(self):
+        """Wrapper method to print neuron model
+        """
         printEqDict_syn(self.keywords, self.parameters)
 
     def set_inputnumber(self, inputnumber):
+        """Sets the respective input number of synapse. This is needed to overcome
+        the summed issue in brian2.
+
+        Args:
+            inputnumber (int): Synapse's input number
+        """
         self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber - 1))  # inputnumber-1 ???
         self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber - 1))
         self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber - 1))
@@ -593,12 +693,23 @@ DPI_Parameters = {'DPI': DpiPara, 'nonplastic': nonePara, 'fusi': fusiPara_curre
 
 
 def printDictionaries(Dict):
+    """Wrapper function to prin dictionaries
+
+    Args:
+        Dict (dict): Dictionary to be printed
+    """
     for keys, values in Dict.items():
         print(keys)
         print(repr(values))
 
 
 def printEqDict_syn(eqDict, param):
+    """Function to print all dictionaries within a neuron model
+
+    Args:
+        eqDict (dict): Dictionary of neuron model and properties
+        param (dict): Dictionary of neuron parameters
+    """
     print('Model equation:')
     print(eqDict['model'])
     print('-_-_-_-_-_-_-_-')

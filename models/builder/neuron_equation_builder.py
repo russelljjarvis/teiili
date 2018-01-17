@@ -1,17 +1,57 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
+# @Author: mrax, alpren, mmilde
+# @Date:   2018-01-12 11:34:34
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-17 15:30:10
+
 """
 This file contains a class that manages a neuon equation
 
 It automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 ...
 And it prepares a dictionary of keywords for easy neurongroup creation
 
-It also provides a funtion to add lines to the model
+It also provides a function to add lines to the model
 
+
+Attributes:
+    activity (TYPE): Description
+    currentEquationsets (TYPE): Description
+    currentParameters (TYPE): Description
+    i_a (TYPE): Description
+    i_ahp (TYPE): Description
+    i_ahpPara (TYPE): Description
+    i_aPara (TYPE): Description
+    i_exponentialPara (TYPE): Description
+    i_model_template (TYPE): Description
+    i_model_templatePara (TYPE): Description
+    i_noise (TYPE): Description
+    i_noisePara (TYPE): Description
+    i_nonLeakyPara (TYPE): Description
+    modes (TYPE): Description
+    none (TYPE): Description
+    nonePara (dict): Description
+    spatial (TYPE): Description
+    v_adapt (TYPE): Description
+    v_expCurrent (TYPE): Description
+    v_leak (TYPE): Description
+    v_model_template (TYPE): Description
+    v_model_templatePara (TYPE): Description
+    v_noise (TYPE): Description
+    voltageEquationsets (TYPE): Description
+    voltageParameters (TYPE): Description
 """
 from brian2 import pF, nS, mV, ms, pA, nA
 
 
 def combineEquations(*args):
+    """Function to combine equations into a single neuron equation
+
+    Args:
+        *args: Dictionary of equations to be combined
+
+    Returns:
+        dict: brian2-like dictionary to describe neuron model
+    """
     model = ''
     threshold = ''
     reset = ''
@@ -41,6 +81,16 @@ def combineEquations(*args):
 
 
 def deleteVar(firstEq, secondEq, var):
+    """Function to delete variables from equation
+
+    Args:
+        firstEq (TYPE): Description
+        secondEq (TYPE): Description
+        var (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     var_set = {}
     var_set = set()
     resultfirstEq = ''
@@ -72,11 +122,19 @@ def deleteVar(firstEq, secondEq, var):
         else:
             resultsecondEq += line + "\n"
     resultEq = firstEq + resultsecondEq
-#    print(resultEq)
     return resultEq, var_set
 
 
 def combineParDictionaries(var_set, *args):
+    """Function to combine parameter dictionary
+
+    Args:
+        var_set (TYPE): Description
+        *args: Description
+
+    Returns:
+        dict: Combined parameter dictionary
+    """
     ParametersDict = {}
     for tmpDict in args:
         # OverrideList = list(ParametersDict.keys() & tmpDict.keys())
@@ -95,9 +153,39 @@ def combineParDictionaries(var_set, *args):
 
 class NeuronEquationBuilder():
 
+    """Class which builds neuron equation according to pre-defined properties such
+    as spike-frequency adaptation, leakage etc.
+
+    Attributes:
+        changeableParameters (list): Description
+        model (dict): Actually neuron model differential equation
+        parameters (dict): Dictionary of parameters
+        refractory (str): Refractory period of the neuron
+        reset (str): Reset level after spike
+        standaloneVars (dict): Dictionary of standalone variables
+        threshold (str): Neuron's spiking threshold
+        verbose (bool): Flag to print more detailed output of neuron equation builder
+    """
+
     def __init__(self, model=None, baseUnit='current', adaptation='calciumFeedback',
                  integrationMode='exponential', leak='leaky', position='spatial',
                  noise='gaussianNoise', refractory='refP', verbose=False):
+        """Summary
+
+        Args:
+            model (dict, optional): Brian2 like model
+            baseUnit (str, optional): Indicates if neuron is current- or conductance-based
+            adaptation (str, optional): What type of adaptive feedback should be used.
+               So far only calciumFeedback is implemented
+            integrationMode (str, optional): Sets if integration up to spike-generation is
+               rather linear or exponential
+            leak (str, optional): Enables leaky integration
+            position (str, optional): To enable spatial-like position indices to neuron
+            noise (str, optional): NOT YET IMPLMENTED! This will in the future allow to
+               add independent mismatch-like noise on each neuron.
+            refractory (str, optional): Refractory period of the neuron
+            verbose (bool, optional): Flag to print more detailed output of neuron equation builder
+        """
         self.verbose = verbose
         if model is not None:
             keywords = model
@@ -193,7 +281,11 @@ class NeuronEquationBuilder():
 
     def addInputCurrents(self, numInputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)
-        it also adds all thise input currents as statevariables"""
+        it also adds all these input currents as state variables
+
+        Args:
+            numInputs (int): Number of inputs to the post-synaptic neuron
+        """
         Ies = ["Ie0"] + ["+ Ie" +
                          str(i + 1) + " " for i in range(numInputs - 1)]
         Iis = ["+Ii0"] + ["+ Ii" +
@@ -208,15 +300,27 @@ class NeuronEquationBuilder():
         self.keywords['model'] += "\n"
 
     def addStateVars(self, stateVars):
-        """just adds a line to the model equation"""
+        """this function adds state variables to neuron equation by just adding
+        a line to the neuron model equation.
+
+        Args:
+            stateVars (dict): State variable to be added to neuron model
+        """
         if self.verbose:
             print("added to Equation: \n" + "\n".join(stateVars))
         self.keywords['model'] += "\n            ".join(stateVars)
 
     def printAll(self):
+        """Wrapper method to print neuron model
+        """
         printEqDict(self.keywords, self.parameters)
 
     def Brian2Eq(self):
+        """Combine dictionaries into brian2-like dictionary structure to
+
+        Returns:
+            dict: Brian2-like dictionary which holds all dictionaries needed to setup neuron.
+        """
         tmp = {'model': self.model,
                'threshold': self.threshold,
                'reset': self.reset}
@@ -551,12 +655,23 @@ voltageParameters = {'voltage': v_model_templatePara, 'calciumFeedback': nonePar
 #equations = {'ExpAdaptIF': ExpAdaptIF, 'simpleIF': simpleIF, 'Silicon': Silicon}
 
 def printDictionaries(Dict):
+    """Wrapper function to print dictionaries
+
+    Args:
+        Dict (dict): Dictionary to be printed
+    """
     for keys, values in Dict.items():
         print(keys)
         print(repr(values))
 
 
 def printEqDict(eqDict, param):
+    """Function to print all dictionaries within a neuron model
+
+    Args:
+        eqDict (dict): Dictionary of neuron model and properties
+        param (dict): Dictionary of neuron parameters
+    """
     print('Model equation:')
     print(eqDict['model'])
     print('-_-_-_-_-_-_-_-')

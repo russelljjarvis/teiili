@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+# @Author: mmilde
+# @Date:   2018-01-10 15:35:29
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-17 15:50:45
+
+"""This file contains default parameter for dpi neuron. For more details on model see
+models/equations/dpi_neuron.py
+
+Attributes:
+    parameters (dict): Neuron parameters
+"""
+
 from brian2 import pF, nS, mV, ms, pA, nA
 from NCSBrian2Lib import constants
 

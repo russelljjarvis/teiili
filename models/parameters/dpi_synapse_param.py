@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+# @Author: mmilde
+# @Date:   2018-01-10 15:35:29
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-17 15:50:31
+
+"""This file contains default parameter for dpi dendritic synapse. For more details on model see
+models/equations/dpi_synapse.py
+
+Attributes:
+    parameters (dict): Synapse parameters
+"""
+
 from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second
 from NCSBrian2Lib import constants
 

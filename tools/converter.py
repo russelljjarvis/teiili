@@ -1,4 +1,11 @@
+# -*- coding: utf-8 -*-
+# @Author: mmilde
+# @Date:   2017-12-27 12:07:15
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-18 13:50:12
+
 """
+Function for external interfaces such as event-based camera, i.e. DVS
 functions in this module convert data from or to brian2 compatible formats
 especially, there are functions to convert data coming from dvs camera
 """
@@ -14,25 +21,20 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
         - timestamps (in us),
         - x,y-position [0..127]
         - polarity (0/1)
-        @param datafile - path to the file to read
-        @param length - how many bytes(B) should be read; default 0=whole file
-        @param version - which file format version is used: "aedat" = v2, "dat" = v1 (old)
-        @param debug - 0 = silent, 1 (default) = print summary, >=2 = print all debug
-        @param camera='DVS128' or 'DAVIS240'
-        @return (ts, xpos, ypos, pol) 4-tuple of lists containing data of all events;
 
     Args:
-        datafile (str, optional): Description
-        length (int, optional): Description
-        version (str, optional): Description
-        debug (int, optional): Description
+        datafile (str, optional): Aedat recording as provided by jAER or cAER
+        length (int, optional): how many bytes(B) should be read; default 0=whole file
+        version (str, optional): which file format version is used: "aedat" = v2, "dat" = v1 (old)
+        debug (int, optional): Flag to provide more detailed report. 0 = silent, 1 (default) = print summary,
+            >=2 = print all debug
         camera (str, optional): Description
 
     Returns:
-        TYPE: Description
+        numy.ndarray: (ts, xpos, ypos, pol) 4D numpy array containing data of all events
 
     Raises:
-        ValueError: Description
+        ValueError: Indicates that a camera was specified which is not supported
     """
     # constants
     # V3 = "aedat3"
@@ -131,32 +133,30 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
     return Events
 
 
-
-
-def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True):
+def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True):
     """Summary Function which converts events extracted from an aedat file using aedat2numpy
     into 1D vectors of neuron indices and timestamps. Funcion only returns index and timestamp
     list for existing types (e.g. On & Off events)
 
     Args:
         Events (None, optional): 4D numpd.ndarray which contains pixel location (x,y), timestamps and polarity ((4,#events))
-        eventDirectory (None, optional): Path to stored events
+        event_directory (None, optional): Path to stored events
         resolution (str/int, optional): Resolution of the camera.
         scale (bool, optional): Flag to rescale the timestampts from micro- to milliseconds
 
     Returns:
         indices_on (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of ON events
-        ts_on (1d numpy.array):  Unique timestamps of active indices of ON events
+        ts_on (1d numpy.array): Unique timestamps of active indices of ON events
         indices_off (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of OFF events
-        ts_off (1d numpy.array):  Unique timestamps of active indices of OFF events
+        ts_off (1d numpy.array): Unique timestamps of active indices of OFF events
     """
-    if eventDirectory is not None:
-        assert type(eventDirectory) == str, 'eventDirectory must be a string'
-        assert eventDirectory[
+    if event_directory is not None:
+        assert type(event_directory) == str, 'event_directory must be a string'
+        assert event_directory[
             -4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
-        Events = np.load(eventDirectory)
+        Events = np.load(event_directory)
     if Events is not None:
-        assert eventDirectory is None, 'Either you specify a path to load Events using eventDirectory. Or you pass the event numpy directly. NOT Both.'
+        assert event_directory is None, 'Either you specify a path to load Events using event_directory. Or you pass the event numpy directly. NOT Both.'
     if np.size(Events, 0) > np.size(Events, 1):
         Events = np.transpose(Events)
 
@@ -244,23 +244,20 @@ def dvs2ind(Events=None, eventDirectory=None, resolution='DAVIS240', scale=True)
         return indices_off, ts_off
 
 
-def DVScsv2numpy(datafile='tmp/aerout.csv', exp_name='Experiment', debug=False):
+def dvs_csv2numpy(datafile='tmp/aerout.csv', debug=False):
     """
     load AER csv logfile and parse these properties of AE events:
         - timestamps (in us),
         - x,y-position [0..127]
         - polarity (0/1)
-        @param datafile - path to the file to read
-        @param debug - 0 = silent, 1 (default) = print summary, >=2 = print all debug
-        @return (ts, xpos, ypos, pol) 4-tuple of lists containing data of all events;
 
     Args:
-        datafile (str, optional): Description
+        datafile (str, optional): path to the csv file to read
         exp_name (str, optional): Description
-        debug (bool, optional): Description
+        debug (bool, optional): Flag to print more details about conversion.
 
     Returns:
-        TYPE: Description
+        numpy.ndarray: (ts, xpos, ypos, pol) 4D numpy array containing data of all events
     """
     import pandas as pd
 

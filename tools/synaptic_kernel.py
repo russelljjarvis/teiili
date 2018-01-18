@@ -2,7 +2,7 @@
 # @Author: alpren, mmilde
 # @Date:   2018-01-09 17:25:21
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 16:44:06
+# @Last Modified time: 2018-01-18 17:12:59
 
 
 """
@@ -47,6 +47,8 @@ def kernel_mexican_1d(i, j, gsigma):
                 return None;
                 }
                 ''')
+@declare_types(square_size='integer', sigma='integer', mu='float', result='float')
+@check_units(square_size=1, sigma=1, mu=1, result=1)
 def gaussian(square_size, sigma=1, mu=None):
     """Makes a square gaussian kernel
 

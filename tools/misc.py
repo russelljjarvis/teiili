@@ -3,7 +3,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 11:54:09
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 16:38:04
+# @Last Modified time: 2018-01-18 17:11:13
 """A collection of helpful miscellaneous functions when working with brian2
 
 """
@@ -56,9 +56,9 @@ float returnValueIf(float test_val, float greater_than_val, float smaller_than_v
         return return_val_false;
 }
 ''')
-@declare_types(testVal='float', greater_than_val='float', smaller_than_val='float',
+@declare_types(test_val='float', greater_than_val='float', smaller_than_val='float',
                return_val_true='float', return_val_false='float', result='float')
-@check_units(testVal=1, greater_than_val=1, smaller_than_val=1, return_val_true=1, return_val_false=1, result=1)
+@check_units(test_val=1, greater_than_val=1, smaller_than_val=1, return_val_true=1, return_val_false=1, result=1)
 def return_value_if(test_val, greater_than_val, smaller_than_val, return_val_true, return_val_false):
     """Summary
     This function is a workaround to allow if statements in run_regularly code

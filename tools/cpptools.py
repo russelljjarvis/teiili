@@ -2,7 +2,7 @@
 # @Author: alpren
 # @Date:   2017-07-28 19:02:05
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 14:00:34
+# @Last Modified time: 2018-01-18 17:14:36
 #!/usr/bin/env python3
 
 """
@@ -145,7 +145,7 @@ def replaceVariablesInCPPcode(replace_vars, replace_file_location):
         print('\n*********************************\nall variables successfully replaced in cpp code! \n')
 
 
-def printDict(pdict):
+def print_dict(pdict):
     """Wrapper function to print dictionary
 
     Args:

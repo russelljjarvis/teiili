@@ -2,7 +2,7 @@
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:06:18
 # @Last Modified by:   mmilde
-# @Last Modified time: 2017-12-27 12:13:16
+# @Last Modified time: 2018-01-18 17:16:19
 """
 This file contains unittest for tools.py
 """
@@ -18,58 +18,58 @@ class TestTools(unittest.TestCase):
     # def test_printStates(self):
     #     self.assertRaises(UserWarning, misc.printStates, 5)
 
-    def test_returnValueIf(self):
+    def test_return_value_if(self):
         testVal = 3.7
-        greaterThanVal = 2.5
-        smallerThanVal = 10.
-        returnValTrue = 1337
-        returnValFalse = 42
-        returnVal = misc.returnValueIf(testVal, greaterThanVal, smallerThanVal,
-                                       returnValTrue, returnValFalse)
-        self.assertEqual(returnVal, 1337)
+        greater_than_val = 2.5
+        smaller_than_val = 10.
+        return_val_true = 1337
+        return_val_false = 42
+        return_val = misc.return_value_if(testVal, greater_than_val, smaller_than_val,
+                                       return_val_true, return_val_false)
+        self.assertEqual(return_val, 1337)
         testVal = 2.4
-        returnVal = misc.returnValueIf(testVal, greaterThanVal, smallerThanVal,
-                                       returnValTrue, returnValFalse)
-        self.assertEqual(returnVal, 42)
+        return_val = misc.return_value_if(testVal, greater_than_val, smaller_than_val,
+                                       return_val_true, return_val_false)
+        self.assertEqual(return_val, 42)
 
     def test_xy2ind_single(self):
         x = 127
         y = 5
-        n2dNeurons = 240
-        ind = indexing.xy2ind(x, y, n2dNeurons)
-        self.assertEqual(ind, int(x) + int(y) * n2dNeurons)
+        n2d_neurons = 240
+        ind = indexing.xy2ind(x, y, n2d_neurons)
+        self.assertEqual(ind, int(x) + int(y) * n2d_neurons)
 
     def test_xy2ind_array(self):
         x = np.arange(0, 128)
         y = np.arange(0, 128)
-        n2dNeurons = 128
-        ind = indexing.xy2ind(x, y, n2dNeurons)
-        self.assertEqual(ind.tolist(), (x + (y * n2dNeurons)).tolist())
+        n2d_neurons = 128
+        ind = indexing.xy2ind(x, y, n2d_neurons)
+        self.assertEqual(ind.tolist(), (x + (y * n2d_neurons)).tolist())
 
     def test_ind2x(self):
         ind = 1327
-        n2dNeurons = 240
-        x = indexing.ind2x(ind, n2dNeurons)
-        self.assertEqual(x, np.floor_divide(np.round(ind), n2dNeurons))
+        n2d_neurons = 240
+        x = indexing.ind2x(ind, n2d_neurons)
+        self.assertEqual(x, np.floor_divide(np.round(ind), n2d_neurons))
 
     def test_ind2y(self):
         ind = 1327
-        n2dNeurons = 240
-        y = indexing.ind2y(ind, n2dNeurons)
-        self.assertEqual(y, np.mod(np.round(ind), n2dNeurons))
+        n2d_neurons = 240
+        y = indexing.ind2y(ind, n2d_neurons)
+        self.assertEqual(y, np.mod(np.round(ind), n2d_neurons))
 
     def test_ind2xy_square(self):
         ind = 1327
-        n2dNeurons = 240
-        coordinates = indexing.ind2xy(ind, n2dNeurons)
-        self.assertEqual(coordinates, np.unravel_index(ind, (n2dNeurons, n2dNeurons)))
+        n2d_neurons = 240
+        coordinates = indexing.ind2xy(ind, n2d_neurons)
+        self.assertEqual(coordinates, np.unravel_index(ind, (n2d_neurons, n2d_neurons)))
 
     def test_ind2xy_rectangular(self):
         ind = 1327
-        n2dNeurons = (240, 180)
-        self.assertTupleEqual(n2dNeurons, (240, 180))
-        coordinates = indexing.ind2xy(ind, n2dNeurons)
-        self.assertEqual(coordinates, np.unravel_index(ind, (n2dNeurons[0], n2dNeurons[1])))
+        n2d_neurons = (240, 180)
+        self.assertTupleEqual(n2d_neurons, (240, 180))
+        coordinates = indexing.ind2xy(ind, n2d_neurons)
+        self.assertEqual(coordinates, np.unravel_index(ind, (n2d_neurons[0], n2d_neurons[1])))
 
     def test_fdist2d(self):
         pass
@@ -98,12 +98,12 @@ class TestTools(unittest.TestCase):
         # Create a small/simple aedat file to test all functions which rely on edat2numpy
 
     def test_dvs2ind(self):
-        self.assertRaises(AssertionError, converter.dvs2ind, eventDirectory=1337)
+        self.assertRaises(AssertionError, converter.dvs2ind, event_directory=1337)
         self.assertRaises(AssertionError, converter.dvs2ind,
-                          eventDirectory='/These/Are/Not/Events.txt')
+                          event_directory='/These/Are/Not/Events.txt')
         # os.command('touch /tmp/Events.npy')
         # self.assertRaises(AssertionError, tools.dvs2ind, Events=np.zeros((4, 100)),
-        #                   eventDirectory='/tmp/Events.npy')
+        #                   event_directory='/tmp/Events.npy')
         # os.command('rm /tmp/Events.npy')
 
 

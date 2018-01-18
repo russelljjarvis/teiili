@@ -3,7 +3,7 @@
 # @Author: alpren
 # @Date:   2017-08-2 18:16:28
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-16 14:49:27
+# @Last Modified time: 2018-01-18 17:14:02
 
 """
 Wrapper class for Netwotrk class of brian2 to provide a more flexible
@@ -17,8 +17,8 @@ from collections import OrderedDict
 import pprint
 
 from brian2 import Network, second, device, get_device, ms, all_devices
-from NCSBrian2Lib.tools.cpptools import buildCppAndReplace,\
-    printDict, params2run_args
+from NCSBrian2Lib.tools.cpptools import build_cpp_and_replace,\
+    print_dict, params2run_args
 from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
 
 

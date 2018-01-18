@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-12 15:24:44
+# @Last Modified time: 2018-01-18 17:15:23
 
 """
 This files contains different WTA circuits
@@ -20,7 +20,7 @@ from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
 
 from NCSBrian2Lib.tools.synaptic_kernel import kernel_mexican_1d, kernel_mexican_2d
-from NCSBrian2Lib.tools.misc import printStates, dist1d2dint
+from NCSBrian2Lib.tools.misc import print_states, dist1d2dint
 from NCSBrian2Lib.tools.indexing import ind2x, ind2y
 from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 

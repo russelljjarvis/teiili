@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Summary
-"""
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-11 15:39:59
+# @Last Modified time: 2018-01-18 10:52:07
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -83,15 +81,16 @@ class stdp_testbench():
 class octa_testbench():
 
     """This class holds all relevant stimuli to test modules provided with the
-    Online Clustering of Temporal Activity (OCTA) framework
+    Online Clustering of Temporal Activity (OCTA) framework.
 
     Attributes:
-        angles (TYPE): List of angles of orientation
-        dv (TYPE): Description
+        angles (numpy.ndarray): List of angles of orientation
         DVS_SHAPE (TYPE): Input shape of the simulated DVS/DAVIS vision sensor
-        end (TYPE): Description
-        line (TYPE): Description
-        start (TYPE): Description
+        end (TYPE): End pixel location of the line
+        line (TYPE): Stimulus of the testbench which is used to either generate an interactive
+            plot to record stimulus with a DVS/DAVIS camera or coordinates are used to generate
+            a SpikeGenerator
+        start (TYPE): Start pixel location of the line
     """
 
     def __init__(self, DVS_SHAPE=(240, 180)):
@@ -191,10 +190,10 @@ class octa_testbench():
                 self.end = np.asarray((endx_2, endy_2))
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
                                                           key=operator.itemgetter(1))
-                self.dv = (self.end - self.start) / self.max_length
+                dv = (self.end - self.start) / self.max_length
                 self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
-                    self.line.append(self.dda_round((step + 1) * self.dv + self.start))
+                    self.line.append(self.dda_round((step + 1) * dv + self.start))
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])
@@ -245,7 +244,7 @@ class octa_testbench():
                 raise UserWarning('No path to recording was provided')
             if orientation == 'vertical':
                 fname = rec_path + 'Inifity_bar_vertical.aedat'
-            elif orthogonal == 'horizontal':
+            elif orientation == 'horizontal':
                 fname = 'Infinity_bar_horizontal.aedat'
             assert(os.path.isfile(fname)), "No recording exists. Please record the respective stimulus first."
             events = aedat2numpy(datafile=fname, camera='DVS240')
@@ -270,10 +269,10 @@ class octa_testbench():
                 self.end = np.asarray((endx_2, endy_2))
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
                                                           key=operator.itemgetter(1))
-                self.dv = (self.end - self.start) / self.max_length
+                dv = (self.end - self.start) / self.max_length
                 self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
-                    self.line.append(self.dda_round((step + 1) * self.dv + self.start))
+                    self.line.append(self.dda_round((step + 1) * dv + self.start))
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])
@@ -373,10 +372,10 @@ class octa_testbench():
                 self.start = np.asarray((endx_1, endy_1))
                 self.end = np.asarray((endx_2, endy_2))
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)), key=operator.itemgetter(1))
-                self.dv = (self.end - self.start) / self.max_length
+                dv = (self.end - self.start) / self.max_length
                 self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
-                    self.line.append(self.dda_round((step + 1) * self.dv + self.start))
+                    self.line.append(self.dda_round((step + 1) * dv + self.start))
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])

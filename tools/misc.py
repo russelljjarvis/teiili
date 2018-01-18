@@ -3,8 +3,8 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 11:54:09
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-09 16:45:16
-"""A collection of helpful functions when working with brian2
+# @Last Modified time: 2018-01-18 16:38:04
+"""A collection of helpful miscellaneous functions when working with brian2
 
 """
 
@@ -26,11 +26,12 @@ from NCSBrian2Lib.tools.indexing import ind2xy
 #===============================================================================
 
 
-def printStates(briangroup):
-    """Summary
+def print_states(briangroup):
+    """Wrapper function to print states of a brian2 groups such as NeuronGroup or Synapses
 
     Args:
-        briangroup (TYPE): Description
+        briangroup (brian2.group): Brain object/group which states/statevariables
+            should be printed
     """
     states = briangroup.get_states()
     print ('\n')
@@ -48,90 +49,90 @@ def printStates(briangroup):
 # This function is a workaround to allow if statements in run_regularly code
 # It is e.g. necessary in order to set values conditional on the current time
 @implementation('cpp', '''
-float returnValueIf(float testVal, float greaterThanVal, float smallerThanVal, float returnValTrue, float returnValFalse) {
-    if ((testVal > greaterThanVal) && (testVal < smallerThanVal))
-        return returnValTrue;
+float returnValueIf(float test_val, float greater_than_val, float smaller_than_val, float return_val_true, float return_val_false) {
+    if ((test_val > greater_than_val) && (test_val < smaller_than_val))
+        return return_val_true;
     else
-        return returnValFalse;
+        return return_val_false;
 }
 ''')
-@declare_types(testVal='float', greaterThanVal='float', smallerThanVal='float',
-               returnValTrue='float', returnValFalse='float', result='float')
-@check_units(testVal=1, greaterThanVal=1, smallerThanVal=1, returnValTrue=1, returnValFalse=1, result=1)
-def returnValueIf(testVal, greaterThanVal, smallerThanVal, returnValTrue, returnValFalse):
+@declare_types(testVal='float', greater_than_val='float', smaller_than_val='float',
+               return_val_true='float', return_val_false='float', result='float')
+@check_units(testVal=1, greater_than_val=1, smaller_than_val=1, return_val_true=1, return_val_false=1, result=1)
+def return_value_if(test_val, greater_than_val, smaller_than_val, return_val_true, return_val_false):
     """Summary
     This function is a workaround to allow if statements in run_regularly code
     It is e.g. necessary in order to set values conditional on the current time
-    it returns a value (returnValTrue or returnValFalse) depending on whether testVal is between
-    smallerThanVal and greaterThanVal or not
+    it returns a value (return_val_true or return_val_false) depending on whether test_val is between
+    smaller_than_val and greater_than_val or not
     Args:
-        testVal (TYPE): the value that is tested
-        greaterThanVal (TYPE): upper bound of the value
-        smallerThanVal (TYPE): lower bound of the value
-        returnValTrue (TYPE): value returned if testVal is in bounds
-        returnValFalse (TYPE): value returned if testVal is out of bounds
+        test_val (TYPE): the value that is tested
+        greater_than_val (TYPE): upper bound of the value
+        smaller_than_val (TYPE): lower bound of the value
+        return_val_true (TYPE): value returned if test_val is in bounds
+        return_val_false (TYPE): value returned if test_val is out of bounds
 
     Returns:
-        float: returns a specified value (returnValTrue or returnValFalse) depending on whether testVal is between
-    smallerThanVal and greaterThanVal
+        float: returns a specified value (return_val_true or return_val_false) depending on whether test_val is between
+    smaller_than_val and greater_than_val
     """
-    if (testVal > greaterThanVal and testVal < smallerThanVal):
-        return returnValTrue
+    if (test_val > greater_than_val and test_val < smaller_than_val):
+        return return_val_true
     else:
-        return returnValFalse
+        return return_val_false
 
 
 @implementation('cpp', '''
-    float dist1d2dfloat(float i, float j, int n2dNeurons) {
-    int ix = i / n2dNeurons;
-    int iy = i % n2dNeurons;
-    int jx = j / n2dNeurons;
-    int jy = j % n2dNeurons;
+    float dist1d2dfloat(float i, float j, int n2d_neurons) {
+    int ix = i / n2d_neurons;
+    int iy = i % n2d_neurons;
+    int jx = j / n2d_neurons;
+    int jy = j % n2d_neurons;
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
-@declare_types(i='float', j='float', n2dNeurons='integer', result='float')
-@check_units(i=1, j=1, n2dNeurons=1, result=1)
-def dist1d2dfloat(i, j, n2dNeurons):
+@declare_types(i='float', j='float', n2d_neurons='integer', result='float')
+@check_units(i=1, j=1, n2d_neurons=1, result=1)
+def dist1d2dfloat(i, j, n2d_neurons):
     """function that calculates distance in 2D field from 2 1D indices
 
     Args:
         i (float, required): 1D index of source neuron
         j (float, required): 1D index of target neuron
-        n2dNeurons (int, required): Size of neuron population
+        n2d_neurons (int, required): Size of neuron population
 
     Returns:
         float: Distance in 2D field
     """
-    (ix, iy) = ind2xy(i, n2dNeurons)
-    (jx, jy) = ind2xy(j, n2dNeurons)
+    (ix, iy) = ind2xy(i, n2d_neurons)
+    (jx, jy) = ind2xy(j, n2d_neurons)
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 
 @implementation('cpp', '''
-    float dist1d2dint(int i, int j, int n2dNeurons) {
-    int ix = i / n2dNeurons;
-    int iy = i % n2dNeurons;
-    int jx = j / n2dNeurons;
-    int jy = j % n2dNeurons;
+    float dist1d2dint(int i, int j, int n2d_neurons) {
+    int ix = i / n2d_neurons;
+    int iy = i % n2d_neurons;
+    int jx = j / n2d_neurons;
+    int jy = j % n2d_neurons;
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
-@declare_types(i='integer', j='integer', n2dNeurons='integer', result='float')
-@check_units(i=1, j=1, n2dNeurons=1, result=1)
-def dist1d2dint(i, j, n2dNeurons):
+@declare_types(i='integer', j='integer', n2d_neurons='integer', result='float')
+@check_units(i=1, j=1, n2d_neurons=1, result=1)
+def dist1d2dint(i, j, n2d_neurons):
     """function that calculates distance in 2D field from 2 1D indices
 
     Args:
         i (int, required): 1D index of source neuron
         j (int, required): 1D index of target neuron
-        n2dNeurons (int, required): Size of neuron population
+        n2d_neurons (int, required): Size of neuron population
 
     Returns:
         int: Distance in 2D field
     """
-    (ix, iy) = ind2xy(i, n2dNeurons)
-    (jx, jy) = ind2xy(j, n2dNeurons)
+    (ix, iy) = ind2xy(i, n2d_neurons)
+    (jx, jy) = ind2xy(j, n2d_neurons)
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 
@@ -179,49 +180,27 @@ def dist2d2dfloat(ix, iy, jx, jy):
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 
-def spikemon2firingRate(spikemon, fromT=0 * ms, toT="max"):
-    """Summary
+def spikemon2firingRate(spikemon, start_time=0 * ms, end_time="max"):
+    """Calculates the firing rate within a window of interest from a SpikeMonitor
 
     Args:
-        spikemon (TYPE): Description
-        fromT (TYPE, optional): Description
-        toT (str, optional): Description
+        spikemon (brian2.SpikeMonitor): Brian2 SpikeMoitor object
+        start_time (brain2.unit.ms, optional): Starting point for window to calculate
+            the firing rate. Must be provided as desired time in ms, e.g. 5 * ms
+        end_time (str, optional): End point for window to calculate
+            the firing rate. Must be provided as desired time in ms, e.g. 5 * ms
 
     Returns:
-        TYPE: Description
+        int: Firing rate in Hz
     """
     spiketimes = (spikemon.t / ms)
     if len(spiketimes) == 0:
         return 0
-    if toT == "max":
-        toT = max(spikemon.t / ms)
-    spiketimes = spiketimes[spiketimes <= toT]
-    spiketimes = spiketimes[spiketimes >= fromT / ms]
+    if end_time == "max":
+        end_time = max(spikemon.t / ms)
+    spiketimes = spiketimes[spiketimes <= end_time]
+    spiketimes = spiketimes[spiketimes >= start_time / ms]
     spiketimes = spiketimes / 1000
     if len(spiketimes) == 0:
         return 0
     return(mean(1 / diff(spiketimes)))
-
-
-def gaussian(squareSize, sigma=1, mu=None):
-    """Make a square gaussian kernel
-
-    Args:
-        squareSize (TYPE): Description
-        sigma (int, optional): Description
-        mu (None, optional): Description
-
-    Returns:
-        TYPE: Description
-    """
-
-    x = np.arange(0, squareSize)
-    y = x[:, np.newaxis]
-
-    if mu is None:
-        x0 = y0 = squareSize // 2
-    else:
-        x0 = mu[0]
-        y0 = mu[1]
-
-    return (1 / np.sqrt(2 * np.pi * sigma**2)) * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * sigma**2))

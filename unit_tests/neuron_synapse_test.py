@@ -2,11 +2,12 @@
 # @Author: mmilde
 # @Date:   2017-25-08 13:43:10
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-15 14:04:55
+# @Last Modified time: 2018-01-19 17:21:36
 # -*- coding: utf-8 -*-
 
 """
 This is a tutorial example used to learn the basics of the Brian2 INI library.
+The emphasise is on neuron groups and non-plastic synapses.
 """
 
 from pyqtgraph.Qt import QtGui, QtCore

@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+# @Author: mmilde
+# @Date:   2018-01-16 17:57:35
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-19 17:20:50
+
+"""this file provides an example of how to use neuron and synapse models which are present
+on neurmorphic chips in the context of synaptic plasticity based on precise timing of spikes.
+
+"""
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import pyqtgraph.exporters
@@ -47,6 +57,8 @@ postSTDP.Itau = 6 * pA
 
 SynPre.connect(True)
 SynPre.weight = 400.
+# SynPre.weight = 100.
+# SynPre.Ie_tau = 2 * pA
 
 SynPost.connect(True)
 SynPost.weight = 400.

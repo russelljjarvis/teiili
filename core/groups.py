@@ -5,7 +5,7 @@
 # @Author: alpren, mmilde
 # @Date:   2017-27-07 17:28:16
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-17 12:27:31
+# @Last Modified time: 2018-01-25 15:05:11
 """
 Wrapper class for brian2 Group class.
 """
@@ -89,6 +89,11 @@ class NCSGroup(Group):
         for strPar in self.strParams:
             if parname in self.strParams[strPar]:
                 self.__setattr__(strPar, self.strParams[strPar])
+
+    def print_equations(self):
+        for key in self.equation_builder.keywords:
+            print(key, " :")
+            print(self.equation_builder.keywords[key])
 
 
 class Neurons(NeuronGroup, NCSGroup):
@@ -478,5 +483,3 @@ class NCSSubgroup(Subgroup):
             int: Number of synapse which project to the same post-synaptic neuron group.
         """
         return self.source.num_inputs
-
-

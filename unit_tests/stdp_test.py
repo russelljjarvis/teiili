@@ -2,7 +2,7 @@
 # @Author: mmilde
 # @Date:   2018-01-16 17:57:35
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-19 17:20:50
+# @Last Modified time: 2018-01-25 15:36:15
 
 """this file provides an example of how to use neuron and synapse models which are present
 on neurmorphic chips in the context of synaptic plasticity based on precise timing of spikes.
@@ -73,7 +73,7 @@ statemonPre = StateMonitor(preSTDP, variables='Imem', record=0, name='statemonPr
 statemonSynPre = StateMonitor(SynPre, variables=['Ie_syn'], record=0, name='statemonSynPre')
 spikemonPost = SpikeMonitor(postSTDP, name='spikemonPost')
 statemonPost = StateMonitor(postSTDP, variables='Imem', record=0, name='statemonPost')
-statemonWeight = StateMonitor(SynSTDP, variables=['Ie_syn', 'wPlast', 'w'], record=True, name='statemonWeight')
+statemonWeight = StateMonitor(SynSTDP, variables=['Ie_syn', 'w_plast', 'weight'], record=True, name='statemonWeight')
 
 Net.add(gPre, gPost, preSTDP, postSTDP, SynPre, SynPost, SynSTDP, statemonSynPre,
         statemonPre, statemonPost, spikemonPre, spikemonPost, statemonWeight)
@@ -101,7 +101,7 @@ win_stdp.nextRow()
 pWeight1 = win_stdp.addPlot(title="Synaptic weight")
 pWeight2 = win_stdp.addPlot(title="Synaptic weight")
 
-pSpikes.addLegend()
+# pSpikes.addLegend()
 
 pImemPre.plot(x=np.asarray(statemonPre.t / ms), y=np.asarray(statemonPre.Imem[0]),
               pen=pg.mkPen(colors[6], width=2))
@@ -150,11 +150,11 @@ pSpikes.plot(x=np.asarray(spikemonPost.t / ms), y=np.asarray(spikemonPost.i),
 pSyn.plot(x=np.asarray(statemonWeight.t / ms), y=np.asarray(statemonWeight.Ie_syn[1]),
           pen=pg.mkPen(colors[3], width=2))
 
-for i, data in enumerate(np.asarray(statemonWeight.w)):
+for i, data in enumerate(np.asarray(statemonWeight.weight)):
     if i == 0:
         pWeight1.plot(x=np.asarray(statemonWeight.t / ms), y=data,
                       pen=pg.mkPen(colors[i], width=3))
-for i, data in enumerate(np.asarray(statemonWeight.wPlast)):
+for i, data in enumerate(np.asarray(statemonWeight.w_plast)):
     if i == 1:
         pWeight2.plot(x=np.asarray(statemonWeight.t / ms), y=data,
                       pen=pg.mkPen(colors[i], width=3))

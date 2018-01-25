@@ -36,7 +36,7 @@ Attributes:
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-15 17:53:31
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-17 15:36:54
+# @Last Modified time: 2018-01-25 15:37:52
 
 
 """
@@ -396,7 +396,7 @@ Dpi = {'model': '''
         Ii{inputnumber}_post = -Ii_syn : amp  (summed)
 
         weight : 1
-        wPlast : 1
+        w_plast : 1
 
         Ie_gain = Io_syn*(Ie_syn<=Io_syn) + Ie_th*(Ie_syn>Io_syn) : amp
         Ii_gain = Io_syn*(Ii_syn<=Io_syn) + Ii_th*(Ii_syn>Io_syn) : amp
@@ -425,8 +425,8 @@ Dpi = {'model': '''
         Csyn         : farad (constant)
         ''',
        'on_pre': '''
-        Ie_syn += Iw_e*wPlast*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))
-        Ii_syn += Iw_i*wPlast*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
+        Ie_syn += Iw_e*w_plast*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))
+        Ii_syn += Iw_i*w_plast*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
         ''',
        'on_post': ''' ''',
        }
@@ -445,7 +445,7 @@ DpiPara = {
     'Ii_th': 10 * pA,
     'Ie_syn': 0.5 * pA,
     'Ii_syn': 0.5 * pA,
-    'wPlast': 1,
+    'w_plast': 1,
     'baseweight_e': 50. * pA,
     'baseweight_i': 50. * pA
 }
@@ -538,7 +538,6 @@ fusiPara_conductance = {"wplus": 0.2,
 
 # STDP learning rule ##
 stdp = {'model': '''
-      w : 1
       dApre/dt = -Apre / taupre : 1 (event-driven)
       dApost/dt = -Apost / taupost : 1 (event-driven)
       w_max: 1 (shared, constant)
@@ -549,13 +548,12 @@ stdp = {'model': '''
       ''',
 
         'on_pre': '''
-      wPlast = w
       Apre += dApre*w_max
-      w = clip(w + Apost, 0, w_max) ''',
+      w_plast = clip(w_plast + Apost, 0, w_max) ''',
 
         'on_post': '''
       Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
-      w = clip(w + Apre, 0, w_max) '''}
+      w_plast = clip(w_plast + Apre, 0, w_max) '''}
 
 stdpPara_current = {"baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
                     "baseweight_i": 7 * pA,
@@ -564,8 +562,7 @@ stdpPara_current = {"baseweight_e": 7 * pA,  # should we find the way to replace
                     "w_max": 1.,
                     "dApre": 0.1,
                     "Q_diffAPrePost": 1.05,
-                    "w": 0,
-                    "wPlast": 0}
+                    "w_plast": 0}
 
 stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to replace since we would define it twice
                         "baseweight_i": 3 * nS,
@@ -574,8 +571,7 @@ stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to rep
                         "w_max": 0.01,
                         "diffApre": 0.01,
                         "Q_diffAPrePost": 1.05,
-                        "w": 0,
-                        "wPlast": 0}
+                        "w_plast": 0}
 
 ########_____Kernels Blocks_____#########################################################
 # you need to declare two set of parameters for every block : (one for current based models and one for conductance based models)

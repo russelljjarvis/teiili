@@ -53,13 +53,30 @@ from brian2 import pF, nS, mV, ms, pA, nA, second, volt
 
 
 def combineEquations_syn(*args):
-    """Function to combine equations into a single synapse equation
+    """Function to combine equations into a single synapse equation.
+    combineEquation also presents the possibility to delete or overwrite an explicit
+    function with the use of the special character '%'.
+    Example with two different dictionaries both containing the explicit function
+    for the variable 'x':
+        eq in the former argument: x = theta
+        eq in the latter argument: %x = gamma
+        eq in the output : x = gamma
+    '%x' without any assignement will simply delete the variable from output 
+    and from parameter dictionary.
+    It relies upon deleteVar in order to combine equation when a '%' is found.    
+        
+        
+        
+        
 
     Args:
-        *args: Dictionary of equations to be combined
+        *args: Dictionary of equations to be combined.
 
     Returns:
         dict: brian2-like dictionary to describe synapse model
+        set: set of the overwritten or removed variables, it's used by the
+            function combineParDictionaries in order to remove the assignments in the
+            parameter dictionary.
     """
     model = ''
     on_pre = ''
@@ -90,15 +107,31 @@ def combineEquations_syn(*args):
 
 
 def deleteVar(firstEq, secondEq, var):
-    """Summary
-
+    """Function to delete variables from equations and then combine them.
+    It works with couples of strings: firstEq, secondEq
+    It search for every line in secondEq for the special character '%' removing it,
+    and then search the variable (even if in differential form '%dx/dt') and erease 
+    every line in fisrEq starting with that variable.(every explixit equation)
+    If the character '=' or ':' is not in the line containing the variable in secondEq
+    the entire line would be ereased.
+    Ex:
+        '%x = theta' --> 'x = theta'
+        '%x' --> ''
+    This feature allows to remove equations in the template that we don't want to 
+    compute by writing '%[variable]' in the other equation blocks.
+    
     Args:
-        firstEq (TYPE): Description
-        secondEq (TYPE): Description
-        var (TYPE): Description
+        firstEq (string): The first subset of equation that we want to enlarge or 
+            overwrite . 
+        secondEq (string): The second subset of equation wich will be added to firstEq
+            It also contains '%' for overwriting or ereasing lines in 
+            firstEq.
+        var (set): A set (could be empty) used to append the variables removed or 
+            overwritten (important for parameters dictionaries handling).
 
     Returns:
-        TYPE: Description
+        string: The combined string containing the subset of equations.
+        set: set containing the variables ereased or overwritten.
     """
     varSet = {}
     varSet = set()
@@ -138,8 +171,9 @@ def combineParDictionaries(varSet, *args):
     """Function to combine parameter dictionary
 
     Args:
-        var_set (TYPE): Description
-        *args: Description
+        var_set (set): set of variables that have to be removed (coming from
+                combineEquations)
+        *args: Dictionaries containing parameters 
 
     Returns:
         dict: Combined parameter dictionary
@@ -163,7 +197,7 @@ class SynapseEquationBuilder():
     """Class which builds synapse equation
 
     Attributes:
-        changeableParameters (list): Description
+        changeableParameters (list): List of changeable parameters during runtime
         model (dict): Actually neuron model differential equation
         on_post (dict): Dictionary with equations specifying behaviour of synapse to
             post-synaptic spike
@@ -197,7 +231,7 @@ class SynapseEquationBuilder():
             self.model = eqDict['model']
             self.on_pre = eqDict['on_pre']
             self.on_post = eqDict['on_post']
-            self.parameters = eqDict['parameters']
+            self.parameters = eqDict['parameters'] 
 
             self.keywords = {'model': self.model, 'on_pre': self.on_pre,
                              'on_post': self.on_post}
@@ -275,7 +309,8 @@ class SynapseEquationBuilder():
                 eqDict['parameters'] = combineParDictionaries(
                     varSet, DPI_Parameters[baseUnit], DPI_Parameters[plasticity])
 
-            self.changeableParameters = ['weight']
+            self.changeableParameters = ['weight'] # TODO: define what parameters we want to be modified
+                                                   # during execution
 
             self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
@@ -688,11 +723,11 @@ DPI_Parameters = {'DPI': DpiPara, 'nonplastic': nonePara, 'fusi': fusiPara_curre
                   'stdp': stdpPara_current}
 
 
-def printDictionaries(Dict):
-    """Wrapper function to prin dictionaries
+def printParamDictionaries(Dict):
+    """Wrapper function to print dictionaries if parameters in a ordered way
 
     Args:
-        Dict (dict): Dictionary to be printed
+        Dict (dict): Parameter dictionary to be printed
     """
     for keys, values in Dict.items():
         print(keys)
@@ -717,5 +752,5 @@ def printEqDict_syn(eqDict, param):
     print('-_-_-_-_-_-_-_-')
     print('Post default parameters')
     print('')
-    printDictionaries(param)
+    printParamDictionaries(param)
     print('-_-_-_-_-_-_-_-')

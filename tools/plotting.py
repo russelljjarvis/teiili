@@ -9,7 +9,7 @@ Attributes:
 # @Author: alpha, mmilde
 # @Date:   2017-07-31 16:13:59
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 17:03:24
+# @Last Modified time: 2018-01-25 16:18:18
 
 """
 Plotting tools for different spike and state monitors
@@ -76,6 +76,7 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
         end_ind = abs(monitor.t - end_time).argmin()
 
         window.setXRange(0, end_time / ms, padding=0)
+        window.setYRange(0, num_neurons)
         window.plot(x=np.asarray(monitor.t / ms)[start_ind:end_ind], y=np.asarray(monitor.i)[start_ind:end_ind],
                     pen=None, symbol='o', symbolPen=None,
                     symbolSize=7, symbolBrush=colors[1])

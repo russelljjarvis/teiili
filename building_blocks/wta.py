@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 17:15:23
+# @Last Modified time: 2018-01-25 16:20:13
 
 """
 This files contains different WTA circuits
@@ -458,11 +458,11 @@ def plotWTA(name, start_time, end_time, num_neurons, WTAMonitors):
     state_syn_input = win_states.addPlot(title="StateMonitor synaptic input")
 
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=WTAMonitors['spikemonWTAInp'], window=raster_input)
+                     num_neurons=num_neurons, monitor=WTAMonitors['spikemonWTAInp'], window=raster_input)
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=WTAMonitors['spikemonWTA'], window=raster_wta)
+                     num_neurons=num_neurons, monitor=WTAMonitors['spikemonWTA'], window=raster_wta)
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=WTAMonitors['spikemonWTAInh'], window=raster_inh)
+                     num_neurons=num_neurons, monitor=WTAMonitors['spikemonWTAInh'], window=raster_inh)
 
     plot_statemon_qt(start_time=start_time, end_time=end_time,
                      monitor=WTAMonitors['statemonWTA'], neuron_id=128,

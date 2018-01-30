@@ -44,13 +44,30 @@ from brian2 import pF, nS, mV, ms, pA, nA
 
 
 def combineEquations(*args):
-    """Function to combine equations into a single neuron equation
+    """Function to combine equations into a single neuron equation.
+    combineEquation also presents the possibility to delete or overwrite an explicit
+    function with the use of the special character '%'.
+    Example with two different dictionaries both containing the explicit function
+    for the variable 'x':
+        eq in the former argument: x = theta
+        eq in the latter argument: %x = gamma
+        eq in the output : x = gamma
+    '%x' without any assignement will simply delete the variable from output 
+    and from parameter dictionary.
+    It relies upon deleteVar in order to combine equation when a '%' is found.    
+        
+        
+        
+        
 
     Args:
-        *args: Dictionary of equations to be combined
+        *args: Dictionary of equations to be combined.
 
     Returns:
         dict: brian2-like dictionary to describe neuron model
+        set: set of the overwritten or removed variables, it's used by the
+            function combineParDictionaries in order to remove the assignments in the
+            parameter dictionary.
     """
     model = ''
     threshold = ''
@@ -81,15 +98,31 @@ def combineEquations(*args):
 
 
 def deleteVar(firstEq, secondEq, var):
-    """Function to delete variables from equation
-
+    """Function to delete variables from equations and then combine them.
+    It works with couples of strings: firstEq, secondEq
+    It search for every line in secondEq for the special character '%' removing it,
+    and then search the variable (even if in differential form '%dx/dt') and erease 
+    every line in fisrEq starting with that variable.(every explixit equation)
+    If the character '=' or ':' is not in the line containing the variable in secondEq
+    the entire line would be ereased.
+    Ex:
+        '%x = theta' --> 'x = theta'
+        '%x' --> ''
+    This feature allows to remove equations in the template that we don't want to 
+    compute by writing '%[variable]' in the other equation blocks.
+    
     Args:
-        firstEq (TYPE): Description
-        secondEq (TYPE): Description
-        var (TYPE): Description
+        firstEq (string): The first subset of equation that we want to enlarge or 
+            overwrite . 
+        secondEq (string): The second subset of equation wich will be added to firstEq
+            It also contains '%' for overwriting or ereasing lines in 
+            firstEq.
+        var (set): A set (could be empty) used to append the variables removed or 
+            overwritten (important for parameters dictionaries handling).
 
     Returns:
-        TYPE: Description
+        string: The combined string containing the subset of equations.
+        set: set containing the variables ereased or overwritten.
     """
     var_set = {}
     var_set = set()
@@ -104,7 +137,7 @@ def deleteVar(firstEq, secondEq, var):
             diffvar2 = 'd' + var2 + '/dt'
             for line2 in firstEq.splitlines():
 
-                # if i found a variable i need to check then if it's the explicit form we want to remove
+                # if i found a variable i need to check then if it's in explicit form
                 if (var2 in line2) or (diffvar2 in line2):
 
                     if (var2 == line2.replace(':', '=').split('=', 1)[0].split()[0]) or\
@@ -129,8 +162,9 @@ def combineParDictionaries(var_set, *args):
     """Function to combine parameter dictionary
 
     Args:
-        var_set (TYPE): Description
-        *args: Description
+        var_set (set): set of variables that have to be removed (coming from
+                combineEquations)
+        *args: Dictionaries containing parameters 
 
     Returns:
         dict: Combined parameter dictionary
@@ -157,7 +191,7 @@ class NeuronEquationBuilder():
     as spike-frequency adaptation, leakage etc.
 
     Attributes:
-        changeableParameters (list): Description
+        changeableParameters (list): List of changeable parameters during runtime
         model (dict): Actually neuron model differential equation
         parameters (dict): Dictionary of parameters
         refractory (str): Refractory period of the neuron
@@ -195,7 +229,8 @@ class NeuronEquationBuilder():
             self.refractory = refractory
             self.parameters = keywords['parameters']
 
-            self.changeableParameters = ['refP']
+            self.changeableParameters = ['refP'] # TODO: define what parameters we want to be modified
+                                                 # during execution
 
             self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
@@ -271,7 +306,8 @@ class NeuronEquationBuilder():
             #self.refractory = 'refP'
             self.parameters = paraDict
 
-            self.changeableParameters = ['refP']
+            self.changeableParameters = ['refP'] # TODO: define what parameters we want to be modified
+                                                 # during execution
 
             self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
@@ -654,15 +690,14 @@ voltageParameters = {'voltage': v_model_templatePara, 'calciumFeedback': nonePar
 # if you have a new equation, just add it to equations
 #equations = {'ExpAdaptIF': ExpAdaptIF, 'simpleIF': simpleIF, 'Silicon': Silicon}
 
-def printDictionaries(Dict):
-    """Wrapper function to print dictionaries
+def printParamDictionaries(Dict):
+    """Wrapper function to print dictionaries if parameters in a ordered way
 
     Args:
-        Dict (dict): Dictionary to be printed
+        Dict (dict): Parameter dictionary to be printed
     """
     for keys, values in Dict.items():
-        print(keys)
-        print(repr(values))
+        print(keys+' = '+repr(values))
 
 
 def printEqDict(eqDict, param):
@@ -682,5 +717,5 @@ def printEqDict(eqDict, param):
     print(eqDict['reset'])
     print('-_-_-_-_-_-_-_-')
     print('')
-    printDictionaries(param)
+    printParamDictionaries(param)
     print('-_-_-_-_-_-_-_-')

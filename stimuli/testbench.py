@@ -142,10 +142,13 @@ class octa_testbench():
         Returns:
             (int): Ceiled value of x
         """
-        return int(x + 0.5)
+        if type(x) is np.ndarray:
+            return (x + 0.5).astype(int)
+        else:
+            return int(x + 0.5)
 
     def rotating_bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
-            angle_step=10, artifical_stimulus=True, rec_path=None):
+                     angle_step=10, artifical_stimulus=True, rec_path=None, debug=False):
         """This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
         A bar is rotating in the center. The goal is to learn necessary
@@ -178,7 +181,7 @@ class octa_testbench():
             x_coord = []
             y_coord = []
             pol = []
-            ts = []
+            self.times = []
             center = (n2dNeurons / 2, n2dNeurons / 2)
             self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, np.radians(angle_step))
             for i, cAngle in enumerate(self.angles):
@@ -195,22 +198,30 @@ class octa_testbench():
                 for step in range(int(self.max_length)):
                     self.line.append(self.dda_round((step + 1) * dv + self.start))
                 for coord in self.line:
+                    if coord[0] >= n2dNeurons or coord[1] >= n2dNeurons:
+                        if debug:
+                            print("Coordinate larger than input space. x: {}, y: {}".format(coord[0], coord[1]))
+                        continue
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])
-                    ts.append(i * ts_offset)
+                    self.times .append(i * ts_offset)
                     pol.append(1)
             events = np.zeros((4, len(x_coord)))
             events[0, :] = np.asarray(x_coord)
             events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(ts)
+            events[2, :] = np.asarray(self.times)
             events[3, :] = np.asarray(pol)
+        if debug:
+            print("Max X: {}. Max Y: {}".format(np.max(events[0, :]), np.max(events[1, :])))
+            print("Stimulus last from {} ms to {} ms".format(np.min(events[2, :]), np.max(events[2, :])))
         if not artifical_stimulus:
-            ind, ts = dvs2ind(events, scale=False)
+            self.indices, self.times = dvs2ind(events, scale=False)
         else:
-            ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
-            print(np.max(ind), np.min(ind))
-        nPixel = np.int(np.max(ind))
-        gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=ind, times=ts * ms, name='bar')
+            self.indices = xy2ind(events[0, :], events[1, :], n2dNeurons)
+            if debug:
+                print("Maximum index: {}, minimum index: {}".format(np.max(self.indices), np.min(self.indices)))
+        nPixel = np.int(np.max(self.indices))
+        gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
         return gInpGroup
 
     def translating_bar_infinity(self, length=10, n2dNeurons=64, orientation='vertical', shift=32,
@@ -252,7 +263,7 @@ class octa_testbench():
             x_coord = []
             y_coord = []
             pol = []
-            ts = []
+            self.times = []
             for i, cAngle in enumerate(self.angles):
                 x, y = self.infinity(cAngle)
                 if orientation == 'vertical':
@@ -276,25 +287,25 @@ class octa_testbench():
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])
-                    ts.append(i * ts_offset)
+                    self.times .append(i * ts_offset)
                     pol.append(1)
 
             events = np.zeros((4, len(x_coord)))
             events[0, :] = np.asarray(x_coord)
             events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(ts)
+            events[2, :] = np.asarray(self.times)
             events[3, :] = np.asarray(pol)
 
         if returnEvents:
             return events
         else:
             if not artifical_stimulus:
-                ind, ts = dvs2ind(events, scale=False)
+                self.indices, self.times = dvs2ind(events, scale=False)
             else:
-                ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
-                print(np.max(ind), np.min(ind))
-            nPixel = np.int(np.max(ind))
-            gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=ind, times=ts * ms, name='bar')
+                self.indices = xy2ind(events[0, :], events[1, :], n2dNeurons)
+                print(np.max(self.indices), np.min(self.indices))
+            nPixel = np.int(np.max(self.indices))
+            gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
             return gInpGroup
 
     def rotating_bar_infinity(self, length=10, n2dNeurons=64, orthogonal=False, shift=32,
@@ -341,7 +352,7 @@ class octa_testbench():
             x_coord = []
             y_coord = []
             pol = []
-            ts = []
+            self.times = []
             flipped_angles = self.angles[::-1]
             for i, cAngle in enumerate(self.angles):
                 x, y = self.infinity(cAngle)
@@ -379,24 +390,24 @@ class octa_testbench():
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])
-                    ts.append(i * ts_offset)
+                    self.times.append(i * ts_offset)
                     pol.append(1)
 
             events = np.zeros((4, len(x_coord)))
             events[0, :] = np.asarray(x_coord)
             events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(ts)
+            events[2, :] = np.asarray(self.times)
             events[3, :] = np.asarray(pol)
 
         if returnEvents:
             return events
         else:
             if not artifical_stimulus:
-                ind, ts = dvs2ind(events, scale=False)
+                self.indices, self.times = dvs2ind(events, scale=False)
             else:
-                ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
-            nPixel = np.int(np.max(ind))
-            gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=ind, times=ts * ms, name='bar')
+                self.indices = xy2ind(events[0, :], events[1, :], n2dNeurons)
+            nPixel = np.int(np.max(self.indices))
+            gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
             return gInpGroup
 
     def ball(self, rec_path):
@@ -476,7 +487,8 @@ class wta_testbench():
             rate (int, optional): Spike frequency f posssion noise process
 
         """
-        self.noise_input = PoissonGroup(num_neurons, rate * Hz)
+        num2d_neurons = num_neurons**2
+        self.noise_input = PoissonGroup(num2d_neurons, rate * Hz)
 
 
 # class visualize():

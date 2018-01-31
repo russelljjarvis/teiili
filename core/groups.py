@@ -91,9 +91,11 @@ class NCSGroup(Group):
                 self.__setattr__(strPar, self.strParams[strPar])
 
     def print_equations(self):
-        for key in self.equation_builder.keywords:
-            print(key, " :")
-            print(self.equation_builder.keywords[key])
+        for key, value in sorted(self.equation_builder.keywords.items()):
+            print("{} : {}".format(key, value))
+        # for key in self.equation_builder.keywords:
+        #     print(key, " :")
+        #     print(self.equation_builder.keywords[key])
 
 
 class Neurons(NeuronGroup, NCSGroup):

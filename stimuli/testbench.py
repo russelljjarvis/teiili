@@ -16,9 +16,11 @@ from NCSBrian2Lib.tools.indexing import xy2ind
 import numpy as np
 import os
 import operator
+from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph as pg
 
 
-class stdp_testbench():
+class STDP_Testbench():
 
     """This class provides a stimuli to test your spike-time depenendent plasticity algorithm
 
@@ -78,7 +80,7 @@ class stdp_testbench():
         return pre, post
 
 
-class octa_testbench():
+class OCTA_Testbench():
 
     """This class holds all relevant stimuli to test modules provided with the
     Online Clustering of Temporal Activity (OCTA) framework.
@@ -206,18 +208,19 @@ class octa_testbench():
                     y_coord.append(coord[1])
                     self.times .append(i * ts_offset)
                     pol.append(1)
-            events = np.zeros((4, len(x_coord)))
-            events[0, :] = np.asarray(x_coord)
-            events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(self.times)
-            events[3, :] = np.asarray(pol)
+            self.events = np.zeros((4, len(x_coord)))
+            self.events[0, :] = np.asarray(x_coord)
+            self.events[1, :] = np.asarray(y_coord)
+            self.events[2, :] = np.asarray(self.times)
+            self.events[3, :] = np.asarray(pol)
+            np.save('/home/schlowmo/Documents/events.npy', self.events)
         if debug:
-            print("Max X: {}. Max Y: {}".format(np.max(events[0, :]), np.max(events[1, :])))
-            print("Stimulus last from {} ms to {} ms".format(np.min(events[2, :]), np.max(events[2, :])))
+            print("Max X: {}. Max Y: {}".format(np.max(self.events[0, :]), np.max(self.events[1, :])))
+            print("Stimulus last from {} ms to {} ms".format(np.min(self.events[2, :]), np.max(self.events[2, :])))
         if not artifical_stimulus:
-            self.indices, self.times = dvs2ind(events, scale=False)
+            self.indices, self.times = dvs2ind(self.events, scale=False)
         else:
-            self.indices = xy2ind(events[0, :], events[1, :], n2dNeurons)
+            self.indices = xy2ind(self.events[0, :], self.events[1, :], n2dNeurons)
             if debug:
                 print("Maximum index: {}, minimum index: {}".format(np.max(self.indices), np.min(self.indices)))
         nPixel = np.int(np.max(self.indices))
@@ -441,7 +444,7 @@ class octa_testbench():
         return input_on, input_off
 
 
-class wta_testbench():
+class WTA_Testbench():
 
     """Collection of functions to test the computational properties of the WTA building_block
 
@@ -491,72 +494,83 @@ class wta_testbench():
         self.noise_input = PoissonGroup(num2d_neurons, rate * Hz)
 
 
-# class visualize():
+class Visualize():
 
-#     """Summary
+    """Summary
 
-#     Attributes:
-#         colors (TYPE): Description
-#         eventPlot (TYPE): Description
-#         labelStyle (dict): Description
-#         win (TYPE): Description
-#     """
+    Attributes:
+        colors (TYPE): Description
+        eventPlot (TYPE): Description
+        labelStyle (dict): Description
+        win (TYPE): Description
+    """
 
-#     def __init__(self):
-#         """Summary
-#         """
-#         app = QtGui.QApplication([])
-#         pg.setConfigOptions(antialias=True)
+    def __init__(self):
+        """Summary
+        """
+        pass
 
-#         self.colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-#                   (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-#         self.labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-#         self.win = pg.GraphicsWindow(title="Stimuli visualization")
-#         self.win.resize(1024, 768)
-#         self.eventPlot = self.win.addPlot(title="Input events in ")
-#         self.eventPlot.addLegend()
+    def plot(self, events, time_window=35):
+        """Summary
 
-#     def plot(self, events, time_window=35):
-#         """Summary
+        Args:
+            events (TYPE): Description
+            time_window (int, optional): Description
+        """
+        global stim
+        self.time_window = time_window
+        app = QtGui.QApplication([])
+        pg.setConfigOptions(antialias=True)
+        colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
+                  (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
+        labelStyle = {'color': '#FFF', 'font-size': '12pt'}
+        win = pg.GraphicsWindow(title="Stimuli visualization")
+        win.resize(1024, 768)
+        eventPlot = win.addPlot(title="Input events in ")
+        eventPlot.addLegend()
 
-#         Args:
-#             events (TYPE): Description
-#             time_window (int, optional): Description
-#         """
-#         if type(events) == str:
-#             events = np.load(events)
-#         self.eventPlot = self.win.addPlot(title="Input events with size {}x{}".format(np.max(events[0, :]), np.max(events[1, :])))
-#         self.eventPlot.addLegend()
+        if type(events) == str:
+            self.events = np.load(events)
+        else:
+            self.events = events
 
-#         self.eventPlot.setLabel('left', "Y", **labelStyle)
-#         self.eventPlot.setLabel('bottom', "X", **labelStyle)
+        eventPlot.setLabel('left', "Y", **labelStyle)
+        eventPlot.setLabel('bottom', "X", **labelStyle)
+        eventPlot.setXRange(0, np.max(events[0, :]))
+        eventPlot.setYRange(0, np.max(events[1, :]))
 
-#         b = QtGui.QFont("Sans Serif", 10)
-#         self.eventPlot.getAxis('bottom').tickFont = b
-#         self.eventPlot.getAxis('left').tickFont = b
+        b = QtGui.QFont("Sans Serif", 10)
+        eventPlot.getAxis('bottom').tickFont = b
+        eventPlot.getAxis('left').tickFont = b
 
-#         # start visualizing
-#         start = 0
-#         for i in range(0, np.max(events[2, :]), time_window * 10**3):
-#             cIndTS = np.logical_and(events[2, :] >= start, events[2, :] <= start + time_window * 10**3)
-#             cIndON = np.logical_and(cIndTS, events[3, :] == 1)
-#             cIndOFF = np.logical_and(cIndTS, events[3, :] == 0)
+        # start visualizing
+        self.start = 0
+        self.stim = eventPlot.plot(pen=None, symbol='o', symbolPen=None,
+                              symbolSize=7, symbolBrush=colors[0],
+                              name='ON Events')
+        eventPlot.enableAutoRange('xy', False)  # stop auto-scaling after the first data set is plotted
+        timer = QtCore.QTimer()
+        timer.timeout.connect(self.update)
+        timer.start(100)
 
-#             xData = events[0, cIndON]
-#             yData = events[1, cIndON]
-#             # plot on events in red
-#             self.eventPlot.plot(x=xData, y=yData,
-#                  pen=None, symbol='o', symbolPen=None,
-#                  symbolSize=7, symbolBrush=self.colors[0],
-#                  name='ON Events')
+        QtGui.QApplication.instance().exec_()
 
-#             if cIndOFF.any():
-#                 xData = events[0, cIndOFF]
-#                 yData = events[1, cIndOFF]
-#                 # plot off events in blue
-#                 self.eventPlot.plot(x=xData, y=yData,
-#                      pen=None, symbol='o', symbolPen=None,
-#                      symbolSize=7, symbolBrush=self.colors[2],
-#                      name='OFF Events')
+    def update(self):
+        global eventPlot
+        cIndTS = np.logical_and(self.events[2, :] >= self.start, self.events[2, :] <= self.start + self.time_window)
+        cIndON = np.logical_and(cIndTS, self.events[3, :] == 1)
 
-#             start += time_window * 10**3
+        data_x = self.events[0, cIndON]
+        data_y = self.events[1, cIndON]
+        self.start += self.time_window
+        # print(len(data_x))
+        # print(np.shape(self.events))
+        # print(self.events[2, :])
+        self.stim.setData(x=data_x, y=data_y)
+
+
+# import numpy as np
+# from NCSBrian2Lib.stimuli.testbench import Visualize
+# vis = Visualize()
+# events = np.load('/home/schlowmo/Documents/events.npy')
+# vis.plot(events)

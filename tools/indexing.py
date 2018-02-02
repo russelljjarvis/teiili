@@ -80,6 +80,7 @@ def ind2y(ind, n2dNeurons):
 
 
 @implementation('numpy', discard_units=True)
+@declare_types(ind='integer', n2dNeurons='integer', result='integer')
 @check_units(ind=1, n2dNeurons=1, result=1)
 def ind2xy(ind, n2dNeurons):
     """Given an index of an array this function will provide
@@ -92,7 +93,35 @@ def ind2xy(ind, n2dNeurons):
     Returns:
         tuple (x, y): The corresponding x, y coordinates
     """
-    if type(n2dNeurons) == tuple:
-        return np.unravel_index(ind, (n2dNeurons[0], n2dNeurons[1]))
-    elif type(n2dNeurons) == int:
-        return np.unravel_index(ind, (n2dNeurons, n2dNeurons))
+    # if type(n2dNeurons) == tuple:
+    #     return np.unravel_index(ind, (n2dNeurons[0], n2dNeurons[1]))
+    # elif type(n2dNeurons) == int:
+    return np.unravel_index(ind, (n2dNeurons, n2dNeurons))
+
+
+@implementation('numpy', discard_units=True)
+@declare_types(ind='integer', ts='integer', pol='boolean', n2dNeurons='integer', result='integer')
+@check_units(ind=1, ts=1, pol=1, n2dNeurons=1, result=1)
+def ind2events(ind, ts, pol=True, n2dNeurons=10):
+    """This function converts spikes from a brain2 group into an
+    event-like structure as provided by a DVS. Events will have the structure
+    of (x, y, ts, pol)
+
+    Args:
+        ind (TYPE): index of neurons that spikes (brian2group.i)
+        ts (TYPE): times when neurons spikes (brian2group.t)
+        pol (None, optional): Either vector with same length as ind or None
+        n2dNeurons (int, required): Longest edge of the original array
+    """
+    x, y = np.unravel_index(ind, (n2dNeurons, n2dNeurons))
+    events = np.zeros((4, len(x)))
+    events[0, :] = np.asarray(x)
+    events[1, :] = np.asarray(y)
+    events[2, :] = np.asarray(ts)
+    if pol:
+        events[3, :] = np.ones((len(x)))
+    elif not pol:
+        events[3, :] = np.zeros((len(x)))
+    elif len(pol) > 1:
+        events[3, :] = pol
+    return events

@@ -209,8 +209,8 @@ def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, In
         (y0, x0) = np.unravel_index(j, (WindowSizeY, WindowSizeX))
         x0 = x0 + int((InputSizeX-WindowSizeX+1)/2) + offx
         y0 = y0 + int((InputSizeY-WindowSizeY+1)/2) - offy
-        x =  (ix - x0)*np.cos(theta-(np.pi/2)) + (iy - y0)*np.sin(theta-(np.pi/2))
-        y = -(ix - x0)*np.sin(theta-(np.pi/2)) + (iy - y0)*np.cos(theta-(np.pi/2))
+        x =  (ix - x0)*np.cos(theta) + (iy - y0)*np.sin(theta)
+        y = -(ix - x0)*np.sin(theta) + (iy - y0)*np.cos(theta)
         exponent = -(((x**2)/(2*sigmax**2)) + ((y**2)/(2*sigmay**2)))
         res = exp(exponent)*np.cos(np.pi*x/freq)
         res = res*(abs(ix - x0)<RFSize/2) *(abs(iy - y0)<RFSize/2)

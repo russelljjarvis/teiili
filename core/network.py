@@ -110,7 +110,7 @@ class NCSNetwork(Network):
                 if standaloneParams is None:
                     standaloneParams = self.standaloneParams
 
-                buildCppAndReplace(standaloneParams, get_device(
+                build_cpp_and_replace(standaloneParams, get_device(
                 ).build_options['directory'], clean=clean)
             else:
                 print("""Network was not recompiled, standaloneParams are changed,
@@ -150,7 +150,7 @@ class NCSNetwork(Network):
 
             startSim = time.time()
             # run simulation
-            printDict(standaloneParams)
+            print_dict(standaloneParams)
             run_args = params2run_args(standaloneParams)
             device.run(directory=os.path.abspath(
                 get_device().build_options['directory']), with_output=True, run_args=run_args)

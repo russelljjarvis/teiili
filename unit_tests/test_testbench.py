@@ -11,8 +11,8 @@ import unittest
 import numpy as np
 from NCSBrian2Lib.stimuli.testbench import octa_testbench, stdp_testbench
 
-octa_testbench = octa_testbench()
-stdp_testbench = stdp_testbench()
+octa_testbench = OCTA_testbench()
+stdp_testbench = STDP_testbench()
 
 
 class TestTestbench(unittest.TestCase):

@@ -1,11 +1,51 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
+"""Summary
+
+Attributes:
+    alphakernel (TYPE): Description
+    alphaPara_conductance (TYPE): Description
+    alphaPara_current (TYPE): Description
+    conductance_Parameters (TYPE): Description
+    conductancekernels (TYPE): Description
+    current_Parameters (TYPE): Description
+    currentkernels (TYPE): Description
+    currentPara (TYPE): Description
+    Dpi (TYPE): Description
+    DPI_Parameters (TYPE): Description
+    DpiPara (TYPE): Description
+    fusi (TYPE): Description
+    fusiPara_conductance (TYPE): Description
+    fusiPara_current (TYPE): Description
+    gaussiankernel (TYPE): Description
+    gaussianPara_conductance (TYPE): Description
+    gaussianPara_current (TYPE): Description
+    modes (dict): Description
+    none (dict): Description
+    nonePara (dict): Description
+    plasticitymodels (TYPE): Description
+    resonantkernel (TYPE): Description
+    resonantPara_conductance (TYPE): Description
+    resonantPara_current (TYPE): Description
+    reversalPara (TYPE): Description
+    reversalsyn (TYPE): Description
+    stdp (TYPE): Description
+    stdpPara_conductance (TYPE): Description
+    stdpPara_current (TYPE): Description
+    template (TYPE): Description
+"""
+# @Author: mrax, alpren, mmilde
+# @Date:   2018-01-15 17:53:31
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-25 15:37:52
+
+
 """
 This file contains a class that manages a synapse equation
 
 It automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 ...
 And it prepares a dictionary of keywords for easy neurongroup creation
 
-It also provides a funtion to add lines to the model
+It also provides a function to add lines to the model
 
 """
 from brian2 import pF, nS, mV, ms, pA, nA, second, volt
@@ -13,6 +53,31 @@ from brian2 import pF, nS, mV, ms, pA, nA, second, volt
 
 
 def combineEquations_syn(*args):
+    """Function to combine equations into a single synapse equation.
+    combineEquation also presents the possibility to delete or overwrite an explicit
+    function with the use of the special character '%'.
+    Example with two different dictionaries both containing the explicit function
+    for the variable 'x':
+        eq in the former argument: x = theta
+        eq in the latter argument: %x = gamma
+        eq in the output : x = gamma
+    '%x' without any assignement will simply delete the variable from output 
+    and from parameter dictionary.
+    It relies upon deleteVar in order to combine equation when a '%' is found.    
+        
+        
+        
+        
+
+    Args:
+        *args: Dictionary of equations to be combined.
+
+    Returns:
+        dict: brian2-like dictionary to describe synapse model
+        set: set of the overwritten or removed variables, it's used by the
+            function combineParDictionaries in order to remove the assignments in the
+            parameter dictionary.
+    """
     model = ''
     on_pre = ''
     on_post = ''
@@ -42,6 +107,32 @@ def combineEquations_syn(*args):
 
 
 def deleteVar(firstEq, secondEq, var):
+    """Function to delete variables from equations and then combine them.
+    It works with couples of strings: firstEq, secondEq
+    It search for every line in secondEq for the special character '%' removing it,
+    and then search the variable (even if in differential form '%dx/dt') and erease 
+    every line in fisrEq starting with that variable.(every explixit equation)
+    If the character '=' or ':' is not in the line containing the variable in secondEq
+    the entire line would be ereased.
+    Ex:
+        '%x = theta' --> 'x = theta'
+        '%x' --> ''
+    This feature allows to remove equations in the template that we don't want to 
+    compute by writing '%[variable]' in the other equation blocks.
+    
+    Args:
+        firstEq (string): The first subset of equation that we want to enlarge or 
+            overwrite . 
+        secondEq (string): The second subset of equation wich will be added to firstEq
+            It also contains '%' for overwriting or ereasing lines in 
+            firstEq.
+        var (set): A set (could be empty) used to append the variables removed or 
+            overwritten (important for parameters dictionaries handling).
+
+    Returns:
+        string: The combined string containing the subset of equations.
+        set: set containing the variables ereased or overwritten.
+    """
     varSet = {}
     varSet = set()
     resultfirstEq = ''
@@ -73,11 +164,20 @@ def deleteVar(firstEq, secondEq, var):
         else:
             resultsecondEq += line + "\n"
     resultEq = firstEq + resultsecondEq
-#    print(resultEq)
     return resultEq, varSet
 
 
 def combineParDictionaries(varSet, *args):
+    """Function to combine parameter dictionary
+
+    Args:
+        var_set (set): set of variables that have to be removed (coming from
+                combineEquations)
+        *args: Dictionaries containing parameters 
+
+    Returns:
+        dict: Combined parameter dictionary
+    """
     ParametersDict = {}
     for tmpDict in args:
         # OverrideList = list(ParametersDict.keys() & tmpDict.keys())
@@ -94,8 +194,34 @@ def combineParDictionaries(varSet, *args):
 
 class SynapseEquationBuilder():
 
+    """Class which builds synapse equation
+
+    Attributes:
+        changeableParameters (list): List of changeable parameters during runtime
+        model (dict): Actually neuron model differential equation
+        on_post (dict): Dictionary with equations specifying behaviour of synapse to
+            post-synaptic spike
+        on_pre (TYPE): Dictionary with equations specifying behaviour of synapse to
+            pre-synaptic spike
+        parameters (dict): Dictionary of parameters
+        standaloneVars (dict): Dictionary of standalone variables
+        verbose (bool): Flag to print more detailed output of neuron equation builder
+    """
+
     def __init__(self, model=None, baseUnit='current', kernel='exponential',
                  plasticity='nonplastic', inputnumber=1, verbose=False):
+        """Summary
+
+        Args:
+            model (dict, optional): Brian2 like model
+            baseUnit (str, optional): Indicates if neuron is current- or conductance-based
+            kernel (str, optional): Specifying temporal kernel with which each spike gets convolved, i.e.
+                exponential decay or alpha function
+            plasticity (str, optional): Plasticity algorithm for the synaptic weight. Can either be
+                'nonplastic', 'fusi' or 'stdp'
+            inputnumber (int, optional): Synapse's input number
+            verbose (bool, optional): Flag to print more detailed output of neuron equation builder
+        """
         self.verbose = verbose
         if model is not None:
             eqDict = model
@@ -105,7 +231,7 @@ class SynapseEquationBuilder():
             self.model = eqDict['model']
             self.on_pre = eqDict['on_pre']
             self.on_post = eqDict['on_post']
-            self.parameters = eqDict['parameters']
+            self.parameters = eqDict['parameters'] 
 
             self.keywords = {'model': self.model, 'on_pre': self.on_pre,
                              'on_post': self.on_post}
@@ -183,7 +309,8 @@ class SynapseEquationBuilder():
                 eqDict['parameters'] = combineParDictionaries(
                     varSet, DPI_Parameters[baseUnit], DPI_Parameters[plasticity])
 
-            self.changeableParameters = ['weight']
+            self.changeableParameters = ['weight'] # TODO: define what parameters we want to be modified
+                                                   # during execution
 
             self.standaloneVars = {}  # TODO: this is just a dummy, needs to be written
 
@@ -205,9 +332,17 @@ class SynapseEquationBuilder():
                              'on_post': eqDict['on_post']}
 
     def printAll(self):
+        """Wrapper method to print neuron model
+        """
         printEqDict_syn(self.keywords, self.parameters)
 
     def set_inputnumber(self, inputnumber):
+        """Sets the respective input number of synapse. This is needed to overcome
+        the summed issue in brian2.
+
+        Args:
+            inputnumber (int): Synapse's input number
+        """
         self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber - 1))  # inputnumber-1 ???
         self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber - 1))
         self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber - 1))
@@ -296,7 +431,7 @@ Dpi = {'model': '''
         Ii{inputnumber}_post = -Ii_syn : amp  (summed)
 
         weight : 1
-        wPlast : 1
+        w_plast : 1
 
         Ie_gain = Io_syn*(Ie_syn<=Io_syn) + Ie_th*(Ie_syn>Io_syn) : amp
         Ii_gain = Io_syn*(Ii_syn<=Io_syn) + Ii_th*(Ii_syn>Io_syn) : amp
@@ -312,7 +447,7 @@ Dpi = {'model': '''
 
 
         Iw_e = weight*baseweight_e  : amp
-        Iw_i = weight*baseweight_i  : amp
+        Iw_i = -weight*baseweight_i  : amp
 
         Ie_tau       : amp (constant)
         Ii_tau       : amp (constant)
@@ -325,8 +460,8 @@ Dpi = {'model': '''
         Csyn         : farad (constant)
         ''',
        'on_pre': '''
-        Ie_syn += Iw_e*wPlast*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))
-        Ii_syn += Iw_i*wPlast*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
+        Ie_syn += Iw_e*w_plast*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))
+        Ii_syn += Iw_i*w_plast*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
         ''',
        'on_post': ''' ''',
        }
@@ -345,7 +480,7 @@ DpiPara = {
     'Ii_th': 10 * pA,
     'Ie_syn': 0.5 * pA,
     'Ii_syn': 0.5 * pA,
-    'wPlast': 1,
+    'w_plast': 1,
     'baseweight_e': 50. * pA,
     'baseweight_i': 50. * pA
 }
@@ -438,7 +573,6 @@ fusiPara_conductance = {"wplus": 0.2,
 
 # STDP learning rule ##
 stdp = {'model': '''
-      w : 1
       dApre/dt = -Apre / taupre : 1 (event-driven)
       dApost/dt = -Apost / taupost : 1 (event-driven)
       w_max: 1 (shared, constant)
@@ -449,13 +583,12 @@ stdp = {'model': '''
       ''',
 
         'on_pre': '''
-      wPlast = w
       Apre += dApre*w_max
-      w = clip(w + Apost, 0, w_max) ''',
+      w_plast = clip(w_plast + Apost, 0, w_max) ''',
 
         'on_post': '''
       Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
-      w = clip(w + Apre, 0, w_max) '''}
+      w_plast = clip(w_plast + Apre, 0, w_max) '''}
 
 stdpPara_current = {"baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
                     "baseweight_i": 7 * pA,
@@ -464,8 +597,7 @@ stdpPara_current = {"baseweight_e": 7 * pA,  # should we find the way to replace
                     "w_max": 1.,
                     "dApre": 0.1,
                     "Q_diffAPrePost": 1.05,
-                    "w": 0,
-                    "wPlast": 0}
+                    "w_plast": 0}
 
 stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to replace since we would define it twice
                         "baseweight_i": 3 * nS,
@@ -474,8 +606,7 @@ stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to rep
                         "w_max": 0.01,
                         "diffApre": 0.01,
                         "Q_diffAPrePost": 1.05,
-                        "w": 0,
-                        "wPlast": 0}
+                        "w_plast": 0}
 
 ########_____Kernels Blocks_____#########################################################
 # you need to declare two set of parameters for every block : (one for current based models and one for conductance based models)
@@ -592,13 +723,24 @@ DPI_Parameters = {'DPI': DpiPara, 'nonplastic': nonePara, 'fusi': fusiPara_curre
                   'stdp': stdpPara_current}
 
 
-def printDictionaries(Dict):
+def printParamDictionaries(Dict):
+    """Wrapper function to print dictionaries if parameters in a ordered way
+
+    Args:
+        Dict (dict): Parameter dictionary to be printed
+    """
     for keys, values in Dict.items():
         print(keys)
         print(repr(values))
 
 
 def printEqDict_syn(eqDict, param):
+    """Function to print all dictionaries within a neuron model
+
+    Args:
+        eqDict (dict): Dictionary of neuron model and properties
+        param (dict): Dictionary of neuron parameters
+    """
     print('Model equation:')
     print(eqDict['model'])
     print('-_-_-_-_-_-_-_-')
@@ -610,5 +752,5 @@ def printEqDict_syn(eqDict, param):
     print('-_-_-_-_-_-_-_-')
     print('Post default parameters')
     print('')
-    printDictionaries(param)
+    printParamDictionaries(param)
     print('-_-_-_-_-_-_-_-')

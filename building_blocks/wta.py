@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-12 15:24:44
+# @Last Modified time: 2018-01-25 16:20:13
 
 """
 This files contains different WTA circuits
@@ -20,7 +20,7 @@ from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
 
 from NCSBrian2Lib.tools.synaptic_kernel import kernel_mexican_1d, kernel_mexican_2d
-from NCSBrian2Lib.tools.misc import printStates, dist1d2dint
+from NCSBrian2Lib.tools.misc import print_states, dist1d2dint
 from NCSBrian2Lib.tools.indexing import ind2x, ind2y
 from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 
@@ -60,6 +60,7 @@ class WTA(BuildingBlock):
                  block_params=wtaParams,
                  num_neurons=16,
                  num_inh_neurons=2,
+                 num_input_neurons=None,
                  cutoff=10,
                  additional_statevars=[],
                  num_inputs=1,
@@ -75,6 +76,7 @@ class WTA(BuildingBlock):
             block_params (dict, optional): Parameter for neuron populations
             num_neurons (int, optional): Size of WTA neuron population
             num_inh_neurons (int, optional): Size of inhibitory interneuron population
+            num_input_neurons (int, optional): Size of input population. If None size will be equal WTA population
             cutoff (int, optional): Radius of self-excitation
             additional_statevars (list, optional): List of additonal statevariables which are not standard
             num_inputs (int, optional): Number of input currents to WTA
@@ -101,6 +103,7 @@ class WTA(BuildingBlock):
                                              num_inh_neurons=num_inh_neurons,
                                              additional_statevars=additional_statevars,
                                              cutoff=cutoff,
+                                             num_input_neurons=num_input_neurons,
                                              num_inputs=num_inputs,
                                              monitor=monitor,
                                              debug=debug,
@@ -113,6 +116,7 @@ class WTA(BuildingBlock):
                                              num_inh_neurons=num_inh_neurons,
                                              additional_statevars=additional_statevars,
                                              cutoff=cutoff,
+                                             num_input_neurons=num_input_neurons,
                                              num_inputs=num_inputs,
                                              monitor=monitor,
                                              debug=debug,
@@ -150,7 +154,7 @@ def gen1dWTA(groupname,
              synapse_eq_builder=DPISyn,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5, sigm=3,
              rpWTA=3 * ms, rpInh=1 * ms,
-             num_neurons=64, num_inh_neurons=5, cutoff=10, num_inputs=1,
+             num_neurons=64, num_inh_neurons=5, num_input_neurons=None, cutoff=10, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     """Summary
 
@@ -167,6 +171,7 @@ def gen1dWTA(groupname,
         rpInh (float, optional): Refractory period of inhibitory neurons
         num_neurons (int, optional): Size of WTA neuron population
         num_inh_neurons (int, optional): Size of inhibitory interneuron population
+        num_input_neurons (int, optional): Size of input population. If None size will be equal WTA population
         cutoff (int, optional): Radius of self-excitation
         num_inputs (int, optional): Number of input currents to WTA
         monitor (bool, optional): Flag to auto-generate spike and statemonitors
@@ -189,11 +194,13 @@ def gen1dWTA(groupname,
                            refractory=rpInh, name='g' + groupname + '_Inh',
                            num_inputs=1)
 
+    if num_input_neurons is None:
+        num_input_neurons = num_neurons
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms
     indWTA = np.asarray([])
     gWTAInpGroup = SpikeGeneratorGroup(
-        num_neurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
+        num_input_neurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
 
     # create synapses
     synInpWTA1e = Connections(gWTAInpGroup, gWTAGroup,
@@ -286,7 +293,7 @@ def gen2dWTA(groupname,
              synapse_eq_builder=DPISyn,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2, sigm=2.5,
              rpWTA=2.5 * ms, rpInh=1 * ms,
-             num_neurons=20, num_inh_neurons=3, cutoff=9, num_inputs=1,
+             num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA
 
@@ -303,6 +310,7 @@ def gen2dWTA(groupname,
         rpInh (float, optional): Refractory period of inhibitory neurons
         num_neurons (int, optional): Size of WTA neuron population
         num_inh_neurons (int, optional): Size of inhibitory interneuron population
+        num_input_neurons (int, optional): Size of input population. If None size will be equal WTA population
         cutoff (int, optional): Radius of self-excitation
         num_inputs (int, optional): Number of input currents to WTA
         monitor (bool, optional): Flag to auto-generate spike and statemonitors
@@ -333,11 +341,15 @@ def gen2dWTA(groupname,
     gWTAGroup.x = "ind2x(i, num_neurons)"
     gWTAGroup.y = "ind2y(i, num_neurons)"
 
+    if num_input_neurons is None:
+        num_input2d_neurons = num2dNeurons
+    else:
+        num_input2d_neurons = num_input_neurons**2
     # empty input for WTA group
     tsWTA = np.asarray([]) * ms
     indWTA = np.asarray([])
     gWTAInpGroup = SpikeGeneratorGroup(
-        num2dNeurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
+        num_input2d_neurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
 
     # create synapses
     synInpWTA1e = Connections(gWTAInpGroup, gWTAGroup,
@@ -426,7 +438,7 @@ def gen2dWTA(groupname,
     return Groups, Monitors, standaloneParams
 
 
-def plotWTA(name, start_time, end_time, num_neurons, WTAMonitors):
+def plotWTA(name, start_time, end_time, WTAMonitors):
     """Function to easily visualize WTA activity.
 
     Args:
@@ -435,7 +447,6 @@ def plotWTA(name, start_time, end_time, num_neurons, WTAMonitors):
             from when network activity should be plotted.
         end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
             Can be smaller than simulation time but not larger
-        num_neurons (int, required): 1D number of neurons in WTA populations
         WTAMonitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors
     """
     pg.setConfigOptions(antialias=True)
@@ -458,11 +469,14 @@ def plotWTA(name, start_time, end_time, num_neurons, WTAMonitors):
     state_syn_input = win_states.addPlot(title="StateMonitor synaptic input")
 
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=WTAMonitors['spikemonWTAInp'], window=raster_input)
+                     num_neurons=np.int(WTAMonitors['spikemonWTAInp'].source.N), monitor=WTAMonitors['spikemonWTAInp'],
+                     window=raster_input)
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=WTAMonitors['spikemonWTA'], window=raster_wta)
+                     num_neurons=WTAMonitors['spikemonWTA'].source.N, monitor=WTAMonitors['spikemonWTA'],
+                     window=raster_wta)
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=WTAMonitors['spikemonWTAInh'], window=raster_inh)
+                     num_neurons=WTAMonitors['spikemonWTAInh'].source.N, monitor=WTAMonitors['spikemonWTAInh'],
+                     window=raster_inh)
 
     plot_statemon_qt(start_time=start_time, end_time=end_time,
                      monitor=WTAMonitors['statemonWTA'], neuron_id=128,

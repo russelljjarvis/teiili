@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+# @Author: mrax, mmilde
+# @Date:   2017-12-27 10:46:44
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-01-17 15:45:15
+
+"""File contains a pre-defined DPI synapse model for the excitatory and inhibitory synapse
+(both dendritic), with all its attributes required by brian2. This model was orinally pubished in Chicca et al. 2014
+
+Attributes:
+    dpi_syn_eq (dict): Dictionary which specifies excitatory or inhibitory synapse according to Differential Pair Intgrator (DPI)
+        synapse circuit.
+"""
+
 dpi_syn_eq = {'model': """
             dIe_syn/dt = (-Ie_syn - Ie_gain + 2*Io_syn*(Ie_syn<=Io_syn))/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
             dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)

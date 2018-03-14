@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Summary
+
+Attributes:
+    colors (TYPE): Description
+    labelStyle (dict): Description
+"""
 # @Author: alpha, mmilde
 # @Date:   2017-07-31 16:13:59
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-12 15:20:18
+# @Last Modified time: 2018-01-25 16:18:18
 
 """
 Plotting tools for different spike and state monitors
@@ -22,27 +28,39 @@ labelStyle = {'color': '#FFF', 'font-size': '12pt'}
 # this is to make plotting that starts at a certain time easier
 
 
-def plotSpikemon(startTime, endTime, SpikeMon, nNeurons, ylab='ind'):
-    if len(SpikeMon.t) > 1:
-        indstart = abs(SpikeMon.t - startTime).argmin()
-        indend = abs(SpikeMon.t - endTime).argmin()
-        plot(np.asarray(SpikeMon.t / ms)[indstart:indend], np.asarray(SpikeMon.i)[indstart:indend], '.k')
+def plot_spikemon(start_time, end_time, monitor, num_neurons, ylab='ind'):
+    """Summary
+
+    Args:
+        start_time (TYPE): Time from which spikes should be visualized
+        end_time (TYPE): Time until which spikes should be visualized
+        monitor (brian2.monitoritor): Monitor which serve as basis for plotting
+        num_neurons (int): Number of neurons to visualize
+        ylab (str, optional): Description
+    """
+    if len(monitor.t) > 1:
+        indstart = abs(monitor.t - start_time).argmin()
+        indend = abs(monitor.t - end_time).argmin()
+        plot(np.asarray(monitor.t / ms)[indstart:indend], np.asarray(monitor.i)[indstart:indend], '.k')
         xlabel('Time [ms]')
         ylabel(ylab)
-        xlim([startTime / ms, endTime / ms])
-        if nNeurons is not None:
-            ylim([0, nNeurons])
+        xlim([start_time / ms, end_time / ms])
+        if num_neurons is not None:
+            ylim([0, num_neurons])
 
 
 def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=16, window=None):
     """Generic plotting function to plot spikemonitors using pyqtgraph
 
     Args:
-        start_time (int, optional): Description
-        end_time (int, optional): Description
+        start_time (int, optional): Time from which spikes should be visualized
+        end_time (int, optional): Time until which spikes should be visualized
         monitor (brian2.obj): Monitor which serve as basis for plotting
         num_neurons (int): Number of neurons to be plotted
         window (TYPE): PyQtGraph window to which the plot should be added
+
+    Raises:
+        UserWarning: Description
     """
     if len(monitor.t) > 1:
         if start_time is None:
@@ -58,6 +76,7 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
         end_ind = abs(monitor.t - end_time).argmin()
 
         window.setXRange(0, end_time / ms, padding=0)
+        window.setYRange(0, num_neurons)
         window.plot(x=np.asarray(monitor.t / ms)[start_ind:end_ind], y=np.asarray(monitor.i)[start_ind:end_ind],
                     pen=None, symbol='o', symbolPen=None,
                     symbolSize=7, symbolBrush=colors[1])
@@ -68,13 +87,24 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
         window.getAxis('left').tickFont = b
 
 
-def plotStatemon(startTime, endTime, StateMon, neuronInd, variable='Vm', unit=mV, name=''):
-    indstart = abs(StateMon.t - startTime).argmin()
-    indend = abs(StateMon.t - endTime).argmin()
-    plot(StateMon.t[indstart:indend] / ms, StateMon[neuronInd].__getattr__(variable)[indstart:indend] / unit)
+def plot_statemon(start_time, end_time, monitor, neuron_id, variable='Vm', unit=mV, name=''):
+    """Summary
+
+    Args:
+        start_time (int, optional): Time from which spikes should be visualized
+        end_time (int, optional): Time until which spikes should be visualized
+        monitor (brian2.obj): Monitor which serve as basis for plotting
+        neuron_id (int): ID of neuron to be visualized
+        variable (str): State variable to visualize
+        unit (brian2.unit, optional): Unit of state variable
+        name (str, optional): Description
+    """
+    indstart = abs(monitor.t - start_time).argmin()
+    indend = abs(monitor.t - end_time).argmin()
+    plot(monitor.t[indstart:indend] / ms, monitor[neuron_id].__getattr__(variable)[indstart:indend] / unit)
     xlabel('Time [ms]')
     ylabel(name + '_' + variable + ' (' + str(unit) + ')')
-    xlim([startTime / ms, endTime / ms])
+    xlim([start_time / ms, end_time / ms])
 
 
 def plot_statemon_qt(start_time=None, end_time=None, monitor=None, neuron_id=True,
@@ -82,13 +112,17 @@ def plot_statemon_qt(start_time=None, end_time=None, monitor=None, neuron_id=Tru
     """Generic plotting function to plot statemonitors using pyqtgraph
 
     Args:
-        start_time (int, optional): Description
-        end_time (int, optional): Description
+        start_time (int, optional): Time from which spikes should be visualized
+        end_time (int, optional): Time until which spikes should be visualized
         monitor (brian2.obj): Monitor which serve as basis for plotting
-        neuron_id (TYPE): Description
-        variable (TYPE): Description
-        window (TYPE): PyQtGraph window to which the plot should be added
-        name (str, optional): Description
+        neuron_id (int): ID of neuron to be visualized
+        variable (str): State variable to visualize
+        unit (brian2.unit, optional): Unit of state variable
+        window (pyqtgraph.window): PyQtGraph window to which the plot should be added
+        name (str, optional): Name of window
+
+    Raises:
+        UserWarning: Description
     """
     if start_time is None:
         start_time = 0 * ms
@@ -114,49 +148,63 @@ def plot_statemon_qt(start_time=None, end_time=None, monitor=None, neuron_id=Tru
     window.getAxis('left').tickFont = b
 
 
-def plotWeightsWtatoGroup(name, nWTA2dNeurons, synWtaG, nCol):
+def plot_weights_wta2group(name, n_wta2d_neurons, syn_g_wta, n_col):
+    """Summary
 
-    mat = np.reshape(synWtaG.w, (nWTA2dNeurons, nWTA2dNeurons, -1))
+    Args:
+        name (str): Name of the plot to be saved
+        n_wta2d_neurons (TYPE): Number of 2d WTA population
+        syn_g_wta (TYPE): Synapse group which weights should be plotted
+        n_col (TYPE): Number of column to visualize
+    """
+    mat = np.reshape(syn_g_wta.w, (n_wta2d_neurons, n_wta2d_neurons, -1))
     imgShape = np.shape(mat)
     print(imgShape)
     nPlots = imgShape[2]
-    #nCol = 10
-    fig, axarr = plt.subplots(nPlots // nCol, nCol)  # ,sharex=True,sharey=True)
+    #n_col = 10
+    fig, axarr = plt.subplots(nPlots // n_col, n_col)  # ,sharex=True,sharey=True)
     for i in range(nPlots):
-        axarr[i // nCol, np.mod(i, nCol)].set_xlim(0, nWTA2dNeurons)
-        axarr[i // nCol, np.mod(i, nCol)].set_ylim(0, nWTA2dNeurons)
-        axarr[i // nCol, np.mod(i, nCol)].axes.get_xaxis().set_visible(False)
-        axarr[i // nCol, np.mod(i, nCol)].axes.get_yaxis().set_visible(False)
-        axarr[i // nCol, np.mod(i, nCol)].set_xticklabels([])
-        axarr[i // nCol, np.mod(i, nCol)].set_yticklabels([])
-        axarr[i // nCol, np.mod(i, nCol)].autoscale(False)
-        # axarr[i//nCol,np.mod(i,nCol)].set(aspect='equal')#adjustable='box-forced',
-        img = axarr[i // nCol, np.mod(i, nCol)].imshow(mat[:, :, i], cmap=plt.cm.binary, vmin=0, vmax=1)
+        axarr[i // n_col, np.mod(i, n_col)].set_xlim(0, n_wta2d_neurons)
+        axarr[i // n_col, np.mod(i, n_col)].set_ylim(0, n_wta2d_neurons)
+        axarr[i // n_col, np.mod(i, n_col)].axes.get_xaxis().set_visible(False)
+        axarr[i // n_col, np.mod(i, n_col)].axes.get_yaxis().set_visible(False)
+        axarr[i // n_col, np.mod(i, n_col)].set_xticklabels([])
+        axarr[i // n_col, np.mod(i, n_col)].set_yticklabels([])
+        axarr[i // n_col, np.mod(i, n_col)].autoscale(False)
+        # axarr[i//n_col,np.mod(i,n_col)].set(aspect='equal')#adjustable='box-forced',
+        img = axarr[i // n_col, np.mod(i, n_col)].imshow(mat[:, :, i], cmap=plt.cm.binary, vmin=0, vmax=1)
         # img.set_aspect(1)
         # print(np.shape(mat[i,:,:]))
-    #plt.colorbar(img, ax=axarr[i//nCol,np.mod(i,nCol)],ticks=[0,0.5,1])
+    #plt.colorbar(img, ax=axarr[i//n_col,np.mod(i,n_col)],ticks=[0,0.5,1])
     # fig.savefig('fig/'+name+'.png',dpi=400)
 
 
-def plotWeightsGrouptoWta(name, nWTA2dNeurons, synGWta, nCol):
+def plot_weights_group2wta(name, n_wta2d_neurons, syn_g_wta, n_col):
+    """Summary
 
-    mat = np.reshape(synGWta.w, (-1, nWTA2dNeurons, nWTA2dNeurons))
+    Args:
+        name (str): Name of the plot to be saved
+        n_wta2d_neurons (int): Number of 2d WTA population
+        syn_g_wta (brian2.synapses): Synapse group which weights should be plotted
+        n_col (int):  Number of column to visualize
+    """
+    mat = np.reshape(syn_g_wta.w, (-1, n_wta2d_neurons, n_wta2d_neurons))
     imgShape = np.shape(mat)
     print(imgShape)
     nPlots = imgShape[0]
-    #nCol = 10
-    fig, axarr = plt.subplots(nPlots // nCol, nCol)  # ,sharex=True,sharey=True)
+    #n_col = 10
+    fig, axarr = plt.subplots(nPlots // n_col, n_col)  # ,sharex=True,sharey=True)
     for i in range(nPlots):
-        axarr[i // nCol, np.mod(i, nCol)].set_xlim(0, nWTA2dNeurons)
-        axarr[i // nCol, np.mod(i, nCol)].set_ylim(0, nWTA2dNeurons)
-        axarr[i // nCol, np.mod(i, nCol)].axes.get_xaxis().set_visible(False)
-        axarr[i // nCol, np.mod(i, nCol)].axes.get_yaxis().set_visible(False)
-        axarr[i // nCol, np.mod(i, nCol)].set_xticklabels([])
-        axarr[i // nCol, np.mod(i, nCol)].set_yticklabels([])
-        axarr[i // nCol, np.mod(i, nCol)].autoscale(False)
-        # axarr[i//nCol,np.mod(i,nCol)].set(aspect='equal')#adjustable='box-forced',
-        img = axarr[i // nCol, np.mod(i, nCol)].imshow(mat[i, :, :], cmap=plt.cm.binary, vmin=0, vmax=1)
+        axarr[i // n_col, np.mod(i, n_col)].set_xlim(0, n_wta2d_neurons)
+        axarr[i // n_col, np.mod(i, n_col)].set_ylim(0, n_wta2d_neurons)
+        axarr[i // n_col, np.mod(i, n_col)].axes.get_xaxis().set_visible(False)
+        axarr[i // n_col, np.mod(i, n_col)].axes.get_yaxis().set_visible(False)
+        axarr[i // n_col, np.mod(i, n_col)].set_xticklabels([])
+        axarr[i // n_col, np.mod(i, n_col)].set_yticklabels([])
+        axarr[i // n_col, np.mod(i, n_col)].autoscale(False)
+        # axarr[i//n_col,np.mod(i,n_col)].set(aspect='equal')#adjustable='box-forced',
+        img = axarr[i // n_col, np.mod(i, n_col)].imshow(mat[i, :, :], cmap=plt.cm.binary, vmin=0, vmax=1)
         # img.set_aspect(1)
         # print(np.shape(mat[i,:,:]))
-    #plt.colorbar(img, ax=axarr[i//nCol,np.mod(i,nCol)],ticks=[0,0.5,1])
+    #plt.colorbar(img, ax=axarr[i//n_col,np.mod(i,n_col)],ticks=[0,0.5,1])
     # fig.savefig('fig/'+name+'.png',dpi=400)

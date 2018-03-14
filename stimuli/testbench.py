@@ -519,7 +519,7 @@ class Visualize():
         """
         global stim
         self.time_window = time_window
-        app = QtGui.QApplication([])
+        self.app = QtGui.QApplication([])
         pg.setConfigOptions(antialias=True)
         colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
                   (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
@@ -528,6 +528,8 @@ class Visualize():
         win.resize(1024, 768)
         eventPlot = win.addPlot(title="Input events in ")
         eventPlot.addLegend()
+
+        self.win = win
 
         if type(events) == str:
             self.events = np.load(events)
@@ -549,9 +551,9 @@ class Visualize():
                               symbolSize=7, symbolBrush=colors[0],
                               name='ON Events')
         eventPlot.enableAutoRange('xy', False)  # stop auto-scaling after the first data set is plotted
-        timer = QtCore.QTimer()
-        timer.timeout.connect(self.update)
-        timer.start(100)
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(100)
 
         QtGui.QApplication.instance().exec_()
 
@@ -569,8 +571,16 @@ class Visualize():
         self.stim.setData(x=data_x, y=data_y)
 
 
-# import numpy as np
-# from NCSBrian2Lib.stimuli.testbench import Visualize
-# vis = Visualize()
-# events = np.load('/home/schlowmo/Documents/events.npy')
-# vis.plot(events)
+if __name__ == '__main__':
+    import numpy as np
+    from NCSBrian2Lib.stimuli.testbench import Visualize
+    import tkinter as tk
+    from tkinter import filedialog
+
+    root = tk.Tk()
+    root.withdraw()
+    vis = Visualize()
+    eventsfile = filedialog.askopenfilename()
+    events = np.load(eventsfile)
+    vis.plot(events)
+

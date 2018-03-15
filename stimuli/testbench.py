@@ -150,7 +150,7 @@ class OCTA_Testbench():
             return int(x + 0.5)
 
     def rotating_bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
-                     angle_step=10, artifical_stimulus=True, rec_path=None, debug=False):
+                     angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None, debug=False):
         """This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
         A bar is rotating in the center. The goal is to learn necessary
@@ -166,6 +166,8 @@ class OCTA_Testbench():
             angle_step (int, optional): Angular velocity. Sets setp widh in np.arrange
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
             rec_path (str, optional): Path to aedat reacording, only used if arificial_stimulus=False
+            save_path (str, optional): Path to store generated events
+            debug (bool, optional): Description
 
         Returns:
             SpikeGenerator obj: Brian2 objects which holds the spiketimes as well
@@ -213,7 +215,9 @@ class OCTA_Testbench():
             self.events[1, :] = np.asarray(y_coord)
             self.events[2, :] = np.asarray(self.times)
             self.events[3, :] = np.asarray(pol)
-            np.save('/home/schlowmo/Documents/events.npy', self.events)
+            if save_path is None:
+                save_path = os.getcwd() + '/'
+            np.save(save_path + 'events.npy', self.events)
         if debug:
             print("Max X: {}. Max Y: {}".format(np.max(self.events[0, :]), np.max(self.events[1, :])))
             print("Stimulus last from {} ms to {} ms".format(np.min(self.events[2, :]), np.max(self.events[2, :])))
@@ -454,7 +458,7 @@ class WTA_Testbench():
         noise_input (brian2.PoissionGroup): PoissionGroup which provides noise events
     """
 
-    def __init(self):
+    def __init__(self):
         """Summary
         """
         pass

@@ -180,7 +180,7 @@ class OCTA_Testbench():
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
             assert(os.path.isfile(rec_path + 'bar.aedat')), "No recording exists. Please record the respective stimulus first."
-            events = aedat2numpy(datafile=rec_path + 'bar.aedat', camera='DVS240')
+            self.events = aedat2numpy(datafile=rec_path + 'bar.aedat', camera='DVS240')
         else:
             x_coord = []
             y_coord = []
@@ -265,7 +265,7 @@ class OCTA_Testbench():
             elif orientation == 'horizontal':
                 fname = 'Infinity_bar_horizontal.aedat'
             assert(os.path.isfile(fname)), "No recording exists. Please record the respective stimulus first."
-            events = aedat2numpy(datafile=fname, camera='DVS240')
+            self.events = aedat2numpy(datafile=fname, camera='DVS240')
         else:
             x_coord = []
             y_coord = []
@@ -297,19 +297,19 @@ class OCTA_Testbench():
                     self.times .append(i * ts_offset)
                     pol.append(1)
 
-            events = np.zeros((4, len(x_coord)))
-            events[0, :] = np.asarray(x_coord)
-            events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(self.times)
-            events[3, :] = np.asarray(pol)
+            self.events = np.zeros((4, len(x_coord)))
+            self.events[0, :] = np.asarray(x_coord)
+            self.events[1, :] = np.asarray(y_coord)
+            self.events[2, :] = np.asarray(self.times)
+            self.events[3, :] = np.asarray(pol)
 
         if returnEvents:
-            return events
+            return self.events
         else:
             if not artifical_stimulus:
-                self.indices, self.times = dvs2ind(events, scale=False)
+                self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                self.indices = xy2ind(events[0, :], events[1, :], n2dNeurons)
+                self.indices = xy2ind(self.events[0, :], self.events[1, :], n2dNeurons)
                 print(np.max(self.indices), np.min(self.indices))
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
@@ -353,8 +353,8 @@ class OCTA_Testbench():
             elif orthogonal == 2:
                 fname = rec_path + 'Infinity_orthogonal_aligned_bar.aedat'
             assert(os.path.isfile(fname)), "No recording exists. Please record the respective stimulus first."
-            events = aedat2numpy(datafile=fname, camera='DVS240')
-            return events
+            self.events = aedat2numpy(datafile=fname, camera='DVS240')
+            return self.events
         else:
             x_coord = []
             y_coord = []
@@ -400,19 +400,19 @@ class OCTA_Testbench():
                     self.times.append(i * ts_offset)
                     pol.append(1)
 
-            events = np.zeros((4, len(x_coord)))
-            events[0, :] = np.asarray(x_coord)
-            events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(self.times)
-            events[3, :] = np.asarray(pol)
+            self.events = np.zeros((4, len(x_coord)))
+            self.events[0, :] = np.asarray(x_coord)
+            self.events[1, :] = np.asarray(y_coord)
+            self.events[2, :] = np.asarray(self.times)
+            self.events[3, :] = np.asarray(pol)
 
         if returnEvents:
-            return events
+            return self.events
         else:
             if not artifical_stimulus:
-                self.indices, self.times = dvs2ind(events, scale=False)
+                self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                self.indices = xy2ind(events[0, :], events[1, :], n2dNeurons)
+                self.indices = xy2ind(self.events[0, :], self.events[1, :], n2dNeurons)
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
             return gInpGroup

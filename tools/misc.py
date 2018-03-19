@@ -137,7 +137,7 @@ def dist1d2dint(i, j, n2d_neurons):
 
 
 @implementation('cpp', '''
-    float dist2dind(int ix, int iy,int jx, int jy) {
+    float dist2d2dint(int ix, int iy,int jx, int jy) {
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
@@ -159,7 +159,7 @@ def dist2d2dint(ix, iy, jx, jy):
 
 
 @implementation('cpp', '''
-    float dist2d(float ix, float iy,float jx, float jy) {
+    float dist2d2dfloat(float ix, float iy,float jx, float jy) {
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')

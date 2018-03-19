@@ -150,7 +150,7 @@ class OCTA_Testbench():
             return int(x + 0.5)
 
     def rotating_bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
-                     angle_step=10, artifical_stimulus=True, rec_path=None, debug=False):
+                     angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None, debug=False):
         """This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
         A bar is rotating in the center. The goal is to learn necessary
@@ -166,6 +166,8 @@ class OCTA_Testbench():
             angle_step (int, optional): Angular velocity. Sets setp widh in np.arrange
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
             rec_path (str, optional): Path to aedat reacording, only used if arificial_stimulus=False
+            save_path (str, optional): Path to store generated events
+            debug (bool, optional): Description
 
         Returns:
             SpikeGenerator obj: Brian2 objects which holds the spiketimes as well
@@ -178,7 +180,7 @@ class OCTA_Testbench():
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
             assert(os.path.isfile(rec_path + 'bar.aedat')), "No recording exists. Please record the respective stimulus first."
-            events = aedat2numpy(datafile=rec_path + 'bar.aedat', camera='DVS240')
+            self.events = aedat2numpy(datafile=rec_path + 'bar.aedat', camera='DVS240')
         else:
             x_coord = []
             y_coord = []
@@ -213,7 +215,9 @@ class OCTA_Testbench():
             self.events[1, :] = np.asarray(y_coord)
             self.events[2, :] = np.asarray(self.times)
             self.events[3, :] = np.asarray(pol)
-            np.save('/home/schlowmo/Documents/events.npy', self.events)
+            if save_path is None:
+                save_path = os.getcwd() + '/'
+            np.save(save_path + 'events.npy', self.events)
         if debug:
             print("Max X: {}. Max Y: {}".format(np.max(self.events[0, :]), np.max(self.events[1, :])))
             print("Stimulus last from {} ms to {} ms".format(np.min(self.events[2, :]), np.max(self.events[2, :])))
@@ -261,7 +265,7 @@ class OCTA_Testbench():
             elif orientation == 'horizontal':
                 fname = 'Infinity_bar_horizontal.aedat'
             assert(os.path.isfile(fname)), "No recording exists. Please record the respective stimulus first."
-            events = aedat2numpy(datafile=fname, camera='DVS240')
+            self.events = aedat2numpy(datafile=fname, camera='DVS240')
         else:
             x_coord = []
             y_coord = []
@@ -293,19 +297,19 @@ class OCTA_Testbench():
                     self.times .append(i * ts_offset)
                     pol.append(1)
 
-            events = np.zeros((4, len(x_coord)))
-            events[0, :] = np.asarray(x_coord)
-            events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(self.times)
-            events[3, :] = np.asarray(pol)
+            self.events = np.zeros((4, len(x_coord)))
+            self.events[0, :] = np.asarray(x_coord)
+            self.events[1, :] = np.asarray(y_coord)
+            self.events[2, :] = np.asarray(self.times)
+            self.events[3, :] = np.asarray(pol)
 
         if returnEvents:
-            return events
+            return self.events
         else:
             if not artifical_stimulus:
-                self.indices, self.times = dvs2ind(events, scale=False)
+                self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                self.indices = xy2ind(events[0, :], events[1, :], n2dNeurons)
+                self.indices = xy2ind(self.events[0, :], self.events[1, :], n2dNeurons)
                 print(np.max(self.indices), np.min(self.indices))
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
@@ -349,8 +353,8 @@ class OCTA_Testbench():
             elif orthogonal == 2:
                 fname = rec_path + 'Infinity_orthogonal_aligned_bar.aedat'
             assert(os.path.isfile(fname)), "No recording exists. Please record the respective stimulus first."
-            events = aedat2numpy(datafile=fname, camera='DVS240')
-            return events
+            self.events = aedat2numpy(datafile=fname, camera='DVS240')
+            return self.events
         else:
             x_coord = []
             y_coord = []
@@ -396,19 +400,19 @@ class OCTA_Testbench():
                     self.times.append(i * ts_offset)
                     pol.append(1)
 
-            events = np.zeros((4, len(x_coord)))
-            events[0, :] = np.asarray(x_coord)
-            events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(self.times)
-            events[3, :] = np.asarray(pol)
+            self.events = np.zeros((4, len(x_coord)))
+            self.events[0, :] = np.asarray(x_coord)
+            self.events[1, :] = np.asarray(y_coord)
+            self.events[2, :] = np.asarray(self.times)
+            self.events[3, :] = np.asarray(pol)
 
         if returnEvents:
-            return events
+            return self.events
         else:
             if not artifical_stimulus:
-                self.indices, self.times = dvs2ind(events, scale=False)
+                self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                self.indices = xy2ind(events[0, :], events[1, :], n2dNeurons)
+                self.indices = xy2ind(self.events[0, :], self.events[1, :], n2dNeurons)
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
             return gInpGroup
@@ -454,7 +458,7 @@ class WTA_Testbench():
         noise_input (brian2.PoissionGroup): PoissionGroup which provides noise events
     """
 
-    def __init(self):
+    def __init__(self):
         """Summary
         """
         pass
@@ -519,7 +523,7 @@ class Visualize():
         """
         global stim
         self.time_window = time_window
-        app = QtGui.QApplication([])
+        self.app = QtGui.QApplication([])
         pg.setConfigOptions(antialias=True)
         colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
                   (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
@@ -528,6 +532,8 @@ class Visualize():
         win.resize(1024, 768)
         eventPlot = win.addPlot(title="Input events in ")
         eventPlot.addLegend()
+
+        self.win = win
 
         if type(events) == str:
             self.events = np.load(events)
@@ -549,9 +555,9 @@ class Visualize():
                               symbolSize=7, symbolBrush=colors[0],
                               name='ON Events')
         eventPlot.enableAutoRange('xy', False)  # stop auto-scaling after the first data set is plotted
-        timer = QtCore.QTimer()
-        timer.timeout.connect(self.update)
-        timer.start(100)
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(100)
 
         QtGui.QApplication.instance().exec_()
 
@@ -569,8 +575,16 @@ class Visualize():
         self.stim.setData(x=data_x, y=data_y)
 
 
-# import numpy as np
-# from NCSBrian2Lib.stimuli.testbench import Visualize
-# vis = Visualize()
-# events = np.load('/home/schlowmo/Documents/events.npy')
-# vis.plot(events)
+if __name__ == '__main__':
+    import numpy as np
+    from NCSBrian2Lib.stimuli.testbench import Visualize
+    import tkinter as tk
+    from tkinter import filedialog
+
+    root = tk.Tk()
+    root.withdraw()
+    vis = Visualize()
+    eventsfile = filedialog.askopenfilename()
+    events = np.load(eventsfile)
+    vis.plot(events)
+

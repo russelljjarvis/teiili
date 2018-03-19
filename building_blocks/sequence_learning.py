@@ -14,20 +14,14 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray,\
     defaultclock, profiling_summary, floor, title, xlabel, ylabel
 
-from NCSBrian2Lib.Equations.neuronEquations import ExpAdaptIF
-from NCSBrian2Lib.Equations.neuronEquations import Silicon
+from NCSBrian2Lib.models.neuron_models import ExpAdaptIF
+from NCSBrian2Lib.models.synapse_models import ReversalSynV
 
-from NCSBrian2Lib.Equations.synapseEquations import reversalSynV
-from NCSBrian2Lib.Equations.synapseEquations import BraderFusiSynapses, SiliconSynapses
+from NCSBrian2Lib.models.parameters.exp_adapt_if_param import parameters as neuron_parameters
+from NCSBrian2Lib.models.parameters.exp_syn_param import parameters as syn_parameters
 
-from NCSBrian2Lib.Parameters.neuronParams import gerstnerExpAIFdefaultregular
-from NCSBrian2Lib.Parameters.neuronParams import SiliconNeuronP
-
-from NCSBrian2Lib.Parameters.synapseParams import revSyn_default
-from NCSBrian2Lib.Parameters.synapseParams import Braderfusi, SiliconSynP
-
-from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
-from NCSBrian2Lib.Groups.Groups import Neurons, Connections
+from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
+from NCSBrian2Lib.core.groups import Neurons, Connections
 
 #%%
 #===============================================================================
@@ -53,21 +47,21 @@ slParams = {'synInpOrd1e_weight': 1.3,
 class SequenceLearning(BuildingBlock):
     '''a 1 or 2D square WTA'''
 
-    def __init__(self, name, neuronEq=ExpAdaptIF, synapseEq=reversalSynV,
-                 neuronParams=gerstnerExpAIFdefaultregular, synapseParams=revSyn_default,
+    def __init__(self, name, neuron_eq_builder=ExpAdaptIF, synapse_eq_builder=ReversalSynV,
+                 neuronParams=neuron_parameters, synapseParams=syn_parameters,
                  blockParams=slParams, numElements=3, numNeuronsPerGroup=6,
-                 numInputs=1, debug=False):
+                 num_inputs=1, debug=False):
 
-        BuildingBlock.__init__(self, name, neuronEq, synapseEq,
-                               neuronParams, synapseParams, blockParams, debug)
+        BuildingBlock.__init__(self, name, neuron_eq_builder, synapse_eq_builder,
+                               blockParams, debug)
 
         self.Groups, self.Monitors,\
             self.standaloneParams = genSequenceLearning(name,
-                                                        neuronEq, neuronParams,
-                                                        synapseEq, synapseParams,
+                                                        neuron_eq_builder, neuronParams,
+                                                        synapse_eq_builder, synapseParams,
                                                         numElements=numElements,
                                                         numNeuronsPerGroup=numNeuronsPerGroup,
-                                                        numInputs=numInputs,
+                                                        num_inputs=num_inputs,
                                                         debug=debug, **blockParams)
         self.group = self.Groups['gOrdGroups']
         self.inputGroup = self.Groups['gInputGroup']
@@ -80,8 +74,8 @@ class SequenceLearning(BuildingBlock):
 
 
 def genSequenceLearning(groupname='Seq',
-                        neuronEq=ExpAdaptIF, neuronPar=gerstnerExpAIFdefaultregular,
-                        synapseEq=reversalSynV, synapsePar=revSyn_default,
+                        neuron_eq_builder=ExpAdaptIF, neuronPar=neuron_parameters,
+                        synapse_eq_builder=ReversalSynV, synapsePar=syn_parameters,
                         numElements=4, numNeuronsPerGroup=8,
                         synInpOrd1e_weight=1.3,
                         synOrdMem1e_weight=1.1,
@@ -99,7 +93,7 @@ def genSequenceLearning(groupname='Seq',
                         gOrdGroups_refP=1.7 * ms,
                         gMemGroups_refP=2.3 * ms,
                         #
-                        numInputs=1,
+                        num_inputs=1,
                         debug=False):
     """create Sequence Learning Network after the model from Sandamirskaya and Schoener (2010)"""
 
@@ -123,35 +117,35 @@ def genSequenceLearning(groupname='Seq',
         numNeuronsPerGroup, indices=indReset, times=tsReset, name='spikegenReset_' + groupname)
 
     # Neurongoups
-    gOrdGroups = Neurons(nOrdNeurons, neuronEq, neuronPar, refractory=gOrdGroups_refP,
-                         name='g' + 'Ord_' + groupname, numInputs=7 + numInputs, debug=debug)
-    gMemGroups = Neurons(nMemNeurons, neuronEq, neuronPar, refractory=gMemGroups_refP,
-                         name='g' + 'Mem_' + groupname, numInputs=3, debug=debug)
+    gOrdGroups = Neurons(nOrdNeurons, equation_builder=neuron_eq_builder(), refractory=gOrdGroups_refP,
+                         name='g' + 'Ord_' + groupname, num_inputs=7 + num_inputs)
+    gMemGroups = Neurons(nMemNeurons, equation_builder=neuron_eq_builder(), refractory=gMemGroups_refP,
+                         name='g' + 'Mem_' + groupname, num_inputs=3)
 
     # Synapses
     # excitatory
-    synInpOrd1e = Connections(gInputGroup, gOrdGroups, synapseEq, synapsePar,
-                              method="euler", debug=debug, name='sInpOrd1e_' + groupname)
-    synOrdMem1e = Connections(gOrdGroups, gMemGroups, synapseEq, synapsePar,
-                              method="euler", debug=debug, name='sOrdMem1e_' + groupname)
-    synMemOrd1e = Connections(gMemGroups, gOrdGroups, synapseEq, synapsePar,
-                              method="euler", debug=debug, name='sMemOrd1e_' + groupname)
+    synInpOrd1e = Connections(gInputGroup, gOrdGroups, equation_builder=synapse_eq_builder(),
+                              method="euler", name='sInpOrd1e_' + groupname)
+    synOrdMem1e = Connections(gOrdGroups, gMemGroups, equation_builder=synapse_eq_builder(),
+                              method="euler", name='sOrdMem1e_' + groupname)
+    synMemOrd1e = Connections(gMemGroups, gOrdGroups, synapse_eq_builder(), synapsePar,
+                              method="euler", name='sMemOrd1e_' + groupname)
     # local
-    synOrdOrd1e = Connections(gOrdGroups, gOrdGroups, synapseEq, synapsePar,
-                              method="euler", debug=debug, name='sOrdOrd1e_' + groupname)
-    synMemMem1e = Connections(gMemGroups, gMemGroups, synapseEq, synapsePar,
-                              method="euler", debug=debug, name='sMemMem1e_' + groupname)
+    synOrdOrd1e = Connections(gOrdGroups, gOrdGroups, equation_builder=synapse_eq_builder(),
+                              method="euler", name='sOrdOrd1e_' + groupname)
+    synMemMem1e = Connections(gMemGroups, gMemGroups, equation_builder=synapse_eq_builder(),
+                              method="euler", name='sMemMem1e_' + groupname)
     # inhibitory
-    synOrdOrd1i = Connections(gOrdGroups, gOrdGroups, synapseEq, synapsePar,
-                              method="euler", debug=debug, name='sOrdOrd1i_' + groupname)
-    synMemOrd1i = Connections(gMemGroups, gOrdGroups, synapseEq, synapsePar,
-                              method="euler", debug=debug, name='sMemOrd1i_' + groupname)
-    synCoSOrd1i = Connections(gCoSGroup, gOrdGroups, synapseEq, synapsePar,
-                              method="euler", debug=debug, name='sCoSOrd1i_' + groupname)
-    synResetOrd1i = Connections(gResetGroup, gOrdGroups, synapseEq, synapsePar,
-                                method="euler", debug=debug, name='sResOrd1i_' + groupname)
-    synResetMem1i = Connections(gResetGroup, gMemGroups, synapseEq, synapsePar,
-                                method="euler", debug=debug, name='sResMem1i_' + groupname)
+    synOrdOrd1i = Connections(gOrdGroups, gOrdGroups, equation_builder=synapse_eq_builder(),
+                              method="euler", name='sOrdOrd1i_' + groupname)
+    synMemOrd1i = Connections(gMemGroups, gOrdGroups, equation_builder=synapse_eq_builder(),
+                              method="euler", name='sMemOrd1i_' + groupname)
+    synCoSOrd1i = Connections(gCoSGroup, gOrdGroups, equation_builder=synapse_eq_builder(),
+                              method="euler", name='sCoSOrd1i_' + groupname)
+    synResetOrd1i = Connections(gResetGroup, gOrdGroups, equation_builder=synapse_eq_builder(),
+                                method="euler", name='sResOrd1i_' + groupname)
+    synResetMem1i = Connections(gResetGroup, gMemGroups, equation_builder=synapse_eq_builder(),
+                                method="euler", name='sResMem1i_' + groupname)
 
     # predefine connections for efficiency reasons
     iii = []

@@ -137,10 +137,12 @@ def replaceVariablesInCPPcode(replace_vars, replace_file_location):
             f.write(line)
     f.close()
     if len(replaceTODOlist) > 0:
-        # maybe we should raise an exception here as this is rather serious?
         warnings.warn("could not find matching variables in cpp code for " + str(replaceTODOlist), Warning)  # warning, items left in todolist
         print('\n* * * * * * * * * * * * * * * * *\n NOT all variables successfully replaced in cpp code! \n')
         print("could not find matching variables in cpp code for " + str(replaceTODOlist))
+
+        # maybe we should raise an exception here as this is rather serious?
+        raise Exception("could not find matching variables in cpp code for " + str(replaceTODOlist))
     else:
         print('\n*********************************\nall variables successfully replaced in cpp code! \n')
 

@@ -274,15 +274,15 @@ class OCTA_Testbench():
             for i, cAngle in enumerate(self.angles):
                 x, y = self.infinity(cAngle)
                 if orientation == 'vertical':
-                    endy_1 = y + ((length / 2) * np.sin(np.pi / 2))
-                    endx_1 = x + ((length / 2) * np.cos(np.pi / 2))
-                    endy_2 = y - ((length / 2) * np.sin(np.pi / 2))
-                    endx_2 = x - ((length / 2) * np.cos(np.pi / 2))
+                    endy_1 = shift + shift * y + ((length / 2) * np.sin(np.pi / 2))
+                    endx_1 = shift + shift * x + ((length / 2) * np.cos(np.pi / 2))
+                    endy_2 = shift + shift * y - ((length / 2) * np.sin(np.pi / 2))
+                    endx_2 = shift + shift * x - ((length / 2) * np.cos(np.pi / 2))
                 elif orientation == 'horizontal':
-                    endy_1 = y + ((length / 2) * np.sin(np.pi))
-                    endx_1 = x + ((length / 2) * np.cos(np.pi))
-                    endy_2 = y - ((length / 2) * np.sin(np.pi))
-                    endx_2 = x - ((length / 2) * np.cos(np.pi))
+                    endy_1 = shift + shift * y + ((length / 2) * np.sin(np.pi))
+                    endx_1 = shift + shift * x + ((length / 2) * np.cos(np.pi))
+                    endy_2 = shift + shift * y - ((length / 2) * np.sin(np.pi))
+                    endx_2 = shift + shift * x - ((length / 2) * np.cos(np.pi))
                 self.start = np.asarray((endx_1, endy_1))
                 self.end = np.asarray((endx_2, endy_2))
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
@@ -365,27 +365,27 @@ class OCTA_Testbench():
                 x, y = self.infinity(cAngle)
                 if orthogonal == 1:
                     if x >= shift:
-                        endy_1 = y + ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                        endx_1 = x + ((length / 2) * np.cos((np.pi / 2 * cAngle)))
-                        endy_2 = y - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                        endx_2 = x - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                        endy_1 = shift + shift * y + ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                        endx_1 = shift + shift * x + ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                        endy_2 = shift + shift * y - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                        endx_2 = shift + shift * x - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
 
                     else:
-                        endy_1 = y - ((length / 2) * np.sin(np.pi + (np.pi / 2 * flipped_angles[i])))
-                        endx_1 = x - ((length / 2) * np.cos(np.pi + (np.pi / 2 * flipped_angles[i])))
-                        endy_2 = y + ((length / 2) * np.sin(np.pi + (np.pi / 2 * flipped_angles[i])))
-                        endx_2 = x + ((length / 2) * np.cos(np.pi + (np.pi / 2 * flipped_angles[i])))
+                        endy_1 = shift + shift * y - ((length / 2) * np.sin(np.pi + (np.pi / 2 * flipped_angles[i])))
+                        endx_1 = shift + shift * x - ((length / 2) * np.cos(np.pi + (np.pi / 2 * flipped_angles[i])))
+                        endy_2 = shift + shift * y + ((length / 2) * np.sin(np.pi + (np.pi / 2 * flipped_angles[i])))
+                        endx_2 = shift + shift * x + ((length / 2) * np.cos(np.pi + (np.pi / 2 * flipped_angles[i])))
                 elif orthogonal == 0:
-                    endy_1 = y + ((length / 2) * np.sin(np.pi / 2 + cAngle))
-                    endx_1 = x + ((length / 2) * np.cos(np.pi / 2 + cAngle))
-                    endy_2 = y - ((length / 2) * np.sin(np.pi / 2 + cAngle))
-                    endx_2 = x - ((length / 2) * np.cos(np.pi / 2 + cAngle))
+                    endy_1 = shift + shift * y + ((length / 2) * np.sin(np.pi / 2 + cAngle))
+                    endx_1 = shift + shift * x + ((length / 2) * np.cos(np.pi / 2 + cAngle))
+                    endy_2 = shift + shift * y - ((length / 2) * np.sin(np.pi / 2 + cAngle))
+                    endx_2 = shift + shift * x - ((length / 2) * np.cos(np.pi / 2 + cAngle))
 
                 elif orthogonal == 2:
-                    endy_1 = y + ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                    endx_1 = x + ((length / 2) * np.cos((np.pi / 2 * cAngle)))
-                    endy_2 = y - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                    endx_2 = x - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                    endy_1 = shift + shift * y + ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                    endx_1 = shift + shift * x + ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                    endy_2 = shift + shift * y - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                    endx_2 = shift + shift * x - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
 
                 self.start = np.asarray((endx_1, endy_1))
                 self.end = np.asarray((endx_2, endy_2))

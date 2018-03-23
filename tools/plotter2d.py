@@ -96,6 +96,8 @@ class Plotter2d(object):
         self._t = monitor.t  # times of spikes
         self.shape = (dims[0], dims[1], len(monitor.t))
 
+        self.monitor = monitor #mainly for debugging!
+
         #self.name = monitor.name
         try:  # that should work if the monitor is a Brian2 Spikemonitor
             self._i = monitor.i  # neuron index number of spike
@@ -211,7 +213,10 @@ class Plotter2d(object):
             self.mask = slice(len(self._t))  # [True] * (len(self._t))
 
     def get_sparse3d(self, dt):
-        """Summary
+        """Using the package sparse (based of scipy sparse, but for 3d), the spiketimes
+        are converted into a sparse matrix. This step is basically just for easy
+        conversion into a dense matrix later, as you cannot do so many computations
+        with the sparse representation.
 
         Args:
             dt (TYPE): Description
@@ -231,7 +236,10 @@ class Plotter2d(object):
     # print(sparse_test.todense())
 
     def get_dense3d(self, dt):
-        """Summary
+        """Transforms the sparse spike time representation in a dense representation,
+        where every spike is given as a 1 in a 3d matrix (time + 2 spatial dimensions)
+        The data is binned using dt. If there is more than one spike in a bin, the bin will
+        not have the value 1, but the number of spikes.
 
         Args:
             dt (TYPE): Description
@@ -242,21 +250,20 @@ class Plotter2d(object):
         sparse3d = self.get_sparse3d(dt)
         return sparse3d.todense()
 
-    def get_filtered(self, dt, filtersize, recalc=False):
-        """Summary
+    def get_filtered(self, dt, filtersize):
+        """applies a rectangular filter (convolution) of length filtersize over time (dimension 0).
+        It returns a 3d matrix with the firing rate.
+        Spiketimes will be binned with a step size of dt.
 
         Args:
-            dt (TYPE): Description
-            filtersize (TYPE): Description
-            recalc (bool, optional): Description
-
+            dt (TYPE): the time step with which the spike times are binned
+            filtersize (TYPE): length of the filter (in brian2 time units)
         Returns:
             TYPE: Description
         """
-        if (dt / ms, filtersize / ms) not in self._filtered or recalc:
-            dense3d = self.get_dense3d(dt)
-            self._filtered[(dt / ms, filtersize / ms)] = ndimage.uniform_filter1d(
-                dense3d, size=int(filtersize / dt), axis=0, mode='constant') * second / dt
+        dense3d = self.get_dense3d(dt)
+        self._filtered[(dt / ms, filtersize / ms)] = ndimage.uniform_filter1d(
+            dense3d, size=int(filtersize / dt), axis=0, mode='constant') * second / dt
         return self._filtered[(dt / ms, filtersize / ms)]
     #    import timeit
     #    timeit.timeit("ndimage.uniform_filter(dense3d, size=(0,0,10))",
@@ -279,22 +286,29 @@ class Plotter2d(object):
         Returns:
             TYPE: Description
         """
-        prev_mask = self.mask
-        self.mask = np.where(self.pol == 0)
-        try:
-            video_filtered0 = self.get_filtered(plot_dt, filtersize, recalc=True)
-        except MemoryError:
-            print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
-            video_filtered0 = self.get_filtered(plot_dt * 10, filtersize)
-        video_filtered0[video_filtered0 > 0] = 1
 
-        self.mask = np.where(self.pol == 1)
-        try:
-            video_filtered1 = self.get_filtered(plot_dt, filtersize, recalc=True)
-        except MemoryError:
-            print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
-            video_filtered1 = self.get_filtered(plot_dt * 10, filtersize)
-        video_filtered1[video_filtered1 > 0] = 2
+        video_filtered0 = 0
+        video_filtered1 = 0
+
+        prev_mask = self.mask
+        self.mask = np.where(self.pol == 0)[0]
+        if len(self.t) > 0:
+            try:
+                video_filtered0 = self.get_filtered(plot_dt, filtersize)
+            except MemoryError:
+                print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
+                video_filtered0 = self.get_filtered(plot_dt * 10, filtersize)
+            video_filtered0[video_filtered0 > 0] = 1
+
+        self.mask = np.where(self.pol == 1)[0]
+        if len(self.t) > 0:
+            try:
+                video_filtered1 = self.get_filtered(plot_dt, filtersize)
+            except MemoryError:
+                print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
+                video_filtered1 = self.get_filtered(plot_dt * 10, filtersize)
+            video_filtered1[video_filtered1 > 0] = 2
+
 
         video_filtered = video_filtered0 + video_filtered1
 
@@ -503,7 +517,7 @@ class Plotter2d(object):
             return cls(mon, (rows, cols))
 
     @classmethod
-    def loaddvs(cls, eventsfile):
+    def loaddvs(cls, eventsfile, dims = None):
         """
         loads a dvs numpy (events file) from aedat2numpy and returns a
         SpikeMonitor2d object, you can also directly pass an events array
@@ -523,8 +537,9 @@ class Plotter2d(object):
             events = np.load(eventsfile)
         else:
             events = eventsfile
-        mon = DVSmonitor(*events)
-        dims = (int(1 + np.max(mon.xi)), int(np.max(1 + mon.yi)))
+        mon = DVSmonitor(*list(events))
+        if dims is None:
+            dims = (int(1 + np.max(mon.xi)), int(np.max(1 + mon.yi)))
         return cls(mon, dims)
 
     def savecsv(self, filename):

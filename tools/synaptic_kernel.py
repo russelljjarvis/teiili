@@ -170,7 +170,23 @@ def kernel_gauss_2d(i, j, gsigma, n2d_neurons):
 # TODO: Add cpp implementation
 # TODO: Add phase parameter
 @implementation('cpp', '''
-
+    float fkernelGabor2d(int i, int j, int offx, int offy, float theta, float sigmax, float sigmay, float freq, int InputSizeX, int InputSizeY, int WindowSizeX, int WindowSizeY, int RFSize){
+    int ix = i % InputSizeX;
+    int iy = i / InputSizeX;
+    if(((WindowSizeX + abs(offx)) <= (InputSizeX-(RFSize-1))) & ((WindowSizeY + abs(offy)) <= (InputSizeY-(RFSize-1)))){
+        int x0 = j % WindowSizeX;
+        int y0 = j / WindowSizeX;
+        x0 += int((InputSizeX-WindowSizeX+1)/2) + offx;
+        y0 += int((InputSizeY-WindowSizeY+1)/2) + offy;
+        float x =  (ix - x0)*cos(theta-M_PI/2) + (iy - y0)*sin(theta-M_PI/2);
+        float y = -(ix - x0)*sin(theta-M_PI/2) + (iy - y0)*cos(theta-M_PI/2);
+        float exponent = -((pow(x,2)/(2*pow(sigmax,2))) + (pow(y,1)/(2*pow(sigmay,2))));
+        float res = exp(exponent)*cos(M_PI*x/freq);
+        res = res*(abs(ix - x0)<RFSize/2) *(abs(iy - y0)<RFSize/2);
+        return res;}
+    else{
+        return 0;}
+        }
      ''')
 @declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float', freq='float', InputSizeX='integer', InputSizeY='integer', WindowSizeX='integer', WindowSizeY='integer', RFSize='integer', result='float')
 @check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, InputSizeX=1, InputSizeY=1, WindowSizeX=1, WindowSizeY=1, RFSize=1, result=1)
@@ -208,7 +224,7 @@ def fkernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, In
     if (WindowSizeX + abs(offx) <= (InputSizeX-(RFSize-1))) & (WindowSizeY + abs(offy) <= (InputSizeY-(RFSize-1))):
         (y0, x0) = np.unravel_index(j, (WindowSizeY, WindowSizeX))
         x0 = x0 + int((InputSizeX-WindowSizeX+1)/2) + offx
-        y0 = y0 + int((InputSizeY-WindowSizeY+1)/2) - offy
+        y0 = y0 + int((InputSizeY-WindowSizeY+1)/2) + offy
         x =  (ix - x0)*np.cos(theta-np.pi/2) + (iy - y0)*np.sin(theta-np.pi/2)
         y = -(ix - x0)*np.sin(theta-np.pi/2) + (iy - y0)*np.cos(theta-np.pi/2)
         exponent = -(((x**2)/(2*sigmax**2)) + ((y**2)/(2*sigmay**2)))

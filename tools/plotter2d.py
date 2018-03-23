@@ -52,7 +52,7 @@ class DVSmonitor():
         yi (TYPE): Description
     """
 
-    def __init__(self, xi, yi, t, pol):
+    def __init__(self, xi, yi, t, pol, unit = None):
         """Summary
 
         Args:
@@ -61,7 +61,10 @@ class DVSmonitor():
             t (TYPE): Description
             pol (TYPE): Description
         """
-        self.t = t * us
+        if unit is None:
+            self.t = t * ms
+        else:
+            self.t = t * unit
         self.xi = xi
         self.yi = yi
         self.pol = pol

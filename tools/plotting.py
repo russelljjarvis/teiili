@@ -66,14 +66,14 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
         if start_time is None:
             start_time = 0 * ms
         if end_time is None:
-            end_time = monitor.t.argmax()
+            end_time = np.max(monitor.t) * 10**-3 * ms
         if window is None:
             raise UserWarning("Please provide plot_statemon_qt with pyqtgraph window.")
         if monitor is None:
             raise UserWarning("No statemonitor provided. Abort plotting")
 
-        start_ind = abs(monitor.t - start_time).argmin()
-        end_ind = abs(monitor.t - end_time).argmin()
+        start_ind = np.argmin(abs(monitor.t - start_time))
+        end_ind = np.argmin(abs(monitor.t - end_time))
 
         window.setXRange(0, end_time / ms, padding=0)
         window.setYRange(0, num_neurons)
@@ -85,6 +85,7 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
         b = QtGui.QFont("Sans Serif", 10)
         window.getAxis('bottom').tickFont = b
         window.getAxis('left').tickFont = b
+        QtGui.QApplication.instance().exec_()
 
 
 def plot_statemon(start_time, end_time, monitor, neuron_id, variable='Vm', unit=mV, name=''):

@@ -316,7 +316,7 @@ class Plotter2d(object):
         video_filtered = video_filtered0 + video_filtered1
 
         imv = pg.ImageView()
-        imv.setImage(video_filtered, xvals=np.arange(
+        imv.setImage(np.flip(video_filtered,2), xvals=np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")
@@ -343,7 +343,7 @@ class Plotter2d(object):
             video_filtered = self.get_filtered(plot_dt * 10, filtersize)
 
         imv = pg.ImageView()
-        imv.setImage(video_filtered, xvals=np.arange(
+        imv.setImage(np.flip(video_filtered,2), xvals=np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")

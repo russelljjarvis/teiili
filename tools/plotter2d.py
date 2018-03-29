@@ -41,7 +41,7 @@ CM_ONOFF = ColorMap([0.0, 0.33, 0.66, 1.0],
                      (255, 0, 0, 255), (255, 255, 0, 255)], mode=2)
 
 
-class DVSmonitor():
+class DVSmonitor:
 
     """Summary
 
@@ -299,7 +299,7 @@ class Plotter2d(object):
             try:
                 video_filtered0 = self.get_filtered(plot_dt, filtersize)
             except MemoryError:
-                print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
+                raise MemoryError("the dt you have set would generate a too large matrix for you memory")
                 video_filtered0 = self.get_filtered(plot_dt * 10, filtersize)
             video_filtered0[video_filtered0 > 0] = 1
 
@@ -308,7 +308,7 @@ class Plotter2d(object):
             try:
                 video_filtered1 = self.get_filtered(plot_dt, filtersize)
             except MemoryError:
-                print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
+                raise MemoryError("the dt you have set would generate a too large matrix for you memory")
                 video_filtered1 = self.get_filtered(plot_dt * 10, filtersize)
             video_filtered1[video_filtered1 > 0] = 2
 
@@ -339,9 +339,8 @@ class Plotter2d(object):
         try:
             video_filtered = self.get_filtered(plot_dt, filtersize)
         except MemoryError:
-            print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
-            video_filtered = self.get_filtered(plot_dt * 10, filtersize)
-
+            raise MemoryError("the dt you have set would generate a too large matrix for you memory")
+            
         imv = pg.ImageView()
         imv.setImage(np.flip(video_filtered,2), xvals=np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))

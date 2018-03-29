@@ -120,7 +120,7 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
         
         # Check the headerfile:
         if (lt.decode(encoding='utf-8')[9:12] == '2.0'):
-            # The file version is AEDAT 2.0. Raise value error
+            # The file version is AEDAT 2.0. Wrong version specified.
             raise ValueError("Wrong .aedat version specified. \n Please enter version = 'V2' ")
         if (camera == 'DVS128'):
             raise ValueError("Unsupported camera version. \n Please enter camera = 'DAVIS240'")
@@ -145,6 +145,7 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
                 y_events_tmp.append(128-y)
             elif (camera == 'DAVIS240'):
                 y_events_tmp.append(180-y)
+            # Set the timestamps according to the specified units
             if unit == 'us':
                 ts_events_tmp.append(ts_tot)
             elif unit == 'ms':
@@ -163,11 +164,10 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
         return  (Events)
         
     elif (version == 'V2') or (version == 'V1'):
-        # jAER AEDAT 2.0
         
         # Check the headerfile:
         if (lt.decode(encoding='utf-8')[9:12] == '3.1'):
-            # The file version is AEDAT 2.0. Raise value error
+            # The file version is AEDAT 3.1. Wrong version specified.
             raise ValueError("Wrong .aedat version specified. \n Please enter version = 'V3' ")
             
         EVT_DVS = 0  # DVS event type
@@ -247,6 +247,7 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
                 elif (camera == 'DAVIS240'):
                     xaddr.append(240-x_addr)
                 yaddr.append(y_addr)
+                # Set the timestamps according to the specified units
                 if unit == 'us':
                     timestamps.append(ts)
                 elif unit == 'ms':

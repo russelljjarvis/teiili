@@ -16,6 +16,7 @@ Attributes:
 # Import required packages
 import csv
 import os
+import sys
 from brian2 import ms, defaultclock, second
 import numpy as np
 import shutil
@@ -39,6 +40,12 @@ CM_JET = ColorMap([0.0, 0.33, 0.66, 1.0],
 CM_ONOFF = ColorMap([0.0, 0.33, 0.66, 1.0],
                     [(0, 0, 0, 255), (0, 255, 0, 255),
                      (255, 0, 0, 255), (255, 255, 0, 255)], mode=2)
+
+app = QtGui.QApplication.instance()
+if app is None:
+    app = QtGui.QApplication(sys.argv)
+else:
+    print('QApplication instance already exists: %s' % str(app))
 
 
 class DVSmonitor:

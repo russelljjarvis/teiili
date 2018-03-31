@@ -13,124 +13,273 @@ especially, there are functions to convert data coming from dvs camera
 import os
 import numpy as np
 import struct
+import itertools
+
+def skip_header(file_read):
+    ''' skip header '''
+    line = file_read.readline()
+    while line.startswith(b'#'):
+        if ( line == b'#!END-HEADER\r\n'):
+            break
+        else:
+            line = file_read.readline()
+            
+def read_events(file_read, xdim, ydim):
+    """ A simple function that read events from cAER tcp"""
+    
+    #raise Exception
+    data = file_read.read(28)
+
+    if(len(data) == 0 ):
+        return [-1], [-1], [-1], [-1], [-1], [-1]
+
+    # read header
+    eventtype = struct.unpack('H', data[0:2])[0]
+    eventsource = struct.unpack('H', data[2:4])[0]
+    eventsize = struct.unpack('I', data[4:8])[0]
+    eventoffset = struct.unpack('I', data[8:12])[0]
+    eventtsoverflow = struct.unpack('I', data[12:16])[0]
+    eventcapacity = struct.unpack('I', data[16:20])[0]
+    eventnumber = struct.unpack('I', data[20:24])[0]
+    eventvalid = struct.unpack('I', data[24:28])[0]
+    next_read = eventcapacity * eventsize  # we now read the full packet
+    data = file_read.read(next_read)    
+    counter = 0  # eventnumber[0]
+    #return arrays
+    x_addr_tot = []
+    y_addr_tot = []
+    pol_tot = []
+    ts_tot =[]
+    spec_type_tot =[]
+    spec_ts_tot = []
+
+    if(eventtype == 1):  # something is wrong as we set in the cAER to send only polarity events
+        while(data[counter:counter + eventsize]):  # loop over all event packets
+            aer_data = struct.unpack('I', data[counter:counter + 4])[0]
+            timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
+            x_addr = (aer_data >> 17) & 0x00007FFF
+            y_addr = (aer_data >> 2) & 0x00007FFF
+            x_addr_tot.append(x_addr)
+            y_addr_tot.append(y_addr)
+            pol = (aer_data >> 1) & 0x00000001
+            pol_tot.append(pol)
+            ts_tot.append(timestamp)
+            # print (timestamp, x_addr, y_addr, pol)
+            counter = counter + eventsize
+    elif(eventtype == 0):
+        spec_type_tot =[]
+        spec_ts_tot = []
+        while(data[counter:counter + eventsize]):  # loop over all event packets
+            special_data = struct.unpack('I', data[counter:counter + 4])[0]
+            timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
+            spec_type = (special_data >> 1) & 0x0000007F
+            spec_type_tot.append(spec_type)
+            spec_ts_tot.append(timestamp)
+            if(spec_type == 6 or spec_type == 7 or spec_type == 9 or spec_type == 10):
+                print (timestamp, spec_type)
+            counter = counter + eventsize        
 
 
-def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, camera='DVS128'):
+    return (np.array(x_addr_tot), np.array(y_addr_tot), np.array(pol_tot), np.array(ts_tot), np.array(spec_type_tot), np.array(spec_ts_tot))
+
+def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, camera='DVS128', unit = 'ms'):
+    
     """
     load AER data file and parse these properties of AE events:
         - timestamps (in us),
-        - x,y-position [0..127]
+        - x,y-position [0..127]x[0..127] for DVS128 [0..239]x[0..127] for DAVIS240 
         - polarity (0/1)
 
     Args:
         datafile (str, optional): Aedat recording as provided by jAER or cAER
         length (int, optional): how many bytes(B) should be read; default 0=whole file
-        version (str, optional): which file format version is used: "aedat" = v2, "dat" = v1 (old)
+        version (str, optional): which file format version is used: 
+            - "dat" = V1 (old)
+            - "aedat" jAER AEDAT 2.0 = V2 
+            - "aedat" cAER AEDAT 3.1 = V3
         debug (int, optional): Flag to provide more detailed report. 0 = silent, 1 (default) = print summary,
             >=2 = print all debug
         camera (str, optional): Description
+        unit: output unit of timestamps specified as a string: 
+            - 'ms' (default), 'us' or 'sec'.
 
     Returns:
-        numy.ndarray: (ts, xpos, ypos, pol) 4D numpy array containing data of all events
+        numy.ndarray: (xpos, ypos, ts, pol) 2D numpy array containing data of all events
 
     Raises:
-        ValueError: Indicates that a camera was specified which is not supported
+        ValueError: Indicates that a camera was specified which is not supported or the AEDAT file version is not supported
     """
-    # constants
-    # V3 = "aedat3"
-    # V2 = "aedat" # current 32bit file format
-    # V1 = "dat"  # old format
-    EVT_DVS = 0  # DVS event type
-    EVT_APS = 1  # APS event
-
-    aeLen = 8  # 1 AE event takes 8 bytes
-    readMode = '>II'  # struct.unpack(), 2x ulong, 4B+4B
-    td = 0.000001  # timestep is 1us
-    if(camera == 'DVS128'):
-        xmask = 0x00fe
-        xshift = 1
-        ymask = 0x7f00
-        yshift = 8
-        pmask = 0x1
-        pshift = 0
-    elif(camera == 'DAVIS240'):  # values take from scripts/matlab/getDVS*.m
-        xmask = 0x003ff000
-        xshift = 12
-        ymask = 0x7fc00000
-        yshift = 22
-        pmask = 0x800
-        pshift = 11
-        eventtypeshift = 31
-    else:
-        raise ValueError("Unsupported camera: %s" % (camera))
-    if (version == 'V1'):
-        print ("using the old .dat format")
-        aeLen = 6
-        readMode = '>HI'  # ushot, ulong = 2B+4B
     aerdatafh = open(datafile, 'rb')
     k = 0  # line number
     p = 0  # pointer, position on bytes
-    statinfo = os.stat(datafile)
-    if length == 0:
-        length = statinfo.st_size
-    # print ("file size", length)
-    # header
     lt = aerdatafh.readline()
-    while lt and lt[0] == "#":
-        p += len(lt)
-        k += 1
+    
+    # Check the .aedat format:
+    if (version == 'V3'):
+        # cAER AEDAT 3.1
+        
+        # Check the headerfile:
+        if (lt.decode(encoding='utf-8')[9:12] == '2.0'):
+            # The file version is AEDAT 2.0. Wrong version specified.
+            raise ValueError("Wrong .aedat version specified. \n Please enter version = 'V2' ")
+        if (camera == 'DVS128'):
+            raise ValueError("Unsupported camera version. \n Please enter camera = 'DAVIS240'")
+            
+        skip_header(aerdatafh)
+        
+        xdim = 240
+        ydim = 180
+        
+        ts_events_tmp = []
+        x_events_tmp = []
+        y_events_tmp = []
+        p_events_tmp = []
+        while(1):
+            x, y, p, ts_tot, spec_type, spec_type_ts = read_events(aerdatafh, xdim, ydim)
+            if(len(ts_tot) > 0 and ts_tot[0] == -1):   
+                break
+            x_events_tmp.append(x)
+            # Set the coordinate (0,0) at the bottom left corner:
+            # NOTE: cAER orgin is at the upper left corner.
+            if (camera == 'DVS128'): 
+                y_events_tmp.append(128-y)
+            elif (camera == 'DAVIS240'):
+                y_events_tmp.append(180-y)
+            # Set the timestamps according to the specified units
+            if unit == 'us':
+                ts_events_tmp.append(ts_tot)
+            elif unit == 'ms':
+                ts_events_tmp.append(ts_tot/1000)
+            elif unit == 'sec':
+                ts_events_tmp.append(ts_tot/1e6)
+            else:
+                raise ValueError("Units not supported. Please select one of these: us, ms, sec")
+            p_events_tmp.append(p)
+        Events = np.zeros([4, len(list(itertools.chain(*ts_events_tmp)))])
+        Events[0, :] = list(itertools.chain(*x_events_tmp))
+        Events[1, :] = list(itertools.chain(*y_events_tmp))
+        Events[2, :] = list(itertools.chain(*ts_events_tmp))
+        Events[3, :] = list(itertools.chain(*p_events_tmp))
+        aerdatafh.close()
+        return  (Events)
+        
+    elif (version == 'V2') or (version == 'V1'):
+        
+        # Check the headerfile:
+        if (lt.decode(encoding='utf-8')[9:12] == '3.1'):
+            # The file version is AEDAT 3.1. Wrong version specified.
+            raise ValueError("Wrong .aedat version specified. \n Please enter version = 'V3' ")
+            
+        EVT_DVS = 0  # DVS event type
+        EVT_APS = 1  # APS event
+    
+        aeLen = 8  # 1 AE event takes 8 bytes
+        readMode = '>II'  # struct.unpack(), 2x ulong, 4B+4B
+        td = 0.000001  # timestep is 1us
+        if(camera == 'DVS128'):
+            xmask = 0x00fe
+            xshift = 1
+            ymask = 0x7f00
+            yshift = 8
+            pmask = 0x1
+            pshift = 0
+        elif(camera == 'DAVIS240'):  # values take from scripts/matlab/getDVS*.m
+            xmask = 0x003ff000
+            xshift = 12
+            ymask = 0x7fc00000
+            yshift = 22
+            pmask = 0x800
+            pshift = 11
+            eventtypeshift = 31
+        else:
+            raise ValueError("Unsupported camera: %s" % (camera))
+        if (version == 'V1'):
+            print ("using the old .dat format")
+            aeLen = 6
+            readMode = '>HI'  # ushot, ulong = 2B+4B
+        aerdatafh = open(datafile, 'rb')
+        k = 0  # line number
+        p = 0  # pointer, position on bytes
+        statinfo = os.stat(datafile)
+        if length == 0:
+            length = statinfo.st_size
+        # print ("file size", length)
+        # header
         lt = aerdatafh.readline()
-        if debug >= 2:
-            print (str(lt))
-        continue
-    # variables to parse
-    timestamps = []
-    xaddr = []
-    yaddr = []
-    pol = []
-    # read data-part of file
-    aerdatafh.seek(p)
-    s = aerdatafh.read(aeLen)
-    p += aeLen
-    # print (xmask, xshift, ymask, yshift, pmask, pshift)
-    while p < length:
-        addr, ts = struct.unpack(readMode, s)
-        # parse event type
-        if(camera == 'DAVIS240'):
-            eventtype = (addr >> eventtypeshift)
-        else:  # DVS128
-            eventtype = EVT_DVS
-        # parse event's data
-        if(eventtype == EVT_DVS):  # this is a DVS event
-            x_addr = (addr & xmask) >> xshift
-            y_addr = (addr & ymask) >> yshift
-            a_pol = (addr & pmask) >> pshift
-            if debug >= 3:
-                print("ts->", ts)  # ok
-                print("x-> ", x_addr)
-                print("y-> ", y_addr)
-                print("pol->", a_pol)
-            timestamps.append(ts)
-            xaddr.append(x_addr)
-            yaddr.append(y_addr)
-            pol.append(a_pol)
+        while lt.startswith(b'#'):
+            p += len(lt)
+            k += 1
+            lt = aerdatafh.readline()
+            if debug >= 2:
+                print (str(lt))
+            continue
+        # variables to parse
+        timestamps = []
+        xaddr = []
+        yaddr = []
+        pol = []
+        # read data-part of file
         aerdatafh.seek(p)
         s = aerdatafh.read(aeLen)
         p += aeLen
-    if debug > 0:
-        try:
-            print ("read %i (~ %.2fM) AE events, duration= %.2fs" % (len(timestamps), len(timestamps) / float(10 ** 6), (timestamps[-1] - timestamps[0]) * td))
-            n = 5
-            print ("showing first %i:" % (n))
-            print ("timestamps: %s \nX-addr: %s\nY-addr: %s\npolarity: %s" % (timestamps[0:n], xaddr[0:n], yaddr[0:n], pol[0:n]))
-        except:
-            print ("failed to print statistics")
-    Events = np.zeros([4, len(timestamps)])
-    Events[0, :] = xaddr
-    Events[1, :] = yaddr
-    Events[2, :] = timestamps
-    Events[3, :] = pol
-    return Events
+        # print (xmask, xshift, ymask, yshift, pmask, pshift)
+        while p < length:
+            addr, ts = struct.unpack(readMode, s)
+            # parse event type
+            if(camera == 'DAVIS240'):
+                eventtype = (addr >> eventtypeshift)
+            else:  # DVS128
+                eventtype = EVT_DVS
+            # parse event's data
+            if(eventtype == EVT_DVS):  # this is a DVS event
+                x_addr = (addr & xmask) >> xshift
+                y_addr = (addr & ymask) >> yshift
+                a_pol = (addr & pmask) >> pshift
+                if debug >= 3:
+                    print("ts->", ts)  # ok
+                    print("x-> ", x_addr)
+                    print("y-> ", y_addr)
+                    print("pol->", a_pol)
+                # Set the coordinate (0,0) at the bottom left corner:
+                # NOTE: jAER orgin is at the bottom right corner.
+                if (camera == 'DVS128'): 
+                    xaddr.append(128-x_addr)
+                elif (camera == 'DAVIS240'):
+                    xaddr.append(240-x_addr)
+                yaddr.append(y_addr)
+                # Set the timestamps according to the specified units
+                if unit == 'us':
+                    timestamps.append(ts)
+                elif unit == 'ms':
+                    timestamps.append(ts/1000)
+                elif unit == 'sec':
+                    timestamps.append(ts/1e6)
+                else:
+                    raise ValueError("Units not supported. Please select one of these: us, ms, sec")
+                pol.append(a_pol)
+            aerdatafh.seek(p)
+            s = aerdatafh.read(aeLen)
+            p += aeLen
+        if debug > 0:
+            try:
+                print ("read %i (~ %.2fM) AE events, duration= %.2fs" % (len(timestamps), len(timestamps) / float(10 ** 6), (timestamps[-1] - timestamps[0]) * td))
+                n = 5
+                print ("showing first %i:" % (n))
+                print ("timestamps: %s \nX-addr: %s\nY-addr: %s\npolarity: %s" % (timestamps[0:n], xaddr[0:n], yaddr[0:n], pol[0:n]))
+            except:
+                print ("failed to print statistics")
+        Events = np.zeros([4, len(timestamps)])
+        # Set the coordinate (0,0) at the upper left corner:
+        # NOTE: jAER orgin is at the bottom right corner.
+        Events[0, :] = xaddr
+        Events[1, :] = yaddr
+        Events[2, :] = timestamps
+        Events[3, :] = pol
+        return Events
+    
+    else:
+        raise ValueError("Unsupported AEDAT file version")
+        return
 
 
 def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True):

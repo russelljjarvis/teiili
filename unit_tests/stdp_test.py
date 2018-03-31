@@ -24,13 +24,13 @@ from NCSBrian2Lib.core.groups import Neurons, Connections
 from NCSBrian2Lib import NCSNetwork, activate_standalone, deactivate_standalone
 from NCSBrian2Lib.models.neuron_models import DPI
 from NCSBrian2Lib.models.synapse_models import DPISyn, DPIstdp
-from NCSBrian2Lib.stimuli.testbench import stdp_testbench
+from NCSBrian2Lib.stimuli.testbench import STDP_Testbench
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 50 * us
 Net = NCSNetwork()
 
-stdp = stdp_testbench()
+stdp = STDP_Testbench()
 gPre, gPost = stdp.stimuli(isi=30)
 
 preSTDP = Neurons(2, equation_builder=DPI(), num_inputs=1, name='preSTDP')

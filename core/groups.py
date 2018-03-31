@@ -315,6 +315,9 @@ class Connections(Synapses, NCSGroup):
                               str(target.name) + ', therefore, please specify an input_number yourself')
                 raise e
 
+        if params is not None:
+            self.parameters = params
+
         if equation_builder is not None:
             if inspect.isclass(equation_builder):
                 self.equation_builder = equation_builder()
@@ -327,12 +330,10 @@ class Connections(Synapses, NCSGroup):
             self.equation_builder.set_inputnumber(self.input_number)
             Kwargs.update(self.equation_builder.keywords)
 
-            if params is not None:
-                self.parameters = params
-                print(
-                    "parameters you provided overwrite parameters from EquationBuilder ")
-            else:
+            if params is None:
                 self.parameters = self.equation_builder.parameters
+            else:
+                print("parameters you provided overwrite parameters from EquationBuilder")
 
         try:
             Synapses.__init__(self, source, target=target,

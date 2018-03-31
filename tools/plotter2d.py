@@ -16,12 +16,13 @@ Attributes:
 # Import required packages
 import csv
 import os
-from brian2 import ms, us, defaultclock, second
+import sys
+from brian2 import ms, defaultclock, second
 import numpy as np
 import shutil
 #import matplotlib.animation as animation
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui #, QtCore
 import pyqtgraph.exporters  # looks redundant, but this is necessary for export
 import sparse
 from scipy import ndimage
@@ -40,8 +41,14 @@ CM_ONOFF = ColorMap([0.0, 0.33, 0.66, 1.0],
                     [(0, 0, 0, 255), (0, 255, 0, 255),
                      (255, 0, 0, 255), (255, 255, 0, 255)], mode=2)
 
+app = QtGui.QApplication.instance()
+if app is None:
+    app = QtGui.QApplication(sys.argv)
+else:
+    print('QApplication instance already exists: %s' % str(app))
 
-class DVSmonitor():
+
+class DVSmonitor:
 
     """Summary
 
@@ -113,20 +120,18 @@ class Plotter2d(object):
             self._yi = np.asarray(monitor.yi, dtype='int')
             self._i = np.ravel_multi_index((self._xi, self._yi), dims)  # neuron index number of spike
             self.pol = monitor.pol
-            try:  # check, if _t has a unit (dvs raw data is given in us)
+            try:  # check, if _t has a unit (dvs raw data is given in ms)
                 self._t[0].dim
             except:
-                self._t = self._t * us
+                self._t = self._t * ms
 
         self.mask = slice(len(monitor.t))  # [True] * (len(monitor.t))
         if plotrange is None:
-            self.plotrange = (0 * ms, np.max(self.t))
+            self.plotrange = (np.min(self.t), np.max(self.t))
         else:
             self.plotrange = plotrange
             self.set_range(plotrange)
 
-        # this might use a lot of memory, but saves computation (I usually keep dt and filtersize)
-        self._filtered = {}
 
     @property
     def t(self):
@@ -209,7 +214,6 @@ class Plotter2d(object):
         '''
         if plotrange:
             self.plotrange = plotrange
-            # TODO: Use slicing
             self.mask = np.where(self._t <= plotrange[1]) & (self._t >= plotrange[0])
         else:
             self.plotrange = (0 * ms, np.max(self._t))
@@ -220,6 +224,7 @@ class Plotter2d(object):
         are converted into a sparse matrix. This step is basically just for easy
         conversion into a dense matrix later, as you cannot do so many computations
         with the sparse representation.
+        sparse documentation can be found here: http://sparse.pydata.org/en/latest/
 
         Args:
             dt (TYPE): Description
@@ -230,7 +235,7 @@ class Plotter2d(object):
         # print(len(self.t))
         #print(np.max(self.t / dt))
         # print(self.plotshape(dt))
-        sparse_spikemat = sparse.COO((np.ones(len(self.t)), (self.t / dt, self.xi, self.yi)),
+        sparse_spikemat = sparse.COO((np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
                                      shape=self.plotshape(dt))
         return sparse_spikemat
 
@@ -265,9 +270,9 @@ class Plotter2d(object):
             TYPE: Description
         """
         dense3d = self.get_dense3d(dt)
-        self._filtered[(dt / ms, filtersize / ms)] = ndimage.uniform_filter1d(
-            dense3d, size=int(filtersize / dt), axis=0, mode='constant') * second / dt
-        return self._filtered[(dt / ms, filtersize / ms)]
+        filtered = ndimage.uniform_filter1d(dense3d, size=int(filtersize / dt),
+                                            axis=0, mode='constant') * second / dt
+        return filtered
     #    import timeit
     #    timeit.timeit("ndimage.uniform_filter(dense3d, size=(0,0,10))",
     #                  setup = 'from scipy import ndimage',
@@ -299,7 +304,7 @@ class Plotter2d(object):
             try:
                 video_filtered0 = self.get_filtered(plot_dt, filtersize)
             except MemoryError:
-                print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
+                raise MemoryError("the dt you have set would generate a too large matrix for your memory")
                 video_filtered0 = self.get_filtered(plot_dt * 10, filtersize)
             video_filtered0[video_filtered0 > 0] = 1
 
@@ -308,7 +313,7 @@ class Plotter2d(object):
             try:
                 video_filtered1 = self.get_filtered(plot_dt, filtersize)
             except MemoryError:
-                print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
+                raise MemoryError("the dt you have set would generate a too large matrix for your memory")
                 video_filtered1 = self.get_filtered(plot_dt * 10, filtersize)
             video_filtered1[video_filtered1 > 0] = 2
 
@@ -316,7 +321,7 @@ class Plotter2d(object):
         video_filtered = video_filtered0 + video_filtered1
 
         imv = pg.ImageView()
-        imv.setImage(video_filtered, xvals=np.arange(
+        imv.setImage(np.flip(video_filtered,2), xvals=np.min(self.t/ms)+np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")
@@ -339,11 +344,10 @@ class Plotter2d(object):
         try:
             video_filtered = self.get_filtered(plot_dt, filtersize)
         except MemoryError:
-            print('the dt you have set would generate a too large matrix for you memory, trying 10*dt')
-            video_filtered = self.get_filtered(plot_dt * 10, filtersize)
+            raise MemoryError("the dt you have set would generate a too large matrix for your memory")
 
         imv = pg.ImageView()
-        imv.setImage(video_filtered, xvals=np.arange(
+        imv.setImage(np.flip(video_filtered,2), xvals=np.min(self.t/ms)+np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")

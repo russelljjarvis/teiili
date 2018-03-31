@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-03-31 14:01:50
+# @Last Modified time: 2018-03-31 14:17:56
 
 """
 This files contains different WTA circuits
@@ -294,6 +294,7 @@ def gen2dWTA(groupname,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2, sigm=2.5,
              rpWTA=2.5 * ms, rpInh=1 * ms,
              wiInhInh=0, EI_connection_probability=1, IE_connection_probability=1,
+             II_connection_probability=0.1,
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA
@@ -376,7 +377,7 @@ def gen2dWTA(groupname,
     synWTAWTA1e.connect('dist1d2dint(i,j,num_neurons)<=cutoff')
     synWTAInh1e.connect('True', p=EI_connection_probability)  # Generates all to all connectivity
     synInhWTA1i.connect('True', p=IE_connection_probability)
-    synInhInh1i.connect('True', p=0.1)
+    synInhInh1i.connect('True', p=II_connection_probability)
 
     synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
     synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)

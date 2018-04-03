@@ -214,9 +214,9 @@ class Plotter2d(object):
         '''
         if plotrange:
             self.plotrange = plotrange
-            self.mask = np.where(self._t <= plotrange[1]) & (self._t >= plotrange[0])
+            self.mask = np.where((self._t <= plotrange[1]) & (self._t >= plotrange[0]))[0]
         else:
-            self.plotrange = (0 * ms, np.max(self._t))
+            self.plotrange = (np.min(self.t), np.max(self.t))
             self.mask = slice(len(self._t))  # [True] * (len(self._t))
 
     def get_sparse3d(self, dt):

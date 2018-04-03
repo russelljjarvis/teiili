@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-25 16:20:13
+# @Last Modified time: 2018-03-31 14:17:56
 
 """
 This files contains different WTA circuits
@@ -293,6 +293,8 @@ def gen2dWTA(groupname,
              synapse_eq_builder=DPISyn,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2, sigm=2.5,
              rpWTA=2.5 * ms, rpInh=1 * ms,
+             wiInhInh=0, EI_connection_probability=1, IE_connection_probability=1,
+             II_connection_probability=0.1,
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA
@@ -328,12 +330,13 @@ def gen2dWTA(groupname,
 
     # create neuron groups
     num2dNeurons = num_neurons**2
+    num_inh_inputs = 2
     gWTAGroup = Neurons(num2dNeurons, equation_builder=neuron_eq_builder(),
                         refractory=rpWTA, name='g' + groupname,
                         num_inputs=3 + num_inputs)
     gWTAInhGroup = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(),
                            refractory=rpInh, name='g' + groupname + '_Inh',
-                           num_inputs=1)
+                           num_inputs=num_inh_inputs)
 
     gWTAGroup.namespace['num_neurons'] = num_neurons
     gWTAGroup.namespace['ind2x'] = ind2x
@@ -364,13 +367,17 @@ def gen2dWTA(groupname,
     synWTAInh1e = Connections(gWTAGroup, gWTAInhGroup,
                               equation_builder=synapse_eq_builder(),
                               method="euler", name='s' + groupname + '_Inhe')
+    synInhInh1i = Connections(gWTAInhGroup, gWTAInhGroup,
+                              equation_builder=synapse_eq_builder(),
+                              method='euler', name='s' + groupname + '_i')
 
     # connect synapses
     synInpWTA1e.connect('i==j')
     # connect the nearest neighbors including itself
     synWTAWTA1e.connect('dist1d2dint(i,j,num_neurons)<=cutoff')
-    synWTAInh1e.connect('True')  # Generates all to all connectivity
-    synInhWTA1i.connect('True')
+    synWTAInh1e.connect('True', p=EI_connection_probability)  # Generates all to all connectivity
+    synInhWTA1i.connect('True', p=IE_connection_probability)
+    synInhInh1i.connect('True', p=II_connection_probability)
 
     synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
     synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)
@@ -379,6 +386,7 @@ def gen2dWTA(groupname,
     synInpWTA1e.weight = weInpWTA
     synWTAInh1e.weight = weWTAInh
     synInhWTA1i.weight = wiInhWTA
+    synInhInh1i.weight = wiInhInh
 
     # lateral excitation kernel
     # we add an additional attribute to that synapse, which allows us to change
@@ -396,7 +404,8 @@ def gen2dWTA(groupname,
         'synInpWTA1e': synInpWTA1e,
         'synWTAWTA1e': synWTAWTA1e,
         'synWTAInh1e': synWTAInh1e,
-        'synInhWTA1i': synInhWTA1i}
+        'synInhWTA1i': synInhWTA1i,
+        'synInhInh1i': synInhInh1i}
 
     # spikemons
     spikemonWTA = SpikeMonitor(gWTAGroup, name='spikemon' + groupname + '_WTA')
@@ -421,6 +430,7 @@ def gen2dWTA(groupname,
         synInpWTA1e.name + '_weight': weInpWTA,
         synWTAInh1e.name + '_weight': weWTAInh,
         synInhWTA1i.name + '_weight': wiInhWTA,
+        synInhInh1i.name + '_weight': wiInhInh,
         synWTAWTA1e.name + '_latWeight': weWTAWTA,
         synWTAWTA1e.name + '_latSigma': sigm,
         gWTAGroup.name + '_refP': rpWTA,

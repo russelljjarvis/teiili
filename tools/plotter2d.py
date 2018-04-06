@@ -626,10 +626,21 @@ class Plotter2d(object):
         ffmpeg -f image2 -i image_%03d.jpg -vf scale=500x500 gifout.gif
 
         Args:
-            filename (TYPE): Description
-            tempfolder (TYPE, optional): Description
-            filtersize (TYPE, optional): Description
-            plot_dt (TYPE, optional): Description
+            filename (str): The filename in which to store the generated gif.
+                            If it does not end with gif, it will be added.
+            tempfolder (str, optional): the directory in which the temporary folder to store
+                                        files created in the process.
+                                        The temporary folder will be deleted afterwards.
+                                        By default it will be created in your home directory
+            plotfunction (str or function, optional): the function that should be used to create the gif.
+                                                      it has to be a function that returns a pyqtgraph imageview
+                                                      (or at least something similar that can export single images)
+                                                      like the methods of this class (plot3d, ...). For the methods,
+                                                      you can also pass a string to identify the plotfunction
+            kwargs: all other keyword agruments will be passed to the plotfunction
+
+            Example usage:
+            plotter2dobject.generate_gif('~/gifname.gif', plotfunction = 'plot3d_on_off', filtersize=100 * ms, plot_dt=50 * ms)
         """
         gif_temp_dir = os.path.join(tempfolder, "gif_temp")
         #pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)

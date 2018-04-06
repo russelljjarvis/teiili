@@ -216,8 +216,9 @@ class Plotter2d(object):
             self.plotrange = plotrange
             self.mask = np.where((self._t <= plotrange[1]) & (self._t >= plotrange[0]))[0]
         else:
-            self.plotrange = (np.min(self.t), np.max(self.t))
             self.mask = slice(len(self._t))  # [True] * (len(self._t))
+            self.plotrange = (np.min(self.t), np.max(self.t))
+
 
     def get_sparse3d(self, dt):
         """Using the package sparse (based of scipy sparse, but for 3d), the spiketimes
@@ -618,7 +619,7 @@ class Plotter2d(object):
 
         return gw_paneplot
 
-    def generate_gif(self, filename, tempfolder=os.path.expanduser('~'), filtersize=100 * ms, plot_dt=200 * defaultclock.dt):
+    def generate_gif(self, filename, tempfolder=os.path.expanduser('~'), plotfunction = 'plot3d', **plotkwargs):
         """
         This only works on linux at the moment
         On wiondows it could be done with ffmpeg somehow like that (names need to be adjusted):
@@ -631,7 +632,10 @@ class Plotter2d(object):
             plot_dt (TYPE, optional): Description
         """
         gif_temp_dir = os.path.join(tempfolder, "gif_temp")
-        pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
+        #pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
+        if type(plotfunction) == str:
+            plotfunction = getattr(self,plotfunction)
+        pgImage = plotfunction(**plotkwargs)
         if not os.path.exists(gif_temp_dir):
             os.makedirs(gif_temp_dir)
         pgImage.export(os.path.join(gif_temp_dir, "gif.png"))

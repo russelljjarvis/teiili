@@ -51,4 +51,4 @@ imv4.play(50)
 #spmon2d_Cam1.plot_panes(num_panes=40, filtersize=100 * ms, num_rows=4, filename=None)
 
 # please provide an absolute path, otherwise dvs.gif will be stored in your wd!
-#spmon2d_Cam1.generate_gif('dvs.gif', filtersize=100 * ms, plot_dt=50 * ms)
+#spmon2d_Cam1.generate_gif('dvs2.gif', plotfunction = 'plot3d_on_off', filtersize=100 * ms, plot_dt=50 * ms)

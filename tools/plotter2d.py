@@ -113,21 +113,25 @@ class Plotter2d(object):
             self._i = monitor.i  # neuron index number of spike
             # print(self._i)
             self._xi, self._yi = np.unravel_index(self._i, (dims[0], dims[1]))
-            self.pol = np.zeros_like(self._t)
             #assert(len(self._i) == len(self._t))
         except:  # that should work, if it is a DVSmonitor (it has xi and yi instead of y)
             self._xi = np.asarray(monitor.xi, dtype='int')
             self._yi = np.asarray(monitor.yi, dtype='int')
             self._i = np.ravel_multi_index((self._xi, self._yi), dims)  # neuron index number of spike
-            self.pol = monitor.pol
             try:  # check, if _t has a unit (dvs raw data is given in ms)
                 self._t[0].dim
             except:
                 self._t = self._t * ms
 
+        try:
+            self.pol = monitor.pol
+        except:
+            self.pol = np.zeros_like(self._t)
+
         self.mask = slice(len(monitor.t))  # [True] * (len(monitor.t))
         if plotrange is None:
-            self.plotrange = (np.min(self.t), np.max(self.t))
+            if len(self.t)>0:
+                self.plotrange = (np.min(self.t), np.max(self.t))
         else:
             self.plotrange = plotrange
             self.set_range(plotrange)
@@ -485,7 +489,7 @@ class Plotter2d(object):
             filename (TYPE): Description
         """
         np.savez_compressed(str(filename) + ".npz", self.i,
-                            self.t, self.dims)
+                            self.t, self.pol, self.dims)
 
     @classmethod
     def loadz(cls, filename):
@@ -513,16 +517,26 @@ class Plotter2d(object):
             return 0
         try:
             with np.load(str(filename)) as loaded_npz:
-                i, t, dims = [loaded_npz[arr] for arr in loaded_npz]
+                i, t, pol, dims = [loaded_npz[arr] for arr in loaded_npz]
+            assert len(dims) == 2
             mon.t = t * second
             mon.i = i
+            mon.pol = pol
             return cls(mon, dims)
-        except:
-            with np.load(str(filename)) as loaded_npz:
-                i, t, rows, cols = [loaded_npz[arr] for arr in loaded_npz]
-            mon.t = t * second
-            mon.i = i
-            return cls(mon, (rows, cols))
+        except: # This is for backwards compatibility
+            print("You are probably loading an old saved monitor!")
+            try:
+                with np.load(str(filename)) as loaded_npz:
+                    i, t, dims = [loaded_npz[arr] for arr in loaded_npz]
+                mon.t = t * second
+                mon.i = i
+                return cls(mon, dims)
+            except:
+                with np.load(str(filename)) as loaded_npz:
+                    i, t, rows, cols = [loaded_npz[arr] for arr in loaded_npz]
+                mon.t = t * second
+                mon.i = i
+                return cls(mon, (rows, cols))
 
     @classmethod
     def loaddvs(cls, eventsfile, dims = None):

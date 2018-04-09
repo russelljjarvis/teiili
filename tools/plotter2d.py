@@ -132,6 +132,8 @@ class Plotter2d(object):
         if plotrange is None:
             if len(self.t)>0:
                 self.plotrange = (np.min(self.t), np.max(self.t))
+            else:
+                self.plotrange = (0*ms, 0*ms)
         else:
             self.plotrange = plotrange
             self.set_range(plotrange)
@@ -240,8 +242,13 @@ class Plotter2d(object):
         # print(len(self.t))
         #print(np.max(self.t / dt))
         # print(self.plotshape(dt))
-        sparse_spikemat = sparse.COO((np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
-                                     shape=self.plotshape(dt))
+        if len(self.t)>0:
+            sparse_spikemat = sparse.COO((np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
+                                          shape=self.plotshape(dt))
+        else:
+            print('Your monitor is empty!')
+            # just create a matrix of zeros, hope, this does not lead to other problems
+            sparse_spikemat = sparse.COO(([0], ([0], [0], [0])),shape=self.plotshape(dt))
         return sparse_spikemat
 
     # Example:

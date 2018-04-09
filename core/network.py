@@ -17,6 +17,7 @@ from collections import OrderedDict
 import pprint
 
 from brian2 import Network, second, device, get_device, ms, all_devices
+from brian2 import SpikeMonitor, StateMonitor, NeuronGroup, Synapses
 from NCSBrian2Lib.tools.cpptools import build_cpp_and_replace,\
     print_dict, params2run_args
 from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
@@ -33,6 +34,23 @@ class NCSNetwork(Network):
         standaloneParams (dict): Dictionary of standalone parameters
     """
     hasRun = False
+
+    @property
+    def spikemonitors(self):
+        return {att.name : att for att in self.__dict__['objects'] if type(att) == SpikeMonitor}
+
+    @property
+    def statemonitors(self):
+        return {att.name : att for att in self.__dict__['objects'] if type(att) == StateMonitor}
+
+    @property
+    def neurongroups(self):
+        return {att.name : att for att in self.__dict__['objects'] if type(att) == NeuronGroup}
+
+    @property
+    def synapses(self):
+        return {att.name : att for att in self.__dict__['objects'] if type(att) == Synapses}
+
 
     def __init__(self, *objs, **kwds):
         """Summary

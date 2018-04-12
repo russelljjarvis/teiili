@@ -9,7 +9,7 @@ Attributes:
 # @Author: alpha, mmilde
 # @Date:   2017-07-31 16:13:59
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-03-25 16:16:15
+# @Last Modified time: 2018-04-05 19:45:29
 
 """
 Plotting tools for different spike and state monitors
@@ -77,6 +77,7 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
 
         window.setXRange(0, end_time / ms, padding=0)
         window.setYRange(0, num_neurons)
+
         window.plot(x=np.asarray(monitor.t / ms)[start_ind:end_ind], y=np.asarray(monitor.i)[start_ind:end_ind],
                     pen=None, symbol='o', symbolPen=None,
                     symbolSize=7, symbolBrush=colors[1])
@@ -85,7 +86,6 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
         b = QtGui.QFont("Sans Serif", 10)
         window.getAxis('bottom').tickFont = b
         window.getAxis('left').tickFont = b
-
 
     return window
 
@@ -130,7 +130,7 @@ def plot_statemon_qt(start_time=None, end_time=None, monitor=None, neuron_id=Tru
     if start_time is None:
         start_time = 0 * ms
     if end_time is None:
-        end_time = monitor.t.argmax()
+        end_time = monitor.t[-1]
     if window is None:
         raise UserWarning("Please provide plot_statemon_qt with pyqtgraph window.")
     if monitor is None:

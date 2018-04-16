@@ -664,7 +664,7 @@ class Plotter2d(object):
             Example usage:
             plotter2dobject.generate_gif('~/gifname.gif', plotfunction = 'plot3d_on_off', filtersize=100 * ms, plot_dt=50 * ms)
         """
-        ticksperframe =(1/plot_dt)/(100*Hz) #TODO: This is not yet working for values lower than 1
+        fps =(1/plot_dt)
         gif_temp_dir = os.path.join(tempfolder, "gif_temp")
         #pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
         if type(plotfunction) == str:
@@ -684,18 +684,30 @@ class Plotter2d(object):
 #        linux_command = "cd " + str(gif_temp_dir) + ";" + \
 #                "convert -delay "+str(delay)+" *.png "+ os.path.abspath(filename)
         if filename.endswith('.mpg'):
+            tickspersecond = 25*Hz #this is the default value
+            ticksperframe = tickspersecond/fps
+            if ticksperframe < 1 or (ticksperframe-int(ticksperframe)>0):
+                print('please set plot dt to a multiple of 40 ms (not smaller) as framerate is limited')
             linux_command = "cd " + \
                 str(gif_temp_dir) + ";" + \
-                "convert -delay "+str(ticksperframe)+"x100 *.png "+ os.path.abspath(filename)
+                "convert -delay "+str(ticksperframe)+" *.png "+ os.path.abspath(filename)
         elif filename.endswith('.gif'):
+            tickspersecond = 100*Hz #this is the default value
+            ticksperframe = tickspersecond/fps
+            if ticksperframe < 1 or (ticksperframe-int(ticksperframe)>0):
+                print('please set plot dt to a multiple of 10 ms (not smaller) as framerate is limited')
             linux_command = "cd " + \
                 str(gif_temp_dir) + ";" + \
-                " convert -delay "+str(ticksperframe)+"x100 -loop 0 *.png " + os.path.abspath(filename)
+                " convert -delay "+str(ticksperframe)+" -loop 0 *.png " + os.path.abspath(filename)
         else:
+            tickspersecond = 100*Hz #this is the default value
+            ticksperframe = tickspersecond/fps
+            if ticksperframe < 1 or (ticksperframe-int(ticksperframe)>0):
+                print('please set plot dt to a multiple of 40 ms (not smaller) as framerate is limited')
             print('you did not specify file ending, assuming gif')
             linux_command = "cd " + \
                 str(gif_temp_dir) + ";" + \
-                " convert -delay "+str(ticksperframe)+"x100 -loop 0 *.png " + os.path.abspath(filename)
+                " convert -delay "+str(ticksperframe)+" -loop 0 *.png " + os.path.abspath(filename)
             linux_command = linux_command + ".gif"
 
         result = subprocess.check_output(linux_command, shell=True)

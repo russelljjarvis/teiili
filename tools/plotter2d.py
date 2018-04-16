@@ -17,7 +17,7 @@ Attributes:
 import csv
 import os
 import sys
-from brian2 import ms, defaultclock, second
+from brian2 import ms, Hz, defaultclock, second
 import numpy as np
 import shutil
 #import matplotlib.animation as animation
@@ -640,15 +640,15 @@ class Plotter2d(object):
 
         return gw_paneplot
 
-    def generate_gif(self, filename, tempfolder=os.path.expanduser('~'), plotfunction = 'plot3d', **plotkwargs):
+    def generate_gif(self, filename, tempfolder=os.path.expanduser('~'), resize = None, plot_dt = 10*ms, plotfunction = 'plot3d', **plotkwargs):
         """
         This only works on linux at the moment
         On wiondows it could be done with ffmpeg somehow like that (names need to be adjusted):
         ffmpeg -f image2 -i image_%03d.jpg -vf scale=500x500 gifout.gif
 
         Args:
-            filename (str): The filename in which to store the generated gif.
-                            If it does not end with gif, it will be added.
+            filename (str): The filename in which to store the generated movie.
+                            The ending can be e.g. mpg or gif
             tempfolder (str, optional): the directory in which the temporary folder to store
                                         files created in the process.
                                         The temporary folder will be deleted afterwards.
@@ -657,25 +657,47 @@ class Plotter2d(object):
                                                       it has to be a function that returns a pyqtgraph imageview
                                                       (or at least something similar that can export single images)
                                                       like the methods of this class (plot3d, ...). For the methods,
-                                                      you can also pass a string to identify the plotfunction
+                                                      you can also pass a string to identify the plotfunction.
+                                                      The plotfunction has to take plot_dt as an argument
             kwargs: all other keyword agruments will be passed to the plotfunction
 
             Example usage:
             plotter2dobject.generate_gif('~/gifname.gif', plotfunction = 'plot3d_on_off', filtersize=100 * ms, plot_dt=50 * ms)
         """
+        ticksperframe =(1/plot_dt)/(100*Hz) #TODO: This is not yet working for values lower than 1
         gif_temp_dir = os.path.join(tempfolder, "gif_temp")
         #pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
         if type(plotfunction) == str:
             plotfunction = getattr(self,plotfunction)
-        pgImage = plotfunction(**plotkwargs)
+        pgImage = plotfunction(plot_dt = plot_dt, **plotkwargs)
         if not os.path.exists(gif_temp_dir):
             os.makedirs(gif_temp_dir)
         pgImage.export(os.path.join(gif_temp_dir, "gif.png"))
-        linux_command = "cd " + \
-            str(gif_temp_dir) + ";" + \
-            " convert -delay 1 -loop 0 *.png " + os.path.abspath(filename)
-        if not filename.endswith('.gif'):
+
+        #TODO: implement resize
+#        if resize is not None:
+#            linux_command = "cd " + \
+#                str(gif_temp_dir) + ";" + "convert -resize "+str(resize)+"x *.png"
+#            result = subprocess.check_output(linux_command, shell=True)
+        # convert gif
+
+#        linux_command = "cd " + str(gif_temp_dir) + ";" + \
+#                "convert -delay "+str(delay)+" *.png "+ os.path.abspath(filename)
+        if filename.endswith('.mpg'):
+            linux_command = "cd " + \
+                str(gif_temp_dir) + ";" + \
+                "convert -delay "+str(ticksperframe)+"x100 *.png "+ os.path.abspath(filename)
+        elif filename.endswith('.gif'):
+            linux_command = "cd " + \
+                str(gif_temp_dir) + ";" + \
+                " convert -delay "+str(ticksperframe)+"x100 -loop 0 *.png " + os.path.abspath(filename)
+        else:
+            print('you did not specify file ending, assuming gif')
+            linux_command = "cd " + \
+                str(gif_temp_dir) + ";" + \
+                " convert -delay "+str(ticksperframe)+"x100 -loop 0 *.png " + os.path.abspath(filename)
             linux_command = linux_command + ".gif"
+
         result = subprocess.check_output(linux_command, shell=True)
         print(result)
         # os.system(linux_command)

@@ -284,6 +284,7 @@ class Plotter2d(object):
         dense3d = self.get_dense3d(dt)
         filtered = ndimage.uniform_filter1d(dense3d, size=int(filtersize / dt),
                                             axis=0, mode='constant') * second / dt
+        #filtered  = ndimage.zoom(filtered, (1, 2, 2))
         return filtered
     #    import timeit
     #    timeit.timeit("ndimage.uniform_filter(dense3d, size=(0,0,10))",
@@ -642,11 +643,12 @@ class Plotter2d(object):
 
     def generate_movie(self, filename, scale = None, speed = 1, plotfunction = 'plot3d',
                        plot_dt = 10*ms, tempfolder=os.path.expanduser('~'),
-                       ffmepgoptions = '', **plotkwargs):
+                       ffmpegoptions = '', **plotkwargs):
         """
         This exports a movie or gif from an imageview
         Existing outputfiles will be overwritten
         This needs ffmpeg wich is installed on most linux distributions and also available for windows and mac
+        Have a loo here: https://ffmpeg.org/
 
         Args:
             filename (str): The filename in which to store the generated movie.
@@ -699,7 +701,7 @@ class Plotter2d(object):
             ffmpeg_command += "-vf scale=" + scale+' '
 
         ffmpeg_command += '-y ' #overwrite existing output files
-        ffmpeg_command += ffmepgoptions +' '
+        ffmpeg_command += ffmpegoptions +' '
 
         ffmpeg_command += os.path.abspath(filename)
 

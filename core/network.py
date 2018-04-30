@@ -37,18 +37,26 @@ class NCSNetwork(Network):
 
     @property
     def spikemonitors(self):
+        '''returns a dictionary of all spikemonitors (e.g. for looping over them)
+        '''
         return {att.name : att for att in self.__dict__['objects'] if type(att) == SpikeMonitor}
 
     @property
     def statemonitors(self):
+        '''returns a dictionary of all statemonitors (e.g. for looping over them)
+        '''
         return {att.name : att for att in self.__dict__['objects'] if type(att) == StateMonitor}
 
     @property
     def neurongroups(self):
+        '''returns a dictionary of all neurongroups (e.g. for looping over them)
+        '''
         return {att.name : att for att in self.__dict__['objects'] if type(att) == NeuronGroup}
 
     @property
     def synapses(self):
+        '''returns a dictionary of all synapses (e.g. for looping over them)
+        '''
         return {att.name : att for att in self.__dict__['objects'] if type(att) == Synapses}
 
 
@@ -158,6 +166,7 @@ class NCSNetwork(Network):
                 # this does not really make sense, as the whole point here is to
                 # avoid recompilation on every run, but some people might still want to use it
                 all_devices['cpp_standalone'].build_on_run = False
+                print('building network, as you have set build_on_run = True')
                 self.build(**kwargs)
 
             if standaloneParams == {}:
@@ -170,8 +179,13 @@ class NCSNetwork(Network):
             # run simulation
             print_dict(standaloneParams)
             run_args = params2run_args(standaloneParams)
-            device.run(directory=os.path.abspath(
-                get_device().build_options['directory']), with_output=True, run_args=run_args)
+            directory=os.path.abspath(get_device().build_options['directory'])
+            if not os.path.isdir(directory):
+                os.mkdir(directory)
+            print('standalone files are written to: ', directory)
+
+            device.run(directory=directory, with_output=True, run_args=run_args)
+
             end = time.time()
             print('simulation in c++ took ' + str(end - startSim) + ' sec')
             print('simulation done!')
@@ -183,7 +197,13 @@ class NCSNetwork(Network):
                 duration = standaloneParams['duration']
 
             Network.run(self, duration=duration, **kwargs)
-
+    
+    def run_as_thread(self, duration,  **kwargs):
+        import threading
+        from functools import partial
+        self.thread = threading.Thread(target=partial(self.run,duration,**kwargs))
+        self.thread.start()
+    
     def printParams(self):
         """This functions prints all standalone parameters (cpp standalone network)
         """

@@ -343,7 +343,7 @@ def gen2dWTA(groupname,
     '''
 
     if spatial_kernel is None:
-        spatial_kernel = kernel_mexican_1d
+        spatial_kernel = kernel_mexican_2d
     # time measurement
     start = time.clock()
 

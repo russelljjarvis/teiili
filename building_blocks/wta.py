@@ -73,6 +73,8 @@ class WTA(BuildingBlock):
                  additional_statevars=[],
                  num_inputs=1,
                  spatial_kernel=None,
+                 EI_connection_probability = 1,
+                 IE_connection_probability = 1,
                  monitor=True,
                  debug=False):
         """Summary
@@ -116,6 +118,8 @@ class WTA(BuildingBlock):
                                              num_inputs=num_inputs,
                                              monitor=monitor,
                                              debug=debug,
+                                             EI_connection_probability = EI_connection_probability,
+                                             IE_connection_probability = IE_connection_probability,
                                              spatial_kernel = spatial_kernel,
                                              **block_params)
         elif dimensions == 2:
@@ -130,6 +134,8 @@ class WTA(BuildingBlock):
                                              num_inputs=num_inputs,
                                              monitor=monitor,
                                              debug=debug,
+                                             EI_connection_probability = EI_connection_probability,
+                                             IE_connection_probability = IE_connection_probability,
                                              spatial_kernel = spatial_kernel,
                                              **block_params)
 
@@ -169,6 +175,7 @@ def gen1dWTA(groupname,
              rpWTA=3 * ms, rpInh=1 * ms,
              num_neurons=64, num_inh_neurons=5, num_input_neurons=None, cutoff=10, num_inputs=1,
              spatial_kernel = kernel_mexican_1d,
+             EI_connection_probability=1, IE_connection_probability=1,
              monitor=True, additional_statevars=[], debug=False):
     """Summary
 
@@ -236,8 +243,8 @@ def gen1dWTA(groupname,
     synInpWTA1e.connect('i==j')
     # connect the nearest neighbors including itself
     synWTAWTA1e.connect('abs(i-j)<=cutoff')
-    synWTAInh1e.connect('True')  # Generates all to all connectivity
-    synInhWTA1i.connect('True')
+    synWTAInh1e.connect('True', p = EI_connection_probability)  # Generates all to all connectivity
+    synInhWTA1i.connect('True', p = IE_connection_probability)
 
     synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
     synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)
@@ -312,6 +319,7 @@ def gen2dWTA(groupname,
              wiInhInh=0, EI_connection_probability=1, IE_connection_probability=1,
              II_connection_probability=0.1,
              spatial_kernel = kernel_mexican_2d,
+             p_WTAInh = 1, p_InhWTA = 1,
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA

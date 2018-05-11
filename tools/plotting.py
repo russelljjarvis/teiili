@@ -9,7 +9,7 @@ Attributes:
 # @Author: alpha, mmilde
 # @Date:   2017-07-31 16:13:59
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-04-05 19:45:29
+# @Last Modified time: 2018-05-09 11:57:06
 
 """
 Plotting tools for different spike and state monitors
@@ -49,7 +49,7 @@ def plot_spikemon(start_time, end_time, monitor, num_neurons, ylab='ind'):
             ylim([0, num_neurons])
 
 
-def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=16, window=None):
+def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=16, window=None, unit=None):
     """Generic plotting function to plot spikemonitors using pyqtgraph
 
     Args:
@@ -62,9 +62,11 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
     Raises:
         UserWarning: Description
     """
+    if unit is None:
+        unit = 1
     if len(monitor.t) > 1:
         if start_time is None:
-            start_time = 0 * ms
+            start_time = 0 * unit
         if end_time is None:
             end_time = monitor.t[-1]
         if window is None:
@@ -75,14 +77,15 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
         start_ind = np.argmin(abs(monitor.t - start_time))
         end_ind = np.argmin(abs(monitor.t - end_time))
 
-        window.setXRange(0, end_time / ms, padding=0)
+        window.setXRange(0, end_time / unit, padding=0)
         window.setYRange(0, num_neurons)
 
-        window.plot(x=np.asarray(monitor.t / ms)[start_ind:end_ind], y=np.asarray(monitor.i)[start_ind:end_ind],
+        window.plot(x=np.asarray(monitor.t / unit)[start_ind:end_ind] - np.array(monitor.t / unit)[start_ind],
+                    y=np.asarray(monitor.i)[start_ind:end_ind],
                     pen=None, symbol='o', symbolPen=None,
                     symbolSize=7, symbolBrush=colors[1])
         window.setLabel('left', "Neuron ID", **labelStyle)
-        window.setLabel('bottom', "Time (ms)", **labelStyle)
+        window.setLabel('bottom', 'Time ({})'.format(str(unit)), **labelStyle)
         b = QtGui.QFont("Sans Serif", 10)
         window.getAxis('bottom').tickFont = b
         window.getAxis('left').tickFont = b

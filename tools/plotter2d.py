@@ -17,7 +17,7 @@ Attributes:
 import csv
 import os
 import sys
-from brian2 import ms, defaultclock, second
+from brian2 import ms, Hz, defaultclock, second
 import numpy as np
 import shutil
 #import matplotlib.animation as animation
@@ -113,21 +113,27 @@ class Plotter2d(object):
             self._i = monitor.i  # neuron index number of spike
             # print(self._i)
             self._xi, self._yi = np.unravel_index(self._i, (dims[0], dims[1]))
-            self.pol = np.zeros_like(self._t)
             #assert(len(self._i) == len(self._t))
         except:  # that should work, if it is a DVSmonitor (it has xi and yi instead of y)
             self._xi = np.asarray(monitor.xi, dtype='int')
             self._yi = np.asarray(monitor.yi, dtype='int')
             self._i = np.ravel_multi_index((self._xi, self._yi), dims)  # neuron index number of spike
-            self.pol = monitor.pol
             try:  # check, if _t has a unit (dvs raw data is given in ms)
                 self._t[0].dim
             except:
                 self._t = self._t * ms
 
+        try:
+            self.pol = monitor.pol
+        except:
+            self.pol = np.zeros_like(self._t)
+
         self.mask = slice(len(monitor.t))  # [True] * (len(monitor.t))
         if plotrange is None:
-            self.plotrange = (np.min(self.t), np.max(self.t))
+            if len(self.t)>0:
+                self.plotrange = (np.min(self.t), np.max(self.t))
+            else:
+                self.plotrange = (0*ms, 0*ms)
         else:
             self.plotrange = plotrange
             self.set_range(plotrange)
@@ -216,8 +222,9 @@ class Plotter2d(object):
             self.plotrange = plotrange
             self.mask = np.where((self._t <= plotrange[1]) & (self._t >= plotrange[0]))[0]
         else:
-            self.plotrange = (np.min(self.t), np.max(self.t))
             self.mask = slice(len(self._t))  # [True] * (len(self._t))
+            self.plotrange = (np.min(self.t), np.max(self.t))
+
 
     def get_sparse3d(self, dt):
         """Using the package sparse (based of scipy sparse, but for 3d), the spiketimes
@@ -235,8 +242,13 @@ class Plotter2d(object):
         # print(len(self.t))
         #print(np.max(self.t / dt))
         # print(self.plotshape(dt))
-        sparse_spikemat = sparse.COO((np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
-                                     shape=self.plotshape(dt))
+        if len(self.t)>0:
+            sparse_spikemat = sparse.COO((np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
+                                          shape=self.plotshape(dt))
+        else:
+            print('Your monitor is empty!')
+            # just create a matrix of zeros, hope, this does not lead to other problems
+            sparse_spikemat = sparse.COO(([0], ([0], [0], [0])),shape=self.plotshape(dt))
         return sparse_spikemat
 
     # Example:
@@ -272,6 +284,7 @@ class Plotter2d(object):
         dense3d = self.get_dense3d(dt)
         filtered = ndimage.uniform_filter1d(dense3d, size=int(filtersize / dt),
                                             axis=0, mode='constant') * second / dt
+        #filtered  = ndimage.zoom(filtered, (1, 2, 2))
         return filtered
     #    import timeit
     #    timeit.timeit("ndimage.uniform_filter(dense3d, size=(0,0,10))",
@@ -484,7 +497,7 @@ class Plotter2d(object):
             filename (TYPE): Description
         """
         np.savez_compressed(str(filename) + ".npz", self.i,
-                            self.t, self.dims)
+                            self.t, self.pol, self.dims)
 
     @classmethod
     def loadz(cls, filename):
@@ -512,16 +525,26 @@ class Plotter2d(object):
             return 0
         try:
             with np.load(str(filename)) as loaded_npz:
-                i, t, dims = [loaded_npz[arr] for arr in loaded_npz]
+                i, t, pol, dims = [loaded_npz[arr] for arr in loaded_npz]
+            assert len(dims) == 2
             mon.t = t * second
             mon.i = i
+            mon.pol = pol
             return cls(mon, dims)
-        except:
-            with np.load(str(filename)) as loaded_npz:
-                i, t, rows, cols = [loaded_npz[arr] for arr in loaded_npz]
-            mon.t = t * second
-            mon.i = i
-            return cls(mon, (rows, cols))
+        except: # This is for backwards compatibility
+            print("You are probably loading an old saved monitor!")
+            try:
+                with np.load(str(filename)) as loaded_npz:
+                    i, t, dims = [loaded_npz[arr] for arr in loaded_npz]
+                mon.t = t * second
+                mon.i = i
+                return cls(mon, dims)
+            except:
+                with np.load(str(filename)) as loaded_npz:
+                    i, t, rows, cols = [loaded_npz[arr] for arr in loaded_npz]
+                mon.t = t * second
+                mon.i = i
+                return cls(mon, (rows, cols))
 
     @classmethod
     def loaddvs(cls, eventsfile, dims = None):
@@ -618,29 +641,71 @@ class Plotter2d(object):
 
         return gw_paneplot
 
-    def generate_gif(self, filename, tempfolder=os.path.expanduser('~'), filtersize=100 * ms, plot_dt=200 * defaultclock.dt):
+    def generate_movie(self, filename, scale = None, speed = 1, plotfunction = 'plot3d',
+                       plot_dt = 10*ms, tempfolder=os.path.expanduser('~'),
+                       ffmpegoptions = '', **plotkwargs):
         """
-        This only works on linux at the moment
-        On wiondows it could be done with ffmpeg somehow like that (names need to be adjusted):
-        ffmpeg -f image2 -i image_%03d.jpg -vf scale=500x500 gifout.gif
+        This exports a movie or gif from an imageview
+        Existing outputfiles will be overwritten
+        This needs ffmpeg wich is installed on most linux distributions and also available for windows and mac
+        Have a loo here: https://ffmpeg.org/
 
         Args:
-            filename (TYPE): Description
-            tempfolder (TYPE, optional): Description
-            filtersize (TYPE, optional): Description
-            plot_dt (TYPE, optional): Description
+            filename (str): The filename in which to store the generated movie.
+                            You can choose a format that can be generated with ffmpeg like '.gif', '.mpg', '.mp4',...
+            scale (str, optional): give pixel size as string e.g. '100x100'
+            speed (num, optional): if the video should run faster, specify a multiplier
+            plot_dt (given in brian2 time units): is passed to the plotfunction and determines the fps
+            tempfolder (str, optional): the directory in which the temporary folder to store
+                                        files created in the process.
+                                        The temporary folder will be deleted afterwards.
+                                        By default it will be created in your home directory
+            plotfunction (str or function, optional): the function that should be used to create the gif.
+                                                      it has to be a function that returns a pyqtgraph imageview
+                                                      (or at least something similar that can export single images)
+                                                      like the methods of this class (plot3d, ...). For the methods,
+                                                      you can also pass a string to identify the plotfunction.
+                                                      The plotfunction has to take plot_dt as an argument
+            ffmepgoptions (str, optional):
+            kwargs: all other keyword agruments will be passed to the plotfunction
+
+            Example usage:
+            plotter2dobject.generate_gif('~/gifname.gif', plotfunction = 'plot3d_on_off', filtersize=100 * ms, plot_dt=50 * ms)
         """
+
+        fps = np.asarray(speed/plot_dt/Hz,dtype = 'int')
+        if abs(speed/plot_dt/Hz-fps)>0.0000001:
+            plot_dt = 1/fps*second
+            print('Your plot_dt was rounded to',plot_dt,'in order to fit framerate of',fps)
+
         gif_temp_dir = os.path.join(tempfolder, "gif_temp")
-        pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
+        #pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
+        if type(plotfunction) == str:
+            plotfunction = getattr(self,plotfunction)
+        pgImage = plotfunction(plot_dt = plot_dt, **plotkwargs)
         if not os.path.exists(gif_temp_dir):
             os.makedirs(gif_temp_dir)
         pgImage.export(os.path.join(gif_temp_dir, "gif.png"))
-        linux_command = "cd " + \
-            str(gif_temp_dir) + ";" + \
-            " convert -delay 1 -loop 0 *.png " + os.path.abspath(filename)
-        if not filename.endswith('.gif'):
-            linux_command = linux_command + ".gif"
-        result = subprocess.check_output(linux_command, shell=True)
+
+        #before switching to ffmpeg we used convert, which is less flexible concerning framerates
+        #        linux_command = "cd " + str(gif_temp_dir) + ";" + \
+        #                "convert -delay "+str(delay)+" *.png "+ os.path.abspath(filename)
+
+        if not '.' in filename:
+            filename = filename + '.gif'
+
+        ffmpeg_command = "cd " + \
+                str(gif_temp_dir) + ";" + \
+                "ffmpeg -f image2 -framerate "+str(fps)+" -pattern_type glob -i '*.png' "
+        if scale is not None:
+            ffmpeg_command += "-vf scale=" + scale+' '
+
+        ffmpeg_command += '-y ' #overwrite existing output files
+        ffmpeg_command += ffmpegoptions +' '
+
+        ffmpeg_command += os.path.abspath(filename)
+
+        result = subprocess.check_output(ffmpeg_command, shell=True)
         print(result)
-        # os.system(linux_command)
+
         shutil.rmtree(gif_temp_dir)

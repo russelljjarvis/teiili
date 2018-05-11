@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-03-31 14:17:56
+# @Last Modified time: 2018-04-18 12:46:05
 
 """
 This files contains different WTA circuits

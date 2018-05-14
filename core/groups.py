@@ -433,19 +433,21 @@ def setParams(briangroup, params, ndargs=None, verbose=False):
         # This fails with synapses coming from SpikeGenerator groups, unidentified bug?
         # This does not work in standalone mode as values of state variables
         # cannot be retrieved before the simulation has been run
-        states = briangroup.get_states()
-        print('\n')
-        print('-_-_-_-_-_-_-_', '\n', 'Parameters set')
-        print(briangroup.name)
-        print('List of first value of each parameter:')
-        for key in states.keys():
-            if key in params:
-                if states[key].size > 1:
-                    print(key, states[key][1])
-                else:
-                    print(key, states[key])
-        print('----------')
-
+        try:
+            states = briangroup.get_states()
+            print('\n')
+            print('-_-_-_-_-_-_-_', '\n', 'Parameters set')
+            print(briangroup.name)
+            print('List of first value of each parameter:')
+            for key in states.keys():
+                if key in params:
+                    if states[key].size > 1:
+                        print(key, states[key][1])
+                    else:
+                        print(key, states[key])
+            print('----------')
+        except:
+            print('printing of states does not work in cpp standalone mode')
 
 class NCSSubgroup(Subgroup):
     """this helps to make Subgroups compatible, otherwise the same as Subgroup

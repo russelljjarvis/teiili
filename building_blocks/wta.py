@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-03-31 14:17:56
+# @Last Modified time: 2018-05-14 18:56:00
 
 """
 This files contains different WTA circuits
@@ -20,7 +20,7 @@ import pyqtgraph as pg
 from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
 
-    
+
 import NCSBrian2Lib.tools.synaptic_kernel
 from NCSBrian2Lib.tools.misc import print_states, dist1d2dint
 from NCSBrian2Lib.tools.indexing import ind2x, ind2y
@@ -39,14 +39,16 @@ else:
     print('QApplication instance already exists: %s' % str(app))
 
 
-
 wtaParams = {'weInpWTA': 1.5,
              'weWTAInh': 1,
              'wiInhWTA': -1,
              'weWTAWTA': 0.5,
              'sigm': 3,
              'rpWTA': 3 * ms,
-             'rpInh': 1 * ms
+             'rpInh': 1 * ms,
+             'EI_connection_probability': 1,
+             'IE_connection_probability': 1,
+             'II_connection_probability': 0
              }
 
 
@@ -74,8 +76,6 @@ class WTA(BuildingBlock):
                  additional_statevars=[],
                  num_inputs=1,
                  spatial_kernel=None,
-                 EI_connection_probability = 1,
-                 IE_connection_probability = 1,
                  monitor=True,
                  debug=False):
         """Summary
@@ -119,9 +119,7 @@ class WTA(BuildingBlock):
                                              num_inputs=num_inputs,
                                              monitor=monitor,
                                              debug=debug,
-                                             EI_connection_probability = EI_connection_probability,
-                                             IE_connection_probability = IE_connection_probability,
-                                             spatial_kernel = spatial_kernel,
+                                             spatial_kernel=spatial_kernel,
                                              **block_params)
         elif dimensions == 2:
             self.Groups, self.Monitors, self.standaloneParams = gen2dWTA(name,
@@ -135,9 +133,7 @@ class WTA(BuildingBlock):
                                              num_inputs=num_inputs,
                                              monitor=monitor,
                                              debug=debug,
-                                             EI_connection_probability = EI_connection_probability,
-                                             IE_connection_probability = IE_connection_probability,
-                                             spatial_kernel = spatial_kernel,
+                                             spatial_kernel=spatial_kernel,
                                              **block_params)
 
         else:
@@ -146,7 +142,7 @@ class WTA(BuildingBlock):
         self.inputGroup = self.Groups['gWTAInpGroup']
         self.inhGroup = self.Groups['gWTAInhGroup']
         self.group = self.Groups['gWTAGroup']
-        
+
         if monitor:
             self.spikemonWTA = self.Monitors['spikemonWTA']
 
@@ -175,8 +171,8 @@ def gen1dWTA(groupname,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5, sigm=3,
              rpWTA=3 * ms, rpInh=1 * ms,
              num_neurons=64, num_inh_neurons=5, num_input_neurons=None, cutoff=10, num_inputs=1,
-             spatial_kernel = "kernel_mexican_1d",
-             EI_connection_probability=1, IE_connection_probability=1,
+             spatial_kernel="kernel_mexican_1d",
+             EI_connection_probability=1, IE_connection_probability=1, II_connection_probability=0,
              monitor=True, additional_statevars=[], debug=False):
     """Summary
 
@@ -208,7 +204,7 @@ def gen1dWTA(groupname,
     if spatial_kernel is None:
         spatial_kernel = "kernel_mexican_1d"
 
-    spatial_kernel_func = getattr(NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)   
+    spatial_kernel_func = getattr(NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)
     # time measurement
     start = time.clock()
 
@@ -241,13 +237,17 @@ def gen1dWTA(groupname,
     synWTAInh1e = Connections(gWTAGroup, gWTAInhGroup,
                               equation_builder=synapse_eq_builder(),
                               method="euler", name='s' + groupname + '_Inhe')
+    synInhInh1i = Connections(gWTAInhGroup, gWTAInhGroup,
+                              equation_builder=synapse_eq_builder(),
+                              method='euler', name='s' + groupname + '_i')
 
     # connect synapses
     synInpWTA1e.connect('i==j')
     # connect the nearest neighbors including itself
     synWTAWTA1e.connect('abs(i-j)<=cutoff')
-    synWTAInh1e.connect('True', p = EI_connection_probability)  # Generates all to all connectivity
-    synInhWTA1i.connect('True', p = IE_connection_probability)
+    synWTAInh1e.connect('True', p=EI_connection_probability)  # Generates all to all connectivity
+    synInhWTA1i.connect('True', p=IE_connection_probability)
+    synInhInh1i.connect('True', p=II_connection_probability)
 
     synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
     synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)
@@ -261,8 +261,8 @@ def gen1dWTA(groupname,
     # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
-    synWTAWTA1e.namespace.update({spatial_kernel : spatial_kernel_func})
-    synWTAWTA1e.weight = 'latWeight * '+spatial_kernel+'(i,j,latSigma)'
+    synWTAWTA1e.namespace.update({spatial_kernel: spatial_kernel_func})
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -272,7 +272,7 @@ def gen1dWTA(groupname,
         'synWTAWTA1e': synWTAWTA1e,
         'synWTAInh1e': synWTAInh1e,
         'synInhWTA1i': synInhWTA1i}
-    
+
     # spikemons
     if monitor:
         spikemonWTA = SpikeMonitor(gWTAGroup, name='spikemon' + groupname + '_WTA')
@@ -321,8 +321,7 @@ def gen2dWTA(groupname,
              rpWTA=2.5 * ms, rpInh=1 * ms,
              wiInhInh=0, EI_connection_probability=1, IE_connection_probability=1,
              II_connection_probability=0.1,
-             spatial_kernel = "kernel_mexican_2d",
-             p_WTAInh = 1, p_InhWTA = 1,
+             spatial_kernel="kernel_mexican_2d",
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA
@@ -355,7 +354,7 @@ def gen2dWTA(groupname,
 
     if spatial_kernel is None:
         spatial_kernel = "kernel_mexican_2d"
-        
+
     spatial_kernel_func = getattr(NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)
     # time measurement
     start = time.clock()
@@ -425,9 +424,9 @@ def gen2dWTA(groupname,
     # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
-    synWTAWTA1e.namespace[spatial_kernel] = spatial_kernel_func 
+    synWTAWTA1e.namespace[spatial_kernel] = spatial_kernel_func
     synWTAWTA1e.namespace['num_neurons'] = num_neurons
-    synWTAWTA1e.weight = 'latWeight * '+spatial_kernel+'(i,j,latSigma,num_neurons)'
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma,num_neurons)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -480,7 +479,7 @@ def gen2dWTA(groupname,
     return Groups, Monitors, standaloneParams
 
 
-def plotWTA(name, start_time, end_time, WTAMonitors, plot_states = True):
+def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
     """Function to easily visualize WTA activity.
 
     Args:
@@ -502,7 +501,6 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states = True):
     raster_wta = win_raster.addPlot(title="SpikeMonitor WTA")
     win_raster.nextRow()
     raster_inh = win_raster.addPlot(title="SpikeMonitor inhibitory interneurons")
-
 
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
                      num_neurons=np.int(WTAMonitors['spikemonWTAInp'].source.N), monitor=WTAMonitors['spikemonWTAInp'],

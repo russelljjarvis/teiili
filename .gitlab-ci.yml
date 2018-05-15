@@ -10,6 +10,7 @@ before_script:
     - apt-get install -y python3-tk
     - pip install pyqtgraph
     - pip3 install pyqt5
+    - export PYTHONPATH="$PYTHONPATH:/builds/"
 
 unit-tests:
     stage: test

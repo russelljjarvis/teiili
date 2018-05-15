@@ -3,6 +3,7 @@ image: python:3.5
 
 # dependencies
 before_script:
+    - apt-get update
     - pip install matplotlib
     - pip install brian2
     - pip install sparse

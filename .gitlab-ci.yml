@@ -1,0 +1,18 @@
+# use a python enviroment
+image: python:3.5
+
+# dependencies
+before_script:
+    - pip install matplotlib
+    - pip install brian2
+    - pip install sparse
+    - apt-get install python3-tk
+    - pip install pyqtgraph
+    - pip3 install pyqt5
+
+unit-tests:
+    stage: test
+    script:
+        - cd unit_tests/
+        - python test_wta.py
+

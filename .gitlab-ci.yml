@@ -7,7 +7,7 @@ before_script:
     - pip install matplotlib
     - pip install brian2
     - pip install sparse
-    - apt-get install python3-tk
+    - apt-get install -y python3-tk
     - pip install pyqtgraph
     - pip3 install pyqt5
 

@@ -4,14 +4,13 @@ image: python:3.5
 # dependencies
 before_script:
     - apt-get update
+    - apt-get install -y python3-tk libgl1-mesa-glx
     - pip install matplotlib
     - pip install brian2
     - pip install sparse
-    - apt-get install -y python3-tk
     - pip install pyqtgraph
-    - pip3 install pyqt5
+    - pip install pyqt5
     - export PYTHONPATH="$PYTHONPATH:/builds/vanessa/"
-    - echo $PYTHONPATH
 
 unit-tests:
     stage: test

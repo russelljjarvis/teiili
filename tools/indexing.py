@@ -93,10 +93,10 @@ def ind2xy(ind, n2dNeurons):
     Returns:
         tuple (x, y): The corresponding x, y coordinates
     """
-    # if type(n2dNeurons) == tuple:
-    #     return np.unravel_index(ind, (n2dNeurons[0], n2dNeurons[1]))
-    # elif type(n2dNeurons) == int:
-    return np.unravel_index(ind, (n2dNeurons, n2dNeurons))
+    try:
+         return np.unravel_index(ind, (n2dNeurons[0], n2dNeurons[1]))
+    except TypeError:
+        return np.unravel_index(ind, (n2dNeurons, n2dNeurons))
 
 
 @implementation('numpy', discard_units=True)

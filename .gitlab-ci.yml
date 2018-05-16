@@ -4,13 +4,13 @@ image: python:3.5
 # dependencies
 before_script:
     - apt-get update
-    - apt-get install -y python3-tk libgl1-mesa-glx
+    - apt-get install -y python3-tk  build-essential libfontconfig1 mesa-common-dev libglu1-mesa-dev libgl1-mesa-glx
+    - apt-get install -y qtmultimedia5-dev libqt5multimedia5-plugins libqt5svg5-dev libqt5sql5-mysql libqt5websockets5-dev
     - pip install matplotlib
     - pip install brian2
     - pip install sparse
     - pip install pyqtgraph
     - pip install pyqt5
-    - unset LD_LIBRARY_PATH
     - export PYTHONPATH="$PYTHONPATH:/builds/vanessa/"
 
 unit-tests:

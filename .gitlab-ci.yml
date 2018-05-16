@@ -12,6 +12,7 @@ before_script:
     - pip install pyqtgraph
     - pip install pyqt5
     - export PYTHONPATH="$PYTHONPATH:/builds/vanessa/"
+    - export XDG_RUNTIME_DIR="/builds/vanessa/tmp/"
 
 unit-tests:
     stage: test

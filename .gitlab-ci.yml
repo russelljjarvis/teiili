@@ -11,6 +11,8 @@ before_script:
     - pip install sparse
     - pip install pyqtgraph
     - pip install pyqt5
+    - mkdir /builds/vanessa/tmp/
+    - chmod -R 0700 /builds/vanessa/tmp/
     - export PYTHONPATH="$PYTHONPATH:/builds/vanessa/"
     - export XDG_RUNTIME_DIR="/builds/vanessa/tmp/"
 

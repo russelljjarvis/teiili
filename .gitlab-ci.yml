@@ -1,27 +1,36 @@
-# use ubuntu imagte
+# you can test locally by using:
+# gitlab-runner exec docker {test_name}
+
+# use ubuntu image (lts)
 image: ubuntu:latest
 
 # dependencies
 before_script:
+    # general
     - apt-get update
     - apt-get install -y software-properties-common
-    - echo "Europe/Zurich" > /etc/timezone    
-    - dpkg-reconfigure -f noninteractive tzdata
+
+    # tzdata
+    - export DEBIAN_FRONTEND=noninteractive
+    - apt-get install -y tzdata
+    - ln -fs /usr/share/zoneinfo/Europe/Zurich /etc/localtime
+    - dpkg-reconfigure --frontend noninteractive tzdata
+    
+    # python
     - apt-get install -y python3-pip python3-numpy python3-matplotlib
-#    - pip3 install --upgrade sphinx sphinx-argparse sphinx_rtd_theme pytest
-#    - pip3 install -e ./
     - apt-get install -y python3-tk  build-essential libfontconfig1 mesa-common-dev libglu1-mesa-dev libgl1-mesa-glx
     - apt-get install -y qtmultimedia5-dev libqt5multimedia5-plugins libqt5svg5-dev libqt5sql5-mysql libqt5websockets5-dev
-#    - pip install matplotlib
+    # project dependencies
     - pip3 install brian2
     - pip3 install sparse
     - pip3 install pyqtgraph
     - pip3 install pyqt5
-    - export PYTHONPATH="$PYTHONPATH:/builds/vanessa/"
+    - cd ..
+    - export PYTHONPATH="$PYTHONPATH:$PWD"
 
 unit-tests:
     stage: test
     script:
-        - cd unit_tests/
+        - cd $CI_PROJECT_DIR/unit_tests/
         - for f in *.py; do python3 "$f"; done
 

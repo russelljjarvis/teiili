@@ -16,8 +16,8 @@ import pyqtgraph.exporters
 import matplotlib.pyplot as plt
 import numpy as np
 
-from NCSBrian2Lib.Groups.Groups import Connections
-from NCSBrian2Lib.Models.SynapseModels import DPI_stdp
+from NCSBrian2Lib.core.groups import Neurons, Connections
+from NCSBrian2Lib.models.synapse_models import DPIstdp
 
 prefs.codegen.target = "numpy"
 
@@ -35,28 +35,32 @@ N = 100
 # Presynaptic neurons G spike at times from 0 to tmax
 # Postsynaptic neurons G spike at times from tmax to 0
 # So difference in spike times will vary from -tmax to +tmax
-G = NeuronGroup(N, '''tspike:second''', threshold='t>tspike', refractory=100 * ms)
-H = NeuronGroup(N, '''
+G = Neurons(N, model='''tspike:second''', threshold='t>tspike', refractory=100 * ms)
+
+G.namespace.update({'tmax': tmax})
+H = Neurons(N, model='''
                 Ii0 : amp
                 Ie0 : amp
                 tspike:second''', threshold='t>tspike', refractory=100 * ms)
+H.namespace.update({'tmax': tmax})
 G.tspike = 'i*tmax/(N-1)'
 H.tspike = '(N-1-i)*tmax/(N-1)'
 
-DPISynEq, DPISynparam = DPI_stdp(1)
+# syn = DPIstdp()
+# S = Connections(G, H, model=syn.model, on_pre=syn.on_pre, on_post=syn.on_post, name='STDP_syn')
 S = Connections(G, H,
-                **DPISynEq, params=DPISynparam)
+                equation_builder=DPIstdp(), name='STDP_syn')
 S.connect('i==j')
-S.w = 0.5
-S.taupre = 5 * ms
-S.taupost = 5 * ms
+S.w_plast = 0.5
+# S.taupre = 5 * ms
+# S.taupost = 5 * ms
 
 spikemonG = SpikeMonitor(G, record=True)
 spikemonH = SpikeMonitor(H, record=True)
 
 run(tmax + 1 * ms)
 
-plt.plot((H.tspike - G.tspike) / ms, S.w, color="black", linewidth=2.5, linestyle="-")
+plt.plot((H.tspike - G.tspike) / ms, S.w_plast, color="black", linewidth=2.5, linestyle="-")
 plt.title("STDP", fontdict=font)
 plt.xlabel(r'$\Delta t$ (ms)')
 plt.ylabel(r'$\Delta w$')

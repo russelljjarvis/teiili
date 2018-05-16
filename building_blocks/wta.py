@@ -214,7 +214,7 @@ def gen1dWTA(groupname,
                         num_inputs=3 + num_inputs)
     gWTAInhGroup = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(),
                            refractory=rpInh, name='g' + groupname + '_Inh',
-                           num_inputs=1)
+                           num_inputs=2)
 
     if num_input_neurons is None:
         num_input_neurons = num_neurons

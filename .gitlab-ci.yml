@@ -10,6 +10,7 @@ before_script:
     - pip install sparse
     - pip install pyqtgraph
     - pip install pyqt5
+    - unset LD_LIBRARY_PATH
     - export PYTHONPATH="$PYTHONPATH:/builds/vanessa/"
 
 unit-tests:

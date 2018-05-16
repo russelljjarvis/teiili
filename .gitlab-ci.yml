@@ -5,6 +5,8 @@ image: ubuntu:latest
 before_script:
     - apt-get update
     - apt-get install -y software-properties-common
+    - echo "Europe/Zurich" > /etc/timezone    
+    - dpkg-reconfigure -f noninteractive tzdata
     - apt-get install -y python3-pip python3-numpy python3-matplotlib
 #    - pip3 install --upgrade sphinx sphinx-argparse sphinx_rtd_theme pytest
 #    - pip3 install -e ./

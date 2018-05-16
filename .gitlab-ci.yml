@@ -32,5 +32,5 @@ unit-tests:
     stage: test
     script:
         - cd $CI_PROJECT_DIR/unit_tests/
-        - for f in *.py; do python3 "$f"; done
+        - python3 -m unittest
 

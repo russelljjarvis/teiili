@@ -20,6 +20,7 @@ from NCSBrian2Lib.core.groups import Neurons, Connections
 from NCSBrian2Lib.models.synapse_models import DPIstdp
 
 prefs.codegen.target = "numpy"
+visualization_backend = 'pyqt'  # Or set it to 'pyplot' to use matplotlib.pyplot to plot
 
 font = {'family': 'serif',
         'color': 'darkred',
@@ -60,18 +61,43 @@ spikemonH = SpikeMonitor(H, record=True)
 
 run(tmax + 1 * ms)
 
-plt.plot((H.tspike - G.tspike) / ms, S.w_plast, color="black", linewidth=2.5, linestyle="-")
-plt.title("STDP", fontdict=font)
-plt.xlabel(r'$\Delta t$ (ms)')
-plt.ylabel(r'$\Delta w$')
-plt.savefig('STDP_IE.png')
 
-# figure()
-# for ii in range(100):
-#    plot(statemon.t/ms,statemon.Apre[ii,:])
-fig = plt.figure()
-plt.plot(spikemonG.t / ms, spikemonG.i, '.k')
-plt.plot(spikemonH.t / ms, spikemonH.i, '.k')
-plt.xlabel('Time [ms]')
-plt.ylabel('Neuron ID')
-plt.show()
+if visualization_backend == 'pyqt':
+    app = QtGui.QApplication.instance()
+    if app is None:
+        app = QtGui.QApplication(sys.argv)
+    else:
+        print('QApplication instance already exists: %s' % str(app))
+
+    labelStyle = {'color': '#FFF', 'font-size': '12pt'}
+    pg.GraphicsView(useOpenGL=True)
+    win = pg.GraphicsWindow(title="STDP Kernel")
+    win.resize(1024, 768)
+    toPlot = win.addPlot(title="Spike-time dependent plasticity")
+
+    toPlot.plot(x=np.asarray((H.tspike - G.tspike) / ms), y=np.asarray(S.w_plast),
+                pen=pg.mkPen((255, 128, 0), width=2))
+
+    toPlot.setLabel('left', '<font>&Delta; w</font>', **labelStyle)
+    toPlot.setLabel('bottom', '<font>&Delta; t</font>', **labelStyle)
+    b = QtGui.QFont("Sans Serif", 10)
+    toPlot.getAxis('bottom').tickFont = b
+    toPlot.getAxis('left').tickFont = b
+    app.exec_()
+
+elif visualization_backend == 'pyplot':
+    plt.plot((H.tspike - G.tspike) / ms, S.w_plast, color="black", linewidth=2.5, linestyle="-")
+    plt.title("STDP", fontdict=font)
+    plt.xlabel(r'$\Delta t$ (ms)')
+    plt.ylabel(r'$\Delta w$')
+    plt.savefig('STDP_IE.png')
+
+    # figure()
+    # for ii in range(100):
+    #    plot(statemon.t/ms,statemon.Apre[ii,:])
+    fig = plt.figure()
+    plt.plot(spikemonG.t / ms, spikemonG.i, '.k')
+    plt.plot(spikemonH.t / ms, spikemonH.i, '.k')
+    plt.xlabel('Time [ms]')
+    plt.ylabel('Neuron ID')
+    plt.show()

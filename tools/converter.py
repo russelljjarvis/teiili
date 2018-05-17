@@ -4,7 +4,7 @@
 # @Author: mmilde
 # @Date:   2017-12-27 12:07:15
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-03-31 14:51:22
+# @Last Modified time: 2018-05-17 09:24:42
 
 """
 Function for external interfaces such as event-based camera, i.e. DVS
@@ -93,13 +93,13 @@ def read_events(file_read, xdim, ydim):
             spec_type_tot.append(spec_type)
             spec_ts_tot.append(timestamp)
             if(spec_type == 6 or spec_type == 7 or spec_type == 9 or spec_type == 10):
-                print (timestamp, spec_type)
+                print(timestamp, spec_type)
             counter = counter + eventsize
 
     return (np.array(x_addr_tot), np.array(y_addr_tot), np.array(pol_tot), np.array(ts_tot), np.array(spec_type_tot), np.array(spec_ts_tot))
 
 
-def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, camera='DVS128', unit='ms'):
+def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit='ms'):
     """
     load AER data file and parse these properties of AE events:
         - timestamps (in us),
@@ -125,7 +125,10 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
     Raises:
         ValueError: Indicates that a camera was specified which is not supported or the AEDAT file version is not supported
     """
-    aerdatafh = open(datafile, 'rb')
+    try:
+        aerdatafh = open(datafile, 'rb')
+    except FileNotFoundError:
+        raise FileNotFoundError('Please specify an aedat file to convert.')
     k = 0  # line number
     p = 0  # pointer, position on bytes
     lt = aerdatafh.readline()
@@ -137,9 +140,11 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
         # Check the headerfile:
         if (lt.decode(encoding='utf-8')[9:12] == '2.0'):
             # The file version is AEDAT 2.0. Wrong version specified.
-            raise ValueError("Wrong .aedat version specified. \n Please enter version = 'V2' ")
+            raise ValueError(
+                "Wrong .aedat version specified. \n Please enter version = 'V2' ")
         if (camera == 'DVS128'):
-            raise ValueError("Unsupported camera version. \n Please enter camera = 'DAVIS240'")
+            raise ValueError(
+                "Unsupported camera version. \n Please enter camera = 'DAVIS240'")
 
         skip_header(aerdatafh)
 
@@ -151,7 +156,8 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
         y_events_tmp = []
         p_events_tmp = []
         while(1):
-            x, y, p, ts_tot, spec_type, spec_type_ts = read_events(aerdatafh, xdim, ydim)
+            x, y, p, ts_tot, spec_type, spec_type_ts = read_events(
+                aerdatafh, xdim, ydim)
             if(len(ts_tot) > 0 and ts_tot[0] == -1):
                 break
             x_events_tmp.append(x)
@@ -169,7 +175,8 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
             elif unit == 'sec':
                 ts_events_tmp.append(ts_tot / 1e6)
             else:
-                raise ValueError("Units not supported. Please select one of these: us, ms, sec")
+                raise ValueError(
+                    "Units not supported. Please select one of these: us, ms, sec")
             p_events_tmp.append(p)
         Events = np.zeros([4, len(list(itertools.chain(*ts_events_tmp)))])
         Events[0, :] = list(itertools.chain(*x_events_tmp))
@@ -184,7 +191,8 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
         # Check the headerfile:
         if (lt.decode(encoding='utf-8')[9:12] == '3.1'):
             # The file version is AEDAT 3.1. Wrong version specified.
-            raise ValueError("Wrong .aedat version specified. \n Please enter version = 'V3' ")
+            raise ValueError(
+                "Wrong .aedat version specified. \n Please enter version = 'V3' ")
 
         EVT_DVS = 0  # DVS event type
         EVT_APS = 1  # APS event
@@ -210,7 +218,7 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
         else:
             raise ValueError("Unsupported camera: %s" % (camera))
         if (version == 'V1'):
-            print ("using the old .dat format")
+            print("using the old .dat format")
             aeLen = 6
             readMode = '>HI'  # ushot, ulong = 2B+4B
         aerdatafh = open(datafile, 'rb')
@@ -227,7 +235,7 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
             k += 1
             lt = aerdatafh.readline()
             if debug >= 2:
-                print (str(lt))
+                print(str(lt))
             continue
         # variables to parse
         timestamps = []
@@ -271,19 +279,22 @@ def aedat2numpy(datafile='/tmp/aerout.aedat', length=0, version='V2', debug=0, c
                 elif unit == 'sec':
                     timestamps.append(ts / 1e6)
                 else:
-                    raise ValueError("Units not supported. Please select one of these: us, ms, sec")
+                    raise ValueError(
+                        "Units not supported. Please select one of these: us, ms, sec")
                 pol.append(a_pol)
             aerdatafh.seek(p)
             s = aerdatafh.read(aeLen)
             p += aeLen
         if debug > 0:
             try:
-                print ("read %i (~ %.2fM) AE events, duration= %.2fs" % (len(timestamps), len(timestamps) / float(10 ** 6), (timestamps[-1] - timestamps[0]) * td))
+                print("read %i (~ %.2fM) AE events, duration= %.2fs" % (len(timestamps), len(
+                    timestamps) / float(10 ** 6), (timestamps[-1] - timestamps[0]) * td))
                 n = 5
-                print ("showing first %i:" % (n))
-                print ("timestamps: %s \nX-addr: %s\nY-addr: %s\npolarity: %s" % (timestamps[0:n], xaddr[0:n], yaddr[0:n], pol[0:n]))
+                print("showing first %i:" % (n))
+                print("timestamps: %s \nX-addr: %s\nY-addr: %s\npolarity: %s" %
+                      (timestamps[0:n], xaddr[0:n], yaddr[0:n], pol[0:n]))
             except:
-                print ("failed to print statistics")
+                print("failed to print statistics")
         Events = np.zeros([4, len(timestamps)])
         # Set the coordinate (0,0) at the upper left corner:
         # NOTE: jAER orgin is at the bottom right corner.
@@ -326,30 +337,36 @@ def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True
         Events = np.transpose(Events)
 
     # extract tempory indices to retrieve
-    cInd_on = Events[3, :] == 1  # Boolean logic to get indices of on and off events, respectively
+    # Boolean logic to get indices of on and off events, respectively
+    cInd_on = Events[3, :] == 1
     cInd_off = Events[3, :] == 0
 
     # Initialize 1D arrays for neuron indices and timestamps
     indices_on = np.zeros([int(np.sum(cInd_on))])
     spiketimes_on = np.zeros([int(np.sum(cInd_on))])
-    # Polarity is either 0 or 1 so the entire length minus the sum of the polarity give the proportion of off events
+    # Polarity is either 0 or 1 so the entire length minus the sum of the
+    # polarity give the proportion of off events
     indices_off = np.zeros([int(np.sum(cInd_off))])
     spiketimes_off = np.zeros([int(np.sum(cInd_off))])
 
     if type(resolution) == str:
-        resolution = int(resolution[-3:])  # extract the x-resolution (i.e. the resolution along the x-axis of the camera)
+        # extract the x-resolution (i.e. the resolution along the x-axis of the
+        # camera)
+        resolution = int(resolution[-3:])
 
     # The equation below follows index = x + y*resolution
     # To retrieve the x and y coordinate again from the index see ind2px
     indices_on = Events[0, cInd_on] + Events[1, cInd_on] * resolution
     indices_off = Events[0, cInd_off] + Events[1, cInd_off] * resolution
     if scale:
-        # The DVS timestamps are in microseconds. We need to convert them to milliseconds for brian
+        # The DVS timestamps are in microseconds. We need to convert them to
+        # milliseconds for brian
         spiketimes_on = np.ceil(Events[2, cInd_on] * 10**(-3))
         spiketimes_off = np.ceil(Events[2, cInd_off] * 10**(-3))
 
     else:
-        # The flag scale is used to prevent rescaling of timestamps if we use artifically generated stimuli
+        # The flag scale is used to prevent rescaling of timestamps if we use
+        # artifically generated stimuli
         spiketimes_on = np.ceil(Events[2, cInd_on])
         spiketimes_off = np.ceil(Events[2, cInd_off])
 
@@ -364,12 +381,15 @@ def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True
         mask_t = spiketimes_on[i]
         mask_i = indices_on[i]
 
-        doubleEntries = np.logical_and(np.logical_and(ts_on_tmp >= mask_t, ts_on_tmp <= mask_t + delta_t), mask_i == ind_on_tmp)
+        doubleEntries = np.logical_and(np.logical_and(
+            ts_on_tmp >= mask_t, ts_on_tmp <= mask_t + delta_t), mask_i == ind_on_tmp)
         # uniqueEntries = np.invert(doubleEntries)
         # print np.sum(doubleEntries)
         if np.sum(doubleEntries) > 1:
-            tmp = np.where(doubleEntries == True)  # Find first occurence on non-unique entries
-            doubleEntries[tmp[0][0]] = False  # keep the first occurance of non-unique entry
+            # Find first occurence on non-unique entries
+            tmp = np.where(doubleEntries == True)
+            # keep the first occurance of non-unique entry
+            doubleEntries[tmp[0][0]] = False
             uniqueEntries = np.invert(doubleEntries)
             ts_on_tmp = ts_on_tmp[uniqueEntries]
             ind_on_tmp = ind_on_tmp[uniqueEntries]
@@ -378,12 +398,15 @@ def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True
         mask_t = spiketimes_off[i]
         mask_i = indices_off[i]
 
-        doubleEntries = np.logical_and(np.logical_and(ts_off_tmp >= mask_t, ts_off_tmp <= mask_t + delta_t), mask_i == ind_off_tmp)
+        doubleEntries = np.logical_and(np.logical_and(
+            ts_off_tmp >= mask_t, ts_off_tmp <= mask_t + delta_t), mask_i == ind_off_tmp)
         # uniqueEntries = np.invert(doubleEntries)
         # print np.sum(doubleEntries)
         if np.sum(doubleEntries) > 1:
-            tmp = np.where(doubleEntries == True)  # Find first occurence on non-unique entries
-            doubleEntries[tmp[0][0]] = False  # keep the first occurance of non-unique entry
+            # Find first occurence on non-unique entries
+            tmp = np.where(doubleEntries == True)
+            # keep the first occurance of non-unique entry
+            doubleEntries[tmp[0][0]] = False
             uniqueEntries = np.invert(doubleEntries)
             ts_off_tmp = ts_off_tmp[uniqueEntries]
             ind_off_tmp = ind_off_tmp[uniqueEntries]

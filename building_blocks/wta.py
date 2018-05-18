@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-03-31 14:17:56
+# @Last Modified time: 2018-05-14 18:56:00
 
 """
 This files contains different WTA circuits
@@ -12,6 +12,7 @@ This files contains different WTA circuits
 
 import time
 import numpy as np
+import sys
 # import matplotlib.pyplot as plt
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
@@ -19,7 +20,8 @@ import pyqtgraph as pg
 from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
 
-from NCSBrian2Lib.tools.synaptic_kernel import kernel_mexican_1d, kernel_mexican_2d
+
+import NCSBrian2Lib.tools.synaptic_kernel
 from NCSBrian2Lib.tools.misc import print_states, dist1d2dint
 from NCSBrian2Lib.tools.indexing import ind2x, ind2y
 from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
@@ -30,6 +32,12 @@ from NCSBrian2Lib.core.groups import Neurons, Connections
 from NCSBrian2Lib.models.neuron_models import DPI
 from NCSBrian2Lib.models.synapse_models import DPISyn
 
+app = QtGui.QApplication.instance()
+if app is None:
+    app = QtGui.QApplication(sys.argv)
+else:
+    print('QApplication instance already exists: %s' % str(app))
+
 
 wtaParams = {'weInpWTA': 1.5,
              'weWTAInh': 1,
@@ -37,7 +45,10 @@ wtaParams = {'weInpWTA': 1.5,
              'weWTAWTA': 0.5,
              'sigm': 3,
              'rpWTA': 3 * ms,
-             'rpInh': 1 * ms
+             'rpInh': 1 * ms,
+             'EI_connection_probability': 1,
+             'IE_connection_probability': 1,
+             'II_connection_probability': 0
              }
 
 
@@ -64,6 +75,7 @@ class WTA(BuildingBlock):
                  cutoff=10,
                  additional_statevars=[],
                  num_inputs=1,
+                 spatial_kernel=None,
                  monitor=True,
                  debug=False):
         """Summary
@@ -107,6 +119,7 @@ class WTA(BuildingBlock):
                                              num_inputs=num_inputs,
                                              monitor=monitor,
                                              debug=debug,
+                                             spatial_kernel=spatial_kernel,
                                              **block_params)
         elif dimensions == 2:
             self.Groups, self.Monitors, self.standaloneParams = gen2dWTA(name,
@@ -120,13 +133,16 @@ class WTA(BuildingBlock):
                                              num_inputs=num_inputs,
                                              monitor=monitor,
                                              debug=debug,
+                                             spatial_kernel=spatial_kernel,
                                              **block_params)
 
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 
         self.inputGroup = self.Groups['gWTAInpGroup']
+        self.inhGroup = self.Groups['gWTAInhGroup']
         self.group = self.Groups['gWTAGroup']
+
         if monitor:
             self.spikemonWTA = self.Monitors['spikemonWTA']
 
@@ -155,6 +171,8 @@ def gen1dWTA(groupname,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5, sigm=3,
              rpWTA=3 * ms, rpInh=1 * ms,
              num_neurons=64, num_inh_neurons=5, num_input_neurons=None, cutoff=10, num_inputs=1,
+             spatial_kernel="kernel_mexican_1d",
+             EI_connection_probability=1, IE_connection_probability=1, II_connection_probability=0,
              monitor=True, additional_statevars=[], debug=False):
     """Summary
 
@@ -183,6 +201,10 @@ def gen1dWTA(groupname,
         Monitors (dictionary): Keys to all spike- and statemonitors
         standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
     """
+    if spatial_kernel is None:
+        spatial_kernel = "kernel_mexican_1d"
+
+    spatial_kernel_func = getattr(NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)
     # time measurement
     start = time.clock()
 
@@ -192,7 +214,7 @@ def gen1dWTA(groupname,
                         num_inputs=3 + num_inputs)
     gWTAInhGroup = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(),
                            refractory=rpInh, name='g' + groupname + '_Inh',
-                           num_inputs=1)
+                           num_inputs=2)
 
     if num_input_neurons is None:
         num_input_neurons = num_neurons
@@ -215,13 +237,17 @@ def gen1dWTA(groupname,
     synWTAInh1e = Connections(gWTAGroup, gWTAInhGroup,
                               equation_builder=synapse_eq_builder(),
                               method="euler", name='s' + groupname + '_Inhe')
+    synInhInh1i = Connections(gWTAInhGroup, gWTAInhGroup,
+                              equation_builder=synapse_eq_builder(),
+                              method='euler', name='s' + groupname + '_i')
 
     # connect synapses
     synInpWTA1e.connect('i==j')
     # connect the nearest neighbors including itself
     synWTAWTA1e.connect('abs(i-j)<=cutoff')
-    synWTAInh1e.connect('True')  # Generates all to all connectivity
-    synInhWTA1i.connect('True')
+    synWTAInh1e.connect('True', p=EI_connection_probability)  # Generates all to all connectivity
+    synInhWTA1i.connect('True', p=IE_connection_probability)
+    synInhInh1i.connect('True', p=II_connection_probability)
 
     synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
     synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)
@@ -235,8 +261,8 @@ def gen1dWTA(groupname,
     # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
-    synWTAWTA1e.namespace['kernel_mexican_1d'] = kernel_mexican_1d
-    synWTAWTA1e.weight = 'latWeight * kernel_mexican_1d(i,j,latSigma)'
+    synWTAWTA1e.namespace.update({spatial_kernel: spatial_kernel_func})
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -295,6 +321,7 @@ def gen2dWTA(groupname,
              rpWTA=2.5 * ms, rpInh=1 * ms,
              wiInhInh=0, EI_connection_probability=1, IE_connection_probability=1,
              II_connection_probability=0.1,
+             spatial_kernel="kernel_mexican_2d",
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA
@@ -325,6 +352,10 @@ def gen2dWTA(groupname,
         standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
     '''
 
+    if spatial_kernel is None:
+        spatial_kernel = "kernel_mexican_2d"
+
+    spatial_kernel_func = getattr(NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)
     # time measurement
     start = time.clock()
 
@@ -393,9 +424,9 @@ def gen2dWTA(groupname,
     # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
-    synWTAWTA1e.namespace['kernel_mexican_2d'] = kernel_mexican_2d
+    synWTAWTA1e.namespace[spatial_kernel] = spatial_kernel_func
     synWTAWTA1e.namespace['num_neurons'] = num_neurons
-    synWTAWTA1e.weight = 'latWeight * kernel_mexican_2d(i,j,latSigma,num_neurons)'
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma,num_neurons)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -448,7 +479,7 @@ def gen2dWTA(groupname,
     return Groups, Monitors, standaloneParams
 
 
-def plotWTA(name, start_time, end_time, WTAMonitors):
+def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
     """Function to easily visualize WTA activity.
 
     Args:
@@ -462,21 +493,14 @@ def plotWTA(name, start_time, end_time, WTAMonitors):
     pg.setConfigOptions(antialias=True)
 
     win_raster = pg.GraphicsWindow(title='Winner-Take-All Test Simulation: Raster plots')
-    win_states = pg.GraphicsWindow(title='Winner-Take-All Test Simulation:State plots')
     win_raster.resize(1000, 1800)
-    win_states.resize(1000, 1800)
     win_raster.setWindowTitle('Winner-Take-All Test Simulation: Raster plots')
-    win_states.setWindowTitle('Winner-Take-All Test Simulation:State plots')
 
     raster_input = win_raster.addPlot(title="SpikeGenerator input")
     win_raster.nextRow()
     raster_wta = win_raster.addPlot(title="SpikeMonitor WTA")
     win_raster.nextRow()
     raster_inh = win_raster.addPlot(title="SpikeMonitor inhibitory interneurons")
-
-    state_membrane = win_states.addPlot(title='StateMonitor membrane potential')
-    win_states.nextRow()
-    state_syn_input = win_states.addPlot(title="StateMonitor synaptic input")
 
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
                      num_neurons=np.int(WTAMonitors['spikemonWTAInp'].source.N), monitor=WTAMonitors['spikemonWTAInp'],
@@ -488,14 +512,25 @@ def plotWTA(name, start_time, end_time, WTAMonitors):
                      num_neurons=WTAMonitors['spikemonWTAInh'].source.N, monitor=WTAMonitors['spikemonWTAInh'],
                      window=raster_inh)
 
-    plot_statemon_qt(start_time=start_time, end_time=end_time,
-                     monitor=WTAMonitors['statemonWTA'], neuron_id=128,
-                     variable="Imem", unit=pA, window=state_membrane, name=name)
-    plot_statemon_qt(start_time=start_time, end_time=end_time,
-                     monitor=WTAMonitors['statemonWTA'], neuron_id=128,
-                     variable="Iin", unit=pA, window=state_syn_input, name=name)
 
-    QtGui.QApplication.instance().exec_()
+    if plot_states:
+        win_states = pg.GraphicsWindow(title='Winner-Take-All Test Simulation:State plots')
+        win_states.resize(1000, 1800)
+        win_states.setWindowTitle('Winner-Take-All Test Simulation:State plots')
+
+        state_membrane = win_states.addPlot(title='StateMonitor membrane potential')
+        win_states.nextRow()
+        state_syn_input = win_states.addPlot(title="StateMonitor synaptic input")
+
+        plot_statemon_qt(start_time=start_time, end_time=end_time,
+                         monitor=WTAMonitors['statemonWTA'], neuron_id=128,
+                         variable="Imem", unit=pA, window=state_membrane, name=name)
+        plot_statemon_qt(start_time=start_time, end_time=end_time,
+                         monitor=WTAMonitors['statemonWTA'], neuron_id=128,
+                         variable="Iin", unit=pA, window=state_syn_input, name=name)
+
+    app.exec()
+    #QtGui.QApplication.instance().exec_()
 
     # fig = figure(figsize=(8, 3))
     # plotSpikemon(start_time, end_time,

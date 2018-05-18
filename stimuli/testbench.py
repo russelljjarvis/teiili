@@ -2,7 +2,7 @@
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 10:52:07
+# @Last Modified time: 2018-05-11 14:48:52
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -12,7 +12,7 @@ The idea is to test certain aspects of you network with common stimuli.
 from brian2 import SpikeGeneratorGroup, PoissonGroup
 from brian2 import ms, Hz
 from NCSBrian2Lib.tools.converter import dvs2ind, aedat2numpy
-from NCSBrian2Lib.tools.indexing import xy2ind
+from NCSBrian2Lib.tools.indexing import xy2ind, ind2xy
 import numpy as np
 import os
 import operator
@@ -150,7 +150,9 @@ class OCTA_Testbench():
             return int(x + 0.5)
 
     def rotating_bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
-                     angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None, debug=False):
+                     angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None,
+                     noise_probability=None, repetitions=1, debug=False):
+
         """This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
         A bar is rotating in the center. The goal is to learn necessary
@@ -186,30 +188,49 @@ class OCTA_Testbench():
             y_coord = []
             pol = []
             self.times = []
+            repetition_offset = 0
             center = (n2dNeurons / 2, n2dNeurons / 2)
             self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, np.radians(angle_step))
-            for i, cAngle in enumerate(self.angles):
-                endy_1 = center[1] + ((length / 2.) * np.sin((np.pi / 2 + cAngle)))
-                endx_1 = center[0] + ((length / 2.) * np.cos((np.pi / 2 + cAngle)))
-                endy_2 = center[1] - ((length / 2.) * np.sin((np.pi / 2 + cAngle)))
-                endx_2 = center[0] - ((length / 2.) * np.cos((np.pi / 2 + cAngle)))
-                self.start = np.asarray((endx_1, endy_1))
-                self.end = np.asarray((endx_2, endy_2))
-                self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
-                                                          key=operator.itemgetter(1))
-                dv = (self.end - self.start) / self.max_length
-                self.line = [self.dda_round(self.start)]
-                for step in range(int(self.max_length)):
-                    self.line.append(self.dda_round((step + 1) * dv + self.start))
-                for coord in self.line:
-                    if coord[0] >= n2dNeurons or coord[1] >= n2dNeurons:
-                        if debug:
-                            print("Coordinate larger than input space. x: {}, y: {}".format(coord[0], coord[1]))
-                        continue
-                    x_coord.append(coord[0])
-                    y_coord.append(coord[1])
-                    self.times .append(i * ts_offset)
-                    pol.append(1)
+            for repetition in range(repetitions):
+                if repetition_offset != 0:
+                    repetition_offset += 10
+                for i, cAngle in enumerate(self.angles):
+                    endy_1 = center[1] + ((length / 2.) * np.sin((np.pi / 2 + cAngle)))
+                    endx_1 = center[0] + ((length / 2.) * np.cos((np.pi / 2 + cAngle)))
+                    endy_2 = center[1] - ((length / 2.) * np.sin((np.pi / 2 + cAngle)))
+                    endx_2 = center[0] - ((length / 2.) * np.cos((np.pi / 2 + cAngle)))
+                    self.start = np.asarray((endx_1, endy_1))
+                    self.end = np.asarray((endx_2, endy_2))
+                    self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
+                                                              key=operator.itemgetter(1))
+                    dv = (self.end - self.start) / self.max_length
+                    self.line = [self.dda_round(self.start)]
+                    for step in range(int(self.max_length)):
+                        self.line.append(self.dda_round((step + 1) * dv + self.start))
+                    list_of_coord = []
+                    for coord in self.line:
+                        list_of_coord.append((coord[0], coord[1]))
+                    for coord in self.line:
+                        if coord[0] >= n2dNeurons or coord[1] >= n2dNeurons:
+                            if debug:
+                                print("Coordinate larger than input space. x: {}, y: {}".format(coord[0], coord[1]))
+                            continue
+                        x_coord.append(coord[0])
+                        y_coord.append(coord[1])
+                        self.times.append(repetition_offset + (i * ts_offset))
+                        pol.append(1)
+                        if noise_probability is not None and noise_probability >= np.random.rand():
+                            noise_index = np.random.randint(0, n2dNeurons**2)
+                            noise_x, noise_y = ind2xy(noise_index, n2dNeurons)
+                            if (noise_x, noise_y) not in list_of_coord:
+                                # print(noise_x, noise_y)
+                                # print(list_of_coord)
+                                list_of_coord.append((noise_x, noise_y))
+                                x_coord.append(noise_x)
+                                y_coord.append(noise_y)
+                                self.times.append(repetition_offset + (i * ts_offset))
+                                pol.append(1)
+                repetition_offset = np.max(self.times)
             self.events = np.zeros((4, len(x_coord)))
             self.events[0, :] = np.asarray(x_coord)
             self.events[1, :] = np.asarray(y_coord)

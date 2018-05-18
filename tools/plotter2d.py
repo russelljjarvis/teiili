@@ -17,7 +17,7 @@ Attributes:
 import csv
 import os
 import sys
-from brian2 import ms, defaultclock, second
+from brian2 import ms, Hz, defaultclock, second
 import numpy as np
 import shutil
 #import matplotlib.animation as animation
@@ -132,6 +132,8 @@ class Plotter2d(object):
         if plotrange is None:
             if len(self.t)>0:
                 self.plotrange = (np.min(self.t), np.max(self.t))
+            else:
+                self.plotrange = (0*ms, 0*ms)
         else:
             self.plotrange = plotrange
             self.set_range(plotrange)
@@ -240,8 +242,13 @@ class Plotter2d(object):
         # print(len(self.t))
         #print(np.max(self.t / dt))
         # print(self.plotshape(dt))
-        sparse_spikemat = sparse.COO((np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
-                                     shape=self.plotshape(dt))
+        if len(self.t)>0:
+            sparse_spikemat = sparse.COO((np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
+                                          shape=self.plotshape(dt))
+        else:
+            print('Your monitor is empty!')
+            # just create a matrix of zeros, hope, this does not lead to other problems
+            sparse_spikemat = sparse.COO(([0], ([0], [0], [0])),shape=self.plotshape(dt))
         return sparse_spikemat
 
     # Example:
@@ -277,6 +284,7 @@ class Plotter2d(object):
         dense3d = self.get_dense3d(dt)
         filtered = ndimage.uniform_filter1d(dense3d, size=int(filtersize / dt),
                                             axis=0, mode='constant') * second / dt
+        #filtered  = ndimage.zoom(filtered, (1, 2, 2))
         return filtered
     #    import timeit
     #    timeit.timeit("ndimage.uniform_filter(dense3d, size=(0,0,10))",
@@ -633,15 +641,21 @@ class Plotter2d(object):
 
         return gw_paneplot
 
-    def generate_gif(self, filename, tempfolder=os.path.expanduser('~'), plotfunction = 'plot3d', **plotkwargs):
+    def generate_movie(self, filename, scale = None, speed = 1, plotfunction = 'plot3d',
+                       plot_dt = 10*ms, tempfolder=os.path.expanduser('~'),
+                       ffmpegoptions = '', **plotkwargs):
         """
-        This only works on linux at the moment
-        On wiondows it could be done with ffmpeg somehow like that (names need to be adjusted):
-        ffmpeg -f image2 -i image_%03d.jpg -vf scale=500x500 gifout.gif
+        This exports a movie or gif from an imageview
+        Existing outputfiles will be overwritten
+        This needs ffmpeg wich is installed on most linux distributions and also available for windows and mac
+        Have a loo here: https://ffmpeg.org/
 
         Args:
-            filename (str): The filename in which to store the generated gif.
-                            If it does not end with gif, it will be added.
+            filename (str): The filename in which to store the generated movie.
+                            You can choose a format that can be generated with ffmpeg like '.gif', '.mpg', '.mp4',...
+            scale (str, optional): give pixel size as string e.g. '100x100'
+            speed (num, optional): if the video should run faster, specify a multiplier
+            plot_dt (given in brian2 time units): is passed to the plotfunction and determines the fps
             tempfolder (str, optional): the directory in which the temporary folder to store
                                         files created in the process.
                                         The temporary folder will be deleted afterwards.
@@ -650,26 +664,48 @@ class Plotter2d(object):
                                                       it has to be a function that returns a pyqtgraph imageview
                                                       (or at least something similar that can export single images)
                                                       like the methods of this class (plot3d, ...). For the methods,
-                                                      you can also pass a string to identify the plotfunction
+                                                      you can also pass a string to identify the plotfunction.
+                                                      The plotfunction has to take plot_dt as an argument
+            ffmepgoptions (str, optional):
             kwargs: all other keyword agruments will be passed to the plotfunction
 
             Example usage:
             plotter2dobject.generate_gif('~/gifname.gif', plotfunction = 'plot3d_on_off', filtersize=100 * ms, plot_dt=50 * ms)
         """
+
+        fps = np.asarray(speed/plot_dt/Hz,dtype = 'int')
+        if abs(speed/plot_dt/Hz-fps)>0.0000001:
+            plot_dt = 1/fps*second
+            print('Your plot_dt was rounded to',plot_dt,'in order to fit framerate of',fps)
+
         gif_temp_dir = os.path.join(tempfolder, "gif_temp")
         #pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
         if type(plotfunction) == str:
             plotfunction = getattr(self,plotfunction)
-        pgImage = plotfunction(**plotkwargs)
+        pgImage = plotfunction(plot_dt = plot_dt, **plotkwargs)
         if not os.path.exists(gif_temp_dir):
             os.makedirs(gif_temp_dir)
         pgImage.export(os.path.join(gif_temp_dir, "gif.png"))
-        linux_command = "cd " + \
-            str(gif_temp_dir) + ";" + \
-            " convert -delay 1 -loop 0 *.png " + os.path.abspath(filename)
-        if not filename.endswith('.gif'):
-            linux_command = linux_command + ".gif"
-        result = subprocess.check_output(linux_command, shell=True)
+
+        #before switching to ffmpeg we used convert, which is less flexible concerning framerates
+        #        linux_command = "cd " + str(gif_temp_dir) + ";" + \
+        #                "convert -delay "+str(delay)+" *.png "+ os.path.abspath(filename)
+
+        if not '.' in filename:
+            filename = filename + '.gif'
+
+        ffmpeg_command = "cd " + \
+                str(gif_temp_dir) + ";" + \
+                "ffmpeg -f image2 -framerate "+str(fps)+" -pattern_type glob -i '*.png' "
+        if scale is not None:
+            ffmpeg_command += "-vf scale=" + scale+' '
+
+        ffmpeg_command += '-y ' #overwrite existing output files
+        ffmpeg_command += ffmpegoptions +' '
+
+        ffmpeg_command += os.path.abspath(filename)
+
+        result = subprocess.check_output(ffmpeg_command, shell=True)
         print(result)
-        # os.system(linux_command)
+
         shutil.rmtree(gif_temp_dir)

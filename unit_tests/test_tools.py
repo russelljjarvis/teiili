@@ -2,7 +2,7 @@
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:06:18
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 17:16:19
+# @Last Modified time: 2018-05-17 09:28:23
 """
 This file contains unittest for tools.py
 """
@@ -94,7 +94,8 @@ class TestTools(unittest.TestCase):
         pass
 
     def test_aedat2numpy(self):
-        self.assertRaises(ValueError, converter.aedat2numpy, camera='DAVIS128')
+        self.assertRaises(FileNotFoundError, converter.aedat2numpy, datafile='/tmp/aerout.aedat')
+        # self.assertRaises(ValueError, converter.aedat2numpy, datafile='tmp/aerout.aedat', camera='DAVIS128')
         # Create a small/simple aedat file to test all functions which rely on edat2numpy
 
     def test_dvs2ind(self):

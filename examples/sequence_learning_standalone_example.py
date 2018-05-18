@@ -29,7 +29,7 @@ from NCSBrian2Lib.models.synapse_models import ReversalSynV
 from NCSBrian2Lib.models.parameters.exp_adapt_if_param import parameters as neuron_parameters
 from NCSBrian2Lib.models.parameters.exp_syn_param import parameters as syn_parameters
 
-from NCSBrian2Lib.tools.cpptools import buildCppAndReplace, collectStandaloneParams, run_standalone
+from NCSBrian2Lib.tools.cpptools import build_cpp_and_replace, collect_standalone_params, run_standalone
 from NCSBrian2Lib.core.network import NCSNetwork
 
 standaloneDir = os.path.expanduser('~/SL_standalone')

@@ -1,7 +1,7 @@
 
 """This file contains dictionaries of neuron equations or modules,
-   combined by the neuron equation builder. 
-   
+   combined by the neuron equation builder.
+
 Modules:
     activity (TYPE): Description
     currentEquationsets (TYPE): Description
@@ -46,7 +46,7 @@ v_model_template = {'model': """
          Vres    : volt      (shared, constant)   # reset potential
          """,
                     'threshold': "Vm > Vthr ",
-                    'reset': "Vm = Vres "}
+                    'reset': "Vm = Vres; "}
 
 v_model_templatePara = {"Cm": 281 * pF,
                         "refP": 2 * ms,
@@ -210,7 +210,7 @@ i_model_template = {'model': '''
             Ica     : amp (constant)
          ''',
                     'threshold': "Imem > Ispkthr",
-                    'reset': "Imem = Ireset"}
+                    'reset': "Imem = Ireset;"}
 
 i_model_templatePara = {
     #--------------------------------------------------------
@@ -306,7 +306,7 @@ i_ahp = {'model': """
          """,
          'threshold': '',
          'reset': '''
-                  Iahp += Iahpmax
+                  Iahp += Iahpmax;
                   '''}
 
 i_ahpPara = {"Itauahp": 1 * pA,

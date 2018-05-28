@@ -79,38 +79,40 @@ class NeuronEquationBuilder():
                 currentEquationsets[leak]
                 currentEquationsets[position]
                 currentEquationsets[noise]
-            
+
             except KeyError as e:
                 print(ERRValue)
 
             if baseUnit == 'current':
-                keywords = combine_neu_dict(modes[baseUnit],
-                                           currentEquationsets[adaptation],
-                                           currentEquationsets[integrationMode],
-                                           currentEquationsets[leak],
-                                           currentEquationsets[position],
-                                           currentEquationsets[noise],
-                                           currentParameters[baseUnit],
-                                           currentParameters[adaptation],
-                                           currentParameters[integrationMode],
-                                           currentParameters[leak],
-                                           currentParameters[position],
-                                           currentParameters[noise])
+                eq_templ = [modes[baseUnit],
+                           currentEquationsets[adaptation],
+                           currentEquationsets[integrationMode],
+                           currentEquationsets[leak],
+                           currentEquationsets[position],
+                           currentEquationsets[noise],]
+                param_templ = [currentParameters[baseUnit],
+                               currentParameters[adaptation],
+                               currentParameters[integrationMode],
+                               currentParameters[leak],
+                               currentParameters[position],
+                               currentParameters[noise],]
+
+                keywords = combine_neu_dict(eq_templ,param_templ)
 
             if baseUnit == 'voltage':
-                keywords = combine_neu_dict(modes[baseUnit],
-                                           voltageEquationsets[adaptation],
-                                           voltageEquationsets[integrationMode],
-                                           voltageEquationsets[leak],
-                                           voltageEquationsets[position],
-                                           voltageEquationsets[noise],
-                                           voltageParameters[baseUnit],
-                                           voltageParameters[adaptation],
-                                           voltageParameters[integrationMode],
-                                           voltageParameters[leak],
-                                           voltageParameters[position],
-                                           voltageParameters[noise])
-
+                eq_templ = [modes[baseUnit],
+                           voltageEquationsets[adaptation],
+                           voltageEquationsets[integrationMode],
+                           voltageEquationsets[leak],
+                           voltageEquationsets[position],
+                           voltageEquationsets[noise],]
+                param_templ = [voltageParameters[baseUnit],
+                               voltageParameters[adaptation],
+                               voltageParameters[integrationMode],
+                               voltageParameters[leak],
+                               voltageParameters[position],
+                               voltageParameters[noise],]
+                keywords = combine_neu_dict(eq_templ,param_templ)
 
             self.keywords = {'model': keywords['model'], 'threshold': keywords['threshold'],
                              'reset': keywords['reset'], 'refractory' : 'refP',  'parameters': keywords['parameters']}
@@ -134,12 +136,45 @@ class NeuronEquationBuilder():
         printParamDictionaries(self.keywords['parameters'])
         print('-_-_-_-_-_-_-_-')
 
-    def exporteq(self, namefile):
-        with open(namefile + ".txt", 'w') as file:
-            json.dump(self.keywords, file)   
-    
-    def importeq(self, namefile):
-        print(namefile)
+    def exporteq(self, filename):
+        with open(filename + ".txt", 'w') as file:
+            file.write("model:")
+            file.write("\n")
+            file.write("'''")
+            file.write(self.keywords['model'])
+            file.write("'''")
+            file.write("\n")
+            file.write("\n")
+            file.write("threshold:")
+            file.write("\n")
+            file.write("'''")
+            file.write("\n")
+            file.write(self.keywords['threshold'])
+            file.write("\n")
+            file.write("'''")
+            file.write("\n")
+            file.write("\n")
+            file.write("reset:")
+            file.write("\n")
+            file.write("'''")
+            file.write("\n")
+            file.write(self.keywords['reset'])
+            file.write("\n")
+            file.write("'''")
+            file.write("\n")
+            file.write("\n")
+            file.write("parameters:")
+            file.write("\n")
+            file.write("'''")
+            file.write("\n")
+            for keys, values in self.keywords['parameters'].items():
+                file.write(keys+' = '+repr(values))
+                file.write("\n")
+            file.write("\n")
+            file.write("'''")
+
+    def importeq(self, filename):
+        print(filename)
 
 
 

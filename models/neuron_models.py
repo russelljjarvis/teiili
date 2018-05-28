@@ -30,4 +30,16 @@ class DPI(NeuronEquationBuilder):
     def __init__(self):
         NeuronEquationBuilder.__init__(self, baseUnit='current', adaptation='calciumFeedback',
                                        integrationMode='exponential', leak='leaky', position='spatial',
-                                       noise='none')
+                                       noise='gaussianNoise')
+
+
+
+if __name__ == '__main__':
+    import os
+    path = os.path.realpath(__file__)
+
+    expAdaptIF = ExpAdaptIF()
+    expAdaptIF.exporteq("ExpAdaptIF")
+
+    dpi = DPI()
+    dpi.exporteq("DPI")

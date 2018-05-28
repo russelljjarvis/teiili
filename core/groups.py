@@ -5,7 +5,7 @@
 # @Author: alpren, mmilde
 # @Date:   2017-27-07 17:28:16
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-25 15:05:11
+# @Last Modified time: 2018-05-28 19:06:47
 """
 Wrapper class for brian2 Group class.
 """
@@ -117,7 +117,7 @@ class Neurons(NeuronGroup, NCSGroup):
     """
 
     def __init__(self, N, equation_builder=None,
-                 params=None,
+                 parameters=None,
                  method='euler',
                  num_inputs=3,
                  verbose=False, **Kwargs):
@@ -151,18 +151,20 @@ class Neurons(NeuronGroup, NCSGroup):
                 self.equation_builder = equation_builder
             self.equation_builder.addInputCurrents(num_inputs)
             Kwargs.update(self.equation_builder.keywords)
-            if params is not None:
+            Kwargs.pop('parameters')
+
+            if parameters is not None:
                 print(
                     "parameters you provided overwrite parameters from EquationBuilder ")
             else:
-                params = self.equation_builder.parameters
+                parameters = self.equation_builder.keywords['parameters']
 
         self.initialized = True
         NCSGroup.__init__(self)
         NeuronGroup.__init__(self, N, method=method, **Kwargs)
 
-        if params is not None:
-            setParams(self, params, verbose=verbose)
+        if parameters is not None:
+            setParams(self, parameters, verbose=verbose)
 
     def registerSynapse(self, synapsename):
         """Summary
@@ -253,7 +255,7 @@ class Connections(Synapses, NCSGroup):
 
     def __init__(self, source, target,
                  equation_builder=None,
-                 params=None,
+                 parameters=None,
                  method='euler',
                  input_number=None,
                  name='synapses*',
@@ -315,8 +317,8 @@ class Connections(Synapses, NCSGroup):
                               str(target.name) + ', therefore, please specify an input_number yourself')
                 raise e
 
-        if params is not None:
-            self.parameters = params
+        if parameters is not None:
+            self.parameters = parameters
 
         if equation_builder is not None:
             if inspect.isclass(equation_builder):
@@ -329,9 +331,10 @@ class Connections(Synapses, NCSGroup):
                 self.equation_builder = equation_builder
             self.equation_builder.set_inputnumber(self.input_number)
             Kwargs.update(self.equation_builder.keywords)
+            Kwargs.pop('parameters')
 
-            if params is None:
-                self.parameters = self.equation_builder.parameters
+            if parameters is None:
+                self.parameters = self.equation_builder.keywords['parameters']
             else:
                 print("parameters you provided overwrite parameters from EquationBuilder")
 

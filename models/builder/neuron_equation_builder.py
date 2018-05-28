@@ -2,7 +2,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-12 11:34:34
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-28 18:30:17
+# @Last Modified time: 2018-05-28 18:36:56
 
 """
 This file contains a class that manages a neuon equation
@@ -157,16 +157,10 @@ class NeuronEquationBuilder():
             file.write("'parameters':\n")
             file.write("{\n")
             for keys, values in self.keywords['parameters'].items():
-<<<<<<< HEAD
-                writestr = "'" + keys + "'" + ' : ' + repr(values)
-                if 'famp' in writestr:
-                    writestr = writestr.replace('famp', '10**(-3) * pamp')
-=======
                 if type(values) is str:
-                    writestr = "'"+keys+"'"+" : "+repr(values)
+                    writestr = "'" + keys + "'" + " : " + repr(values)
                 else:
-                    writestr = "'"+keys+"'"+" : '"+repr(values)+"'"
->>>>>>> 5871b29ef96947a78d568aa0c1eab9df76042e8e
+                    writestr = "'" + keys + "'" + " : '" + repr(values) + "'"
                 file.write(writestr)
                 file.write(",\n")
             file.write("}\n")

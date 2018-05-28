@@ -12,7 +12,7 @@ And it prepares a dictionary of keywords for easy synapse creation
 It also provides a function to add lines to the model
 
 """
-import json
+import os
 from brian2 import pF, nS, mV, ms, pA, nA
 from NCSBrian2Lib.models.builder.combine import combine_neu_dict
 from NCSBrian2Lib.models.builder.templates.neuron_templates  import modes, currentEquationsets, voltageEquationsets, currentParameters, voltageParameters
@@ -137,41 +137,33 @@ class NeuronEquationBuilder():
         print('-_-_-_-_-_-_-_-')
 
     def exporteq(self, filename):
-        with open(filename + ".txt", 'w') as file:
-            file.write("model:")
-            file.write("\n")
+        with open(filename + ".py", 'w') as file:
+            file.write('from brian2.units import * \n')
+            file.write(os.path.basename(filename) + " = {")
+            file.write("'model':\n")
             file.write("'''")
             file.write(self.keywords['model'])
-            file.write("'''")
-            file.write("\n")
-            file.write("\n")
-            file.write("threshold:")
-            file.write("\n")
-            file.write("'''")
-            file.write("\n")
+            file.write("''',\n")
+            file.write("'threshold':\n")
+            file.write("'''\n")
             file.write(self.keywords['threshold'])
             file.write("\n")
-            file.write("'''")
-            file.write("\n")
-            file.write("\n")
-            file.write("reset:")
-            file.write("\n")
-            file.write("'''")
-            file.write("\n")
+            file.write("''',\n")
+            file.write("'reset':\n")
+            file.write("'''\n")
             file.write(self.keywords['reset'])
             file.write("\n")
-            file.write("'''")
-            file.write("\n")
-            file.write("\n")
-            file.write("parameters:")
-            file.write("\n")
-            file.write("'''")
-            file.write("\n")
+            file.write("''',\n")
+            file.write("'parameters':\n")
+            file.write("{\n")
             for keys, values in self.keywords['parameters'].items():
-                file.write(keys+' = '+repr(values))
-                file.write("\n")
-            file.write("\n")
-            file.write("'''")
+                writestr = "'"+keys+"'"+' : '+repr(values)
+                if 'famp' in writestr:
+                    writestr = writestr.replace('famp','10**(-3) * pamp')
+                file.write(writestr)
+                file.write(",\n")
+            file.write("}\n")
+            file.write("}")
 
     def importeq(self, filename):
         print(filename)

@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2018-01-09 17:26:00
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-09 17:27:25
+# @Last Modified time: 2018-05-23 16:18:35
 
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types
 import numpy as np
@@ -95,7 +95,7 @@ def ind2xy(ind, n2dNeurons):
     """
     try:
          return np.unravel_index(ind, (n2dNeurons[0], n2dNeurons[1]))
-    except TypeError:
+    except IndexError:
         return np.unravel_index(ind, (n2dNeurons, n2dNeurons))
 
 

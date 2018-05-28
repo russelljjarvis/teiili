@@ -2,10 +2,11 @@
 # @Author: mrax, mmilde
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 10:43:17
+# @Last Modified time: 2018-05-28 18:58:41
 
 """This contains subclasses of SynapseEquationBuilder with predefined common parameters
 """
+import os
 from NCSBrian2Lib.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
 
@@ -69,3 +70,27 @@ class StdpSynV(SynapseEquationBuilder):
         """
         SynapseEquationBuilder.__init__(self, model=None, baseUnit='conductance',
                                         kernel='exponential', plasticity='stdp')
+
+
+if __name__ == '__main__':
+
+    path = os.path.dirname(os.path.realpath(NCSBrian2Lib.models.__file__))
+
+    path = os.path.join(path, "equations")
+    if not os.path.isdir(path):
+        os.mkdir(path)
+
+    ReversalSynV = ReversalSynV()
+    ReversalSynV.exporteq(os.path.join(path, "ReversalSynV"))
+
+    BraderFusiSynapses = BraderFusiSynapses()
+    BraderFusiSynapses.exporteq(os.path.join(path, "BraderFusiSynapses"))
+
+    DPISyn = DPISyn()
+    DPISyn.exporteq(os.path.join(path, "DPISyn"))
+
+    DPIstdp = DPIstdp()
+    DPIstdp.exporteq(os.path.join(path, "DPIstdp"))
+
+    StdpSynV = StdpSynV()
+    StdpSynV.exporteq(os.path.join(path, "StdpSynV"))

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-12 11:34:34
-# @Last Modified by:   mrax
-# @Last Modified time: 2018-04-16 00:03:10
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-05-28 18:30:17
 
 """
 This file contains a class that manages a neuon equation
@@ -13,9 +13,10 @@ It also provides a function to add lines to the model
 
 """
 import os
+import importlib
 from brian2 import pF, nS, mV, ms, pA, nA
 from NCSBrian2Lib.models.builder.combine import combine_neu_dict
-from NCSBrian2Lib.models.builder.templates.neuron_templates  import modes, currentEquationsets, voltageEquationsets, currentParameters, voltageParameters
+from NCSBrian2Lib.models.builder.templates.neuron_templates import modes, currentEquationsets, voltageEquationsets, currentParameters, voltageParameters
 
 
 class NeuronEquationBuilder():
@@ -36,7 +37,7 @@ class NeuronEquationBuilder():
 
     def __init__(self, model=None, baseUnit='current', adaptation='calciumFeedback',
                  integrationMode='exponential', leak='leaky', position='spatial',
-                 noise='gaussianNoise', refractory = 'refractory', verbose=False):
+                 noise='gaussianNoise', refractory='refractory', verbose=False):
         """Summary
 
         Args:
@@ -85,40 +86,39 @@ class NeuronEquationBuilder():
 
             if baseUnit == 'current':
                 eq_templ = [modes[baseUnit],
-                           currentEquationsets[adaptation],
-                           currentEquationsets[integrationMode],
-                           currentEquationsets[leak],
-                           currentEquationsets[position],
-                           currentEquationsets[noise],]
+                            currentEquationsets[adaptation],
+                            currentEquationsets[integrationMode],
+                            currentEquationsets[leak],
+                            currentEquationsets[position],
+                            currentEquationsets[noise], ]
                 param_templ = [currentParameters[baseUnit],
                                currentParameters[adaptation],
                                currentParameters[integrationMode],
                                currentParameters[leak],
                                currentParameters[position],
-                               currentParameters[noise],]
+                               currentParameters[noise], ]
 
-                keywords = combine_neu_dict(eq_templ,param_templ)
+                keywords = combine_neu_dict(eq_templ, param_templ)
 
             if baseUnit == 'voltage':
                 eq_templ = [modes[baseUnit],
-                           voltageEquationsets[adaptation],
-                           voltageEquationsets[integrationMode],
-                           voltageEquationsets[leak],
-                           voltageEquationsets[position],
-                           voltageEquationsets[noise],]
+                            voltageEquationsets[adaptation],
+                            voltageEquationsets[integrationMode],
+                            voltageEquationsets[leak],
+                            voltageEquationsets[position],
+                            voltageEquationsets[noise], ]
                 param_templ = [voltageParameters[baseUnit],
                                voltageParameters[adaptation],
                                voltageParameters[integrationMode],
                                voltageParameters[leak],
                                voltageParameters[position],
-                               voltageParameters[noise],]
-                keywords = combine_neu_dict(eq_templ,param_templ)
+                               voltageParameters[noise], ]
+                keywords = combine_neu_dict(eq_templ, param_templ)
 
             self.keywords = {'model': keywords['model'], 'threshold': keywords['threshold'],
-                             'reset': keywords['reset'], 'refractory' : 'refP',  'parameters': keywords['parameters']}
+                             'reset': keywords['reset'], 'refractory': 'refP',
+                             'parameters': keywords['parameters']}
             self.printAll()
-
-
 
     def printAll(self):
         """Method to print all dictionaries within a neuron model
@@ -157,17 +157,33 @@ class NeuronEquationBuilder():
             file.write("'parameters':\n")
             file.write("{\n")
             for keys, values in self.keywords['parameters'].items():
-                writestr = "'"+keys+"'"+' : '+repr(values)
+                writestr = "'" + keys + "'" + ' : ' + repr(values)
                 if 'famp' in writestr:
-                    writestr = writestr.replace('famp','10**(-3) * pamp')
+                    writestr = writestr.replace('famp', '10**(-3) * pamp')
                 file.write(writestr)
                 file.write(",\n")
             file.write("}\n")
             file.write("}")
 
     def importeq(self, filename):
-        print(filename)
+        if os.path.basename(filename) is "":
+            dict_name = os.path.basename(os.path.dirname(filename))
+        else:
+            dict_name = os.path.basename(filename)
+            filename = os.path.join(filename, '')
 
+        tmp_import_path = []
+        while os.path.basename(os.path.dirname(filename)) is not "":
+            tmp_import_path.append(os.path.basename(os.path.dirname(filename)))
+            filename = os.path.dirname(filename)
+        importpath = ".".join(tmp_import_path[::-1])
+
+        eq_dict = importlib.import_module(importpath)
+        neuron_eq = eq_dict.__dict__[dict_name]
+
+        self.keywords = {'model': neuron_eq['model'], 'threshold': neuron_eq['threshold'],
+                         'reset': neuron_eq['reset'], 'refractory': 'refP',
+                         'parameters': neuron_eq['parameters']}
 
 
 def printParamDictionaries(Dict):
@@ -177,5 +193,4 @@ def printParamDictionaries(Dict):
         Dict (dict): Parameter dictionary to be printed
     """
     for keys, values in Dict.items():
-        print('      '+keys+' = '+repr(values))
-
+        print('      ' + keys + ' = ' + repr(values))

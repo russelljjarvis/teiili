@@ -2,13 +2,14 @@
 # @Author: mmilde
 # @Date:   2018-01-08 14:53:11
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-09 16:21:16
+# @Last Modified time: 2018-05-28 13:31:09
 
 """ This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
 
 from NCSBrian2Lib.models.builder.neuron_equation_builder import NeuronEquationBuilder
 import NCSBrian2Lib.models
 import os
+
 
 class ExpAdaptIF(NeuronEquationBuilder):
     """ This class provides you with all equations to simulate a voltage-based
@@ -34,18 +35,16 @@ class DPI(NeuronEquationBuilder):
                                        noise='gaussianNoise')
 
 
-
 if __name__ == '__main__':
-
 
     path = os.path.dirname(os.path.realpath(NCSBrian2Lib.models.__file__))
 
-    path = os.path.join(path,"equations")
+    path = os.path.join(path, "equations")
     if not os.path.isdir(path):
         os.mkdir(path)
 
     expAdaptIF = ExpAdaptIF()
-    expAdaptIF.exporteq( os.path.join(path,"ExpAdaptIF"))
+    expAdaptIF.exporteq(os.path.join(path, "ExpAdaptIF"))
 
     dpi = DPI()
-    dpi.exporteq( os.path.join(path,"DPI"))
+    dpi.exporteq(os.path.join(path, "DPI"))

@@ -157,9 +157,10 @@ class NeuronEquationBuilder():
             file.write("'parameters':\n")
             file.write("{\n")
             for keys, values in self.keywords['parameters'].items():
-                writestr = "'"+keys+"'"+' : '+repr(values)
-                if 'famp' in writestr:
-                    writestr = writestr.replace('famp','10**(-3) * pamp')
+                if type(values) is str:
+                    writestr = "'"+keys+"'"+" : "+repr(values)
+                else:
+                    writestr = "'"+keys+"'"+" : '"+repr(values)+"'"
                 file.write(writestr)
                 file.write(",\n")
             file.write("}\n")

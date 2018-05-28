@@ -2,7 +2,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-12 11:34:34
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-28 18:36:56
+# @Last Modified time: 2018-05-28 18:42:04
 
 """
 This file contains a class that manages a neuon equation
@@ -119,6 +119,38 @@ class NeuronEquationBuilder():
                              'reset': keywords['reset'], 'refractory': 'refP',
                              'parameters': keywords['parameters']}
             self.printAll()
+
+    def addInputCurrents(self, numInputs):
+        """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)
+        it also adds all these input currents as state variables
+
+
+        Args:
+            numInputs (int): Number of inputs to the post-synaptic neuron
+        """
+        Ies = ["Ie0"] + ["+ Ie" +
+                         str(i + 1) + " " for i in range(numInputs - 1)]
+        Iis = ["+Ii0"] + ["+ Ii" +
+                          str(i + 1) + " " for i in range(numInputs - 1)]
+        self.keywords['model'] = self.keywords['model'] + "Iin = " + \
+            "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
+        Iesline = ["    Ie" + str(i) + " : amp" for i in range(numInputs)]
+        Iisline = ["    Ii" + str(i) + " : amp" for i in range(numInputs)]
+        self.addStateVars(Iesline)
+        self.keywords['model'] += "\n"
+        self.addStateVars(Iisline)
+        self.keywords['model'] += "\n"
+
+    def addStateVars(self, stateVars):
+        """this function adds state variables to neuron equation by just adding
+        a line to the neuron model equation.
+
+        Args:
+            stateVars (dict): State variable to be added to neuron model
+        """
+        if self.verbose:
+            print("added to Equation: \n" + "\n".join(stateVars))
+        self.keywords['model'] += "\n            ".join(stateVars)
 
     def printAll(self):
         """Method to print all dictionaries within a neuron model

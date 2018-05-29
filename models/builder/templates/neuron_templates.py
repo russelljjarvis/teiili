@@ -176,11 +176,10 @@ none = {'model': '',
 # Code partially adapted from Daniele Conti and Llewyn Salt
 # Email: mmilde@ini.uzh.chs
 i_model_template = {'model': '''
-            dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt_clip - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt_clip + Iahp_clip - Ia_clip) / Itau_clip)) * Imem)   ) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
+            dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt_clip - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt_clip + Iahp_clip - Ia_clip) / Itau_clip)) * Imem)) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
 
             Iahp      : amp
             Ia        : amp
-            # Ia_clip   : amp
             Iahp_clip : amp
 
             Itau_clip = Itau*(Imem>Io) + Io*(Imem<=Io)  : amp

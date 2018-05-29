@@ -1,7 +1,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-15 17:53:31
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-29 12:07:43
+# @Last Modified time: 2018-05-29 12:19:47
 
 
 """
@@ -83,6 +83,7 @@ class SynapseEquationBuilder():
                 eq_tmpl = [modes[baseUnit],
                           kernels[kernel],
                           plasticitymodels[plasticity]]
+
                 param_templ = [current_Parameters[baseUnit],
                                current_Parameters[kernel],
                                current_Parameters[plasticity]]

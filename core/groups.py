@@ -421,12 +421,14 @@ class Connections(Synapses, NCSGroup):
         ylabel('Target neuron index')
 
 
-def setParams(briangroup, params, ndargs=None, verbose=False):
+def setParams(briangroup, params, ndargs=None, raise_error = True, verbose=False):
     """This function takes a params dictionary and sets the parameters of a briangroup
 
     Args:
-        briangroup (brian2.group, required): Neuron or Synapsegroup to set parameters on
+        brianggroup(brian2.groups.group, required): Neuron or Synapsegroup to set parameters on
         params (dict, required): Parameter keys and values to be set
+        raise_error (boolean, optional): determines if an error is raised,
+            if a parameter does not exist as a state variable of the group
         ndargs (None, optional): Description
         verbose (bool, optional): Flag to get more details about paramter setting process
     """
@@ -440,6 +442,15 @@ def setParams(briangroup, params, ndargs=None, verbose=False):
                     setattr(briangroup, par, ndargs[par])
             else:
                 setattr(briangroup, par, params[par])
+        else:
+            warnings.warn("Group " + str(briangroup.name) +
+                          " has no state variable " + str(par))
+            if raise_error:
+                raise AttributeError("Group " + str(briangroup.name) +
+                          " has no state variable " + str(par) +
+                          ', but you tried to set it with set_params '+
+                          'if you want to ignore this error, pass raise_error = False')
+
     if verbose:
         # This fails with synapses coming from SpikeGenerator groups, unidentified bug?
         # This does not work in standalone mode as values of state variables

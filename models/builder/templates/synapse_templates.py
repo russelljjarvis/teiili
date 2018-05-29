@@ -53,6 +53,9 @@ current = {'model': '''
             kernel_e : amp * second **-1
             kernel_i : amp * second **-1
 
+            Ie{inputnumber}_post = Ie_syn : amp (summed)
+            Ii{inputnumber}_post = -Ii_syn : amp (summed)
+
             tausyne : second (constant) # synapse time constant
             tausyni : second (constant) # synapse time constant
             w_plast : 1
@@ -83,11 +86,11 @@ currentPara = {"tausyne": 5 * ms,
 
 # Additional equations for conductance based models
 conductance = {'model': '''
-               dgIe/dt = (-gIe) / tausyne + kernel_e: siemens (clock-driven)
+               dgIe/dt = (-gIe) / tausyne + kernel_e : siemens (clock-driven)
                dgIi/dt = (-gIi) / tausyni + kernel_i : siemens (clock-driven)
 
-               Ie_syn = gIe*(EIe - Vm_post) :amp
-               Ii_syn = gIi*(EIi - Vm_post) :amp
+               Ie_syn = gIe*(EIe - Vm_post) : amp
+               Ii_syn = gIi*(EIi - Vm_post) : amp
 
                EIe : volt (shared,constant)             # excitatory reversal potential
                EIi : volt (shared,constant)             # inhibitory reversal potential
@@ -135,6 +138,8 @@ Dpi = {'model': '''
         dIe_syn/dt = (-Ie_syn - Ie_gain + 2*Io_syn*(Ie_syn<=Io_syn))/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
         dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
 
+        Ie{inputnumber}_post = Ie_syn : amp (summed)
+        Ii{inputnumber}_post = -Ii_syn : amp (summed)
 
         weight : 1
         w_plast : 1

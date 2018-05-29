@@ -1,7 +1,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-15 17:53:31
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-28 19:14:51
+# @Last Modified time: 2018-05-29 12:07:43
 
 
 """
@@ -80,35 +80,48 @@ class SynapseEquationBuilder():
                 print(ERRValue)
 
             if baseUnit == 'current':
-                keywords = combine_syn_dict(modes[baseUnit], kernels[kernel],
-                                            plasticitymodels[plasticity],
-                                            current_Parameters[baseUnit],
-                                            current_Parameters[kernel],
-                                            current_Parameters[plasticity])
-                keywords['model'] = keywords['model'].format(unit='amp')
-                keywords['on_pre'] = keywords['on_pre'].format(unit='amp')
-                keywords['on_post'] = keywords['on_post'].format(unit='amp')
+                eq_tmpl = [modes[baseUnit],
+                          kernels[kernel],
+                          plasticitymodels[plasticity]]
+                param_templ = [current_Parameters[baseUnit],
+                               current_Parameters[kernel],
+                               current_Parameters[plasticity]]
+
+                keywords = combine_syn_dict(eq_tmpl, param_templ)
+
+                keywords['model'] = keywords['model'].format(inputnumber="{inputnumber}", unit='amp')
+                keywords['on_pre'] = keywords['on_pre'].format(inputnumber="{inputnumber}", unit='amp')
+                keywords['on_post'] = keywords['on_post'].format(inputnumber="{inputnumber}", unit='amp')
 
             if baseUnit == 'conductance':
-                keywords = combine_syn_dict(modes[baseUnit], kernels[kernel],
-                                            plasticitymodels[plasticity],
-                                            conductance_Parameters[baseUnit],
-                                            conductance_Parameters[kernel],
-                                            conductance_Parameters[plasticity])
+                eq_tmpl = [modes[baseUnit],
+                           kernels[kernel],
+                           plasticitymodels[plasticity]]
+
+                param_templ = [conductance_Parameters[baseUnit],
+                               conductance_Parameters[kernel],
+                               conductance_Parameters[plasticity]]
+
+                keywords = combine_syn_dict(eq_tmpl, param_templ)
+
                 keywords['model'] = keywords['model'].format(unit='siemens')
                 keywords['on_pre'] = keywords['on_pre'].format(unit='siemens')
-                keywords['on_post'] = keywords[
-                    'on_post'].format(unit='siemens')
+                keywords['on_post'] = keywords['on_post'].format(unit='siemens')
 
             if baseUnit == 'DPI':
-                keywords = combine_syn_dict(modes[baseUnit], kernels[kernel],
-                                            plasticitymodels[plasticity],
-                                            DPI_Parameters[baseUnit],
-                                            DPI_Parameters[kernel],
-                                            DPI_Parameters[plasticity])
-                keywords['model'] = keywords['model'].format(unit='amp')
-                keywords['on_pre'] = keywords['on_pre'].format(unit='amp')
-                keywords['on_post'] = keywords['on_post'].format(unit='amp')
+                eq_tmpl = [modes[baseUnit],
+                           kernels[kernel],
+                           plasticitymodels[plasticity]]
+
+                param_templ = [DPI_Parameters[baseUnit],
+                               DPI_Parameters[kernel],
+                               DPI_Parameters[plasticity]]
+
+                keywords = combine_syn_dict(eq_tmpl, param_templ)
+
+                keywords['model'] = keywords['model'].format(inputnumber="{inputnumber}", unit='amp')
+                keywords['on_pre'] = keywords['on_pre'].format(inputnumber="{inputnumber}", unit='amp')
+                keywords['on_post'] = keywords['on_post'].format(inputnumber="{inputnumber}", unit='amp')
 
             self.keywords = {'model': keywords['model'], 'on_pre': keywords['on_pre'],
                              'on_post': keywords['on_post'], 'parameters': keywords['parameters']}

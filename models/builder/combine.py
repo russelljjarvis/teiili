@@ -12,7 +12,8 @@ is found in the equantions
 
 """
 
-def combine_neu_dict(eq_templ,param_templ):
+
+def combine_neu_dict(eq_templ, param_templ):
     """Function to combine neuron models into a single neuron model.
     This library offers this ability in order to combine single blocks into bigger
     and more complex Brian2 compatibile model
@@ -66,9 +67,10 @@ def combine_neu_dict(eq_templ,param_templ):
             reset, newreset, params = var_replacer(reset, newreset, params)
         reset += newreset
 
-    return {'model': model, 'threshold': threshold, 'reset': reset, 'parameters' : params}
+    return {'model': model, 'threshold': threshold, 'reset': reset, 'parameters': params}
 
-def combine_syn_dict(*args):
+
+def combine_syn_dict(eq_templ, param_templ):
 
     """Function to combine synapse models into a single synapse model.
     This library offers this ability in order to combine single blocks into bigger
@@ -102,8 +104,8 @@ def combine_syn_dict(*args):
     on_pre = ''
     on_post = ''
     params = {}
-    eq_templ = args[0:int(len(args)/2)]
-    param_templ = args[int(len(args)/2):]
+    # eq_templ = args[0:int(len(args)/2)]
+    # param_templ = args[int(len(args)/2):]
 
     for k, eq in enumerate(eq_templ):
 
@@ -124,9 +126,7 @@ def combine_syn_dict(*args):
 
         params.update(param_templ[k])
 
-    return {'model': model, 'on_pre': on_pre, 'on_post': on_post, 'parameters' : params}
-
-
+    return {'model': model, 'on_pre': on_pre, 'on_post': on_post, 'parameters': params}
 
 
 def var_replacer(firstEq, secondEq, params):
@@ -181,7 +181,7 @@ def var_replacer(firstEq, secondEq, params):
                     # e.g. "var = x+1"  or "var : 1"
                     if ((var == line2.replace(':', '=').split('=', 1)[0].split()[0]) or
                     (diffvar in line2.replace(':', '=').split('=', 1)[0].split()[0])):
-                        resultfirstEq[kk]=line
+                        resultfirstEq[kk] = line
 
             #after replacing the "%" flagged line in the resultfirstEq
             #remove that line from the resultsecondEq
@@ -195,5 +195,3 @@ def var_replacer(firstEq, secondEq, params):
     resultsecondEq = "\n".join(resultsecondEq)
 
     return resultfirstEq, resultsecondEq, params
-
-

@@ -33,11 +33,11 @@ Net = NCSNetwork()
 stdp = STDP_Testbench()
 gPre, gPost = stdp.stimuli(isi=30)
 
-preSTDP = Neurons(2, equation_builder=DPI(), num_inputs=1, name='preSTDP')
+preSTDP = Neurons(2, equation_builder=DPI(), num_inputs=1, name='preSTDP', verbose = True)
 # preSTDP.setParams(DPIparam)
 preSTDP.refP = 3 * ms
 
-postSTDP = Neurons(2, equation_builder=DPI(), num_inputs=2, name='postSTDP')
+postSTDP = Neurons(2, equation_builder=DPI(), num_inputs=2, name='postSTDP', verbose = True)
 # postSTDP.setParams(DPIparam)
 
 

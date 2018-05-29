@@ -68,7 +68,7 @@ class NCSGroup(Group):
             self.standaloneVars += [name]
             # self.__setattr__(name, value)  # TODO: Maybe do that always?
 
-    def setParams(self, params, **kwargs):
+    def set_params(self, params, **kwargs):
         """Summary
 
         Args:
@@ -78,7 +78,7 @@ class NCSGroup(Group):
         Returns:
             TYPE: Description
         """
-        return setParams(self, params, **kwargs)
+        return set_params(self, params, **kwargs)
 
     def updateParam(self, parname):
         """this is used to update string based params during run (e.g. with gui)
@@ -120,7 +120,7 @@ class Neurons(NeuronGroup, NCSGroup):
         initialized (bool): Flag to register Neurons population with NCSGroups
         num_inputs (int): Number of possible synaptic inputs. This overocmes the summed issue
             present in brian2.
-        numSynapses (int): Number of synapses projecting to post-synaptic neurn group
+        num_synapses (int): Number of synapses projecting to post-synaptic neurn group
         synapses_dict (dict): Dictionary with all synapse names and their respective synapse index
         verbose (bool): Flag to print more details of neurongroup generation
     """
@@ -146,7 +146,7 @@ class Neurons(NeuronGroup, NCSGroup):
         """
         self.verbose = verbose
         self.num_inputs = num_inputs
-        self.numSynapses = 0
+        self.num_synapses = 0
         self.synapses_dict = {}
 
         if equation_builder is not None:
@@ -172,9 +172,9 @@ class Neurons(NeuronGroup, NCSGroup):
         NCSGroup.__init__(self)
         NeuronGroup.__init__(self, N, method=method, **Kwargs)
 
-        setParams(self, self.parameters, verbose=verbose)
+        set_params(self, self.parameters, verbose=verbose)
 
-    def registerSynapse(self, synapsename):
+    def register_synapse(self, synapsename):
         """Summary
         Registers a Synapse so we know the input number.
         It counts all synapses conected with one neurongroup
@@ -190,14 +190,14 @@ class Neurons(NeuronGroup, NCSGroup):
             dict: dictionary with all synapse names and their respective synapse index
         """
         if synapsename not in self.synapses_dict:
-            self.numSynapses += 1
-            self.synapses_dict[synapsename] = self.numSynapses
+            self.num_synapses += 1
+            self.synapses_dict[synapsename] = self.num_synapses
         if self.verbose:
             print('increasing number of registered Synapses of ' +
-                  self.name + ' to ', self.numSynapses)
+                  self.name + ' to ', self.num_synapses)
             print('specified max number of Synapses of ' +
                   self.name + ' is ', self.num_inputs)
-        if self.num_inputs < self.numSynapses:
+        if self.num_inputs < self.num_synapses:
             raise ValueError('There seem so be too many connections to ' +
                              self.name + ', please increase num_inputs')
         return self.synapses_dict[synapsename]
@@ -308,9 +308,9 @@ class Connections(Synapses, NCSGroup):
         try:
             if self.verbose:
                 print(name, ': target', target.name, 'has',
-                      target.numSynapses, 'of', target.num_inputs, 'synapses')
+                      target.num_synapses, 'of', target.num_inputs, 'synapses')
                 print('trying to add one more...')
-            self.input_number = target.registerSynapse(name)
+            self.input_number = target.register_synapse(name)
             if self.verbose:
                 print('OK!')
                 print('input number is: ' + str(self.input_number))
@@ -376,7 +376,7 @@ class Connections(Synapses, NCSGroup):
         Synapses.connect(self, condition=condition, i=i, j=j, p=p, n=n,
                          skip_if_invalid=skip_if_invalid,
                          namespace=namespace, level=level + 1, **Kwargs)
-        setParams(self, self.parameters, verbose=self.verbose)
+        set_params(self, self.parameters, verbose=self.verbose)
 
     def __setattr__(self, key, value):
         """Function to set arguments to synapses
@@ -421,7 +421,7 @@ class Connections(Synapses, NCSGroup):
         ylabel('Target neuron index')
 
 
-def setParams(briangroup, params, ndargs=None, raise_error = True, verbose=False):
+def set_params(briangroup, params, ndargs=None, raise_error = False, verbose=False):
     """This function takes a params dictionary and sets the parameters of a briangroup
 
     Args:
@@ -443,8 +443,13 @@ def setParams(briangroup, params, ndargs=None, raise_error = True, verbose=False
             else:
                 setattr(briangroup, par, params[par])
         else:
+            # print and warn, as warnings are sometimes harder to see
+            print("Group " + str(briangroup.name) +
+                          " has no state variable " + str(par)+
+                          ", but you tried to set it with set_params")
             warnings.warn("Group " + str(briangroup.name) +
-                          " has no state variable " + str(par))
+                          " has no state variable " + str(par)+
+                          ", but you tried to set it with set_params")
             if raise_error:
                 raise AttributeError("Group " + str(briangroup.name) +
                           " has no state variable " + str(par) +
@@ -458,8 +463,7 @@ def setParams(briangroup, params, ndargs=None, raise_error = True, verbose=False
         try:
             states = briangroup.get_states()
             print('\n')
-            print('-_-_-_-_-_-_-_', '\n', 'Parameters set')
-            print(briangroup.name)
+            print('-_-_-_-_-_-_-_\nParameters set by set_params for',briangroup.name,':')
             print('List of first value of each parameter:')
             for key in states.keys():
                 if key in params:
@@ -468,6 +472,20 @@ def setParams(briangroup, params, ndargs=None, raise_error = True, verbose=False
                     else:
                         print(key, states[key])
             print('----------')
+
+            dellist = list(params.keys())+['N','i','t','dt','not_refractory','lastspike']
+            for k in dellist:
+                try:
+                    states.pop(k)
+                except:
+                    pass
+            print('By this set_params call, you have not set the following parameters:' )
+            for key in states.keys():
+                if states[key].size > 1:
+                    print(key, states[key][1])
+                else:
+                    print(key, states[key])
+
         except:
             print('printing of states does not work in cpp standalone mode')
 
@@ -476,7 +494,7 @@ class NCSSubgroup(Subgroup):
     TODO: Some functionality of the package is not compatible with subgroups yet!!!
 
     Attributes:
-        registerSynapse (TYPE): Description
+        register_synapse (TYPE): Description
     """
 
     def __init__(self, source, start, stop, name=None):
@@ -489,18 +507,18 @@ class NCSSubgroup(Subgroup):
             name (str, optional): Name of subgroup
         """
         warnings.warn('Some functionality of this package is not compatible with subgroups yet')
-        self.registerSynapse = None
+        self.register_synapse = None
         Subgroup.__init__(self, source, start, stop, name)
-        self.registerSynapse = self.source.registerSynapse  # TODO: this is not ideal, as it is not necessary to register a synapse for subgroups!
+        self.register_synapse = self.source.register_synapse  # TODO: this is not ideal, as it is not necessary to register a synapse for subgroups!
 
     @property
-    def numSynapses(self):
+    def num_synapses(self):
         """Property to overcome summed issue present in brian2
 
         Returns:
             int: Number of synapse which originate at the same pre-synaptic neuron group.
         """
-        return self.source.numSynapses
+        return self.source.num_synapses
 
     @property
     def num_inputs(self):

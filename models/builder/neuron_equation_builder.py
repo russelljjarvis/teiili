@@ -2,7 +2,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-12 11:34:34
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-28 18:42:04
+# @Last Modified time: 2018-05-29 12:08:09
 
 """
 This file contains a class that manages a neuon equation
@@ -90,13 +90,13 @@ class NeuronEquationBuilder():
                             currentEquationsets[integrationMode],
                             currentEquationsets[leak],
                             currentEquationsets[position],
-                            currentEquationsets[noise], ]
+                            currentEquationsets[noise]]
                 param_templ = [currentParameters[baseUnit],
                                currentParameters[adaptation],
                                currentParameters[integrationMode],
                                currentParameters[leak],
                                currentParameters[position],
-                               currentParameters[noise], ]
+                               currentParameters[noise]]
 
                 keywords = combine_neu_dict(eq_templ, param_templ)
 
@@ -106,19 +106,20 @@ class NeuronEquationBuilder():
                             voltageEquationsets[integrationMode],
                             voltageEquationsets[leak],
                             voltageEquationsets[position],
-                            voltageEquationsets[noise], ]
+                            voltageEquationsets[noise]]
                 param_templ = [voltageParameters[baseUnit],
                                voltageParameters[adaptation],
                                voltageParameters[integrationMode],
                                voltageParameters[leak],
                                voltageParameters[position],
-                               voltageParameters[noise], ]
+                               voltageParameters[noise]]
                 keywords = combine_neu_dict(eq_templ, param_templ)
 
             self.keywords = {'model': keywords['model'], 'threshold': keywords['threshold'],
                              'reset': keywords['reset'], 'refractory': 'refP',
                              'parameters': keywords['parameters']}
-            self.printAll()
+            if self.verbose:
+                self.printAll()
 
     def addInputCurrents(self, numInputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)

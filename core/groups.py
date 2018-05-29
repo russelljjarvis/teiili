@@ -97,6 +97,15 @@ class NCSGroup(Group):
         #     print(key, " :")
         #     print(self.equation_builder.keywords[key])
 
+    @property
+    def model(self):
+        """Summary
+
+        Returns:
+            TYPE: Description
+        """
+        return self.equation_builder.keywords['model']
+
 
 class Neurons(NeuronGroup, NCSGroup):
     """
@@ -154,17 +163,16 @@ class Neurons(NeuronGroup, NCSGroup):
             Kwargs.pop('parameters')
 
             if parameters is not None:
-                print(
-                    "parameters you provided overwrite parameters from EquationBuilder ")
+                self.parameters = parameters
+                print("parameters you provided overwrite parameters from EquationBuilder ")
             else:
-                parameters = self.equation_builder.keywords['parameters']
+                self.parameters = self.equation_builder.keywords['parameters']
 
         self.initialized = True
         NCSGroup.__init__(self)
         NeuronGroup.__init__(self, N, method=method, **Kwargs)
 
-        if parameters is not None:
-            setParams(self, parameters, verbose=verbose)
+        setParams(self, self.parameters, verbose=verbose)
 
     def registerSynapse(self, synapsename):
         """Summary

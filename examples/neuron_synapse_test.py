@@ -2,7 +2,7 @@
 # @Author: mmilde
 # @Date:   2017-25-08 13:43:10
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-19 17:21:36
+# @Last Modified time: 2018-05-30 13:56:59
 # -*- coding: utf-8 -*-
 
 """
@@ -38,15 +38,14 @@ Net = NCSNetwork()
 
 testNeurons = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron")
 # Example of how to set parameters, saved as a dictionary
-testNeurons.setParams(DPIparam)
+testNeurons.set_params(DPIparam)
 testNeurons.refP = 3 * ms
 
 testNeurons2 = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron2")
-# testNeurons2.setParams(DPIparam)
 testNeurons2.refP = 3 * ms
 
 
-InpSyn = Connections(gInpGroup, testNeurons, equation_builder=DPISyn(), name="testSyn", verbose=True)
+InpSyn = Connections(gInpGroup, testNeurons, equation_builder=DPISyn(), name="testSyn", verbose=False)
 InpSyn.connect(True)
 
 InpSyn.weight = 10

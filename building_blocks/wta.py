@@ -22,7 +22,8 @@ from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
 
 
 import NCSBrian2Lib.tools.synaptic_kernel
-from NCSBrian2Lib.tools.misc import print_states, dist1d2dint
+from NCSBrian2Lib.tools.misc import print_states
+from NCSBrian2Lib.tools.distance import  dist1d2dint
 from NCSBrian2Lib.tools.indexing import ind2x, ind2y
 from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 
@@ -372,8 +373,8 @@ def gen2dWTA(groupname,
     gWTAGroup.namespace['num_neurons'] = num_neurons
     gWTAGroup.namespace['ind2x'] = ind2x
     gWTAGroup.namespace['ind2y'] = ind2y
-    gWTAGroup.x = "ind2x(i, num_neurons)"
-    gWTAGroup.y = "ind2y(i, num_neurons)"
+    gWTAGroup.x = "ind2x(i, num_neurons,num_neurons)"
+    gWTAGroup.y = "ind2y(i, num_neurons,num_neurons)"
 
     if num_input_neurons is None:
         num_input2d_neurons = num2dNeurons
@@ -405,7 +406,7 @@ def gen2dWTA(groupname,
     # connect synapses
     synInpWTA1e.connect('i==j')
     # connect the nearest neighbors including itself
-    synWTAWTA1e.connect('dist1d2dint(i,j,num_neurons)<=cutoff')
+    synWTAWTA1e.connect('dist1d2dint(i,j,num_neurons,num_neurons)<=cutoff')
     synWTAInh1e.connect('True', p=EI_connection_probability)  # Generates all to all connectivity
     synInhWTA1i.connect('True', p=IE_connection_probability)
     synInhInh1i.connect('True', p=II_connection_probability)
@@ -426,7 +427,7 @@ def gen2dWTA(groupname,
     synWTAWTA1e.latSigma = sigm
     synWTAWTA1e.namespace[spatial_kernel] = spatial_kernel_func
     synWTAWTA1e.namespace['num_neurons'] = num_neurons
-    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma,num_neurons)'
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma,num_neurons,num_neurons)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,

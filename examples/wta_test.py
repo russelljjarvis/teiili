@@ -14,7 +14,7 @@ from scipy import ndimage
 
 from brian2 import prefs, ms, pA, nA, StateMonitor, device, set_device,\
  second, msecond, defaultclock
- 
+
 
 from NCSBrian2Lib.building_blocks.wta import WTA, plotWTA
 from NCSBrian2Lib.core.groups import Neurons, Connections
@@ -62,7 +62,8 @@ wtaParams = {'weInpWTA': 500,
              'weWTAWTA': 200,#75,
              'sigm': 1,
              'rpWTA': 3 * ms,
-             'rpInh': 1 * ms
+             'rpInh': 1 * ms,
+             'EI_connection_probability' : 0.7,
              }
 
 #wtaParams = {'weInpWTA': 1.5,
@@ -76,7 +77,7 @@ wtaParams = {'weInpWTA': 500,
 
 gtestWTA = WTA(name='testWTA', dimensions=1, num_neurons=num_neurons, num_inh_neurons=40,
                num_input_neurons=num_input_neurons, num_inputs=2, block_params=wtaParams,
-               spatial_kernel = "kernel_gauss_1d", EI_connection_probability=0.7)
+               spatial_kernel = "kernel_gauss_1d")
 
 syn_in_ex = gtestWTA.Groups["synInpWTA1e"]
 syn_ex_ex = gtestWTA.Groups['synWTAWTA1e']
@@ -118,7 +119,7 @@ sigmas_dict={}
 
 for par0 in range(0,300,20):
     for par1 in range(0,500,20):
-           
+
         if run_as_standalone:
             standaloneParams=OrderedDict([('duration', 0.5 * second),
                          ('stestWTA_e_latWeight', 400),#280),
@@ -129,12 +130,12 @@ for par0 in range(0,300,20):
                          ('gtestWTA_refP', 5. * msecond),
                          ('gtestWTA_Inh_refP', 5. * msecond),
                          ('gtestWTA_Iconst', 5000 * pA)])
-            
+
             duration=standaloneParams['duration']/ms
             Net.run(duration=duration*ms, standaloneParams=standaloneParams, report='text')
         else:
             Net.run(duration * ms)
-              
+
         num_source_neurons = gtestWTA.Groups['gWTAInpGroup'].N
         num_target_neurons = gtestWTA.Groups['gWTAGroup'].N
         cm = plt.cm.get_cmap('jet')
@@ -145,40 +146,40 @@ for par0 in range(0,300,20):
         # Getting sparse weights
         #wta_plot,_=plotWTA(name='testWTA', start_time=0 * ms, end_time=duration * ms,
         #        WTAMonitors=gtestWTA.Monitors, plot_states=False)
-        
-        
+
+
         spikemonWTA = gtestWTA.Groups['spikemonWTA']
         spiketimes = spikemonWTA.t
         dt = defaultclock.dt
-        spikeinds = spiketimes/dt
-        
+        spikeinds = np.asarray(spiketimes/dt, dtype = 'int')
+
         data_sparse = scipy.sparse.coo_matrix((np.ones(len(spikeinds)),(spikeinds,[i for i in spikemonWTA.i])))
         data_dense = data_sparse.todense()
-        
+
         #data_dense.shape
         filtersize = 500*ms
         data_filtered = ndimage.uniform_filter1d(data_dense, size=int(filtersize / dt), axis=0, mode='constant') * second / dt
         #plt.plot(data) #[400,:])
         data = data_filtered[400,:]
-        
+
         from functools import partial
         minres = minimize(partial(objective_function,data=data),[10,3,50])#,method='COBYLA')
-        
+
         ampl = minres.x[2]
         mu =  minres.x[0]
         sig = minres.x[1]
-        
+
         gauss_fit =  ampl*gaussian(x, mu, sig)
-        
+
         #plt.plot(x,gauss_fit)
         #plt.plot(x,data)
         #plt.legend(labels = ['fit','data'])
         #plt.show()
-        
-        
+
+
         amplitudes_dict[(par0,par1)] = ampl
         sigmas_dict[(par0,par1)] = sig
-    
+
 
 print('took', time.time()-st)
 
@@ -205,7 +206,7 @@ if False:
     ex_sum = np.sum(syn_ex_ih.weight * syn_ex_ih.baseweight_e)
     ih_sum = np.sum(syn_ih_ex.weight * syn_ih_ex.baseweight_i)
 
-    
+
     ex_ex_mat = np.zeros((100,100))
     ex_ex_mat[syn_ex_ex.i,syn_ex_ex.j] =  syn_ex_ex.weight * syn_ex_ex.baseweight_e
     plt.imshow(ex_ex_mat)
@@ -214,12 +215,12 @@ if False:
     w,v=linalg.eig(ex_ex_mat)
     plt.plot(w)
     plt.imshow(v)
-        
+
     statemonWTA = gtestWTA.Groups['statemonWTA']
-    
+
     gWTAGroup = gtestWTA.Groups["gWTAGroup"]
     gWTAGroup.print_equations()
-    
+
     gWTAGroup.Ie0/pA
     gWTAGroup.Ie1/pA
     gWTAGroup.Ie2/pA
@@ -228,17 +229,17 @@ if False:
     gWTAGroup.Ii1/pA
     gWTAGroup.Ii2/pA
     gWTAGroup.Ii3/pA
-    
+
     Ie = gWTAGroup.Ie0/pA+gWTAGroup.Ie1/pA+gWTAGroup.Ie2/pA+gWTAGroup.Ie3/pA
     Ii = gWTAGroup.Ii0/pA+gWTAGroup.Ii1/pA+gWTAGroup.Ii2/pA+gWTAGroup.Ii3/pA
-    
+
     plt.figure()
     plt.plot(Ie)
     plt.plot(Ii)
     plt.plot(Ii/Ie)
     plt.show()
-    
-    
+
+
     statemonWTAin.Ie0/pA
     statemonWTAin.Ie1/pA
     statemonWTAin.Ie2/pA
@@ -247,20 +248,20 @@ if False:
     statemonWTAin.Ii1/pA
     statemonWTAin.Ii2/pA
     statemonWTAin.Ii3/pA
-    
+
     Ie = statemonWTAin.Ie0/pA+statemonWTAin.Ie1/pA+statemonWTAin.Ie2/pA+statemonWTAin.Ie3/pA
     Ii = statemonWTAin.Ii0/pA+statemonWTAin.Ii1/pA+statemonWTAin.Ii2/pA+statemonWTAin.Ii3/pA
-    
-    Ie_sum = np.sum(Ie.T,axis=1) 
-    Ii_sum = np.sum(Ii.T,axis=1) 
-    
+
+    Ie_sum = np.sum(Ie.T,axis=1)
+    Ii_sum = np.sum(Ii.T,axis=1)
+
     plt.figure()
     plt.plot(Ie_sum)
     plt.plot(Ie_sum)
     plt.figure()
     plt.plot(Ii_sum/Ie_sum)
     plt.show()
-    
+
     font = 10
     fig = plt.figure(figsize=(8,6))
     ax1 = plt.subplot(211)
@@ -270,7 +271,7 @@ if False:
     ax1.set_ylabel('Iconst (nA)', fontsize=font - 2)
     ax1.tick_params(axis='x', labelsize=font - 4)
     ax1.tick_params(axis='y', labelsize=font - 4)
-    
+
 #%%
 standaloneParams=OrderedDict([('duration', 0.5 * second),
              ('stestWTA_e_latWeight', 400),#280),

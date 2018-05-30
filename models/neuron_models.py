@@ -2,7 +2,7 @@
 # @Author: mmilde
 # @Date:   2018-01-08 14:53:11
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-28 13:31:09
+# @Last Modified time: 2018-05-30 10:26:09
 
 """ This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
 
@@ -31,8 +31,8 @@ class DPI(NeuronEquationBuilder):
 
     def __init__(self):
         NeuronEquationBuilder.__init__(self, baseUnit='current', adaptation='calciumFeedback',
-                                       integrationMode='exponential', leak='leaky', position='spatial',
-                                       noise='gaussianNoise')
+                                       integrationMode='exponential', leak='leaky',
+                                       position='spatial', noise='none')
 
 
 if __name__ == '__main__':

@@ -174,7 +174,7 @@ none = {'model': '',
 # Silicon Neuron as in Chicca et al. 2014
 # Author: Moritz Milde
 # Code partially adapted from Daniele Conti and Llewyn Salt
-# Email: mmilde@ini.uzh.chs
+# Email: mmilde@ini.uzh.ch
 i_model_template = {'model': '''
             dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt_clip - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt_clip + Iahp_clip - Ia_clip) / Itau_clip)) * Imem)) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
 
@@ -326,7 +326,7 @@ nonePara = {}
 
 modes = {'current': i_model_template, 'voltage': v_model_template}
 
-currentEquationsets = {'calciumFeedback': i_ahp, 'exponential': none,
+currentEquationsets = {'calciumFeedback': i_ahp, 'exponential': i_a,
                        'leaky': none, 'non-leaky': none,
                        'spatial': spatial, 'gaussianNoise': i_noise, 'none': none, 'linear': none}
 

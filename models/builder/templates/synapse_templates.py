@@ -183,7 +183,6 @@ DpiPara = {
     'kn_syn': 0.75,
     'kp_syn': 0.66,
     'Ut_syn': 25. * mV,
-    'Igain': 15 * pA,
     'Csyn': 1.5 * pF,
     'Ie_tau': 10. * pA,
     'Ii_tau': 10. * pA,

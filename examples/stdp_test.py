@@ -2,7 +2,7 @@
 # @Author: mmilde
 # @Date:   2018-01-16 17:57:35
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-30 11:59:23
+# @Last Modified time: 2018-05-30 13:55:01
 
 """this file provides an example of how to use neuron and synapse models which are present
 on neurmorphic chips in the context of synaptic plasticity based on precise timing of spikes.
@@ -37,12 +37,10 @@ gPre, gPost = stdp.stimuli(isi=30)
 
 preSTDP = Neurons(2, equation_builder=DPI(), num_inputs=1,
                   name='preSTDP', verbose=True)
-# preSTDP.setParams(DPIparam)
 preSTDP.refP = 3 * ms
 
 postSTDP = Neurons(2, equation_builder=DPI(), num_inputs=2,
                    name='postSTDP', verbose=True)
-# postSTDP.setParams(DPIparam)
 
 
 SynPre = Connections(gPre, preSTDP,

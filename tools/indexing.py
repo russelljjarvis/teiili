@@ -35,7 +35,8 @@ def xy2ind(x, y, nrows, ncols):
     Returns:
         ind (int): Converted index (e.g. flattened array)
     """
-    return (np.ravel_multi_index((x,y),(nrows,ncols)) , x*ncols+y)
+    return np.ravel_multi_index((x,y),(nrows,ncols))
+    #return x*ncols+y
 
 
 @implementation('cpp', '''

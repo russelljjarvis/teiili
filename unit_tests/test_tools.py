@@ -35,41 +35,42 @@ class TestTools(unittest.TestCase):
     def test_xy2ind_single(self):
         x = 127
         y = 5
-        n2d_neurons = 240
-        ind = indexing.xy2ind(x, y, n2d_neurons)
-        self.assertEqual(ind, int(x) + int(y) * n2d_neurons)
+        ncols = 240
+        nrows = 240
+        ind = indexing.xy2ind(x, y, nrows, ncols)
+        self.assertEqual(ind, int(x)*ncols + int(y))
 
     def test_xy2ind_array(self):
         x = np.arange(0, 128)
         y = np.arange(0, 128)
         n2d_neurons = 128
-        ind = indexing.xy2ind(x, y, n2d_neurons)
-        self.assertEqual(ind.tolist(), (x + (y * n2d_neurons)).tolist())
+        ind = indexing.xy2ind(x, y, n2d_neurons, n2d_neurons)
+        self.assertEqual(list(ind), list(x + (y * n2d_neurons)))
 
     def test_ind2x(self):
         ind = 1327
         n2d_neurons = 240
-        x = indexing.ind2x(ind, n2d_neurons)
+        x = indexing.ind2x(ind, n2d_neurons, n2d_neurons)
         self.assertEqual(x, np.floor_divide(np.round(ind), n2d_neurons))
 
     def test_ind2y(self):
         ind = 1327
         n2d_neurons = 240
-        y = indexing.ind2y(ind, n2d_neurons)
+        y = indexing.ind2y(ind, n2d_neurons, n2d_neurons)
         self.assertEqual(y, np.mod(np.round(ind), n2d_neurons))
 
     def test_ind2xy_square(self):
         ind = 1327
         n2d_neurons = 240
-        coordinates = indexing.ind2xy(ind, n2d_neurons)
+        coordinates = indexing.ind2xy(ind, n2d_neurons, n2d_neurons)
         self.assertEqual(coordinates, np.unravel_index(ind, (n2d_neurons, n2d_neurons)))
 
     def test_ind2xy_rectangular(self):
         ind = 1327
-        n2d_neurons = (240, 180)
-        self.assertTupleEqual(n2d_neurons, (240, 180))
-        coordinates = indexing.ind2xy(ind, n2d_neurons)
-        self.assertEqual(coordinates, np.unravel_index(ind, (n2d_neurons[0], n2d_neurons[1])))
+        nrows, ncols = (240, 180)
+        #self.assertTupleEqual(n2d_neurons, (240, 180))
+        coordinates = indexing.ind2xy(ind, nrows, ncols)
+        self.assertEqual(coordinates, np.unravel_index(ind, (nrows, ncols)))
 
     def test_fdist2d(self):
         pass

@@ -1,7 +1,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-15 17:53:31
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-29 12:19:47
+# @Last Modified time: 2018-05-29 12:24:16
 
 
 """
@@ -76,7 +76,7 @@ class SynapseEquationBuilder():
                 kernels[kernel]
                 plasticitymodels[plasticity]
 
-            except KeyError as e:
+            except KeyError:
                 print(ERRValue)
 
             if baseUnit == 'current':

@@ -254,12 +254,7 @@ i_model_templatePara = {
     "Ireset": 0.6 * pA,  # Reset Imem to Ireset after each spike
     "Ith": 0.9 * pA,
     "Itau": 8 * pA,
-    "refP": 1 * ms,
-    #---------------------------------------------------------
-    # Noise parameters
-    #---------------------------------------------------------
-    "mu": 0.25 * pA,
-    "sigma": 0.1 * pA
+    "refP": 1 * ms
 }
 
 

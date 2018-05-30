@@ -2,7 +2,7 @@
 # @Author: mmilde
 # @Date:   2018-01-16 17:57:35
 # @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-25 15:36:15
+# @Last Modified time: 2018-05-30 10:14:44
 
 """this file provides an example of how to use neuron and synapse models which are present
 on neurmorphic chips in the context of synaptic plasticity based on precise timing of spikes.
@@ -33,11 +33,13 @@ Net = NCSNetwork()
 stdp = STDP_Testbench()
 gPre, gPost = stdp.stimuli(isi=30)
 
-preSTDP = Neurons(2, equation_builder=DPI(), num_inputs=1, name='preSTDP', verbose = True)
+preSTDP = Neurons(2, equation_builder=DPI(), num_inputs=1,
+                  name='preSTDP', verbose=True)
 # preSTDP.setParams(DPIparam)
 preSTDP.refP = 3 * ms
 
-postSTDP = Neurons(2, equation_builder=DPI(), num_inputs=2, name='postSTDP', verbose = True)
+postSTDP = Neurons(2, equation_builder=DPI(), num_inputs=2,
+                   name='postSTDP', verbose=True)
 # postSTDP.setParams(DPIparam)
 
 
@@ -69,11 +71,15 @@ SynSTDP.Ie_tau = 2 * pA
 
 
 spikemonPre = SpikeMonitor(preSTDP, name='spikemonPre')
-statemonPre = StateMonitor(preSTDP, variables='Imem', record=0, name='statemonPre')
-statemonSynPre = StateMonitor(SynPre, variables=['Ie_syn'], record=0, name='statemonSynPre')
+statemonPre = StateMonitor(preSTDP, variables='Imem',
+                           record=0, name='statemonPre')
+statemonSynPre = StateMonitor(
+    SynPre, variables=['Ie_syn'], record=0, name='statemonSynPre')
 spikemonPost = SpikeMonitor(postSTDP, name='spikemonPost')
-statemonPost = StateMonitor(postSTDP, variables='Imem', record=0, name='statemonPost')
-statemonWeight = StateMonitor(SynSTDP, variables=['Ie_syn', 'w_plast', 'weight'], record=True, name='statemonWeight')
+statemonPost = StateMonitor(
+    postSTDP, variables='Imem', record=0, name='statemonPost')
+statemonWeight = StateMonitor(SynSTDP, variables=[
+                              'Ie_syn', 'w_plast', 'weight'], record=True, name='statemonWeight')
 
 Net.add(gPre, gPost, preSTDP, postSTDP, SynPre, SynPost, SynSTDP, statemonSynPre,
         statemonPre, statemonPost, spikemonPre, spikemonPost, statemonWeight)

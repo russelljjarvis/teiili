@@ -6,10 +6,16 @@
 
 """
 This module provides functions, that can be used for synaptic connectivity kernels (generate weight matrices).
-In order to also use them with c++ code generation all functions that are added here need to have a cpp implementation given by the @implementation decorator.
+In order to also use them with c++ code generation all functions that are added
+here need to have a cpp implementation given by the @implementation decorator.
 
-To avoid dependencies of other functions in the cpp code, indexing the indexing functions are not used, but written again.
+TODO: It would be good, if one could easily use different distance functions like
+on a ring or torus (1d/2d periodic boundary conditions)
+For numpy, this would be easy to implement by just using the respective function (from tools.distance) and add a selector as a parameter.
+For cpp, we would have to make sure, that the used functions are known.
+
 """
+
 import numpy as np
 from brian2 import implementation, check_units, exp, declare_types
 from NCSBrian2Lib.tools.indexing import ind2xy#, xy2ind, ind2x, ind2y

@@ -14,14 +14,14 @@ import numpy as np
 
 # TODO: Add cpp implementation
 @implementation('cpp', '''
-                float gaussian(int square_size, int sigma, float mu) {
+                float gaussian2d(int square_size, int sigma, float mu) {
                 return None;
                 }
                 ''')
-@declare_types(square_size='integer', sigma='integer', mu='float', result='float')
-@check_units(square_size=1, sigma=1, mu=1, result=1)
-def gaussian(square_size, sigma=1, mu=None):
-    """Makes a square gaussian kernel
+@declare_types(nrows='integer', ncols='integer', sigma='integer', mu_x='float', mu_y='float', result='float')
+@check_units(nrows=1, ncols=1, sigma=1, mu_x=1, mu_y=1, result=1)
+def gaussian2d(nrows, ncols, sigma=1, mu_x=None, mu_y=None):
+    """Makes a gaussian
 
     Args:
         square_size (int):  Size of the square, i.e. amplitude? (not sure!)
@@ -32,13 +32,26 @@ def gaussian(square_size, sigma=1, mu=None):
         TYPE: Description
     """
 
-    x = np.arange(0, square_size)
-    y = x[:, np.newaxis]
+    x = np.arange(0, nrows)
+    y = np.reshape(np.arange(0, ncols),(ncols,1))
+    #y = x[:, np.newaxis]
 
-    if mu is None:
-        x0 = y0 = square_size // 2
-    else:
-        x0 = mu[0]
-        y0 = mu[1]
+    if mu_x is None:
+        mu_x = nrows // 2
+    if mu_y is None:
+        mu_y = ncols // 2
 
-    return (1 / np.sqrt(2 * np.pi * sigma**2)) * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * sigma**2))
+    gaussian = (1 / np.sqrt(2 * np.pi * sigma**2)) * np.exp(-((x - mu_x)**2 + (y - mu_y)**2) / (2 * sigma**2))
+
+    return gaussian
+
+
+
+
+
+if __name__ == '__main__':
+    # just plot all the functions
+
+    import matplotlib.pyplot as plt
+    img = gaussian2d(50,60,10)
+    plt.imshow(img)

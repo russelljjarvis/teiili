@@ -128,7 +128,7 @@ class Neurons(NeuronGroup, NCSGroup):
     def __init__(self, N, equation_builder=None,
                  parameters=None,
                  method='euler',
-                 num_inputs=3,
+                 #num_inputs=3,
                  verbose=False, **Kwargs):
         """Summary
 
@@ -139,26 +139,25 @@ class Neurons(NeuronGroup, NCSGroup):
                 models/neuron_models.py
             params (dict, optional): Dictionary of parameter's keys and values
             method (str, optional): Integration method to solve the differential equation
-            num_inputs (int, optional): Number of possible synaptic inputs. This overocmes the summed issue
                 present in brian2.
             verbose (bool, optional): Flag to print more details of neurongroup generation
             **Kwargs: Description
         """
         self.verbose = verbose
-        self.num_inputs = num_inputs
+        #self.num_inputs = num_inputs
         self.num_synapses = 0
         self.synapses_dict = {}
 
         if equation_builder is not None:
-            if inspect.isclass(equation_builder):
-                self.equation_builder = equation_builder()
-            elif isinstance(equation_builder, str):
+            #if inspect.isclass(equation_builder):
+            #    self.equation_builder = equation_builder()
+            if isinstance(equation_builder, str):
                 equation_builder = getattr(
                     neuron_models, equation_builder)
                 self.equation_builder = equation_builder()
             else:
                 self.equation_builder = equation_builder
-            self.equation_builder.addInputCurrents(num_inputs)
+            #self.equation_builder.addInputCurrents(num_inputs)
             Kwargs.update(self.equation_builder.keywords)
             Kwargs.pop('parameters')
 
@@ -195,11 +194,11 @@ class Neurons(NeuronGroup, NCSGroup):
         if self.verbose:
             print('increasing number of registered Synapses of ' +
                   self.name + ' to ', self.num_synapses)
-            print('specified max number of Synapses of ' +
-                  self.name + ' is ', self.num_inputs)
-        if self.num_inputs < self.num_synapses:
-            raise ValueError('There seem so be too many connections to ' +
-                             self.name + ', please increase num_inputs')
+            #print('specified max number of Synapses of ' +
+            #      self.name + ' is ', self.num_inputs)
+        #if self.num_inputs < self.num_synapses:
+        #    raise ValueError('There seem so be too many connections to ' +
+        #                     self.name + ', please increase num_inputs')
         return self.synapses_dict[synapsename]
 
     def __setattr__(self, key, value):
@@ -308,7 +307,7 @@ class Connections(Synapses, NCSGroup):
         try:
             if self.verbose:
                 print(name, ': target', target.name, 'has',
-                      target.num_synapses, 'of', target.num_inputs, 'synapses')
+                      target.num_synapses, 'synapses')
                 print('trying to add one more...')
             self.input_number = target.register_synapse(name)
             if self.verbose:
@@ -520,11 +519,11 @@ class NCSSubgroup(Subgroup):
         """
         return self.source.num_synapses
 
-    @property
-    def num_inputs(self):
-        """Property to overcome summed issue present in brian2
-
-        Returns:
-            int: Number of synapse which project to the same post-synaptic neuron group.
-        """
-        return self.source.num_inputs
+#    @property
+#    def num_inputs(self):
+#        """Property to overcome summed issue present in brian2
+#
+#        Returns:
+#            int: Number of synapse which project to the same post-synaptic neuron group.
+#        """
+#        return self.source.num_inputs

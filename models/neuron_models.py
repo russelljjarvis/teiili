@@ -16,10 +16,11 @@ class ExpAdaptIF(NeuronEquationBuilder):
     exponential, adaptive integrate and fire neuron.
     """
 
-    def __init__(self):
+    def __init__(self, num_inputs=1):
         NeuronEquationBuilder.__init__(self, baseUnit='voltage', adaptation='calciumFeedback',
                                        integrationMode='exponential', leak='non-leaky',
                                        position='spatial', noise='none')
+        self.addInputCurrents(num_inputs)
 
 
 class DPI(NeuronEquationBuilder):
@@ -29,10 +30,11 @@ class DPI(NeuronEquationBuilder):
     which was published in 2014 (Chicca et al. 2014).
     """
 
-    def __init__(self):
+    def __init__(self, num_inputs=1):
         NeuronEquationBuilder.__init__(self, baseUnit='current', adaptation='calciumFeedback',
                                        integrationMode='exponential', leak='leaky',
                                        position='spatial', noise='none')
+        self.addInputCurrents(num_inputs)
 
 
 if __name__ == '__main__':

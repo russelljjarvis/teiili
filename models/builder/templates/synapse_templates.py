@@ -92,6 +92,9 @@ conductance = {'model': '''
                Ie_syn = gIe*(EIe - Vm_post) : amp
                Ii_syn = gIi*(EIi - Vm_post) : amp
 
+               Ie{inputnumber}_post = Ie_syn : amp (summed)
+               Ii{inputnumber}_post = -Ii_syn : amp (summed)
+
                EIe : volt (shared,constant)             # excitatory reversal potential
                EIi : volt (shared,constant)             # inhibitory reversal potential
 

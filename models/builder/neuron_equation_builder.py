@@ -35,7 +35,7 @@ class NeuronEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder
     """
 
-    def __init__(self, model=None, baseUnit='current', adaptation='calciumFeedback',
+    def __init__(self, keywords=None, baseUnit='current', adaptation='calciumFeedback',
                  integrationMode='exponential', leak='leaky', position='spatial',
                  noise='gaussianNoise', refractory='refractory', verbose=False):
         """Summary
@@ -55,8 +55,10 @@ class NeuronEquationBuilder():
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder
         """
         self.verbose = verbose
-        if model is not None:
-            keywords = model
+        if keywords is not None:
+            self.keywords = {'model': keywords['model'], 'threshold': keywords['threshold'],
+                             'reset': keywords['reset'], 'refractory': 'refP',
+                             'parameters': keywords['parameters']}
 
         else:
             ERRValue = """
@@ -118,8 +120,8 @@ class NeuronEquationBuilder():
             self.keywords = {'model': keywords['model'], 'threshold': keywords['threshold'],
                              'reset': keywords['reset'], 'refractory': 'refP',
                              'parameters': keywords['parameters']}
-            if self.verbose:
-                self.printAll()
+        if self.verbose:
+            self.printAll()
 
     def addInputCurrents(self, numInputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)
@@ -178,9 +180,8 @@ class NeuronEquationBuilder():
             file.write(self.keywords['model'])
             file.write("''',\n")
             file.write("'threshold':\n")
-            file.write("'''\n")
+            file.write("'''")
             file.write(self.keywords['threshold'])
-            file.write("\n")
             file.write("''',\n")
             file.write("'reset':\n")
             file.write("'''\n")
@@ -199,7 +200,8 @@ class NeuronEquationBuilder():
             file.write("}\n")
             file.write("}")
 
-    def importeq(self, filename):
+    @classmethod
+    def importeq(cls, filename):
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
         else:
@@ -215,9 +217,10 @@ class NeuronEquationBuilder():
         eq_dict = importlib.import_module(importpath)
         neuron_eq = eq_dict.__dict__[dict_name]
 
-        self.keywords = {'model': neuron_eq['model'], 'threshold': neuron_eq['threshold'],
-                         'reset': neuron_eq['reset'], 'refractory': 'refP',
-                         'parameters': neuron_eq['parameters']}
+        # self.keywords = {'model': neuron_eq['model'], 'threshold': neuron_eq['threshold'],
+        #                  'reset': neuron_eq['reset'], 'refractory': 'refP',
+        #                  'parameters': neuron_eq['parameters']}
+        return cls(keywords=neuron_eq)
 
 
 def printParamDictionaries(Dict):

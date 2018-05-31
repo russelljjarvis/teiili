@@ -12,24 +12,35 @@ Please look at the Examples here: https://code.ini.uzh.ch/ncs/NCSBrian2Examples
 
 ### Prerequisites
 
-You need to have brian2 installed.
+* brian2
 
-If you use Anaconda, just use
+    You need to have brian2 installed.
 
-```
-conda install brian2
-```
+    If you use Anaconda, just use
+
+    ```
+    conda install brian2
+    ```
+
+* Add the NCSBrian2Lib to the PYTHONPATH
+    You can add the following line to your `~/.bashrc`<sup>1</sup>:
+    ```
+    export PYTHONPATH=$PYTHONPATH:"/path/to/parent_folder/of/NCSBrian2Lib"
+    ```
+
+* Create an alias for `python3`
+    If you are using `python3` in this form, create an alias to call it as `python`.
+    Add the following line to your `~/.bashrc`<sup>1</sup>:
+    ```
+    alias python=python3
+    ```
+
+<sup>1</sup> or type it on the terminal window that you are using.
 
 We would recommend to use iPython with spyder or jupyter
 
 You probably need to use Linux if you want to use standalone code generation,
 otherwise, Windows works fine
-
-### Installing
-
-```
-Placeholder
-```
 
 ### Usage
 

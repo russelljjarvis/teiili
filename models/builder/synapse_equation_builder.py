@@ -34,7 +34,7 @@ class SynapseEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder
     """
 
-    def __init__(self, model=None, baseUnit='current', kernel='exponential',
+    def __init__(self, keywords=None, baseUnit='current', kernel='exponential',
                  plasticity='nonplastic', verbose=False):
         """Summary
 
@@ -50,8 +50,9 @@ class SynapseEquationBuilder():
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder
         """
         self.verbose = verbose
-        if model is not None:
-            keywords = model
+        if keywords is not None:
+            self.keywords = {'model': keywords['model'], 'on_pre': keywords['on_pre'],
+                             'on_post': keywords['on_post'], 'parameters': keywords['parameters']}
 
         else:
             ERRValue = """
@@ -127,8 +128,8 @@ class SynapseEquationBuilder():
             self.keywords = {'model': keywords['model'], 'on_pre': keywords['on_pre'],
                              'on_post': keywords['on_post'], 'parameters': keywords['parameters']}
 
-            if self.verbose == True:
-                self.printAll()
+        if self.verbose == True:
+            self.printAll()
 
     def set_inputnumber(self, inputnumber):
         """Sets the respective input number of synapse. This is needed to overcome
@@ -186,7 +187,8 @@ class SynapseEquationBuilder():
             file.write("}\n")
             file.write("}")
 
-    def importeq(self, filename):
+    @classmethod
+    def importeq(cls, filename):
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
         else:
@@ -202,8 +204,7 @@ class SynapseEquationBuilder():
         eq_dict = importlib.import_module(importpath)
         synapse_eq = eq_dict.__dict__[dict_name]
 
-        self.keywords = {'model': synapse_eq['model'], 'on_pre': synapse_eq['on_pre'],
-                         'on_post': synapse_eq['on_post'], 'parameters': synapse_eq['parameters']}
+        return cls(keywords=synapse_eq)
 
 
 def printParamDictionaries(Dict):

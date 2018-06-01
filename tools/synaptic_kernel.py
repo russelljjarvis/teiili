@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: alpren, mmilde
 # @Date:   2018-01-09 17:25:21
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 17:12:59
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 16:47:52
 
 """
 This module provides functions, that can be used for synaptic connectivity kernels (generate weight matrices).
@@ -150,27 +150,27 @@ def kernel_gauss_2d(i, j, gsigma, nrows, ncols):
 # TODO: Make this consistent with the other functions in this module
 # TODO: Add phase parameter
 @implementation('cpp', '''
-    float kernelGabor2d(int i, int j, int offx, int offy, float theta, float sigmax, float sigmay, float freq, int InputSizeX, int InputSizeY, int WindowSizeX, int WindowSizeY, int RFSize){
-    int ix = i % InputSizeX;
-    int iy = i / InputSizeX;
-    if(((WindowSizeX + abs(offx)) <= (InputSizeX-(RFSize-1))) & ((WindowSizeY + abs(offy)) <= (InputSizeY-(RFSize-1)))){
-        int x0 = j % WindowSizeX;
-        int y0 = j / WindowSizeX;
-        x0 += int((InputSizeX-WindowSizeX+1)/2) + offx;
-        y0 += int((InputSizeY-WindowSizeY+1)/2) + offy;
+    float kernel_gabor_2d(int i, int j, int offx, int offy, float theta, float sigmax, float sigmay, float freq, int input_size_x, int input_size_y, int window_size_x, int window_size_y, int rf_size){
+    int ix = i % input_size_x;
+    int iy = i / input_size_x;
+    if(((window_size_x + abs(offx)) <= (input_size_x-(rf_size-1))) & ((window_size_y + abs(offy)) <= (input_size_y-(rf_size-1)))){
+        int x0 = j % window_size_x;
+        int y0 = j / window_size_x;
+        x0 += int((input_size_x-WindowSizeX+1)/2) + offx;
+        y0 += int((input_size_y-window_size_y+1)/2) + offy;
         float x =  (ix - x0)*cos(theta-M_PI/2) + (iy - y0)*sin(theta-M_PI/2);
         float y = -(ix - x0)*sin(theta-M_PI/2) + (iy - y0)*cos(theta-M_PI/2);
         float exponent = -((pow(x,2)/(2*pow(sigmax,2))) + (pow(y,1)/(2*pow(sigmay,2))));
         float res = exp(exponent)*cos(M_PI*x/freq);
-        res = res*(abs(ix - x0)<RFSize/2) *(abs(iy - y0)<RFSize/2);
+        res = res*(abs(ix - x0)<rf_size/2) *(abs(iy - y0)<rf_size/2);
         return res;}
     else{
         return 0;}
         }
      ''')
-@declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float', freq='float', InputSizeX='integer', InputSizeY='integer', WindowSizeX='integer', WindowSizeY='integer', RFSize='integer', result='float')
-@check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, InputSizeX=1, InputSizeY=1, WindowSizeX=1, WindowSizeY=1, RFSize=1, result=1)
-def kernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, InputSizeY, WindowSizeX, WindowSizeY, RFSize):
+@declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float', freq='float', input_size_x='integer', input_size_y='integer', WindowSizeX='integer', window_size_y='integer', rf_size='integer', result='float')
+@check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, input_size_x=1, input_size_y=1, window_size_x=1, window_size_y=1, rf_size=1, result=1)
+def kernel_gabor_2d(i, j, offx, offy, theta, sigmax, sigmay, freq, input_size_x, input_size_y, window_size_x, window_size_y, rf_size):
     """Summary: function that calculates Gabor 2D kernel, only works with odd square Receptive Fields,
     it the prints the weight values for a couple of neurons.
     To spare computation this connectivety kernel gives the possibility to use a
@@ -190,29 +190,29 @@ def kernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, Inp
         sigmax (float): variance along x
         sigmay (float): variance along y
         freq (float): frequency of the filter
-        InputSizeX (int): x size of the input layer
-        InputSizeY (int): y size of the input layer
-        WindowSizeX (int): x size of the output layer
-        WindowSizeY (int): y size of the output layer
-        RFSize (int): side size of the Receptive Field
+        input_size_x (int): x size of the input layer
+        input_size_y (int): y size of the input layer
+        window_size_x (int): x size of the output layer
+        window_size_y (int): y size of the output layer
+        rf_size (int): side size of the Receptive Field
 
     Returns:
         float: The weight between the i and j neuron
     """
 
-    (iy, ix) = np.unravel_index(i, (InputSizeY, InputSizeX))
-    if (WindowSizeX + abs(offx) <= (InputSizeX - (RFSize - 1))) & (WindowSizeY + abs(offy) <= (InputSizeY - (RFSize - 1))):
-        (y0, x0) = np.unravel_index(j, (WindowSizeY, WindowSizeX))
-        x0 = x0 + int((InputSizeX - WindowSizeX + 1) / 2) + offx
-        y0 = y0 + int((InputSizeY - WindowSizeY + 1) / 2) + offy
+    (iy, ix) = np.unravel_index(i, (input_size_y, input_size_x))
+    if (window_size_x + abs(offx) <= (input_size_x - (rf_size - 1))) & (window_size_y + abs(offy) <= (input_size_y - (rf_size - 1))):
+        (y0, x0) = np.unravel_index(j, (window_size_y, window_size_x))
+        x0 = x0 + int((input_size_x - window_size_x + 1) / 2) + offx
+        y0 = y0 + int((input_size_y - window_size_y + 1) / 2) + offy
         x = (ix - x0) * np.cos(theta - np.pi / 2) + \
             (iy - y0) * np.sin(theta - np.pi / 2)
         y = -(ix - x0) * np.sin(theta - np.pi / 2) + \
             (iy - y0) * np.cos(theta - np.pi / 2)
         exponent = -(((x**2) / (2 * sigmax**2)) + ((y**2) / (2 * sigmay**2)))
         res = exp(exponent) * np.cos(np.pi * x / freq)
-        res = res * (abs(ix - x0) < RFSize / 2) * (abs(iy - y0) < RFSize / 2)
+        res = res * (abs(ix - x0) < rf_size / 2) * (abs(iy - y0) < rf_size / 2)
         return res
     else:
-        print("The kernel window it's bigger than InputSize-(RFSize-1)")
+        print("The kernel window it's bigger than InputSize-(rf_size-1)")
         return 0

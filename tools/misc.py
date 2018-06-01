@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 11:54:09
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 17:11:13
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 16:50:56
 """A collection of helpful miscellaneous functions when working with brian2
 
 """
@@ -50,7 +50,6 @@ def return_value_if(test_val, greater_than_val, smaller_than_val, return_val_tru
         return return_val_false
 
 
-
 def print_states(briangroup):
     """Wrapper function to print states of a brian2 groups such as NeuronGroup or Synapses
 
@@ -71,9 +70,7 @@ def print_states(briangroup):
     print ('----------')
 
 
-
-
-def spikemon2firingRate(spikemon, start_time=0 * ms, end_time="max"):
+def spikemon2firing_rate(spikemon, start_time=0 * ms, end_time="max"):
     """Calculates the instantaneous firing rate within a window of interest from a SpikeMonitor
 
     Args:

@@ -3,8 +3,8 @@
 """
 # @Author: mmilde
 # @Date:   2017-12-27 12:07:15
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-17 09:24:42
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 16:43:55
 
 """
 Function for external interfaces such as event-based camera, i.e. DVS
@@ -32,7 +32,7 @@ def skip_header(file_read):
             line = file_read.readline()
 
 
-def read_events(file_read, xdim, ydim):
+def read_events(file_read, x_dim, y_dim):
     """A simple function that read events from cAER tcp
 
     Args:
@@ -148,8 +148,8 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
 
         skip_header(aerdatafh)
 
-        xdim = 240
-        ydim = 180
+        X_DIM = 240
+        Y_DIM = 180
 
         ts_events_tmp = []
         x_events_tmp = []
@@ -157,7 +157,7 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
         p_events_tmp = []
         while(1):
             x, y, p, ts_tot, spec_type, spec_type_ts = read_events(
-                aerdatafh, xdim, ydim)
+                aerdatafh, X_DIM, Y_DIM)
             if(len(ts_tot) > 0 and ts_tot[0] == -1):
                 break
             x_events_tmp.append(x)
@@ -178,13 +178,13 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
                 raise ValueError(
                     "Units not supported. Please select one of these: us, ms, sec")
             p_events_tmp.append(p)
-        Events = np.zeros([4, len(list(itertools.chain(*ts_events_tmp)))])
-        Events[0, :] = list(itertools.chain(*x_events_tmp))
-        Events[1, :] = list(itertools.chain(*y_events_tmp))
-        Events[2, :] = list(itertools.chain(*ts_events_tmp))
-        Events[3, :] = list(itertools.chain(*p_events_tmp))
+        events = np.zeros([4, len(list(itertools.chain(*ts_events_tmp)))])
+        events[0, :] = list(itertools.chain(*x_events_tmp))
+        events[1, :] = list(itertools.chain(*y_events_tmp))
+        events[2, :] = list(itertools.chain(*ts_events_tmp))
+        events[3, :] = list(itertools.chain(*p_events_tmp))
         aerdatafh.close()
-        return (Events)
+        return (events)
 
     elif (version == 'V2') or (version == 'V1'):
 
@@ -295,21 +295,21 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
                       (timestamps[0:n], xaddr[0:n], yaddr[0:n], pol[0:n]))
             except:
                 print("failed to print statistics")
-        Events = np.zeros([4, len(timestamps)])
+        events = np.zeros([4, len(timestamps)])
         # Set the coordinate (0,0) at the upper left corner:
         # NOTE: jAER orgin is at the bottom right corner.
-        Events[0, :] = xaddr
-        Events[1, :] = yaddr
-        Events[2, :] = timestamps
-        Events[3, :] = pol
-        return Events
+        events[0, :] = xaddr
+        events[1, :] = yaddr
+        events[2, :] = timestamps
+        events[3, :] = pol
+        return events
 
     else:
         raise ValueError("Unsupported AEDAT file version")
         return
 
 
-def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True):
+def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True):
     """Summary Function which converts events extracted from an aedat file using aedat2numpy
     into 1D vectors of neuron indices and timestamps. Funcion only returns index and timestamp
     list for existing types (e.g. On & Off events)
@@ -330,16 +330,16 @@ def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True
         assert type(event_directory) == str, 'event_directory must be a string'
         assert event_directory[
             -4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
-        Events = np.load(event_directory)
-    if Events is not None:
-        assert event_directory is None, 'Either you specify a path to load Events using event_directory. Or you pass the event numpy directly. NOT Both.'
-    if np.size(Events, 0) > np.size(Events, 1):
-        Events = np.transpose(Events)
+        events = np.load(event_directory)
+    if events is not None:
+        assert event_directory is None, 'Either you specify a path to load events using event_directory. Or you pass the event numpy directly. NOT Both.'
+    if np.size(events, 0) > np.size(events, 1):
+        events = np.transpose(events)
 
     # extract tempory indices to retrieve
     # Boolean logic to get indices of on and off events, respectively
-    cInd_on = Events[3, :] == 1
-    cInd_off = Events[3, :] == 0
+    cInd_on = events[3, :] == 1
+    cInd_off = events[3, :] == 0
 
     # Initialize 1D arrays for neuron indices and timestamps
     indices_on = np.zeros([int(np.sum(cInd_on))])
@@ -356,19 +356,19 @@ def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True
 
     # The equation below follows index = x + y*resolution
     # To retrieve the x and y coordinate again from the index see ind2px
-    indices_on = Events[0, cInd_on] + Events[1, cInd_on] * resolution
-    indices_off = Events[0, cInd_off] + Events[1, cInd_off] * resolution
+    indices_on = events[0, cInd_on] + events[1, cInd_on] * resolution
+    indices_off = events[0, cInd_off] + events[1, cInd_off] * resolution
     if scale:
         # The DVS timestamps are in microseconds. We need to convert them to
         # milliseconds for brian
-        spiketimes_on = np.ceil(Events[2, cInd_on] * 10**(-3))
-        spiketimes_off = np.ceil(Events[2, cInd_off] * 10**(-3))
+        spiketimes_on = np.ceil(events[2, cInd_on] * 10**(-3))
+        spiketimes_off = np.ceil(events[2, cInd_off] * 10**(-3))
 
     else:
         # The flag scale is used to prevent rescaling of timestamps if we use
         # artifically generated stimuli
-        spiketimes_on = np.ceil(Events[2, cInd_on])
-        spiketimes_off = np.ceil(Events[2, cInd_off])
+        spiketimes_on = np.ceil(events[2, cInd_on])
+        spiketimes_off = np.ceil(events[2, cInd_off])
 
     # Check for double entries within 100 us
     ts_on_tmp = spiketimes_on
@@ -381,16 +381,16 @@ def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True
         mask_t = spiketimes_on[i]
         mask_i = indices_on[i]
 
-        doubleEntries = np.logical_and(np.logical_and(
+        double_entries = np.logical_and(np.logical_and(
             ts_on_tmp >= mask_t, ts_on_tmp <= mask_t + delta_t), mask_i == ind_on_tmp)
-        # uniqueEntries = np.invert(doubleEntries)
-        # print np.sum(doubleEntries)
-        if np.sum(doubleEntries) > 1:
+        # uniqueEntries = np.invert(double_entries)
+        # print np.sum(double_entries)
+        if np.sum(double_entries) > 1:
             # Find first occurence on non-unique entries
-            tmp = np.where(doubleEntries == True)
+            tmp = np.where(double_entries == True)
             # keep the first occurance of non-unique entry
-            doubleEntries[tmp[0][0]] = False
-            uniqueEntries = np.invert(doubleEntries)
+            double_entries[tmp[0][0]] = False
+            uniqueEntries = np.invert(double_entries)
             ts_on_tmp = ts_on_tmp[uniqueEntries]
             ind_on_tmp = ind_on_tmp[uniqueEntries]
 
@@ -398,16 +398,16 @@ def dvs2ind(Events=None, event_directory=None, resolution='DAVIS240', scale=True
         mask_t = spiketimes_off[i]
         mask_i = indices_off[i]
 
-        doubleEntries = np.logical_and(np.logical_and(
+        double_entries = np.logical_and(np.logical_and(
             ts_off_tmp >= mask_t, ts_off_tmp <= mask_t + delta_t), mask_i == ind_off_tmp)
-        # uniqueEntries = np.invert(doubleEntries)
-        # print np.sum(doubleEntries)
-        if np.sum(doubleEntries) > 1:
+        # uniqueEntries = np.invert(double_entries)
+        # print np.sum(double_entries)
+        if np.sum(double_entries) > 1:
             # Find first occurence on non-unique entries
-            tmp = np.where(doubleEntries == True)
+            tmp = np.where(double_entries == True)
             # keep the first occurance of non-unique entry
-            doubleEntries[tmp[0][0]] = False
-            uniqueEntries = np.invert(doubleEntries)
+            double_entries[tmp[0][0]] = False
+            uniqueEntries = np.invert(double_entries)
             ts_off_tmp = ts_off_tmp[uniqueEntries]
             ind_off_tmp = ind_off_tmp[uniqueEntries]
 
@@ -470,7 +470,7 @@ def dvs_csv2numpy(datafile='tmp/aerout.csv', debug=False):
     y_list = df['y_raw']
     time_list = df['timestamp']
     pol_list = df['pol']
-    timestep = time_list[0]
+    timestamp = time_list[0]
 
     # Get new coordinates with more useful representation
     #df['x'] = df['y_raw']
@@ -478,44 +478,44 @@ def dvs_csv2numpy(datafile='tmp/aerout.csv', debug=False):
     # discard every third event
     #new_ind = 0
     #Events = np.zeros([4, len(df['timestamp'])/3])
-    Events_x = []
-    Events_y = []
-    Events_time = []
-    Events_pol = []
+    events_x = []
+    events_y = []
+    events_time = []
+    events_pol = []
     counter = 0
     for j in range(len(df['timestamp'])):
         if counter % 3 == 0:
-            if (timestep == time_list[j]):
+            if (timestamp == time_list[j]):
                 #Events[0, new_ind] = x_list[j]
-                Events_x.append(x_list[j])
-                Events_y.append(y_list[j])
-                Events_time.append(time_list[j])
-                Events_pol.append(pol_list[j])
+                events_x.append(x_list[j])
+                events_y.append(y_list[j])
+                events_time.append(time_list[j])
+                events_pol.append(pol_list[j])
                 #new_ind += 1
-                timestep = time_list[j]
+                timestamp = time_list[j]
             else:
                 counter += 1
-                timestep = time_list[j]
+                timestamp = time_list[j]
         elif counter % 3 == 1:
-            if (timestep == time_list[j]):
+            if (timestamp == time_list[j]):
                 continue
             else:
                 counter += 1
-                timestep = time_list[j]
+                timestamp = time_list[j]
         elif counter % 3 == 2:
-            if (timestep == time_list[j]):
+            if (timestamp == time_list[j]):
                 continue
             else:
                 counter += 1
-                timestep = time_list[j]
-    Events = np.zeros([4, len(Events_time)])
-    Events[0, :] = Events_x
-    Events[1, :] = Events_y
-    Events[2, :] = Events_time
-    Events[3, :] = Events_pol
+                timestamp = time_list[j]
+    events = np.zeros([4, len(events_time)])
+    events[0, :] = events_x
+    events[1, :] = events_y
+    events[2, :] = events_time
+    events[3, :] = events_pol
     if debug == True:
-        print(Events[0, 0:10])
-        print(Events[1, 0:10])
-        print(Events[2, 0:10])
-        print(Events[3, 0:10])
-    return Events
+        print(events[0, 0:10])
+        print(events[1, 0:10])
+        print(events[2, 0:10])
+        print(events[3, 0:10])
+    return events

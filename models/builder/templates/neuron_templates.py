@@ -57,22 +57,7 @@ v_model_templatePara = {"Cm": 281 * pF,
                         "Iconst": 0 * pA,
                         "Vthr": -50.4 * mV,
                         "Vres": -70.6 * mV
-
                         }
-
-#                        "gL": 35 * nS,
-#                        "EL": -70.6 * mV,
-#                        "DeltaT": 2 * mV,
-#                        "tauwad": 144 * ms,
-#                        "a": 4 * nS,
-#                        "b": 0.0805 * nA,
-#                        "Vm": -70.6 * mV,
-#                        "Iconst": 0 * pA,
-#                        "sigma": 0 * pA,
-#                        "taue": 5 * ms,
-#                        "taui": 6 * ms,
-#                        "EIe": 60.0 * mV,
-#                        "EIi": -90.0 * mV
 
 # exponential current (see exponential I&F Model)
 v_expCurrent = {'model': """
@@ -138,37 +123,6 @@ activity = {'model': """
 none = {'model': '',
         'threshold': '',
         'reset': ''}
-
-
-# Brette, Gerstner 2005 Exponential adaptive IF model
-# see: http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
-#ExpAdaptIF = combineEquations(v_model_template, v_expCurrent, v_leak, v_adapt)
-#
-# ExpAdaptIF['default'] = {"Cm": 281 * pF,
-#                         "gL": 35 * nS,
-#                         "EL": -70.6 * mV,
-#                         "VT": -50.4 * mV,
-#                         "DeltaT": 2 * mV,
-#                         "tauwad": 144 * ms,
-#                         "a": 4 * nS,
-#                         "b": 0.0805 * nA,
-#                         "Vr": -70.6 * mV,
-#                         "Vm": -70.6 * mV,
-#                         "Iconst": 0 * pA,
-#                         "refP": 2 * ms}
-#
-#
-# simple leaky IF model
-#simpleIF = combineEquations(v_model_template, v_leak)
-# simpleIF['default'] = {"gL": 4.3 * nS,
-#                       "Vr": -55 * mV,
-#                       "EL": -55 * mV,
-#                       "Vthr": -40 * mV,
-#                       "Cm": 0.135 * pF,
-#                       "Vm": -55 * mV
-#                       }
-#
-
 
 # current based template
 # Silicon Neuron as in Chicca et al. 2014
@@ -336,4 +290,3 @@ currentParameters = {'current': i_model_templatePara, 'calciumFeedback': i_ahpPa
 voltageParameters = {'voltage': v_model_templatePara, 'calciumFeedback': nonePara,
                      'exponential': nonePara, 'leaky': nonePara, 'non-leaky': nonePara,
                      'spatial': nonePara, 'gaussianNoise': nonePara, 'none': nonePara, 'linear': nonePara}
-

@@ -18,7 +18,7 @@ For cpp, we would have to make sure, that the used functions are known.
 
 import numpy as np
 from brian2 import implementation, check_units, exp, declare_types
-from NCSBrian2Lib.tools.indexing import ind2xy#, xy2ind, ind2x, ind2y
+from NCSBrian2Lib.tools.indexing import ind2xy  # , xy2ind, ind2x, ind2y
 
 
 @implementation('cpp', '''
@@ -104,7 +104,8 @@ def kernel_mexican_2d(i, j, gsigma, nrows, ncols):
     x = ix - jx
     y = iy - jy
     exponent = -(x**2 + y**2) / (2 * gsigma**2)
-    res = (1 + exponent) * exp(exponent)  # mexican hat / negative Laplacian of Gaussian #not normalized
+    # mexican hat / negative Laplacian of Gaussian #not normalized
+    res = (1 + exponent) * exp(exponent)
     return res
 
 
@@ -144,7 +145,6 @@ def kernel_gauss_2d(i, j, gsigma, nrows, ncols):
     exponent = -(x**2 + y**2) / (2 * gsigma**2)
     res = exp(exponent)
     return res
-
 
 
 # TODO: Make this consistent with the other functions in this module
@@ -201,15 +201,17 @@ def kernelGabor2d(i, j, offx, offy, theta, sigmax, sigmay, freq, InputSizeX, Inp
     """
 
     (iy, ix) = np.unravel_index(i, (InputSizeY, InputSizeX))
-    if (WindowSizeX + abs(offx) <= (InputSizeX-(RFSize-1))) & (WindowSizeY + abs(offy) <= (InputSizeY-(RFSize-1))):
+    if (WindowSizeX + abs(offx) <= (InputSizeX - (RFSize - 1))) & (WindowSizeY + abs(offy) <= (InputSizeY - (RFSize - 1))):
         (y0, x0) = np.unravel_index(j, (WindowSizeY, WindowSizeX))
-        x0 = x0 + int((InputSizeX-WindowSizeX+1)/2) + offx
-        y0 = y0 + int((InputSizeY-WindowSizeY+1)/2) + offy
-        x =  (ix - x0)*np.cos(theta-np.pi/2) + (iy - y0)*np.sin(theta-np.pi/2)
-        y = -(ix - x0)*np.sin(theta-np.pi/2) + (iy - y0)*np.cos(theta-np.pi/2)
-        exponent = -(((x**2)/(2*sigmax**2)) + ((y**2)/(2*sigmay**2)))
-        res = exp(exponent)*np.cos(np.pi*x/freq)
-        res = res*(abs(ix - x0)<RFSize/2) *(abs(iy - y0)<RFSize/2)
+        x0 = x0 + int((InputSizeX - WindowSizeX + 1) / 2) + offx
+        y0 = y0 + int((InputSizeY - WindowSizeY + 1) / 2) + offy
+        x = (ix - x0) * np.cos(theta - np.pi / 2) + \
+            (iy - y0) * np.sin(theta - np.pi / 2)
+        y = -(ix - x0) * np.sin(theta - np.pi / 2) + \
+            (iy - y0) * np.cos(theta - np.pi / 2)
+        exponent = -(((x**2) / (2 * sigmax**2)) + ((y**2) / (2 * sigmay**2)))
+        res = exp(exponent) * np.cos(np.pi * x / freq)
+        res = res * (abs(ix - x0) < RFSize / 2) * (abs(iy - y0) < RFSize / 2)
         return res
     else:
         print("The kernel window it's bigger than InputSize-(RFSize-1)")

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Author: alpren, mmilde
 # @Date:   2017-07-27 10:46:44
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-09 17:23:11
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 14:42:30
 
 from brian2 import asarray
 from collections import OrderedDict
@@ -27,11 +27,11 @@ class BuildingBlock:
         name (str, required): Name of the building_block population
         neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
         params (TYPE): Description
-        standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
         synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
     """
 
-    def __init__(self, name, neuron_eq_builder, synapse_eq_builder, blockParams, debug, monitor=False):
+    def __init__(self, name, neuron_eq_builder, synapse_eq_builder, block_params, debug, monitor=False):
         """Summary
 
         Args:
@@ -45,12 +45,12 @@ class BuildingBlock:
         self.name = name
         self.neuron_eq_builder = neuron_eq_builder
         self.synapse_eq_builder = synapse_eq_builder
-        self.params = blockParams
+        self.params = block_params
         self.debug = debug
         self.Groups = {}
         self.Monitors = {}
         self.monitor = monitor
-        self.standaloneParams = OrderedDict()
+        self.standalone_params = OrderedDict()
 
     def __iter__(self):
         """this allows us to iterate over the BrianObjects and directly add the Block to a Network
@@ -71,6 +71,6 @@ class BuildingBlock:
             TYPE: Description
         """
         # asarray is to remove units. It is the way proposed in the tutorial
-        run_args = [str(asarray(self.standaloneParams[key]))
-                    for key in self.standaloneParams]
+        run_args = [str(asarray(self.standalone_params[key]))
+                    for key in self.standalone_params]
         return run_args

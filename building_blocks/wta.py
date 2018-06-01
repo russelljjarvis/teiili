@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-14 18:56:00
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 15:18:07
 
 """
 This files contains different WTA circuits
@@ -33,13 +33,6 @@ from NCSBrian2Lib.core.groups import Neurons, Connections
 from NCSBrian2Lib.models.neuron_models import DPI
 from NCSBrian2Lib.models.synapse_models import DPISyn
 
-app = QtGui.QApplication.instance()
-if app is None:
-    app = QtGui.QApplication(sys.argv)
-else:
-    print('QApplication instance already exists: %s' % str(app))
-
-
 wtaParams = {'weInpWTA': 1.5,
              'weWTAInh': 1,
              'wiInhWTA': -1,
@@ -62,7 +55,7 @@ class WTA(BuildingBlock):
         inputGroup (SpikeGenerator): SpikeGenerator obj. to stimulate WTA
         num_neurons (int, optional): Size of WTA neuron population
         spikemonWTA (TYPE): Description
-        standaloneParams (dict): Keys for all standalone parameters necessary for cpp code generation
+        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation
     '''
 
     def __init__(self, name,
@@ -109,7 +102,7 @@ class WTA(BuildingBlock):
                                monitor)
 
         if dimensions == 1:
-            self.Groups, self.Monitors, self.standaloneParams = gen1dWTA(name,
+            self.Groups, self.Monitors, self.standalone_params = gen1dWTA(name,
                                              neuron_eq_builder,
                                              synapse_eq_builder,
                                              num_neurons=num_neurons,
@@ -123,7 +116,7 @@ class WTA(BuildingBlock):
                                              spatial_kernel=spatial_kernel,
                                              **block_params)
         elif dimensions == 2:
-            self.Groups, self.Monitors, self.standaloneParams = gen2dWTA(name,
+            self.Groups, self.Monitors, self.standalone_params = gen2dWTA(name,
                                              neuron_eq_builder,
                                              synapse_eq_builder,
                                              num_neurons=num_neurons,
@@ -200,7 +193,7 @@ def gen1dWTA(groupname,
     Returns:
         Groups (dictionary): Keys to all neuron and synapse groups
         Monitors (dictionary): Keys to all spike- and statemonitors
-        standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
     """
     if spatial_kernel is None:
         spatial_kernel = "kernel_mexican_1d"
@@ -248,8 +241,8 @@ def gen1dWTA(groupname,
     synInhWTA1i.connect('True', p=IE_connection_probability)
     synInhInh1i.connect('True', p=II_connection_probability)
 
-    synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
-    synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(name='latWeight', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(name='latSigma', shared=True, constant=True)
 
     # set weights
     synInpWTA1e.weight = weInpWTA
@@ -292,7 +285,7 @@ def gen1dWTA(groupname,
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: weInpWTA, weWTAInh, wiInhWTA, weWTAWTA,rpWTA, rpInh,sigm
-    standaloneParams = {
+    standalone_params = {
         synInpWTA1e.name + '_weight': weInpWTA,
         synWTAInh1e.name + '_weight': weWTAInh,
         synInhWTA1i.name + '_weight': wiInhWTA,
@@ -310,7 +303,7 @@ def gen1dWTA(groupname,
         for key in Groups:
             print(key)
 
-    return Groups, Monitors, standaloneParams
+    return Groups, Monitors, standalone_params
 
 
 def gen2dWTA(groupname,
@@ -348,7 +341,7 @@ def gen2dWTA(groupname,
     Returns:
         Groups (dictionary): Keys to all neuron and synapse groups
         Monitors (dictionary): Keys to all spike- and statemonitors
-        standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
     '''
 
     if spatial_kernel is None:
@@ -407,8 +400,8 @@ def gen2dWTA(groupname,
     synInhWTA1i.connect('True', p=IE_connection_probability)
     synInhInh1i.connect('True', p=II_connection_probability)
 
-    synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
-    synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(name='latWeight', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(name='latSigma', shared=True, constant=True)
 
     # set weights
     synInpWTA1e.weight = weInpWTA
@@ -454,7 +447,7 @@ def gen2dWTA(groupname,
     # replacevars should be the real names of the parameters,
     # that can be changed by the arguments of this function:
     # in this case: weInpWTA, weWTAInh, wiInhWTA, weWTAWTA,rpWTA, rpInh,sigm
-    standaloneParams = {
+    standalone_params = {
         synInpWTA1e.name + '_weight': weInpWTA,
         synWTAInh1e.name + '_weight': weWTAInh,
         synInhWTA1i.name + '_weight': wiInhWTA,
@@ -473,7 +466,7 @@ def gen2dWTA(groupname,
         for key in Groups:
             print(key)
 
-    return Groups, Monitors, standaloneParams
+    return Groups, Monitors, standalone_params
 
 
 def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
@@ -487,6 +480,12 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
             Can be smaller than simulation time but not larger
         WTAMonitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors
     """
+    app = QtGui.QApplication.instance()
+    if app is None:
+        app = QtGui.QApplication(sys.argv)
+    else:
+        print('QApplication instance already exists: %s' % str(app))
+
     pg.setConfigOptions(antialias=True)
 
     win_raster = pg.GraphicsWindow(title='Winner-Take-All Test Simulation: Raster plots')
@@ -509,7 +508,6 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
                      num_neurons=WTAMonitors['spikemonWTAInh'].source.N, monitor=WTAMonitors['spikemonWTAInh'],
                      window=raster_inh)
 
-
     if plot_states:
         win_states = pg.GraphicsWindow(title='Winner-Take-All Test Simulation:State plots')
         win_states.resize(1000, 1800)
@@ -527,40 +525,3 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
                          variable="Iin", unit=pA, window=state_syn_input, name=name)
 
     app.exec()
-    #QtGui.QApplication.instance().exec_()
-
-    # fig = figure(figsize=(8, 3))
-    # plotSpikemon(start_time, end_time,
-    #              WTAMonitors['spikemonWTA'], num_neurons, ylab='ind WTA_' + name)
-    # fig = figure(figsize=(8, 3))
-    # plotSpikemon(start_time, end_time,
-    #              WTAMonitors['spikemonWTAInp'], None, ylab='ind WTAInp_' + name)
-    # fig = figure(figsize=(8, 3))
-    # plotSpikemon(start_time, end_time,
-    #              WTAMonitors['spikemonWTAInh'], None, ylab='ind WTAInh_' + name)
-    # # fig.savefig('fig/'+name+'_Spikes.png')
-
-    # if num_neurons > 20:
-    #     plot_state_neurons = range(20)
-    # else:
-    #     plot_state_neurons = range(num_neurons)
-
-    # statemonWTA = WTAMonitors['statemonWTA']
-    # if len(statemonWTA.t) > 0:
-    #     fig = figure(figsize=(8, 10))
-    #     nPlots = 3 * 100
-    #     subplot(nPlots + 11)
-    #     for ii in plot_state_neurons:
-    #         plotStatemon(start_time, end_time, statemonWTA,
-    #                      ii, variable='Imem', unit=pA, name=name)
-    #     subplot(nPlots + 12)
-    #     for ii in plot_state_neurons:
-    #         plotStatemon(start_time, end_time, statemonWTA,
-    #                      ii, variable='Iin', unit=pA, name=name)
-    #     # subplot(nPlots + 13)
-    #     # for ii in plot_state_neurons:
-    #     #     plotStatemon(start_time, end_time, statemonWTA,
-    #     #                  ii, variable='Ie1', unit=pA, name=name)
-    #     # fig.savefig('fig/'+name+'_States.png', dpi=300)
-    # plt.draw()
-    # plt.show()

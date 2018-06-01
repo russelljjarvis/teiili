@@ -6,8 +6,8 @@
 
 """ This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
 
-from NCSBrian2Lib.models.builder.neuron_equation_builder import NeuronEquationBuilder
-import NCSBrian2Lib.models
+from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+import teili.models
 import os
 
 
@@ -39,7 +39,7 @@ class DPI(NeuronEquationBuilder):
 
 if __name__ == '__main__':
 
-    path = os.path.dirname(os.path.realpath(NCSBrian2Lib.models.__file__))
+    path = os.path.dirname(os.path.realpath(teili.models.__file__))
 
     path = os.path.join(path, "equations")
     if not os.path.isdir(path):

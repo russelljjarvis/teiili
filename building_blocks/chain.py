@@ -12,11 +12,11 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, TimedArray,\
     defaultclock, SpikeGeneratorGroup
 
-from NCSBrian2Lib.models.neuron_models import ExpAdaptIF
-from NCSBrian2Lib.models.synapse_models import reversalSynV
+from teili.models.neuron_models import ExpAdaptIF
+from teili.models.synapse_models import reversalSynV
 
-from NCSBrian2Lib.BuildingBlocks.BuildingBlock import BuildingBlock
-from NCSBrian2Lib.Groups.Groups import Neurons, Connections
+from teili.BuildingBlocks.BuildingBlock import BuildingBlock
+from teili.Groups.Groups import Neurons, Connections
 #===============================================================================
 
 

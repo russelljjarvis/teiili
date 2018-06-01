@@ -7,34 +7,76 @@ Created on Wed May 30 13:43:45 2018
 
 This module provides generic functions that are not yet provided by brian2 including a cpp
 implementation.
-This is not to be confused with the synaptic kernels, that are for conectivity matrix generation.
+This is not to be confused with the synaptic kernels, that are for conectivity matrix generation (they could/should be used by those!).
 """
 from brian2 import implementation, check_units, declare_types
 import numpy as np
 
-
-# TODO: Add cpp implementation
 @implementation('cpp', '''
-                float gaussian2d(int square_size, int sigma, float mu) {
-                return None;
-                }
-                ''')
-@declare_types(nrows='integer', ncols='integer', sigma_x='float', sigma_y='float', rho='float', mu_x='float', mu_y='float', result='float')
-@check_units(nrows=1, ncols=1, sigma_x=1, sigma_y=1, mu_x=1, mu_y=1, rho=1, result=1)
-def normal2d_density(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None, mu_y=None):
-    """returns a 2d normal density distributuion array of size (nrows, ncols)
+    float normal2d_density(float dist_x, float dist_y, float sigma_x = 1.0, float sigma_y = 1.0, float rho = 0.0, bool normalized = True) {
+        float f1;
+        if (normalized)
+            f1 = (1.0 / (2.0 * M_PI * sigma_x * sigma_y * sqrt(1 - pow(rho,2))));
+        else
+            f1 = 1.0;
 
+            float f2 = -(1.0 / (2.0 * (1.0 - pow(rho,2))));
+            fxy = 2 * (dist_x / sigma_x) * (dist_y / sigma_y) * rho;
+            density = f1 * exp(f2 * (pow((dist_x / sigma_x),2) + pow((dist_y / sigma_y),2) - fxy));
+
+            float exponent = -(pow(x,2) + pow(y,2)) / (2 * pow(gsigma,2));
+            return density;
+    }
+                ''')
+@declare_types(dist_x='float', dist_y='float', sigma_x='float', sigma_y='float',
+               rho='float', result='float', normalized = 'boolean')
+@check_units(dist_x=1, dist_y=1, sigma_x=1, sigma_y=1, rho=1, normalized = 1, result=1)
+def normal2d_density(dist_x, dist_y, sigma_x=1, sigma_y=1, rho=0, normalized = True):
+    """
+    Args:
+        dist_x and _y (float, optional):  (x - mu_x) and (y - mu_y)
+        ncols, nrows (int): size of the output array
+        sigma_x and _y (float, optional): Standard deviations of gaussian distribution
+        rho (float, optional): correlation coefficient of the 2 variables
+    Returns:
+        TYPE: float
+        normal (probability) density at a specific distance to the mean (dist_x,dist_y) of a 2d distribution
+    """
+    if normalized:
+        f1 = (1 / (2 * np.pi * sigma_x * sigma_y * np.sqrt(1 - rho**2)))
+    else:
+        f1 = 1
+    f2 = -(1 / (2 * (1 - rho**2)))
+    fx = dist_x / sigma_x
+    fy = dist_y / sigma_y
+    fxy = 2 * fx * fy * rho
+    density = f1 * np.exp(f2 * (fx**2 + fy**2 - fxy))
+
+    return density
+
+
+
+
+
+# Did not add a cpp implementation, as we usually can't work with arrays anyway
+@implementation('numpy', discard_units=True)
+@declare_types(nrows='integer', ncols='integer', sigma_x='float', sigma_y='float', rho='float',
+               mu_x='float', mu_y='float', result='float', normalized = 'boolean')
+@check_units(nrows=1, ncols=1, sigma_x=1, sigma_y=1, mu_x=1, mu_y=1, rho=1, normalized = 1, result=1)
+def normal2d_density_array(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None, mu_y=None, normalized = True):
+    """returns a 2d normal density distributuion array of size (nrows, ncols)
 
     Args:
         ncols, nrows (int): size of the output array
         sigma_x and _y (float, optional): Standard deviations of gaussian distribution
         mu_x and _y (float, optional): Means of gaussian distribution
         rho (float, optional): correlation coefficient of the 2 variables
+        normalized (boolean, optional): If you set this to False, it will no longer be a
+            probability density with integral of one, but the max amplitude (in the middle of the bump) will be 1
 
     Returns:
         TYPE: Description
     """
-
     x = np.arange(0, nrows)
     y = np.reshape(np.arange(0, ncols), (ncols, 1))
     #y = x[:, np.newaxis]
@@ -44,20 +86,16 @@ def normal2d_density(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None, mu_y=
     if mu_y is None:
         mu_y = ncols // 2
 
-    #gaussian = np.exp(-((x - mu_x)**2 + (y - mu_y)**2) / (2 * sigma**2))
-    f1 = (1 / (2 * np.pi * sigma_x * sigma_y * np.sqrt(1 - rho**2)))
-    f2 = -(1 / (2 * (1 - rho**2)))
-    fx = (x - mu_x) / sigma_x
-    fy = (y - mu_y) / sigma_y
-    fxy = 2 * fx * fy * rho
-    density = f1 * np.exp(f2 * (fx**2 + fy**2 - fxy))
+    dist_x= (x - mu_x)
+    dist_y= (y - mu_y)
 
-    return density
+    return normal2d_density(dist_x, dist_y, sigma_x, sigma_y, rho, normalized)
+
 
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    img = normal2d_density(100, 100, 20, 10, 0.5)
+    img = normal2d_density_array(100, 100, 20, 10, 0.5)
     plt.figure()
     plt.imshow(img)
     plt.colorbar()

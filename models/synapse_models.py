@@ -7,8 +7,8 @@
 """This contains subclasses of SynapseEquationBuilder with predefined common parameters
 """
 import os
-from NCSBrian2Lib.models.builder.synapse_equation_builder import SynapseEquationBuilder
-import NCSBrian2Lib.models
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+import teili.models
 
 
 class ReversalSynV(SynapseEquationBuilder):
@@ -86,7 +86,7 @@ class StdpSynV(SynapseEquationBuilder):
 
 if __name__ == '__main__':
 
-    path = os.path.dirname(os.path.realpath(NCSBrian2Lib.models.__file__))
+    path = os.path.dirname(os.path.realpath(teili.models.__file__))
 
     path = os.path.join(path, "equations")
     if not os.path.isdir(path):

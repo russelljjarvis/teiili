@@ -21,16 +21,16 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs, Spi
     defaultclock, profiling_summary, codegen, size, pamp, pfarad, msecond
 #from brian2 import *
 
-from NCSBrian2Lib.building_blocks.sequence_learning import SequenceLearning
+from teili.building_blocks.sequence_learning import SequenceLearning
 
-from NCSBrian2Lib.models.neuron_models import ExpAdaptIF
-from NCSBrian2Lib.models.synapse_models import ReversalSynV
+from teili.models.neuron_models import ExpAdaptIF
+from teili.models.synapse_models import ReversalSynV
 
-from NCSBrian2Lib.models.parameters.exp_adapt_if_param import parameters as neuron_parameters
-from NCSBrian2Lib.models.parameters.exp_syn_param import parameters as syn_parameters
+from teili.models.parameters.exp_adapt_if_param import parameters as neuron_parameters
+from teili.models.parameters.exp_syn_param import parameters as syn_parameters
 
-from NCSBrian2Lib.tools.cpptools import build_cpp_and_replace, collect_standalone_params, run_standalone
-from NCSBrian2Lib.core.network import NCSNetwork
+from teili.tools.cpptools import build_cpp_and_replace, collect_standalone_params, run_standalone
+from teili.core.network import NCSNetwork
 
 standaloneDir = os.path.expanduser('~/SL_standalone')
 #isStandalone = True

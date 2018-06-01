@@ -15,8 +15,8 @@ from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
     ylabel, xlabel, xlim, ylim, figure, Group, Subgroup
 from collections import OrderedDict
 
-from NCSBrian2Lib.models import neuron_models
-from NCSBrian2Lib.models import synapse_models
+from teili.models import neuron_models
+from teili.models import synapse_models
 
 
 class NCSGroup(Group):
@@ -256,7 +256,7 @@ class Connections(Synapses, NCSGroup):
     Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters
 
     Attributes:
-        equation_builder (NCSBrian2Lib): Class which builds the synapse model
+        equation_builder (teili): Class which builds the synapse model
         input_number (int): Number of input to post synatic neuron. This variable takes care of the summed
             issue present in brian2
         parameters (dict): Dictionary of parameter keys and values of the synapse model.
@@ -324,7 +324,7 @@ class Connections(Synapses, NCSGroup):
             if input_number is not None:
                 self.input_number = input_number
             else:
-                warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for ' +
+                warnings.warn('you seem to use brian2 NeuronGroups instead of teili Neurons for ' +
                               str(target.name) + ', therefore, please specify an input_number yourself')
                 raise e
 

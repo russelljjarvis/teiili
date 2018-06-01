@@ -7,13 +7,13 @@ Created on Wed Mar 14 15:43:12 2018
 """
 import numpy as np
 from brian2 import us, ms
-from NCSBrian2Lib.tools.plotter2d import Plotter2d
+from teili.tools.plotter2d import Plotter2d
 from matplotlib import pyplot as plt
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 app = QtGui.QApplication([])
 
-from NCSBrian2Lib.stimuli.testbench import Visualize
+from teili.stimuli.testbench import Visualize
 import tkinter as tk
 from tkinter import filedialog
 root = tk.Tk()

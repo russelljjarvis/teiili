@@ -21,17 +21,17 @@ from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
 
 
-import NCSBrian2Lib.tools.synaptic_kernel
-from NCSBrian2Lib.tools.misc import print_states
-from NCSBrian2Lib.tools.distance import  dist1d2dint
-from NCSBrian2Lib.tools.indexing import ind2x, ind2y
-from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
+import teili.tools.synaptic_kernel
+from teili.tools.misc import print_states
+from teili.tools.distance import  dist1d2dint
+from teili.tools.indexing import ind2x, ind2y
+from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 
-from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
-from NCSBrian2Lib.core.groups import Neurons, Connections
+from teili.building_blocks.building_block import BuildingBlock
+from teili.core.groups import Neurons, Connections
 
-from NCSBrian2Lib.models.neuron_models import DPI
-from NCSBrian2Lib.models.synapse_models import DPISyn
+from teili.models.neuron_models import DPI
+from teili.models.synapse_models import DPISyn
 
 wtaParams = {'weInpWTA': 1.5,
              'weWTAInh': 1,
@@ -198,7 +198,7 @@ def gen1dWTA(groupname,
     if spatial_kernel is None:
         spatial_kernel = "kernel_mexican_1d"
 
-    spatial_kernel_func = getattr(NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)
+    spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
     # time measurement
     start = time.clock()
 
@@ -347,7 +347,7 @@ def gen2dWTA(groupname,
     if spatial_kernel is None:
         spatial_kernel = "kernel_mexican_2d"
 
-    spatial_kernel_func = getattr(NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)
+    spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
     # time measurement
     start = time.clock()
 

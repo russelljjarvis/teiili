@@ -11,7 +11,7 @@
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
     figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel, device
 import numpy as np
-from NCSBrian2Lib.tools.indexing import ind2xy
+from teili.tools.indexing import ind2xy
 
 
 # This function is a workaround to allow if statements in run_regularly code

@@ -1,4 +1,4 @@
-# NCSBrian2Lib
+# teili
 
 This library was made to facilitate your Brian2 simulations
 
@@ -24,10 +24,10 @@ Please look at the Examples here: https://code.ini.uzh.ch/ncs/NCSBrian2Examples
     conda install brian2
     ```
 
-* Add the NCSBrian2Lib to the PYTHONPATH
+* Add the teili to the PYTHONPATH
     You can add the following line to your `~/.bashrc`<sup>1</sup>:
     ```
-    export PYTHONPATH=$PYTHONPATH:"/path/to/parent_folder/of/NCSBrian2Lib"
+    export PYTHONPATH=$PYTHONPATH:"/path/to/parent_folder/of/teili"
     ```
 
 <sup>1</sup> or type it on the terminal window that you are using.
@@ -40,7 +40,7 @@ otherwise, Windows works fine
 ### Usage
 
 ```
-from NCSBrian2Lib import Neurons, Connections
+from teili import Neurons, Connections
 
 # how to create a Neuron
 Neuron1 = Neurons(numNeurons, NeuronEquation, NeuronParams,

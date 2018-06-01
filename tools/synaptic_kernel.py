@@ -18,7 +18,7 @@ For cpp, we would have to make sure, that the used functions are known.
 
 import numpy as np
 from brian2 import implementation, check_units, exp, declare_types
-from NCSBrian2Lib.tools.indexing import ind2xy  # , xy2ind, ind2x, ind2y
+from teili.tools.indexing import ind2xy  # , xy2ind, ind2x, ind2y
 
 
 @implementation('cpp', '''

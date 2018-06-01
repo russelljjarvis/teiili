@@ -11,8 +11,8 @@ The idea is to test certain aspects of you network with common stimuli.
 """
 from brian2 import SpikeGeneratorGroup, PoissonGroup
 from brian2 import ms, Hz
-from NCSBrian2Lib.tools.converter import dvs2ind, aedat2numpy
-from NCSBrian2Lib.tools.indexing import xy2ind, ind2xy
+from teili.tools.converter import dvs2ind, aedat2numpy
+from teili.tools.indexing import xy2ind, ind2xy
 import numpy as np
 import os
 import operator
@@ -105,7 +105,7 @@ class OCTA_Testbench():
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
 
     def aedat2events(self, rec, camera='DVS128'):
-        """Wrapper function of the original aedat2numpy function in NCSBrian2Lib.tools.converter.
+        """Wrapper function of the original aedat2numpy function in teili.tools.converter.
         This funcion will save events for later usage and will directly return them if no
         SpikeGeneratorGroup is needed.
 

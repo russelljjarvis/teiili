@@ -1,26 +1,26 @@
 #first import all the tools
-from NCSBrian2Lib.tools.converter import *
-from NCSBrian2Lib.tools.cpptools import *
-from NCSBrian2Lib.tools.indexing import *
-from NCSBrian2Lib.tools.misc import *
-from NCSBrian2Lib.tools.plotting import *
-from NCSBrian2Lib.tools.synaptic_kernel import *
+from teili.tools.converter import *
+from teili.tools.cpptools import *
+from teili.tools.indexing import *
+from teili.tools.misc import *
+from teili.tools.plotting import *
+from teili.tools.synaptic_kernel import *
 
-from NCSBrian2Lib.models.parameters import constants
+from teili.models.parameters import constants
 
 # then the core modules
-from NCSBrian2Lib.core.groups import *
-from NCSBrian2Lib.core.network import *
+from teili.core.groups import *
+from teili.core.network import *
 
 
-from NCSBrian2Lib.models.builder.neuron_equation_builder import *
-from NCSBrian2Lib.models.builder.synapse_equation_builder import *
+from teili.models.builder.neuron_equation_builder import *
+from teili.models.builder.synapse_equation_builder import *
 
 # At some point we also might want to import the building blocks
-# from NCSBrian2Lib.building_blocks.building_block import *
-# from NCSBrian2Lib.building_blocks.chain import *
-# from NCSBrian2Lib.building_blocks.sequence_learning import *
-# from NCSBrian2Lib.building_blocks.wta import *
+# from teili.building_blocks.building_block import *
+# from teili.building_blocks.chain import *
+# from teili.building_blocks.sequence_learning import *
+# from teili.building_blocks.wta import *
 
 
 

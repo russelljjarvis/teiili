@@ -9,7 +9,7 @@
 
 from brian2 import implementation, check_units, declare_types
 import numpy as np
-from NCSBrian2Lib.tools.indexing import ind2xy
+from teili.tools.indexing import ind2xy
 
 
 @implementation('cpp', '''

@@ -15,8 +15,8 @@ It also provides a function to add lines to the model
 import os
 import importlib
 from brian2 import pF, nS, mV, ms, pA, nA
-from NCSBrian2Lib.models.builder.combine import combine_syn_dict
-from NCSBrian2Lib.models.builder.templates.synapse_templates import modes, kernels, plasticity_models,\
+from teili.models.builder.combine import combine_syn_dict
+from teili.models.builder.templates.synapse_templates import modes, kernels, plasticity_models,\
     current_parameters, conductance_parameters, DPI_parameters, DPI_shunt_parameters
 
 

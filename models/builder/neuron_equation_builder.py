@@ -16,8 +16,8 @@ import os
 import importlib
 import re
 from brian2 import pF, nS, mV, ms, pA, nA
-from NCSBrian2Lib.models.builder.combine import combine_neu_dict
-from NCSBrian2Lib.models.builder.templates.neuron_templates import modes, current_equation_sets, voltage_equation_sets, \
+from teili.models.builder.combine import combine_neu_dict
+from teili.models.builder.templates.neuron_templates import modes, current_equation_sets, voltage_equation_sets, \
     current_parameters, voltage_parameters
 
 

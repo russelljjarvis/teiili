@@ -9,7 +9,7 @@ This file contains unittest for testbench.py
 
 import unittest
 import numpy as np
-from NCSBrian2Lib.stimuli.testbench import OCTA_Testbench, STDP_Testbench
+from teili.stimuli.testbench import OCTA_Testbench, STDP_Testbench
 
 octa_testbench = OCTA_Testbench()
 stdp_testbench = STDP_Testbench()

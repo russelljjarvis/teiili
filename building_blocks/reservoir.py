@@ -19,14 +19,14 @@ import pyqtgraph as pg
 from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
 
-import NCSBrian2Lib.tools.synaptic_kernel
-from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
+import teili.tools.synaptic_kernel
+from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 
-from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
-from NCSBrian2Lib.core.groups import Neurons, Connections
+from teili.building_blocks.building_block import BuildingBlock
+from teili.core.groups import Neurons, Connections
 
-from NCSBrian2Lib.models.neuron_models import ExpAdaptIF
-from NCSBrian2Lib.models.synapse_models import reversalSynV
+from teili.models.neuron_models import ExpAdaptIF
+from teili.models.synapse_models import reversalSynV
 
 reservor_params = {'weInpR': 1.5,
                    'weRInh': 1,
@@ -165,7 +165,7 @@ def gen_reservoir(groupname,
         spatial_kernel = "kernel_mexican_1d"
 
     spatial_kernel_func = getattr(
-        NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)
+        teili.tools.synaptic_kernel, spatial_kernel)
 
     # create neuron groups
     gRGroup = Neurons(num_neurons,

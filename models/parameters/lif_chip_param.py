@@ -1,5 +1,5 @@
 from brian2 import pF, nS, mV, ms, pA, nA
-from NCSBrian2Lib import constants
+from teili import constants
 
 parameters = {"kn": constants.KAPPA_N,
               "kp": constants.KAPPA_P,

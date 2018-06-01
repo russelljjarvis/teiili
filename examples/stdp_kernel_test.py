@@ -16,8 +16,8 @@ import pyqtgraph.exporters
 import matplotlib.pyplot as plt
 import numpy as np
 
-from NCSBrian2Lib.core.groups import Neurons, Connections
-from NCSBrian2Lib.models.synapse_models import DPIstdp
+from teili.core.groups import Neurons, Connections
+from teili.models.synapse_models import DPIstdp
 
 prefs.codegen.target = "numpy"
 visualization_backend = 'pyqt'  # Or set it to 'pyplot' to use matplotlib.pyplot to plot

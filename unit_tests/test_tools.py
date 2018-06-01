@@ -10,7 +10,7 @@ This file contains unittest for tools.py
 import unittest
 import numpy as np
 import os
-from NCSBrian2Lib.tools import indexing, converter, misc, synaptic_kernel
+from teili.tools import indexing, converter, misc, synaptic_kernel
 
 
 class TestTools(unittest.TestCase):

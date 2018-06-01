@@ -18,9 +18,9 @@ import pprint
 
 from brian2 import Network, second, device, get_device, ms, all_devices
 from brian2 import SpikeMonitor, StateMonitor, NeuronGroup, Synapses
-from NCSBrian2Lib.tools.cpptools import build_cpp_and_replace,\
+from teili.tools.cpptools import build_cpp_and_replace,\
     print_dict, params2run_args
-from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
+from teili.building_blocks.building_block import BuildingBlock
 
 
 class NCSNetwork(Network):

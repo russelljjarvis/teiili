@@ -129,14 +129,14 @@ def combine_syn_dict(eq_templ, param_templ):
     return {'model': model, 'on_pre': on_pre, 'on_post': on_post, 'parameters': params}
 
 
-def var_replacer(firstEq, secondEq, params):
+def var_replacer(first_eq, second_eq, params):
 
     """Function to delete variables from equations and parameters.
-    It works with couples of strings and a dict of parameters: firstEq, secondEq and params
-    It search for every line in secondEq for the special character '%' removing it,
+    It works with couples of strings and a dict of parameters: first_eq, second_eq and params
+    It search for every line in second_eq for the special character '%' removing it,
     and then search the variable (even if in differential form '%dx/dt') and erease
     every line in fisrEq starting with that variable.(every explicit equation)
-    If the character '=' or ':' is not in the line containing the variable in secondEq
+    If the character '=' or ':' is not in the line containing the variable in second_eq
     the entire line would be ereased.
     Ex:
         '%x = theta' --> 'x = theta'
@@ -145,26 +145,26 @@ def var_replacer(firstEq, secondEq, params):
     compute by writing '%[variable]' in the other equation blocks.
 
     Args:
-        firstEq (string): The first subset of equation that we want to expand or
+        first_eq (string): The first subset of equation that we want to expand or
             overwrite .
-        secondEq (string): The second subset of equation wich will be added to firstEq
+        second_eq (string): The second subset of equation wich will be added to first_eq
             It also contains '%' for overwriting or ereasing lines in
-            firstEq.
-        parameters (dict): The parameter dictionary of the firstEq, var_replacer
+            first_eq.
+        parameters (dict): The parameter dictionary of the first_eq, var_replacer
         will remove any variable deleted or replaced with the special character
         '%'
 
     Returns:
-        resultfirstEq: The first eq string containing the replaced variable eqs
-        resultsecondEq:  The second eq string without the lines containing the
+        result_first_eq: The first eq string containing the replaced variable eqs
+        result_second_eq:  The second eq string without the lines containing the
             special charachter '%'
         params: The parameter dictionary not containing the removed/replaced variable
     """
 
-    resultfirstEq = firstEq.splitlines()
-    resultsecondEq = secondEq.splitlines()
+    result_first_eq = first_eq.splitlines()
+    result_second_eq = second_eq.splitlines()
 
-    for k, line in enumerate(secondEq.splitlines()):
+    for k, line in enumerate(second_eq.splitlines()):
         if '%' in line:  # if the replace character '%' is found, extract the variable
             var = line.split('%', 1)[1].split()[0]
             line = line.replace("%", "")
@@ -172,26 +172,26 @@ def var_replacer(firstEq, secondEq, params):
                 var = var.split('/', 1)[0][1:]
             diffvar = 'd' + var + '/dt'
 
-            for kk, line2 in enumerate(firstEq.splitlines()):
+            for kk, line2 in enumerate(first_eq.splitlines()):
                 # now look for the variable in the equation lines extracted from
-                # firstEq
+                # first_eq
                 if (var in line2) or (diffvar in line2):
                     # if i found a variable i need to check then if it's in explicit form
                     # meaning it's followed by ":" or "="
                     # e.g. "var = x+1"  or "var : 1"
                     if ((var == line2.replace(':', '=').split('=', 1)[0].split()[0]) or
                     (diffvar in line2.replace(':', '=').split('=', 1)[0].split()[0])):
-                        resultfirstEq[kk] = line
+                        result_first_eq[kk] = line
 
-            #after replacing the "%" flagged line in the resultfirstEq
-            #remove that line from the resultsecondEq
-            resultsecondEq[k] = ""
+            #after replacing the "%" flagged line in the result_first_eq
+            #remove that line from the result_second_eq
+            result_second_eq[k] = ""
             try:
                 params.pop(var)
             except KeyError:
                 pass
 
-    resultfirstEq = "\n".join(resultfirstEq)
-    resultsecondEq = "\n".join(resultsecondEq)
+    result_first_eq = "\n".join(result_first_eq)
+    result_second_eq = "\n".join(result_second_eq)
 
-    return resultfirstEq, resultsecondEq, params
+    return result_first_eq, result_second_eq, params

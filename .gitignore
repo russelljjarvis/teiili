@@ -104,4 +104,4 @@ ENV/
 *.gif
 *.svg
 
-.models/equations/
+models/equations/

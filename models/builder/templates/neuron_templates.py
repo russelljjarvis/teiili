@@ -8,14 +8,14 @@ Modules:
     currentParameters (TYPE): Description
     i_a (TYPE): Description
     i_ahp (TYPE): Description
-    i_ahpPara (TYPE): Description
-    i_aPara (TYPE): Description
-    i_exponentialPara (TYPE): Description
+    i_ahp_params (TYPE): Description
+    i_a_params (TYPE): Description
+    i_exponential_params (TYPE): Description
     i_model_template (TYPE): Description
-    i_model_templatePara (TYPE): Description
+    i_model_template_params (TYPE): Description
     i_noise (TYPE): Description
-    i_noisePara (TYPE): Description
-    i_nonLeakyPara (TYPE): Description
+    i_noise_params (TYPE): Description
+    i_non_leaky_params (TYPE): Description
     modes (TYPE): Description
     none (TYPE): Description
     nonePara (dict): Description
@@ -165,7 +165,7 @@ i_model_template = {'model': '''
                     'threshold': "Imem > Ispkthr",
                     'reset': "Imem = Ireset;"}
 
-i_model_templatePara = {
+i_model_template_params = {
     #--------------------------------------------------------
     # Default equations disabled
     #--------------------------------------------------------
@@ -223,7 +223,7 @@ i_noise = {'model': """
            'threshold': '',
            'reset': ''}
 
-i_noisePara = {"mu": 0.25 * pA,
+i_noise_params = {"mu": 0.25 * pA,
                "sigma": 0.1 * pA}
 
 # feedback
@@ -238,7 +238,7 @@ i_a = {'model': """
        'threshold': '',
        'reset': ''}
 
-i_aPara = {"Iath": 0.5 * nA,
+i_a_params = {"Iath": 0.5 * nA,
            "Iagain": 50. * pA,
            "Ianorm": 10. * pA}
 
@@ -257,36 +257,36 @@ i_ahp = {'model': """
                   Iahp += Iahpmax;
                   '''}
 
-i_ahpPara = {"Itauahp": 1 * pA,
+i_ahp_params = {"Itauahp": 1 * pA,
              "Ithahp": 1 * pA,
              "Ica": 2 * pA,
              "Cahp": 1 * pF}
 
 
-i_exponentialPara = {"Ith": 0.9 * pA,
+i_exponential_params = {"Ith": 0.9 * pA,
                      "Iath": 0.5 * nA,
                      "Iagain": 50 * pA,
                      "Ianorm": 10 * pA,
                      "Itau": 8 * pA}
 
-i_nonLeakyPara = {"Itau": 0.5 * pA}
+i_non_leaky_params = {"Itau": 0.5 * pA}
 
 nonePara = {}
 
 modes = {'current': i_model_template, 'voltage': v_model_template}
 
-currentEquationsets = {'calciumFeedback': i_ahp, 'exponential': i_a,
-                       'leaky': none, 'non-leaky': none,
-                       'spatial': spatial, 'gaussianNoise': i_noise, 'none': none, 'linear': none}
+current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
+                       'leaky': none, 'non_leaky': none,
+                       'spatial': spatial, 'gaussian_noise': i_noise, 'none': none, 'linear': none}
 
-voltageEquationsets = {'calciumFeedback': v_adapt, 'exponential': v_expCurrent,
-                       'leaky': v_leak, 'non-leaky': none,
-                       'spatial': spatial, 'gaussianNoise': v_noise, 'none': none, 'linear': none}
+voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_expCurrent,
+                       'leaky': v_leak, 'non_leaky': none,
+                       'spatial': spatial, 'gaussian_noise': v_noise, 'none': none, 'linear': none}
 
-currentParameters = {'current': i_model_templatePara, 'calciumFeedback': i_ahpPara,
-                     'exponential': i_exponentialPara, 'leaky': nonePara, 'non-leaky': i_nonLeakyPara,
-                     'spatial': nonePara, 'gaussianNoise': i_noisePara, 'none': nonePara, 'linear': nonePara}
+current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
+                     'exponential': i_exponential_params, 'leaky': nonePara, 'non_leaky': i_non_leaky_params,
+                     'spatial': nonePara, 'gaussian_noise': i_noise_params, 'none': nonePara, 'linear': nonePara}
 
-voltageParameters = {'voltage': v_model_templatePara, 'calciumFeedback': nonePara,
-                     'exponential': nonePara, 'leaky': nonePara, 'non-leaky': nonePara,
-                     'spatial': nonePara, 'gaussianNoise': nonePara, 'none': nonePara, 'linear': nonePara}
+voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': nonePara,
+                     'exponential': nonePara, 'leaky': nonePara, 'non_leaky': nonePara,
+                     'spatial': nonePara, 'gaussian_noise': nonePara, 'none': nonePara, 'linear': nonePara}

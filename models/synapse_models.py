@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 # @Author: mrax, mmilde
 # @Date:   2017-12-27 10:46:44
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-28 18:58:41
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 12:32:31
 
 """This contains subclasses of SynapseEquationBuilder with predefined common parameters
 """
 import os
 from NCSBrian2Lib.models.builder.synapse_equation_builder import SynapseEquationBuilder
+import NCSBrian2Lib.models
 
 
 class ReversalSynV(SynapseEquationBuilder):
@@ -17,7 +18,7 @@ class ReversalSynV(SynapseEquationBuilder):
         """This class provides you with all equations to simulate synapses with reversal
         potential.
         """
-        SynapseEquationBuilder.__init__(self, model=None, baseUnit='conductance',
+        SynapseEquationBuilder.__init__(self, baseUnit='conductance',
                                         kernel='exponential', plasticity='nonplastic')
 
 
@@ -28,7 +29,7 @@ class BraderFusiSynapses(SynapseEquationBuilder):
         """This class provides you with all equations to simulate a bistable Brader-Fusi synapse
         as published in Brader and Fusi 2007
         """
-        SynapseEquationBuilder.__init__(self, model=None, baseUnit='current',
+        SynapseEquationBuilder.__init__(self, baseUnit='current',
                                         kernel='exponential', plasticity='fusi')
 
 
@@ -39,7 +40,18 @@ class DPISyn(SynapseEquationBuilder):
         """This class provides you with all equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014
         """
-        SynapseEquationBuilder.__init__(self, model=None, baseUnit='DPI',
+        SynapseEquationBuilder.__init__(self, baseUnit='DPI',
+                                        plasticity='nonplastic')
+
+
+class DPIShunt(SynapseEquationBuilder):
+    """"""
+
+    def __init__(self):
+        """This class provides you with all equations to simulate a Differential Pair
+        Integrator (DPI) synapse as published in Chicca et al. 2014
+        """
+        SynapseEquationBuilder.__init__(self, baseUnit='DPIShunting',
                                         plasticity='nonplastic')
 
 
@@ -54,7 +66,7 @@ class DPIstdp(SynapseEquationBuilder):
         and Song and Abbott (2001). Also see another example at:
         https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
         """
-        SynapseEquationBuilder.__init__(self, model=None, baseUnit='DPI',
+        SynapseEquationBuilder.__init__(self, baseUnit='DPI',
                                         plasticity='stdp')
 
 
@@ -68,7 +80,7 @@ class StdpSynV(SynapseEquationBuilder):
         Also see another example at:
         https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
         """
-        SynapseEquationBuilder.__init__(self, model=None, baseUnit='conductance',
+        SynapseEquationBuilder.__init__(self, baseUnit='conductance',
                                         kernel='exponential', plasticity='stdp')
 
 
@@ -88,6 +100,9 @@ if __name__ == '__main__':
 
     DPISyn = DPISyn()
     DPISyn.exporteq(os.path.join(path, "DPISyn"))
+
+    DPIShunt = DPIShunt()
+    DPIShunt.exporteq(os.path.join(path, "DPIShunt"))
 
     DPIstdp = DPIstdp()
     DPIstdp.exporteq(os.path.join(path, "DPIstdp"))

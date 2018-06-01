@@ -9,6 +9,7 @@ Collections of functions which convert indices to x, y coordinates and vice vers
 from brian2 import implementation, check_units, declare_types
 import numpy as np
 
+
 @implementation('cpp', '''
     inline int xy2ind(int x, int y, int nrows, int ncols) {
     ind = x*ncols+y
@@ -35,8 +36,8 @@ def xy2ind(x, y, nrows, ncols):
     Returns:
         ind (int): Converted index (e.g. flattened array)
     """
-    return np.ravel_multi_index((x,y),(nrows,ncols))
-    #return x*ncols+y
+    return np.ravel_multi_index((x, y), (nrows, ncols))
+    # return x*ncols+y
 
 
 @implementation('cpp', '''
@@ -61,7 +62,7 @@ def ind2x(ind, nrows, ncols):
         x (int): The x coordinate of the respective index in the unflattened array
     """
     return np.unravel_index(ind, (nrows, ncols))[0]
-    #return int(ind/ncols)
+    # return int(ind/ncols)
 
 
 @implementation('cpp', '''
@@ -86,7 +87,7 @@ def ind2y(ind, nrows, ncols):
         y (int): The y coordinate of the respective index in the unflattened array
     """
     return np.unravel_index(ind, (nrows, ncols))[1]
-    #return int(ind%ncols)
+    # return int(ind%ncols)
 
 
 @implementation('numpy', discard_units=True)
@@ -108,16 +109,10 @@ def ind2xy(ind, nrows, ncols):
         tuple (x, y): The corresponding x, y coordinates
     """
     return np.unravel_index(ind, (nrows, ncols))
-    #return (int(ind/ncols), int(ind%ncols))
+    # return (int(ind/ncols), int(ind%ncols))
 
 
-
-
-
-
-
-
-#TODO: make this consistent with the other functions in this module! (or maybe it is not at the right place here)
+# TODO: make this consistent with the other functions in this module! (or maybe it is not at the right place here)
 @implementation('numpy', discard_units=True)
 @declare_types(ind='integer', ts='integer', pol='boolean', n2dNeurons='integer', result='integer')
 @check_units(ind=1, ts=1, pol=1, n2dNeurons=1, result=1)

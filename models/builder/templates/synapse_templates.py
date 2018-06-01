@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# @Author: Moritz Milde
+# @Date:   2018-06-01 11:57:02
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 12:29:39
+
 """This file contains dictionaries of neuron synapse or modules,
    combined by the synapse equation builder.
 
@@ -35,14 +40,14 @@ Modules:
     template (TYPE): Description
 """
 from brian2 import pF, nS, mV, ms, pA, nA, volt, second
-
+'''
 ##########################################################################
 #######_____TEMPLATE MODEL AND PARAMETERS_____############################
 ##########################################################################
 
-
-# none model is useful when adding exponential kernel and nonplasticity at
-# the synapse as they already present in the template model
+none model is useful when adding exponential kernel and nonplasticity at
+the synapse as they already present in the template model
+'''
 none = {'model': ''' ''', 'on_pre': ''' ''', 'on_post': ''' '''}
 
 
@@ -91,6 +96,9 @@ conductance = {'model': '''
 
                Ie_syn = gIe*(EIe - Vm_post) : amp
                Ii_syn = gIi*(EIi - Vm_post) : amp
+
+               Ie{inputnumber}_post = Ie_syn : amp (summed)
+               Ii{inputnumber}_post = -Ii_syn : amp (summed)
 
                EIe : volt (shared,constant)             # excitatory reversal potential
                EIi : volt (shared,constant)             # inhibitory reversal potential
@@ -195,27 +203,76 @@ DpiPara = {
     'baseweight_i': 50. * pA
 }
 
+# DPI shunting inhibition
+Dpi_shunt = {'model': """
+            dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
 
+            Ishunt{inputnumber}_post = -Ii_syn : amp  (summed)
+
+            weight : 1
+            w_plast : 1
+
+            Ii_gain = Io_syn*(Ii_syn<=Io_syn) + Ii_th*(Ii_syn>Io_syn) : amp
+
+            Itau_i = Io_syn*(Ii_syn<=Io_syn) + Ii_tau*(Ii_syn>Io_syn) : amp
+
+            baseweight_i : amp (constant)     # synaptic gain
+            tausyni = Csyn * Ut_syn /(kappa_syn * Itau_i) : second
+            kappa_syn = (kn_syn + kp_syn) / 2 : 1
+
+
+            Iw_i = weight*baseweight_i  : amp
+
+            Ii_tau       : amp (constant)
+            Ii_th        : amp (constant)
+            kn_syn       : 1 (constant)
+            kp_syn       : 1 (constant)
+            Ut_syn       : volt (constant)
+            Io_syn       : amp (constant)
+            Csyn         : farad (constant)
+            """,
+             'on_pre': """
+             Ii_syn += Iw_i*w_plast*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
+              """,
+             'on_post': """ """
+             }
+
+Dpi_shunt_para = {
+    'Csyn': 1.5 * pF,
+    'Io_syn': 0.5 * pA,
+    'Ii_tau': 10. * pA,
+    'Ut_syn': 25. * mV,
+    'baseweight_i': 50. * pA,
+    'kn_syn': 0.75,
+    'kp_syn': 0.66,
+    'wPlast': 1,
+    'Ii_th': 10 * pA,
+    'Ii_syn': 0.5 * pA
+}
+
+
+'''
 ##########################################################################
 #######_____ADDITIONAL EQUATIONS BLOCKS AND PARAMETERS_____###############
 ##########################################################################
-# Every block must specifies additional model, pre and post spike equations, as well as
-# two different sets (dictionaries) of parameters for conductance based
-# models or current models
+Every block must specifies additional model, pre and post spike equations, as well as
+two different sets (dictionaries) of parameters for conductance based
+models or current models
 
-# If you want to ovverride an equation add '%' before the variable of your
-# block's explicit equation
+If you want to override an equation add '%' before the variable of your
+block's explicit equation
 
-# example:  Let's say we have the simplest model (current one with template equation),
-# and you're implementing a new block with this explicit equation : d{synvar_e}/dt = (-{synvar_e})**2 / synvar_e,
-# if you want to override the equation already declared in the template: d{synvar_e}/dt = (-{synvar_e}) / tausyne + kernel_e:
-# your equation will be : %d{synvar_e}/dt = (-{synvar_e})**2 / synvar_e
+example:  Let's say we have the simplest model (current one with template equation),
+and you're implementing a new block with this explicit equation : d{synvar_e}/dt = (-{synvar_e})**2 / synvar_e,
+if you want to override the equation already declared in the template: d{synvar_e}/dt = (-{synvar_e}) / tausyne + kernel_e:
+your equation will be : %d{synvar_e}/dt = (-{synvar_e})**2 / synvar_e
 
 
-########_____Plasticity Blocks_____#######################################
-# you need to declare two set of parameters for every block : (one for
-# current based models and one for conductance based models)
+Plasticity Blocks:
 
+you need to declare two set of parameters for every block : (one for
+current based models and one for conductance based models)
+'''
 # Fusi learning rule ##
 fusi = {'model': '''
       dCa/dt = (-Ca/tau_ca) : volt (event-driven) #Calcium Potential
@@ -320,13 +377,14 @@ stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to rep
                         "diffApre": 0.01,
                         "Q_diffAPrePost": 1.05,
                         "w_plast": 0}
+'''
+Kernels Blocks:
 
-########_____Kernels Blocks_____##########################################
-# you need to declare two set of parameters for every block : (one for
-# current based models and one for conductance based models)
+you need to declare two set of parameters for every block : (one for
+current based models and one for conductance based models)
 
-# TODO: THESE KERNELS ARE WRONG!
-
+TODO: THESE KERNELS ARE WRONG!
+'''
 # Alpha kernel ##
 
 alphakernel = {'model': '''
@@ -409,12 +467,14 @@ gaussianPara_conductance = {"sigma_gaussian_e": 6 * ms,
 
 nonePara = {}
 
+'''
+Dictionary of keywords:
 
-########_____Dictionary of keywords_____##################################
-# These dictionaries contains keyword and models and parameters names useful for the __init__ subroutine
-# Every new block dictionaries must be added to these definitions
-
-modes = {'current': current, 'conductance': conductance, 'DPI': Dpi}
+These dictionaries contains keyword and models and parameters names useful for the __init__ subroutine
+Every new block dictionaries must be added to these definitions
+'''
+modes = {'current': current, 'conductance': conductance,
+         'DPI': Dpi, 'DPIShunting': Dpi_shunt}
 
 kernels = {'exponential': none, 'alpha': alphakernel,
            'resonant': resonantkernel, 'gaussian': gaussiankernel}
@@ -433,3 +493,6 @@ conductance_Parameters = {'conductance': conductancePara, 'nonplastic': nonePara
 
 DPI_Parameters = {'DPI': DpiPara, 'exponential': nonePara, 'nonplastic': nonePara,
                   'fusi': fusiPara_current, 'stdp': stdpPara_current}
+
+DPI_shunt_Parameters = {'DPIShunting': Dpi_shunt_para, 'exponential': nonePara, 'nonplastic': nonePara,
+                        'fusi': fusiPara_current, 'stdp': stdpPara_current}

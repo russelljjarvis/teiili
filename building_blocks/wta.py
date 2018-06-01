@@ -210,12 +210,10 @@ def gen1dWTA(groupname,
     start = time.clock()
 
     # create neuron groups
-    gWTAGroup = Neurons(num_neurons, equation_builder=neuron_eq_builder(),
-                        refractory=rpWTA, name='g' + groupname,
-                        num_inputs=3 + num_inputs)
-    gWTAInhGroup = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(),
-                           refractory=rpInh, name='g' + groupname + '_Inh',
-                           num_inputs=2)
+    gWTAGroup = Neurons(num_neurons, equation_builder=neuron_eq_builder(num_inputs=3 + num_inputs),
+                        refractory=rpWTA, name='g' + groupname)
+    gWTAInhGroup = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(num_inputs=2),
+                           refractory=rpInh, name='g' + groupname + '_Inh')
 
     if num_input_neurons is None:
         num_input_neurons = num_neurons
@@ -363,12 +361,10 @@ def gen2dWTA(groupname,
     # create neuron groups
     num2dNeurons = num_neurons**2
     num_inh_inputs = 2
-    gWTAGroup = Neurons(num2dNeurons, equation_builder=neuron_eq_builder(),
-                        refractory=rpWTA, name='g' + groupname,
-                        num_inputs=3 + num_inputs)
-    gWTAInhGroup = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(),
-                           refractory=rpInh, name='g' + groupname + '_Inh',
-                           num_inputs=num_inh_inputs)
+    gWTAGroup = Neurons(num2dNeurons, equation_builder=neuron_eq_builder(num_inputs=3 + num_inputs),
+                        refractory=rpWTA, name='g' + groupname)
+    gWTAInhGroup = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(num_inputs=num_inh_inputs),
+                           refractory=rpInh, name='g' + groupname + '_Inh')
 
     gWTAGroup.namespace['num_neurons'] = num_neurons
     gWTAGroup.namespace['ind2x'] = ind2x

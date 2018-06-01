@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-11 14:48:52
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 16:10:05
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -26,18 +26,18 @@ class STDP_Testbench():
 
     Attributes:
         N (int): Size of the pre and post neuronal population
-        stimulusLength (int): Length of stimuli in ms
+        stimulus_length (int): Length of stimuli in ms
     """
 
-    def __init__(self, N=1, stimulusLength=1200):
+    def __init__(self, N=1, stimulus_length=1200):
         """Summary
 
         Args:
             N (int, optional): Size of the pre and post neuronal population
-            stimulusLength (int, optional): Length of stimuli in ms
+            stimulus_length (int, optional): Length of stimuli in ms
         """
         self.N = N  # Number of Neurons per input group
-        self.stimulusLength = stimulusLength
+        self.stimulus_length = stimulus_length
 
     def stimuli(self, isi=10):
         """
@@ -254,7 +254,7 @@ class OCTA_Testbench():
 
     def translating_bar_infinity(self, length=10, n2dNeurons=64, orientation='vertical', shift=32,
                                  ts_offset=10, artifical_stimulus=True, rec_path=None,
-                                 returnEvents=False):
+                                 return_events=False):
         """
         This function will either load recorded DAVIS/DVS recordings or generate artificial events
         of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
@@ -268,11 +268,11 @@ class OCTA_Testbench():
             ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
             rec_path (str, optional): Path to recordings
-            returnEvents (bool, optional): Flag to return events instead of SpikeGenerator
+            return_events (bool, optional): Flag to return events instead of SpikeGenerator
 
         Returns:
             SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes
-            events (numpy.ndarray, optional): If returnEvents is set events will be returned
+            events (numpy.ndarray, optional): If return_events is set events will be returned
 
         Raises:
             UserWarning: If no filename is given but aedat reacording should be loaded
@@ -324,7 +324,7 @@ class OCTA_Testbench():
             self.events[2, :] = np.asarray(self.times)
             self.events[3, :] = np.asarray(pol)
 
-        if returnEvents:
+        if return_events:
             return self.events
         else:
             if not artifical_stimulus:
@@ -338,7 +338,7 @@ class OCTA_Testbench():
 
     def rotating_bar_infinity(self, length=10, n2dNeurons=64, orthogonal=False, shift=32,
                               ts_offset=10, artifical_stimulus=True, rec_path=None,
-                              returnEvents=False):
+                              return_events=False):
         """This function will either load recorded DAVIS/DVS recordings or generate artificial events
         of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
         In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
@@ -352,11 +352,11 @@ class OCTA_Testbench():
             ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
             rec_path (None, optional): Description
-            returnEvents (bool, optional): Flag to return events instead of SpikeGenerator
+            return_events (bool, optional): Flag to return events instead of SpikeGenerator
 
         Returns:
             SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes
-            events (numpy.ndarray, optional): If returnEvents is set events will be returned
+            events (numpy.ndarray, optional): If return_events is set events will be returned
 
         Raises:
             UserWarning: If no filename is given but aedat reacording should be loaded
@@ -427,7 +427,7 @@ class OCTA_Testbench():
             self.events[2, :] = np.asarray(self.times)
             self.events[3, :] = np.asarray(pol)
 
-        if returnEvents:
+        if return_events:
             return self.events
         else:
             if not artifical_stimulus:
@@ -512,7 +512,7 @@ class WTA_Testbench():
 
         Args:
             num_neurons (int, optional): 1D size of WTA population
-            rate (int, optional): Spike frequency f posssion noise process
+            rate (int, optional): Spike frequency f poission noise process
 
         """
         num2d_neurons = num_neurons**2
@@ -525,7 +525,7 @@ class Visualize():
 
     Attributes:
         colors (TYPE): Description
-        eventPlot (TYPE): Description
+        event_plot (TYPE): Description
         labelStyle (dict): Description
         win (TYPE): Description
     """
@@ -551,8 +551,8 @@ class Visualize():
         labelStyle = {'color': '#FFF', 'font-size': '12pt'}
         win = pg.GraphicsWindow(title="Stimuli visualization")
         win.resize(1024, 768)
-        eventPlot = win.addPlot(title="Input events in ")
-        eventPlot.addLegend()
+        event_plot = win.addPlot(title="Input events in ")
+        event_plot.addLegend()
 
         self.win = win
 
@@ -561,21 +561,21 @@ class Visualize():
         else:
             self.events = events
 
-        eventPlot.setLabel('left', "Y", **labelStyle)
-        eventPlot.setLabel('bottom', "X", **labelStyle)
-        eventPlot.setXRange(0, np.max(events[0, :]))
-        eventPlot.setYRange(0, np.max(events[1, :]))
+        event_plot.setLabel('left', "Y", **labelStyle)
+        event_plot.setLabel('bottom', "X", **labelStyle)
+        event_plot.setXRange(0, np.max(events[0, :]))
+        event_plot.setYRange(0, np.max(events[1, :]))
 
         b = QtGui.QFont("Sans Serif", 10)
-        eventPlot.getAxis('bottom').tickFont = b
-        eventPlot.getAxis('left').tickFont = b
+        event_plot.getAxis('bottom').tickFont = b
+        event_plot.getAxis('left').tickFont = b
 
         # start visualizing
         self.start = 0
-        self.stim = eventPlot.plot(pen=None, symbol='o', symbolPen=None,
+        self.stim = event_plot.plot(pen=None, symbol='o', symbolPen=None,
                               symbolSize=7, symbolBrush=colors[0],
                               name='ON Events')
-        eventPlot.enableAutoRange('xy', False)  # stop auto-scaling after the first data set is plotted
+        event_plot.enableAutoRange('xy', False)  # stop auto-scaling after the first data set is plotted
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.start(100)
@@ -583,12 +583,12 @@ class Visualize():
         QtGui.QApplication.instance().exec_()
 
     def update(self):
-        global eventPlot
-        cIndTS = np.logical_and(self.events[2, :] >= self.start, self.events[2, :] <= self.start + self.time_window)
-        cIndON = np.logical_and(cIndTS, self.events[3, :] == 1)
+        global event_plot
+        c_ind_ts = np.logical_and(self.events[2, :] >= self.start, self.events[2, :] <= self.start + self.time_window)
+        c_ind_on = np.logical_and(c_ind_ts, self.events[3, :] == 1)
 
-        data_x = self.events[0, cIndON]
-        data_y = self.events[1, cIndON]
+        data_x = self.events[0, c_ind_on]
+        data_y = self.events[1, c_ind_on]
         self.start += self.time_window
         # print(len(data_x))
         # print(np.shape(self.events))
@@ -597,8 +597,6 @@ class Visualize():
 
 
 if __name__ == '__main__':
-    import numpy as np
-    from NCSBrian2Lib.stimuli.testbench import Visualize
     import tkinter as tk
     from tkinter import filedialog
 
@@ -608,4 +606,3 @@ if __name__ == '__main__':
     eventsfile = filedialog.askopenfilename()
     events = np.load(eventsfile)
     vis.plot(events)
-

@@ -8,6 +8,7 @@
 """
 import os
 from NCSBrian2Lib.models.builder.synapse_equation_builder import SynapseEquationBuilder
+import NCSBrian2Lib.models
 
 
 class ReversalSynV(SynapseEquationBuilder):

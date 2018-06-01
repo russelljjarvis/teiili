@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde
 # @Date:   2017-25-08 13:43:10
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-30 13:56:59
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 18:46:24
 # -*- coding: utf-8 -*-
 
 """
@@ -36,12 +36,12 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 
 Net = NCSNetwork()
 
-testNeurons = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron")
+testNeurons = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron")
 # Example of how to set parameters, saved as a dictionary
 testNeurons.set_params(DPIparam)
 testNeurons.refP = 3 * ms
 
-testNeurons2 = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron2")
+testNeurons2 = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron2")
 testNeurons2.refP = 3 * ms
 
 

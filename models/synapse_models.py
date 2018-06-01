@@ -92,20 +92,24 @@ if __name__ == '__main__':
     if not os.path.isdir(path):
         os.mkdir(path)
 
-    ReversalSynV = ReversalSynV()
-    ReversalSynV.export_eq(os.path.join(path, "ReversalSynV"))
+    reversalSynV = ReversalSynV()
+    reversalSynV.export_eq(os.path.join(path, "ReversalSynV"))
 
-    BraderFusiSynapses = BraderFusiSynapses()
-    BraderFusiSynapses.export_eq(os.path.join(path, "BraderFusiSynapses"))
+    braderFusiSynapses = BraderFusiSynapses()
+    braderFusiSynapses.export_eq(os.path.join(path, "BraderFusiSynapses"))
 
-    DPISyn = DPISyn()
-    DPISyn.export_eq(os.path.join(path, "DPISyn"))
+    dpiSyn = DPISyn()
+    dpiSyn.export_eq(os.path.join(path, "DPISyn"))
 
-    DPIShunt = DPIShunt()
-    DPIShunt.export_eq(os.path.join(path, "DPIShunt"))
+    dpiShunt = DPIShunt()
+    dpiShunt.export_eq(os.path.join(path, "DPIShunt"))
 
-    DPIstdp = DPIstdp()
-    DPIstdp.export_eq(os.path.join(path, "DPIstdp"))
+    dpistdp = DPIstdp()
+    dpistdp.export_eq(os.path.join(path, "DPIstdp"))
 
-    StdpSynV = StdpSynV()
-    StdpSynV.export_eq(os.path.join(path, "StdpSynV"))
+    stdpSynV = StdpSynV()
+    stdpSynV.export_eq(os.path.join(path, "StdpSynV"))
+
+    reversalSynVfusi = SynapseEquationBuilder(base_unit='conductance',
+                                        kernel='exponential', plasticity='fusi')
+    reversalSynVfusi.export_eq(os.path.join(path, "ReversalSynVfusi"))

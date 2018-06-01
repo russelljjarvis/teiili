@@ -1,7 +1,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-15 17:53:31
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-29 12:24:16
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 12:43:27
 
 
 """
@@ -16,7 +16,8 @@ import os
 import importlib
 from brian2 import pF, nS, mV, ms, pA, nA
 from NCSBrian2Lib.models.builder.combine import combine_syn_dict
-from NCSBrian2Lib.models.builder.templates.synapse_templates import modes, kernels, plasticitymodels, current_Parameters, conductance_Parameters, DPI_Parameters
+from NCSBrian2Lib.models.builder.templates.synapse_templates import modes, kernels, plasticitymodels,\
+    current_Parameters, conductance_Parameters, DPI_Parameters, DPI_shunt_Parameters
 
 
 class SynapseEquationBuilder():
@@ -82,8 +83,8 @@ class SynapseEquationBuilder():
 
             if baseUnit == 'current':
                 eq_tmpl = [modes[baseUnit],
-                          kernels[kernel],
-                          plasticitymodels[plasticity]]
+                           kernels[kernel],
+                           plasticitymodels[plasticity]]
 
                 param_templ = [current_Parameters[baseUnit],
                                current_Parameters[kernel],
@@ -91,9 +92,12 @@ class SynapseEquationBuilder():
 
                 keywords = combine_syn_dict(eq_tmpl, param_templ)
 
-                keywords['model'] = keywords['model'].format(inputnumber="{inputnumber}", unit='amp')
-                keywords['on_pre'] = keywords['on_pre'].format(inputnumber="{inputnumber}", unit='amp')
-                keywords['on_post'] = keywords['on_post'].format(inputnumber="{inputnumber}", unit='amp')
+                keywords['model'] = keywords['model'].format(
+                    inputnumber="{inputnumber}", unit='amp')
+                keywords['on_pre'] = keywords['on_pre'].format(
+                    inputnumber="{inputnumber}", unit='amp')
+                keywords['on_post'] = keywords['on_post'].format(
+                    inputnumber="{inputnumber}", unit='amp')
 
             if baseUnit == 'conductance':
                 eq_tmpl = [modes[baseUnit],
@@ -106,9 +110,12 @@ class SynapseEquationBuilder():
 
                 keywords = combine_syn_dict(eq_tmpl, param_templ)
 
-                keywords['model'] = keywords['model'].format(inputnumber="{inputnumber}", unit='siemens')
-                keywords['on_pre'] = keywords['on_pre'].format(inputnumber="{inputnumber}", unit='siemens')
-                keywords['on_post'] = keywords['on_post'].format(inputnumber="{inputnumber}", unit='siemens')
+                keywords['model'] = keywords['model'].format(
+                    inputnumber="{inputnumber}", unit='siemens')
+                keywords['on_pre'] = keywords['on_pre'].format(
+                    inputnumber="{inputnumber}", unit='siemens')
+                keywords['on_post'] = keywords['on_post'].format(
+                    inputnumber="{inputnumber}", unit='siemens')
 
             if baseUnit == 'DPI':
                 eq_tmpl = [modes[baseUnit],
@@ -121,9 +128,30 @@ class SynapseEquationBuilder():
 
                 keywords = combine_syn_dict(eq_tmpl, param_templ)
 
-                keywords['model'] = keywords['model'].format(inputnumber="{inputnumber}", unit='amp')
-                keywords['on_pre'] = keywords['on_pre'].format(inputnumber="{inputnumber}", unit='amp')
-                keywords['on_post'] = keywords['on_post'].format(inputnumber="{inputnumber}", unit='amp')
+                keywords['model'] = keywords['model'].format(
+                    inputnumber="{inputnumber}", unit='amp')
+                keywords['on_pre'] = keywords['on_pre'].format(
+                    inputnumber="{inputnumber}", unit='amp')
+                keywords['on_post'] = keywords['on_post'].format(
+                    inputnumber="{inputnumber}", unit='amp')
+
+            if baseUnit == 'DPIShunting':
+                eq_tmpl = [modes[baseUnit],
+                           kernels[kernel],
+                           plasticitymodels[plasticity]]
+
+                param_templ = [DPI_shunt_Parameters[baseUnit],
+                               DPI_shunt_Parameters[kernel],
+                               DPI_shunt_Parameters[plasticity]]
+
+                keywords = combine_syn_dict(eq_tmpl, param_templ)
+
+                keywords['model'] = keywords['model'].format(
+                    inputnumber="{inputnumber}", unit='amp')
+                keywords['on_pre'] = keywords['on_pre'].format(
+                    inputnumber="{inputnumber}", unit='amp')
+                keywords['on_post'] = keywords['on_post'].format(
+                    inputnumber="{inputnumber}", unit='amp')
 
             self.keywords = {'model': keywords['model'], 'on_pre': keywords['on_pre'],
                              'on_post': keywords['on_post'], 'parameters': keywords['parameters']}
@@ -138,9 +166,12 @@ class SynapseEquationBuilder():
         Args:
             inputnumber (int): Synapse's input number
         """
-        self.keywords['model'] = self.keywords['model'].format(inputnumber=str(inputnumber - 1))  # inputnumber-1 ???
-        self.keywords['on_pre'] = self.keywords['on_pre'].format(inputnumber=str(inputnumber - 1))
-        self.keywords['on_post'] = self.keywords['on_post'].format(inputnumber=str(inputnumber - 1))
+        self.keywords['model'] = self.keywords['model'].format(
+            inputnumber=str(inputnumber - 1))  # inputnumber-1 ???
+        self.keywords['on_pre'] = self.keywords[
+            'on_pre'].format(inputnumber=str(inputnumber - 1))
+        self.keywords['on_post'] = self.keywords[
+            'on_post'].format(inputnumber=str(inputnumber - 1))
 
     def printAll(self):
         """Method to print all dictionaries within a synapse model

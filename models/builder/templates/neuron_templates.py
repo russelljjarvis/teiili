@@ -18,7 +18,7 @@ Modules:
     i_non_leaky_params (TYPE): Description
     modes (TYPE): Description
     none (TYPE): Description
-    nonePara (dict): Description
+    none_params (dict): Description
     spatial (TYPE): Description
     v_adapt (TYPE): Description
     v_expCurrent (TYPE): Description
@@ -271,7 +271,7 @@ i_exponential_params = {"Ith": 0.9 * pA,
 
 i_non_leaky_params = {"Itau": 0.5 * pA}
 
-nonePara = {}
+none_params = {}
 
 modes = {'current': i_model_template, 'voltage': v_model_template}
 
@@ -284,9 +284,9 @@ voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_expCurren
                        'spatial': spatial, 'gaussian_noise': v_noise, 'none': none, 'linear': none}
 
 current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
-                     'exponential': i_exponential_params, 'leaky': nonePara, 'non_leaky': i_non_leaky_params,
-                     'spatial': nonePara, 'gaussian_noise': i_noise_params, 'none': nonePara, 'linear': nonePara}
+                     'exponential': i_exponential_params, 'leaky': none_params, 'non_leaky': i_non_leaky_params,
+                     'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 'linear': none_params}
 
-voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': nonePara,
-                     'exponential': nonePara, 'leaky': nonePara, 'non_leaky': nonePara,
-                     'spatial': nonePara, 'gaussian_noise': nonePara, 'none': nonePara, 'linear': nonePara}
+voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': none_params,
+                     'exponential': none_params, 'leaky': none_params, 'non_leaky': none_params,
+                     'spatial': none_params, 'gaussian_noise': none_params, 'none': none_params, 'linear': none_params}

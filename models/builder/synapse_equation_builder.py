@@ -105,9 +105,9 @@ class SynapseEquationBuilder():
 
                 keywords = combine_syn_dict(eq_tmpl, param_templ)
 
-                keywords['model'] = keywords['model'].format(unit='siemens')
-                keywords['on_pre'] = keywords['on_pre'].format(unit='siemens')
-                keywords['on_post'] = keywords['on_post'].format(unit='siemens')
+                keywords['model'] = keywords['model'].format(inputnumber="{inputnumber}", unit='siemens')
+                keywords['on_pre'] = keywords['on_pre'].format(inputnumber="{inputnumber}", unit='siemens')
+                keywords['on_post'] = keywords['on_post'].format(inputnumber="{inputnumber}", unit='siemens')
 
             if baseUnit == 'DPI':
                 eq_tmpl = [modes[baseUnit],

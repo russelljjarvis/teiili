@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde
 # @Date:   2018-01-08 14:53:11
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-30 10:26:09
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 16:01:57
 
 """ This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
 
@@ -17,10 +17,10 @@ class ExpAdaptIF(NeuronEquationBuilder):
     """
 
     def __init__(self, num_inputs=1):
-        NeuronEquationBuilder.__init__(self, baseUnit='voltage', adaptation='calciumFeedback',
-                                       integrationMode='exponential', leak='non-leaky',
+        NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='calcium_feedback',
+                                       integration_mode='exponential', leak='non_leaky',
                                        position='spatial', noise='none')
-        self.addInputCurrents(num_inputs)
+        self.add_input_currents(num_inputs)
 
 
 class DPI(NeuronEquationBuilder):
@@ -31,10 +31,10 @@ class DPI(NeuronEquationBuilder):
     """
 
     def __init__(self, num_inputs=1):
-        NeuronEquationBuilder.__init__(self, baseUnit='current', adaptation='calciumFeedback',
-                                       integrationMode='exponential', leak='leaky',
+        NeuronEquationBuilder.__init__(self, base_unit='current', adaptation='calcium_feedback',
+                                       integration_mode='exponential', leak='leaky',
                                        position='spatial', noise='none')
-        self.addInputCurrents(num_inputs)
+        self.add_input_currents(num_inputs)
 
 
 if __name__ == '__main__':
@@ -46,7 +46,7 @@ if __name__ == '__main__':
         os.mkdir(path)
 
     expAdaptIF = ExpAdaptIF()
-    expAdaptIF.exporteq(os.path.join(path, "ExpAdaptIF"))
+    expAdaptIF.export_eq(os.path.join(path, "ExpAdaptIF"))
 
     dpi = DPI()
-    dpi.exporteq(os.path.join(path, "DPI"))
+    dpi.export_eq(os.path.join(path, "DPI"))

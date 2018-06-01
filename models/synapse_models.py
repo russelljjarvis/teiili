@@ -2,7 +2,7 @@
 # @Author: mrax, mmilde
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 12:32:31
+# @Last Modified time: 2018-06-01 16:02:10
 
 """This contains subclasses of SynapseEquationBuilder with predefined common parameters
 """
@@ -19,7 +19,7 @@ class ReversalSynV(SynapseEquationBuilder):
         potential.
         """
         SynapseEquationBuilder.__init__(self, baseUnit='conductance',
-                                        kernel='exponential', plasticity='nonplastic')
+                                        kernel='exponential', plasticity='non_plastic')
 
 
 class BraderFusiSynapses(SynapseEquationBuilder):
@@ -41,7 +41,7 @@ class DPISyn(SynapseEquationBuilder):
         Integrator (DPI) synapse as published in Chicca et al. 2014
         """
         SynapseEquationBuilder.__init__(self, baseUnit='DPI',
-                                        plasticity='nonplastic')
+                                        plasticity='non_plastic')
 
 
 class DPIShunt(SynapseEquationBuilder):
@@ -52,7 +52,7 @@ class DPIShunt(SynapseEquationBuilder):
         Integrator (DPI) synapse as published in Chicca et al. 2014
         """
         SynapseEquationBuilder.__init__(self, baseUnit='DPIShunting',
-                                        plasticity='nonplastic')
+                                        plasticity='non_plastic')
 
 
 class DPIstdp(SynapseEquationBuilder):
@@ -93,19 +93,19 @@ if __name__ == '__main__':
         os.mkdir(path)
 
     ReversalSynV = ReversalSynV()
-    ReversalSynV.exporteq(os.path.join(path, "ReversalSynV"))
+    ReversalSynV.export_eq(os.path.join(path, "ReversalSynV"))
 
     BraderFusiSynapses = BraderFusiSynapses()
-    BraderFusiSynapses.exporteq(os.path.join(path, "BraderFusiSynapses"))
+    BraderFusiSynapses.export_eq(os.path.join(path, "BraderFusiSynapses"))
 
     DPISyn = DPISyn()
-    DPISyn.exporteq(os.path.join(path, "DPISyn"))
+    DPISyn.export_eq(os.path.join(path, "DPISyn"))
 
     DPIShunt = DPIShunt()
-    DPIShunt.exporteq(os.path.join(path, "DPIShunt"))
+    DPIShunt.export_eq(os.path.join(path, "DPIShunt"))
 
     DPIstdp = DPIstdp()
-    DPIstdp.exporteq(os.path.join(path, "DPIstdp"))
+    DPIstdp.export_eq(os.path.join(path, "DPIstdp"))
 
     StdpSynV = StdpSynV()
-    StdpSynV.exporteq(os.path.join(path, "StdpSynV"))
+    StdpSynV.export_eq(os.path.join(path, "StdpSynV"))

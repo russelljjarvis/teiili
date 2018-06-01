@@ -2,7 +2,7 @@
 # @Author: alpren, mmilde
 # @Date:   2018-01-09 17:25:21
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 16:47:52
+# @Last Modified time: 2018-06-01 16:56:34
 
 """
 This module provides functions, that can be used for synaptic connectivity kernels (generate weight matrices).
@@ -156,7 +156,7 @@ def kernel_gauss_2d(i, j, gsigma, nrows, ncols):
     if(((window_size_x + abs(offx)) <= (input_size_x-(rf_size-1))) & ((window_size_y + abs(offy)) <= (input_size_y-(rf_size-1)))){
         int x0 = j % window_size_x;
         int y0 = j / window_size_x;
-        x0 += int((input_size_x-WindowSizeX+1)/2) + offx;
+        x0 += int((input_size_x-window_size_x+1)/2) + offx;
         y0 += int((input_size_y-window_size_y+1)/2) + offy;
         float x =  (ix - x0)*cos(theta-M_PI/2) + (iy - y0)*sin(theta-M_PI/2);
         float y = -(ix - x0)*sin(theta-M_PI/2) + (iy - y0)*cos(theta-M_PI/2);
@@ -168,7 +168,7 @@ def kernel_gauss_2d(i, j, gsigma, nrows, ncols):
         return 0;}
         }
      ''')
-@declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float', freq='float', input_size_x='integer', input_size_y='integer', WindowSizeX='integer', window_size_y='integer', rf_size='integer', result='float')
+@declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float', freq='float', input_size_x='integer', input_size_y='integer', window_size_x='integer', window_size_y='integer', rf_size='integer', result='float')
 @check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, input_size_x=1, input_size_y=1, window_size_x=1, window_size_y=1, rf_size=1, result=1)
 def kernel_gabor_2d(i, j, offx, offy, theta, sigmax, sigmay, freq, input_size_x, input_size_y, window_size_x, window_size_y, rf_size):
     """Summary: function that calculates Gabor 2D kernel, only works with odd square Receptive Fields,

@@ -5,7 +5,7 @@
 # @Author: alpren, mmilde
 # @Date:   2017-27-07 17:28:16
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 14:10:07
+# @Last Modified time: 2018-06-01 15:38:28
 """
 Wrapper class for brian2 Group class.
 """
@@ -158,7 +158,7 @@ class Neurons(NeuronGroup, NCSGroup):
                 self.equation_builder = equation_builder()
             else:
                 self.equation_builder = equation_builder
-            # self.equation_builder.addInputCurrents(num_inputs)
+            # self.equation_builder.add_input_currents(num_inputs)
             Kwargs.update(self.equation_builder.keywords)
             Kwargs.pop('parameters')
 
@@ -340,7 +340,7 @@ class Connections(Synapses, NCSGroup):
                 self.equation_builder = equation_builder()
             else:
                 self.equation_builder = equation_builder
-            self.equation_builder.set_inputnumber(self.input_number)
+            self.equation_builder.set_input_number(self.input_number)
             Kwargs.update(self.equation_builder.keywords)
             Kwargs.pop('parameters')
 

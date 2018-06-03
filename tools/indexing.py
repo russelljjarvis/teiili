@@ -44,8 +44,8 @@ def xy2ind(x, y, nrows, ncols):
 
 
 @implementation('cpp', '''
-    inline int ind2x(int ind, int nrows_cpp, int ncols_cpp) {
-    return ind / ncols_cpp;
+    inline int ind2x(int ind_cpp, int nrows_cpp, int ncols_cpp) {
+    return ind_cpp / ncols_cpp;
     }
      ''')
 @declare_types(ind='integer', nrows='integer', ncols='integer', result='integer')
@@ -69,8 +69,8 @@ def ind2x(ind, nrows, ncols):
 
 
 @implementation('cpp', '''
-    inline int ind2y(int ind, int nrows_cpp, int ncols_cpp) {
-    return ind % ncols_cpp;
+    inline int ind2y(int ind_cpp, int nrows_cpp, int ncols_cpp) {
+    return ind_cpp % ncols_cpp;
     }
      ''')
 @declare_types(ind='integer', nrows='integer', ncols='integer', result='integer')

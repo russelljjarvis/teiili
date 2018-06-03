@@ -8,21 +8,25 @@ Created on Wed May 30 13:43:45 2018
 This module provides generic functions that are not yet provided by brian2 including a cpp
 implementation.
 This is not to be confused with the synaptic kernels, that are for conectivity matrix generation (they could/should be used by those!).
+
+the suffix "_cpp" avoids that variables are string replaced by brian2 if the same name
+is used in the network
+
 """
 from brian2 import implementation, check_units, declare_types
 import numpy as np
 
 @implementation('cpp', '''
-    float normal2d_density(float dist_x, float dist_y, float sigma_x = 1.0, float sigma_y = 1.0, float rho = 0.0, bool normalized = true) {
+    float normal2d_density(float dist_x_cpp, float dist_y_cpp, float sigma_x_cpp = 1.0, float sigma_y_cpp = 1.0, float rho_cpp = 0.0, bool normalized_cpp = true) {
         float f1;
-        if (normalized)
-            f1 = (1.0 / (2.0 * M_PI * sigma_x * sigma_y * sqrt(1 - pow(rho,2))));
+        if (normalized_cpp)
+            f1 = (1.0 / (2.0 * M_PI * sigma_x_cpp * sigma_y_cpp * sqrt(1 - pow(rho_cpp,2))));
         else
             f1 = 1.0;
 
-            float f2 = -(1.0 / (2.0 * (1.0 - pow(rho,2))));
-            float fxy = 2 * (dist_x / sigma_x) * (dist_y / sigma_y) * rho;
-            float density = f1 * exp(f2 * (pow((dist_x / sigma_x),2) + pow((dist_y / sigma_y),2) - fxy));
+            float f2 = -(1.0 / (2.0 * (1.0 - pow(rho_cpp,2))));
+            float fxy = 2 * (dist_x_cpp / sigma_x_cpp) * (dist_y_cpp / sigma_y_cpp) * rho_cpp;
+            float density = f1 * exp(f2 * (pow((dist_x_cpp / sigma_x_cpp),2) + pow((dist_y_cpp / sigma_y_cpp),2) - fxy));
 
             return density;
     }

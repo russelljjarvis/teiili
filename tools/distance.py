@@ -72,8 +72,8 @@ def dist1d2dint(i, j, nrows, ncols):
 
 
 @implementation('cpp', '''
-    float dist2d2dint(int ix, int iy,int jx, int jy) {
-    return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
+    float dist2d2dint(int ix_cpp, int iy_cpp,int jx_cpp, int jy_cpp) {
+    return sqrt(pow((ix_cpp - jx_cpp),2) + pow((iy_cpp - jy_cpp),2));
     }
      ''')
 @declare_types(ix='integer', iy='integer', jx='integer', jy='integer', result='float')
@@ -94,8 +94,8 @@ def dist2d2dint(ix, iy, jx, jy):
 
 
 @implementation('cpp', '''
-    float dist2d2dfloat(float ix, float iy,float jx, float jy) {
-    return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
+    float dist2d2dfloat(float ix_cpp, float iy_cpp,float jx_cpp, float jy_cpp) {
+    return sqrt(pow((ix_cpp - jx_cpp),2) + pow((iy_cpp - jy_cpp),2));
     }
      ''')
 @declare_types(ix='float', iy='float', jx='float', jy='float', result='float')
@@ -118,10 +118,10 @@ def dist2d2dfloat(ix, iy, jx, jy):
 
 # this is not consistent with the other functions as this assumes normalized x and y coordinates
 @implementation('cpp', '''
-    float torus_dist2d2dfloat(float ix, float iy,float jx, float jy) {
+    float torus_dist2d2dfloat(float ix_cpp, float iy_cpp, float jx_cpp, float jy_cpp) {
 
-    float dx = min( min(abs(ix - jx), abs(ix - jx + 1)), abs(ix - jx - 1));
-    float dy = min( min(abs(iy - jy), abs(iy - jy + 1)), abs(iy - jy - 1));
+    float dx = min( min(abs(ix_cpp - jx_cpp), abs(ix_cpp - jx_cpp + 1)), abs(ix_cpp - jx_cpp - 1));
+    float dy = min( min(abs(iy_cpp - jy_cpp), abs(iy_cpp - jy_cpp + 1)), abs(iy_cpp - jy_cpp - 1));
 
     return sqrt(pow(dx,2) + pow(dy,2));
     }

@@ -13,13 +13,12 @@ This files contains different WTA circuits
 import time
 import numpy as np
 import sys
-# import matplotlib.pyplot as plt
+
+#import matplotlib.pyplot as plt
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
-from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
-    StateMonitor, figure, subplot, mV, pA
-
+from brian2 import ms, mV, pA, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
 import teili.tools.synaptic_kernel
 from teili.tools.misc import print_states

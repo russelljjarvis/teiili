@@ -19,7 +19,7 @@ from teili.models import neuron_models
 from teili.models import synapse_models
 
 
-class NCSGroup(Group):
+class TeiliGroup(Group):
     """just a bunch of methods that are shared between neurons and connections
     class Group is already used by brian2
 
@@ -108,7 +108,7 @@ class NCSGroup(Group):
         return self.equation_builder.keywords['model']
 
 
-class Neurons(NeuronGroup, NCSGroup):
+class Neurons(NeuronGroup, TeiliGroup):
     """
     This class is a subclass of NeuronGroup
     You can use it as a NeuronGroup, and everything will be passed to NeuronGroup.
@@ -118,7 +118,7 @@ class Neurons(NeuronGroup, NCSGroup):
         equation_builder (TYPE): Class which describes the neuron model equation and all
             porperties and default paramters. See /model/builder/neuron_equation_builder.py and
             models/neuron_models.py
-        initialized (bool): Flag to register Neurons population with NCSGroups
+        initialized (bool): Flag to register Neurons population with TeiliGroups
         num_inputs (int): Number of possible synaptic inputs. This overocmes the summed issue
             present in brian2.
         num_synapses (int): Number of synapses projecting to post-synaptic neurn group
@@ -170,7 +170,7 @@ class Neurons(NeuronGroup, NCSGroup):
                 self.parameters = self.equation_builder.keywords['parameters']
 
         self.initialized = True
-        NCSGroup.__init__(self)
+        TeiliGroup.__init__(self)
         NeuronGroup.__init__(self, N, method=method, **Kwargs)
 
         set_params(self, self.parameters, verbose=verbose)
@@ -229,7 +229,7 @@ class Neurons(NeuronGroup, NCSGroup):
             item (TYPE): Description
 
         Returns:
-            NCSSubgroup: The respective neuron subgroup
+            TeiliSubgroup: The respective neuron subgroup
 
         Raises:
             IndexError: Error that indicates that size of subgroup set by start and stop is out of bounds
@@ -245,11 +245,11 @@ class Neurons(NeuronGroup, NCSGroup):
             raise IndexError('Illegal start/end values for subgroup, %d>=%d' %
                              (start, stop))
 
-        return NCSSubgroup(self, start, stop)
+        return TeiliSubgroup(self, start, stop)
 
 
 # TODO: find out, if it is possible to have delay as statevariable
-class Connections(Synapses, NCSGroup):
+class Connections(Synapses, TeiliGroup):
     """
     This class is a subclass of Synapses
     You can use it as a Synapses, and everything will be passed to Synapses.
@@ -292,7 +292,7 @@ class Connections(Synapses, NCSGroup):
             AttributeError: Warning to indicate that an input_number was specified even though this is taken care of automatically
             Exception: Unit mismatch in equations
         """
-        NCSGroup.__init__(self)
+        TeiliGroup.__init__(self)
 
         self.verbose = verbose
         self.input_number = 0
@@ -496,7 +496,7 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
             print('printing of states does not work in cpp standalone mode')
 
 
-class NCSSubgroup(Subgroup):
+class TeiliSubgroup(Subgroup):
     """this helps to make Subgroups compatible, otherwise the same as Subgroup
     TODO: Some functionality of the package is not compatible with subgroups yet!!!
 

@@ -13,7 +13,7 @@ from brian2 import implementation, check_units, declare_types
 import numpy as np
 
 @implementation('cpp', '''
-    float normal2d_density(float dist_x, float dist_y, float sigma_x = 1.0, float sigma_y = 1.0, float rho = 0.0, bool normalized = True) {
+    float normal2d_density(float dist_x, float dist_y, float sigma_x = 1.0, float sigma_y = 1.0, float rho = 0.0, bool normalized = true) {
         float f1;
         if (normalized)
             f1 = (1.0 / (2.0 * M_PI * sigma_x * sigma_y * sqrt(1 - pow(rho,2))));
@@ -21,10 +21,9 @@ import numpy as np
             f1 = 1.0;
 
             float f2 = -(1.0 / (2.0 * (1.0 - pow(rho,2))));
-            fxy = 2 * (dist_x / sigma_x) * (dist_y / sigma_y) * rho;
-            density = f1 * exp(f2 * (pow((dist_x / sigma_x),2) + pow((dist_y / sigma_y),2) - fxy));
+            float fxy = 2 * (dist_x / sigma_x) * (dist_y / sigma_y) * rho;
+            float density = f1 * exp(f2 * (pow((dist_x / sigma_x),2) + pow((dist_y / sigma_y),2) - fxy));
 
-            float exponent = -(pow(x,2) + pow(y,2)) / (2 * pow(gsigma,2));
             return density;
     }
                 ''')

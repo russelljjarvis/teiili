@@ -5,6 +5,9 @@
 # @Last Modified by:   alpren
 # @Last Modified time: 2018-05-30
 """functions to compute distance (e.g. in 2d)
+
+the suffix "_cpp" avoids that variables are string replaced by brian2 if the same name
+is used in the network
 """
 
 from brian2 import implementation, check_units, declare_types
@@ -13,11 +16,11 @@ from teili.tools.indexing import ind2xy
 
 
 @implementation('cpp', '''
-    float dist1d2dfloat(float i, float j, int nrows, int ncols) {
-    int ix = i / ncols;
-    int iy = i % ncols;
-    int jx = j / ncols;
-    int jy = j % ncols;
+    float dist1d2dfloat(float i, float j, int nrows_cpp, int ncols_cpp) {
+    int ix = i / ncols_cpp;
+    int iy = i % ncols_cpp;
+    int jx = j / ncols_cpp;
+    int jy = j % ncols_cpp;
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')
@@ -41,11 +44,11 @@ def dist1d2dfloat(i, j, nrows, ncols):
 
 
 @implementation('cpp', '''
-    float dist1d2dint(int i, int j, int nrows, int ncols) {
-    int ix = i / ncols;
-    int iy = i % ncols;
-    int jx = j / ncols;
-    int jy = j % ncols;
+    float dist1d2dint(int i, int j, int nrows_cpp, int ncols_cpp) {
+    int ix = i / ncols_cpp;
+    int iy = i % ncols_cpp;
+    int jx = j / ncols_cpp;
+    int jy = j % ncols_cpp;
     return sqrt(pow((ix - jx),2) + pow((iy - jy),2));
     }
      ''')

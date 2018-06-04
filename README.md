@@ -77,7 +77,7 @@ cd teili/examples
 python3 neuron_synapse_test.py
 ```
 The output should loo like this
-<center><img src=".example_behaviour.png" width="300" height="200" </center>
+<center><img src="examples/.example_behaviour.png" width="300" height="200" </center>
 
 
 

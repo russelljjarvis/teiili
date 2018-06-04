@@ -18,6 +18,7 @@ import sys
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
+import brian2
 from brian2 import ms, mV, pA, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
 import teili.tools.synaptic_kernel
@@ -195,9 +196,15 @@ def gen1dWTA(groupname,
         standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
     """
     if spatial_kernel is None:
-        spatial_kernel = "kernel_mexican_1d"
+        spatial_kernel = "kernel_gaussian_1d"
 
-    spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
+    if type(spatial_kernel) == brian2.core.functions.Function:
+        spatial_kernel_func = spatial_kernel
+        spatial_kernel_name = spatial_kernel.pyfunc.__name__
+    else:
+        spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
+        spatial_kernel_name = spatial_kernel
+
     # time measurement
     start = time.clock()
 
@@ -252,8 +259,8 @@ def gen1dWTA(groupname,
     # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
-    synWTAWTA1e.namespace.update({spatial_kernel: spatial_kernel_func})
-    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma)'
+    synWTAWTA1e.namespace.update({spatial_kernel_name: spatial_kernel_func})
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel_name + '(i,j,latSigma)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -312,7 +319,7 @@ def gen2dWTA(groupname,
              rpWTA=2.5 * ms, rpInh=1 * ms,
              wiInhInh=0, EI_connection_probability=1, IE_connection_probability=1,
              II_connection_probability=0.1,
-             spatial_kernel="kernel_mexican_2d",
+             spatial_kernel="kernel_gaussian_2d",
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA
@@ -344,9 +351,15 @@ def gen2dWTA(groupname,
     '''
 
     if spatial_kernel is None:
-        spatial_kernel = "kernel_mexican_2d"
+        spatial_kernel = "kernel_gaussian_2d"
 
-    spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
+
+    if type(spatial_kernel) == brian2.core.functions.Function:
+        spatial_kernel_func = spatial_kernel
+        spatial_kernel_name = spatial_kernel.pyfunc.__name__
+    else:
+        spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
+        spatial_kernel_name = spatial_kernel
     # time measurement
     start = time.clock()
 
@@ -413,9 +426,9 @@ def gen2dWTA(groupname,
     # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
-    synWTAWTA1e.namespace[spatial_kernel] = spatial_kernel_func
+    synWTAWTA1e.namespace[spatial_kernel_name] = spatial_kernel_func
     synWTAWTA1e.namespace['num_neurons'] = num_neurons
-    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma,num_neurons,num_neurons)'
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel_name + '(i,j,latSigma,num_neurons,num_neurons)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,

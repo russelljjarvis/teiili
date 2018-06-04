@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 15:18:07
+# @Last Modified time: 2018-06-04 10:08:51
 
 """
 This files contains different WTA circuits
@@ -22,7 +22,7 @@ from brian2 import ms, mV, pA, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
 import teili.tools.synaptic_kernel
 from teili.tools.misc import print_states
-from teili.tools.distance import  dist1d2dint
+from teili.tools.distance import dist1d2dint
 from teili.tools.indexing import ind2x, ind2y
 from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 

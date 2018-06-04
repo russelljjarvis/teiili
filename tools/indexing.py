@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde, alpren
 # @Date:   2018-01-09 17:26:00
-# @Last Modified by:   alpren
-# @Last Modified time: 2018-05-30
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-04 14:10:09
 """
 Collections of functions which convert indices to x, y coordinates and vice versa
 
@@ -94,7 +94,7 @@ def ind2y(ind, nrows, ncols):
 
 
 @implementation('numpy', discard_units=True)
-@declare_types(ind='integer', nrows='integer', ncols='integer',  result='integer')
+@declare_types(ind='integer', nrows='integer', ncols='integer', result='integer')
 @check_units(ind=1, nrows=1, ncols=1, result=1)
 def ind2xy(ind, nrows, ncols):
     """Given an index of an array this function will provide

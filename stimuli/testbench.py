@@ -261,8 +261,8 @@ class OCTA_Testbench():
         if not artifical_stimulus:
             self.indices, self.times = dvs2ind(self.events, scale=False)
         else:
-            self.indices = xy2ind(self.events[0, :], self.events[
-                                  1, :], n2dNeurons, n2dNeurons)
+            self.indices = xy2ind(np.asarray(self.events[0, :],dtype = 'int'), np.asarray(self.events[
+                                  1, :],dtype = 'int'), n2dNeurons, n2dNeurons)
             if debug:
                 print("Maximum index: {}, minimum index: {}".format(
                     np.max(self.indices), np.min(self.indices)))

@@ -5,10 +5,21 @@
 # @Last Modified time: 2018-05-30 10:26:09
 
 """ This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
-
+import os
 from NCSBrian2Lib.models.builder.neuron_equation_builder import NeuronEquationBuilder
 import NCSBrian2Lib.models
-import os
+
+
+class Izhikevich(NeuronEquationBuilder):
+    """ This class provides you with all equations to simulate a voltage-based
+    quadratic, adaptive integrate and fire neuron.
+    """
+
+    def __init__(self, num_inputs=1):
+        NeuronEquationBuilder.__init__(self, baseUnit='voltage', adaptation='calciumFeedback',
+                                       integrationMode='quadratic', leak='non-leaky',
+                                       position='spatial', noise='none')
+        self.addInputCurrents(num_inputs)
 
 
 class ExpAdaptIF(NeuronEquationBuilder):

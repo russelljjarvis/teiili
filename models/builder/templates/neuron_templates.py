@@ -70,6 +70,39 @@ v_expCurrent = {'model': """
             """,
                 'threshold': '',
                 'reset': ''}
+
+# quadratic current (see Izhikevic Model)
+v_quadCurrent = {'model': """
+            #quadratic
+            %Iexp = k*(Vm - VR)(Vm - VT) : amp
+            %dIadapt/dt = a*(b*(Vm - VR) - Iadapt : amp
+            VT      : volt          (shared, constant)        # V threshold
+            VR      : volt          (shared, constant)        # V rest
+            k       : siemens       (shared, constant)        # slope factor
+            a       : 1/second      (shared, constant)        # recovery time constant
+            b       : siemens       (shared, constant)        # 1/Rin
+            c       : volt          (shared, constant)        # potential reset value
+            d       : volt/second   (shared, constant)        # outward minus inward currents 
+                                                              # activated during the spike 
+                                                              # and affecting the after-spike 
+                                                              # behavior
+            %Vthr = VT : volt  (shared)
+            %Vres = VR : volt  (shared)
+            """,
+                'threshold': '',
+                'reset': """%Vm = c
+                Iadapt += d"""}
+
+v_quad_templatePara = {
+    "Cm": 250.0 * pF,
+    "VR": -60.0 * mV,
+    "VT": -20.0 * mV,
+    "k":  2.5  * nS, # k = 1/Rin Nicola&Clopath2017
+    "a": 0.01 / ms, # Nicola&Clopath2017
+    "b": 0.0 / ms, # Nicola&Clopath2017
+    "c": -65 * mV, # Nicola&Clopath2017
+    "d": 200 * mV/ms}  # Nicola&Clopath2017
+
 # leak
 v_leak = {'model': """
           #leak
@@ -276,17 +309,20 @@ nonePara = {}
 modes = {'current': i_model_template, 'voltage': v_model_template}
 
 currentEquationsets = {'calciumFeedback': i_ahp, 'exponential': i_a,
-                       'leaky': none, 'non-leaky': none,
+                       'leaky': none, 'non-leaky': none, 'quadratic': nonePara,
                        'spatial': spatial, 'gaussianNoise': i_noise, 'none': none, 'linear': none}
 
 voltageEquationsets = {'calciumFeedback': v_adapt, 'exponential': v_expCurrent,
+                       'quadratic': v_quadCurrent,
                        'leaky': v_leak, 'non-leaky': none,
                        'spatial': spatial, 'gaussianNoise': v_noise, 'none': none, 'linear': none}
 
 currentParameters = {'current': i_model_templatePara, 'calciumFeedback': i_ahpPara,
+                     'quadratic': nonePara,
                      'exponential': i_exponentialPara, 'leaky': nonePara, 'non-leaky': i_nonLeakyPara,
                      'spatial': nonePara, 'gaussianNoise': i_noisePara, 'none': nonePara, 'linear': nonePara}
 
 voltageParameters = {'voltage': v_model_templatePara, 'calciumFeedback': nonePara,
-                     'exponential': nonePara, 'leaky': nonePara, 'non-leaky': nonePara,
+                     'exponential': nonePara, 'quadratic': v_quad_templatePara,
+                     'leaky': nonePara, 'non-leaky': nonePara,
                      'spatial': nonePara, 'gaussianNoise': nonePara, 'none': nonePara, 'linear': nonePara}

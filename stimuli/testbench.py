@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-04 14:20:06
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-06-04 18:04:23
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -233,8 +233,7 @@ class OCTA_Testbench():
                         pol.append(1)
                         if noise_probability is not None and noise_probability >= np.random.rand():
                             noise_index = np.random.randint(0, n2dNeurons**2)
-                            noise_x, noise_y = ind2xy(
-                                noise_index, np.int(n2dNeurons), np.int(n2dNeurons))
+                            noise_x, noise_y = ind2xy(noise_index, n2dNeurons, n2dNeurons)
                             if (noise_x, noise_y) not in list_of_coord:
                                 # print(noise_x, noise_y)
                                 # print(list_of_coord)
@@ -261,8 +260,8 @@ class OCTA_Testbench():
         if not artifical_stimulus:
             self.indices, self.times = dvs2ind(self.events, scale=False)
         else:
-            self.indices = xy2ind(np.asarray(self.events[0, :],dtype = 'int'), np.asarray(self.events[
-                                  1, :],dtype = 'int'), n2dNeurons, n2dNeurons)
+            self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'), np.asarray(self.events[
+                                  1, :], dtype='int'), n2dNeurons, n2dNeurons)
             if debug:
                 print("Maximum index: {}, minimum index: {}".format(
                     np.max(self.indices), np.min(self.indices)))
@@ -355,8 +354,9 @@ class OCTA_Testbench():
             if not artifical_stimulus:
                 self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                self.indices = xy2ind(
-                    self.events[0, :], self.events[1, :], n2dNeurons, n2dNeurons)
+                self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
+                                      np.asarray(self.events[1, :], dtype='int'),
+                                      n2dNeurons, n2dNeurons)
                 print(np.max(self.indices), np.min(self.indices))
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(
@@ -483,8 +483,9 @@ class OCTA_Testbench():
             if not artifical_stimulus:
                 self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                self.indices = xy2ind(
-                    self.events[0, :], self.events[1, :], n2dNeurons, n2dNeurons)
+                self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
+                                      np.asarray(self.events[1, :], dtype='int'),
+                                      n2dNeurons, n2dNeurons)
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(
                 nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')

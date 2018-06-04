@@ -165,7 +165,7 @@ def gen1dWTA(groupname,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5, sigm=3,
              rpWTA=3 * ms, rpInh=1 * ms,
              num_neurons=64, num_inh_neurons=5, num_input_neurons=None, cutoff=10, num_inputs=1,
-             spatial_kernel="kernel_mexican_1d",
+             spatial_kernel="kernel_gauss_1d",
              EI_connection_probability=1, IE_connection_probability=1, II_connection_probability=0,
              monitor=True, additional_statevars=[], debug=False):
     """Summary
@@ -196,7 +196,7 @@ def gen1dWTA(groupname,
         standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
     """
     if spatial_kernel is None:
-        spatial_kernel = "kernel_gaussian_1d"
+        spatial_kernel = "kernel_gauss_1d"
 
     if type(spatial_kernel) == brian2.core.functions.Function:
         spatial_kernel_func = spatial_kernel
@@ -319,7 +319,7 @@ def gen2dWTA(groupname,
              rpWTA=2.5 * ms, rpInh=1 * ms,
              wiInhInh=0, EI_connection_probability=1, IE_connection_probability=1,
              II_connection_probability=0.1,
-             spatial_kernel="kernel_gaussian_2d",
+             spatial_kernel="kernel_gauss_2d",
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA
@@ -351,7 +351,7 @@ def gen2dWTA(groupname,
     '''
 
     if spatial_kernel is None:
-        spatial_kernel = "kernel_gaussian_2d"
+        spatial_kernel = "kernel_gauss_2d"
 
 
     if type(spatial_kernel) == brian2.core.functions.Function:

@@ -138,7 +138,7 @@ if __name__ == '__main__':
     prefs.codegen.target = 'numpy'
 
     from teili.tools.cpptools import activate_standalone
-    #activate_standalone(directory='test_stimgen', build_on_run=True)
+    activate_standalone(directory='test_stimgen', build_on_run=True)
 
     nrows = 80
     ncols = 80

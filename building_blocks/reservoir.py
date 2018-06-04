@@ -26,6 +26,11 @@ from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
 from NCSBrian2Lib.core.groups import Neurons, Connections
 
+from NCSBrian2Lib.models.neuron_models import Izhikevich
+from NCSBrian2Lib.models.synapse_models import DPISyn
+
+from NCSBrian2Lib.models.parameters.izh_neuron_param import parameters as IzhParams
+
 # RParams = {'weInpR': 1.5,
 #            'weRInh': 1,
 #            'wiInhR': -1,
@@ -49,7 +54,7 @@ class R(BuildingBlock):
     '''
 
     def __init__(self, name,
-                 neuron_eq_builder=LIF,
+                 neuron_eq_builder=Izhikevich,
                  synapse_eq_builder=ExpSyn,
                  block_params=wtaParams,
                  num_neurons=16,
@@ -96,7 +101,7 @@ class R(BuildingBlock):
                                                                    debug=debug,
                                                                    **block_params)
 
-        self.inputGroup = self.Groups['gRInpGroup']
+        self.inputGroup =self.Groups['gRInpGroup']
         self.group = self.Groups['gRGroup']
         if monitor:
             self.spikemonR = self.Monitors['spikemonR']
@@ -119,7 +124,7 @@ class R(BuildingBlock):
 
 
 def genR(groupname,
-             neuron_eq_builder=DPI,
+             neuron_eq_builder=ExpAdaptIF,
              synapse_eq_builder=DPISyn,
              weInpR=1.5, weRInh=1, wiInhR=-1, weRR=0.5, sigm=3,
              rpR=3 * ms, rpInh=1 * ms,
@@ -185,12 +190,12 @@ def genR(groupname,
                                 method="euler", name='s' + groupname + '_Inhe')
 
     # connect synapses
-    synInpR.connect(p=)
+    synInpR.connect(p=0.1)
     # connect the nearest neighbors including itself
-    synRR.connect(p=)
+    synRR.connect(p=0.1)
     if fraction_inh_neurons is not None:
-        synRInh1e.connect(p=)  # Generates all to all connectivity
-        synInhR1i.connect(p=)
+        synRInh1e.connect(p=0.1)  # Generates all to all connectivity
+        synInhR1i.connect(p=0.1)
 
     synRR.addStateVariable(name='latWeight', shared=True, constant=True)
     synRR.addStateVariable(name='latSigma', shared=True, constant=True)

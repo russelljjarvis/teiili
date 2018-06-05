@@ -4,10 +4,11 @@
 # @Author: Moritz Milde
 # @Date:   2018-06-05 11:09:20
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 16:21:37
+# @Last Modified time: 2018-06-05 16:30:54
 
 import numpy as np
 from tkinter import filedialog
+import warnings
 '''
 To understand the structure of in the rasterplots but also in the learned weight matrices, we need to sort the weight matrices according to some similarity measure, such as euclidean distance.
 However, the sorting algorithm is completely agnostic to the similarity measure. It connects each node with maximum two edges and constructs a directed graph.
@@ -39,9 +40,10 @@ class SortMatrix():
         matrix (ndarray, optional): matrix as provided by load_matrix
         nrows (int, required): number of rows of the 2d array
         ncols (int, optional): number of columns of the 2d array
-        permutation (list): Description
+        permutation (list): List of indices which are more similar to each other
+            in (euclidean) distance
         similarity_matrix (ndarray, optional): Matrix containing similarities
-        sorted_matrix (TYPE): Description
+        sorted_matrix (TYPE): Sorted matrix according to permutation
     """
 
     def __init__(self, nrows, ncols=None, filename=None, axis=0):
@@ -54,15 +56,14 @@ class SortMatrix():
             axis (int, optional): Axis along which similarity should be computed
 
         Raises:
-            UserWarning: Description
+            UserWarning: In case you did not specify ncols, the Class assumes that the
+                matrix is squared
         """
-        try:
-            self.nrows = nrows
-            self.ncols = ncols
-        except NameError:
-            raise UserWarning('Please specify nrows')
+        self.nrows = nrows
+        self.ncols = ncols
 
         if self.ncols is None:
+            warnings.warn('You did not specify ncols. Matrix is assumed to be squared')
             self.ncols = self.nrows
 
         self.filename = filename

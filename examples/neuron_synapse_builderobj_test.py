@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde
 # @Date:   2017-25-08 13:43:10
-# @Last Modified by:   kburel
-# @Last Modified time: 2018-06-05 13:52:37
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-05 16:51:26
 # -*- coding: utf-8 -*-
 
 """
@@ -22,20 +22,22 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
 
 from teili.core.groups import Neurons, Connections
 from teili import NCSNetwork
-from teili.models.neuron_models import DPI
-from teili.models.synapse_models import DPISyn
 from teili.models.parameters.dpi_neuron_param import parameters as DPIparam
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
-#For this example you must first run models/neuron_models.py and synapse_models.py,
-#which will create the equation template. This will be stored in models/equations  
-#Building neuron objects
-builder_object1 = NeuronEquationBuilder.import_eq('teili/models/equations/DPI',num_inputs=2)
-builder_object2 = NeuronEquationBuilder.import_eq('teili/models/equations/DPI',num_inputs=2)
-#Building synapses objects
-builder_object3 = SynapseEquationBuilder.import_eq('teili/models/equations/DPISyn')
-builder_object4 = SynapseEquationBuilder.import_eq('teili/models/equations/DPISyn')
+# For this example you must first run models/neuron_models.py and synapse_models.py,
+# which will create the equation template. This will be stored in models/equations
+# Building neuron objects
+builder_object1 = NeuronEquationBuilder.import_eq(
+    'teili/models/equations/DPI', num_inputs=2)
+builder_object2 = NeuronEquationBuilder.import_eq(
+    'teili/models/equations/DPI', num_inputs=2)
+# Building synapses objects
+builder_object3 = SynapseEquationBuilder.import_eq(
+    'teili/models/equations/DPISyn')
+builder_object4 = SynapseEquationBuilder.import_eq(
+    'teili/models/equations/DPISyn')
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us
@@ -57,17 +59,21 @@ testNeurons2 = Neurons(2, equation_builder=builder_object2, name="testNeuron2")
 testNeurons2.refP = 3 * ms
 
 
-InpSyn = Connections(gInpGroup, testNeurons, equation_builder=builder_object3, name="testSyn", verbose=False)
+InpSyn = Connections(gInpGroup, testNeurons,
+                     equation_builder=builder_object3, name="testSyn", verbose=False)
 InpSyn.connect(True)
 
 InpSyn.weight = 10
-Syn = Connections(testNeurons, testNeurons2, equation_builder=builder_object4, name="testSyn2")
+Syn = Connections(testNeurons, testNeurons2,
+                  equation_builder=builder_object4, name="testSyn2")
 Syn.connect(True)
 
-# you can change all the parameters like this after creation of the neurongroup:
+# you can change all the parameters like this after creation of the
+# neurongroup:
 Syn.weight = 100
 
-# Example of how to set single parameters, rather than using an entire dictionary
+# Example of how to set single parameters, rather than using an entire
+# dictionary
 testNeurons.Iconst = 10 * nA
 # testNeurons2.Itau = 13 * pA
 # testNeurons2.Iath = 80 * pA

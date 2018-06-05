@@ -1,13 +1,12 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# @Author: Alpha Renner
+# @Date:   2018-06-05 09:12:40
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-05 09:38:25
+
 """
-Created on Wed May 30 13:32:50 2018
-
-@author: alpha
-
-
-
 How to use them:
+TBA
 
 """
 

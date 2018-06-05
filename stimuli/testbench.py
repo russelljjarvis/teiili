@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-06-04 18:19:12
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-05 09:26:28
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -15,6 +15,7 @@ from teili.tools.converter import dvs2ind, aedat2numpy
 from teili.tools.indexing import xy2ind, ind2xy
 import numpy as np
 import os
+import sys
 import operator
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
@@ -618,7 +619,13 @@ class Visualize():
         """
         global stim
         self.time_window = time_window
-        self.app = QtGui.QApplication([])
+
+        self.app = QtGui.QApplication.instance()
+        if self.app is None:
+            self.app = QtGui.QApplication(sys.argv)
+        else:
+            print('QApplication instance already exists: %s' % str(self.app))
+
         pg.setConfigOptions(antialias=True)
         colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
                   (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
@@ -655,7 +662,7 @@ class Visualize():
         self.timer.timeout.connect(self.update)
         self.timer.start(100)
 
-        QtGui.QApplication.instance().exec_()
+        self.app.exec_()
 
     def update(self):
         global event_plot

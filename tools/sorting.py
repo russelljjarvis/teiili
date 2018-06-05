@@ -4,10 +4,30 @@
 # @Author: Moritz Milde
 # @Date:   2018-06-05 11:09:20
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 16:14:58
+# @Last Modified time: 2018-06-05 16:21:37
 
 import numpy as np
 from tkinter import filedialog
+'''
+To understand the structure of in the rasterplots but also in the learned weight matrices, we need to sort the weight matrices according to some similarity measure, such as euclidean distance.
+However, the sorting algorithm is completely agnostic to the similarity measure. It connects each node with maximum two edges and constructs a directed graph.
+This sorting is idea is similar to the travelling salesman problem.
+
+Usage example
+from teili.tools.sorting import SortMatrix
+
+obj = SortMatrix(nrows=49)
+
+# or if you want to diectly specify the path to your matrix
+
+filename = '/path/to/your/matrix.npy'
+obj = SortMatrix(nrows=49, filename=filename)
+
+# in case of non-squared matrices specify nrows and ncols
+
+filename = '/path/to/your/matrix.npy'
+obj = SortMatrix(nrows=49, ncols=100, filename=filename)
+'''
 
 
 class SortMatrix():

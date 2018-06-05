@@ -2,7 +2,7 @@
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 09:26:28
+# @Last Modified time: 2018-06-05 14:23:30
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -170,18 +170,18 @@ class OCTA_Testbench():
             orientation (str): `orientation` of the bar. Can either be 'vertical'
                 or 'horizontal'
             ts_offset (int): time between two pixel location
-            angle_step (int, optional): Angular velocity. Sets setp widh in np.arrange
+            angle_step (int, optional): Angular velocity. Sets step width in np.arrange
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
-            rec_path (str, optional): Path to aedat reacording, only used if arificial_stimulus=False
+            rec_path (str, optional): Path to aedat recording, only used if arificial_stimulus=False
             save_path (str, optional): Path to store generated events
             debug (bool, optional): Description
 
         Returns:
-            SpikeGenerator obj: Brian2 objects which holds the spiketimes as well
+            SpikeGenerator obj: Brian2 objects which holds the spike times as well
                 as the respective neuron indices
 
         Raises:
-            UserWarning: If no filename is given but aedat reacording should be loaded
+            UserWarning: If no filename is given but aedat recording should be loaded
         """
         if ncols is None:
             ncols = nrows
@@ -257,7 +257,7 @@ class OCTA_Testbench():
             self.events[2, :] = np.asarray(self.times)
             self.events[3, :] = np.asarray(pol)
             if save_path is None:
-                save_path = os.getcwd() + '/'
+                save_path = os.path.join(os.getcwd(), '')
             np.save(save_path + 'events.npy', self.events)
         if debug:
             print("Max X: {}. Max Y: {}".format(

@@ -37,7 +37,7 @@ class NeuronEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder
     """
 
-    def __init__(self, keywords=None, base_unit='current', adaptation='calciumFeedback',
+    def __init__(self, keywords=None, base_unit='current', adaptation='calcium_feedback',
                  integration_mode='exponential', leak='leaky', position='spatial',
                  noise='gaussianNoise', refractory='refractory', verbose=False):
         """Summary
@@ -89,7 +89,7 @@ class NeuronEquationBuilder():
 
             except KeyError as e:
                 print(ERRValue)
-
+    
             if base_unit == 'current':
                 eq_templ = [modes[base_unit],
                             current_equation_sets[adaptation],

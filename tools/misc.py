@@ -4,8 +4,8 @@
 # @Date:   2017-12-27 11:54:09
 # @Last Modified by:   Moritz Milde
 # @Last Modified time: 2018-06-01 16:50:56
-"""A collection of helpful miscellaneous functions when working with brian2
-
+"""
+A collection of helpful miscellaneous functions when working with brian2
 """
 
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
@@ -14,8 +14,8 @@ import numpy as np
 from teili.tools.indexing import ind2xy
 
 
-# This function is a workaround to allow if statements in run_regularly code
-# It is e.g. necessary in order to set values conditional on the current time
+# This function is a workaround to allow if statements in run_regularly code.
+# It is necessary for example in order to set values conditional on the current time.
 @implementation('cpp', '''
 float returnValueIf(float test_val, float greater_than_val, float smaller_than_val, float return_val_true, float return_val_false) {
     if ((test_val > greater_than_val) && (test_val < smaller_than_val))
@@ -29,10 +29,10 @@ float returnValueIf(float test_val, float greater_than_val, float smaller_than_v
 @check_units(test_val=1, greater_than_val=1, smaller_than_val=1, return_val_true=1, return_val_false=1, result=1)
 def return_value_if(test_val, greater_than_val, smaller_than_val, return_val_true, return_val_false):
     """Summary
-    This function is a workaround to allow if statements in run_regularly code
-    It is e.g. necessary in order to set values conditional on the current time
-    it returns a value (return_val_true or return_val_false) depending on whether test_val is between
-    smaller_than_val and greater_than_val or not
+    This function is a workaround to allow if statements in run_regularly code.
+    It is necessary for example in order to set values conditional on the current time.
+    It returns a value (return_val_true or return_val_false) depending on whether test_val is between
+    smaller_than_val and greater_than_val or not.
     Args:
         test_val (TYPE): the value that is tested
         greater_than_val (TYPE): upper bound of the value

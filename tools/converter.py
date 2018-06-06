@@ -7,9 +7,9 @@
 # @Last Modified time: 2018-06-01 16:43:55
 
 """
-Function for external interfaces such as event-based camera, i.e. DVS
-functions in this module convert data from or to brian2 compatible formats
-especially, there are functions to convert data coming from dvs camera
+Function for external interfaces such as an event-based camera, e.g. DVS.
+functions in this module convert data from or to brian2 compatible formats.
+In particular, there are functions to convert data coming from DVS cameras.
 """
 
 import os
@@ -120,7 +120,7 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
             - 'ms' (default), 'us' or 'sec'.
 
     Returns:
-        numy.ndarray: (xpos, ypos, ts, pol) 2D numpy array containing data of all events
+        numpy.ndarray: (xpos, ypos, ts, pol) 2D numpy array containing data of all events
 
     Raises:
         ValueError: Indicates that a camera was specified which is not supported or the AEDAT file version is not supported
@@ -310,15 +310,15 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
 
 
 def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True):
-    """Summary Function which converts events extracted from an aedat file using aedat2numpy
-    into 1D vectors of neuron indices and timestamps. Funcion only returns index and timestamp
+    """Summary: Function which converts events extracted from an aedat file using aedat2numpy
+    into 1D vectors of neuron indices and timestamps. Function only returns index and timestamp
     list for existing types (e.g. On & Off events)
 
     Args:
         Events (None, optional): 4D numpd.ndarray which contains pixel location (x,y), timestamps and polarity ((4,#events))
         event_directory (None, optional): Path to stored events
         resolution (str/int, optional): Resolution of the camera.
-        scale (bool, optional): Flag to rescale the timestampts from micro- to milliseconds
+        scale (bool, optional): Flag to rescale the timestamps from micro- to milliseconds
 
     Returns:
         indices_on (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of ON events
@@ -332,7 +332,7 @@ def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True
             -4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
         events = np.load(event_directory)
     if events is not None:
-        assert event_directory is None, 'Either you specify a path to load events using event_directory. Or you pass the event numpy directly. NOT Both.'
+        assert event_directory is None, 'Either you specify a path to load events using event_directory. Or you pass the event numpy directly. NOT both.'
     if np.size(events, 0) > np.size(events, 1):
         events = np.transpose(events)
 

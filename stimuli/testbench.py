@@ -23,7 +23,7 @@ import pyqtgraph as pg
 
 class STDP_Testbench():
 
-    """This class provides a stimuli to test your spike-time depenendent plasticity algorithm
+    """This class provides a stimulus to test your spike-time depenendent plasticity algorithm.
 
     Attributes:
         N (int): Size of the pre and post neuronal population
@@ -48,11 +48,11 @@ class STDP_Testbench():
         The protocol follows homoeostasis, weak LTP, weak LTD, strong LTP, strong LTD, homoeostasis
 
         Args:
-            isi (int, optional): Interspike Inerval. How many spikes per stimulus phase
+            isi (int, optional): Interspike Interval. How many spikes per stimulus phase
 
         Returns:
-            SpikeGeneratorGroup (brian2.obj: rian2 objects which holds the spiketimes as well
-                as the respective neuron indices
+            SpikeGeneratorGroup (brian2.obj: Brian2 objects which hold the spiketimes and
+                the respective neuron indices
         """
         t_pre_homoeotasis_1 = np.arange(1, 202, isi)
         t_pre_weakLTP = np.arange(301, 502, isi)
@@ -111,7 +111,7 @@ class OCTA_Testbench():
 
     def aedat2events(self, rec, camera='DVS128'):
         """Wrapper function of the original aedat2numpy function in teili.tools.converter.
-        This funcion will save events for later usage and will directly return them if no
+        This function will save events for later usage and will directly return them if no
         SpikeGeneratorGroup is needed.
 
         Args:
@@ -130,10 +130,10 @@ class OCTA_Testbench():
         return events
 
     def infinity(self, cAngle):
-        """Given an angle cAngle this function returns the current postion on an infinity trajectory
+        """Given an angle cAngle this function returns the current position on an infinity trajectory
 
         Args:
-            cAngle (float): current angle in rad which determines postion on inifinity trajectory
+            cAngle (float): current angle in rad which determines position on inifinity trajectory
 
         Returns:
             position (tuple): Postion in x, y coordinates
@@ -157,11 +157,11 @@ class OCTA_Testbench():
     def rotating_bar(self, length=10, nrows=10, ncols=None, orientation='vertical', ts_offset=10,
                      angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None,
                      noise_probability=None, repetitions=1, debug=False):
-        """This function returns a single spikegenerator group (Brian object)
-        The scope of this function is to provide a simple test stimulus
+        """This function returns a single spikegenerator group (Brian object).
+        The scope of this function is to provide a simple test stimulus.
         A bar is rotating in the center. The goal is to learn necessary
-        spatio-temporal feature of the moving bar and be able to make predictions
-        where the bar will move
+        spatio-temporal features of the moving bar and be able to make predictions
+        where the bar will move.
 
         Args:
             length (int): `length` of the bar in pixel.
@@ -282,7 +282,7 @@ class OCTA_Testbench():
                                  return_events=False):
         """
         This function will either load recorded DAVIS/DVS recordings or generate artificial events
-        of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
+        of a bar moving on an infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
         In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
 
         Args:
@@ -379,7 +379,7 @@ class OCTA_Testbench():
                               ts_offset=10, artifical_stimulus=True, rec_path=None,
                               return_events=False):
         """This function will either load recorded DAVIS/DVS recordings or generate artificial events
-        of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
+        of a bar moving on an infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
         In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
 
         Args:
@@ -389,7 +389,7 @@ class OCTA_Testbench():
             orthogonal (bool, optional): Flag which determines if bar is kept always orthogonal to trajectory,
                 if it kept aligned with trajectory or if it returns in "chaotic way"
             shift (int, optional): offset in x where the stimulus will start
-            ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
+            ts_offset (int, optional): Time in ms between consecutive pixels (stimulus velocity)
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
             rec_path (None, optional): Description
             return_events (bool, optional): Flag to return events instead of SpikeGenerator
@@ -511,9 +511,9 @@ class OCTA_Testbench():
     def ball(self, rec_path):
         '''
         This function loads a simple recording of a ball moving in a small arena.
-        The idea is to test the Online Clustering and Prediction module of OCTAPUS
+        The idea is to test the Online Clustering and Prediction module of OCTAPUS.
         The aim is to learn spatio-temporal features based on the ball's trajectory
-        and learn to predict its movement
+        and learn to predict its movement.
 
         Args:
             rec_path (str, required): Path to recording
@@ -549,7 +549,7 @@ class WTA_Testbench():
     Attributes:
         indices (numpy.ndarray): Array with neuron indices
         times (numpy.ndarray): Array with neuron spike timestimes
-        noise_input (brian2.PoissionGroup): PoissionGroup which provides noise events
+        noise_input (brian2.PoissonGroup): PoissonGroup which provides noise events
     """
 
     def __init__(self):
@@ -583,11 +583,11 @@ class WTA_Testbench():
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 
     def background_noise(self, num_neurons=10, rate=10):
-        """Provides background noise as poisson spike trains
+        """Provides background noise as Poisson spike trains
 
         Args:
             num_neurons (int, optional): 1D size of WTA population
-            rate (int, optional): Spike frequency f poission noise process
+            rate (int, optional): Spike frequency f Poisson noise process
 
         """
         num2d_neurons = num_neurons**2

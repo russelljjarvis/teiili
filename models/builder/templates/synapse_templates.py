@@ -127,13 +127,13 @@ conductance = {'model': '''
 # standard parameters for conductance based models
 conductance_params = {"Ige": 0 * nS,
                       "tausyne": 5 * ms,
-                      # We define tausyn again here since its different from
+                      # We define tausyn again here since it's different from
                       # current base, is this a problem?
                       "tausyni": 6 * ms,
                       "EIe": 60.0 * mV,
                       "EIi": -90.0 * mV,
                       "w_plast": 1,
-                      # should we find the way to replace baseweight_e/i, since we
+                      # should we find a way to replace baseweight_e/i, since we
                       # already defined it in template?
                       "baseweight_e": 7 * nS,
                       "baseweight_i": 3 * nS,
@@ -255,22 +255,22 @@ dpi_shunt_params = {
 ##########################################################################
 #######_____ADDITIONAL EQUATIONS BLOCKS AND PARAMETERS_____###############
 ##########################################################################
-Every block must specifies additional model, pre and post spike equations, as well as
+Every block must specify additional model, pre- and post-spike equations, as well as
 two different sets (dictionaries) of parameters for conductance based
-models or current models
+models or current models.
 
 If you want to override an equation add '%' before the variable of your
-block's explicit equation
+block's explicit equation.
 
-example:  Let's say we have the simplest model (current one with template equation),
-and you're implementing a new block with this explicit equation : d{synvar_e}/dt = (-{synvar_e})**2 / synvar_e,
-if you want to override the equation already declared in the template: d{synvar_e}/dt = (-{synvar_e}) / tausyne + kernel_e:
+Example:  Let's say we have the simplest model (current one with template equation),
+and you're implementing a new block with this explicit equation : d{synvar_e}/dt = (-{synvar_e})**2 / synvar_e.
+If you want to override the equation already declared in the template: d{synvar_e}/dt = (-{synvar_e}) / tausyne + kernel_e,
 your equation will be : %d{synvar_e}/dt = (-{synvar_e})**2 / synvar_e
 
 
 Plasticity Blocks:
 
-you need to declare two set of parameters for every block : (one for
+You need to declare two set of parameters for every block: (one for
 current based models and one for conductance based models)
 '''
 # Fusi learning rule ##
@@ -360,7 +360,7 @@ stdp = {'model': '''
       Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
       w_plast = clip(w_plast + Apre, 0, w_max) '''}
 
-stdp_para_current = {"baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
+stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace since we would define it twice?
                      "baseweight_i": 7 * pA,
                      "taupre": 10 * ms,
                      "taupost": 10 * ms,
@@ -369,7 +369,7 @@ stdp_para_current = {"baseweight_e": 7 * pA,  # should we find the way to replac
                      "Q_diffAPrePost": 1.05,
                      "w_plast": 0}
 
-stdp_para_conductance = {"baseweight_e": 7 * nS,  # should we find the way to replace since we would define it twice
+stdp_para_conductance = {"baseweight_e": 7 * nS,  # should we find a way to replace since we would define it twice?
                          "baseweight_i": 3 * nS,
                          "taupre": 20 * ms,
                          "taupost": 20 * ms,
@@ -380,8 +380,8 @@ stdp_para_conductance = {"baseweight_e": 7 * nS,  # should we find the way to re
 '''
 Kernels Blocks:
 
-you need to declare two set of parameters for every block : (one for
-current based models and one for conductance based models)
+You need to declare two set of parameters for every block: one for
+current based models and one for conductance based models.
 
 TODO: THESE KERNELS ARE WRONG!
 '''

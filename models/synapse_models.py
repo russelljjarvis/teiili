@@ -15,7 +15,7 @@ class ReversalSynV(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate synapses with reversal
+        """This class provides you with all the equations to simulate synapses with reversal
         potential.
         """
         SynapseEquationBuilder.__init__(self, base_unit='conductance',
@@ -26,7 +26,7 @@ class BraderFusiSynapses(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a bistable Brader-Fusi synapse
+        """This class provides you with all the equations to simulate a bistable Brader-Fusi synapse
         as published in Brader and Fusi 2007
         """
         SynapseEquationBuilder.__init__(self, base_unit='current',
@@ -37,7 +37,7 @@ class DPISyn(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a Differential Pair
+        """This class provides you with all the equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014
         """
         SynapseEquationBuilder.__init__(self, base_unit='DPI',
@@ -48,7 +48,7 @@ class DPIShunt(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a Differential Pair
+        """This class provides you with all the equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014
         """
         SynapseEquationBuilder.__init__(self, base_unit='DPIShunting',
@@ -59,10 +59,10 @@ class DPIstdp(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a Differential Pair
+        """This class provides you with all the equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014. However, additional
         equations are provided to make this synapse subject to learning based on
-        Spike-Time Depenendent Plasticity (STDP) as published in Song, Miller and Abbott (2000)
+        Spike-Time Dependent Plasticity (STDP) as published in Song, Miller and Abbott (2000)
         and Song and Abbott (2001). Also see another example at:
         https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
         """
@@ -74,8 +74,8 @@ class StdpSynV(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a exponential decaying
-        voltage-based synapse with learning based on Spike-Time Depenendent Plasticity (STDP)
+        """This class provides you with all the equations to simulate an exponential decaying
+        voltage-based synapse with learning based on Spike-Time Dependent Plasticity (STDP)
         as published in Song, Miller and Abbott (2000) and Song and Abbott (2001).
         Also see another example at:
         https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html

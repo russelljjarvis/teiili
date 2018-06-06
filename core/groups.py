@@ -324,7 +324,7 @@ class Connections(Synapses, TeiliGroup):
             if input_number is not None:
                 self.input_number = input_number
             else:
-                warnings.warn('you seem to use brian2 NeuronGroups instead of teili Neurons for ' +
+                warnings.warn('you seem to be using brian2 NeuronGroups instead of teili Neurons for ' +
                               str(target.name) + ', therefore, please specify an input_number yourself')
                 raise e
 
@@ -431,10 +431,10 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
     Args:
         brianggroup(brian2.groups.group, required): Neuron or Synapsegroup to set parameters on
         params (dict, required): Parameter keys and values to be set
-        raise_error (boolean, optional): determines if an error is raised,
+        raise_error (boolean, optional): determines if an error is raised
             if a parameter does not exist as a state variable of the group
         ndargs (None, optional): Description
-        verbose (bool, optional): Flag to get more details about paramter setting process
+        verbose (bool, optional): Flag to get more details about parameter setting process
     """
     for par in params:
         if hasattr(briangroup, par):
@@ -485,7 +485,7 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
                     states.pop(k)
                 except:
                     pass
-            print('By this set_params call, you have not set the following parameters:')
+            print('In this set_params call, you have not set the following parameters:')
             for key in states.keys():
                 if states[key].size > 1:
                     print(key, states[key][1])
@@ -493,7 +493,7 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
                     print(key, states[key])
 
         except:
-            print('printing of states does not work in cpp standalone mode')
+            print('Printing of states does not work in cpp standalone mode')
 
 
 class TeiliSubgroup(Subgroup):

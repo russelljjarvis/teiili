@@ -103,3 +103,5 @@ ENV/
 *.jpg
 *.gif
 *.svg
+
+models/equations/

@@ -5,7 +5,7 @@
 # @Last Modified time: 2018-01-11 12:43:19
 import unittest
 import numpy as np
-from NCSBrian2Lib.building_blocks.wta import WTA
+from teili.building_blocks.wta import WTA
 from brian2 import prefs, ms
 
 prefs.codegen.target = "numpy"

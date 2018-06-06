@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Author: alpren
 # @Date:   2017-08-2 18:16:28
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 17:14:02
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 14:12:16
 
 """
 Wrapper class for Netwotrk class of brian2 to provide a more flexible
@@ -17,9 +17,10 @@ from collections import OrderedDict
 import pprint
 
 from brian2 import Network, second, device, get_device, ms, all_devices
-from NCSBrian2Lib.tools.cpptools import build_cpp_and_replace,\
+from brian2 import SpikeMonitor, StateMonitor, NeuronGroup, Synapses
+from teili.tools.cpptools import build_cpp_and_replace,\
     print_dict, params2run_args
-from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
+from teili.building_blocks.building_block import BuildingBlock
 
 
 class NCSNetwork(Network):
@@ -33,6 +34,30 @@ class NCSNetwork(Network):
         standaloneParams (dict): Dictionary of standalone parameters
     """
     hasRun = False
+
+    @property
+    def spikemonitors(self):
+        '''returns a dictionary of all spikemonitors (e.g. for looping over them)
+        '''
+        return {att.name: att for att in self.__dict__['objects'] if type(att) == SpikeMonitor}
+
+    @property
+    def statemonitors(self):
+        '''returns a dictionary of all statemonitors (e.g. for looping over them)
+        '''
+        return {att.name: att for att in self.__dict__['objects'] if type(att) == StateMonitor}
+
+    @property
+    def neurongroups(self):
+        '''returns a dictionary of all neurongroups (e.g. for looping over them)
+        '''
+        return {att.name: att for att in self.__dict__['objects'] if type(att) == NeuronGroup}
+
+    @property
+    def synapses(self):
+        '''returns a dictionary of all synapses (e.g. for looping over them)
+        '''
+        return {att.name: att for att in self.__dict__['objects'] if type(att) == Synapses}
 
     def __init__(self, *objs, **kwds):
         """Summary
@@ -48,7 +73,7 @@ class NCSNetwork(Network):
         # Network.__init__(self, *objs, **kwds)
         Network.__init__(self)
 
-    def add_standaloneParams(self, **params):
+    def add_standalone_params(self, **params):
         """Function to a add standalone parameter to the standaloneParam dict.
         These parammeters can be changed after building w/o recompiling the network
 
@@ -110,7 +135,7 @@ class NCSNetwork(Network):
                 if standaloneParams is None:
                     standaloneParams = self.standaloneParams
 
-                buildCppAndReplace(standaloneParams, get_device(
+                build_cpp_and_replace(standaloneParams, get_device(
                 ).build_options['directory'], clean=clean)
             else:
                 print("""Network was not recompiled, standaloneParams are changed,
@@ -138,8 +163,10 @@ class NCSNetwork(Network):
 
             if all_devices['cpp_standalone'].build_on_run:
                 # this does not really make sense, as the whole point here is to
-                # avoid recompilation on every run, but some people might still want to use it
+                # avoid recompilation on every run, but some people might still
+                # want to use it
                 all_devices['cpp_standalone'].build_on_run = False
+                print('building network, as you have set build_on_run = True')
                 self.build(**kwargs)
 
             if standaloneParams == {}:
@@ -150,10 +177,17 @@ class NCSNetwork(Network):
 
             startSim = time.time()
             # run simulation
-            printDict(standaloneParams)
+            print_dict(standaloneParams)
             run_args = params2run_args(standaloneParams)
-            device.run(directory=os.path.abspath(
-                get_device().build_options['directory']), with_output=True, run_args=run_args)
+            directory = os.path.abspath(
+                get_device().build_options['directory'])
+            if not os.path.isdir(directory):
+                os.mkdir(directory)
+            print('standalone files are written to: ', directory)
+
+            device.run(directory=directory,
+                       with_output=True, run_args=run_args)
+
             end = time.time()
             print('simulation in c++ took ' + str(end - startSim) + ' sec')
             print('simulation done!')
@@ -166,7 +200,14 @@ class NCSNetwork(Network):
 
             Network.run(self, duration=duration, **kwargs)
 
-    def printParams(self):
+    def run_as_thread(self, duration, **kwargs):
+        import threading
+        from functools import partial
+        self.thread = threading.Thread(
+            target=partial(self.run, duration, **kwargs))
+        self.thread.start()
+
+    def print_params(self):
         """This functions prints all standalone parameters (cpp standalone network)
         """
         pprinter = pprint.PrettyPrinter()

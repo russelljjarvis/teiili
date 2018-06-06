@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde
 # @Date:   2017-25-08 13:43:10
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-19 17:21:36
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 18:46:24
 # -*- coding: utf-8 -*-
 
 """
@@ -19,11 +19,11 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, TimedArray,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
-from NCSBrian2Lib.core.groups import Neurons, Connections
-from NCSBrian2Lib import NCSNetwork
-from NCSBrian2Lib.models.neuron_models import DPI
-from NCSBrian2Lib.models.synapse_models import DPISyn
-from NCSBrian2Lib.models.parameters.dpi_neuron_param import parameters as DPIparam
+from teili.core.groups import Neurons, Connections
+from teili import NCSNetwork
+from teili.models.neuron_models import DPI
+from teili.models.synapse_models import DPISyn
+from teili.models.parameters.dpi_neuron_param import parameters as DPIparam
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us
@@ -36,17 +36,16 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 
 Net = NCSNetwork()
 
-testNeurons = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron")
+testNeurons = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron")
 # Example of how to set parameters, saved as a dictionary
-testNeurons.setParams(DPIparam)
+testNeurons.set_params(DPIparam)
 testNeurons.refP = 3 * ms
 
-testNeurons2 = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron2")
-# testNeurons2.setParams(DPIparam)
+testNeurons2 = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron2")
 testNeurons2.refP = 3 * ms
 
 
-InpSyn = Connections(gInpGroup, testNeurons, equation_builder=DPISyn(), name="testSyn", verbose=True)
+InpSyn = Connections(gInpGroup, testNeurons, equation_builder=DPISyn(), name="testSyn", verbose=False)
 InpSyn.connect(True)
 
 InpSyn.weight = 10
@@ -85,7 +84,7 @@ Net.run(duration * ms)
 pg.setConfigOptions(antialias=True)
 
 labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-win = pg.GraphicsWindow(title='NCSBrian2Lib Test Simulation')
+win = pg.GraphicsWindow(title='teili Test Simulation')
 win.resize(1900, 600)
 win.setWindowTitle('Simple SNN')
 

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 10:52:07
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-05 14:23:30
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -11,31 +11,34 @@ The idea is to test certain aspects of you network with common stimuli.
 """
 from brian2 import SpikeGeneratorGroup, PoissonGroup
 from brian2 import ms, Hz
-from NCSBrian2Lib.tools.converter import dvs2ind, aedat2numpy
-from NCSBrian2Lib.tools.indexing import xy2ind
+from teili.tools.converter import dvs2ind, aedat2numpy
+from teili.tools.indexing import xy2ind, ind2xy
 import numpy as np
 import os
+import sys
 import operator
+from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph as pg
 
 
-class stdp_testbench():
+class STDP_Testbench():
 
     """This class provides a stimuli to test your spike-time depenendent plasticity algorithm
 
     Attributes:
         N (int): Size of the pre and post neuronal population
-        stimulusLength (int): Length of stimuli in ms
+        stimulus_length (int): Length of stimuli in ms
     """
 
-    def __init__(self, N=1, stimulusLength=1200):
+    def __init__(self, N=1, stimulus_length=1200):
         """Summary
 
         Args:
             N (int, optional): Size of the pre and post neuronal population
-            stimulusLength (int, optional): Length of stimuli in ms
+            stimulus_length (int, optional): Length of stimuli in ms
         """
         self.N = N  # Number of Neurons per input group
-        self.stimulusLength = stimulusLength
+        self.stimulus_length = stimulus_length
 
     def stimuli(self, isi=10):
         """
@@ -61,24 +64,28 @@ class stdp_testbench():
                            t_pre_strongLTP, t_pre_strongLTD, t_pre_homoeotasis_2))
 
         # Normal distributed shift of spike times to ensure homoeotasis
-        t_post_homoeotasis_1 = t_pre_homoeotasis_1 + np.clip(np.random.randn(len(t_pre_homoeotasis_1)), -1, 1)
+        t_post_homoeotasis_1 = t_pre_homoeotasis_1 + \
+            np.clip(np.random.randn(len(t_pre_homoeotasis_1)), -1, 1)
         t_post_weakLTP = t_pre_weakLTP + 5   # post neuron spikes 7 ms after pre
         t_post_weakLTD = t_pre_weakLTD - 5   # post neuron spikes 7 ms before pre
         t_post_strongLTP = t_pre_strongLTP + 1  # post neurons spikes 1 ms after pre
         t_post_strongLTD = t_pre_strongLTD - 1  # post neurons spikes 1 ms before pre
-        t_post_homoeotasis_2 = t_pre_homoeotasis_2 + np.clip(np.random.randn(len(t_pre_homoeotasis_2)), -1, 1)
+        t_post_homoeotasis_2 = t_pre_homoeotasis_2 + \
+            np.clip(np.random.randn(len(t_pre_homoeotasis_2)), -1, 1)
 
         t_post = np.hstack((t_post_homoeotasis_1, t_post_weakLTP, t_post_weakLTD,
                             t_post_strongLTP, t_post_strongLTD, t_post_homoeotasis_2))
         ind_pre = np.zeros(len(t_pre))
         ind_post = np.zeros(len(t_post))
 
-        pre = SpikeGeneratorGroup(self.N, indices=ind_pre, times=t_pre * ms, name='gPre')
-        post = SpikeGeneratorGroup(self.N, indices=ind_post, times=t_post * ms, name='gPost')
+        pre = SpikeGeneratorGroup(
+            self.N, indices=ind_pre, times=t_pre * ms, name='gPre')
+        post = SpikeGeneratorGroup(
+            self.N, indices=ind_post, times=t_post * ms, name='gPost')
         return pre, post
 
 
-class octa_testbench():
+class OCTA_Testbench():
 
     """This class holds all relevant stimuli to test modules provided with the
     Online Clustering of Temporal Activity (OCTA) framework.
@@ -103,7 +110,7 @@ class octa_testbench():
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
 
     def aedat2events(self, rec, camera='DVS128'):
-        """Wrapper function of the original aedat2numpy function in NCSBrian2Lib.tools.converter.
+        """Wrapper function of the original aedat2numpy function in teili.tools.converter.
         This funcion will save events for later usage and will directly return them if no
         SpikeGeneratorGroup is needed.
 
@@ -142,10 +149,14 @@ class octa_testbench():
         Returns:
             (int): Ceiled value of x
         """
-        return int(x + 0.5)
+        if type(x) is np.ndarray:
+            return (x + 0.5).astype(int)
+        else:
+            return int(x + 0.5)
 
-    def rotating_bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
-            angle_step=10, artifical_stimulus=True, rec_path=None):
+    def rotating_bar(self, length=10, nrows=10, ncols=None, orientation='vertical', ts_offset=10,
+                     angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None,
+                     noise_probability=None, repetitions=1, debug=False):
         """This function returns a single spikegenerator group (Brian object)
         The scope of this function is to provide a simple test stimulus
         A bar is rotating in the center. The goal is to learn necessary
@@ -154,68 +165,121 @@ class octa_testbench():
 
         Args:
             length (int): `length` of the bar in pixel.
-            n2dNeurons (int, optional): Size of the pizel array
+            nrows (int, optional): X-Axis size of the pixel array
+            ncols (int, optional): Y-Axis size of the pixel array
             orientation (str): `orientation` of the bar. Can either be 'vertical'
                 or 'horizontal'
             ts_offset (int): time between two pixel location
-            angle_step (int, optional): Angular velocity. Sets setp widh in np.arrange
+            angle_step (int, optional): Angular velocity. Sets step width in np.arrange
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
-            rec_path (str, optional): Path to aedat reacording, only used if arificial_stimulus=False
+            rec_path (str, optional): Path to aedat recording, only used if arificial_stimulus=False
+            save_path (str, optional): Path to store generated events
+            debug (bool, optional): Description
 
         Returns:
-            SpikeGenerator obj: Brian2 objects which holds the spiketimes as well
+            SpikeGenerator obj: Brian2 objects which holds the spike times as well
                 as the respective neuron indices
 
         Raises:
-            UserWarning: If no filename is given but aedat reacording should be loaded
+            UserWarning: If no filename is given but aedat recording should be loaded
         """
+        if ncols is None:
+            ncols = nrows
+
+        num_neurons = nrows * ncols
+
         if not artifical_stimulus:
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
-            assert(os.path.isfile(rec_path + 'bar.aedat')), "No recording exists. Please record the respective stimulus first."
-            events = aedat2numpy(datafile=rec_path + 'bar.aedat', camera='DVS240')
+            assert(os.path.isfile(rec_path + 'bar.aedat')
+                   ), "No recording exists. Please record the respective stimulus first."
+            self.events = aedat2numpy(
+                datafile=rec_path + 'bar.aedat', camera='DVS240')
         else:
             x_coord = []
             y_coord = []
             pol = []
-            ts = []
-            center = (n2dNeurons / 2, n2dNeurons / 2)
-            self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, np.radians(angle_step))
-            for i, cAngle in enumerate(self.angles):
-                endy_1 = center[1] + ((length / 2.) * np.sin((np.pi / 2 + cAngle)))
-                endx_1 = center[0] + ((length / 2.) * np.cos((np.pi / 2 + cAngle)))
-                endy_2 = center[1] - ((length / 2.) * np.sin((np.pi / 2 + cAngle)))
-                endx_2 = center[0] - ((length / 2.) * np.cos((np.pi / 2 + cAngle)))
-                self.start = np.asarray((endx_1, endy_1))
-                self.end = np.asarray((endx_2, endy_2))
-                self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
-                                                          key=operator.itemgetter(1))
-                dv = (self.end - self.start) / self.max_length
-                self.line = [self.dda_round(self.start)]
-                for step in range(int(self.max_length)):
-                    self.line.append(self.dda_round((step + 1) * dv + self.start))
-                for coord in self.line:
-                    x_coord.append(coord[0])
-                    y_coord.append(coord[1])
-                    ts.append(i * ts_offset)
-                    pol.append(1)
-            events = np.zeros((4, len(x_coord)))
-            events[0, :] = np.asarray(x_coord)
-            events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(ts)
-            events[3, :] = np.asarray(pol)
+            self.times = []
+            repetition_offset = 0
+            center = (nrows / 2, ncols / 2)
+            self.angles = np.arange(-np.pi / 2, np.pi *
+                                    3 / 2, np.radians(angle_step))
+            for repetition in range(repetitions):
+                if repetition_offset != 0:
+                    repetition_offset += 10
+                for i, cAngle in enumerate(self.angles):
+                    endy_1 = center[1] + ((length / 2.)
+                                          * np.sin((np.pi / 2 + cAngle)))
+                    endx_1 = center[0] + ((length / 2.)
+                                          * np.cos((np.pi / 2 + cAngle)))
+                    endy_2 = center[1] - ((length / 2.)
+                                          * np.sin((np.pi / 2 + cAngle)))
+                    endx_2 = center[0] - ((length / 2.)
+                                          * np.cos((np.pi / 2 + cAngle)))
+                    self.start = np.asarray((endx_1, endy_1))
+                    self.end = np.asarray((endx_2, endy_2))
+                    self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
+                                                              key=operator.itemgetter(1))
+                    dv = (self.end - self.start) / self.max_length
+                    self.line = [self.dda_round(self.start)]
+                    for step in range(int(self.max_length)):
+                        self.line.append(self.dda_round(
+                            (step + 1) * dv + self.start))
+                    list_of_coord = []
+                    for coord in self.line:
+                        list_of_coord.append((coord[0], coord[1]))
+                    for coord in self.line:
+                        if coord[0] >= nrows or coord[1] >= nrows:
+                            if debug:
+                                print("Coordinate larger than input space. x: {}, y: {}".format(
+                                    coord[0], coord[1]))
+                            continue
+                        x_coord.append(coord[0])
+                        y_coord.append(coord[1])
+                        self.times.append(repetition_offset + (i * ts_offset))
+                        pol.append(1)
+                        if noise_probability is not None and noise_probability >= np.random.rand():
+                            noise_index = np.random.randint(0, num_neurons)
+                            noise_x, noise_y = ind2xy(noise_index, nrows, ncols)
+                            if (noise_x, noise_y) not in list_of_coord:
+                                # print(noise_x, noise_y)
+                                # print(list_of_coord)
+                                list_of_coord.append((noise_x, noise_y))
+                                x_coord.append(noise_x)
+                                y_coord.append(noise_y)
+                                self.times.append(
+                                    repetition_offset + (i * ts_offset))
+                                pol.append(1)
+                repetition_offset = np.max(self.times)
+            self.events = np.zeros((4, len(x_coord)))
+            self.events[0, :] = np.asarray(x_coord)
+            self.events[1, :] = np.asarray(y_coord)
+            self.events[2, :] = np.asarray(self.times)
+            self.events[3, :] = np.asarray(pol)
+            if save_path is None:
+                save_path = os.path.join(os.getcwd(), '')
+            np.save(save_path + 'events.npy', self.events)
+        if debug:
+            print("Max X: {}. Max Y: {}".format(
+                np.max(self.events[0, :]), np.max(self.events[1, :])))
+            print("Stimulus last from {} ms to {} ms".format(
+                np.min(self.events[2, :]), np.max(self.events[2, :])))
         if not artifical_stimulus:
-            ind, ts = dvs2ind(events, scale=False)
+            self.indices, self.times = dvs2ind(self.events, scale=False)
         else:
-            ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
-            print(np.max(ind), np.min(ind))
-        nPixel = np.int(np.max(ind))
-        gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=ind, times=ts * ms, name='bar')
+            self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'), np.asarray(self.events[
+                                  1, :], dtype='int'), nrows, ncols)
+            if debug:
+                print("Maximum index: {}, minimum index: {}".format(
+                    np.max(self.indices), np.min(self.indices)))
+        nPixel = np.int(np.max(self.indices))
+        gInpGroup = SpikeGeneratorGroup(
+            nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
         return gInpGroup
 
-    def translating_bar_infinity(self, length=10, n2dNeurons=64, orientation='vertical', shift=32,
+    def translating_bar_infinity(self, length=10, nrows=64, ncols=None, orientation='vertical', shift=32,
                                  ts_offset=10, artifical_stimulus=True, rec_path=None,
-                                 returnEvents=False):
+                                 return_events=False):
         """
         This function will either load recorded DAVIS/DVS recordings or generate artificial events
         of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
@@ -223,22 +287,27 @@ class octa_testbench():
 
         Args:
             length (int, optional): length of the bar in pixel
-            n2dNeurons (int, optional): Size of the pizel array
+            nrows (int, optional): X-Axis size of the pixel array
+            ncols (int, optional): Y-Axis size of the pixel array
             orientation (str, optional): lag which determines if bar is orientated vertical or horizontal
             shift (int, optional): offset in x where the stimulus will start
             ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
             rec_path (str, optional): Path to recordings
-            returnEvents (bool, optional): Flag to return events instead of SpikeGenerator
+            return_events (bool, optional): Flag to return events instead of SpikeGenerator
 
         Returns:
             SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes
-            events (numpy.ndarray, optional): If returnEvents is set events will be returned
+            events (numpy.ndarray, optional): If return_events is set events will be returned
 
         Raises:
             UserWarning: If no filename is given but aedat reacording should be loaded
 
         """
+        if ncols is None:
+            ncols = nrows
+
+        num_neurons = nrows * ncols
         if not artifical_stimulus:
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
@@ -246,25 +315,30 @@ class octa_testbench():
                 fname = rec_path + 'Inifity_bar_vertical.aedat'
             elif orientation == 'horizontal':
                 fname = 'Infinity_bar_horizontal.aedat'
-            assert(os.path.isfile(fname)), "No recording exists. Please record the respective stimulus first."
-            events = aedat2numpy(datafile=fname, camera='DVS240')
+            assert(os.path.isfile(
+                fname)), "No recording exists. Please record the respective stimulus first."
+            self.events = aedat2numpy(datafile=fname, camera='DVS240')
         else:
             x_coord = []
             y_coord = []
             pol = []
-            ts = []
+            self.times = []
             for i, cAngle in enumerate(self.angles):
                 x, y = self.infinity(cAngle)
                 if orientation == 'vertical':
-                    endy_1 = y + ((length / 2) * np.sin(np.pi / 2))
-                    endx_1 = x + ((length / 2) * np.cos(np.pi / 2))
-                    endy_2 = y - ((length / 2) * np.sin(np.pi / 2))
-                    endx_2 = x - ((length / 2) * np.cos(np.pi / 2))
+                    endy_1 = shift + shift * y + \
+                        ((length / 2) * np.sin(np.pi / 2))
+                    endx_1 = shift + shift * x + \
+                        ((length / 2) * np.cos(np.pi / 2))
+                    endy_2 = shift + shift * y - \
+                        ((length / 2) * np.sin(np.pi / 2))
+                    endx_2 = shift + shift * x - \
+                        ((length / 2) * np.cos(np.pi / 2))
                 elif orientation == 'horizontal':
-                    endy_1 = y + ((length / 2) * np.sin(np.pi))
-                    endx_1 = x + ((length / 2) * np.cos(np.pi))
-                    endy_2 = y - ((length / 2) * np.sin(np.pi))
-                    endx_2 = x - ((length / 2) * np.cos(np.pi))
+                    endy_1 = shift + shift * y + ((length / 2) * np.sin(np.pi))
+                    endx_1 = shift + shift * x + ((length / 2) * np.cos(np.pi))
+                    endy_2 = shift + shift * y - ((length / 2) * np.sin(np.pi))
+                    endx_2 = shift + shift * x - ((length / 2) * np.cos(np.pi))
                 self.start = np.asarray((endx_1, endy_1))
                 self.end = np.asarray((endx_2, endy_2))
                 self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)),
@@ -272,52 +346,57 @@ class octa_testbench():
                 dv = (self.end - self.start) / self.max_length
                 self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
-                    self.line.append(self.dda_round((step + 1) * dv + self.start))
+                    self.line.append(self.dda_round(
+                        (step + 1) * dv + self.start))
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])
-                    ts.append(i * ts_offset)
+                    self.times .append(i * ts_offset)
                     pol.append(1)
 
-            events = np.zeros((4, len(x_coord)))
-            events[0, :] = np.asarray(x_coord)
-            events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(ts)
-            events[3, :] = np.asarray(pol)
+            self.events = np.zeros((4, len(x_coord)))
+            self.events[0, :] = np.asarray(x_coord)
+            self.events[1, :] = np.asarray(y_coord)
+            self.events[2, :] = np.asarray(self.times)
+            self.events[3, :] = np.asarray(pol)
 
-        if returnEvents:
-            return events
+        if return_events:
+            return self.events
         else:
             if not artifical_stimulus:
-                ind, ts = dvs2ind(events, scale=False)
+                self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
-                print(np.max(ind), np.min(ind))
-            nPixel = np.int(np.max(ind))
-            gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=ind, times=ts * ms, name='bar')
+                self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
+                                      np.asarray(self.events[1, :], dtype='int'),
+                                      nrows, ncols)
+                print(np.max(self.indices), np.min(self.indices))
+            nPixel = np.int(np.max(self.indices))
+            gInpGroup = SpikeGeneratorGroup(
+                nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
             return gInpGroup
 
-    def rotating_bar_infinity(self, length=10, n2dNeurons=64, orthogonal=False, shift=32,
+    def rotating_bar_infinity(self, length=10, nrows=64, ncols=None, orthogonal=False, shift=32,
                               ts_offset=10, artifical_stimulus=True, rec_path=None,
-                              returnEvents=False):
+                              return_events=False):
         """This function will either load recorded DAVIS/DVS recordings or generate artificial events
         of bar moving on a infinity trajectory with fixed orientation, i.e. no super-imposed rotation.
         In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
 
         Args:
             length (int, optional): Length of the bar in pixel
-            n2dNeurons (int, optional): Size of the pizel array
+            nrows (int, optional): X-Axis size of the pixel array
+            ncols (int, optional): Y-Axis size of the pixel array
             orthogonal (bool, optional): Flag which determines if bar is kept always orthogonal to trajectory,
                 if it kept aligned with trajectory or if it returns in "chaotic way"
             shift (int, optional): offset in x where the stimulus will start
             ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
             rec_path (None, optional): Description
-            returnEvents (bool, optional): Flag to return events instead of SpikeGenerator
+            return_events (bool, optional): Flag to return events instead of SpikeGenerator
 
         Returns:
             SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes
-            events (numpy.ndarray, optional): If returnEvents is set events will be returned
+            events (numpy.ndarray, optional): If return_events is set events will be returned
 
         Raises:
             UserWarning: If no filename is given but aedat reacording should be loaded
@@ -325,6 +404,10 @@ class octa_testbench():
         Deleted Parameters:
             rec_pah (None, optional): Path to recordings
         """
+        if ncols is None:
+            ncols = nrows
+
+        num_neurons = nrows * ncols
         if not artifical_stimulus:
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
@@ -334,69 +417,95 @@ class octa_testbench():
                 fname = rec_path + 'Infinity_orthogonal_bar.aedat'
             elif orthogonal == 2:
                 fname = rec_path + 'Infinity_orthogonal_aligned_bar.aedat'
-            assert(os.path.isfile(fname)), "No recording exists. Please record the respective stimulus first."
-            events = aedat2numpy(datafile=fname, camera='DVS240')
-            return events
+            assert(os.path.isfile(
+                fname)), "No recording exists. Please record the respective stimulus first."
+            self.events = aedat2numpy(datafile=fname, camera='DVS240')
+            return self.events
         else:
             x_coord = []
             y_coord = []
             pol = []
-            ts = []
+            self.times = []
             flipped_angles = self.angles[::-1]
             for i, cAngle in enumerate(self.angles):
                 x, y = self.infinity(cAngle)
                 if orthogonal == 1:
                     if x >= shift:
-                        endy_1 = y + ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                        endx_1 = x + ((length / 2) * np.cos((np.pi / 2 * cAngle)))
-                        endy_2 = y - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                        endx_2 = x - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                        endy_1 = shift + shift * y + \
+                            ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                        endx_1 = shift + shift * x + \
+                            ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                        endy_2 = shift + shift * y - \
+                            ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                        endx_2 = shift + shift * x - \
+                            ((length / 2) * np.cos((np.pi / 2 * cAngle)))
 
                     else:
-                        endy_1 = y - ((length / 2) * np.sin(np.pi + (np.pi / 2 * flipped_angles[i])))
-                        endx_1 = x - ((length / 2) * np.cos(np.pi + (np.pi / 2 * flipped_angles[i])))
-                        endy_2 = y + ((length / 2) * np.sin(np.pi + (np.pi / 2 * flipped_angles[i])))
-                        endx_2 = x + ((length / 2) * np.cos(np.pi + (np.pi / 2 * flipped_angles[i])))
+                        endy_1 = shift + shift * y - \
+                            ((length / 2) * np.sin(np.pi +
+                                                   (np.pi / 2 * flipped_angles[i])))
+                        endx_1 = shift + shift * x - \
+                            ((length / 2) * np.cos(np.pi +
+                                                   (np.pi / 2 * flipped_angles[i])))
+                        endy_2 = shift + shift * y + \
+                            ((length / 2) * np.sin(np.pi +
+                                                   (np.pi / 2 * flipped_angles[i])))
+                        endx_2 = shift + shift * x + \
+                            ((length / 2) * np.cos(np.pi +
+                                                   (np.pi / 2 * flipped_angles[i])))
                 elif orthogonal == 0:
-                    endy_1 = y + ((length / 2) * np.sin(np.pi / 2 + cAngle))
-                    endx_1 = x + ((length / 2) * np.cos(np.pi / 2 + cAngle))
-                    endy_2 = y - ((length / 2) * np.sin(np.pi / 2 + cAngle))
-                    endx_2 = x - ((length / 2) * np.cos(np.pi / 2 + cAngle))
+                    endy_1 = shift + shift * y + \
+                        ((length / 2) * np.sin(np.pi / 2 + cAngle))
+                    endx_1 = shift + shift * x + \
+                        ((length / 2) * np.cos(np.pi / 2 + cAngle))
+                    endy_2 = shift + shift * y - \
+                        ((length / 2) * np.sin(np.pi / 2 + cAngle))
+                    endx_2 = shift + shift * x - \
+                        ((length / 2) * np.cos(np.pi / 2 + cAngle))
 
                 elif orthogonal == 2:
-                    endy_1 = y + ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                    endx_1 = x + ((length / 2) * np.cos((np.pi / 2 * cAngle)))
-                    endy_2 = y - ((length / 2) * np.sin((np.pi / 2 * cAngle)))
-                    endx_2 = x - ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                    endy_1 = shift + shift * y + \
+                        ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                    endx_1 = shift + shift * x + \
+                        ((length / 2) * np.cos((np.pi / 2 * cAngle)))
+                    endy_2 = shift + shift * y - \
+                        ((length / 2) * np.sin((np.pi / 2 * cAngle)))
+                    endx_2 = shift + shift * x - \
+                        ((length / 2) * np.cos((np.pi / 2 * cAngle)))
 
                 self.start = np.asarray((endx_1, endy_1))
                 self.end = np.asarray((endx_2, endy_2))
-                self.max_direction, self.max_length = max(enumerate(abs(self.end - self.start)), key=operator.itemgetter(1))
+                self.max_direction, self.max_length = max(
+                    enumerate(abs(self.end - self.start)), key=operator.itemgetter(1))
                 dv = (self.end - self.start) / self.max_length
                 self.line = [self.dda_round(self.start)]
                 for step in range(int(self.max_length)):
-                    self.line.append(self.dda_round((step + 1) * dv + self.start))
+                    self.line.append(self.dda_round(
+                        (step + 1) * dv + self.start))
                 for coord in self.line:
                     x_coord.append(coord[0])
                     y_coord.append(coord[1])
-                    ts.append(i * ts_offset)
+                    self.times.append(i * ts_offset)
                     pol.append(1)
 
-            events = np.zeros((4, len(x_coord)))
-            events[0, :] = np.asarray(x_coord)
-            events[1, :] = np.asarray(y_coord)
-            events[2, :] = np.asarray(ts)
-            events[3, :] = np.asarray(pol)
+            self.events = np.zeros((4, len(x_coord)))
+            self.events[0, :] = np.asarray(x_coord)
+            self.events[1, :] = np.asarray(y_coord)
+            self.events[2, :] = np.asarray(self.times)
+            self.events[3, :] = np.asarray(pol)
 
-        if returnEvents:
-            return events
+        if return_events:
+            return self.events
         else:
             if not artifical_stimulus:
-                ind, ts = dvs2ind(events, scale=False)
+                self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                ind = xy2ind(events[0, :], events[1, :], n2dNeurons)
-            nPixel = np.int(np.max(ind))
-            gInpGroup = SpikeGeneratorGroup(nPixel + 1, indices=ind, times=ts * ms, name='bar')
+                self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
+                                      np.asarray(self.events[1, :], dtype='int'),
+                                      nrows, ncols)
+            nPixel = np.int(np.max(self.indices))
+            gInpGroup = SpikeGeneratorGroup(
+                nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
             return gInpGroup
 
     def ball(self, rec_path):
@@ -419,10 +528,13 @@ class octa_testbench():
         if rec_path is None:
             raise UserWarning('No path to recording was provided')
         fname = rec_path + 'ball.aedat'
-        assert(os.path.isfile(fname)), "No recording ball.aedat exists in {}. Please use jAER to record the stimulus and save it as ball.aedat in {}".format(rec_path, rec_path)
+        assert(os.path.isfile(fname)), "No recording ball.aedat exists in {}. Please use jAER to record the stimulus and save it as ball.aedat in {}".format(
+            rec_path, rec_path)
         events = aedat2numpy(datafile=fname, camera='DVS240')
-        ind_on, ts_on, ind_off, ts_off = dvs2ind(Events=events, resolution=max(self.DVS_SHAPE), scale=True)
-        # depending on how long conversion to index takes we might need to savbe this as well
+        ind_on, ts_on, ind_off, ts_off = dvs2ind(
+            Events=events, resolution=max(self.DVS_SHAPE), scale=True)
+        # depending on how long conversion to index takes we might need to
+        # savbe this as well
         input_on = SpikeGeneratorGroup(N=self.DVS_SHAPE[0] * self.DVS_SHAPE[1],
                                        indices=ind_on, times=ts_on, name='input_on*')
         input_off = SpikeGeneratorGroup(N=self.DVS_SHAPE[0] * self.DVS_SHAPE[1],
@@ -430,7 +542,7 @@ class octa_testbench():
         return input_on, input_off
 
 
-class wta_testbench():
+class WTA_Testbench():
 
     """Collection of functions to test the computational properties of the WTA building_block
 
@@ -440,7 +552,7 @@ class wta_testbench():
         noise_input (brian2.PoissionGroup): PoissionGroup which provides noise events
     """
 
-    def __init(self):
+    def __init__(self):
         """Summary
         """
         pass
@@ -462,9 +574,11 @@ class wta_testbench():
         """
         self.times = np.arange(start_time, end_time + 1, isi)
         if dimensions == 1:
-            self.indices = np.round(np.linspace(0, num_neurons, len(self.times)))
+            self.indices = np.round(np.linspace(
+                0, num_neurons, len(self.times)))
         elif dimensions == 2:
-            self.indices = np.round(np.linspace(0, num_neurons, len(self.times))) + (num_neurons**2 / 2)
+            self.indices = np.round(np.linspace(
+                0, num_neurons, len(self.times))) + (num_neurons**2 / 2)
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 
@@ -473,78 +587,105 @@ class wta_testbench():
 
         Args:
             num_neurons (int, optional): 1D size of WTA population
-            rate (int, optional): Spike frequency f posssion noise process
+            rate (int, optional): Spike frequency f poission noise process
 
         """
-        self.noise_input = PoissonGroup(num_neurons, rate * Hz)
+        num2d_neurons = num_neurons**2
+        self.noise_input = PoissonGroup(num2d_neurons, rate * Hz)
 
 
-# class visualize():
+class Visualize():
 
-#     """Summary
+    """Summary
 
-#     Attributes:
-#         colors (TYPE): Description
-#         eventPlot (TYPE): Description
-#         labelStyle (dict): Description
-#         win (TYPE): Description
-#     """
+    Attributes:
+        colors (TYPE): Description
+        event_plot (TYPE): Description
+        labelStyle (dict): Description
+        win (TYPE): Description
+    """
 
-#     def __init__(self):
-#         """Summary
-#         """
-#         app = QtGui.QApplication([])
-#         pg.setConfigOptions(antialias=True)
+    def __init__(self):
+        """Summary
+        """
+        pass
 
-#         self.colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-#                   (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-#         self.labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-#         self.win = pg.GraphicsWindow(title="Stimuli visualization")
-#         self.win.resize(1024, 768)
-#         self.eventPlot = self.win.addPlot(title="Input events in ")
-#         self.eventPlot.addLegend()
+    def plot(self, events, time_window=35):
+        """Summary
 
-#     def plot(self, events, time_window=35):
-#         """Summary
+        Args:
+            events (TYPE): Description
+            time_window (int, optional): Description
+        """
+        global stim
+        self.time_window = time_window
 
-#         Args:
-#             events (TYPE): Description
-#             time_window (int, optional): Description
-#         """
-#         if type(events) == str:
-#             events = np.load(events)
-#         self.eventPlot = self.win.addPlot(title="Input events with size {}x{}".format(np.max(events[0, :]), np.max(events[1, :])))
-#         self.eventPlot.addLegend()
+        self.app = QtGui.QApplication.instance()
+        if self.app is None:
+            self.app = QtGui.QApplication(sys.argv)
+        else:
+            print('QApplication instance already exists: %s' % str(self.app))
 
-#         self.eventPlot.setLabel('left', "Y", **labelStyle)
-#         self.eventPlot.setLabel('bottom', "X", **labelStyle)
+        pg.setConfigOptions(antialias=True)
+        colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
+                  (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
+        labelStyle = {'color': '#FFF', 'font-size': '12pt'}
+        win = pg.GraphicsWindow(title="Stimuli visualization")
+        win.resize(1024, 768)
+        event_plot = win.addPlot(title="Input events in ")
+        event_plot.addLegend()
 
-#         b = QtGui.QFont("Sans Serif", 10)
-#         self.eventPlot.getAxis('bottom').tickFont = b
-#         self.eventPlot.getAxis('left').tickFont = b
+        self.win = win
 
-#         # start visualizing
-#         start = 0
-#         for i in range(0, np.max(events[2, :]), time_window * 10**3):
-#             cIndTS = np.logical_and(events[2, :] >= start, events[2, :] <= start + time_window * 10**3)
-#             cIndON = np.logical_and(cIndTS, events[3, :] == 1)
-#             cIndOFF = np.logical_and(cIndTS, events[3, :] == 0)
+        if type(events) == str:
+            self.events = np.load(events)
+        else:
+            self.events = events
 
-#             xData = events[0, cIndON]
-#             yData = events[1, cIndON]
-#             # plot on events in red
-#             self.eventPlot.plot(x=xData, y=yData,
-#                  pen=None, symbol='o', symbolPen=None,
-#                  symbolSize=7, symbolBrush=self.colors[0],
-#                  name='ON Events')
+        event_plot.setLabel('left', "Y", **labelStyle)
+        event_plot.setLabel('bottom', "X", **labelStyle)
+        event_plot.setXRange(0, np.max(events[0, :]))
+        event_plot.setYRange(0, np.max(events[1, :]))
 
-#             if cIndOFF.any():
-#                 xData = events[0, cIndOFF]
-#                 yData = events[1, cIndOFF]
-#                 # plot off events in blue
-#                 self.eventPlot.plot(x=xData, y=yData,
-#                      pen=None, symbol='o', symbolPen=None,
-#                      symbolSize=7, symbolBrush=self.colors[2],
-#                      name='OFF Events')
+        b = QtGui.QFont("Sans Serif", 10)
+        event_plot.getAxis('bottom').tickFont = b
+        event_plot.getAxis('left').tickFont = b
 
-#             start += time_window * 10**3
+        # start visualizing
+        self.start = 0
+        self.stim = event_plot.plot(pen=None, symbol='o', symbolPen=None,
+                                    symbolSize=7, symbolBrush=colors[0],
+                                    name='ON Events')
+        # stop auto-scaling after the first data set is plotted
+        event_plot.enableAutoRange('xy', False)
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(100)
+
+        self.app.exec_()
+
+    def update(self):
+        global event_plot
+        c_ind_ts = np.logical_and(self.events[2, :] >= self.start, self.events[
+                                  2, :] <= self.start + self.time_window)
+        c_ind_on = np.logical_and(c_ind_ts, self.events[3, :] == 1)
+
+        data_x = self.events[0, c_ind_on]
+        data_y = self.events[1, c_ind_on]
+        self.start += self.time_window
+        # print(len(data_x))
+        # print(np.shape(self.events))
+        # print(self.events[2, :])
+        self.stim.setData(x=data_x, y=data_y)
+
+
+if __name__ == '__main__':
+    import tkinter as tk
+    from tkinter import filedialog
+
+    root = tk.Tk()
+    root.withdraw()
+    vis = Visualize()
+    eventsfile = filedialog.askopenfilename()
+    events = np.load(eventsfile)
+    vis.plot(events)

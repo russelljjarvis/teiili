@@ -9,10 +9,10 @@ This file contains unittest for testbench.py
 
 import unittest
 import numpy as np
-from NCSBrian2Lib.stimuli.testbench import octa_testbench, stdp_testbench
+from teili.stimuli.testbench import OCTA_Testbench, STDP_Testbench
 
-octa_testbench = octa_testbench()
-stdp_testbench = stdp_testbench()
+octa_testbench = OCTA_Testbench()
+stdp_testbench = STDP_Testbench()
 
 
 class TestTestbench(unittest.TestCase):

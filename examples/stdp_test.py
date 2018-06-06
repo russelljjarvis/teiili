@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde
 # @Date:   2018-01-16 17:57:35
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-30 13:55:01
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 16:59:19
 
 """this file provides an example of how to use neuron and synapse models which are present
 on neurmorphic chips in the context of synaptic plasticity based on precise timing of spikes.
@@ -20,11 +20,11 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, TimedArray,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
-from NCSBrian2Lib.core.groups import Neurons, Connections
-from NCSBrian2Lib import NCSNetwork, activate_standalone, deactivate_standalone
-from NCSBrian2Lib.models.neuron_models import DPI
-from NCSBrian2Lib.models.synapse_models import DPISyn, DPIstdp
-from NCSBrian2Lib.stimuli.testbench import STDP_Testbench
+from teili.core.groups import Neurons, Connections
+from teili import NCSNetwork, activate_standalone, deactivate_standalone
+from teili.models.neuron_models import DPI
+from teili.models.synapse_models import DPISyn, DPIstdp
+from teili.stimuli.testbench import STDP_Testbench
 
 save_plot = False
 
@@ -35,11 +35,11 @@ Net = NCSNetwork()
 stdp = STDP_Testbench()
 gPre, gPost = stdp.stimuli(isi=30)
 
-preSTDP = Neurons(2, equation_builder=DPI(), num_inputs=1,
+preSTDP = Neurons(2, equation_builder=DPI(num_inputs=1),
                   name='preSTDP', verbose=True)
 preSTDP.refP = 3 * ms
 
-postSTDP = Neurons(2, equation_builder=DPI(), num_inputs=2,
+postSTDP = Neurons(2, equation_builder=DPI(num_inputs=2),
                    name='postSTDP', verbose=True)
 
 

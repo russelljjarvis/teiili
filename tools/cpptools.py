@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: alpren
 # @Date:   2017-07-28 19:02:05
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 17:14:36
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 16:44:33
 #!/usr/bin/env python3
 
 """
@@ -62,7 +62,7 @@ def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True
 
     maincppPath = os.path.join(os.getcwd(), standalone_dir, 'main.cpp')  # this should always be the correct path
     replace_vars = [key for key in standalone_params]
-    replaceVariablesInCPPcode(replace_vars, replace_file_location=maincppPath)
+    replace_variables_in_cpp_code(replace_vars, replace_file_location=maincppPath)
     #===============================================================================
     # compile
     if do_compile:
@@ -78,7 +78,7 @@ def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True
         print('\n\nstandalone was built, ready to compile!')
 
 
-def replaceVariablesInCPPcode(replace_vars, replace_file_location):
+def replace_variables_in_cpp_code(replace_vars, replace_file_location):
     '''replaces a list of variables in CPP code for standalone code generation with changeable parameters
     and it adds duration as a changeable parameter (it is always the first argument)
 

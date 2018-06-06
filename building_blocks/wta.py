@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-14 18:56:00
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-04 10:08:51
 
 """
 This files contains different WTA circuits
@@ -13,32 +13,25 @@ This files contains different WTA circuits
 import time
 import numpy as np
 import sys
-# import matplotlib.pyplot as plt
+
+#import matplotlib.pyplot as plt
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
-from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
-    StateMonitor, figure, subplot, mV, pA
+import brian2
+from brian2 import ms, mV, pA, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
+import teili.tools.synaptic_kernel
+from teili.tools.misc import print_states
+from teili.tools.distance import dist1d2dint
+from teili.tools.indexing import ind2x, ind2y
+from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 
-import NCSBrian2Lib.tools.synaptic_kernel
-from NCSBrian2Lib.tools.misc import print_states
-from NCSBrian2Lib.tools.distance import  dist1d2dint
-from NCSBrian2Lib.tools.indexing import ind2x, ind2y
-from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
+from teili.building_blocks.building_block import BuildingBlock
+from teili.core.groups import Neurons, Connections
 
-from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
-from NCSBrian2Lib.core.groups import Neurons, Connections
-
-from NCSBrian2Lib.models.neuron_models import DPI
-from NCSBrian2Lib.models.synapse_models import DPISyn
-
-app = QtGui.QApplication.instance()
-if app is None:
-    app = QtGui.QApplication(sys.argv)
-else:
-    print('QApplication instance already exists: %s' % str(app))
-
+from teili.models.neuron_models import DPI
+from teili.models.synapse_models import DPISyn
 
 wtaParams = {'weInpWTA': 1.5,
              'weWTAInh': 1,
@@ -62,7 +55,7 @@ class WTA(BuildingBlock):
         inputGroup (SpikeGenerator): SpikeGenerator obj. to stimulate WTA
         num_neurons (int, optional): Size of WTA neuron population
         spikemonWTA (TYPE): Description
-        standaloneParams (dict): Keys for all standalone parameters necessary for cpp code generation
+        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation
     '''
 
     def __init__(self, name,
@@ -109,7 +102,7 @@ class WTA(BuildingBlock):
                                monitor)
 
         if dimensions == 1:
-            self.Groups, self.Monitors, self.standaloneParams = gen1dWTA(name,
+            self.Groups, self.Monitors, self.standalone_params = gen1dWTA(name,
                                              neuron_eq_builder,
                                              synapse_eq_builder,
                                              num_neurons=num_neurons,
@@ -123,7 +116,7 @@ class WTA(BuildingBlock):
                                              spatial_kernel=spatial_kernel,
                                              **block_params)
         elif dimensions == 2:
-            self.Groups, self.Monitors, self.standaloneParams = gen2dWTA(name,
+            self.Groups, self.Monitors, self.standalone_params = gen2dWTA(name,
                                              neuron_eq_builder,
                                              synapse_eq_builder,
                                              num_neurons=num_neurons,
@@ -172,7 +165,7 @@ def gen1dWTA(groupname,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=0.5, sigm=3,
              rpWTA=3 * ms, rpInh=1 * ms,
              num_neurons=64, num_inh_neurons=5, num_input_neurons=None, cutoff=10, num_inputs=1,
-             spatial_kernel="kernel_mexican_1d",
+             spatial_kernel="kernel_gauss_1d",
              EI_connection_probability=1, IE_connection_probability=1, II_connection_probability=0,
              monitor=True, additional_statevars=[], debug=False):
     """Summary
@@ -200,12 +193,18 @@ def gen1dWTA(groupname,
     Returns:
         Groups (dictionary): Keys to all neuron and synapse groups
         Monitors (dictionary): Keys to all spike- and statemonitors
-        standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
     """
     if spatial_kernel is None:
-        spatial_kernel = "kernel_mexican_1d"
+        spatial_kernel = "kernel_gauss_1d"
 
-    spatial_kernel_func = getattr(NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)
+    if type(spatial_kernel) == brian2.core.functions.Function:
+        spatial_kernel_func = spatial_kernel
+        spatial_kernel_name = spatial_kernel.pyfunc.__name__
+    else:
+        spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
+        spatial_kernel_name = spatial_kernel
+
     # time measurement
     start = time.clock()
 
@@ -248,8 +247,8 @@ def gen1dWTA(groupname,
     synInhWTA1i.connect('True', p=IE_connection_probability)
     synInhInh1i.connect('True', p=II_connection_probability)
 
-    synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
-    synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(name='latWeight', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(name='latSigma', shared=True, constant=True)
 
     # set weights
     synInpWTA1e.weight = weInpWTA
@@ -260,8 +259,8 @@ def gen1dWTA(groupname,
     # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
-    synWTAWTA1e.namespace.update({spatial_kernel: spatial_kernel_func})
-    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma)'
+    synWTAWTA1e.namespace.update({spatial_kernel_name: spatial_kernel_func})
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel_name + '(i,j,latSigma)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -292,7 +291,7 @@ def gen1dWTA(groupname,
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: weInpWTA, weWTAInh, wiInhWTA, weWTAWTA,rpWTA, rpInh,sigm
-    standaloneParams = {
+    standalone_params = {
         synInpWTA1e.name + '_weight': weInpWTA,
         synWTAInh1e.name + '_weight': weWTAInh,
         synInhWTA1i.name + '_weight': wiInhWTA,
@@ -310,7 +309,7 @@ def gen1dWTA(groupname,
         for key in Groups:
             print(key)
 
-    return Groups, Monitors, standaloneParams
+    return Groups, Monitors, standalone_params
 
 
 def gen2dWTA(groupname,
@@ -320,7 +319,7 @@ def gen2dWTA(groupname,
              rpWTA=2.5 * ms, rpInh=1 * ms,
              wiInhInh=0, EI_connection_probability=1, IE_connection_probability=1,
              II_connection_probability=0.1,
-             spatial_kernel="kernel_mexican_2d",
+             spatial_kernel="kernel_gauss_2d",
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''generates a new square 2d WTA
@@ -348,13 +347,19 @@ def gen2dWTA(groupname,
     Returns:
         Groups (dictionary): Keys to all neuron and synapse groups
         Monitors (dictionary): Keys to all spike- and statemonitors
-        standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
     '''
 
     if spatial_kernel is None:
-        spatial_kernel = "kernel_mexican_2d"
+        spatial_kernel = "kernel_gauss_2d"
 
-    spatial_kernel_func = getattr(NCSBrian2Lib.tools.synaptic_kernel, spatial_kernel)
+
+    if type(spatial_kernel) == brian2.core.functions.Function:
+        spatial_kernel_func = spatial_kernel
+        spatial_kernel_name = spatial_kernel.pyfunc.__name__
+    else:
+        spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
+        spatial_kernel_name = spatial_kernel
     # time measurement
     start = time.clock()
 
@@ -407,8 +412,8 @@ def gen2dWTA(groupname,
     synInhWTA1i.connect('True', p=IE_connection_probability)
     synInhInh1i.connect('True', p=II_connection_probability)
 
-    synWTAWTA1e.addStateVariable(name='latWeight', shared=True, constant=True)
-    synWTAWTA1e.addStateVariable(name='latSigma', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(name='latWeight', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(name='latSigma', shared=True, constant=True)
 
     # set weights
     synInpWTA1e.weight = weInpWTA
@@ -421,9 +426,9 @@ def gen2dWTA(groupname,
     # and retrieve that value more easily
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
-    synWTAWTA1e.namespace[spatial_kernel] = spatial_kernel_func
+    synWTAWTA1e.namespace[spatial_kernel_name] = spatial_kernel_func
     synWTAWTA1e.namespace['num_neurons'] = num_neurons
-    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma,num_neurons,num_neurons)'
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel_name + '(i,j,latSigma,num_neurons,num_neurons)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -454,7 +459,7 @@ def gen2dWTA(groupname,
     # replacevars should be the real names of the parameters,
     # that can be changed by the arguments of this function:
     # in this case: weInpWTA, weWTAInh, wiInhWTA, weWTAWTA,rpWTA, rpInh,sigm
-    standaloneParams = {
+    standalone_params = {
         synInpWTA1e.name + '_weight': weInpWTA,
         synWTAInh1e.name + '_weight': weWTAInh,
         synInhWTA1i.name + '_weight': wiInhWTA,
@@ -473,7 +478,7 @@ def gen2dWTA(groupname,
         for key in Groups:
             print(key)
 
-    return Groups, Monitors, standaloneParams
+    return Groups, Monitors, standalone_params
 
 
 def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
@@ -487,6 +492,12 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
             Can be smaller than simulation time but not larger
         WTAMonitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors
     """
+    app = QtGui.QApplication.instance()
+    if app is None:
+        app = QtGui.QApplication(sys.argv)
+    else:
+        print('QApplication instance already exists: %s' % str(app))
+
     pg.setConfigOptions(antialias=True)
 
     win_raster = pg.GraphicsWindow(title='Winner-Take-All Test Simulation: Raster plots')
@@ -509,7 +520,6 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
                      num_neurons=WTAMonitors['spikemonWTAInh'].source.N, monitor=WTAMonitors['spikemonWTAInh'],
                      window=raster_inh)
 
-
     if plot_states:
         win_states = pg.GraphicsWindow(title='Winner-Take-All Test Simulation:State plots')
         win_states.resize(1000, 1800)
@@ -527,40 +537,3 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
                          variable="Iin", unit=pA, window=state_syn_input, name=name)
 
     app.exec()
-    #QtGui.QApplication.instance().exec_()
-
-    # fig = figure(figsize=(8, 3))
-    # plotSpikemon(start_time, end_time,
-    #              WTAMonitors['spikemonWTA'], num_neurons, ylab='ind WTA_' + name)
-    # fig = figure(figsize=(8, 3))
-    # plotSpikemon(start_time, end_time,
-    #              WTAMonitors['spikemonWTAInp'], None, ylab='ind WTAInp_' + name)
-    # fig = figure(figsize=(8, 3))
-    # plotSpikemon(start_time, end_time,
-    #              WTAMonitors['spikemonWTAInh'], None, ylab='ind WTAInh_' + name)
-    # # fig.savefig('fig/'+name+'_Spikes.png')
-
-    # if num_neurons > 20:
-    #     plot_state_neurons = range(20)
-    # else:
-    #     plot_state_neurons = range(num_neurons)
-
-    # statemonWTA = WTAMonitors['statemonWTA']
-    # if len(statemonWTA.t) > 0:
-    #     fig = figure(figsize=(8, 10))
-    #     nPlots = 3 * 100
-    #     subplot(nPlots + 11)
-    #     for ii in plot_state_neurons:
-    #         plotStatemon(start_time, end_time, statemonWTA,
-    #                      ii, variable='Imem', unit=pA, name=name)
-    #     subplot(nPlots + 12)
-    #     for ii in plot_state_neurons:
-    #         plotStatemon(start_time, end_time, statemonWTA,
-    #                      ii, variable='Iin', unit=pA, name=name)
-    #     # subplot(nPlots + 13)
-    #     # for ii in plot_state_neurons:
-    #     #     plotStatemon(start_time, end_time, statemonWTA,
-    #     #                  ii, variable='Ie1', unit=pA, name=name)
-    #     # fig.savefig('fig/'+name+'_States.png', dpi=300)
-    # plt.draw()
-    # plt.show()

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-18 17:15:23
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 15:17:35
 
 """
 This files contains different Reservoir circuits
@@ -19,17 +19,16 @@ import pyqtgraph as pg
 from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
     StateMonitor, figure, subplot, mV, pA
 
-from NCSBrian2Lib.tools.misc import print_states, dist1d2dint
-from NCSBrian2Lib.tools.indexing import ind2x, ind2y
-from NCSBrian2Lib.tools.plotting import plot_spikemon_qt, plot_statemon_qt
+import teili.tools.synaptic_kernel
+from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 
-from NCSBrian2Lib.building_blocks.building_block import BuildingBlock
-from NCSBrian2Lib.core.groups import Neurons, Connections
+from teili.building_blocks.building_block import BuildingBlock
+from teili.core.groups import Neurons, Connections
 
-from NCSBrian2Lib.models.neuron_models import Izhikevich
-from NCSBrian2Lib.models.synapse_models import DPISyn
+from teili.models.neuron_models import Izhikevich
+from teili.models.synapse_models import DoubleExponential
 
-from NCSBrian2Lib.models.parameters.izh_neuron_param import parameters as IzhParams
+from teili.models.parameters.izh_neuron_param import parameters as IzhParams
 
 # RParams = {'weInpR': 1.5,
 #            'weRInh': 1,
@@ -40,27 +39,38 @@ from NCSBrian2Lib.models.parameters.izh_neuron_param import parameters as IzhPar
 #            'rpInh': 1 * ms
 # }
 
+reservor_params = {'weInpR': 1.5,
+                   'weRInh': 1,
+                   'wiInhR': -1,
+                   'weRR': 0.5,
+                   'sigm': 3,
+                   'rpR': 3 * ms,
+                   'rpInh': 1 * ms
+                   }
 
-class R(BuildingBlock):
+
+class Reservoir(BuildingBlock):
     '''A recurrent Neural Net inmplementing a Reservoir
 
     Attributes:
         group (dict): List of keys of neuron population
         inputGroup (SpikeGenerator): SpikeGenerator obj. to stimulate R
         num_neurons (int, optional): Size of R neuron population
-        fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple 
+        fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple
         spikemonR (TYPE): Description
-        standaloneParams (dict): Keys for all standalone parameters necessary for cpp code generation
+        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation
     '''
 
     def __init__(self, name,
                  neuron_eq_builder=Izhikevich,
-                 synapse_eq_builder=ExpSyn,
-                 block_params=wtaParams,
+                 synapse_eq_builder=DoubleExponential,
+                 block_params=reservor_params,
                  num_neurons=16,
+                 num_inputs=1,
+                 cutoff=10,
                  fraction_inh_neurons=None,
                  additional_statevars=[],
-                 num_inputs=1,
+                 spatial_kernel=None,
                  monitor=True,
                  debug=False):
         """Summary
@@ -79,7 +89,7 @@ class R(BuildingBlock):
             debug (bool, optional): Flag to gain additional information
 
         Raises:
-            NotImplementedError: 
+            NotImplementedError:
         """
         self.num_neurons = num_neurons
         BuildingBlock.__init__(self, name,
@@ -89,17 +99,19 @@ class R(BuildingBlock):
                                debug,
                                monitor)
 
-        self.Groups, self.Monitors, self.standaloneParams = genR(name,
-                                                                   neuron_eq_builder,
-                                                                   synapse_eq_builder,
-                                                                   num_neurons=num_neurons,
-                                                                   fraction_inh_neurons=fraction_inh_neurons,
-                                                                   additional_statevars=additional_statevars,
-                                                                   cutoff=cutoff,
-                                                                   num_inputs=num_inputs,
-                                                                   monitor=monitor,
-                                                                   debug=debug,
-                                                                   **block_params)
+        self.Groups, self.Monitors, \
+            self.standalone_params = gen_reservoir(name,
+                                                   neuron_eq_builder,
+                                                   synapse_eq_builder,
+                                                   num_neurons=num_neurons,
+                                                   num_inputs=num_inputs,
+                                                   fraction_inh_neurons=fraction_inh_neurons,
+                                                   additional_statevars=additional_statevars,
+                                                   cutoff=cutoff,
+                                                   spatial_kernel=spatial_kernel,
+                                                   monitor=monitor,
+                                                   debug=debug,
+                                                   **block_params)
 
         self.inputGroup =self.Groups['gRInpGroup']
         self.group = self.Groups['gRGroup']
@@ -119,17 +131,20 @@ class R(BuildingBlock):
                 end_time = max(self.spikemonR.t)
             else:
                 end_time = end_time * ms
-        plotR(self.name, start_time, end_time, self.numNeurons **
-                self.dimensions, self.Monitors)
+        plot_reservoir(self.name, start_time, end_time, self.numNeurons **
+                       self.dimensions, self.Monitors)
 
 
-def genR(groupname,
-             neuron_eq_builder=ExpAdaptIF,
-             synapse_eq_builder=DPISyn,
-             weInpR=1.5, weRInh=1, wiInhR=-1, weRR=0.5, sigm=3,
-             rpR=3 * ms, rpInh=1 * ms,
-             num_neurons=64, fraction_inh_neurons=0.2, num_inputs=1,
-             monitor=True, additional_statevars=[], debug=False):
+def gen_reservoir(groupname,
+                  neuron_eq_builder=ExpAdaptIF,
+                  synapse_eq_builder=reversalSynV,
+                  weInpR=1.5, weRInh=1, wiInhR=-1, weRR=0.5, sigm=3,
+                  rpR=3 * ms, rpInh=1 * ms,
+                  num_neurons=64, num_inputs=1,
+                  fraction_inh_neurons=0.2,
+                  spatial_kernel="kernel_mexican_1d",
+                  monitor=True, additional_statevars=[], debug=False):
+
     """Summary
 
     Args:
@@ -154,33 +169,41 @@ def genR(groupname,
     Returns:
         Groups (dictionary): Keys to all neuron and synapse groups
         Monitors (dictionary): Keys to all spike- and statemonitors
-        standaloneParams (dictionary): Dictionary which holds all parameters to create a standalone network
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
     """
     # time measurement
     start = time.clock()
+    if spatial_kernel is None:
+        spatial_kernel = "kernel_mexican_1d"
+
+    spatial_kernel_func = getattr(
+        teili.tools.synaptic_kernel, spatial_kernel)
 
     # create neuron groups
-    gRGroup = Neurons(num_neurons, equation_builder=neuron_eq_builder(),
-                        refractory=rpR, name='g' + groupname,
-                        num_inputs=3 + num_inputs)
+    gRGroup = Neurons(num_neurons,
+                      equation_builder=neuron_eq_builder(
+                          num_inputs=3 + num_inputs),
+                      refractory=rpR, name='g' + groupname)
+
     if fraction_inh_neurons is not None:
-        gRInhGroup = Neurons(round(num_neurons*fraction_inh_neurons), equation_builder=neuron_eq_builder(),
-                             refractory=rpInh, name='g' + groupname + '_Inh',
-                             num_inputs=1)
+        gRInhGroup = Neurons(round(num_neurons * fraction_inh_neurons),
+                             equation_builder=neuron_eq_builder(num_inputs=1),
+                             refractory=rpInh, name='g' + groupname + '_Inh')
 
     # empty input for R group
-    tsR = np.asarray([]) * ms
-    indR = np.asarray([])
+    ts_reservoir = np.asarray([]) * ms
+    ind_reservoir = np.asarray([])
     gRInpGroup = SpikeGeneratorGroup(
-        num_neurons, indices=indR, times=tsR, name='g' + groupname + '_Inp')
+        num_neurons, indices=ind_reservoir, times=ts_reservoir, name='g' + groupname + '_Inp')
 
     # create synapses
-    synInpR = Connections(gRInpGroup, gRGroup,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_Inp')
-    synRR = Connections(gRGroup, gRGroup,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_RR')
+    synInpR1e = Connections(gRInpGroup, gRGroup,
+                            equation_builder=synapse_eq_builder(),
+                            method="euler", name='s' + groupname + '_Inp')
+    synRR1e = Connections(gRGroup, gRGroup,
+                          equation_builder=synapse_eq_builder(),
+                          method="euler", name='s' + groupname + '_RR')
+
     if fraction_inh_neurons is not None:
         synInhR1i = Connections(gRInhGroup, gRGroup,
                                 equation_builder=synapse_eq_builder(),
@@ -190,18 +213,18 @@ def genR(groupname,
                                 method="euler", name='s' + groupname + '_Inhe')
 
     # connect synapses
-    synInpR.connect(p=0.1)
+    synInpR1e.connect(p=1.0)
     # connect the nearest neighbors including itself
-    synRR.connect(p=0.1)
+    synRR1e.connect(p=1.0)
     if fraction_inh_neurons is not None:
-        synRInh1e.connect(p=0.1)  # Generates all to all connectivity
-        synInhR1i.connect(p=0.1)
+        synRInh1e.connect(p=1.0)  # Generates all to all connectivity
+        synInhR1i.connect(p=1.0)
 
-    synRR.addStateVariable(name='latWeight', shared=True, constant=True)
-    synRR.addStateVariable(name='latSigma', shared=True, constant=True)
+    synRR1e.add_state_variable(name='latWeight', shared=True, constant=True)
+    synRR1e.add_state_variable(name='latSigma', shared=True, constant=True)
 
     # set weights
-    synInpR.weight = weInpR
+    synInpR1e.weight = weInpR
     synRInh1e.weight = weRInh
     synInhR1i.weight = wiInhR
     # lateral excitation kernel
@@ -209,15 +232,16 @@ def genR(groupname,
     # and retrieve that value more easily
     synRR1e.latWeight = weRR
     synRR1e.latSigma = sigm
-    synRR1e.namespace['kernel_mexican_1d'] = kernel_mexican_1d
-    synRR1e.weight = 'latWeight * kernel_mexican_1d(i,j,latSigma)'
+    synRR1e.namespace.update({spatial_kernel: spatial_kernel_func})
+    synRR1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma)'
 
     Groups = {
         'gRGroup': gRGroup,
         'gRInhGroup': gRInhGroup,
         'gRInpGroup': gRInpGroup,
-        'synInpR': synInpR,
-        'synRR': synRR}
+        'synInpR1e': synInpR1e,
+        'synRR1e': synRR1e}
+
     if fraction_inh_neurons is not None:
         Groups['synRInh1e'] = synRInh1e
         Groups['synInhR1i'] = synInhR1i
@@ -226,14 +250,16 @@ def genR(groupname,
     if monitor:
         spikemonR = SpikeMonitor(gRGroup, name='spikemon' + groupname + '_R')
         if fraction_inh_neurons is not None:
-            spikemonRInh = SpikeMonitor(gRInhGroup, name='spikemon' + groupname + '_RInh')
-        spikemonRInp = SpikeMonitor(gRInpGroup, name='spikemon' + groupname + '_RInp')
+            spikemonRInh = SpikeMonitor(
+                gRInhGroup, name='spikemon' + groupname + '_RInh')
+        spikemonRInp = SpikeMonitor(
+            gRInpGroup, name='spikemon' + groupname + '_RInp')
         try:
             statemonR = StateMonitor(gRGroup, ('Vm', 'Ie', 'Ii'), record=True,
-                                       name='statemon' + groupname + '_R')
+                                     name='statemon' + groupname + '_R')
         except KeyError:
             statemonR = StateMonitor(gRGroup, ('Imem', 'Iin'), record=True,
-                                       name='statemon' + groupname + '_R')
+                                     name='statemon' + groupname + '_R')
         Monitors = {
             'spikemonR': spikemonR,
             'spikemonRInh': spikemonRInh,
@@ -243,7 +269,7 @@ def genR(groupname,
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: weInpR, weRInh, wiInhR, weRR,rpR, rpInh,sigm
-    standaloneParams = {
+    standalone_params = {
         synInpR1e.name + '_weight': weInpR,
         synRInh1e.name + '_weight': weRInh,
         synInhR1i.name + '_weight': wiInhR,
@@ -261,10 +287,10 @@ def genR(groupname,
         for key in Groups:
             print(key)
 
-    return Groups, Monitors, standaloneParams
+    return Groups, Monitors, standalone_params
 
 
-def plotR(name, start_time, end_time, num_neurons, RMonitors):
+def plot_reservoir(name, start_time, end_time, num_neurons, reservoir_monitors):
     """Function to easily visualize R activity.
 
     Args:
@@ -274,12 +300,14 @@ def plotR(name, start_time, end_time, num_neurons, RMonitors):
         end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
             Can be smaller than simulation time but not larger
         num_neurons (int, required): 1D number of neurons in R populations
-        RMonitors (dict.): Dictionary with keys to access spike- and statemonitors. in R.Monitors
+        reservoir_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in R.Monitors
     """
     pg.setConfigOptions(antialias=True)
 
-    win_raster = pg.GraphicsWindow(title='Winner-Take-All Test Simulation: Raster plots')
-    win_states = pg.GraphicsWindow(title='Winner-Take-All Test Simulation:State plots')
+    win_raster = pg.GraphicsWindow(
+        title='Winner-Take-All Test Simulation: Raster plots')
+    win_states = pg.GraphicsWindow(
+        title='Winner-Take-All Test Simulation:State plots')
     win_raster.resize(1000, 1800)
     win_states.resize(1000, 1800)
     win_raster.setWindowTitle('Winner-Take-All Test Simulation: Raster plots')
@@ -289,37 +317,39 @@ def plotR(name, start_time, end_time, num_neurons, RMonitors):
     win_raster.nextRow()
     raster_wta = win_raster.addPlot(title="SpikeMonitor R")
     win_raster.nextRow()
-    raster_inh = win_raster.addPlot(title="SpikeMonitor inhibitory interneurons")
+    raster_inh = win_raster.addPlot(
+        title="SpikeMonitor inhibitory interneurons")
 
-    state_membrane = win_states.addPlot(title='StateMonitor membrane potential')
+    state_membrane = win_states.addPlot(
+        title='StateMonitor membrane potential')
     win_states.nextRow()
     state_syn_input = win_states.addPlot(title="StateMonitor synaptic input")
 
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=RMonitors['spikemonRInp'], window=raster_input)
+                     num_neurons=16, monitor=reservoir_monitors['spikemonRInp'], window=raster_input)
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=RMonitors['spikemonR'], window=raster_wta)
+                     num_neurons=16, monitor=reservoir_monitors['spikemonR'], window=raster_wta)
     plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=RMonitors['spikemonRInh'], window=raster_inh)
+                     num_neurons=16, monitor=reservoir_monitors['spikemonRInh'], window=raster_inh)
 
     plot_statemon_qt(start_time=start_time, end_time=end_time,
-                     monitor=RMonitors['statemonR'], neuron_id=128,
+                     monitor=reservoir_monitors['statemonR'], neuron_id=128,
                      variable="Imem", unit=pA, window=state_membrane, name=name)
     plot_statemon_qt(start_time=start_time, end_time=end_time,
-                     monitor=RMonitors['statemonR'], neuron_id=128,
+                     monitor=reservoir_monitors['statemonR'], neuron_id=128,
                      variable="Iin", unit=pA, window=state_syn_input, name=name)
 
     QtGui.QApplication.instance().exec_()
 
     # fig = figure(figsize=(8, 3))
     # plotSpikemon(start_time, end_time,
-    #              RMonitors['spikemonR'], num_neurons, ylab='ind R_' + name)
+    #              reservoir_monitors['spikemonR'], num_neurons, ylab='ind R_' + name)
     # fig = figure(figsize=(8, 3))
     # plotSpikemon(start_time, end_time,
-    #              RMonitors['spikemonRInp'], None, ylab='ind RInp_' + name)
+    #              reservoir_monitors['spikemonRInp'], None, ylab='ind RInp_' + name)
     # fig = figure(figsize=(8, 3))
     # plotSpikemon(start_time, end_time,
-    #              RMonitors['spikemonRInh'], None, ylab='ind RInh_' + name)
+    #              reservoir_monitors['spikemonRInh'], None, ylab='ind RInh_' + name)
     # # fig.savefig('fig/'+name+'_Spikes.png')
 
     # if num_neurons > 20:
@@ -327,7 +357,7 @@ def plotR(name, start_time, end_time, num_neurons, RMonitors):
     # else:
     #     plot_state_neurons = range(num_neurons)
 
-    # statemonR = RMonitors['statemonR']
+    # statemonR = reservoir_monitors['statemonR']
     # if len(statemonR.t) > 0:
     #     fig = figure(figsize=(8, 10))
     #     nPlots = 3 * 100

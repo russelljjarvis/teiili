@@ -8,20 +8,20 @@ Modules:
     currentParameters (TYPE): Description
     i_a (TYPE): Description
     i_ahp (TYPE): Description
-    i_ahpPara (TYPE): Description
-    i_aPara (TYPE): Description
-    i_exponentialPara (TYPE): Description
+    i_ahp_params (TYPE): Description
+    i_a_params (TYPE): Description
+    i_exponential_params (TYPE): Description
     i_model_template (TYPE): Description
-    i_model_templatePara (TYPE): Description
+    i_model_template_params (TYPE): Description
     i_noise (TYPE): Description
-    i_noisePara (TYPE): Description
-    i_nonLeakyPara (TYPE): Description
+    i_noise_params (TYPE): Description
+    i_non_leaky_params (TYPE): Description
     modes (TYPE): Description
     none (TYPE): Description
-    nonePara (dict): Description
+    none_params (dict): Description
     spatial (TYPE): Description
     v_adapt (TYPE): Description
-    v_expCurrent (TYPE): Description
+    v_exp_current (TYPE): Description
     v_leak (TYPE): Description
     v_model_template (TYPE): Description
     v_model_templatePara (TYPE): Description
@@ -60,7 +60,7 @@ v_model_templatePara = {"Cm": 281 * pF,
                         }
 
 # exponential current (see exponential I&F Model)
-v_expCurrent = {'model': """
+v_exp_current = {'model': """
             #exponential
             %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
             VT      : volt      (shared, constant)        #
@@ -72,20 +72,20 @@ v_expCurrent = {'model': """
                 'reset': ''}
 
 # quadratic current (see Izhikevic Model)
-v_quadCurrent = {'model': """
+v_quad_current = {'model': """
             #quadratic
             %Iexp = k*(Vm - VR)(Vm - VT) : amp
             %dIadapt/dt = a*(b*(Vm - VR) - Iadapt : amp
-            VT      : volt          (shared, constant)        # V threshold
-            VR      : volt          (shared, constant)        # V rest
-            k       : siemens       (shared, constant)        # slope factor
-            a       : 1/second      (shared, constant)        # recovery time constant
-            b       : siemens       (shared, constant)        # 1/Rin
-            c       : volt          (shared, constant)        # potential reset value
-            d       : volt/second   (shared, constant)        # outward minus inward currents 
-                                                              # activated during the spike 
-                                                              # and affecting the after-spike 
-                                                              # behavior
+            VT      : volt                (shared, constant)        # V threshold
+            VR      : volt                (shared, constant)        # V rest
+            k       : siemens             (shared, constant)        # slope factor
+            a       : second **-1         (shared, constant)        # recovery time constant
+            b       : siemens             (shared, constant)        # 1/Rin
+            c       : volt                (shared, constant)        # potential reset value
+            d       : volt * second **-1  (shared, constant)        # outward minus inward currents 
+                                                                    # activated during the spike 
+                                                                    # and affecting the after-spike 
+                                                                    # behavior
             %Vthr = VT : volt  (shared)
             %Vres = VR : volt  (shared)
             """,
@@ -93,7 +93,7 @@ v_quadCurrent = {'model': """
                 'reset': """%Vm = c
                 Iadapt += d"""}
 
-v_quad_templatePara = {
+v_quad_params = {
     "Cm": 250.0 * pF,
     "VR": -60.0 * mV,
     "VT": -20.0 * mV,
@@ -198,7 +198,7 @@ i_model_template = {'model': '''
                     'threshold': "Imem > Ispkthr",
                     'reset': "Imem = Ireset;"}
 
-i_model_templatePara = {
+i_model_template_params = {
     #--------------------------------------------------------
     # Default equations disabled
     #--------------------------------------------------------
@@ -256,7 +256,7 @@ i_noise = {'model': """
            'threshold': '',
            'reset': ''}
 
-i_noisePara = {"mu": 0.25 * pA,
+i_noise_params = {"mu": 0.25 * pA,
                "sigma": 0.1 * pA}
 
 # feedback
@@ -271,7 +271,7 @@ i_a = {'model': """
        'threshold': '',
        'reset': ''}
 
-i_aPara = {"Iath": 0.5 * nA,
+i_a_params = {"Iath": 0.5 * nA,
            "Iagain": 50. * pA,
            "Ianorm": 10. * pA}
 
@@ -290,39 +290,39 @@ i_ahp = {'model': """
                   Iahp += Iahpmax;
                   '''}
 
-i_ahpPara = {"Itauahp": 1 * pA,
+i_ahp_params = {"Itauahp": 1 * pA,
              "Ithahp": 1 * pA,
              "Ica": 2 * pA,
              "Cahp": 1 * pF}
 
 
-i_exponentialPara = {"Ith": 0.9 * pA,
+i_exponential_params = {"Ith": 0.9 * pA,
                      "Iath": 0.5 * nA,
                      "Iagain": 50 * pA,
                      "Ianorm": 10 * pA,
                      "Itau": 8 * pA}
 
-i_nonLeakyPara = {"Itau": 0.5 * pA}
+i_non_leaky_params = {"Itau": 0.5 * pA}
 
-nonePara = {}
+none_params = {}
 
 modes = {'current': i_model_template, 'voltage': v_model_template}
 
-currentEquationsets = {'calciumFeedback': i_ahp, 'exponential': i_a,
-                       'leaky': none, 'non-leaky': none, 'quadratic': nonePara,
-                       'spatial': spatial, 'gaussianNoise': i_noise, 'none': none, 'linear': none}
+current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
+                         'leaky': none, 'non_leaky': none, 'quadratic': none,
+                         'spatial': spatial, 'gaussian_noise': i_noise, 'none': none, 'linear': none}
 
-voltageEquationsets = {'calciumFeedback': v_adapt, 'exponential': v_expCurrent,
-                       'quadratic': v_quadCurrent,
-                       'leaky': v_leak, 'non-leaky': none,
-                       'spatial': spatial, 'gaussianNoise': v_noise, 'none': none, 'linear': none}
+voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_exp_current,
+                         'quadratic': v_quad_current,
+                         'leaky': v_leak, 'non_leaky': none,
+                         'spatial': spatial, 'gaussian_noise': v_noise, 'none': none, 'linear': none}
 
-currentParameters = {'current': i_model_templatePara, 'calciumFeedback': i_ahpPara,
-                     'quadratic': nonePara,
-                     'exponential': i_exponentialPara, 'leaky': nonePara, 'non-leaky': i_nonLeakyPara,
-                     'spatial': nonePara, 'gaussianNoise': i_noisePara, 'none': nonePara, 'linear': nonePara}
+current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
+                      'quadratic': none_params,
+                      'exponential': i_exponential_params, 'leaky': none_params, 'non_leaky': i_non_leaky_params,
+                      'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 'linear': none_params}
 
-voltageParameters = {'voltage': v_model_templatePara, 'calciumFeedback': nonePara,
-                     'exponential': nonePara, 'quadratic': v_quad_templatePara,
-                     'leaky': nonePara, 'non-leaky': nonePara,
-                     'spatial': nonePara, 'gaussianNoise': nonePara, 'none': nonePara, 'linear': nonePara}
+voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': none_params,
+                      'exponential': none_params, 'quadratic': v_quad_params,
+                      'leaky': none_params, 'non_leaky': none_params,
+                      'spatial': none_params, 'gaussian_noise': none_params, 'none': none_params, 'linear': none_params}

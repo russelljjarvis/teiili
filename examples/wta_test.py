@@ -16,12 +16,12 @@ from brian2 import prefs, ms, pA, nA, StateMonitor, device, set_device,\
  second, msecond, defaultclock
 
 
-from NCSBrian2Lib.building_blocks.wta import WTA, plotWTA
-from NCSBrian2Lib.core.groups import Neurons, Connections
-from NCSBrian2Lib.stimuli.testbench import WTA_Testbench
-from NCSBrian2Lib import NCSNetwork
-from NCSBrian2Lib.models.synapse_models import DPISyn, DPIstdp
-from NCSBrian2Lib.tools.synaptic_kernel import kernel_gauss_1d
+from teili.building_blocks.wta import WTA, plotWTA
+from teili.core.groups import Neurons, Connections
+from teili.stimuli.testbench import WTA_Testbench
+from teili import NCSNetwork
+from teili.models.synapse_models import DPISyn, DPIstdp
+from teili.tools.synaptic_kernel import kernel_gauss_1d
 
 prefs.codegen.target = 'numpy'
 

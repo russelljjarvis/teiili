@@ -12,7 +12,7 @@ Attributes:
 """
 
 from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second
-from NCSBrian2Lib import constants
+from teili import constants
 
 parameters = {
     "Igain": 15 * pA,

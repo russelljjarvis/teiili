@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-12 11:34:34
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-29 12:08:09
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 15:41:28
 
 """
 This file contains a class that manages a neuon equation
@@ -16,8 +16,9 @@ import os
 import importlib
 import re
 from brian2 import pF, nS, mV, ms, pA, nA
-from NCSBrian2Lib.models.builder.combine import combine_neu_dict
-from NCSBrian2Lib.models.builder.templates.neuron_templates import modes, currentEquationsets, voltageEquationsets, currentParameters, voltageParameters
+from teili.models.builder.combine import combine_neu_dict
+from teili.models.builder.templates.neuron_templates import modes, current_equation_sets, voltage_equation_sets, \
+    current_parameters, voltage_parameters
 
 
 class NeuronEquationBuilder():
@@ -36,17 +37,17 @@ class NeuronEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder
     """
 
-    def __init__(self, keywords=None, baseUnit='current', adaptation='calciumFeedback',
-                 integrationMode='exponential', leak='leaky', position='spatial',
+    def __init__(self, keywords=None, base_unit='current', adaptation='calciumFeedback',
+                 integration_mode='exponential', leak='leaky', position='spatial',
                  noise='gaussianNoise', refractory='refractory', verbose=False):
         """Summary
 
         Args:
             model (dict, optional): Brian2 like model
-            baseUnit (str, optional): Indicates if neuron is current- or conductance-based
+            base_unit (str, optional): Indicates if neuron is current- or conductance-based
             adaptation (str, optional): What type of adaptive feedback should be used.
                So far only calciumFeedback is implemented
-            integrationMode (str, optional): Sets if integration up to spike-generation is
+            integration_mode (str, optional): Sets if integration up to spike-generation is
                rather linear or exponential
             leak (str, optional): Enables leaky integration
             position (str, optional): To enable spatial-like position indices to neuron
@@ -57,8 +58,10 @@ class NeuronEquationBuilder():
         """
         self.verbose = verbose
         if keywords is not None:
-            self.keywords = {'model': keywords['model'], 'threshold': keywords['threshold'],
-                             'reset': keywords['reset'], 'refractory': 'refP',
+            self.keywords = {'model': keywords['model'],
+                             'threshold': keywords['threshold'],
+                             'reset': keywords['reset'],
+                             'refractory': 'refP',
                              'parameters': keywords['parameters']}
 
         else:
@@ -77,60 +80,62 @@ class NeuronEquationBuilder():
                     """
 
             try:
-                modes[baseUnit]
-                currentEquationsets[adaptation]
-                currentEquationsets[integrationMode]
-                currentEquationsets[leak]
-                currentEquationsets[position]
-                currentEquationsets[noise]
+                modes[base_unit]
+                current_equation_sets[adaptation]
+                current_equation_sets[integration_mode]
+                current_equation_sets[leak]
+                current_equation_sets[position]
+                current_equation_sets[noise]
 
             except KeyError as e:
                 print(ERRValue)
 
-            if baseUnit == 'current':
-                eq_templ = [modes[baseUnit],
-                            currentEquationsets[adaptation],
-                            currentEquationsets[integrationMode],
-                            currentEquationsets[leak],
-                            currentEquationsets[position],
-                            currentEquationsets[noise]]
-                param_templ = [currentParameters[baseUnit],
-                               currentParameters[adaptation],
-                               currentParameters[integrationMode],
-                               currentParameters[leak],
-                               currentParameters[position],
-                               currentParameters[noise]]
+            if base_unit == 'current':
+                eq_templ = [modes[base_unit],
+                            current_equation_sets[adaptation],
+                            current_equation_sets[integration_mode],
+                            current_equation_sets[leak],
+                            current_equation_sets[position],
+                            current_equation_sets[noise]]
+                param_templ = [current_parameters[base_unit],
+                               current_parameters[adaptation],
+                               current_parameters[integration_mode],
+                               current_parameters[leak],
+                               current_parameters[position],
+                               current_parameters[noise]]
 
                 keywords = combine_neu_dict(eq_templ, param_templ)
 
-            if baseUnit == 'voltage':
-                eq_templ = [modes[baseUnit],
-                            voltageEquationsets[adaptation],
-                            voltageEquationsets[integrationMode],
-                            voltageEquationsets[leak],
-                            voltageEquationsets[position],
-                            voltageEquationsets[noise]]
-                param_templ = [voltageParameters[baseUnit],
-                               voltageParameters[adaptation],
-                               voltageParameters[integrationMode],
-                               voltageParameters[leak],
-                               voltageParameters[position],
-                               voltageParameters[noise]]
+            if base_unit == 'voltage':
+                eq_templ = [modes[base_unit],
+                            voltage_equation_sets[adaptation],
+                            voltage_equation_sets[integration_mode],
+                            voltage_equation_sets[leak],
+                            voltage_equation_sets[position],
+                            voltage_equation_sets[noise]]
+                param_templ = [voltage_parameters[base_unit],
+                               voltage_parameters[adaptation],
+                               voltage_parameters[integration_mode],
+                               voltage_parameters[leak],
+                               voltage_parameters[position],
+                               voltage_parameters[noise]]
                 keywords = combine_neu_dict(eq_templ, param_templ)
 
-            self.keywords = {'model': keywords['model'], 'threshold': keywords['threshold'],
-                             'reset': keywords['reset'], 'refractory': 'refP',
+            self.keywords = {'model': keywords['model'],
+                             'threshold': keywords['threshold'],
+                             'reset': keywords['reset'],
+                             'refractory': 'refP',
                              'parameters': keywords['parameters']}
         if self.verbose:
-            self.printAll()
+            self.print_all()
 
-    def addInputCurrents(self, numInputs):
-        """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = numInputs)
+    def add_input_currents(self, num_inputs):
+        """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = num_inputs)
         it also adds all these input currents as state variables
 
 
         Args:
-            numInputs (int): Number of inputs to the post-synaptic neuron
+            num_inputs (int): Number of inputs to the post-synaptic neuron
         """
         # remove previously added inputcurrent lines
         inputcurrent_e_pattern = re.compile("Ie\d+ : amp")
@@ -139,7 +144,8 @@ class NeuronEquationBuilder():
         for line in self.keywords['model'].split('\n'):
             if " Iin = " in line:
                 model.remove(line)
-                print('previously added input currents were removed, following lines deleted:')
+                print(
+                    'previously added input currents were removed, following lines deleted:')
                 print(line)
             elif inputcurrent_e_pattern.search(line) is not None:
                 print(line)
@@ -151,21 +157,20 @@ class NeuronEquationBuilder():
         self.keywords['model'] = '\n'.join(model)
 
         Ies = ["Ie0"] + ["+ Ie" +
-                         str(i + 1) + " " for i in range(numInputs - 1)]
+                         str(i + 1) + " " for i in range(num_inputs - 1)]
         Iis = ["+Ii0"] + ["+ Ii" +
-                          str(i + 1) + " " for i in range(numInputs - 1)]
-
+                          str(i + 1) + " " for i in range(num_inputs - 1)]
 
         self.keywords['model'] = self.keywords['model'] + " Iin = " + \
             "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
-        Iesline = ["    Ie" + str(i) + " : amp" for i in range(numInputs)]
-        Iisline = ["    Ii" + str(i) + " : amp" for i in range(numInputs)]
-        self.addStateVars(Iesline)
+        Iesline = ["    Ie" + str(i) + " : amp" for i in range(num_inputs)]
+        Iisline = ["    Ii" + str(i) + " : amp" for i in range(num_inputs)]
+        self.add_state_vars(Iesline)
         self.keywords['model'] += "\n"
-        self.addStateVars(Iisline)
+        self.add_state_vars(Iisline)
         self.keywords['model'] += "\n"
 
-    def addStateVars(self, stateVars):
+    def add_state_vars(self, stateVars):
         """this function adds state variables to neuron equation by just adding
         a line to the neuron model equation.
 
@@ -176,7 +181,7 @@ class NeuronEquationBuilder():
             print("added to Equation: \n" + "\n".join(stateVars))
         self.keywords['model'] += "\n            ".join(stateVars)
 
-    def printAll(self):
+    def print_all(self):
         """Method to print all dictionaries within a neuron model
         """
         print('Model equation:')
@@ -189,10 +194,10 @@ class NeuronEquationBuilder():
         print(self.keywords['reset'])
         print('-_-_-_-_-_-_-_-')
         print('Parameters:')
-        printParamDictionaries(self.keywords['parameters'])
+        print_param_dictionaries(self.keywords['parameters'])
         print('-_-_-_-_-_-_-_-')
 
-    def exporteq(self, filename):
+    def export_eq(self, filename):
         with open(filename + ".py", 'w') as file:
             file.write('from brian2.units import * \n')
             file.write(os.path.basename(filename) + " = {")
@@ -222,7 +227,7 @@ class NeuronEquationBuilder():
             file.write("}")
 
     @classmethod
-    def importeq(cls, filename, num_inputs=1):
+    def import_eq(cls, filename, num_inputs=1):
         '''
         num_inputs is used to add additional input currents, that are used
         for different synapses that are summed
@@ -243,15 +248,12 @@ class NeuronEquationBuilder():
         neuron_eq = eq_dict.__dict__[dict_name]
 
         builder_obj = cls(keywords=neuron_eq)
-        builder_obj.addInputCurrents(num_inputs)
+        builder_obj.add_input_currents(num_inputs)
 
-        # self.keywords = {'model': neuron_eq['model'], 'threshold': neuron_eq['threshold'],
-        #                  'reset': neuron_eq['reset'], 'refractory': 'refP',
-        #                  'parameters': neuron_eq['parameters']}
         return builder_obj
 
 
-def printParamDictionaries(Dict):
+def print_param_dictionaries(Dict):
     """Function to print dictionaries of parameters in a ordered way
 
     Args:

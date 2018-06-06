@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde, alpren
 # @Date:   2018-01-09 17:26:00
-# @Last Modified by:   alpren
-# @Last Modified time: 2018-05-30
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-04 14:10:09
 """
 Collections of functions which convert indices to x, y coordinates and vice versa
+
+the suffix "_cpp" avoids that variables are string replaced by brian2 if the same name
+is used in the network
+
 """
 from brian2 import implementation, check_units, declare_types
 import numpy as np
 
 
 @implementation('cpp', '''
-    inline int xy2ind(int x, int y, int nrows, int ncols) {
-    ind = x*ncols+y
-    return ind;
+    inline int xy2ind(int x, int y, int nrows_cpp, int ncols_cpp) {
+    return x*ncols_cpp+y;
     }
      ''')
 @declare_types(x='integer', y='integer', nrows='integer', ncols='integer', result='integer')
@@ -41,8 +44,8 @@ def xy2ind(x, y, nrows, ncols):
 
 
 @implementation('cpp', '''
-    inline int ind2x(int ind, int nrows, int ncols) {
-    return ind / ncols;
+    inline int ind2x(int ind_cpp, int nrows_cpp, int ncols_cpp) {
+    return ind_cpp / ncols_cpp;
     }
      ''')
 @declare_types(ind='integer', nrows='integer', ncols='integer', result='integer')
@@ -66,8 +69,8 @@ def ind2x(ind, nrows, ncols):
 
 
 @implementation('cpp', '''
-    inline int ind2y(int ind, int nrows, int ncols) {
-    return ind % ncols;
+    inline int ind2y(int ind_cpp, int nrows_cpp, int ncols_cpp) {
+    return ind_cpp % ncols_cpp;
     }
      ''')
 @declare_types(ind='integer', nrows='integer', ncols='integer', result='integer')
@@ -91,7 +94,7 @@ def ind2y(ind, nrows, ncols):
 
 
 @implementation('numpy', discard_units=True)
-@declare_types(ind='integer', nrows='integer', ncols='integer',  result='integer')
+@declare_types(ind='integer', nrows='integer', ncols='integer', result='integer')
 @check_units(ind=1, nrows=1, ncols=1, result=1)
 def ind2xy(ind, nrows, ncols):
     """Given an index of an array this function will provide

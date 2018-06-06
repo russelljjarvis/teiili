@@ -2,13 +2,13 @@
 # @Author: mrax, mmilde
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 12:32:31
+# @Last Modified time: 2018-06-01 16:57:48
 
 """This contains subclasses of SynapseEquationBuilder with predefined common parameters
 """
 import os
-from NCSBrian2Lib.models.builder.synapse_equation_builder import SynapseEquationBuilder
-import NCSBrian2Lib.models
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+import teili.models
 
 
 class ReversalSynV(SynapseEquationBuilder):
@@ -18,8 +18,8 @@ class ReversalSynV(SynapseEquationBuilder):
         """This class provides you with all equations to simulate synapses with reversal
         potential.
         """
-        SynapseEquationBuilder.__init__(self, baseUnit='conductance',
-                                        kernel='exponential', plasticity='nonplastic')
+        SynapseEquationBuilder.__init__(self, base_unit='conductance',
+                                        kernel='exponential', plasticity='non_plastic')
 
 
 class BraderFusiSynapses(SynapseEquationBuilder):
@@ -29,7 +29,7 @@ class BraderFusiSynapses(SynapseEquationBuilder):
         """This class provides you with all equations to simulate a bistable Brader-Fusi synapse
         as published in Brader and Fusi 2007
         """
-        SynapseEquationBuilder.__init__(self, baseUnit='current',
+        SynapseEquationBuilder.__init__(self, base_unit='current',
                                         kernel='exponential', plasticity='fusi')
 
 
@@ -40,8 +40,8 @@ class DPISyn(SynapseEquationBuilder):
         """This class provides you with all equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014
         """
-        SynapseEquationBuilder.__init__(self, baseUnit='DPI',
-                                        plasticity='nonplastic')
+        SynapseEquationBuilder.__init__(self, base_unit='DPI',
+                                        plasticity='non_plastic')
 
 
 class DPIShunt(SynapseEquationBuilder):
@@ -51,8 +51,8 @@ class DPIShunt(SynapseEquationBuilder):
         """This class provides you with all equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014
         """
-        SynapseEquationBuilder.__init__(self, baseUnit='DPIShunting',
-                                        plasticity='nonplastic')
+        SynapseEquationBuilder.__init__(self, base_unit='DPIShunting',
+                                        plasticity='non_plastic')
 
 
 class DPIstdp(SynapseEquationBuilder):
@@ -66,7 +66,7 @@ class DPIstdp(SynapseEquationBuilder):
         and Song and Abbott (2001). Also see another example at:
         https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
         """
-        SynapseEquationBuilder.__init__(self, baseUnit='DPI',
+        SynapseEquationBuilder.__init__(self, base_unit='DPI',
                                         plasticity='stdp')
 
 
@@ -80,32 +80,36 @@ class StdpSynV(SynapseEquationBuilder):
         Also see another example at:
         https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
         """
-        SynapseEquationBuilder.__init__(self, baseUnit='conductance',
+        SynapseEquationBuilder.__init__(self, base_unit='conductance',
                                         kernel='exponential', plasticity='stdp')
 
 
 if __name__ == '__main__':
 
-    path = os.path.dirname(os.path.realpath(NCSBrian2Lib.models.__file__))
+    path = os.path.dirname(os.path.realpath(teili.models.__file__))
 
     path = os.path.join(path, "equations")
     if not os.path.isdir(path):
         os.mkdir(path)
 
-    ReversalSynV = ReversalSynV()
-    ReversalSynV.exporteq(os.path.join(path, "ReversalSynV"))
+    reversalSynV = ReversalSynV()
+    reversalSynV.export_eq(os.path.join(path, "ReversalSynV"))
 
-    BraderFusiSynapses = BraderFusiSynapses()
-    BraderFusiSynapses.exporteq(os.path.join(path, "BraderFusiSynapses"))
+    braderFusiSynapses = BraderFusiSynapses()
+    braderFusiSynapses.export_eq(os.path.join(path, "BraderFusiSynapses"))
 
-    DPISyn = DPISyn()
-    DPISyn.exporteq(os.path.join(path, "DPISyn"))
+    dpiSyn = DPISyn()
+    dpiSyn.export_eq(os.path.join(path, "DPISyn"))
 
-    DPIShunt = DPIShunt()
-    DPIShunt.exporteq(os.path.join(path, "DPIShunt"))
+    dpiShunt = DPIShunt()
+    dpiShunt.export_eq(os.path.join(path, "DPIShunt"))
 
-    DPIstdp = DPIstdp()
-    DPIstdp.exporteq(os.path.join(path, "DPIstdp"))
+    dpistdp = DPIstdp()
+    dpistdp.export_eq(os.path.join(path, "DPIstdp"))
 
-    StdpSynV = StdpSynV()
-    StdpSynV.exporteq(os.path.join(path, "StdpSynV"))
+    stdpSynV = StdpSynV()
+    stdpSynV.export_eq(os.path.join(path, "StdpSynV"))
+
+    reversalSynVfusi = SynapseEquationBuilder(base_unit='conductance',
+                                        kernel='exponential', plasticity='fusi')
+    reversalSynVfusi.export_eq(os.path.join(path, "ReversalSynVfusi"))

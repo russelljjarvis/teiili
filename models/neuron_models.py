@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde
 # @Date:   2018-01-08 14:53:11
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-30 10:26:09
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 16:01:57
 
 """ This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
+from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+import teili.models
 import os
-from NCSBrian2Lib.models.builder.neuron_equation_builder import NeuronEquationBuilder
-import NCSBrian2Lib.models
 
 
 class Izhikevich(NeuronEquationBuilder):
@@ -16,10 +16,11 @@ class Izhikevich(NeuronEquationBuilder):
     """
 
     def __init__(self, num_inputs=1):
-        NeuronEquationBuilder.__init__(self, baseUnit='voltage', adaptation='calciumFeedback',
-                                       integrationMode='quadratic', leak='non-leaky',
+        NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='calcium_feedback',
+                                       integration_mode='quadratic', leak='non_leaky',
                                        position='spatial', noise='none')
-        self.addInputCurrents(num_inputs)
+        self.add_input_currents(num_inputs)
+
 
 
 class ExpAdaptIF(NeuronEquationBuilder):
@@ -28,10 +29,10 @@ class ExpAdaptIF(NeuronEquationBuilder):
     """
 
     def __init__(self, num_inputs=1):
-        NeuronEquationBuilder.__init__(self, baseUnit='voltage', adaptation='calciumFeedback',
-                                       integrationMode='exponential', leak='non-leaky',
+        NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='calcium_feedback',
+                                       integration_mode='exponential', leak='non_leaky',
                                        position='spatial', noise='none')
-        self.addInputCurrents(num_inputs)
+        self.add_input_currents(num_inputs)
 
 
 class DPI(NeuronEquationBuilder):
@@ -42,22 +43,22 @@ class DPI(NeuronEquationBuilder):
     """
 
     def __init__(self, num_inputs=1):
-        NeuronEquationBuilder.__init__(self, baseUnit='current', adaptation='calciumFeedback',
-                                       integrationMode='exponential', leak='leaky',
+        NeuronEquationBuilder.__init__(self, base_unit='current', adaptation='calcium_feedback',
+                                       integration_mode='exponential', leak='leaky',
                                        position='spatial', noise='none')
-        self.addInputCurrents(num_inputs)
+        self.add_input_currents(num_inputs)
 
 
 if __name__ == '__main__':
 
-    path = os.path.dirname(os.path.realpath(NCSBrian2Lib.models.__file__))
+    path = os.path.dirname(os.path.realpath(teili.models.__file__))
 
     path = os.path.join(path, "equations")
     if not os.path.isdir(path):
         os.mkdir(path)
 
     expAdaptIF = ExpAdaptIF()
-    expAdaptIF.exporteq(os.path.join(path, "ExpAdaptIF"))
+    expAdaptIF.export_eq(os.path.join(path, "ExpAdaptIF"))
 
     dpi = DPI()
-    dpi.exporteq(os.path.join(path, "DPI"))
+    dpi.export_eq(os.path.join(path, "DPI"))

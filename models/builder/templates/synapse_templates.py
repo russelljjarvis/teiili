@@ -2,41 +2,41 @@
 # @Author: Moritz Milde
 # @Date:   2018-06-01 11:57:02
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 12:29:39
+# @Last Modified time: 2018-06-01 16:00:36
 
 """This file contains dictionaries of neuron synapse or modules,
    combined by the synapse equation builder.
 
 Modules:
-    alphakernel (TYPE): Description
-    alphaPara_conductance (TYPE): Description
-    alphaPara_current (TYPE): Description
+    alpha_kernel (TYPE): Description
+    alpha_params_conductance (TYPE): Description
+    alpha_params_current (TYPE): Description
     conductance_Parameters (TYPE): Description
     conductancekernels (TYPE): Description
     current_Parameters (TYPE): Description
     currentkernels (TYPE): Description
-    currentPara (TYPE): Description
+    current_params (TYPE): Description
     Dpi (TYPE): Description
     DPI_Parameters (TYPE): Description
-    DpiPara (TYPE): Description
+    dpi_params (TYPE): Description
     fusi (TYPE): Description
-    fusiPara_conductance (TYPE): Description
-    fusiPara_current (TYPE): Description
-    gaussiankernel (TYPE): Description
-    gaussianPara_conductance (TYPE): Description
-    gaussianPara_current (TYPE): Description
+    fusi_params_conductance (TYPE): Description
+    fusi_params_current (TYPE): Description
+    gaussian_kernel (TYPE): Description
+    gaussian_params_conductance (TYPE): Description
+    gaussian_params_current (TYPE): Description
     modes (dict): Description
     none (dict): Description
-    nonePara (dict): Description
+    none_params (dict): Description
     plasticitymodels (TYPE): Description
-    resonantkernel (TYPE): Description
-    resonantPara_conductance (TYPE): Description
-    resonantPara_current (TYPE): Description
+    resonant_kernel (TYPE): Description
+    resonant_params_conductance (TYPE): Description
+    resonant_params_current (TYPE): Description
     reversalPara (TYPE): Description
     reversalsyn (TYPE): Description
     stdp (TYPE): Description
-    stdpPara_conductance (TYPE): Description
-    stdpPara_current (TYPE): Description
+    stdp_para_conductance (TYPE): Description
+    stdp_para_current (TYPE): Description
     template (TYPE): Description
 """
 from brian2 import pF, nS, mV, ms, pA, nA, volt, second
@@ -45,7 +45,7 @@ from brian2 import pF, nS, mV, ms, pA, nA, volt, second
 #######_____TEMPLATE MODEL AND PARAMETERS_____############################
 ##########################################################################
 
-none model is useful when adding exponential kernel and nonplasticity at
+none model is useful when adding exponential kernel and non_plasticity at
 the synapse as they already present in the template model
 '''
 none = {'model': ''' ''', 'on_pre': ''' ''', 'on_post': ''' '''}
@@ -58,8 +58,8 @@ current = {'model': '''
             kernel_e : amp * second **-1
             kernel_i : amp * second **-1
 
-            Ie{inputnumber}_post = Ie_syn : amp (summed)
-            Ii{inputnumber}_post = -Ii_syn : amp (summed)
+            Ie{input_number}_post = Ie_syn : amp (summed)
+            Ii{input_number}_post = -Ii_syn : amp (summed)
 
             tausyne : second (constant) # synapse time constant
             tausyni : second (constant) # synapse time constant
@@ -80,14 +80,14 @@ current = {'model': '''
            }
 
 # standard parameters for current based models
-currentPara = {"tausyne": 5 * ms,
-               "tausyni": 5 * ms,
-               "w_plast": 1,
-               "baseweight_e": 1 * nA,
-               "baseweight_i": 1 * nA,
-               "kernel_e": 0 * nA * ms**-1,
-               "kernel_i": 0 * nA * ms**-1
-               }
+current_params = {"tausyne": 5 * ms,
+                  "tausyni": 5 * ms,
+                  "w_plast": 1,
+                  "baseweight_e": 1 * nA,
+                  "baseweight_i": 1 * nA,
+                  "kernel_e": 0 * nA * ms**-1,
+                  "kernel_i": 0 * nA * ms**-1
+                  }
 
 # Additional equations for conductance based models
 conductance = {'model': '''
@@ -97,8 +97,8 @@ conductance = {'model': '''
                Ie_syn = gIe*(EIe - Vm_post) : amp
                Ii_syn = gIi*(EIi - Vm_post) : amp
 
-               Ie{inputnumber}_post = Ie_syn : amp (summed)
-               Ii{inputnumber}_post = -Ii_syn : amp (summed)
+               Ie{input_number}_post = Ie_syn : amp (summed)
+               Ii{input_number}_post = -Ii_syn : amp (summed)
 
                EIe : volt (shared,constant)             # excitatory reversal potential
                EIi : volt (shared,constant)             # inhibitory reversal potential
@@ -125,29 +125,29 @@ conductance = {'model': '''
                }
 
 # standard parameters for conductance based models
-conductancePara = {"Ige": 0 * nS,
-                   "tausyne": 5 * ms,
-                   # We define tausyn again here since its different from
-                   # current base, is this a problem?
-                   "tausyni": 6 * ms,
-                   "EIe": 60.0 * mV,
-                   "EIi": -90.0 * mV,
-                   "w_plast": 1,
-                   # should we find the way to replace baseweight_e/i, since we
-                   # already defined it in template?
-                   "baseweight_e": 7 * nS,
-                   "baseweight_i": 3 * nS,
-                   "kernel_e": 0 * nS * ms**-1,
-                   "kernel_i": 0 * nS * ms**-1
-                   }
+conductance_params = {"Ige": 0 * nS,
+                      "tausyne": 5 * ms,
+                      # We define tausyn again here since its different from
+                      # current base, is this a problem?
+                      "tausyni": 6 * ms,
+                      "EIe": 60.0 * mV,
+                      "EIi": -90.0 * mV,
+                      "w_plast": 1,
+                      # should we find the way to replace baseweight_e/i, since we
+                      # already defined it in template?
+                      "baseweight_e": 7 * nS,
+                      "baseweight_i": 3 * nS,
+                      "kernel_e": 0 * nS * ms**-1,
+                      "kernel_i": 0 * nS * ms**-1
+                      }
 
 # Dpi type model
-Dpi = {'model': '''
+dpi = {'model': '''
         dIe_syn/dt = (-Ie_syn - Ie_gain + 2*Io_syn*(Ie_syn<=Io_syn))/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
         dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
 
-        Ie{inputnumber}_post = Ie_syn : amp (summed)
-        Ii{inputnumber}_post = -Ii_syn : amp (summed)
+        Ie{input_number}_post = Ie_syn : amp (summed)
+        Ii{input_number}_post = -Ii_syn : amp (summed)
 
         weight : 1
         w_plast : 1
@@ -186,7 +186,7 @@ Dpi = {'model': '''
        }
 
 # standard parameters for Dpi models
-DpiPara = {
+dpi_params = {
     'Io_syn': 0.5 * pA,
     'kn_syn': 0.75,
     'kp_syn': 0.66,
@@ -204,10 +204,10 @@ DpiPara = {
 }
 
 # DPI shunting inhibition
-Dpi_shunt = {'model': """
+dpi_shunt = {'model': """
             dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
 
-            Ishunt{inputnumber}_post = -Ii_syn : amp  (summed)
+            Ishunt{input_number}_post = -Ii_syn : amp  (summed)
 
             weight : 1
             w_plast : 1
@@ -237,7 +237,7 @@ Dpi_shunt = {'model': """
              'on_post': """ """
              }
 
-Dpi_shunt_para = {
+dpi_shunt_params = {
     'Csyn': 1.5 * pF,
     'Io_syn': 0.5 * pA,
     'Ii_tau': 10. * pA,
@@ -307,39 +307,39 @@ fusi = {'model': '''
 
         'on_post': '''Ca += w_ca'''}
 
-fusiPara_current = {"wplus": 0.2,
-                    "wminus": 0.2,
-                    "theta_upl": 180 * mV,
-                    "theta_uph": 1 * volt,
-                    "theta_downh": 90 * mV,
-                    "theta_downl": 50 * mV,
-                    "theta_V": -59 * mV,
-                    "alpha": 0.0001 / second,
-                    "beta": 0.0001 / second,
-                    "tau_ca": 8 * ms,
-                    "w_ca": 250 * mV,
-                    "w_min": 0,
-                    "w_max": 1,
-                    "theta_w": 0.5,
-                    "w": 0
-                    }
+fusi_params_current = {"wplus": 0.2,
+                       "wminus": 0.2,
+                       "theta_upl": 180 * mV,
+                       "theta_uph": 1 * volt,
+                       "theta_downh": 90 * mV,
+                       "theta_downl": 50 * mV,
+                       "theta_V": -59 * mV,
+                       "alpha": 0.0001 / second,
+                       "beta": 0.0001 / second,
+                       "tau_ca": 8 * ms,
+                       "w_ca": 250 * mV,
+                       "w_min": 0,
+                       "w_max": 1,
+                       "theta_w": 0.5,
+                       "w": 0
+                       }
 
-fusiPara_conductance = {"wplus": 0.2,
-                        "wminus": 0.2,
-                        "theta_upl": 180 * mV,
-                        "theta_uph": 1 * volt,
-                        "theta_downh": 90 * mV,
-                        "theta_downl": 50 * mV,
-                        "theta_V": -59 * mV,
-                        "alpha": 0.0001 / second,
-                        "beta": 0.0001 / second,
-                        "tau_ca": 8 * ms,
-                        "w_ca": 250 * mV,
-                        "w_min": 0,
-                        "w_max": 1,
-                        "theta_w": 0.5,
-                        "w": 0
-                        }
+fusi_params_conductance = {"wplus": 0.2,
+                           "wminus": 0.2,
+                           "theta_upl": 180 * mV,
+                           "theta_uph": 1 * volt,
+                           "theta_downh": 90 * mV,
+                           "theta_downl": 50 * mV,
+                           "theta_V": -59 * mV,
+                           "alpha": 0.0001 / second,
+                           "beta": 0.0001 / second,
+                           "tau_ca": 8 * ms,
+                           "w_ca": 250 * mV,
+                           "w_min": 0,
+                           "w_max": 1,
+                           "theta_w": 0.5,
+                           "w": 0
+                           }
 
 # STDP learning rule ##
 stdp = {'model': '''
@@ -360,23 +360,23 @@ stdp = {'model': '''
       Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
       w_plast = clip(w_plast + Apre, 0, w_max) '''}
 
-stdpPara_current = {"baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
-                    "baseweight_i": 7 * pA,
-                    "taupre": 10 * ms,
-                    "taupost": 10 * ms,
-                    "w_max": 1.,
-                    "dApre": 0.1,
-                    "Q_diffAPrePost": 1.05,
-                    "w_plast": 0}
+stdp_para_current = {"baseweight_e": 7 * pA,  # should we find the way to replace since we would define it twice
+                     "baseweight_i": 7 * pA,
+                     "taupre": 10 * ms,
+                     "taupost": 10 * ms,
+                     "w_max": 1.,
+                     "dApre": 0.1,
+                     "Q_diffAPrePost": 1.05,
+                     "w_plast": 0}
 
-stdpPara_conductance = {"baseweight_e": 7 * nS,  # should we find the way to replace since we would define it twice
-                        "baseweight_i": 3 * nS,
-                        "taupre": 20 * ms,
-                        "taupost": 20 * ms,
-                        "w_max": 0.01,
-                        "diffApre": 0.01,
-                        "Q_diffAPrePost": 1.05,
-                        "w_plast": 0}
+stdp_para_conductance = {"baseweight_e": 7 * nS,  # should we find the way to replace since we would define it twice
+                         "baseweight_i": 3 * nS,
+                         "taupre": 20 * ms,
+                         "taupost": 20 * ms,
+                         "w_max": 0.01,
+                         "diffApre": 0.01,
+                         "Q_diffAPrePost": 1.05,
+                         "w_plast": 0}
 '''
 Kernels Blocks:
 
@@ -387,7 +387,7 @@ TODO: THESE KERNELS ARE WRONG!
 '''
 # Alpha kernel ##
 
-alphakernel = {'model': '''
+alpha_kernel = {'model': '''
              %kernel_e = baseweight_e*(weight>0)*w_plast*weight*exp(1-t_spike/tausyne_rise)/tausyne : {unit} * second **-1
              %kernel_i = baseweight_i*(weight<0)*w_plast*weight*exp(1-t_spike/tausyni_rise)/tausyni : {unit} * second **-1
              dt_spike/dt = 1 : second (clock-driven)
@@ -395,25 +395,25 @@ alphakernel = {'model': '''
              tausyni_rise : second
              ''',
 
-               'on_pre': '''
+                'on_pre': '''
 
              t_spike = 0 * ms
              ''',
 
-               'on_post': ''' '''}
+                'on_post': ''' '''}
 
-alphaPara_current = {"tausyne": 2 * ms,
-                     "tausyni": 2 * ms,
-                     "tausyne_rise": 0.5 * ms,
-                     "tausyni_rise": 0.5 * ms}
+alpha_params_current = {"tausyne": 2 * ms,
+                        "tausyni": 2 * ms,
+                        "tausyne_rise": 0.5 * ms,
+                        "tausyni_rise": 0.5 * ms}
 
-alphaPara_conductance = {"tausyne": 2 * ms,
-                         "tausyni": 2 * ms,
-                         "tausyne_rise": 1 * ms,
-                         "tausyni_rise": 1 * ms}
+alpha_params_conductance = {"tausyne": 2 * ms,
+                            "tausyni": 2 * ms,
+                            "tausyne_rise": 1 * ms,
+                            "tausyni_rise": 1 * ms}
 
 # Resonant kernel ##
-resonantkernel = {'model': '''
+resonant_kernel = {'model': '''
                 omega: 1/second
                 sigma_gaussian : second
                 %kernel_e  = baseweight_e*(weight>0)*w_plast*(weight*exp(-t_spike/tausyne_rise)*cos(omega*t_spike))/tausyne : {unit} * second **-1
@@ -423,28 +423,28 @@ resonantkernel = {'model': '''
                 tausyni_rise : second
                 ''',
 
-                  'on_pre': '''
+                   'on_pre': '''
 
                 t_spike = 0 * ms
                 ''',
 
-                  'on_post': ''' '''}
+                   'on_post': ''' '''}
 
-resonantPara_current = {"tausyne": 2 * ms,
-                        "tausyni": 2 * ms,
-                        "omega": 7 / ms,
-                        "tausyne_rise": 0.5 * ms,
-                        "tausyni_rise": 0.5 * ms}
+resonant_params_current = {"tausyne": 2 * ms,
+                           "tausyni": 2 * ms,
+                           "omega": 7 / ms,
+                           "tausyne_rise": 0.5 * ms,
+                           "tausyni_rise": 0.5 * ms}
 
-resonantPara_conductance = {"tausyne": 2 * ms,
-                            "tausyni": 2 * ms,
-                            "omega": 1 / ms}
+resonant_params_conductance = {"tausyne": 2 * ms,
+                               "tausyni": 2 * ms,
+                               "omega": 1 / ms}
 
 
 #  Gaussian kernel ##
 
 
-gaussiankernel = {'model': '''
+gaussian_kernel = {'model': '''
                   %tausyne = (sigma_gaussian_e**2)/t_spike : second
                   %tausyni = (sigma_gaussian_i**2)/t_spike : second
                   sigma_gaussian_e : second
@@ -452,20 +452,20 @@ gaussiankernel = {'model': '''
 
                   dt_spike/dt = 1 : second (clock-driven)
                   ''',
-                  # this time we need to add this pre eq to the template pe eq
+                   # this time we need to add this pre eq to the template pe eq
 
-                  'on_pre': '''t_spike = 0 * ms''',
+                   'on_pre': '''t_spike = 0 * ms''',
 
-                  'on_post': ''' '''}
+                   'on_post': ''' '''}
 
-gaussianPara_current = {"sigma_gaussian_e": 6 * ms,
-                        "sigma_gaussian_i": 6 * ms}
+gaussian_params_current = {"sigma_gaussian_e": 6 * ms,
+                           "sigma_gaussian_i": 6 * ms}
 
-gaussianPara_conductance = {"sigma_gaussian_e": 6 * ms,
-                            "sigma_gaussian_i": 6 * ms}
+gaussian_params_conductance = {"sigma_gaussian_e": 6 * ms,
+                               "sigma_gaussian_i": 6 * ms}
 
 
-nonePara = {}
+none_params = {}
 
 '''
 Dictionary of keywords:
@@ -474,25 +474,25 @@ These dictionaries contains keyword and models and parameters names useful for t
 Every new block dictionaries must be added to these definitions
 '''
 modes = {'current': current, 'conductance': conductance,
-         'DPI': Dpi, 'DPIShunting': Dpi_shunt}
+         'DPI': dpi, 'DPIShunting': dpi_shunt}
 
-kernels = {'exponential': none, 'alpha': alphakernel,
-           'resonant': resonantkernel, 'gaussian': gaussiankernel}
+kernels = {'exponential': none, 'alpha': alpha_kernel,
+           'resonant': resonant_kernel, 'gaussian': gaussian_kernel}
 
-plasticitymodels = {'nonplastic': none, 'fusi': fusi, 'stdp': stdp}
+plasticity_models = {'non_plastic': none, 'fusi': fusi, 'stdp': stdp}
 
 
 # parameters dictionaries
-current_Parameters = {'current': currentPara, 'nonplastic': nonePara, 'fusi': fusiPara_current,
-                      'stdp': stdpPara_current, 'exponential': nonePara, 'alpha': alphaPara_current,
-                      'resonant': resonantPara_current, 'gaussian': gaussianPara_current}
+current_parameters = {'current': current_params, 'non_plastic': none_params, 'fusi': fusi_params_current,
+                      'stdp': stdp_para_current, 'exponential': none_params, 'alpha': alpha_params_current,
+                      'resonant': resonant_params_current, 'gaussian': gaussian_params_current}
 
-conductance_Parameters = {'conductance': conductancePara, 'nonplastic': nonePara, 'fusi': fusiPara_conductance,
-                          'stdp': stdpPara_conductance, 'exponential': nonePara, 'alpha': alphaPara_conductance,
-                          'resonant': resonantPara_conductance, 'gaussian': gaussianPara_conductance}
+conductance_parameters = {'conductance': conductance_params, 'non_plastic': none_params, 'fusi': fusi_params_conductance,
+                          'stdp': stdp_para_conductance, 'exponential': none_params, 'alpha': alpha_params_conductance,
+                          'resonant': resonant_params_conductance, 'gaussian': gaussian_params_conductance}
 
-DPI_Parameters = {'DPI': DpiPara, 'exponential': nonePara, 'nonplastic': nonePara,
-                  'fusi': fusiPara_current, 'stdp': stdpPara_current}
+DPI_parameters = {'DPI': dpi_params, 'exponential': none_params, 'non_plastic': none_params,
+                  'fusi': fusi_params_current, 'stdp': stdp_para_current}
 
-DPI_shunt_Parameters = {'DPIShunting': Dpi_shunt_para, 'exponential': nonePara, 'nonplastic': nonePara,
-                        'fusi': fusiPara_current, 'stdp': stdpPara_current}
+DPI_shunt_parameters = {'DPIShunting': dpi_shunt_params, 'exponential': none_params, 'non_plastic': none_params,
+                        'fusi': fusi_params_current, 'stdp': stdp_para_current}

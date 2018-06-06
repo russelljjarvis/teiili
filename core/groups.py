@@ -4,8 +4,8 @@
 """
 # @Author: alpren, mmilde
 # @Date:   2017-27-07 17:28:16
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-28 19:06:47
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-01 15:38:28
 """
 Wrapper class for brian2 Group class.
 """
@@ -15,28 +15,28 @@ from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
     ylabel, xlabel, xlim, ylim, figure, Group, Subgroup
 from collections import OrderedDict
 
-from NCSBrian2Lib.models import neuron_models
-from NCSBrian2Lib.models import synapse_models
+from teili.models import neuron_models
+from teili.models import synapse_models
 
 
-class NCSGroup(Group):
+class TeiliGroup(Group):
     """just a bunch of methods that are shared between neurons and connections
     class Group is already used by brian2
 
     Attributes:
-        standaloneParams (dict): Dictionary of standalone parameters.
-        standaloneVars (list): List of standalone variables
-        strParams (dict): Name of paramters to be updated
+        standalone_params (dict): Dictionary of standalone parameters.
+        standalone_vars (list): List of standalone variables
+        str_params (dict): Name of paramters to be updated
     """
 
     def __init__(self):
         """Summary
         """
-        self.standaloneVars = []
-        self.standaloneParams = OrderedDict()
-        self.strParams = {}
+        self.standalone_vars = []
+        self.standalone_params = OrderedDict()
+        self.str_params = {}
 
-    def addStateVariable(self, name, unit=1, shared=False, constant=False, changeInStandalone=True):
+    def add_state_variable(self, name, unit=1, shared=False, constant=False, changeInStandalone=True):
         """this method allows you to add a state variable
         (usually defined in equations), that is changeable in standalone mode
         If you pass a value, it will directly set it and decide based on that value,
@@ -54,7 +54,8 @@ class NCSGroup(Group):
             size = 1
         else:
             # TODO: Check if this works for neuron as well
-            # TODO: Raise error (understandable) if addStateVariable is called before synapses are connected
+            # TODO: Raise error (understandable) if addStateVariable is called
+            # before synapses are connected
             size = self.variables['N'].get_value()
 
         try:
@@ -65,7 +66,7 @@ class NCSGroup(Group):
                                      constant=constant, scalar=shared)  # dimensionless
 
         if changeInStandalone:
-            self.standaloneVars += [name]
+            self.standalone_vars += [name]
             # self.__setattr__(name, value)  # TODO: Maybe do that always?
 
     def set_params(self, params, **kwargs):
@@ -80,15 +81,15 @@ class NCSGroup(Group):
         """
         return set_params(self, params, **kwargs)
 
-    def updateParam(self, parname):
+    def update_param(self, parname):
         """this is used to update string based params during run (e.g. with gui)
 
         Args:
             parname (str): Name of paramter to be updated
         """
-        for strPar in self.strParams:
-            if parname in self.strParams[strPar]:
-                self.__setattr__(strPar, self.strParams[strPar])
+        for strPar in self.str_params:
+            if parname in self.str_params[strPar]:
+                self.__setattr__(strPar, self.str_params[strPar])
 
     def print_equations(self):
         for key, value in sorted(self.equation_builder.keywords.items()):
@@ -107,7 +108,7 @@ class NCSGroup(Group):
         return self.equation_builder.keywords['model']
 
 
-class Neurons(NeuronGroup, NCSGroup):
+class Neurons(NeuronGroup, TeiliGroup):
     """
     This class is a subclass of NeuronGroup
     You can use it as a NeuronGroup, and everything will be passed to NeuronGroup.
@@ -117,7 +118,7 @@ class Neurons(NeuronGroup, NCSGroup):
         equation_builder (TYPE): Class which describes the neuron model equation and all
             porperties and default paramters. See /model/builder/neuron_equation_builder.py and
             models/neuron_models.py
-        initialized (bool): Flag to register Neurons population with NCSGroups
+        initialized (bool): Flag to register Neurons population with TeiliGroups
         num_inputs (int): Number of possible synaptic inputs. This overocmes the summed issue
             present in brian2.
         num_synapses (int): Number of synapses projecting to post-synaptic neurn group
@@ -128,7 +129,7 @@ class Neurons(NeuronGroup, NCSGroup):
     def __init__(self, N, equation_builder=None,
                  parameters=None,
                  method='euler',
-                 #num_inputs=3,
+                 # num_inputs=3,
                  verbose=False, **Kwargs):
         """Summary
 
@@ -149,7 +150,7 @@ class Neurons(NeuronGroup, NCSGroup):
         self.synapses_dict = {}
 
         if equation_builder is not None:
-            #if inspect.isclass(equation_builder):
+            # if inspect.isclass(equation_builder):
             #    self.equation_builder = equation_builder()
             if isinstance(equation_builder, str):
                 equation_builder = getattr(
@@ -157,18 +158,19 @@ class Neurons(NeuronGroup, NCSGroup):
                 self.equation_builder = equation_builder()
             else:
                 self.equation_builder = equation_builder
-            #self.equation_builder.addInputCurrents(num_inputs)
+            # self.equation_builder.add_input_currents(num_inputs)
             Kwargs.update(self.equation_builder.keywords)
             Kwargs.pop('parameters')
 
             if parameters is not None:
                 self.parameters = parameters
-                print("parameters you provided overwrite parameters from EquationBuilder ")
+                print(
+                    "parameters you provided overwrite parameters from EquationBuilder ")
             else:
                 self.parameters = self.equation_builder.keywords['parameters']
 
         self.initialized = True
-        NCSGroup.__init__(self)
+        TeiliGroup.__init__(self)
         NeuronGroup.__init__(self, N, method=method, **Kwargs)
 
         set_params(self, self.parameters, verbose=verbose)
@@ -194,9 +196,9 @@ class Neurons(NeuronGroup, NCSGroup):
         if self.verbose:
             print('increasing number of registered Synapses of ' +
                   self.name + ' to ', self.num_synapses)
-            #print('specified max number of Synapses of ' +
+            # print('specified max number of Synapses of ' +
             #      self.name + ' is ', self.num_inputs)
-        #if self.num_inputs < self.num_synapses:
+        # if self.num_inputs < self.num_synapses:
         #    raise ValueError('There seem so be too many connections to ' +
         #                     self.name + ', please increase num_inputs')
         return self.synapses_dict[synapsename]
@@ -210,15 +212,15 @@ class Neurons(NeuronGroup, NCSGroup):
         """
         NeuronGroup.__setattr__(self, key, value)
         if hasattr(self, 'name'):
-            if key in self.standaloneVars and not isinstance(value, str):
+            if key in self.standalone_vars and not isinstance(value, str):
                 # we have to check if the variable has a value assigned or
                 # is assigned a string that is evaluated by brian2 later
                 # as in that case we do not want it here
-                self.standaloneParams.update({self.name + '_' + key: value})
+                self.standalone_params.update({self.name + '_' + key: value})
 
             if isinstance(value, str) and value != 'name' and value != 'when':
                 # store this for later update
-                self.strParams.update({key: value})
+                self.str_params.update({key: value})
 
     def __getitem__(self, item):
         """Taken from brian2/brian2/groups/neurongroup.py
@@ -227,14 +229,15 @@ class Neurons(NeuronGroup, NCSGroup):
             item (TYPE): Description
 
         Returns:
-            NCSSubgroup: The respective neuron subgroup
+            TeiliSubgroup: The respective neuron subgroup
 
         Raises:
             IndexError: Error that indicates that size of subgroup set by start and stop is out of bounds
             TypeError: Error to indicate that wrong syntax has been used
         """
         if not isinstance(item, slice):
-            raise TypeError('Subgroups can only be constructed using slicing syntax')
+            raise TypeError(
+                'Subgroups can only be constructed using slicing syntax')
         start, stop, step = item.indices(self._N)
         if step != 1:
             raise IndexError('Subgroups have to be contiguous')
@@ -242,18 +245,18 @@ class Neurons(NeuronGroup, NCSGroup):
             raise IndexError('Illegal start/end values for subgroup, %d>=%d' %
                              (start, stop))
 
-        return NCSSubgroup(self, start, stop)
+        return TeiliSubgroup(self, start, stop)
 
 
 # TODO: find out, if it is possible to have delay as statevariable
-class Connections(Synapses, NCSGroup):
+class Connections(Synapses, TeiliGroup):
     """
     This class is a subclass of Synapses
     You can use it as a Synapses, and everything will be passed to Synapses.
     Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters
 
     Attributes:
-        equation_builder (NCSBrian2Lib): Class which builds the synapse model
+        equation_builder (teili): Class which builds the synapse model
         input_number (int): Number of input to post synatic neuron. This variable takes care of the summed
             issue present in brian2
         parameters (dict): Dictionary of parameter keys and values of the synapse model.
@@ -289,12 +292,13 @@ class Connections(Synapses, NCSGroup):
             AttributeError: Warning to indicate that an input_number was specified even though this is taken care of automatically
             Exception: Unit mismatch in equations
         """
-        NCSGroup.__init__(self)
+        TeiliGroup.__init__(self)
 
         self.verbose = verbose
         self.input_number = 0
 
-        # check if it is a building block, if yes, set bb.group as source/target
+        # check if it is a building block, if yes, set bb.group as
+        # source/target
         try:
             target = target.group
         except:
@@ -320,7 +324,7 @@ class Connections(Synapses, NCSGroup):
             if input_number is not None:
                 self.input_number = input_number
             else:
-                warnings.warn('you seem to use brian2 NeuronGroups instead of NCSBrian2Lib Neurons for ' +
+                warnings.warn('you seem to use brian2 NeuronGroups instead of teili Neurons for ' +
                               str(target.name) + ', therefore, please specify an input_number yourself')
                 raise e
 
@@ -336,14 +340,15 @@ class Connections(Synapses, NCSGroup):
                 self.equation_builder = equation_builder()
             else:
                 self.equation_builder = equation_builder
-            self.equation_builder.set_inputnumber(self.input_number)
+            self.equation_builder.set_input_number(self.input_number)
             Kwargs.update(self.equation_builder.keywords)
             Kwargs.pop('parameters')
 
             if parameters is None:
                 self.parameters = self.equation_builder.keywords['parameters']
             else:
-                print("parameters you provided overwrite parameters from EquationBuilder")
+                print(
+                    "parameters you provided overwrite parameters from EquationBuilder")
 
         try:
             Synapses.__init__(self, source, target=target,
@@ -386,15 +391,15 @@ class Connections(Synapses, NCSGroup):
         """
         Synapses.__setattr__(self, key, value)
         if hasattr(self, 'name'):
-            if key in self.standaloneVars and not isinstance(value, str):
+            if key in self.standalone_vars and not isinstance(value, str):
                 # we have to check if the variable has a value assigned or
                 # is assigned a string that is evaluated by brian2 later
                 # as in that case we do not want it here
-                self.standaloneParams.update({self.name + '_' + key: value})
+                self.standalone_params.update({self.name + '_' + key: value})
 
             if isinstance(value, str) and value != 'name' and value != 'when':
                 # store this for later update
-                self.strParams.update({key: value})
+                self.str_params.update({key: value})
 
     def plot(self):
         """simple visualization of synapse connectivity (connected dots and connectivity matrix)
@@ -420,7 +425,7 @@ class Connections(Synapses, NCSGroup):
         ylabel('Target neuron index')
 
 
-def set_params(briangroup, params, ndargs=None, raise_error = False, verbose=False):
+def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False):
     """This function takes a params dictionary and sets the parameters of a briangroup
 
     Args:
@@ -444,16 +449,16 @@ def set_params(briangroup, params, ndargs=None, raise_error = False, verbose=Fal
         else:
             # print and warn, as warnings are sometimes harder to see
             print("Group " + str(briangroup.name) +
-                          " has no state variable " + str(par)+
-                          ", but you tried to set it with set_params")
+                  " has no state variable " + str(par) +
+                  ", but you tried to set it with set_params")
             warnings.warn("Group " + str(briangroup.name) +
-                          " has no state variable " + str(par)+
+                          " has no state variable " + str(par) +
                           ", but you tried to set it with set_params")
             if raise_error:
                 raise AttributeError("Group " + str(briangroup.name) +
-                          " has no state variable " + str(par) +
-                          ', but you tried to set it with set_params '+
-                          'if you want to ignore this error, pass raise_error = False')
+                                     " has no state variable " + str(par) +
+                                     ', but you tried to set it with set_params ' +
+                                     'if you want to ignore this error, pass raise_error = False')
 
     if verbose:
         # This fails with synapses coming from SpikeGenerator groups, unidentified bug?
@@ -462,7 +467,8 @@ def set_params(briangroup, params, ndargs=None, raise_error = False, verbose=Fal
         try:
             states = briangroup.get_states()
             print('\n')
-            print('-_-_-_-_-_-_-_\nParameters set by set_params for',briangroup.name,':')
+            print('-_-_-_-_-_-_-_\nParameters set by set_params for',
+                  briangroup.name, ':')
             print('List of first value of each parameter:')
             for key in states.keys():
                 if key in params:
@@ -472,13 +478,14 @@ def set_params(briangroup, params, ndargs=None, raise_error = False, verbose=Fal
                         print(key, states[key])
             print('----------')
 
-            dellist = list(params.keys())+['N','i','t','dt','not_refractory','lastspike']
+            dellist = list(params.keys()) + \
+                ['N', 'i', 't', 'dt', 'not_refractory', 'lastspike']
             for k in dellist:
                 try:
                     states.pop(k)
                 except:
                     pass
-            print('By this set_params call, you have not set the following parameters:' )
+            print('By this set_params call, you have not set the following parameters:')
             for key in states.keys():
                 if states[key].size > 1:
                     print(key, states[key][1])
@@ -488,7 +495,8 @@ def set_params(briangroup, params, ndargs=None, raise_error = False, verbose=Fal
         except:
             print('printing of states does not work in cpp standalone mode')
 
-class NCSSubgroup(Subgroup):
+
+class TeiliSubgroup(Subgroup):
     """this helps to make Subgroups compatible, otherwise the same as Subgroup
     TODO: Some functionality of the package is not compatible with subgroups yet!!!
 
@@ -505,10 +513,13 @@ class NCSSubgroup(Subgroup):
             stop (int, required): End index of source neuron group which should be in subgroup
             name (str, optional): Name of subgroup
         """
-        warnings.warn('Some functionality of this package is not compatible with subgroups yet')
+        warnings.warn(
+            'Some functionality of this package is not compatible with subgroups yet')
         self.register_synapse = None
         Subgroup.__init__(self, source, start, stop, name)
-        self.register_synapse = self.source.register_synapse  # TODO: this is not ideal, as it is not necessary to register a synapse for subgroups!
+        # TODO: this is not ideal, as it is not necessary to register a synapse
+        # for subgroups!
+        self.register_synapse = self.source.register_synapse
 
     @property
     def num_synapses(self):

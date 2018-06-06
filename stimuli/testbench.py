@@ -2,7 +2,7 @@
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-04 14:20:06
+# @Last Modified time: 2018-06-05 14:23:30
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -15,6 +15,7 @@ from teili.tools.converter import dvs2ind, aedat2numpy
 from teili.tools.indexing import xy2ind, ind2xy
 import numpy as np
 import os
+import sys
 import operator
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
@@ -153,7 +154,7 @@ class OCTA_Testbench():
         else:
             return int(x + 0.5)
 
-    def rotating_bar(self, length=10, n2dNeurons=10, orientation='vertical', ts_offset=10,
+    def rotating_bar(self, length=10, nrows=10, ncols=None, orientation='vertical', ts_offset=10,
                      angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None,
                      noise_probability=None, repetitions=1, debug=False):
         """This function returns a single spikegenerator group (Brian object)
@@ -164,23 +165,29 @@ class OCTA_Testbench():
 
         Args:
             length (int): `length` of the bar in pixel.
-            n2dNeurons (int, optional): Size of the pizel array
+            nrows (int, optional): X-Axis size of the pixel array
+            ncols (int, optional): Y-Axis size of the pixel array
             orientation (str): `orientation` of the bar. Can either be 'vertical'
                 or 'horizontal'
             ts_offset (int): time between two pixel location
-            angle_step (int, optional): Angular velocity. Sets setp widh in np.arrange
+            angle_step (int, optional): Angular velocity. Sets step width in np.arrange
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
-            rec_path (str, optional): Path to aedat reacording, only used if arificial_stimulus=False
+            rec_path (str, optional): Path to aedat recording, only used if arificial_stimulus=False
             save_path (str, optional): Path to store generated events
             debug (bool, optional): Description
 
         Returns:
-            SpikeGenerator obj: Brian2 objects which holds the spiketimes as well
+            SpikeGenerator obj: Brian2 objects which holds the spike times as well
                 as the respective neuron indices
 
         Raises:
-            UserWarning: If no filename is given but aedat reacording should be loaded
+            UserWarning: If no filename is given but aedat recording should be loaded
         """
+        if ncols is None:
+            ncols = nrows
+
+        num_neurons = nrows * ncols
+
         if not artifical_stimulus:
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
@@ -194,7 +201,7 @@ class OCTA_Testbench():
             pol = []
             self.times = []
             repetition_offset = 0
-            center = (n2dNeurons / 2, n2dNeurons / 2)
+            center = (nrows / 2, ncols / 2)
             self.angles = np.arange(-np.pi / 2, np.pi *
                                     3 / 2, np.radians(angle_step))
             for repetition in range(repetitions):
@@ -222,7 +229,7 @@ class OCTA_Testbench():
                     for coord in self.line:
                         list_of_coord.append((coord[0], coord[1]))
                     for coord in self.line:
-                        if coord[0] >= n2dNeurons or coord[1] >= n2dNeurons:
+                        if coord[0] >= nrows or coord[1] >= nrows:
                             if debug:
                                 print("Coordinate larger than input space. x: {}, y: {}".format(
                                     coord[0], coord[1]))
@@ -232,9 +239,8 @@ class OCTA_Testbench():
                         self.times.append(repetition_offset + (i * ts_offset))
                         pol.append(1)
                         if noise_probability is not None and noise_probability >= np.random.rand():
-                            noise_index = np.random.randint(0, n2dNeurons**2)
-                            noise_x, noise_y = ind2xy(
-                                noise_index, np.int(n2dNeurons), np.int(n2dNeurons))
+                            noise_index = np.random.randint(0, num_neurons)
+                            noise_x, noise_y = ind2xy(noise_index, nrows, ncols)
                             if (noise_x, noise_y) not in list_of_coord:
                                 # print(noise_x, noise_y)
                                 # print(list_of_coord)
@@ -251,7 +257,7 @@ class OCTA_Testbench():
             self.events[2, :] = np.asarray(self.times)
             self.events[3, :] = np.asarray(pol)
             if save_path is None:
-                save_path = os.getcwd() + '/'
+                save_path = os.path.join(os.getcwd(), '')
             np.save(save_path + 'events.npy', self.events)
         if debug:
             print("Max X: {}. Max Y: {}".format(
@@ -261,8 +267,8 @@ class OCTA_Testbench():
         if not artifical_stimulus:
             self.indices, self.times = dvs2ind(self.events, scale=False)
         else:
-            self.indices = xy2ind(np.asarray(self.events[0, :],dtype = 'int'), np.asarray(self.events[
-                                  1, :],dtype = 'int'), n2dNeurons, n2dNeurons)
+            self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'), np.asarray(self.events[
+                                  1, :], dtype='int'), nrows, ncols)
             if debug:
                 print("Maximum index: {}, minimum index: {}".format(
                     np.max(self.indices), np.min(self.indices)))
@@ -271,7 +277,7 @@ class OCTA_Testbench():
             nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
         return gInpGroup
 
-    def translating_bar_infinity(self, length=10, n2dNeurons=64, orientation='vertical', shift=32,
+    def translating_bar_infinity(self, length=10, nrows=64, ncols=None, orientation='vertical', shift=32,
                                  ts_offset=10, artifical_stimulus=True, rec_path=None,
                                  return_events=False):
         """
@@ -281,7 +287,8 @@ class OCTA_Testbench():
 
         Args:
             length (int, optional): length of the bar in pixel
-            n2dNeurons (int, optional): Size of the pizel array
+            nrows (int, optional): X-Axis size of the pixel array
+            ncols (int, optional): Y-Axis size of the pixel array
             orientation (str, optional): lag which determines if bar is orientated vertical or horizontal
             shift (int, optional): offset in x where the stimulus will start
             ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
@@ -297,6 +304,10 @@ class OCTA_Testbench():
             UserWarning: If no filename is given but aedat reacording should be loaded
 
         """
+        if ncols is None:
+            ncols = nrows
+
+        num_neurons = nrows * ncols
         if not artifical_stimulus:
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
@@ -355,15 +366,16 @@ class OCTA_Testbench():
             if not artifical_stimulus:
                 self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                self.indices = xy2ind(
-                    self.events[0, :], self.events[1, :], n2dNeurons, n2dNeurons)
+                self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
+                                      np.asarray(self.events[1, :], dtype='int'),
+                                      nrows, ncols)
                 print(np.max(self.indices), np.min(self.indices))
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(
                 nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
             return gInpGroup
 
-    def rotating_bar_infinity(self, length=10, n2dNeurons=64, orthogonal=False, shift=32,
+    def rotating_bar_infinity(self, length=10, nrows=64, ncols=None, orthogonal=False, shift=32,
                               ts_offset=10, artifical_stimulus=True, rec_path=None,
                               return_events=False):
         """This function will either load recorded DAVIS/DVS recordings or generate artificial events
@@ -372,7 +384,8 @@ class OCTA_Testbench():
 
         Args:
             length (int, optional): Length of the bar in pixel
-            n2dNeurons (int, optional): Size of the pizel array
+            nrows (int, optional): X-Axis size of the pixel array
+            ncols (int, optional): Y-Axis size of the pixel array
             orthogonal (bool, optional): Flag which determines if bar is kept always orthogonal to trajectory,
                 if it kept aligned with trajectory or if it returns in "chaotic way"
             shift (int, optional): offset in x where the stimulus will start
@@ -391,6 +404,10 @@ class OCTA_Testbench():
         Deleted Parameters:
             rec_pah (None, optional): Path to recordings
         """
+        if ncols is None:
+            ncols = nrows
+
+        num_neurons = nrows * ncols
         if not artifical_stimulus:
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
@@ -483,8 +500,9 @@ class OCTA_Testbench():
             if not artifical_stimulus:
                 self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
-                self.indices = xy2ind(
-                    self.events[0, :], self.events[1, :], n2dNeurons, n2dNeurons)
+                self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
+                                      np.asarray(self.events[1, :], dtype='int'),
+                                      nrows, ncols)
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(
                 nPixel + 1, indices=self.indices, times=self.times * ms, name='bar')
@@ -601,7 +619,13 @@ class Visualize():
         """
         global stim
         self.time_window = time_window
-        self.app = QtGui.QApplication([])
+
+        self.app = QtGui.QApplication.instance()
+        if self.app is None:
+            self.app = QtGui.QApplication(sys.argv)
+        else:
+            print('QApplication instance already exists: %s' % str(self.app))
+
         pg.setConfigOptions(antialias=True)
         colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
                   (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
@@ -638,7 +662,7 @@ class Visualize():
         self.timer.timeout.connect(self.update)
         self.timer.start(100)
 
-        QtGui.QApplication.instance().exec_()
+        self.app.exec_()
 
     def update(self):
         global event_plot

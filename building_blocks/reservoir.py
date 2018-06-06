@@ -2,7 +2,7 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 15:17:35
+# @Last Modified time: 2018-06-05 09:56:29
 
 """
 This files contains different Reservoir circuits
@@ -10,7 +10,7 @@ NicolaClopath2017
 ...
 """
 
-import time
+import time, sys
 import numpy as np
 # import matplotlib.pyplot as plt
 from pyqtgraph.Qt import QtGui, QtCore
@@ -54,8 +54,8 @@ class Reservoir(BuildingBlock):
 
     Attributes:
         group (dict): List of keys of neuron population
-        inputGroup (SpikeGenerator): SpikeGenerator obj. to stimulate R
-        num_neurons (int, optional): Size of R neuron population
+        input_group (SpikeGenerator): SpikeGenerator obj. to stimulate Reservoir
+        num_neurons (int, optional): Size of Reservoir neuron population
         fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple
         spikemonR (TYPE): Description
         standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation
@@ -76,15 +76,15 @@ class Reservoir(BuildingBlock):
         """Summary
 
         Args:
-            groupname (str, required): Name of the R population
-            dimensions (int, optional): Specifies if 1 or 2 dimensional R is created
+            groupname (str, required): Name of the Reservoir population
+            dimensions (int, optional): Specifies if 1 or 2 dimensional Reservoir is created
             neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
             synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
             block_params (dict, optional): Parameter for neuron populations
-            num_neurons (int, optional): Size of R neuron population
+            num_neurons (int, optional): Size of Reservoir neuron population
             fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple
             additional_statevars (list, optional): List of additonal statevariables which are not standard
-            num_inputs (int, optional): Number of input currents to R
+            num_inputs (int, optional): Number of input currents to Reservoir
             monitor (bool, optional): Flag to auto-generate spike and statemonitors
             debug (bool, optional): Flag to gain additional information
 
@@ -113,13 +113,13 @@ class Reservoir(BuildingBlock):
                                                    debug=debug,
                                                    **block_params)
 
-        self.inputGroup =self.Groups['gRInpGroup']
+        self.input_group = self.Groups['gRInpGroup']
         self.group = self.Groups['gRGroup']
         if monitor:
             self.spikemonR = self.Monitors['spikemonR']
 
     def plot(self, start_time=0 * ms, end_time=None):
-        """Simple plot for R
+        """Simple plot for Reservoir
 
         Args:
             start_time (int, optional): Start time of plot in ms
@@ -148,20 +148,20 @@ def gen_reservoir(groupname,
     """Summary
 
     Args:
-        groupname (str, required): Name of the R population
+        groupname (str, required): Name of the Reservoir population
         neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
         synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
-        weInpR (float, optional): Excitatory synaptic weight between input SpikeGenerator and R neurons
-        weRInh (int, optional): Excitatory synaptic weight between R population and inhibitory interneuron
-        wiInhR (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and R population
-        weRR (float, optional): Self-excitatory synaptic weight (R)
+        weInpR (float, optional): Excitatory synaptic weight between input SpikeGenerator and Reservoir neurons
+        weRInh (int, optional): Excitatory synaptic weight between Reservoir population and inhibitory interneuron
+        wiInhR (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and Reservoir population
+        weRR (float, optional): Self-excitatory synaptic weight (Reservoir)
         sigm (int, optional): Description
-        rpR (float, optional): Refractory period of R neurons
+        rpR (float, optional): Refractory period of Reservoir neurons
         rpInh (float, optional): Refractory period of inhibitory neurons
-        num_neurons (int, optional): Size of R neuron population
+        num_neurons (int, optional): Size of Reservoir neuron population
         fraction_inh_neurons (int, optional): Set to None to skip Dale's priciple
         cutoff (int, optional): Radius of self-excitation
-        num_inputs (int, optional): Number of input currents to R
+        num_inputs (int, optional): Number of input currents to Reservoir
         monitor (bool, optional): Flag to auto-generate spike and statemonitors
         additional_statevars (list, optional): List of additonal statevariables which are not standard
         debug (bool, optional): Flag to gain additional information
@@ -190,7 +190,7 @@ def gen_reservoir(groupname,
                              equation_builder=neuron_eq_builder(num_inputs=1),
                              refractory=rpInh, name='g' + groupname + '_Inh')
 
-    # empty input for R group
+    # empty input for Reservoir group
     ts_reservoir = np.asarray([]) * ms
     ind_reservoir = np.asarray([])
     gRInpGroup = SpikeGeneratorGroup(
@@ -281,7 +281,7 @@ def gen_reservoir(groupname,
 
     end = time.clock()
     if debug:
-        print('creating R of ' + str(num_neurons) + ' neurons with name ' +
+        print('creating Reservoir of ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
         print('The keys of the output dict are:')
         for key in Groups:
@@ -291,17 +291,22 @@ def gen_reservoir(groupname,
 
 
 def plot_reservoir(name, start_time, end_time, num_neurons, reservoir_monitors):
-    """Function to easily visualize R activity.
+    """Function to easily visualize Reservoir activity.
 
     Args:
-        name (str, required): Name of the R population
+        name (str, required): Name of the Reservoir population
         start_time (brian2.units.fundamentalunits.Quantity, required): Start time in ms
             from when network activity should be plotted.
         end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
             Can be smaller than simulation time but not larger
-        num_neurons (int, required): 1D number of neurons in R populations
-        reservoir_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in R.Monitors
+        num_neurons (int, required): 1D number of neurons in Reservoir populations
+        reservoir_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in Reservoir.Monitors
     """
+    app = QtGui.QApplication.instance()
+    if app is None:
+        app = QtGui.QApplication(sys.argv)
+    else:
+        print('QApplication instance already exists: %s' % str(app))
     pg.setConfigOptions(antialias=True)
 
     win_raster = pg.GraphicsWindow(
@@ -311,11 +316,11 @@ def plot_reservoir(name, start_time, end_time, num_neurons, reservoir_monitors):
     win_raster.resize(1000, 1800)
     win_states.resize(1000, 1800)
     win_raster.setWindowTitle('Winner-Take-All Test Simulation: Raster plots')
-    win_states.setWindowTitle('Winner-Take-All Test Simulation:State plots')
+    win_states.setWindowTitle('Winner-Take-All Test Simulation: State plots')
 
     raster_input = win_raster.addPlot(title="SpikeGenerator input")
     win_raster.nextRow()
-    raster_wta = win_raster.addPlot(title="SpikeMonitor R")
+    raster_wta = win_raster.addPlot(title="SpikeMonitor Reservoir")
     win_raster.nextRow()
     raster_inh = win_raster.addPlot(
         title="SpikeMonitor inhibitory interneurons")
@@ -339,7 +344,7 @@ def plot_reservoir(name, start_time, end_time, num_neurons, reservoir_monitors):
                      monitor=reservoir_monitors['statemonR'], neuron_id=128,
                      variable="Iin", unit=pA, window=state_syn_input, name=name)
 
-    QtGui.QApplication.instance().exec_()
+    app.exec_()
 
     # fig = figure(figsize=(8, 3))
     # plotSpikemon(start_time, end_time,

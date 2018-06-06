@@ -1,8 +1,16 @@
-# coding: utf-8
-#===============================================================================
+# -*- coding: utf-8 -*-
+# @Author: Alpha Renner
+# @Date:   2018-06-01 18:45:19
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-05 11:17:21
+
 """
-This is a simple chain of neurons
+This is a simple syn-fire chain of neurons
+
+Attributes:
+    chain_params (TYPE): Description
 """
+
 import os
 import numpy as np
 from datetime import datetime
@@ -17,21 +25,48 @@ from teili.models.synapse_models import reversalSynV
 
 from teili.BuildingBlocks.BuildingBlock import BuildingBlock
 from teili.Groups.Groups import Neurons, Connections
-#===============================================================================
+#=========================================================================
 
 
 chain_params = {'num_chains': 4,
-               'num_neurons_per_chain': 15,
-               'synChaCha1e_weight': 4,
-               'synInpCha1e_weight': 1,
-               'gChaGroup_refP': 1 * ms}
+                'num_neurons_per_chain': 15,
+                'synChaCha1e_weight': 4,
+                'synInpCha1e_weight': 1,
+                'gChaGroup_refP': 1 * ms}
 
 
 class Chain(BuildingBlock):
+
+    """Summary
+
+    Attributes:
+        gChaGroup_refP (TYPE, optional): Parameter specifying the refractory period
+        group (TYPE): Description
+        input_group (TYPE): Description
+        num_chains (int, optional): Number of chains to generate
+        num_neurons_per_chain (int, optional): Number of neurons within one chain
+        spikemon_cha (brian2 SpikeMonitor obj.): Description
+        spikemon_cha_inp (brian2 SpikeMonitor obj.): Description
+        standalone_params (TYPE): Description
+        synapse (TYPE): Description
+        synChaCha1e_weight (int, optional): Parameter specifying the recurrent weight
+        synInpCha1e_weight (int, optional): Parameter specifying the input weight
+    """
+
     def __init__(self, name, neuron_eq_builder=ExpAdaptIF(1),
                  synapse_eq_builder=reversalSynV(),
                  block_params=chain_params,
                  num_inputs=1, debug=False):
+        """Summary
+
+        Args:
+            name (str, required): Base name for building block
+            neuron_eq_builder (teili.models.builder obj, optional): Neuron equation builder object
+            synapse_eq_builder (teili.models.builder obj, optional): Synapse equation builder object
+            block_params (dict, optional): Dictionary of parameters such as synChaCha1e_weight or gChaGroup_refP
+            num_inputs (int, optional): Number of inputs from different source populations
+            debug (bool, optional): Debug flag
+        """
         self.num_chains = block_params['num_chains']
         self.num_neurons_per_chain = block_params['num_neurons_per_chain']
         self.synChaCha1e_weight = block_params['synChaCha1e_weight']
@@ -43,41 +78,48 @@ class Chain(BuildingBlock):
 
         self.Groups, self.Monitors,\
             self.standalone_params = gen_chain(name,
-                                        neuron_eq_builder,
-                                        synapse_eq_builder,
-                                        self.numChains,
-                                        self.num_neurons_per_chain,
-                                        num_inputs,
-                                        self.synChaCha1e_weight,
-                                        self.synInpCha1e_weight,
-                                        self.gChaGroup_refP,
-                                        debug=self.debug)
+                                               neuron_eq_builder,
+                                               synapse_eq_builder,
+                                               self.numChains,
+                                               self.num_neurons_per_chain,
+                                               num_inputs,
+                                               self.synChaCha1e_weight,
+                                               self.synInpCha1e_weight,
+                                               self.gChaGroup_refP,
+                                               debug=self.debug)
 
-        self.inputGroup = self.Groups['gChaInpGroup']
+        self.input_group = self.Groups['gChaInpGroup']
         self.group = self.Groups['gChaGroup']
         self.synapse = self.Groups['synChaCha1e']
 
-        self.spikemonCha = self.Monitors['spikemonCha']
-        self.spikemonChaInp = self.Monitors['spikemonChaInp']
+        self.spikemon_cha = self.Monitors['spikemon_cha']
+        self.spikemon_cha_inp = self.Monitors['spikemon_cha_inp']
 
     def plot(self, savedir=None):
+        """Simple function to plot recorded state and spikemonitors
 
-        if len(self.spikemonCha.t) < 1:
+        Args:
+            savedir (str, optional): Path to directory to save plaot
+
+        Returns:
+            matplotlib.pyplot object: Returns figure
+        """
+        if len(self.spikemon_cha.t) < 1:
             print(
                 'Monitor is empty, have you run the Network and added the monitor to the Network?')
             return
 
-        duration = max(self.spikemonCha.t + 10 * ms)
+        duration = max(self.spikemon_cha.t + 10 * ms)
         # Cha plots
         fig = figure()
         subplot(211)
-        plot(self.spikemonCha.t / ms, self.spikemonCha.i, '.k')
+        plot(self.spikemon_cha.t / ms, self.spikemon_cha.i, '.k')
         xlabel('Time [ms]')
         ylabel('i_Cha')
         # ylim([0,0])
         xlim([0, duration / ms])
         subplot(212)
-        plot(self.spikemonChaInp.t / ms, self.spikemonChaInp.i, '.k')
+        plot(self.spikemon_cha_inp.t / ms, self.spikemon_cha_inp.i, '.k')
         xlabel('Time [ms]')
         ylabel('i_Cha_Inp')
 
@@ -89,16 +131,32 @@ class Chain(BuildingBlock):
 
 
 def gen_chain(groupname='Cha',
-             neuron_eq_builder=ExpAdaptIF(1),
-             synapse_eq_builder=reversalSynV(),
-             num_chains=4,
-             num_neurons_per_chain=15,
-             num_inputs=1,
-             synChaCha1e_weight=4,
-             synInpCha1e_weight=1,
-             gChaGroup_refP=1 * ms,
-             debug=False):
-    """create chains of neurons"""
+              neuron_eq_builder=ExpAdaptIF(1),
+              synapse_eq_builder=reversalSynV(),
+              num_chains=4,
+              num_neurons_per_chain=15,
+              num_inputs=1,
+              synChaCha1e_weight=4,
+              synInpCha1e_weight=1,
+              gChaGroup_refP=1 * ms,
+              debug=False):
+    """create chains of neurons
+
+    Args:
+        groupname (str, optional): Base name for building block
+        neuron_eq_builder (TYPE, optional): Neuron equation builder object
+        synapse_eq_builder (TYPE, optional): Synapse equation builder object
+        num_chains (int, optional): Number of chains to generate
+        num_neurons_per_chain (int, optional): Number of neurons within one chain
+        num_inputs (int, optional): Number of inputs from different source populations
+        synChaCha1e_weight (int, optional): Parameter specifying the recurrent weight
+        synInpCha1e_weight (int, optional): Parameter specifying the input weight
+        gChaGroup_refP (TYPE, optional): Parameter specifying the refractory period
+        debug (bool, optional): Debug flag
+
+    Returns:
+        TYPE: Description
+    """
 
     # empty input SpikeGenerator
     ts_cha_inp = np.asarray([]) * ms
@@ -126,12 +184,13 @@ def gen_chain(groupname='Cha',
     synChaCha1e.weight = synChaCha1e_weight
     synInpCha1e.weight = synInpCha1e_weight
 
-    spikemonChaInp = SpikeMonitor(gChaInpGroup, name='spikemon' + groupname + 'ChaInp')
-    spikemonCha = SpikeMonitor(gChaGroup, name='spikemon' + groupname + 'Cha')
+    spikemon_cha_inp = SpikeMonitor(
+        gChaInpGroup, name='spikemon' + groupname + '_cha_inp')
+    spikemon_cha = SpikeMonitor(gChaGroup, name='spikemon' + groupname + '_cha')
 
     Monitors = {
-        'spikemonChaInp': spikemonChaInp,
-        'spikemonCha': spikemonCha
+        'spikemon_cha_inp': spikemon_cha_inp,
+        'spikemon_cha': spikemon_cha
     }
 
     Groups = {

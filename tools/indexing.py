@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde, alpren
 # @Date:   2018-01-09 17:26:00
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-04 14:10:09
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-06-04 18:49:39
 """
 Collections of functions which convert indices to x, y coordinates and vice versa
 
@@ -39,6 +39,7 @@ def xy2ind(x, y, nrows, ncols):
     Returns:
         ind (int): Converted index (e.g. flattened array)
     """
+    #print(x, y, nrows, ncols)
     return np.ravel_multi_index((x, y), (nrows, ncols))
     # return x*ncols+y
 
@@ -59,7 +60,8 @@ def ind2x(ind, nrows, ncols):
 
     Args:
         ind (int, required): index of flattened array that should be converted back to pixel cooridnates
-        n2dNeurons (int, required): Longest edge of the original array
+        nrows(int, required): Longest edge of the original array
+        ncols(int, required): Shortest edge of the original array
 
     Returns:
         x (int): The x coordinate of the respective index in the unflattened array
@@ -84,7 +86,8 @@ def ind2y(ind, nrows, ncols):
 
     Args:
         ind (int, required): index of flattened array that should be converted back to pixel cooridnates
-        n2dNeurons (int, required): Longest edge of the original array
+        nrows (int, required): Longest edge of the original array
+        ncols (int, required): Shortest edge of the original array
 
     Returns:
         y (int): The y coordinate of the respective index in the unflattened array
@@ -106,7 +109,8 @@ def ind2xy(ind, nrows, ncols):
 
     Args:
         ind (int, required): index of flattened array that should be converted back to pixel cooridnates
-        n2dNeurons (int, required): Longest edge of the original array
+        nrows (int, required): Longest edge of the original array
+        ncols (int, required): Shortest edge of the original array
 
     Returns:
         tuple (x, y): The corresponding x, y coordinates
@@ -117,9 +121,9 @@ def ind2xy(ind, nrows, ncols):
 
 # TODO: make this consistent with the other functions in this module! (or maybe it is not at the right place here)
 @implementation('numpy', discard_units=True)
-@declare_types(ind='integer', ts='integer', pol='boolean', n2dNeurons='integer', result='integer')
-@check_units(ind=1, ts=1, pol=1, n2dNeurons=1, result=1)
-def ind2events(ind, ts, pol=True, n2dNeurons=10):
+@declare_types(ind='integer', ts='integer', pol='boolean', nrows='integer', ncols='integer', result='integer')
+@check_units(ind=1, ts=1, pol=1, nrows=1, ncols=1, result=1)
+def ind2events(ind, ts, pol=True, nrows=10, ncols=10):
     """This function converts spikes from a brain2 group into an
     event-like structure as provided by a DVS. Events will have the structure
     of (x, y, ts, pol)
@@ -128,9 +132,10 @@ def ind2events(ind, ts, pol=True, n2dNeurons=10):
         ind (TYPE): index of neurons that spikes (brian2group.i)
         ts (TYPE): times when neurons spikes (brian2group.t)
         pol (None, optional): Either vector with same length as ind or None
-        n2dNeurons (int, required): Longest edge of the original array
+        nrows (int, required): Longest edge of the original array
+        ncols (int, required): Shortest edge of the original array
     """
-    x, y = np.unravel_index(ind, (n2dNeurons, n2dNeurons))
+    x, y = np.unravel_index(ind, (nrows, ncols))
     events = np.zeros((4, len(x)))
     events[0, :] = np.asarray(x)
     events[1, :] = np.asarray(y)

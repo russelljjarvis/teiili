@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
-This is the same as the tutorial file but uses subgroups.
-It is used to test issues with subroups in brian2 and the library.
-Later, a subroup unit test should be created
+# @Author: mmilde
+# @Date:   2017-25-08 13:43:10
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-05 16:51:26
+# -*- coding: utf-8 -*-
 
-Created on 25.8.2017
+"""
+This is a tutorial example used to learn the basics of the Brian2 INI library.
+The emphasise is on neuron groups and non-plastic synapses.
 """
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-import numpy as np
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
@@ -19,9 +21,23 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
 from teili.core.groups import Neurons, Connections
-from teili import NCSNetwork, activate_standalone, deactivate_standalone
-from teili.models.neuron_models import DPI
-from teili.models.synapse_models import DPISyn
+from teili import NCSNetwork
+from teili.models.parameters.dpi_neuron_param import parameters as DPIparam
+from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+
+# For this example you must first run models/neuron_models.py and synapse_models.py,
+# which will create the equation template. This will be stored in models/equations
+# Building neuron objects
+builder_object1 = NeuronEquationBuilder.import_eq(
+    'teili/models/equations/DPI', num_inputs=2)
+builder_object2 = NeuronEquationBuilder.import_eq(
+    'teili/models/equations/DPI', num_inputs=2)
+# Building synapses objects
+builder_object3 = SynapseEquationBuilder.import_eq(
+    'teili/models/equations/DPISyn')
+builder_object4 = SynapseEquationBuilder.import_eq(
+    'teili/models/equations/DPISyn')
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us
@@ -34,55 +50,49 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 
 Net = NCSNetwork()
 
-testNeurons = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron")
-# testNeurons.setParams(DPIparam)
+testNeurons = Neurons(2, equation_builder=builder_object1, name="testNeuron")
+# Example of how to set parameters, saved as a dictionary
+testNeurons.set_params(DPIparam)
 testNeurons.refP = 3 * ms
 
-testNeurons2 = Neurons(2, equation_builder=DPI(), num_inputs=2, name="testNeuron2")
-# testNeurons2.setParams(DPIparam)
+testNeurons2 = Neurons(2, equation_builder=builder_object2, name="testNeuron2")
 testNeurons2.refP = 3 * ms
 
-testNeuronsSub1 = testNeurons[0:1]
-testNeuronsSub2 = testNeurons[1:2]
 
-#InpSyn = Connections(gInpGroup, testNeurons, equation_builder=DPISyn(), name="testSyn", verbose=True)
-#InpSyn.connect(True)
-InpSyn1 = Connections(gInpGroup, testNeuronsSub1, equation_builder=DPISyn(), name="testSyn1a", verbose=True)
-InpSyn1.connect(True)
-InpSyn2 = Connections(gInpGroup, testNeuronsSub2, equation_builder=DPISyn(), name="testSyn1b", verbose=True)
-InpSyn2.connect(True)
+InpSyn = Connections(gInpGroup, testNeurons,
+                     equation_builder=builder_object3, name="testSyn", verbose=False)
+InpSyn.connect(True)
 
-InpSyn1.weight = 10
-InpSyn2.weight = 10
-
-Syn = Connections(testNeurons, testNeurons2, equation_builder=DPISyn(), name="testSyn2")
+InpSyn.weight = 10
+Syn = Connections(testNeurons, testNeurons2,
+                  equation_builder=builder_object4, name="testSyn2")
 Syn.connect(True)
 
-# you can change all the parameters like this after creation of the neurongroup:
+# you can change all the parameters like this after creation of the
+# neurongroup:
 Syn.weight = 100
 
-testNeurons.Iconst = 7 * nA
+# Example of how to set single parameters, rather than using an entire
+# dictionary
+testNeurons.Iconst = 10 * nA
 # testNeurons2.Itau = 13 * pA
 # testNeurons2.Iath = 80 * pA
 # testNeurons2.Iagain = 20 * pA
 # testNeurons2.Ianorm = 8 * pA
 
-
-
 spikemonInp = SpikeMonitor(gInpGroup, name='spikemonInp')
 spikemon = SpikeMonitor(testNeurons, name='spikemon')
 spikemonOut = SpikeMonitor(testNeurons2, name='spikemonOut')
 statemonInpSyn = StateMonitor(
-    InpSyn1, variables='Ie_syn', record=True, name='statemonInpSyn')
+    InpSyn, variables='Ie_syn', record=True, name='statemonInpSyn')
 statemonNeuOut = StateMonitor(testNeurons2, variables=[
                               'Imem'], record=0, name='statemonNeuOut')
 statemonNeuIn = StateMonitor(testNeurons, variables=[
                              "Iin", "Imem", "Iahp"], record=[0, 1], name='statemonNeu')
 statemonSynOut = StateMonitor(
     Syn, variables='Ie_syn', record=True, name='statemonSynOut')
-# statemonSynTest=StateMonitor(testInpSyn,variables=["Isyn_exc"],record=[0],name='statemonSyn')
 
-Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn1, InpSyn2, Syn, spikemonInp, spikemon,
+Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon,
         spikemonOut, statemonNeuIn, statemonNeuOut, statemonSynOut, statemonInpSyn)
 
 duration = 500
@@ -174,4 +184,4 @@ p6.getAxis('bottom').tickFont = b
 p6.getAxis('left').tickFont = b
 
 
-#QtGui.QApplication.instance().exec_()
+QtGui.QApplication.instance().exec_()

@@ -6,7 +6,7 @@
 """
 Collections of functions which convert indices to x, y coordinates and vice versa
 
-the suffix "_cpp" avoids that variables are string replaced by brian2 if the same name
+The suffix "_cpp" avoids variables being string-replaced by brian2 if the same name
 is used in the network
 
 """
@@ -23,7 +23,7 @@ import numpy as np
 @check_units(x=1, y=1, nrows=1, ncols=1, result=1)
 def xy2ind(x, y, nrows, ncols):
     """Given a pair of x, y (pixel) coordinates this function
-    will return an index that correspond to a flattened pixel array
+    will return an index that corresponds to a flattened pixel array
     It is a wrapper around np.ravel_multi_index with a cpp implementation
 
     Beware that the cpp version does not check if your input is OK
@@ -102,7 +102,7 @@ def ind2y(ind, nrows, ncols):
 def ind2xy(ind, nrows, ncols):
     """Given an index of an array this function will provide
     you with the corresponding x and y coordinate of the original array
-    This is basically a wrapper around numpys unravel index
+    This is basically a wrapper around numpy's unravel index
 
     We do not provide a cpp implementation here, because it would return an array,
     which cannot easily be indexed, so please use ind2x and ind2y for that purpose!
@@ -124,7 +124,7 @@ def ind2xy(ind, nrows, ncols):
 @declare_types(ind='integer', ts='integer', pol='boolean', nrows='integer', ncols='integer', result='integer')
 @check_units(ind=1, ts=1, pol=1, nrows=1, ncols=1, result=1)
 def ind2events(ind, ts, pol=True, nrows=10, ncols=10):
-    """This function converts spikes from a brain2 group into an
+    """This function converts spikes from a brian2 group into an
     event-like structure as provided by a DVS. Events will have the structure
     of (x, y, ts, pol)
 

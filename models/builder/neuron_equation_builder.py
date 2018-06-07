@@ -5,11 +5,11 @@
 # @Last Modified time: 2018-06-01 15:41:28
 
 """
-This file contains a class that manages a neuon equation
+This file contains a class that manages a neuron equation.
 
-And it prepares a dictionary of keywords for easy synapse creation
+And it prepares a dictionary of keywords for easy synapse creation.
 
-It also provides a function to add lines to the model
+It also provides a function to add lines to the model.
 
 """
 import os
@@ -48,9 +48,9 @@ class NeuronEquationBuilder():
             adaptation (str, optional): What type of adaptive feedback should be used.
                So far only calciumFeedback is implemented
             integration_mode (str, optional): Sets if integration up to spike-generation is
-               rather linear or exponential
+               linear or exponential
             leak (str, optional): Enables leaky integration
-            position (str, optional): To enable spatial-like position indices to neuron
+            position (str, optional): To enable spatial-like position indices on neuron
             noise (str, optional): NOT YET IMPLMENTED! This will in the future allow to
                add independent mismatch-like noise on each neuron.
             refractory (str, optional): Refractory period of the neuron
@@ -67,15 +67,15 @@ class NeuronEquationBuilder():
         else:
             ERRValue = """
                                 ---Model not present in dictionaries---
-                    This class constructor build a model for a neuron using pre-existent blocks.
+                    This class constructor builds a model for a neuron using pre-existing blocks.
 
                     The first entry is the model type,
-                    choice between : 'current' or 'voltage'
+                    choose between 'current' or 'voltage'.
 
-                    you can choose then what module load for you neuron,
-                    the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussianNoise'
-                    if you don't want to load a module just use the keyword 'none'
-                    example: NeuronEquationBuilder('current','none','expnential','leak','none','none'.....)
+                    You can choose then what module to load for your neuron,
+                    the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussianNoise'.
+                    If you don't want to load a module just use the keyword 'none'
+                    example: NeuronEquationBuilder('current','none','exponential','leak','none','none'.....)
 
                     """
 
@@ -229,7 +229,7 @@ class NeuronEquationBuilder():
     @classmethod
     def import_eq(cls, filename, num_inputs=1):
         '''
-        num_inputs is used to add additional input currents, that are used
+        num_inputs is used to add additional input currents that are used
         for different synapses that are summed
         '''
         if os.path.basename(filename) is "":
@@ -254,7 +254,7 @@ class NeuronEquationBuilder():
 
 
 def print_param_dictionaries(Dict):
-    """Function to print dictionaries of parameters in a ordered way
+    """Function to print dictionaries of parameters in an ordered way
 
     Args:
         Dict (dict): Parameter dictionary to be printed

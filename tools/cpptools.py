@@ -25,7 +25,7 @@ def activate_standalone(directory='Brian2Network_standalone', build_on_run=False
 
     Args:
         directory (str, optional): Standalone directory containing all compiled files
-        build_on_run (bool, optional): Flag to (re-) built network before simulating
+        build_on_run (bool, optional): Flag to (re-)build network before simulating
     """
     set_device('cpp_standalone', directory=directory, build_on_run=build_on_run)
     device.reinit()

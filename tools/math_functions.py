@@ -7,9 +7,9 @@ Created on Wed May 30 13:43:45 2018
 
 This module provides generic functions that are not yet provided by brian2 including a cpp
 implementation.
-This is not to be confused with the synaptic kernels, that are for conectivity matrix generation (they could/should be used by those!).
+This is not to be confused with the synaptic kernels that are for conectivity matrix generation (they could/should be used by those!).
 
-the suffix "_cpp" avoids that variables are string replaced by brian2 if the same name
+the suffix "_cpp" avoids variables being string-replaced by brian2 if the same name
 is used in the network
 
 """
@@ -41,9 +41,9 @@ def normal2d_density(x, y, mu_x = 0, mu_y = 0, sigma_x=1, sigma_y=1, rho=0, norm
     """
     Args:
         x and y (float):  x and y coordinates
-        mu_x and y (float):  Means of gaussian in x and y dimension
+        mu_x and mu_y (float):  Means of gaussian in x and y dimension
         ncols, nrows (int): size of the output array
-        sigma_x and _y (float, optional): Standard deviations of gaussian distribution
+        sigma_x and sigma_y (float, optional): Standard deviations of gaussian distribution
         rho (float, optional): correlation coefficient of the 2 variables
     Returns:
         TYPE: float
@@ -78,11 +78,11 @@ def normal2d_density_array(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None,
 
     Args:
         ncols, nrows (int): size of the output array
-        sigma_x and _y (float, optional): Standard deviations of gaussian distribution
-        mu_x and _y (float, optional): Means of gaussian distribution
+        sigma_x and sigma_y (float, optional): Standard deviations of gaussian distribution
+        mu_x and mu_y (float, optional): Means of gaussian distribution
         rho (float, optional): correlation coefficient of the 2 variables
         normalized (boolean, optional): If you set this to False, it will no longer be a
-            probability density with integral of one, but the max amplitude (in the middle of the bump) will be 1
+            probability density with an integral of one, but the max amplitude (in the middle of the bump) will be 1
 
     Returns:
         TYPE: Description

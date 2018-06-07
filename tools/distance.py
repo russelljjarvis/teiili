@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde, alpren
 # @Date:   2018-05-30 11:54:09
-# @Last Modified by:   alpren
-# @Last Modified time: 2018-05-30
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-05 13:56:24
 """functions to compute distance (e.g. in 2d)
 
-the suffix "_cpp" avoids that variables are string replaced by brian2 if the same name
+The suffix "_cpp" avoids variables being string-replaced by brian2 if the same name
 is used in the network
 """
 
@@ -115,7 +115,6 @@ def dist2d2dfloat(ix, iy, jx, jy):
     return np.sqrt((ix - jx)**2 + (iy - jy)**2)
 
 
-
 # this is not consistent with the other functions as this assumes normalized x and y coordinates
 @implementation('cpp', '''
     float torus_dist2d2dfloat(float ix_cpp, float iy_cpp, float jx_cpp, float jy_cpp) {
@@ -141,6 +140,6 @@ def torus_dist2d2dfloat(ix, iy, jx, jy):
     Returns:
         float: Distance in 2D field with periodic boundary conditions
     """
-    dx = min(abs(ix - jx), abs(ix - jx + 1), abs(ix - jx - 1));
-    dy = min(abs(iy - jy), abs(iy - jy + 1), abs(iy - jy - 1));
+    dx = min(abs(ix - jx), abs(ix - jx + 1), abs(ix - jx - 1))
+    dy = min(abs(iy - jy), abs(iy - jy + 1), abs(iy - jy - 1))
     return np.sqrt(dx**2 + dy**2)

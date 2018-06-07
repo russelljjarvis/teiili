@@ -1,13 +1,12 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# @Author: Alpha Renner
+# @Date:   2018-06-05 09:12:40
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-05 09:38:25
+
 """
-Created on Wed May 30 13:32:50 2018
-
-@author: alpha
-
-
-
 How to use them:
+TBA
 
 """
 
@@ -21,7 +20,7 @@ from brian2 import device, codegen, defaultclock, NeuronGroup, Synapses, run,\
 from brian2 import mV, mA, ms, ohm, uA, pA, Hz
 
 #import teili
-from teili import normal2d_density,ind2x, ind2y, Plotter2d
+from teili import normal2d_density, ind2x, ind2y, Plotter2d
 from teili.core.groups import TeiliGroup, Neurons
 
 
@@ -119,16 +118,16 @@ class StimulusSpikeGenerator(TeiliGroup, PoissonGroup):
 
                 self.__setattr__(arg, patternkwargs[arg])
 
-        run_reg_str = trajectory_eq +'''
+        run_reg_str = trajectory_eq + '''
                            x = ind2x(i, nrows, ncols)
                            y = ind2y(i, nrows, ncols)
                            activity=amplitude*{pattern_name}(x, y, {pattern_args})
                            '''.format(pattern_name=pattern_name, pattern_args=pattern_args_str)
         self.run_regularly(run_reg_str, dt=dt)
 
-
     def plot_rates(self):
-        resh_rates = np.reshape(np.asarray(self.rates),(self.nrows,self.ncols))
+        resh_rates = np.reshape(np.asarray(self.rates),
+                                (self.nrows, self.ncols))
         plt.figure()
         plt.imshow(resh_rates)
 
@@ -154,7 +153,7 @@ if __name__ == '__main__':
         nrows, ncols, dt=50 * ms, trajectory_eq=trajectory_eq, amplitude=200,
         spike_generator='poisson', pattern_func=normal2d_density,
         name="moving_gaussian_stimgen",
-        mu_x = 40.0, mu_y = 40.0, sigma_x=1.0, sigma_y=1.0, rho=0.0, normalized=False)
+        mu_x=40.0, mu_y=40.0, sigma_x=1.0, sigma_y=1.0, rho=0.0, normalized=False)
 
     poissonspmon = SpikeMonitor(stimgen, record=True)
 

@@ -75,11 +75,11 @@ class teiliNetwork(Network):
 
     def add_standalone_params(self, **params):
         """Function to a add standalone parameter to the standaloneParam dict.
-        These parammeters can be changed after building w/o recompiling the network
+        These parameters can be changed after building w/o recompiling the network
 
         Args:
             **params (dict, required): Dictionary with parameter to be added to
-                stanaloneParamss
+                standaloneParamss
         """
         for key in params:
             self.standaloneParams[key] = params[key]
@@ -118,7 +118,7 @@ class teiliNetwork(Network):
                 executin time, resources etc.
             level (int, optional): Description
             recompile (bool, optional): Flag to indicate if network should rather be recompiled
-                than used based on a prioir build. Set this to False if you want to only change
+                than used based on a prior build. Set this to False if you want to only change
                 parameters rather than network topology
             standaloneParams (dict, optional): Dictionary with standalone parametes which
                 should be changed
@@ -142,7 +142,7 @@ class teiliNetwork(Network):
                       but Network structure is not!
                       This might lead to unexpected behavior.""")
         else:
-            print('Network was compiled, as you have not set the device to \
+            print('Network was compiled; as you have not set the device to \
                   cpp_standalone, you can still run() it using numpy code generation')
 
     def run(self, duration=None, standaloneParams=dict(), **kwargs):

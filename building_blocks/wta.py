@@ -82,7 +82,7 @@ class WTA(BuildingBlock):
             block_params (dict, optional): Parameter for neuron populations
             num_neurons (int, optional): Size of WTA neuron population
             num_inh_neurons (int, optional): Size of inhibitory interneuron population
-            num_input_neurons (int, optional): Size of input population. If None size will be equal WTA population
+            num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population
             cutoff (int, optional): Radius of self-excitation
             additional_statevars (list, optional): List of additonal statevariables which are not standard
             num_inputs (int, optional): Number of input currents to WTA
@@ -90,7 +90,7 @@ class WTA(BuildingBlock):
             debug (bool, optional): Flag to gain additional information
 
         Raises:
-            NotImplementedError: If dimension is set larger than 2 error is raised
+            NotImplementedError: If dimension is set larger than 2, error is raised
         """
         self.num_neurons = num_neurons
         self.dimensions = dimensions
@@ -183,7 +183,7 @@ def gen1dWTA(groupname,
         rpInh (float, optional): Refractory period of inhibitory neurons
         num_neurons (int, optional): Size of WTA neuron population
         num_inh_neurons (int, optional): Size of inhibitory interneuron population
-        num_input_neurons (int, optional): Size of input population. If None size will be equal WTA population
+        num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population
         cutoff (int, optional): Radius of self-excitation
         num_inputs (int, optional): Number of input currents to WTA
         monitor (bool, optional): Flag to auto-generate spike and statemonitors
@@ -228,7 +228,7 @@ def gen1dWTA(groupname,
                               method="euler", name='s' + groupname + '_Inpe')
     synWTAWTA1e = Connections(gWTAGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_e')  # ,
+                              method="euler", name='s' + groupname + '_e')
     synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
                               method="euler", name='s' + groupname + '_Inhi')
@@ -337,7 +337,7 @@ def gen2dWTA(groupname,
         rpInh (float, optional): Refractory period of inhibitory neurons
         num_neurons (int, optional): Size of WTA neuron population
         num_inh_neurons (int, optional): Size of inhibitory interneuron population
-        num_input_neurons (int, optional): Size of input population. If None size will be equal WTA population
+        num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population
         cutoff (int, optional): Radius of self-excitation
         num_inputs (int, optional): Number of input currents to WTA
         monitor (bool, optional): Flag to auto-generate spike and statemonitors
@@ -393,7 +393,7 @@ def gen2dWTA(groupname,
                               method="euler", name='s' + groupname + '_Inpe')
     synWTAWTA1e = Connections(gWTAGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_e')  # ,
+                              method="euler", name='s' + groupname + '_e')
     synInhWTA1i = Connections(gWTAInhGroup, gWTAGroup,
                               equation_builder=synapse_eq_builder(),
                               method="euler", name='s' + groupname + '_Inhi')

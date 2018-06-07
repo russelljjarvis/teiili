@@ -3,10 +3,11 @@
 """
 Created on Tue Jul 25 16:50:14 2017
 
-This example shows mainly how the standalone code generation with changeable parameters works
-It simulates the core of the sequence learning architecture
+This example shows mainly how the standalone code generation with changeable parameters works.
+It simulates the core of the sequence learning architecture.
 
-if you are using anaconda, you might need to update libgcc before the cpp code generation works correctly (conda install libgcc) Version 5.2. works for me.
+If you are using anaconda, you might need to update libgcc before the cpp code generation works correctly (conda install libgcc).
+Version 5.2. works for me.
 
 
 @author: alpha
@@ -114,9 +115,9 @@ seqNet = teiliNetwork()
 #seqNet = Network()
 seqNet.add(SequenceLearningExample,SequenceLearningExample.Monitors)
 
-# this is how you add additional parameters that you want to change in the standalone run (you just have to find out their name...)
-# taugIi in this case is valid vor all neurons!
-# please note, that this is string replacement, so if you have another state variable that is called e.g. GammataugIi, this would also be replaced!
+# This is how you add additional parameters that you want to change in the standalone run (you just have to find out their names...)
+# taugIi in this case is valid for all neurons!
+# Note that this is string replacement, so if you have another state variable that is called e.g. GammataugIi, this would also be replaced!
 #seqNet.add_standaloneParams(gOrd_Seq_b=0.0805*nA, taugIi=6*ms)
 
 seqNet.build()
@@ -132,7 +133,7 @@ SequenceLearningExample.plot()
 
 #%%
 # You can now set the standaloneParams
-# first print them in order to see, what we can change:
+# First print them in order to see what we can change:
 seqNet.printParams()
 
 #%%

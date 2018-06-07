@@ -29,8 +29,8 @@ from teili.models.synapse_models import ReversalSynV
 from teili.models.parameters.exp_adapt_if_param import parameters as neuron_parameters
 from teili.models.parameters.exp_syn_param import parameters as syn_parameters
 
-from teili.tools.cpptools import build_cpp_and_replace, collect_standalone_params, run_standalone
-from teili.core.network import NCSNetwork
+#from teili.tools.cpptools import build_cpp_and_replace, collect_standalone_params, run_standalone
+from teili.core.network import teiliNetwork
 
 standaloneDir = os.path.expanduser('~/SL_standalone')
 #isStandalone = True
@@ -110,7 +110,7 @@ tsReset = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 300, np.ones((nP
 indReset = np.mod(np.arange(size(tsReset)), nPerGroup)
 SequenceLearningExample.resetGroup.set_spikes(indices=indReset, times=tsReset)
 
-seqNet = NCSNetwork()
+seqNet = teiliNetwork()
 #seqNet = Network()
 seqNet.add(SequenceLearningExample,SequenceLearningExample.Monitors)
 

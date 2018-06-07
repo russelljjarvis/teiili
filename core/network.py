@@ -23,7 +23,7 @@ from teili.tools.cpptools import build_cpp_and_replace,\
 from teili.building_blocks.building_block import BuildingBlock
 
 
-class NCSNetwork(Network):
+class teiliNetwork(Network):
     """this is a subclass of brian2.Network and does the same thing plus
     some additional methods for convenience
     and functionality to allow real time plotting and gui

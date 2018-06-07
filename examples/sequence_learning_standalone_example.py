@@ -118,7 +118,7 @@ seqNet.add(SequenceLearningExample,SequenceLearningExample.Monitors)
 # This is how you add additional parameters that you want to change in the standalone run (you just have to find out their names...)
 # taugIi in this case is valid for all neurons!
 # Note that this is string replacement, so if you have another state variable that is called e.g. GammataugIi, this would also be replaced!
-#seqNet.add_standaloneParams(gOrd_Seq_b=0.0805*nA, taugIi=6*ms)
+#seqNet.add_standalone_params(gOrd_Seq_b=0.0805*nA, taugIi=6*ms)
 
 seqNet.build()
 

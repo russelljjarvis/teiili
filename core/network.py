@@ -125,12 +125,12 @@ class teiliNetwork(Network):
             clean (bool, optional): Flag to clean-up standalone directory
         """
         if get_device() == all_devices['cpp_standalone']:
-            if recompile or not NCSNetwork.hasRun:
+            if recompile or not teiliNetwork.hasRun:
 
                 print('building network...')
                 Network.run(self, duration=0 * ms, report=report, report_period=report_period,
                             namespace=namespace, profile=profile, level=level + 1)
-                NCSNetwork.hasRun = True
+                teiliNetwork.hasRun = True
 
                 if standaloneParams is None:
                     standaloneParams = self.standaloneParams

@@ -5,14 +5,14 @@
 # @Last Modified time: 2018-06-01 16:56:34
 
 """
-This module provides functions, that can be used for synaptic connectivity kernels (generate weight matrices).
-In order to also use them with c++ code generation all functions that are added
+This module provides functions that can be used for synaptic connectivity kernels (generate weight matrices).
+In order to also use them with C++ code generation, all functions that are added
 here need to have a cpp implementation given by the @implementation decorator.
 
 TODO: It would be good, if one could easily use different distance functions like
-on a ring or torus (1d/2d periodic boundary conditions)
+on a ring or torus (1d/2d periodic boundary conditions).
 For numpy, this would be easy to implement by just using the respective function (from tools.distance) and add a selector as a parameter.
-For cpp, we would have to make sure, that the used functions are known.
+For cpp, we would have to make sure that the functions used are known.
 
 """
 
@@ -32,7 +32,7 @@ from teili.tools.indexing import ind2xy  # , xy2ind, ind2x, ind2y
 @declare_types(i='integer', j='integer', gsigma='float', result='float')
 @check_units(i=1, j=1, gsigma=1, result=1)
 def kernel_mexican_1d(i, j, gsigma):
-    """Summary:function that calculates mexican hat 1D kernel
+    """Summary: function that calculates mexican hat 1D kernel
 
     Args:
         i (int): presynaptic index
@@ -40,7 +40,7 @@ def kernel_mexican_1d(i, j, gsigma):
         gsigma (float): sigma (sd) of kernel
 
     Returns:
-        float: value of kernel, that can be set as a weight
+        float: value of kernel that can be set as a weight
     """
     x = i - j
     exponent = -(x**2) / (2 * gsigma**2)
@@ -61,10 +61,10 @@ def kernel_gauss_1d(i, j, gsigma):
     Args:
         i (int): presynaptic index
         j (int): postsynaptic index
-        gsigma (float): sigma (sd) of kernel
+        gsigma (float): sigma (SD) of kernel
 
     Returns:
-        float: value of kernel, that can be set as a weight
+        float: value of kernel that can be set as a weight
     """
     res = exp(-((i - j)**2) / (2 * gsigma**2))  # gaussian, not normalized
     return res
@@ -90,13 +90,13 @@ def kernel_mexican_2d(i, j, gsigma, nrows, ncols):
     Args:
         i (int): presynaptic index
         j (int): postsynaptic index
-        gsigma (float): sigma (sd) of kernel
-        ncols (int): number of cols in 2d array of neurons, needed to calcualte 1d index
+        gsigma (float): sigma (SD) of kernel
+        ncols (int): number of cols in 2d array of neurons, needed to calcualate 1d index
         nrows (int): number of rows in 2d array of neurons, only needed to check
                     if index is in array (this check is skipped in cpp version)
 
     Returns:
-        float: value of kernel, that can be set as a weight
+        float: value of kernel that can be set as a weight
     """
     # exponent = -(fdist(i,j,ncols)**2)/(2*gsigma**2) #alternative
     (ix, iy) = ind2xy(i, nrows, ncols)
@@ -129,14 +129,14 @@ def kernel_gauss_2d(i, j, gsigma, nrows, ncols):
     Args:
         i (int): presynaptic index
         j (int): postsynaptic index
-        gsigma (float): sigma (sd) of kernel
-        ncols (int): number of cols in 2d array of neurons, needed to calcualte 1d index
+        gsigma (float): sigma (SD) of kernel
+        ncols (int): number of cols in 2d array of neurons, needed to calcualate 1d index
         nrows (int): number of rows in 2d array of neurons, only needed to check
                     if index is in array (this check is skipped in cpp version)
 
 
     Returns:
-        float: value of kernel, that can be set as a weight
+        float: value of kernel that can be set as a weight
     """
     (ix, iy) = ind2xy(i, nrows, ncols)
     (jx, jy) = ind2xy(j, nrows, ncols)
@@ -171,11 +171,12 @@ def kernel_gauss_2d(i, j, gsigma, nrows, ncols):
 @declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float', freq='float', input_size_x='integer', input_size_y='integer', window_size_x='integer', window_size_y='integer', rf_size='integer', result='float')
 @check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, input_size_x=1, input_size_y=1, window_size_x=1, window_size_y=1, rf_size=1, result=1)
 def kernel_gabor_2d(i, j, offx, offy, theta, sigmax, sigmay, freq, input_size_x, input_size_y, window_size_x, window_size_y, rf_size):
-    """Summary: function that calculates Gabor 2D kernel, only works with odd square Receptive Fields,
-    it the prints the weight values for a couple of neurons.
-    To spare computation this connectivety kernel gives the possibility to use a
-    smaller output layer which only accounts for a smaller portion of the input
-    layer. The output layer can be centered on the input layer using offx
+    """Summary: function that calculates Gabor 2D kernel
+    Only works with odd-sized square Receptive Fields.
+    It prints the weight values for a couple of neurons.
+    To spare computation, this connectivety kernel allows the use of a
+    smaller output layer which only accounts for a small portion of the input
+    layer. The output layer can be displaced w.r.t. the input layer using offx
     and offy.
 
 
@@ -197,7 +198,7 @@ def kernel_gabor_2d(i, j, offx, offy, theta, sigmax, sigmay, freq, input_size_x,
         rf_size (int): side size of the Receptive Field
 
     Returns:
-        float: The weight between the i and j neuron
+        float: The weight between the ith and jth neuron
     """
 
     (iy, ix) = np.unravel_index(i, (input_size_y, input_size_x))
@@ -214,5 +215,5 @@ def kernel_gabor_2d(i, j, offx, offy, theta, sigmax, sigmay, freq, input_size_x,
         res = res * (abs(ix - x0) < rf_size / 2) * (abs(iy - y0) < rf_size / 2)
         return res
     else:
-        print("The kernel window it's bigger than InputSize-(rf_size-1)")
+        print("The kernel window is bigger than InputSize-(rf_size-1)")
         return 0

@@ -27,9 +27,6 @@ from teili.building_blocks.sequence_learning import SequenceLearning
 from teili.models.neuron_models import ExpAdaptIF
 from teili.models.synapse_models import ReversalSynV
 
-from teili.models.parameters.exp_adapt_if_param import parameters as neuron_parameters
-from teili.models.parameters.exp_syn_param import parameters as syn_parameters
-
 #from teili.tools.cpptools import build_cpp_and_replace, collect_standalone_params, run_standalone
 from teili.core.network import teiliNetwork
 
@@ -74,11 +71,9 @@ slParams = {'synInpOrd1e_weight': 1.3,
 SequenceLearningExample = SequenceLearning(name='Seq',
                                            neuron_eq_builder=ExpAdaptIF,
                                            synapse_eq_builder=ReversalSynV,
-                                           neuronParams=neuron_parameters,
-                                           synapseParams=syn_parameters,
-                                           blockParams=slParams,
-                                           numElements=nElem,
-                                           numNeuronsPerGroup=nPerGroup,
+                                           block_params=slParams,
+                                           num_elements=nElem,
+                                           num_neurons_per_group=nPerGroup,
                                            debug=False)
 
 #for key in SLGroups: print(key)
@@ -88,7 +83,7 @@ tsInput = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 5, np.ones((nPer
                           np.ones((nPerGroup,), dtype=np.int) * 7
                           )) * ms
 indInput = np.mod(np.arange(size(tsInput)), nPerGroup)
-SequenceLearningExample.inputGroup.set_spikes(indices=indInput, times=tsInput)
+SequenceLearningExample.input_group.set_spikes(indices=indInput, times=tsInput)
 
 # CoS group
 tsCoS = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 100, np.ones((nPerGroup,), dtype=np.int) * 101,
@@ -100,7 +95,7 @@ tsCoS = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 100, np.ones((nPer
                         np.ones((nPerGroup,), dtype=np.int) * 204, np.ones((nPerGroup,), dtype=np.int) * 205
                         )) * ms
 indCoS = np.mod(np.arange(size(tsCoS)), nPerGroup)
-SequenceLearningExample.cosGroup.set_spikes(indices=indCoS, times=tsCoS)
+SequenceLearningExample.cos_group.set_spikes(indices=indCoS, times=tsCoS)
 
 # reset group
 tsReset = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 300, np.ones((nPerGroup,), dtype=np.int) * 301,
@@ -109,7 +104,7 @@ tsReset = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 300, np.ones((nP
                           np.ones((nPerGroup,), dtype=np.int) * 306, np.ones((nPerGroup,), dtype=np.int) * 307
                           )) * ms
 indReset = np.mod(np.arange(size(tsReset)), nPerGroup)
-SequenceLearningExample.resetGroup.set_spikes(indices=indReset, times=tsReset)
+SequenceLearningExample.reset_group.set_spikes(indices=indReset, times=tsReset)
 
 seqNet = teiliNetwork()
 #seqNet = Network()

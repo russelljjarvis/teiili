@@ -125,7 +125,7 @@ conductance = {'model': '''
                }
 
 # standard parameters for conductance based models
-conductance_params = {"Ige": 0 * nS,
+conductance_params = {"gIe": 0 * nS,
                       "tausyne": 5 * ms,
                       # We define tausyn again here since it's different from
                       # current base, is this a problem?

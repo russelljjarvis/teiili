@@ -65,6 +65,7 @@ v_expCurrent = {'model': """
             %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
             VT      : volt      (shared, constant)        #
             DeltaT  : volt      (shared, constant)        # slope factor
+            gL      : siemens   (shared, constant)        # leak conductance
 
             %Vthr = (VT + 5 * DeltaT) : volt  (shared)
             """,
@@ -87,6 +88,7 @@ v_adapt = {'model': """
         tauIadapt  : second    (shared, constant)        # adaptation time constant
         gAdapt     : siemens   (shared, constant)        # adaptation decay parameter
         wIadapt    : amp       (shared, constant)        # adaptation weight
+        EL      : volt      (shared, constant)        # reversal potential
         """,
            'threshold': '',
            'reset': 'Iadapt += wIadapt; '}

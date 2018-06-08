@@ -159,7 +159,9 @@ class Neurons(NeuronGroup, TeiliGroup):
             else:
                 self.equation_builder = equation_builder
             # self.equation_builder.add_input_currents(num_inputs)
+
             Kwargs.update(self.equation_builder.keywords)
+            Kwargs.update({'method':method})
             Kwargs.pop('parameters')
 
             if parameters is not None:
@@ -171,7 +173,7 @@ class Neurons(NeuronGroup, TeiliGroup):
 
         self.initialized = True
         TeiliGroup.__init__(self)
-        NeuronGroup.__init__(self, N, method=method, **Kwargs)
+        NeuronGroup.__init__(self, N, **Kwargs)
 
         set_params(self, self.parameters, verbose=verbose)
 
@@ -340,7 +342,7 @@ class Connections(Synapses, TeiliGroup):
                 self.equation_builder = equation_builder()
             else:
                 self.equation_builder = equation_builder
-            self.equation_builder.set_input_number(self.input_number)
+            self.equation_builder.set_input_number(self.input_number-1)
             Kwargs.update(self.equation_builder.keywords)
             Kwargs.pop('parameters')
 

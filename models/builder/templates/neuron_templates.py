@@ -45,7 +45,7 @@ v_model_template = {'model': """
          Vthr    : volt      (shared)
          Vres    : volt      (shared, constant)   # reset potential
          """,
-                    'threshold': "Vm > Vthr ",
+                    'threshold': "Vm > Vthr",
                     'reset': "Vm = Vres; "}
 
 v_model_templatePara = {"Cm": 281 * pF,
@@ -60,20 +60,18 @@ v_model_templatePara = {"Cm": 281 * pF,
                         }
 
 # exponential current (see exponential I&F Model)
+#exponential
 v_expCurrent = {'model': """
-            #exponential
             %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
             VT      : volt      (shared, constant)        #
             DeltaT  : volt      (shared, constant)        # slope factor
             gL      : siemens   (shared, constant)        # leak conductance
-
             %Vthr = (VT + 5 * DeltaT) : volt  (shared)
             """,
                 'threshold': '',
                 'reset': ''}
 # leak
 v_leak = {'model': """
-          #leak
           %Ileak = -gL*(Vm - EL) : amp
           gL      : siemens   (shared, constant)        # leak conductance
           EL      : volt      (shared, constant)        # leak reversal potential
@@ -83,7 +81,6 @@ v_leak = {'model': """
 
 # adaptation
 v_adapt = {'model': """
-        #adapt
         %dIadapt/dt = -(gAdapt*(EL - Vm) + Iadapt)/tauIadapt : amp
         tauIadapt  : second    (shared, constant)        # adaptation time constant
         gAdapt     : siemens   (shared, constant)        # adaptation decay parameter

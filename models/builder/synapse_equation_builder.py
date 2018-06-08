@@ -18,7 +18,7 @@ from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_syn_dict
 from teili.models.builder.templates.synapse_templates import modes, kernels, plasticity_models,\
     current_parameters, conductance_parameters, DPI_parameters, DPI_shunt_parameters
-
+import copy
 
 class SynapseEquationBuilder():
 
@@ -160,8 +160,20 @@ class SynapseEquationBuilder():
                              'on_post': keywords['on_post'],
                              'parameters': keywords['parameters']}
 
+        self.keywords_original = dict(self.keywords)
+
         if self.verbose == True:
             self.print_all()
+
+    def __call__(self):
+        """
+        This allows the user to call the object like a class in order to make new objects.
+        Maybe this use is a bit confusing, so rather not use it.
+        """
+        builder_copy =  copy.deepcopy(self)
+        builder_copy.keywords = dict(self.keywords_original)
+        return builder_copy
+
 
     def set_input_number(self, input_number):
         """Sets the input number of synapse. This is needed to overcome
@@ -170,12 +182,14 @@ class SynapseEquationBuilder():
         Args:
             input_number (int): Synapse's input number
         """
+        self.keywords_original = self.keywords
+
         self.keywords['model'] = self.keywords['model'].format(
-            input_number=str(input_number - 1))  # input_number-1 ???
+            input_number=str(input_number))  # input_number-1 ???
         self.keywords['on_pre'] = self.keywords[
-            'on_pre'].format(input_number=str(input_number - 1))
+            'on_pre'].format(input_number=str(input_number))
         self.keywords['on_post'] = self.keywords[
-            'on_post'].format(input_number=str(input_number - 1))
+            'on_post'].format(input_number=str(input_number))
 
     def print_all(self):
         """Method to print all dictionaries within a synapse model
@@ -224,6 +238,10 @@ class SynapseEquationBuilder():
 
     @classmethod
     def import_eq(cls, filename):
+        #if only the filename without path is given, we assume it is one of the predefined models
+        if os.path.dirname(filename) is "":
+            filename = os.path.join('teili','models','equations',filename)
+
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
         else:

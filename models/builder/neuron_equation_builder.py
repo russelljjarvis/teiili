@@ -15,6 +15,7 @@ It also provides a function to add lines to the model.
 import os
 import importlib
 import re
+import copy
 from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_neu_dict
 from teili.models.builder.templates.neuron_templates import modes, current_equation_sets, voltage_equation_sets, \
@@ -39,7 +40,7 @@ class NeuronEquationBuilder():
 
     def __init__(self, keywords=None, base_unit='current', adaptation='calciumFeedback',
                  integration_mode='exponential', leak='leaky', position='spatial',
-                 noise='gaussianNoise', refractory='refractory', verbose=False):
+                 noise='gaussianNoise', refractory='refractory', num_inputs=1, verbose=False):
         """Summary
 
         Args:
@@ -126,17 +127,30 @@ class NeuronEquationBuilder():
                              'reset': keywords['reset'],
                              'refractory': 'refP',
                              'parameters': keywords['parameters']}
+
+            self.num_inputs = num_inputs
+            self.add_input_currents(num_inputs)
+
         if self.verbose:
             self.print_all()
+
+    def __call__(self, num_inputs):
+        """
+        This allows the user to call the object with the num_inputs argument, like it is done with the class
+        Maybe this use is a bit confusing, but it may be convenient.
+        """
+        builder_copy =  copy.deepcopy(self)
+        builder_copy.add_input_currents(num_inputs)
+        return builder_copy
 
     def add_input_currents(self, num_inputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = num_inputs)
         it also adds all these input currents as state variables
 
-
         Args:
             num_inputs (int): Number of inputs to the post-synaptic neuron
         """
+        self.num_inputs = num_inputs
         # remove previously added inputcurrent lines
         inputcurrent_e_pattern = re.compile("Ie\d+ : amp")
         inputcurrent_i_pattern = re.compile("Ii\d+ : amp")
@@ -161,10 +175,10 @@ class NeuronEquationBuilder():
         Iis = ["+Ii0"] + ["+ Ii" +
                           str(i + 1) + " " for i in range(num_inputs - 1)]
 
-        self.keywords['model'] = self.keywords['model'] + " Iin = " + \
+        self.keywords['model'] = self.keywords['model'] + "\nIin = " + \
             "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
-        Iesline = ["    Ie" + str(i) + " : amp" for i in range(num_inputs)]
-        Iisline = ["    Ii" + str(i) + " : amp" for i in range(num_inputs)]
+        Iesline = ["        Ie" + str(i) + " : amp" for i in range(num_inputs)]
+        Iisline = ["        Ii" + str(i) + " : amp" for i in range(num_inputs)]
         self.add_state_vars(Iesline)
         self.keywords['model'] += "\n"
         self.add_state_vars(Iisline)
@@ -231,6 +245,10 @@ class NeuronEquationBuilder():
         num_inputs is used to add additional input currents that are used
         for different synapses that are summed
         '''
+        #if only the filename without path is given, we assume it is one of the predefined models
+        if os.path.dirname(filename) is "":
+            filename = os.path.join('teili','models','equations',filename)
+
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
         else:

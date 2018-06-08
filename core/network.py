@@ -105,7 +105,7 @@ class teiliNetwork(Network):
             except AttributeError:
                 pass
 
-    def build(self, report=None, report_period=10 * second,
+    def build(self, report="stdout", report_period=10 * second,
               namespace=None, profile=True, level=0, recompile=False,
               standaloneParams=None, clean=True):
         """Building the network

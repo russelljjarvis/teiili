@@ -19,8 +19,8 @@ import numpy as np
 @implementation('cpp', '''
     float normal2d_density(float x_cpp, float y_cpp, float mu_x_cpp, float mu_y_cpp,
                            float sigma_x_cpp, float sigma_y_cpp, float rho_cpp, bool normalized_cpp) {
-        float dist_x = x_cpp-mu_x_cpp
-        float dist_y = y_cpp-mu_y_cpp
+        float dist_x = x_cpp-mu_x_cpp;
+        float dist_y = y_cpp-mu_y_cpp;
         float f1;
         if (normalized_cpp)
             f1 = (1.0 / (2.0 * M_PI * sigma_x_cpp * sigma_y_cpp * sqrt(1 - pow(rho_cpp,2))));

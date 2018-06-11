@@ -97,9 +97,12 @@ standaloneParams=OrderedDict([('duration', 0.5 * second),
 duration=standaloneParams['duration']/ms
 Net.run(duration=duration*ms, standaloneParams=standaloneParams, report='text')
 
-wta_plot = plotWTA(wta_monitors=gtestWTA.Monitors, name='testWTA',
-                     start_time=0 * ms, end_time=duration * ms, plot_states=False)
+wta_plot = gtestWTA.plot()
 wta_plot.show()
+
+#wta_plot = plotWTA(wta_monitors=gtestWTA.Monitors, name='testWTA',
+#                     start_time=0 * ms, end_time=duration * ms, plot_states=False)
+#wta_plot.show()
 
 spikemonWTA = gtestWTA.Groups['spikemonWTA']
 spiketimes = spikemonWTA.t

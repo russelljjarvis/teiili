@@ -2,7 +2,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-12 11:34:34
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 15:41:28
+# @Last Modified time: 2018-06-11 11:10:59
 
 """
 This file contains a class that manages a neuron equation.
@@ -156,7 +156,7 @@ class NeuronEquationBuilder():
         inputcurrent_i_pattern = re.compile("Ii\d+ : amp")
         model = self.keywords['model'].split('\n')
         for line in self.keywords['model'].split('\n'):
-            if " Iin = " in line:
+            if "Iin =" in line or "Iin=" in line:
                 model.remove(line)
                 print(
                     'previously added input currents were removed, following lines deleted:')

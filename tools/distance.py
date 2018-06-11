@@ -6,7 +6,7 @@
 # @Last Modified time: 2018-06-05 13:56:24
 """functions to compute distance (e.g. in 2d)
 
-the suffix "_cpp" avoids that variables are string replaced by brian2 if the same name
+The suffix "_cpp" avoids variables being string-replaced by brian2 if the same name
 is used in the network
 """
 

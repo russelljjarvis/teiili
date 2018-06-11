@@ -1,4 +1,4 @@
-#first import all the tools
+# First import all the tools
 from teili.tools.converter import *
 from teili.tools.cpptools import *
 from teili.tools.indexing import *

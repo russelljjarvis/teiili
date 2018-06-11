@@ -5,16 +5,17 @@
 # @Last Modified time: 2018-06-01 15:41:28
 
 """
-This file contains a class that manages a neuon equation
+This file contains a class that manages a neuron equation.
 
-And it prepares a dictionary of keywords for easy synapse creation
+And it prepares a dictionary of keywords for easy synapse creation.
 
-It also provides a function to add lines to the model
+It also provides a function to add lines to the model.
 
 """
 import os
 import importlib
 import re
+import copy
 from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_neu_dict
 from teili.models.builder.templates.neuron_templates import modes, current_equation_sets, voltage_equation_sets, \
@@ -37,9 +38,9 @@ class NeuronEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder
     """
 
-    def __init__(self, keywords=None, base_unit='current', adaptation='calcium_feedback',
+    def __init__(self, keywords=None, base_unit='current', adaptation='calciumFeedback',
                  integration_mode='exponential', leak='leaky', position='spatial',
-                 noise='gaussianNoise', refractory='refractory', verbose=False):
+                 noise='gaussianNoise', refractory='refractory', num_inputs=1, verbose=False):
         """Summary
 
         Args:
@@ -48,9 +49,9 @@ class NeuronEquationBuilder():
             adaptation (str, optional): What type of adaptive feedback should be used.
                So far only calciumFeedback is implemented
             integration_mode (str, optional): Sets if integration up to spike-generation is
-               rather linear or exponential
+               linear or exponential
             leak (str, optional): Enables leaky integration
-            position (str, optional): To enable spatial-like position indices to neuron
+            position (str, optional): To enable spatial-like position indices on neuron
             noise (str, optional): NOT YET IMPLMENTED! This will in the future allow to
                add independent mismatch-like noise on each neuron.
             refractory (str, optional): Refractory period of the neuron
@@ -67,15 +68,15 @@ class NeuronEquationBuilder():
         else:
             ERRValue = """
                                 ---Model not present in dictionaries---
-                    This class constructor build a model for a neuron using pre-existent blocks.
+                    This class constructor builds a model for a neuron using pre-existing blocks.
 
                     The first entry is the model type,
-                    choice between : 'current' or 'voltage'
+                    choose between 'current' or 'voltage'.
 
-                    you can choose then what module load for you neuron,
-                    the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussianNoise'
-                    if you don't want to load a module just use the keyword 'none'
-                    example: NeuronEquationBuilder('current','none','expnential','leak','none','none'.....)
+                    You can choose then what module to load for your neuron,
+                    the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussianNoise'.
+                    If you don't want to load a module just use the keyword 'none'
+                    example: NeuronEquationBuilder('current','none','exponential','leak','none','none'.....)
 
                     """
 
@@ -89,7 +90,7 @@ class NeuronEquationBuilder():
 
             except KeyError as e:
                 print(ERRValue)
-    
+
             if base_unit == 'current':
                 eq_templ = [modes[base_unit],
                             current_equation_sets[adaptation],
@@ -126,17 +127,30 @@ class NeuronEquationBuilder():
                              'reset': keywords['reset'],
                              'refractory': 'refP',
                              'parameters': keywords['parameters']}
+
+            self.num_inputs = num_inputs
+            self.add_input_currents(num_inputs)
+
         if self.verbose:
             self.print_all()
+
+    def __call__(self, num_inputs):
+        """
+        This allows the user to call the object with the num_inputs argument, like it is done with the class
+        Maybe this use is a bit confusing, but it may be convenient.
+        """
+        builder_copy =  copy.deepcopy(self)
+        builder_copy.add_input_currents(num_inputs)
+        return builder_copy
 
     def add_input_currents(self, num_inputs):
         """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = num_inputs)
         it also adds all these input currents as state variables
 
-
         Args:
             num_inputs (int): Number of inputs to the post-synaptic neuron
         """
+        self.num_inputs = num_inputs
         # remove previously added inputcurrent lines
         inputcurrent_e_pattern = re.compile("Ie\d+ : amp")
         inputcurrent_i_pattern = re.compile("Ii\d+ : amp")
@@ -161,10 +175,10 @@ class NeuronEquationBuilder():
         Iis = ["+Ii0"] + ["+ Ii" +
                           str(i + 1) + " " for i in range(num_inputs - 1)]
 
-        self.keywords['model'] = self.keywords['model'] + " Iin = " + \
+        self.keywords['model'] = self.keywords['model'] + "\nIin = " + \
             "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
-        Iesline = ["    Ie" + str(i) + " : amp" for i in range(num_inputs)]
-        Iisline = ["    Ii" + str(i) + " : amp" for i in range(num_inputs)]
+        Iesline = ["        Ie" + str(i) + " : amp" for i in range(num_inputs)]
+        Iisline = ["        Ii" + str(i) + " : amp" for i in range(num_inputs)]
         self.add_state_vars(Iesline)
         self.keywords['model'] += "\n"
         self.add_state_vars(Iisline)
@@ -210,9 +224,8 @@ class NeuronEquationBuilder():
             file.write(self.keywords['threshold'])
             file.write("''',\n")
             file.write("'reset':\n")
-            file.write("'''\n")
+            file.write("'''")
             file.write(self.keywords['reset'])
-            file.write("\n")
             file.write("''',\n")
             file.write("'parameters':\n")
             file.write("{\n")
@@ -229,9 +242,13 @@ class NeuronEquationBuilder():
     @classmethod
     def import_eq(cls, filename, num_inputs=1):
         '''
-        num_inputs is used to add additional input currents, that are used
+        num_inputs is used to add additional input currents that are used
         for different synapses that are summed
         '''
+        #if only the filename without path is given, we assume it is one of the predefined models
+        if os.path.dirname(filename) is "":
+            filename = os.path.join('teili','models','equations',filename)
+
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
         else:
@@ -254,7 +271,7 @@ class NeuronEquationBuilder():
 
 
 def print_param_dictionaries(Dict):
-    """Function to print dictionaries of parameters in a ordered way
+    """Function to print dictionaries of parameters in an ordered way
 
     Args:
         Dict (dict): Parameter dictionary to be printed

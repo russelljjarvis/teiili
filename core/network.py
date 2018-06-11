@@ -23,7 +23,7 @@ from teili.tools.cpptools import build_cpp_and_replace,\
 from teili.building_blocks.building_block import BuildingBlock
 
 
-class NCSNetwork(Network):
+class teiliNetwork(Network):
     """this is a subclass of brian2.Network and does the same thing plus
     some additional methods for convenience
     and functionality to allow real time plotting and gui
@@ -75,11 +75,11 @@ class NCSNetwork(Network):
 
     def add_standalone_params(self, **params):
         """Function to a add standalone parameter to the standaloneParam dict.
-        These parammeters can be changed after building w/o recompiling the network
+        These parameters can be changed after building w/o recompiling the network
 
         Args:
             **params (dict, required): Dictionary with parameter to be added to
-                stanaloneParamss
+                standaloneParamss
         """
         for key in params:
             self.standaloneParams[key] = params[key]
@@ -105,7 +105,7 @@ class NCSNetwork(Network):
             except AttributeError:
                 pass
 
-    def build(self, report=None, report_period=10 * second,
+    def build(self, report="stdout", report_period=10 * second,
               namespace=None, profile=True, level=0, recompile=False,
               standaloneParams=None, clean=True):
         """Building the network
@@ -118,19 +118,19 @@ class NCSNetwork(Network):
                 executin time, resources etc.
             level (int, optional): Description
             recompile (bool, optional): Flag to indicate if network should rather be recompiled
-                than used based on a prioir build. Set this to False if you want to only change
+                than used based on a prior build. Set this to False if you want to only change
                 parameters rather than network topology
             standaloneParams (dict, optional): Dictionary with standalone parametes which
                 should be changed
             clean (bool, optional): Flag to clean-up standalone directory
         """
         if get_device() == all_devices['cpp_standalone']:
-            if recompile or not NCSNetwork.hasRun:
+            if recompile or not teiliNetwork.hasRun:
 
                 print('building network...')
                 Network.run(self, duration=0 * ms, report=report, report_period=report_period,
                             namespace=namespace, profile=profile, level=level + 1)
-                NCSNetwork.hasRun = True
+                teiliNetwork.hasRun = True
 
                 if standaloneParams is None:
                     standaloneParams = self.standaloneParams
@@ -142,7 +142,7 @@ class NCSNetwork(Network):
                       but Network structure is not!
                       This might lead to unexpected behavior.""")
         else:
-            print('Network was compiled, as you have not set the device to \
+            print('Network was compiled; as you have not set the device to \
                   cpp_standalone, you can still run() it using numpy code generation')
 
     def run(self, duration=None, standaloneParams=dict(), **kwargs):

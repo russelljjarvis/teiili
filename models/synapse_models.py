@@ -1,4 +1,4 @@
- #-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # @Author: mrax, mmilde
 # @Date:   2017-12-27 10:46:44
 # @Last Modified by:   Moritz Milde
@@ -11,22 +11,11 @@ from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 import teili.models
 
 
-class DoubleExponential(SynapseEquationBuilder):
-    """"""
-
-    def __init__(self):
-        """This class provides you with all equations to simulate synapses with double
-        exponential dynamics.
-        """
-        SynapseEquationBuilder.__init__(self, base_unit='current',
-                                        kernel='alpha', plasticity='non_plastic')
-
-
 class ReversalSynV(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate synapses with reversal
+        """This class provides you with all the equations to simulate synapses with reversal
         potential.
         """
         SynapseEquationBuilder.__init__(self, base_unit='conductance',
@@ -37,7 +26,7 @@ class BraderFusiSynapses(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a bistable Brader-Fusi synapse
+        """This class provides you with all the equations to simulate a bistable Brader-Fusi synapse
         as published in Brader and Fusi 2007
         """
         SynapseEquationBuilder.__init__(self, base_unit='current',
@@ -48,7 +37,7 @@ class DPISyn(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a Differential Pair
+        """This class provides you with all the equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014
         """
         SynapseEquationBuilder.__init__(self, base_unit='DPI',
@@ -59,7 +48,7 @@ class DPIShunt(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a Differential Pair
+        """This class provides you with all the equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014
         """
         SynapseEquationBuilder.__init__(self, base_unit='DPIShunting',
@@ -70,10 +59,10 @@ class DPIstdp(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a Differential Pair
+        """This class provides you with all the equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014. However, additional
         equations are provided to make this synapse subject to learning based on
-        Spike-Time Depenendent Plasticity (STDP) as published in Song, Miller and Abbott (2000)
+        Spike-Time Dependent Plasticity (STDP) as published in Song, Miller and Abbott (2000)
         and Song and Abbott (2001). Also see another example at:
         https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
         """
@@ -85,8 +74,8 @@ class StdpSynV(SynapseEquationBuilder):
     """"""
 
     def __init__(self):
-        """This class provides you with all equations to simulate a exponential decaying
-        voltage-based synapse with learning based on Spike-Time Depenendent Plasticity (STDP)
+        """This class provides you with all the equations to simulate an exponential decaying
+        voltage-based synapse with learning based on Spike-Time Dependent Plasticity (STDP)
         as published in Song, Miller and Abbott (2000) and Song and Abbott (2001).
         Also see another example at:
         https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
@@ -102,9 +91,6 @@ if __name__ == '__main__':
     path = os.path.join(path, "equations")
     if not os.path.isdir(path):
         os.mkdir(path)
-
-    doubleExponential = DoubleExponential()
-    doubleExponential.export_eq(os.path.join(path, "DoubleExponential"))
 
     reversalSynV = ReversalSynV()
     reversalSynV.export_eq(os.path.join(path, "ReversalSynV"))
@@ -127,3 +113,4 @@ if __name__ == '__main__':
     reversalSynVfusi = SynapseEquationBuilder(base_unit='conductance',
                                         kernel='exponential', plasticity='fusi')
     reversalSynVfusi.export_eq(os.path.join(path, "ReversalSynVfusi"))
+

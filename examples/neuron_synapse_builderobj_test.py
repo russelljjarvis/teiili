@@ -21,7 +21,7 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
 from teili.core.groups import Neurons, Connections
-from teili import NCSNetwork
+from teili import teiliNetwork
 from teili.models.parameters.dpi_neuron_param import parameters as DPIparam
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
@@ -48,7 +48,7 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
                                 times=tsInp, name='gtestInp')
 
 
-Net = NCSNetwork()
+Net = teiliNetwork()
 
 testNeurons = Neurons(2, equation_builder=builder_object1, name="testNeuron")
 # Example of how to set parameters, saved as a dictionary

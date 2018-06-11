@@ -23,8 +23,12 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray,\
     defaultclock, profiling_summary, floor, title, xlabel, ylabel
 
-from teili.models.neuron_models import ExpAdaptIF
-from teili.models.synapse_models import ReversalSynV
+#from teili.models.neuron_models import ExpAdaptIF
+#from teili.models.synapse_models import ReversalSynV
+from teili import NeuronEquationBuilder, SynapseEquationBuilder
+
+ExpAdaptIF = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
+ReversalSynV = SynapseEquationBuilder.import_eq('ReversalSynV')
 
 from teili.building_blocks.building_block import BuildingBlock
 from teili.core.groups import Neurons, Connections
@@ -80,8 +84,8 @@ class SequenceLearning(BuildingBlock):
 
         self.Groups, self.Monitors,\
             self.standalone_params = gen_sequence_learning(name,
-                                                        neuron_eq_builder,
-                                                        synapse_eq_builder,
+                                                        neuron_eq_builder=neuron_eq_builder,
+                                                        synapse_eq_builder=synapse_eq_builder,
                                                         num_elements=num_elements,
                                                         num_neurons_per_group=num_neurons_per_group,
                                                         num_inputs=num_inputs,
@@ -98,6 +102,8 @@ class SequenceLearning(BuildingBlock):
             TYPE: Description
         """
         return plot_sequence_learning(self.Monitors)
+
+
 
 
 def gen_sequence_learning(groupname='Seq',

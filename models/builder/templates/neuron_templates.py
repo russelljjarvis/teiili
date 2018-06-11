@@ -46,7 +46,7 @@ v_model_template = {'model': """
          Vres    : volt      (shared, constant)   # reset potential
          """,
                     'threshold': "Vm > Vthr",
-                    'reset': "Vm = Vres; "}
+                    'reset': "Vm = Vres;"}
 
 v_model_templatePara = {"Cm": 281 * pF,
                         "refP": 2 * ms,
@@ -70,6 +70,11 @@ v_expCurrent = {'model': """
             """,
                 'threshold': '',
                 'reset': ''}
+
+v_expCurrent_params = {"gL" : 4.3 * nS,
+                       "DeltaT": 2 * mV,
+                       "VT": -50.4 * mV
+                       }
 # leak
 v_leak = {'model': """
           %Ileak = -gL*(Vm - EL) : amp
@@ -78,6 +83,10 @@ v_leak = {'model': """
          """,
           'threshold': '',
           'reset': ''}
+
+v_leak_params = {"gL" : 4.3 * nS,
+                 "EL" : -55 * mV
+                 }
 
 # adaptation
 v_adapt = {'model': """
@@ -88,7 +97,16 @@ v_adapt = {'model': """
         EL      : volt      (shared, constant)        # reversal potential
         """,
            'threshold': '',
-           'reset': 'Iadapt += wIadapt; '}
+           'reset': 'Iadapt += wIadapt;'}
+
+
+v_adapt_params = {"gAdapt": 4 * nS,
+                  "wIadapt": 0.0805 * nA,
+                  "tauIadapt": 144 * ms,
+                  "EL": -70.6 * mV
+                  }
+
+
 # noise
 v_noise = {'model': """
         %Inoise = xi*Anoise*(second**0.5) : amp
@@ -286,6 +304,6 @@ current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_
                      'exponential': i_exponential_params, 'leaky': none_params, 'non_leaky': i_non_leaky_params,
                      'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 'linear': none_params}
 
-voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': none_params,
-                     'exponential': none_params, 'leaky': none_params, 'non_leaky': none_params,
+voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': v_adapt_params,
+                     'exponential': v_expCurrent_params, 'leaky': v_leak_params, 'non_leaky': none_params,
                      'spatial': none_params, 'gaussian_noise': none_params, 'none': none_params, 'linear': none_params}

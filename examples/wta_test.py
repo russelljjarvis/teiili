@@ -19,7 +19,7 @@ from brian2 import prefs, ms, pA, nA, StateMonitor, device, set_device,\
 from teili.building_blocks.wta import WTA, plotWTA
 from teili.core.groups import Neurons, Connections
 from teili.stimuli.testbench import WTA_Testbench
-from teili import NCSNetwork
+from teili import teiliNetwork
 from teili.models.synapse_models import DPISyn, DPIstdp
 from teili.tools.synaptic_kernel import kernel_gauss_1d
 
@@ -52,7 +52,7 @@ num_input_neurons = num_neurons
 
 x = np.arange(0,num_neurons-1,1)
 
-Net = NCSNetwork()
+Net = teiliNetwork()
 duration = 500#10000
 testbench = WTA_Testbench()
 

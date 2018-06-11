@@ -24,14 +24,20 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs, Spi
 
 from teili.building_blocks.sequence_learning import SequenceLearning
 
-from teili.models.neuron_models import ExpAdaptIF
-from teili.models.synapse_models import ReversalSynV
+#from teili.models.neuron_models import ExpAdaptIF
+#from teili.models.synapse_models import ReversalSynV
+
+from teili import NeuronEquationBuilder, SynapseEquationBuilder
+ExpAdaptIF = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
+ReversalSynV = SynapseEquationBuilder.import_eq('ReversalSynV')
 
 #from teili.tools.cpptools import build_cpp_and_replace, collect_standalone_params, run_standalone
 from teili.core.network import teiliNetwork
 
 standaloneDir = os.path.expanduser('~/SL_standalone')
 #isStandalone = True
+
+#prefs.codegen.target = 'numpy'
 
 try:
     seqNet.hasRun
@@ -43,6 +49,7 @@ except:
 
 
 prefs.devices.cpp_standalone.openmp_threads = 4
+prefs.devices.cpp_standalone.extra_make_args_unix = ["-j$(nproc)"]
 
 defaultclock.dt = 100 * us
 
@@ -115,23 +122,6 @@ seqNet.add(SequenceLearningExample,SequenceLearningExample.Monitors)
 # Note that this is string replacement, so if you have another state variable that is called e.g. GammataugIi, this would also be replaced!
 #seqNet.add_standalone_params(gOrd_Seq_b=0.0805*nA, taugIi=6*ms)
 
-seqNet.build()
-
-#%%
-# Simulation
-
-seqNet['spikemonOrd_Seq']
-seqNet.run(duration)  # , report='text')
-print ('ready...')
-
-SequenceLearningExample.plot()
-
-#%%
-# You can now set the standaloneParams
-# First print them in order to see what we can change:
-seqNet.printParams()
-
-#%%
 standaloneParams = OrderedDict([('duration', 0.33 * second),
                              ('sInpOrd1e_Seq_weight', 1.3),
                              ('sOrdMem1e_Seq_weight', 1.1),
@@ -143,11 +133,31 @@ standaloneParams = OrderedDict([('duration', 0.33 * second),
                              ('sCoSOrd1i_Seq_weight', -1.14),
                              ('sResOrd1i_Seq_weight', -1.44),
                              ('sResMem1i_Seq_weight', -2.6),
-                             ('gOrd_Seq_refP', 1.7 * msecond),
-                             ('gMem_Seq_refP', 2.3 * msecond),
-                             ('gOrd_Seq_b', 80.5 * pamp),
-                             ('gOrd_Seq_C', 281. * pfarad),
-                             ('taugIi', 6. * msecond)])
+                             #('gOrd_Seq_refP', 1.7 * msecond),
+                             #('gMem_Seq_refP', 2.3 * msecond),
+                             #('gOrd_Seq_b', 80.5 * pamp),
+                             #('gOrd_Seq_C', 281. * pfarad),
+                             #('taugIi', 6. * msecond)
+                             ])
+
+seqNet.build(standaloneParams = standaloneParams)
+
+#%%
+# Simulation
+
+seqNet['spikemonOrd_Seq']
+seqNet.run(duration,standaloneParams = standaloneParams)  # , report='text')
+print ('ready...')
+
+SequenceLearningExample.plot()
+
+#%%
+# You can now set the standaloneParams
+# First print them in order to see what we can change:
+seqNet.print_params()
+
+#%%
+
 
 standaloneParams = OrderedDict([('duration', 0.33 * second),
                  ('gOrd_Seq_refP', 1.7 * msecond),
@@ -167,3 +177,6 @@ standaloneParams = OrderedDict([('duration', 0.33 * second),
 seqNet.run(standaloneParams=standaloneParams)
 #%%
 SequenceLearningExample.plot()
+
+
+seqNet['gMem_Seq'].equation_builder.keywords

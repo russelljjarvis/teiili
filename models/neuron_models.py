@@ -2,7 +2,7 @@
 # @Author: mmilde
 # @Date:   2018-01-08 14:53:11
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 16:01:57
+# @Last Modified time: 2018-06-11 18:14:03
 
 """ This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
@@ -20,7 +20,6 @@ class Izhikevich(NeuronEquationBuilder):
                                        integration_mode='quadratic', leak='non_leaky',
                                        position='spatial', noise='none')
         self.add_input_currents(num_inputs)
-
 
 
 class ExpAdaptIF(NeuronEquationBuilder):
@@ -65,4 +64,3 @@ if __name__ == '__main__':
 
     izhikevich = Izhikevich()
     izhikevich.export_eq(os.path.join(path, "Izhikevich"))
-

@@ -11,6 +11,17 @@ from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 import teili.models
 
 
+class DoubleExponential(SynapseEquationBuilder):
+    """"""
+
+    def __init__(self):
+        """This class provides you with all equations to simulate synapses with double
+        exponential dynamics.
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='alpha', plasticity='non_plastic')
+
+
 class ReversalSynV(SynapseEquationBuilder):
     """"""
 
@@ -91,6 +102,9 @@ if __name__ == '__main__':
     path = os.path.join(path, "equations")
     if not os.path.isdir(path):
         os.mkdir(path)
+
+    doubleExponential = DoubleExponential()
+    doubleExponential.export_eq(os.path.join(path, "DoubleExponential"))
 
     reversalSynV = ReversalSynV()
     reversalSynV.export_eq(os.path.join(path, "ReversalSynV"))

@@ -39,7 +39,7 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 
 Net = teiliNetwork()
 
-testNeurons = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron")
+testNeurons = Neurons(2, equation_builder=neuron_model(num_inputs=2), name="testNeuron")
 # Example of how to set parameters, saved as a dictionary
 testNeurons.set_params(neuron_model_param)
 testNeurons.refP = 3 * ms
@@ -49,11 +49,10 @@ testNeurons2.set_params(neuron_model_param)
 testNeurons2.refP = 3 * ms
 
 
-InpSyn = Connections(gInpGroup, testNeurons, equation_builder=DPISyn(), name="testSyn", verbose=False)
+InpSyn = Connections(gInpGroup, testNeurons, equation_builder=syn_model(), name="testSyn", verbose=False)
 InpSyn.connect(True)
 
-InpSyn.weight = 10
-Syn = Connections(testNeurons, testNeurons2, equation_builder=DPISyn(), name="testSyn2")
+Syn = Connections(testNeurons, testNeurons2, equation_builder=syn_model(), name="testSyn2")
 Syn.connect(True)
 
 # you can change all the parameters like this after creation of the neurongroup:

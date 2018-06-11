@@ -61,7 +61,7 @@ v_model_templatePara = {"Cm": 281 * pF,
 
 # exponential current (see exponential I&F Model)
 #exponential
-v_expCurrent = {'model': """
+v_exp_current = {'model': """
             %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
             VT      : volt      (shared, constant)        #
             DeltaT  : volt      (shared, constant)        # slope factor
@@ -75,11 +75,10 @@ v_expCurrent = {'model': """
 v_quad_current = {'model': """
             #quadratic
             %Iexp = k*(Vm - VR)*(Vm - VT) : amp
-            %dIadapt/dt = -(gAdapt*(EL - Vm) + Iadapt)/tauIadapt : amp #dIadapt/dt = a*(b*(Vm - VR) - Iadapt) : amp
             %tauIadapt = 1.0/a  : second    (shared)        # adaptation time constant
             %gAdapt = b         : siemens   (shared)        # adaptation decay parameter
             %wIadapt = d         : amp      (shared)        # adaptation weight
-            EL = VR : volt
+            %EL = VR : volt
             VT      : volt                (shared, constant)        # V threshold
             VR      : volt                (shared, constant)        # V rest
             k       : siemens * volt **-1 (shared, constant)        # slope factor
@@ -106,7 +105,7 @@ v_quad_params = {
     "d": 200 * pA,  # Nicola&Clopath2017
     "k":  2.5  * nS / mV} # k = 1/Rin Nicola&Clopath2017
 
-v_expCurrent_params = {"gL" : 4.3 * nS,
+v_exp_current_params = {"gL" : 4.3 * nS,
                        "DeltaT": 2 * mV,
                        "VT": -50.4 * mV
                        }
@@ -342,6 +341,6 @@ current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_
                       'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 'linear': none_params}
 
 voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': v_adapt_params,
-                      'exponential': v_expCurrent_params, 'quadratic': v_quad_params,
+                      'exponential': v_exp_current_params, 'quadratic': v_quad_params,
                       'leaky': v_leak_params, 'non_leaky': none_params,
                       'spatial': none_params, 'gaussian_noise': none_params, 'none': none_params, 'linear': none_params}

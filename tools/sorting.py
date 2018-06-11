@@ -4,7 +4,7 @@
 # @Author: Moritz Milde
 # @Date:   2018-06-05 11:09:20
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 16:30:54
+# @Last Modified time: 2018-06-11 17:07:53
 
 import numpy as np
 from tkinter import filedialog
@@ -46,7 +46,7 @@ class SortMatrix():
         sorted_matrix (TYPE): Sorted matrix according to permutation
     """
 
-    def __init__(self, nrows, ncols=None, filename=None, axis=0):
+    def __init__(self, nrows, ncols=None, filename=None, matrix=None, axis=0):
         """Summary
 
         Args:
@@ -68,7 +68,10 @@ class SortMatrix():
 
         self.filename = filename
         # Load reshaped matrix. Dimensions are specified via nrwos, ncols
-        self.matrix = self.load_matrix()
+        if matrix is None:
+            self.matrix = self.load_matrix()
+        elif matrix is not None:
+            self.matrix = matrix
         # Compute similarity along specified axis
         self.similarity_matrix = self.get_similarity_matrix(axis=axis)
         # Get permutation along specified axis

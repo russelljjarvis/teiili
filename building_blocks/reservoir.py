@@ -25,10 +25,24 @@ from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 from teili.building_blocks.building_block import BuildingBlock
 from teili.core.groups import Neurons, Connections
 
-from teili.models.neuron_models import ExpAdaptIF
-from teili.models.synapse_models import reversalSynV
+from teili.models.neuron_models import Izhikevich
+from teili.models.synapse_models import DoubleExponential
+# from teili.models.neuron_models import DPI
+# from teili.models.neuron_models import ExpAdaptIF
+# from teili.models.synapse_models import DPISyn
 
-reservor_params = {'weInpR': 1.5,
+from teili.models.parameters.izhikevich_param import parameters as IzhParams
+
+# RParams = {'weInpR': 1.5,
+#            'weRInh': 1,
+#            'wiInhR': -1,
+#            'weRR': 0.5,
+#            'sigm': 3,
+#            'rpR': 3 * ms,
+#            'rpInh': 1 * ms
+# }
+
+reservoir_params = {'weInpR': 1.5,
                    'weRInh': 1,
                    'wiInhR': -1,
                    'weRR': 0.5,
@@ -51,14 +65,14 @@ class Reservoir(BuildingBlock):
     '''
 
     def __init__(self, name,
-                 neuron_eq_builder=ExpAdaptIF,
-                 synapse_eq_builder=reversalSynV,
-                 block_params=reservor_params,
+                 neuron_eq_builder=Izhikevich,
+                 synapse_eq_builder=DoubleExponential,
+                 block_params=reservoir_params,
                  num_neurons=16,
-                 num_inputs=1,
-                 cutoff=10,
-                 fraction_inh_neurons=None,
+                 num_input_neurons=1,
+                 fraction_inh_neurons=0.2,
                  additional_statevars=[],
+                 num_inputs=1,
                  spatial_kernel=None,
                  monitor=True,
                  debug=False):
@@ -90,13 +104,11 @@ class Reservoir(BuildingBlock):
 
         self.Groups, self.Monitors, \
             self.standalone_params = gen_reservoir(name,
-                                                   neuron_eq_builder,
-                                                   synapse_eq_builder,
+                                                   neuron_eq_builder=neuron_eq_builder,
+                                                   synapse_eq_builder=synapse_eq_builder,
                                                    num_neurons=num_neurons,
                                                    num_inputs=num_inputs,
                                                    fraction_inh_neurons=fraction_inh_neurons,
-                                                   additional_statevars=additional_statevars,
-                                                   cutoff=cutoff,
                                                    spatial_kernel=spatial_kernel,
                                                    monitor=monitor,
                                                    debug=debug,
@@ -125,14 +137,15 @@ class Reservoir(BuildingBlock):
 
 
 def gen_reservoir(groupname,
-                  neuron_eq_builder=ExpAdaptIF,
-                  synapse_eq_builder=reversalSynV,
+                  neuron_eq_builder=Izhikevich,
+                  synapse_eq_builder=DoubleExponential,
                   weInpR=1.5, weRInh=1, wiInhR=-1, weRR=0.5, sigm=3,
                   rpR=3 * ms, rpInh=1 * ms,
                   num_neurons=64, num_inputs=1,
                   fraction_inh_neurons=0.2,
                   spatial_kernel="kernel_mexican_1d",
                   monitor=True, additional_statevars=[], debug=False):
+
     """Summary
 
     Args:
@@ -213,8 +226,9 @@ def gen_reservoir(groupname,
 
     # set weights
     synInpR1e.weight = weInpR
-    synRInh1e.weight = weRInh
-    synInhR1i.weight = wiInhR
+    if fraction_inh_neurons is not None:
+        synRInh1e.weight = weRInh
+        synInhR1i.weight = wiInhR
     # lateral excitation kernel
     # we add an additional attribute to that synapse, which allows us to change
     # and retrieve that value more easily
@@ -225,10 +239,12 @@ def gen_reservoir(groupname,
 
     Groups = {
         'gRGroup': gRGroup,
-        'gRInhGroup': gRInhGroup,
         'gRInpGroup': gRInpGroup,
         'synInpR1e': synInpR1e,
         'synRR1e': synRR1e}
+
+    if fraction_inh_neurons is not None:
+        Groups['gRInhGroup'] = gRInhGroup,
 
     if fraction_inh_neurons is not None:
         Groups['synRInh1e'] = synRInh1e
@@ -243,30 +259,33 @@ def gen_reservoir(groupname,
         spikemonRInp = SpikeMonitor(
             gRInpGroup, name='spikemon' + groupname + '_RInp')
         try:
-            statemonR = StateMonitor(gRGroup, ('Vm', 'Ie', 'Ii'), record=True,
+            statemonR = StateMonitor(gRGroup, ('Vm', 'Iexp', 'Iin'), record=True,
                                      name='statemon' + groupname + '_R')
         except KeyError:
-            statemonR = StateMonitor(gRGroup, ('Imem', 'Iin'), record=True,
+            statemonR = StateMonitor(gRGroup, ('Iexp', 'Iin'), record=True,
                                      name='statemon' + groupname + '_R')
         Monitors = {
             'spikemonR': spikemonR,
-            'spikemonRInh': spikemonRInh,
             'spikemonRInp': spikemonRInp,
             'statemonR': statemonR}
+        if fraction_inh_neurons is not None:
+            Monitors['spikemonRInh'] = spikemonRInh
 
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: weInpR, weRInh, wiInhR, weRR,rpR, rpInh,sigm
     standalone_params = {
         synInpR1e.name + '_weight': weInpR,
-        synRInh1e.name + '_weight': weRInh,
-        synInhR1i.name + '_weight': wiInhR,
         synRR1e.name + '_latWeight': weRR,
         synRR1e.name + '_latSigma': sigm,
-        gRGroup.name + '_refP': rpR,
-        gRInhGroup.name + '_refP': rpInh,
+        gRGroup.name + '_refP': rpR
     }
+    if fraction_inh_neurons is not None:
+        standalone_params[synRInh1e.name + '_weight'] =  weRInh
+        standalone_params[synInhR1i.name + '_weight'] = wiInhR
+        standalone_params[gRInhGroup.name + '_refP'] = rpInh,
 
+    
     end = time.clock()
     if debug:
         print('creating Reservoir of ' + str(num_neurons) + ' neurons with name ' +

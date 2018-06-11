@@ -5,10 +5,22 @@
 # @Last Modified time: 2018-06-01 16:01:57
 
 """ This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
-
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 import teili.models
 import os
+
+
+class Izhikevich(NeuronEquationBuilder):
+    """ This class provides you with all equations to simulate a voltage-based
+    quadratic, adaptive integrate and fire neuron.
+    """
+
+    def __init__(self, num_inputs=1):
+        NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='calcium_feedback',
+                                       integration_mode='quadratic', leak='non_leaky',
+                                       position='spatial', noise='none')
+        self.add_input_currents(num_inputs)
+
 
 
 class ExpAdaptIF(NeuronEquationBuilder):
@@ -50,3 +62,7 @@ if __name__ == '__main__':
 
     dpi = DPI()
     dpi.export_eq(os.path.join(path, "DPI"))
+
+    izhikevich = Izhikevich()
+    izhikevich.export_eq(os.path.join(path, "Izhikevich"))
+

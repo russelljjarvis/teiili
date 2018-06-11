@@ -31,5 +31,12 @@ class TestEquations(unittest.TestCase):
         Net.add(testNeurons)
         Net.run(5*ms)
 
+    def test_Izhikevich(self):
+        Izhikevich = NeuronEquationBuilder.import_eq('Izhikevich', num_inputs=1)
+        testNeurons = Neurons(1, equation_builder=Izhikevich(num_inputs=1), name="testNeuron", verbose = False)
+        Net = teiliNetwork()
+        Net.add(testNeurons)
+        Net.run(5*ms)
+
 if __name__ == '__main__':
     unittest.main()

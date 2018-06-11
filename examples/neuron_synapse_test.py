@@ -160,7 +160,6 @@ if hasattr(statemonNeuOut,'Imem'):
                 pen=pg.mkPen(colors[5], width=3))
 if hasattr(statemonNeuOut,'Vm'):
     for data in np.asarray(statemonNeuOut.Vm):
-        print(data)
         p6.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
                 pen=pg.mkPen(colors[5], width=3))
 

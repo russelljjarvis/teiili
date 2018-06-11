@@ -140,21 +140,21 @@ class WTA(BuildingBlock):
         if monitor:
             self.spikemonWTA = self.Monitors['spikemonWTA']
 
-    def plot(self, start_time=0 * ms, end_time=None):
+    def plot(self, start_time=0 * ms, end_time=None, plot_states = True):
         """Simple plot for WTA
 
         Args:
             start_time (int, optional): Start time of plot in ms
             end_time (int, optional): End time of plot in ms
         """
-
-        if end_time is None:
-            if len(self.spikemonWTA.t) > 0:
-                end_time = max(self.spikemonWTA.t)
-            else:
-                end_time = end_time * ms
-        plotWTA(self.name, start_time, end_time, self.num_neurons **
-                self.dimensions, self.Monitors)
+#        if end_time is None:
+#            if len(self.spikemonWTA.t) > 0:
+#                end_time = max(self.spikemonWTA.t)
+#            else:
+#                end_time = end_time * ms
+        win = plotWTA(wta_monitors = self.Monitors, name = self.name,
+                start_time=start_time, end_time=end_time, plot_states=plot_states)
+        return win
 
 # TODO: Generalize for n dimensions
 

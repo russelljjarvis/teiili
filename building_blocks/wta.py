@@ -153,7 +153,7 @@ class WTA(BuildingBlock):
                 end_time = max(self.spikemonWTA.t)
             else:
                 end_time = end_time * ms
-        plotWTA(self.name, start_time, end_time, self.numNeurons **
+        plotWTA(self.name, start_time, end_time, self.num_neurons **
                 self.dimensions, self.Monitors)
 
 # TODO: Generalize for n dimensions
@@ -481,7 +481,7 @@ def gen2dWTA(groupname,
     return Groups, Monitors, standalone_params
 
 
-def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
+def plotWTA(wta_monitors, name, start_time, end_time, plot_states=True):
     """Function to easily visualize WTA activity.
 
     Args:
@@ -490,7 +490,7 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
             from when network activity should be plotted.
         end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
             Can be smaller than simulation time but not larger
-        WTAMonitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors
+        wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors
     """
     app = QtGui.QApplication.instance()
     if app is None:
@@ -510,14 +510,14 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
     win_raster.nextRow()
     raster_inh = win_raster.addPlot(title="SpikeMonitor inhibitory interneurons")
 
-    plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=np.int(WTAMonitors['spikemonWTAInp'].source.N), monitor=WTAMonitors['spikemonWTAInp'],
+    plot_spikemon_qt(monitor=wta_monitors['spikemonWTAInp'], start_time=start_time, end_time=end_time,
+                     num_neurons=np.int(wta_monitors['spikemonWTAInp'].source.N),
                      window=raster_input)
-    plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=WTAMonitors['spikemonWTA'].source.N, monitor=WTAMonitors['spikemonWTA'],
+    plot_spikemon_qt(monitor=wta_monitors['spikemonWTA'], start_time=start_time, end_time=end_time,
+                     num_neurons=wta_monitors['spikemonWTA'].source.N,
                      window=raster_wta)
-    plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=WTAMonitors['spikemonWTAInh'].source.N, monitor=WTAMonitors['spikemonWTAInh'],
+    plot_spikemon_qt(monitor=wta_monitors['spikemonWTAInh'], start_time=start_time, end_time=end_time,
+                     num_neurons=wta_monitors['spikemonWTAInh'].source.N,
                      window=raster_inh)
 
     if plot_states:
@@ -530,10 +530,10 @@ def plotWTA(name, start_time, end_time, WTAMonitors, plot_states=True):
         state_syn_input = win_states.addPlot(title="StateMonitor synaptic input")
 
         plot_statemon_qt(start_time=start_time, end_time=end_time,
-                         monitor=WTAMonitors['statemonWTA'], neuron_id=128,
+                         monitor=wta_monitors['statemonWTA'], neuron_id=128,
                          variable="Imem", unit=pA, window=state_membrane, name=name)
         plot_statemon_qt(start_time=start_time, end_time=end_time,
-                         monitor=WTAMonitors['statemonWTA'], neuron_id=128,
+                         monitor=wta_monitors['statemonWTA'], neuron_id=128,
                          variable="Iin", unit=pA, window=state_syn_input, name=name)
 
     app.exec()

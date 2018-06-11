@@ -49,7 +49,7 @@ def plot_spikemon(start_time, end_time, monitor, num_neurons, ylab='ind'):
             ylim([0, num_neurons])
 
 
-def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=16, window=None, unit=None):
+def plot_spikemon_qt(monitor, start_time=None, end_time=None, num_neurons=16, window=None, unit=None):
     """Generic plotting function to plot spikemonitors using pyqtgraph
 
     Args:
@@ -63,32 +63,52 @@ def plot_spikemon_qt(start_time=None, end_time=None, monitor=None, num_neurons=1
         UserWarning: Description
     """
     if unit is None:
-        unit = 1
+        try:  # .dim raises an Error if monitor.t is not a brian2 Quantity
+            if str(monitor.t.dim) == 's':
+                unit = ms
+            else:
+                pass #this should not happen
+        except AttributeError:
+            unit = 1
+
     if len(monitor.t) > 1:
         if start_time is None:
             start_time = 0 * unit
+        else:
+            try:
+                start_time.dim
+            except AttributeError:
+                start_time = start_time*unit
         if end_time is None:
             end_time = monitor.t[-1]
+        else:
+            try:
+                start_time.dim
+            except AttributeError:
+                start_time = start_time*unit
         if window is None:
             raise UserWarning("Please provide plot_statemon_qt with pyqtgraph window.")
         if monitor is None:
             raise UserWarning("No statemonitor provided. Abort plotting")
+        else:
+            start_ind = np.argmin(abs(monitor.t - start_time))
+            end_ind = np.argmin(abs(monitor.t - end_time))
 
-        start_ind = np.argmin(abs(monitor.t - start_time))
-        end_ind = np.argmin(abs(monitor.t - end_time))
+            window.setXRange(0, end_time / unit, padding=0)
+            window.setYRange(0, num_neurons)
 
-        window.setXRange(0, end_time / unit, padding=0)
-        window.setYRange(0, num_neurons)
+            window.plot(x=np.asarray(monitor.t / unit)[start_ind:end_ind] - np.array(monitor.t / unit)[start_ind],
+                        y=np.asarray(monitor.i)[start_ind:end_ind],
+                        pen=None, symbol='o', symbolPen=None,
+                        symbolSize=7, symbolBrush=colors[1])
+            window.setLabel('left', "Neuron ID", **labelStyle)
+            window.setLabel('bottom', 'Time ({})'.format(str(unit)), **labelStyle)
+            b = QtGui.QFont("Sans Serif", 10)
+            window.getAxis('bottom').tickFont = b
+            window.getAxis('left').tickFont = b
 
-        window.plot(x=np.asarray(monitor.t / unit)[start_ind:end_ind] - np.array(monitor.t / unit)[start_ind],
-                    y=np.asarray(monitor.i)[start_ind:end_ind],
-                    pen=None, symbol='o', symbolPen=None,
-                    symbolSize=7, symbolBrush=colors[1])
-        window.setLabel('left', "Neuron ID", **labelStyle)
-        window.setLabel('bottom', 'Time ({})'.format(str(unit)), **labelStyle)
-        b = QtGui.QFont("Sans Serif", 10)
-        window.getAxis('bottom').tickFont = b
-        window.getAxis('left').tickFont = b
+    else:
+        print("monitor is empty")
 
     return window
 

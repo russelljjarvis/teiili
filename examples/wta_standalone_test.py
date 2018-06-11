@@ -34,19 +34,6 @@ if run_as_standalone:
     device.activate(directory=standaloneDir, build_on_run=False)
     prefs.devices.cpp_standalone.openmp_threads = 4
 
-
-def gaussian(x,mu,sig):
-    return np.exp(-((mu - x)**2) / (2 * sig**2))
-
-
-def objective_function(par,data):
-    mu = par[0]
-    sig = par[1]
-    ampl = par[2]
-    gauss = ampl*gaussian(x,mu,sig)
-    mse = np.mean([(h-g)**2 for h,g in zip(data,gauss)])
-    return mse
-
 num_neurons = 50
 num_input_neurons = num_neurons
 
@@ -95,6 +82,7 @@ if run_as_standalone:
     Net.build()
 
 #%%
+#parameters are nonsense, please find good ones!
 standaloneParams=OrderedDict([('duration', 0.5 * second),
              ('stestWTA_e_latWeight', 400),#280),
              ('stestWTA_e_latSigma', 2),

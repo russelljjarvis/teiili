@@ -537,3 +537,5 @@ def plotWTA(wta_monitors, name, start_time, end_time, plot_states=True):
                          variable="Iin", unit=pA, window=state_syn_input, name=name)
 
     app.exec()
+
+    return win_raster

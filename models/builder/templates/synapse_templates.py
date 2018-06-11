@@ -396,8 +396,9 @@ alpha_kernel = {'model': '''
              ''',
 
                 'on_pre': '''
-
              t_spike = 0 * ms
+             %Ie_syn += 0 * amp
+             %Ii_syn += 0 * amp
              ''',
 
                 'on_post': ''' '''}
@@ -405,7 +406,8 @@ alpha_kernel = {'model': '''
 alpha_params_current = {"tausyne": 2 * ms,
                         "tausyni": 2 * ms,
                         "tausyne_rise": 0.5 * ms,
-                        "tausyni_rise": 0.5 * ms}
+                        "tausyni_rise": 0.5 * ms,
+                        "t_spike": 5000 * ms } # Assuming that last spike has occurred long time ago 
 
 alpha_params_conductance = {"tausyne": 2 * ms,
                             "tausyni": 2 * ms,

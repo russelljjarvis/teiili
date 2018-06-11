@@ -71,37 +71,40 @@ v_expCurrent = {'model': """
                 'threshold': '',
                 'reset': ''}
 
-# quadratic current (see Izhikevic Model)
+# quadratic current (see Izhikevich Model)
 v_quad_current = {'model': """
             #quadratic
-            %Iexp = k*(Vm - VR)(Vm - VT) : amp
-            %dIadapt/dt = a*(b*(Vm - VR) - Iadapt : amp
+            %Iexp = k*(Vm - VR)*(Vm - VT) : amp
+            %dIadapt/dt = -(gAdapt*(EL - Vm) + Iadapt)/tauIadapt : amp #dIadapt/dt = a*(b*(Vm - VR) - Iadapt) : amp
+            %tauIadapt = 1.0/a  : second    (shared)        # adaptation time constant
+            %gAdapt = b         : siemens   (shared)        # adaptation decay parameter
+            %wIadapt = d         : amp      (shared)        # adaptation weight
+            EL = VR : volt
             VT      : volt                (shared, constant)        # V threshold
             VR      : volt                (shared, constant)        # V rest
-            k       : siemens             (shared, constant)        # slope factor
+            k       : siemens * volt **-1 (shared, constant)        # slope factor
             a       : second **-1         (shared, constant)        # recovery time constant
             b       : siemens             (shared, constant)        # 1/Rin
             c       : volt                (shared, constant)        # potential reset value
-            d       : volt * second **-1  (shared, constant)        # outward minus inward currents 
+            d       : amp                 (shared, constant)        # outward minus inward currents 
                                                                     # activated during the spike 
                                                                     # and affecting the after-spike 
                                                                     # behavior
             %Vthr = VT : volt  (shared)
             %Vres = VR : volt  (shared)
             """,
-                'threshold': '',
-                'reset': """%Vm = c
-                Iadapt += d"""}
+                  'threshold': '',
+                  'reset': "%Vm = c; Iadapt += wIadapt;"}
 
 v_quad_params = {
     "Cm": 250.0 * pF,
     "VR": -60.0 * mV,
     "VT": -20.0 * mV,
-    "k":  2.5  * nS, # k = 1/Rin Nicola&Clopath2017
     "a": 0.01 / ms, # Nicola&Clopath2017
-    "b": 0.0 / ms, # Nicola&Clopath2017
+    "b": 0.0 * nS, # Nicola&Clopath2017
     "c": -65 * mV, # Nicola&Clopath2017
-    "d": 200 * mV/ms}  # Nicola&Clopath2017
+    "d": 200 * pA,  # Nicola&Clopath2017
+    "k":  2.5  * nS / mV} # k = 1/Rin Nicola&Clopath2017
 
 v_expCurrent_params = {"gL" : 4.3 * nS,
                        "DeltaT": 2 * mV,

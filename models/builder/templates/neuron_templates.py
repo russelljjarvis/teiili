@@ -71,6 +71,11 @@ v_exp_current = {'model': """
                 'threshold': '',
                 'reset': ''}
 
+v_exp_current_params = {"gL" : 4.3 * nS,
+                       "DeltaT": 2 * mV,
+                       "VT": -50.4 * mV
+                       }
+
 # quadratic current (see Izhikevich Model)
 v_quad_current = {'model': """
             #quadratic
@@ -85,9 +90,9 @@ v_quad_current = {'model': """
             a       : second **-1         (shared, constant)        # recovery time constant
             b       : siemens             (shared, constant)        # 1/Rin
             c       : volt                (shared, constant)        # potential reset value
-            d       : amp                 (shared, constant)        # outward minus inward currents 
-                                                                    # activated during the spike 
-                                                                    # and affecting the after-spike 
+            d       : amp                 (shared, constant)        # outward minus inward currents
+                                                                    # activated during the spike
+                                                                    # and affecting the after-spike
                                                                     # behavior
             %Vthr = VT : volt  (shared)
             %Vres = VR : volt  (shared)
@@ -105,10 +110,7 @@ v_quad_params = {
     "d": 200 * pA,  # Nicola&Clopath2017
     "k":  2.5  * nS / mV} # k = 1/Rin Nicola&Clopath2017
 
-v_exp_current_params = {"gL" : 4.3 * nS,
-                       "DeltaT": 2 * mV,
-                       "VT": -50.4 * mV
-                       }
+
 # leak
 v_leak = {'model': """
           %Ileak = -gL*(Vm - EL) : amp

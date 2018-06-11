@@ -62,3 +62,7 @@ if __name__ == '__main__':
 
     dpi = DPI()
     dpi.export_eq(os.path.join(path, "DPI"))
+
+    izhikevich = Izhikevich()
+    izhikevich.export_eq(os.path.join(path, "Izhikevich"))
+

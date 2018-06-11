@@ -21,9 +21,12 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
 
 from teili.core.groups import Neurons, Connections
 from teili import teiliNetwork
-from teili.models.neuron_models import DPI
-from teili.models.synapse_models import DPISyn
-from teili.models.parameters.dpi_neuron_param import parameters as DPIparam
+# from teili.models.neuron_models import DPI as neuron_model
+# from teili.models.synapse_models import DPISyn as syn_model
+# from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
+from teili.models.neuron_models import Izhikevich as neuron_model
+from teili.models.synapse_models import DoubleExponential as syn_model
+from teili.models.parameters.izhikevich_param import parameters as neuron_model_param
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us
@@ -36,41 +39,57 @@ gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
 
 Net = teiliNetwork()
 
-testNeurons = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron")
+testNeurons = Neurons(2, equation_builder=neuron_model(num_inputs=2), name="testNeuron")
 # Example of how to set parameters, saved as a dictionary
-testNeurons.set_params(DPIparam)
+testNeurons.set_params(neuron_model_param)
 testNeurons.refP = 3 * ms
 
-testNeurons2 = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron2")
+testNeurons2 = Neurons(2, equation_builder=neuron_model(num_inputs=2), name="testNeuron2")
+testNeurons2.set_params(neuron_model_param)
 testNeurons2.refP = 3 * ms
 
 
-InpSyn = Connections(gInpGroup, testNeurons, equation_builder=DPISyn(), name="testSyn", verbose=False)
+InpSyn = Connections(gInpGroup, testNeurons, equation_builder=syn_model(), name="testSyn", verbose=False)
 InpSyn.connect(True)
 
-InpSyn.weight = 10
-Syn = Connections(testNeurons, testNeurons2, equation_builder=DPISyn(), name="testSyn2")
+Syn = Connections(testNeurons, testNeurons2, equation_builder=syn_model(), name="testSyn2")
 Syn.connect(True)
 
 # you can change all the parameters like this after creation of the neurongroup:
-Syn.weight = 100
+if 'Imem' in neuron_model().keywords['model']:
+    InpSyn.weight = 10
+    Syn.weight = 100
 
-# Example of how to set single parameters, rather than using an entire dictionary
-testNeurons.Iconst = 10 * nA
-# testNeurons2.Itau = 13 * pA
-# testNeurons2.Iath = 80 * pA
-# testNeurons2.Iagain = 20 * pA
-# testNeurons2.Ianorm = 8 * pA
+    # Example of how to set single parameters, rather than using an entire dictionary
+    testNeurons.Iconst = 10 * nA
+    # testNeurons2.Itau = 13 * pA
+    # testNeurons2.Iath = 80 * pA
+    # testNeurons2.Iagain = 20 * pA
+    # testNeurons2.Ianorm = 8 * pA
+elif 'Vm' in neuron_model().keywords['model']:
+    InpSyn.weight = 1.5
+    Syn.weight = 8.0
+    # Example of how to set single parameters, rather than using an entire dictionary
+    testNeurons.Iconst = 3 * nA
 
 spikemonInp = SpikeMonitor(gInpGroup, name='spikemonInp')
 spikemon = SpikeMonitor(testNeurons, name='spikemon')
 spikemonOut = SpikeMonitor(testNeurons2, name='spikemonOut')
 statemonInpSyn = StateMonitor(
     InpSyn, variables='Ie_syn', record=True, name='statemonInpSyn')
-statemonNeuOut = StateMonitor(testNeurons2, variables=[
-                              'Imem'], record=0, name='statemonNeuOut')
-statemonNeuIn = StateMonitor(testNeurons, variables=[
+if 'Imem' in neuron_model().keywords['model']:
+    statemonNeuOut = StateMonitor(testNeurons2,
+                                  variables=['Imem'],
+                                  record=0, name='statemonNeuOut')
+    statemonNeuIn = StateMonitor(testNeurons, variables=[
                              "Iin", "Imem", "Iahp"], record=[0, 1], name='statemonNeu')
+elif 'Vm' in neuron_model().keywords['model']:
+    statemonNeuOut = StateMonitor(testNeurons2,
+                                  variables=['Vm'],
+                                  record=0, name='statemonNeuOut')
+    statemonNeuIn = StateMonitor(testNeurons, variables=[
+                             "Iin", "Vm", "Iadapt"], record=[0, 1], name='statemonNeu')
+
 statemonSynOut = StateMonitor(
     Syn, variables='Ie_syn', record=True, name='statemonSynOut')
 
@@ -120,9 +139,14 @@ for i, data in enumerate(np.asarray(statemonInpSyn.Ie_syn)):
             pen=pg.mkPen(colors[3], width=2), name=name)
 
 # Intermediate neurons
-for i, data in enumerate(np.asarray(statemonNeuIn.Imem)):
-    p3.plot(x=np.asarray(statemonNeuIn.t / ms), y=data,
-            pen=pg.mkPen(colors[6], width=2))
+if hasattr(statemonNeuIn,'Imem'):
+    for i, data in enumerate(np.asarray(statemonNeuIn.Imem)):
+        p3.plot(x=np.asarray(statemonNeuIn.t / ms), y=data,
+                pen=pg.mkPen(colors[6], width=2))
+if hasattr(statemonNeuIn,'Vm'):
+    for i, data in enumerate(np.asarray(statemonNeuIn.Vm)):
+        p3.plot(x=np.asarray(statemonNeuIn.t / ms), y=data,
+                pen=pg.mkPen(colors[6], width=2))
 
 # Output synapses
 for i, data in enumerate(np.asarray(statemonSynOut.Ie_syn)):
@@ -130,9 +154,14 @@ for i, data in enumerate(np.asarray(statemonSynOut.Ie_syn)):
     p4.plot(x=np.asarray(statemonSynOut.t / ms), y=data,
             pen=pg.mkPen(colors[1], width=2), name=name)
 
-for data in np.asarray(statemonNeuOut.Imem):
-    p6.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
-            pen=pg.mkPen(colors[5], width=3))
+if hasattr(statemonNeuOut,'Imem'):
+    for data in np.asarray(statemonNeuOut.Imem):
+        p6.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
+                pen=pg.mkPen(colors[5], width=3))
+if hasattr(statemonNeuOut,'Vm'):
+    for data in np.asarray(statemonNeuOut.Vm):
+        p6.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
+                pen=pg.mkPen(colors[5], width=3))
 
 p5.plot(x=np.asarray(spikemonOut.t / ms), y=np.asarray(spikemonOut.i),
         pen=None, symbol='o', symbolPen=None,
@@ -142,11 +171,12 @@ p1.setLabel('left', "Neuron ID", **labelStyle)
 p1.setLabel('bottom', "Time (ms)", **labelStyle)
 p2.setLabel('left', "Synaptic current", units='A', **labelStyle)
 p2.setLabel('bottom', "Time (ms)", **labelStyle)
-p3.setLabel('left', "Membrane current Imem", units="A", **labelStyle)
+i_current_name = 'Imem' if 'Imem' in neuron_model().keywords['model'] else 'Vm'
+p3.setLabel('left', "Membrane current %s"%i_current_name, units="A", **labelStyle)
 p3.setLabel('bottom', "Time (ms)", **labelStyle)
 p4.setLabel('left', "Synaptic current I_e", units="A", **labelStyle)
 p4.setLabel('bottom', "Time (ms)", **labelStyle)
-p6.setLabel('left', "Membrane current I_mem", units="A", **labelStyle)
+p6.setLabel('left', "Membrane current %s"%i_current_name, units="A", **labelStyle)
 p6.setLabel('bottom', "Time (ms)", **labelStyle)
 p5.setLabel('left', "Neuron ID", **labelStyle)
 p5.setLabel('bottom', "Time (ms)", **labelStyle)

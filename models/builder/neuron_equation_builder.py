@@ -2,7 +2,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-12 11:34:34
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 15:41:28
+# @Last Modified time: 2018-06-11 18:16:20
 
 """
 This file contains a class that manages a neuron equation.
@@ -139,7 +139,7 @@ class NeuronEquationBuilder():
         This allows the user to call the object with the num_inputs argument, like it is done with the class
         Maybe this use is a bit confusing, but it may be convenient.
         """
-        builder_copy =  copy.deepcopy(self)
+        builder_copy = copy.deepcopy(self)
         builder_copy.add_input_currents(num_inputs)
         return builder_copy
 
@@ -156,17 +156,20 @@ class NeuronEquationBuilder():
         inputcurrent_i_pattern = re.compile("Ii\d+ : amp")
         model = self.keywords['model'].split('\n')
         for line in self.keywords['model'].split('\n'):
-            if " Iin = " in line:
+            if "Iin =" in line or "Iin=" in line:
                 model.remove(line)
-                print(
-                    'previously added input currents were removed, following lines deleted:')
-                print(line)
+                if self.verbose:
+                    print(
+                        'previously added input currents were removed, following lines deleted:')
+                    print(line)
             elif inputcurrent_e_pattern.search(line) is not None:
-                print(line)
+                if self.verbose:
+                    print(line)
                 model.remove(line)
             elif inputcurrent_i_pattern.search(line) is not None:
                 model.remove(line)
-                print(line)
+                if self.verbose:
+                    print(line)
 
         self.keywords['model'] = '\n'.join(model)
 
@@ -245,9 +248,10 @@ class NeuronEquationBuilder():
         num_inputs is used to add additional input currents that are used
         for different synapses that are summed
         '''
-        #if only the filename without path is given, we assume it is one of the predefined models
+        # if only the filename without path is given, we assume it is one of
+        # the predefined models
         if os.path.dirname(filename) is "":
-            filename = os.path.join('teili','models','equations',filename)
+            filename = os.path.join('teili', 'models', 'equations', filename)
 
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))

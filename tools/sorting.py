@@ -4,7 +4,7 @@
 # @Author: Moritz Milde
 # @Date:   2018-06-05 11:09:20
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 16:30:54
+# @Last Modified time: 2018-06-11 18:11:24
 
 import numpy as np
 from tkinter import filedialog
@@ -38,24 +38,26 @@ class SortMatrix():
     Attributes:
         filename (str, optional): path/to/matrix/name.npy
         matrix (ndarray, optional): matrix as provided by load_matrix
-        nrows (int, required): number of rows of the 2d array
         ncols (int, optional): number of columns of the 2d array
+        nrows (int, required): number of rows of the 2d array
         permutation (list): List of indices which are more similar to each other
             in (euclidean) distance
         similarity_matrix (ndarray, optional): Matrix containing similarities
         sorted_matrix (TYPE): Sorted matrix according to permutation
     """
 
-    def __init__(self, nrows, ncols=None, filename=None, axis=0):
+    def __init__(self, nrows, ncols=None, filename=None, matrix=None, axis=0):
         """Summary
 
         Args:
             nrows (int, required): number of rows of the 2d array
             ncols (int, optional): number of columns of the 2d array
             filename (str, optional): path/to/matrix/name.npy
+            matrix (ndarray, optional): Instead of providing filename and location
+                one can also pass the matrix to sort directly to the class
             axis (int, optional): Axis along which similarity should be computed
 
-        Raises:
+        No Longer Raises:
             UserWarning: In case you did not specify ncols, the Class assumes that the
                 matrix is squared
         """
@@ -68,7 +70,10 @@ class SortMatrix():
 
         self.filename = filename
         # Load reshaped matrix. Dimensions are specified via nrwos, ncols
-        self.matrix = self.load_matrix()
+        if matrix is None:
+            self.matrix = self.load_matrix()
+        elif matrix is not None:
+            self.matrix = matrix
         # Compute similarity along specified axis
         self.similarity_matrix = self.get_similarity_matrix(axis=axis)
         # Get permutation along specified axis
@@ -101,7 +106,7 @@ class SortMatrix():
             y (ndarray, required): 1d vector
 
         Returns:
-            TYPE: Element-wise euclidean distance of 2 1d vectors
+            ndarray: Element-wise euclidean distance of 2 1d vectors
         '''
         return np.linalg.norm(x - y)
 
@@ -115,7 +120,6 @@ class SortMatrix():
         Returns:
             ndarray: Matrix containing similarities
         '''
-        # Load matrix if it not given
 
         self.similarity_matrix = np.zeros(
             (np.size(self.matrix, axis), np.size(self.matrix, axis))) * np.nan
@@ -152,7 +156,7 @@ class SortMatrix():
             axis (int, optional): Axis along which similarity should be computed
 
         Returns:
-            TYPE: Vector of permuted indices
+            list: Vector of permuted indices
         '''
         similarity_matrix = np.array(self.similarity_matrix)
         steps = []
@@ -225,7 +229,7 @@ class SortMatrix():
         the permutation indices.
 
         Returns:
-            TYPE: Description
+            ndarray: Sorted matrix according to similarity in euclidean distance
         '''
         if len(self.permutation) == 0:
             self.permutation = self.get_permutation(matrix=self.matrix)

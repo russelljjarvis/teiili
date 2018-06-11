@@ -213,7 +213,7 @@ class Neurons(NeuronGroup, TeiliGroup):
             key (TYPE): key of attribute to be set
             value (TYPE): value of respective key to be set
         """
-        print('set', key, 'to', value)
+        #print('set', key, 'to', value)
         NeuronGroup.__setattr__(self, key, value)
         if hasattr(self, 'name'):
             if key in self.standalone_vars and not isinstance(value, str):

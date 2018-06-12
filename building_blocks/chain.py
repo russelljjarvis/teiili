@@ -2,7 +2,7 @@
 # @Author: Alpha Renner
 # @Date:   2018-06-01 18:45:19
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-12 17:43:10
+# @Last Modified time: 2018-06-12 17:44:04
 
 """
 This is a simple syn-fire chain of neurons
@@ -54,7 +54,7 @@ class Chain(BuildingBlock):
     """
 
     def __init__(self, name, neuron_eq_builder=ExpAdaptIF(1),
-                 synapse_eq_builder=reversalSynV(),
+                 synapse_eq_builder=ReversalSynV(),
                  block_params=chain_params,
                  num_inputs=1, debug=False):
         """Summary
@@ -132,7 +132,7 @@ class Chain(BuildingBlock):
 
 def gen_chain(groupname='Cha',
               neuron_eq_builder=ExpAdaptIF(1),
-              synapse_eq_builder=reversalSynV(),
+              synapse_eq_builder=ReversalSynV(),
               num_chains=4,
               num_neurons_per_chain=15,
               num_inputs=1,

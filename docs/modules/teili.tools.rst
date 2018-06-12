@@ -28,14 +28,6 @@ teili.tools.distance module
     :undoc-members:
     :show-inheritance:
 
-teili.tools.generateConnectionMatrix module
--------------------------------------------
-
-.. automodule:: teili.tools.generateConnectionMatrix
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 teili.tools.indexing module
 ---------------------------
 

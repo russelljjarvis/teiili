@@ -3,7 +3,7 @@
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-15 17:53:31
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-12 18:12:59
+# @Last Modified time: 2018-06-12 18:15:41
 """
 This file contains a class that manages a synapse equation.
 
@@ -49,10 +49,6 @@ class SynapseEquationBuilder():
             plasticity (str, optional): Plasticity algorithm for the synaptic weight. Can either be
                 'non_plastic', 'fusi' or 'stdp'
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder
-
-        Deleted Parameters:
-            model (dict, optional): Brian2 model composed of model eq, on-pre eq,
-                on-post eq, parameter dicionary
         """
 
         self.verbose = verbose

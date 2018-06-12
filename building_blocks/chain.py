@@ -2,7 +2,7 @@
 # @Author: Alpha Renner
 # @Date:   2018-06-01 18:45:19
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 11:17:21
+# @Last Modified time: 2018-06-12 17:43:10
 
 """
 This is a simple syn-fire chain of neurons
@@ -21,7 +21,7 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     defaultclock, SpikeGeneratorGroup
 
 from teili.models.neuron_models import ExpAdaptIF
-from teili.models.synapse_models import reversalSynV
+from teili.models.synapse_models import ReversalSynV
 
 from teili.BuildingBlocks.BuildingBlock import BuildingBlock
 from teili.Groups.Groups import Neurons, Connections

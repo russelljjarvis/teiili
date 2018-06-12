@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+"""Summary
+"""
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 14:23:30
+# @Last Modified time: 2018-06-12 18:21:55
 # @EMail: mmilde@ini.uzh.ch
 """
 This class holds different pre-defined testbench stimuli.
@@ -22,7 +24,6 @@ import pyqtgraph as pg
 
 
 class STDP_Testbench():
-
     """This class provides a stimulus to test your spike-time depenendent plasticity algorithm.
 
     Attributes:
@@ -41,7 +42,8 @@ class STDP_Testbench():
         self.stimulus_length = stimulus_length
 
     def stimuli(self, isi=10):
-        """
+        """Stimulus gneration for STDP protocols
+
         This function returns two brian2 objects.
         Both are Spikegeneratorgroups which hold a single index each
         and varying spike times.
@@ -86,7 +88,6 @@ class STDP_Testbench():
 
 
 class OCTA_Testbench():
-
     """This class holds all relevant stimuli to test modules provided with the
     Online Clustering of Temporal Activity (OCTA) framework.
 
@@ -94,10 +95,13 @@ class OCTA_Testbench():
         angles (numpy.ndarray): List of angles of orientation
         DVS_SHAPE (TYPE): Input shape of the simulated DVS/DAVIS vision sensor
         end (TYPE): End pixel location of the line
+        events (TYPE): Description
+        indices (TYPE): Description
         line (TYPE): Stimulus of the testbench which is used to either generate an interactive
             plot to record stimulus with a DVS/DAVIS camera or coordinates are used to generate
             a SpikeGenerator
         start (TYPE): Start pixel location of the line
+        times (list): Description
     """
 
     def __init__(self, DVS_SHAPE=(240, 180)):
@@ -111,6 +115,7 @@ class OCTA_Testbench():
 
     def aedat2events(self, rec, camera='DVS128'):
         """Wrapper function of the original aedat2numpy function in teili.tools.converter.
+
         This function will save events for later usage and will directly return them if no
         SpikeGeneratorGroup is needed.
 
@@ -158,6 +163,7 @@ class OCTA_Testbench():
                      angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None,
                      noise_probability=None, repetitions=1, debug=False):
         """This function returns a single spikegenerator group (Brian object).
+
         The scope of this function is to provide a simple test stimulus.
         A bar is rotating in the center. The goal is to learn necessary
         spatio-temporal features of the moving bar and be able to make predictions
@@ -174,6 +180,8 @@ class OCTA_Testbench():
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
             rec_path (str, optional): Path to aedat recording, only used if arificial_stimulus=False
             save_path (str, optional): Path to store generated events
+            noise_probability (None, optional): Description
+            repetitions (int, optional): Description
             debug (bool, optional): Description
 
         Returns:
@@ -548,8 +556,8 @@ class WTA_Testbench():
 
     Attributes:
         indices (numpy.ndarray): Array with neuron indices
-        times (numpy.ndarray): Array with neuron spike timestimes
         noise_input (brian2.PoissonGroup): PoissonGroup which provides noise events
+        times (numpy.ndarray): Array with neuron spike timestimes
     """
 
     def __init__(self):
@@ -563,13 +571,16 @@ class WTA_Testbench():
 
         Args:
             num_neurons (int, optional): 1D size of WTA population
-            dimension (int, optional): Dimension of WTA. Can either be 1 or 2
+            dimensions (int, optional): Description
             start_time (int, optional): Description
             end_time (int, optional): Description
             isi (int, optional): Description
 
         Raises:
             NotImplementedError: If dimension is set larger than 2 error is raised
+
+        Deleted Parameters:
+            dimension (int, optional): Dimension of WTA. Can either be 1 or 2
 
         """
         self.times = np.arange(start_time, end_time + 1, isi)
@@ -596,13 +607,21 @@ class WTA_Testbench():
 
 class Visualize():
 
-    """Summary
+    """This class will soon be obsolete!!!
 
     Attributes:
+        app (TYPE): Description
+        events (TYPE): Description
+        start (int): Description
+        stim (TYPE): Description
+        time_window (TYPE): Description
+        timer (TYPE): Description
+        win (TYPE): Description
+
+    Deleted Attributes:
         colors (TYPE): Description
         event_plot (TYPE): Description
         labelStyle (dict): Description
-        win (TYPE): Description
     """
 
     def __init__(self):
@@ -665,6 +684,8 @@ class Visualize():
         self.app.exec_()
 
     def update(self):
+        """Summary
+        """
         global event_plot
         c_ind_ts = np.logical_and(self.events[2, :] >= self.start, self.events[
                                   2, :] <= self.start + self.time_window)

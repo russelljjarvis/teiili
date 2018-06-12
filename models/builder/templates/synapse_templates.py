@@ -2,7 +2,7 @@
 # @Author: Moritz Milde
 # @Date:   2018-06-01 11:57:02
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 16:00:36
+# @Last Modified time: 2018-06-12 18:17:51
 
 """This file contains dictionaries of neuron synapse or modules,
    combined by the synapse equation builder.
@@ -40,16 +40,8 @@ Modules:
     template (TYPE): Description
 """
 from brian2 import pF, nS, mV, ms, pA, nA, volt, second
-'''
-##########################################################################
-#######_____TEMPLATE MODEL AND PARAMETERS_____############################
-##########################################################################
 
-none model is useful when adding exponential kernel and non_plasticity at
-the synapse as they already present in the template model
-'''
 none = {'model': ''' ''', 'on_pre': ''' ''', 'on_post': ''' '''}
-
 
 current = {'model': '''
             dIe_syn/dt = (-Ie_syn) / tausyne + kernel_e: amp (clock-driven)
@@ -251,10 +243,8 @@ dpi_shunt_params = {
 }
 
 
-'''
-##########################################################################
-#######_____ADDITIONAL EQUATIONS BLOCKS AND PARAMETERS_____###############
-##########################################################################
+'''ADDITIONAL EQUATIONS BLOCKS AND PARAMETERS
+
 Every block must specify additional model, pre- and post-spike equations, as well as
 two different sets (dictionaries) of parameters for conductance based
 models or current models.
@@ -377,8 +367,7 @@ stdp_para_conductance = {"baseweight_e": 7 * nS,  # should we find a way to repl
                          "diffApre": 0.01,
                          "Q_diffAPrePost": 1.05,
                          "w_plast": 0}
-'''
-Kernels Blocks:
+'''Kernels Blocks:
 
 You need to declare two set of parameters for every block: one for
 current based models and one for conductance based models.
@@ -407,7 +396,7 @@ alpha_params_current = {"tausyne": 2 * ms,
                         "tausyni": 2 * ms,
                         "tausyne_rise": 0.5 * ms,
                         "tausyni_rise": 0.5 * ms,
-                        "t_spike": 5000 * ms } # Assuming that last spike has occurred long time ago 
+                        "t_spike": 5000 * ms}  # Assuming that last spike has occurred long time ago
 
 alpha_params_conductance = {"tausyne": 2 * ms,
                             "tausyni": 2 * ms,
@@ -469,8 +458,7 @@ gaussian_params_conductance = {"sigma_gaussian_e": 6 * ms,
 
 none_params = {}
 
-'''
-Dictionary of keywords:
+'''Dictionary of keywords:
 
 These dictionaries contains keyword and models and parameters names useful for the __init__ subroutine
 Every new block dictionaries must be added to these definitions

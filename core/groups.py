@@ -89,6 +89,7 @@ class TeiliGroup(Group):
         """
         for strPar in self.str_params:
             if parname in self.str_params[strPar]:
+                print(strPar, 'set to', self.str_params[strPar])
                 self.__setattr__(strPar, self.str_params[strPar])
 
     def print_equations(self):
@@ -212,6 +213,7 @@ class Neurons(NeuronGroup, TeiliGroup):
             key (TYPE): key of attribute to be set
             value (TYPE): value of respective key to be set
         """
+        #print('set', key, 'to', value)
         NeuronGroup.__setattr__(self, key, value)
         if hasattr(self, 'name'):
             if key in self.standalone_vars and not isinstance(value, str):

@@ -154,6 +154,7 @@ class WTA(BuildingBlock):
 #                end_time = end_time * ms
         win = plotWTA(wta_monitors = self.Monitors, name = self.name,
                 start_time=start_time, end_time=end_time, plot_states=plot_states)
+        self.plot_win = win
         return win
 
 # TODO: Generalize for n dimensions
@@ -481,14 +482,14 @@ def gen2dWTA(groupname,
     return Groups, Monitors, standalone_params
 
 
-def plotWTA(wta_monitors, name, start_time, end_time, plot_states=True):
+def plotWTA(wta_monitors, name, start_time = None, end_time = None, plot_states=True):
     """Function to easily visualize WTA activity.
 
     Args:
         name (str, required): Name of the WTA population
-        start_time (brian2.units.fundamentalunits.Quantity, required): Start time in ms
+        start_time (brian2.units.fundamentalunits.Quantity): Start time in ms
             from when network activity should be plotted.
-        end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
+        end_time (brian2.units.fundamentalunits.Quantity): End time in ms of plot.
             Can be smaller than simulation time but not larger
         wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors
     """

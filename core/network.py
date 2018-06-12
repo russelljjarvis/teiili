@@ -17,7 +17,7 @@ from collections import OrderedDict
 import pprint
 
 from brian2 import Network, second, device, get_device, ms, all_devices
-from brian2 import SpikeMonitor, StateMonitor, NeuronGroup, Synapses
+from brian2 import SpikeMonitor, StateMonitor, NeuronGroup, Synapses, Quantity
 from teili.tools.cpptools import build_cpp_and_replace,\
     print_dict, params2run_args
 from teili.building_blocks.building_block import BuildingBlock
@@ -31,7 +31,7 @@ class teiliNetwork(Network):
     Attributes:
         blocks (list): Description
         hasRun (bool): Flag to indicate if network had been simulated already
-        standaloneParams (dict): Dictionary of standalone parameters
+        standalone_params (dict): Dictionary of standalone parameters
     """
     hasRun = False
 
@@ -67,8 +67,8 @@ class teiliNetwork(Network):
             **kwds: Description
         """
         self.blocks = []
-        self.standaloneParams = OrderedDict()
-        self.standaloneParams['duration'] = 0 * ms
+        self.standalone_params = OrderedDict()
+        self.standalone_params['duration'] = 0 * ms
 
         # Network.__init__(self, *objs, **kwds)
         Network.__init__(self)
@@ -79,10 +79,10 @@ class teiliNetwork(Network):
 
         Args:
             **params (dict, required): Dictionary with parameter to be added to
-                standaloneParamss
+                standalone_paramss
         """
         for key in params:
-            self.standaloneParams[key] = params[key]
+            self.standalone_params[key] = params[key]
 
     def add(self, *objs):
         """does the same thing as Network.add (adding Groups to the Network)
@@ -99,15 +99,15 @@ class teiliNetwork(Network):
                 print('added to network building blocks: ', obj)
 
             try:
-                # add all standaloneParams from BBs, neurons and synapses
-                # to Network.standaloneParams
-                self.standaloneParams.update(obj.standaloneParams)
+                # add all standalone_params from BBs, neurons and synapses
+                # to Network.standalone_params
+                self.standalone_params.update(obj.standalone_params)
             except AttributeError:
                 pass
 
     def build(self, report="stdout", report_period=10 * second,
               namespace=None, profile=True, level=0, recompile=False,
-              standaloneParams=None, clean=True):
+              standalone_params=None, clean=True):
         """Building the network
 
         Args:
@@ -120,7 +120,7 @@ class teiliNetwork(Network):
             recompile (bool, optional): Flag to indicate if network should rather be recompiled
                 than used based on a prior build. Set this to False if you want to only change
                 parameters rather than network topology
-            standaloneParams (dict, optional): Dictionary with standalone parametes which
+            standalone_params (dict, optional): Dictionary with standalone parametes which
                 should be changed
             clean (bool, optional): Flag to clean-up standalone directory
         """
@@ -132,27 +132,27 @@ class teiliNetwork(Network):
                             namespace=namespace, profile=profile, level=level + 1)
                 teiliNetwork.hasRun = True
 
-                if standaloneParams is None:
-                    standaloneParams = self.standaloneParams
+                if standalone_params is None:
+                    standalone_params = self.standalone_params
 
-                build_cpp_and_replace(standaloneParams, get_device(
+                build_cpp_and_replace(standalone_params, get_device(
                 ).build_options['directory'], clean=clean)
             else:
-                print("""Network was not recompiled, standaloneParams are changed,
+                print("""Network was not recompiled, standalone_params are changed,
                       but Network structure is not!
                       This might lead to unexpected behavior.""")
         else:
             print('Network was compiled; as you have not set the device to \
                   cpp_standalone, you can still run() it using numpy code generation')
 
-    def run(self, duration=None, standaloneParams=dict(), **kwargs):
+    def run(self, duration=None, standalone_params=dict(), **kwargs):
         """Wrapper function to simulate a network given the duration time.
         Parameters which should be changeable especially after cpp compilation need to
-        be provided to standaloneParams
+        be provided to standalone_params
 
         Args:
             duration (brain2.unit, optional): Simulation time in ms, i.e. 100 * ms
-            standaloneParams (dict, optional): Dictionary whichs keys refer to parameters
+            standalone_params (dict, optional): Dictionary whichs keys refer to parameters
                 which should be changeable in cpp standalone mode
             **kwargs (optional): addtional keyword arguments
         """
@@ -169,16 +169,16 @@ class teiliNetwork(Network):
                 print('building network, as you have set build_on_run = True')
                 self.build(**kwargs)
 
-            if standaloneParams == {}:
-                standaloneParams = self.standaloneParams
+            if standalone_params == {}:
+                standalone_params = self.standalone_params
 
             if duration is not None:
-                standaloneParams['duration'] = duration
+                standalone_params['duration'] = duration
 
             startSim = time.time()
             # run simulation
-            print_dict(standaloneParams)
-            run_args = params2run_args(standaloneParams)
+            print_dict(standalone_params)
+            run_args = params2run_args(standalone_params)
             directory = os.path.abspath(
                 get_device().build_options['directory'])
             if not os.path.isdir(directory):
@@ -194,9 +194,9 @@ class teiliNetwork(Network):
 
         else:
             if duration is not None:
-                standaloneParams['duration'] = duration
+                standalone_params['duration'] = duration
             else:
-                duration = standaloneParams['duration']
+                duration = standalone_params['duration']
 
             Network.run(self, duration=duration, **kwargs)
 
@@ -211,4 +211,5 @@ class teiliNetwork(Network):
         """This functions prints all standalone parameters (cpp standalone network)
         """
         pprinter = pprint.PrettyPrinter()
-        pprinter.pprint(self.standaloneParams)
+        pprinter.pprint(self.standalone_params)
+

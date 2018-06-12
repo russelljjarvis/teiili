@@ -1,5 +1,3 @@
-
-
 """
 This file contains a set of functions used by the library to combine models.
 
@@ -9,7 +7,6 @@ Combine_syn_dict is used for combining neuron models
 
 Both functions use the var_replacer when the special overwrite character '%'
 is found in the equations
-
 """
 
 
@@ -21,17 +18,16 @@ def combine_neu_dict(eq_templ, param_templ):
     function with the use of the special character '%'.
     Example with two different dictionaries both containing the explicit function
     for the variable 'x':
-        eq in the former argument: x = theta
-        eq in the latter argument: %x = gamma
-        eq in the output : x = gamma
+    1) The former argument: x = theta
+    2) The latter argument: %x = gamma
+    3) The output : x = gamma
     '%x' without any assignment will simply delete the variable from the output
     and from the parameter dictionary.
 
     Args:
-        *args: 2n dictionaries. The first n subset is composed of the equation
-        templates selected by the builder, the second n subset is composed by
-        the parameters templates for every model block i.e
-        combine_neu_dict(eq_block1, eq_block2, param_dict1, param_dict2)
+        eq_templ (dict): Dictionary containing different keywords and equations
+        param_templ (dict): Dictionary containing different parameters for the
+            equation
 
     Returns:
         dict: brian2-like dictionary to describe neuron model composed by
@@ -41,6 +37,9 @@ def combine_neu_dict(eq_templ, param_templ):
             reset (string): Dictionary with equations specifying behaviour of synapse to
                 pre-synaptic spike
             parameters (dict): Dictionary of parameters
+
+    Examples:
+        >>> combine_syn_dict(eq_templ, param_templ)
     """
     model = ''
     threshold = ''
@@ -71,25 +70,23 @@ def combine_neu_dict(eq_templ, param_templ):
 
 
 def combine_syn_dict(eq_templ, param_templ):
-
     """Function to combine synapse models into a single synapse model.
     This library offers this ability in order to combine single blocks into bigger
     and more complex Brian2 compatible models.
-    combine_syn_dict also makes it possibile to delete or overwrite an explicit
+    combine_syn_dict also makes it possible to delete or overwrite an explicit
     function with the use of the special character '%'.
     Example with two different dictionaries both containing the explicit function
     for the variable 'x':
-        eq in the former argument: x = theta
-        eq in the latter argument: %x = gamma
-        eq in the output : x = gamma
-    '%x' without any assignement will simply delete the variable from output
+    1) The former argument: x = theta
+    2) The latter argument: %x = gamma
+    3) The output : x = gamma
+    '%x' without any assignment will simply delete the variable from output
     and from the parameter dictionary.
 
     Args:
-        *args: 2n dictionaries. The first n subset is composed of the equation
-        templates selected by the builder, the second n subset is composed by
-        the parameters templates for every model block i.e
-        combine_syn_dict(eq_block1, eq_block2, param_dict1, param_dict2)
+        eq_templ (dict): Dictionary containing different keywords and equations
+        param_templ (dict): Dictionary containing different parameters for the
+            equation
 
     Returns:
         dict: brian2-like dictionary to describe neuron model composed by
@@ -99,13 +96,14 @@ def combine_syn_dict(eq_templ, param_templ):
             on_pre (string): Dictionary with equations specifying behaviour of synapse to
                 pre-synaptic spike
             parameters (dict): Dictionary of parameters
+
+    Examples:
+        >>> combine_syn_dict(eq_templ, param_templ)
     """
     model = ''
     on_pre = ''
     on_post = ''
     params = {}
-    # eq_templ = args[0:int(len(args)/2)]
-    # param_templ = args[int(len(args)/2):]
 
     for k, eq in enumerate(eq_templ):
 
@@ -130,7 +128,6 @@ def combine_syn_dict(eq_templ, param_templ):
 
 
 def var_replacer(first_eq, second_eq, params):
-
     """Function to delete variables from equations and parameters.
     It works with couples of strings and a dict of parameters: first_eq, second_eq and params
     It searches for every line in second_eq for the special character '%' removing it,
@@ -138,18 +135,13 @@ def var_replacer(first_eq, second_eq, params):
     every line in first_eq starting with that variable (every explicit equation).
     If the character '=' or ':' is not in the line containing the variable in second_eq
     the entire line would be erased.
-    Example:
-        '%x = theta' --> 'x = theta'
-        '%x' --> ''
-    This feature allows to remove equations in the template that we don't want to
-    compute by writing '%[variable]' in the other equation blocks.
 
     Args:
         first_eq (string): The first subset of equations that we want to expand or
             overwrite .
         second_eq (string): The second subset of equations which will be added to first_eq
             It also contains '%' for overwriting or erasing lines in first_eq.
-        parameters (dict): The parameter dictionary of the first_eq, var_replacer
+        params (dict): Description
         will remove any variable deleted or replaced with the special character
         '%'
 
@@ -157,7 +149,13 @@ def var_replacer(first_eq, second_eq, params):
         result_first_eq: The first_eq string containing the replaced variable equations
         result_second_eq: The second_eq string without the lines containing the
             special character '%'
-        params: The parameter dictionary not containing the removed/replaced variables
+        params: The parameter dictionary not containing the removed/replaced variables\
+
+    Examples:
+        >>> '%x = theta' --> 'x = theta'
+        >>> '%x' --> ''
+        This feature allows to remove equations in the template that we don't want to
+        compute by writing '%[variable]' in the other equation blocks.
     """
 
     result_first_eq = first_eq.splitlines()

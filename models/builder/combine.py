@@ -47,7 +47,6 @@ def combine_neu_dict(eq_templ, param_templ):
 
     params = {}
     for d in param_templ:
-        #print(d)
         params.update(d)
 
     for k, eq in enumerate(eq_templ):

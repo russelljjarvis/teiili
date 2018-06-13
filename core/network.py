@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Wrapper class for Netwotrk class of brian2.
+
+This wrapper provides a more flexible interface, especially to
+change parameters on the fly after compilation
+
+Todo:
+    * function that plots the whole network
+"""
 # @Author: alpren
 # @Date:   2017-08-2 18:16:28
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 14:12:16
 
-"""
-Wrapper class for Netwotrk class of brian2 to provide a more flexible
-interface, especially to change parameters on the fly after compilation
-"""
-
-# todo function that plots the whole network
 import os
 import time
 from collections import OrderedDict
@@ -24,39 +24,53 @@ from teili.building_blocks.building_block import BuildingBlock
 
 
 class teiliNetwork(Network):
-    """this is a subclass of brian2.Network and does the same thing plus
-    some additional methods for convenience
-    and functionality to allow real time plotting and gui
+    """This is a subclass of brian2.Network.
+
+    This subclass does the same thing plus some additional methods for
+    convenience and functionality to allow real time plotting and gui.
 
     Attributes:
         blocks (list): Description
-        hasRun (bool): Flag to indicate if network had been simulated already
+        has_run (bool): Flag to indicate if network had been simulated already
         standalone_params (dict): Dictionary of standalone parameters
+        thread (TYPE): Description
     """
-    hasRun = False
+    has_run = False
 
     @property
     def spikemonitors(self):
-        '''returns a dictionary of all spikemonitors (e.g. for looping over them)
-        '''
+        """A spikemonitor wrapper.
+
+        Returns:
+            dict: A dictionary of all spikemonitors (e.g. for looping over them)
+        """
         return {att.name: att for att in self.__dict__['objects'] if type(att) == SpikeMonitor}
 
     @property
     def statemonitors(self):
-        '''returns a dictionary of all statemonitors (e.g. for looping over them)
-        '''
+        """A statemonitor wrapper.
+
+        Returns:
+            dict: A dictionary of all statemonitors (e.g. for looping over them)
+        """
         return {att.name: att for att in self.__dict__['objects'] if type(att) == StateMonitor}
 
     @property
     def neurongroups(self):
-        '''returns a dictionary of all neurongroups (e.g. for looping over them)
-        '''
+        """A NeuronGroup wrapper.
+
+        Returns:
+            dict: A dictionary of all neurongroups (e.g. for looping over them)
+        """
         return {att.name: att for att in self.__dict__['objects'] if type(att) == NeuronGroup}
 
     @property
     def synapses(self):
-        '''returns a dictionary of all synapses (e.g. for looping over them)
-        '''
+        """A Synapses wrapper.
+
+        Returns:
+            dict: A dictionary of all synapses (e.g. for looping over them).
+        """
         return {att.name: att for att in self.__dict__['objects'] if type(att) == Synapses}
 
     def __init__(self, *objs, **kwds):
@@ -75,21 +89,23 @@ class teiliNetwork(Network):
 
     def add_standalone_params(self, **params):
         """Function to a add standalone parameter to the standaloneParam dict.
-        These parameters can be changed after building w/o recompiling the network
+
+        These parameters can be changed after building w/o recompiling the network.
 
         Args:
             **params (dict, required): Dictionary with parameter to be added to
-                standalone_paramss
+                standalone_params.
         """
         for key in params:
             self.standalone_params[key] = params[key]
 
     def add(self, *objs):
-        """does the same thing as Network.add (adding Groups to the Network)
-        It furthermore adds the groups to a list for the parameter gui
+        """Does the same thing as Network.add (adding Groups to the Network)
+
+        It furthermore adds the groups to a list for the parameter gui.
 
         Args:
-            *objs: arguments (brian2 objects which should be added to the network)
+            *objs: arguments (brian2 objects which should be added to the network).
         """
         Network.add(self, *objs)
 
@@ -108,29 +124,29 @@ class teiliNetwork(Network):
     def build(self, report="stdout", report_period=10 * second,
               namespace=None, profile=True, level=0, recompile=False,
               standalone_params=None, clean=True):
-        """Building the network
+        """Building the network.
 
         Args:
-            report (bool, optional): Flag to provide more detailed information during run
-            report_period (brian2.unit, optional): how often should be reported (unit time)
-            namespace (None, optional): Description
+            report (bool, optional): Flag to provide more detailed information during run.
+            report_period (brian2.unit, optional): how often should be reported (unit time).
+            namespace (None, optional): Namespace containing all names of the network to be build.
             profile (bool, optional): Flag to enable profiling of the network in terms of
-                executin time, resources etc.
-            level (int, optional): Description
+                executin time, resources etc. .
+            level (int, optional): Description.
             recompile (bool, optional): Flag to indicate if network should rather be recompiled
                 than used based on a prior build. Set this to False if you want to only change
-                parameters rather than network topology
+                parameters rather than network topology.
             standalone_params (dict, optional): Dictionary with standalone parametes which
-                should be changed
-            clean (bool, optional): Flag to clean-up standalone directory
+                should be changed.
+            clean (bool, optional): Flag to clean-up standalone directory.
         """
         if get_device() == all_devices['cpp_standalone']:
-            if recompile or not teiliNetwork.hasRun:
+            if recompile or not teiliNetwork.has_run:
 
                 print('building network...')
                 Network.run(self, duration=0 * ms, report=report, report_period=report_period,
                             namespace=namespace, profile=profile, level=level + 1)
-                teiliNetwork.hasRun = True
+                teiliNetwork.has_run = True
 
                 if standalone_params is None:
                     standalone_params = self.standalone_params
@@ -147,14 +163,15 @@ class teiliNetwork(Network):
 
     def run(self, duration=None, standalone_params=dict(), **kwargs):
         """Wrapper function to simulate a network given the duration time.
+
         Parameters which should be changeable especially after cpp compilation need to
-        be provided to standalone_params
+        be provided to standalone_params.
 
         Args:
-            duration (brain2.unit, optional): Simulation time in ms, i.e. 100 * ms
+            duration (brain2.unit, optional): Simulation time in ms, i.e. 100 * ms.
             standalone_params (dict, optional): Dictionary whichs keys refer to parameters
-                which should be changeable in cpp standalone mode
-            **kwargs (optional): addtional keyword arguments
+                which should be changeable in cpp standalone mode.
+            **kwargs (optional): Additional keyword arguments.
         """
         # kwargs are if you want to use the StandaloneNetwork as a simple brian2
         # network with numpy code generation
@@ -201,6 +218,12 @@ class teiliNetwork(Network):
             Network.run(self, duration=duration, **kwargs)
 
     def run_as_thread(self, duration, **kwargs):
+        """Running network in a thread.
+
+        Args:
+            duration (brain2.unit, optional): Simulation time in ms, i.e. 100 * ms.
+            **kwargs (optional): Additional keyword arguments.
+        """
         import threading
         from functools import partial
         self.thread = threading.Thread(
@@ -208,8 +231,7 @@ class teiliNetwork(Network):
         self.thread.start()
 
     def print_params(self):
-        """This functions prints all standalone parameters (cpp standalone network)
+        """This functions prints all standalone parameters (cpp standalone network).
         """
         pprinter = pprint.PrettyPrinter()
         pprinter.pprint(self.standalone_params)
-

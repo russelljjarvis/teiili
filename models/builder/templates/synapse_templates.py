@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Author: Moritz Milde
-# @Date:   2018-06-01 11:57:02
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-12 18:17:51
-
 """This file contains dictionaries of neuron synapse or modules,
    combined by the synapse equation builder.
 
@@ -38,7 +33,45 @@ Modules:
     stdp_para_conductance (TYPE): Description
     stdp_para_current (TYPE): Description
     template (TYPE): Description
+
+Attributes:
+    alpha_kernel (TYPE): Description
+    alpha_params_conductance (TYPE): Description
+    alpha_params_current (TYPE): Description
+    conductance (TYPE): Description
+    conductance_parameters (TYPE): Description
+    conductance_params (TYPE): Description
+    current (TYPE): Description
+    current_parameters (TYPE): Description
+    current_params (TYPE): Description
+    dpi (TYPE): Description
+    DPI_parameters (TYPE): Description
+    dpi_params (TYPE): Description
+    dpi_shunt (TYPE): Description
+    DPI_shunt_parameters (TYPE): Description
+    dpi_shunt_params (TYPE): Description
+    fusi (TYPE): Description
+    fusi_params_conductance (TYPE): Description
+    fusi_params_current (TYPE): Description
+    gaussian_kernel (TYPE): Description
+    gaussian_params_conductance (TYPE): Description
+    gaussian_params_current (TYPE): Description
+    kernels (TYPE): Description
+    modes (TYPE): Description
+    none (dict): Description
+    none_params (dict): Description
+    plasticity_models (TYPE): Description
+    resonant_kernel (TYPE): Description
+    resonant_params_conductance (TYPE): Description
+    resonant_params_current (TYPE): Description
+    stdp (TYPE): Description
+    stdp_para_conductance (TYPE): Description
+    stdp_para_current (TYPE): Description
 """
+# @Author: Moritz Milde
+# @Date:   2018-06-01 11:57:02
+
+
 from brian2 import pF, nS, mV, ms, pA, nA, volt, second
 
 none = {'model': ''' ''', 'on_pre': ''' ''', 'on_post': ''' '''}

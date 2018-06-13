@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed May 30 13:43:45 2018
-
-@author: alpha
-
-This module provides generic functions that are not yet provided by brian2 including a cpp
+"""This module provides generic functions that are not yet provided by brian2 including a cpp
 implementation.
+
 This is not to be confused with the synaptic kernels that are for conectivity matrix generation (they could/should be used by those!).
 
 the suffix "_cpp" avoids variables being string-replaced by brian2 if the same name
 is used in the network
-
 """
+#Created on Wed May 30 13:43:45 2018
+#@author: alpha
+
 from brian2 import implementation, check_units, declare_types
 import numpy as np
+
 
 @implementation('cpp', '''
     float normal2d_density(float x_cpp, float y_cpp, float mu_x_cpp, float mu_y_cpp,
@@ -35,23 +34,23 @@ import numpy as np
     }
                 ''')
 @declare_types(x='float', y='float', mu_x='float', mu_y='float', sigma_x='float', sigma_y='float',
-               rho='float', result='float', normalized = 'boolean')
-@check_units(x=1, y=1, mu_x = 1, mu_y = 1, sigma_x=1, sigma_y=1, rho=1, normalized = 1, result=1)
-def normal2d_density(x, y, mu_x = 0, mu_y = 0, sigma_x=1, sigma_y=1, rho=0, normalized = True):
+               rho='float', result='float', normalized='boolean')
+@check_units(x=1, y=1, mu_x=1, mu_y=1, sigma_x=1, sigma_y=1, rho=1, normalized=1, result=1)
+def normal2d_density(x, y, mu_x=0, mu_y=0, sigma_x=1, sigma_y=1, rho=0, normalized=True):
     """
     Args:
-        x and y (float):  x and y coordinates
-        mu_x and mu_y (float):  Means of gaussian in x and y dimension
-        ncols, nrows (int): size of the output array
-        sigma_x and sigma_y (float, optional): Standard deviations of gaussian distribution
-        rho (float, optional): correlation coefficient of the 2 variables
+        x, y (float): x and y coordinates.
+        mu_x, mu_y (float): Means of Gaussian in x and y dimension.
+        sigma_x, sigma_y (float, optional): Standard deviations of Gaussian distribution.
+        rho (float, optional): correlation coefficient of the 2 variables.
+        normalized (bool, optional): Description
+
     Returns:
-        TYPE: float
-        normal (probability) density at a specific distance to the mean (dist_x,dist_y) of a 2d distribution
+        float: normal (probability) density at a specific distance to the mean (dist_x,dist_y) of a 2d distribution.
     """
     #print(dist_x, dist_y, sigma_x, sigma_y, rho, normalized )
-    dist_x = x-mu_x
-    dist_y = y-mu_y
+    dist_x = x - mu_x
+    dist_y = y - mu_y
     if normalized:
         f1 = (1 / (2 * np.pi * sigma_x * sigma_y * np.sqrt(1 - rho**2)))
     else:
@@ -61,31 +60,44 @@ def normal2d_density(x, y, mu_x = 0, mu_y = 0, sigma_x=1, sigma_y=1, rho=0, norm
     fy = dist_y / sigma_y
     fxy = 2 * fx * fy * rho
     density = f1 * np.exp(f2 * (fx**2 + fy**2 - fxy))
-    #print(density)
+    # print(density)
     return density
-
-
-
 
 
 # Did not add a cpp implementation, as we usually can't work with arrays anyway
 @implementation('numpy', discard_units=True)
 @declare_types(nrows='integer', ncols='integer', sigma_x='float', sigma_y='float', rho='float',
-               mu_x='float', mu_y='float', result='float', normalized = 'boolean')
-@check_units(nrows=1, ncols=1, sigma_x=1, sigma_y=1, mu_x=1, mu_y=1, rho=1, normalized = 1, result=1)
-def normal2d_density_array(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None, mu_y=None, normalized = True):
-    """returns a 2d normal density distributuion array of size (nrows, ncols)
+               mu_x='float', mu_y='float', result='float', normalized='boolean')
+@check_units(nrows=1, ncols=1, sigma_x=1, sigma_y=1, mu_x=1, mu_y=1, rho=1, normalized=1, result=1)
+def normal2d_density_array(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None, mu_y=None, normalized=True):
+    """Returns a 2d normal density distributuion array of size (nrows, ncols).
 
     Args:
-        ncols, nrows (int): size of the output array
-        sigma_x and sigma_y (float, optional): Standard deviations of gaussian distribution
-        mu_x and mu_y (float, optional): Means of gaussian distribution
-        rho (float, optional): correlation coefficient of the 2 variables
+        ncols, nrows (int): size of the output array.
+        sigma_x (int, optional): Description
+        sigma_y (int, optional): Description
+        rho (float, optional): correlation coefficient of the 2 variables.
+        mu_x (None, optional): Description
+        mu_y (None, optional): Description
         normalized (boolean, optional): If you set this to False, it will no longer be a
-            probability density with an integral of one, but the max amplitude (in the middle of the bump) will be 1
+            probability density with an integral of one, but the maximum amplitude (in the middle of the bump) will be 1.
+        sigma_x and sigma_y (float, optional): Standard deviations of Gaussian distribution.
+        mu_x and mu_y (float, optional): Means of Gaussian distribution.
 
     Returns:
-        TYPE: Description
+        ndarray: Description
+
+    Note:
+        as the function is vectorized, this is the same as:
+
+        >>> density = np.zeros((nrows+1, ncols+1))
+        >>>     i = -1
+        >>>     for dx in dist_x:
+        >>>         i+= 1
+        >>>         j = -1
+        >>>         for dy in dist_y:
+        >>>         j+=1
+        >>>         density[j,i] = normal2d_density(dx, dy, sigma_x, sigma_y, rho, normalized)
     """
     x = np.arange(0, nrows)
     y = np.reshape(np.arange(0, ncols), (ncols, 1))
@@ -96,20 +108,10 @@ def normal2d_density_array(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None,
     if mu_y is None:
         mu_y = ncols // 2
 
-    density = normal2d_density(x, y, mu_x, mu_y, sigma_x, sigma_y, rho, normalized)
-
-##as the function is vectorized, this is the same as:
-#    density = np.zeros((nrows+1, ncols+1))
-#    i = -1
-#    for dx in dist_x:
-#        i+= 1
-#        j = -1
-#        for dy in dist_y:
-#            j+=1
-#            density[j,i] = normal2d_density(dx, dy, sigma_x, sigma_y, rho, normalized)
+    density = normal2d_density(
+        x, y, mu_x, mu_y, sigma_x, sigma_y, rho, normalized)
 
     return density
-
 
 
 if __name__ == '__main__':

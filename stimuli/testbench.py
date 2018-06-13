@@ -1,16 +1,48 @@
 # -*- coding: utf-8 -*-
-"""Summary
+"""This class holds different pre-defined testbench stimuli.
+
+The idea is to test certain aspects of you network with common stimuli.
+
+Example:
+    >>> import numpy as np
+    >>> from brian2 import us, ms
+    >>> from pyqtgraph.Qt import QtCore, QtGui
+    >>> import pyqtgraph as pg
+    >>> from teili.stimuli.testbench import OCTA_Testbench
+    >>> from teili.tools.plotter2d import Plotter2d
+
+    >>> app = QtGui.QApplication.instance()
+    >>> if app is None:
+            app = QtGui.QApplication(sys.argv)
+    >>> else:
+            print('QApplication instance already exists: %s' % str(app))
+
+    >>> testbench = OCTA_Testbench()
+    >>> testbench.rotating_bar(length=10, nrows=10, orientation='vertical', ts_offset=3,
+                           angle_step=10, noise_probability=0.2, repetitions=90, debug=False)
+
+    In order to visualize it:
+
+    >>> event_monitor = Plotter2d.loaddvs(testbench.events)
+    >>> imv1 = event_monitor.plot3d_on_off(plot_dt=10*ms, filtersize=15*ms)
+
+    >>> win = pg.GraphicsWindow(title="DVS Spikes")
+    >>> gridlayout = QtGui.QGridLayout(win)
+    >>> gridlayout.addWidget(imv1, 1, 1)
+    >>> win.resize(1500, 1000)
+    >>> win.setLayout(gridlayout)
+    >>> win.show()
+    >>> win.setWindowTitle('DVS plot')
+    >>> imv1.play(10)
+
+    >>> app.exec_()
+
+Todo:
+    * As soon as visualizer class is updated, change imports!
 """
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-12 18:21:55
-# @EMail: mmilde@ini.uzh.ch
-"""
-This class holds different pre-defined testbench stimuli.
-The idea is to test certain aspects of you network with common stimuli.
 
-"""
 from brian2 import SpikeGeneratorGroup, PoissonGroup
 from brian2 import ms, Hz
 from teili.tools.converter import dvs2ind, aedat2numpy
@@ -27,34 +59,35 @@ class STDP_Testbench():
     """This class provides a stimulus to test your spike-time depenendent plasticity algorithm.
 
     Attributes:
-        N (int): Size of the pre and post neuronal population
-        stimulus_length (int): Length of stimuli in ms
+        N (int): Size of the pre and post neuronal population.
+        stimulus_length (int): Length of stimuli in ms.
     """
 
     def __init__(self, N=1, stimulus_length=1200):
-        """Summary
+        """Initializes the testbench class.
 
         Args:
-            N (int, optional): Size of the pre and post neuronal population
-            stimulus_length (int, optional): Length of stimuli in ms
+            N (int, optional): Size of the pre and post neuronal population.
+            stimulus_length (int, optional): Length of stimuli in ms.
         """
         self.N = N  # Number of Neurons per input group
         self.stimulus_length = stimulus_length
 
     def stimuli(self, isi=10):
-        """Stimulus gneration for STDP protocols
+        """Stimulus gneration for STDP protocols.
 
         This function returns two brian2 objects.
         Both are Spikegeneratorgroups which hold a single index each
         and varying spike times.
-        The protocol follows homoeostasis, weak LTP, weak LTD, strong LTP, strong LTD, homoeostasis
+        The protocol follows homoeostasis, weak LTP, weak LTD, strong LTP,
+        strong LTD, homoeostasis.
 
         Args:
-            isi (int, optional): Interspike Interval. How many spikes per stimulus phase
+            isi (int, optional): Interspike Interval. How many spikes per stimulus phase.
 
         Returns:
             SpikeGeneratorGroup (brian2.obj: Brian2 objects which hold the spiketimes and
-                the respective neuron indices
+                the respective neuron indices.
         """
         t_pre_homoeotasis_1 = np.arange(1, 202, isi)
         t_pre_weakLTP = np.arange(301, 502, isi)
@@ -92,23 +125,23 @@ class OCTA_Testbench():
     Online Clustering of Temporal Activity (OCTA) framework.
 
     Attributes:
-        angles (numpy.ndarray): List of angles of orientation
-        DVS_SHAPE (TYPE): Input shape of the simulated DVS/DAVIS vision sensor
-        end (TYPE): End pixel location of the line
-        events (TYPE): Description
-        indices (TYPE): Description
+        angles (numpy.ndarray): List of angles of orientation.
+        DVS_SHAPE (TYPE): Input shape of the simulated DVS/DAVIS vision sensor.
+        end (TYPE): End pixel location of the line.
+        events (TYPE): Attribute storing events of testbench stimulus.
+        indices (TYPE): Attribute storing neuron index of testbench stimulus.
         line (TYPE): Stimulus of the testbench which is used to either generate an interactive
             plot to record stimulus with a DVS/DAVIS camera or coordinates are used to generate
-            a SpikeGenerator
-        start (TYPE): Start pixel location of the line
-        times (list): Description
+            a SpikeGenerator.
+        start (TYPE): Start pixel location of the line.
+        times (list): Attribute storing spike times of testbench stimulus.
     """
 
     def __init__(self, DVS_SHAPE=(240, 180)):
         """Summary
 
         Args:
-            DVS_SHAPE (tuple, optional): Dimension of pixel array of the simulated DVS/DAVIS vision sensor
+            DVS_SHAPE (tuple, optional): Dimension of pixel array of the simulated DVS/DAVIS vision sensor.
         """
         self.DVS_SHAPE = DVS_SHAPE
         self.angles = np.arange(-np.pi / 2, np.pi * 3 / 2, 0.01)
@@ -120,13 +153,13 @@ class OCTA_Testbench():
         SpikeGeneratorGroup is needed.
 
         Args:
-            rec (str): Path to stored .aedat file
+            rec (str): Path to stored .aedat file.
             camera (str, optional): Can either be string ('DAVIS240') or int 240, which specifies
-                the larger of the 2 pixel dimension to unravel the coordinates into indices
+                the larger of the 2 pixel dimension to unravel the coordinates into indices.
 
         Returns:
             events (np.ndarray): 4D numpy array with #events entries. Array is organized as x, y, ts, pol
-                see aedat2numpy for more details
+                see aedat2numpy for more details.
         """
         assert(type(rec) == str), "rec has to be a string."
         assert(os.path.isfile(rec)), "File does not exist."
@@ -135,24 +168,24 @@ class OCTA_Testbench():
         return events
 
     def infinity(self, cAngle):
-        """Given an angle cAngle this function returns the current position on an infinity trajectory
+        """Given an angle cAngle this function returns the current position on an infinity trajectory.
 
         Args:
-            cAngle (float): current angle in rad which determines position on inifinity trajectory
+            cAngle (float): current angle in rad which determines position on inifinity trajectory.
 
         Returns:
-            position (tuple): Postion in x, y coordinates
+            position (tuple): Postion in x, y coordinates.
         """
         return np.cos(cAngle), np.sin(cAngle) * np.cos(cAngle)
 
     def dda_round(self, x):
-        """Simple round funcion
+        """Simple round funcion.
 
         Args:
-            x (float): Value to be rounded
+            x (float): Value to be rounded.
 
         Returns:
-            (int): Ceiled value of x
+            (int): Ceiled value of x.
         """
         if type(x) is np.ndarray:
             return (x + 0.5).astype(int)
@@ -171,18 +204,18 @@ class OCTA_Testbench():
 
         Args:
             length (int): `length` of the bar in pixel.
-            nrows (int, optional): X-Axis size of the pixel array
-            ncols (int, optional): Y-Axis size of the pixel array
+            nrows (int, optional): X-Axis size of the pixel array.
+            ncols (int, optional): Y-Axis size of the pixel array.
             orientation (str): `orientation` of the bar. Can either be 'vertical'
-                or 'horizontal'
-            ts_offset (int): time between two pixel location
-            angle_step (int, optional): Angular velocity. Sets step width in np.arrange
-            artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
-            rec_path (str, optional): Path to aedat recording, only used if arificial_stimulus=False
-            save_path (str, optional): Path to store generated events
-            noise_probability (None, optional): Description
-            repetitions (int, optional): Description
-            debug (bool, optional): Description
+                or 'horizontal'.
+            ts_offset (int): time between two pixel location.
+            angle_step (int, optional): Angular velocity. Sets step width in np.arrange.
+            artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file.
+            rec_path (str, optional): Path/to/stored/location/of/recorded/stimulus.aedat.
+            save_path (str, optional): Path to store generated events.
+            noise_probability (float, optional): Probability of noise events between 0 and 1.
+            repetitions (int, optional): Number of revelations of the rotating bar.
+            debug (bool, optional): Flag to print more detailed output of testbench.
 
         Returns:
             SpikeGenerator obj: Brian2 objects which holds the spike times as well
@@ -294,22 +327,22 @@ class OCTA_Testbench():
         In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
 
         Args:
-            length (int, optional): length of the bar in pixel
-            nrows (int, optional): X-Axis size of the pixel array
-            ncols (int, optional): Y-Axis size of the pixel array
-            orientation (str, optional): lag which determines if bar is orientated vertical or horizontal
-            shift (int, optional): offset in x where the stimulus will start
-            ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity)
-            artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
-            rec_path (str, optional): Path to recordings
-            return_events (bool, optional): Flag to return events instead of SpikeGenerator
+            length (int, optional): length of the bar in pixel.
+            nrows (int, optional): X-Axis size of the pixel array.
+            ncols (int, optional): Y-Axis size of the pixel array.
+            orientation (str, optional): lag which determines if bar is orientated vertical or horizontal.
+            shift (int, optional): offset in x where the stimulus will start.
+            ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity).
+            artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file.
+            rec_path (str, optional): Path/to/stored/location/of/recorded/stimulus.aedat.
+            return_events (bool, optional): Flag to return events instead of SpikeGenerator.
 
         Returns:
-            SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes
-            events (numpy.ndarray, optional): If return_events is set events will be returned
+            SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes.
+            events (numpy.ndarray, optional): If return_events is set events will be returned.
 
         Raises:
-            UserWarning: If no filename is given but aedat reacording should be loaded
+            UserWarning: If no filename is given but aedat recording should be loaded.
 
         """
         if ncols is None:
@@ -391,26 +424,23 @@ class OCTA_Testbench():
         In both cases, the events are provided to a SpikeGeneratorGroup which is returned.
 
         Args:
-            length (int, optional): Length of the bar in pixel
-            nrows (int, optional): X-Axis size of the pixel array
-            ncols (int, optional): Y-Axis size of the pixel array
+            length (int, optional): Length of the bar in pixel.
+            nrows (int, optional): X-Axis size of the pixel array.
+            ncols (int, optional): Y-Axis size of the pixel array.
             orthogonal (bool, optional): Flag which determines if bar is kept always orthogonal to trajectory,
-                if it kept aligned with trajectory or if it returns in "chaotic way"
-            shift (int, optional): offset in x where the stimulus will start
-            ts_offset (int, optional): Time in ms between consecutive pixels (stimulus velocity)
-            artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file
-            rec_path (None, optional): Description
-            return_events (bool, optional): Flag to return events instead of SpikeGenerator
+                if it kept aligned with trajectory or if it returns in "chaotic way".
+            shift (int, optional): offset in x where the stimulus will start.
+            ts_offset (int, optional): Time in ms between consecutive pixels (stimulus velocity).
+            artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file.
+            rec_path (str, optional): Path/to/stored/location/of/recorded/stimulus.aedat.
+            return_events (bool, optional): Flag to return events instead of SpikeGenerator.
 
         Returns:
-            SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes
-            events (numpy.ndarray, optional): If return_events is set events will be returned
+            SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes.
+            events (numpy.ndarray, optional): If return_events is set events will be returned.
 
         Raises:
-            UserWarning: If no filename is given but aedat reacording should be loaded
-
-        Deleted Parameters:
-            rec_pah (None, optional): Path to recordings
+            UserWarning: If no filename is given but aedat recording should be loaded.
         """
         if ncols is None:
             ncols = nrows
@@ -552,12 +582,12 @@ class OCTA_Testbench():
 
 class WTA_Testbench():
 
-    """Collection of functions to test the computational properties of the WTA building_block
+    """Collection of functions to test the computational properties of the WTA building_block.
 
     Attributes:
-        indices (numpy.ndarray): Array with neuron indices
-        noise_input (brian2.PoissonGroup): PoissonGroup which provides noise events
-        times (numpy.ndarray): Array with neuron spike timestimes
+        indices (numpy.ndarray): Array with neuron indices.
+        noise_input (brian2.PoissonGroup): PoissonGroup which provides noise events.
+        times (numpy.ndarray): Array with neuron spike times.
     """
 
     def __init__(self):
@@ -570,18 +600,14 @@ class WTA_Testbench():
         of a WTA population
 
         Args:
-            num_neurons (int, optional): 1D size of WTA population
-            dimensions (int, optional): Description
-            start_time (int, optional): Description
-            end_time (int, optional): Description
-            isi (int, optional): Description
+            num_neurons (int, optional): 1D size of WTA population.
+            dimensions (int, optional): Dimension of WTA. Can either be 1 or 2
+            start_time (int, optional): Start time when stimulus should start.
+            end_time (int, optional): End time when stimulus should stop.
+            isi (int, optional): Inter-spike between spike times.
 
         Raises:
             NotImplementedError: If dimension is set larger than 2 error is raised
-
-        Deleted Parameters:
-            dimension (int, optional): Dimension of WTA. Can either be 1 or 2
-
         """
         self.times = np.arange(start_time, end_time + 1, isi)
         if dimensions == 1:
@@ -599,114 +625,6 @@ class WTA_Testbench():
         Args:
             num_neurons (int, optional): 1D size of WTA population
             rate (int, optional): Spike frequency f Poisson noise process
-
         """
         num2d_neurons = num_neurons**2
         self.noise_input = PoissonGroup(num2d_neurons, rate * Hz)
-
-
-class Visualize():
-
-    """This class will soon be obsolete!!!
-
-    Attributes:
-        app (TYPE): Description
-        events (TYPE): Description
-        start (int): Description
-        stim (TYPE): Description
-        time_window (TYPE): Description
-        timer (TYPE): Description
-        win (TYPE): Description
-
-    Deleted Attributes:
-        colors (TYPE): Description
-        event_plot (TYPE): Description
-        labelStyle (dict): Description
-    """
-
-    def __init__(self):
-        """Summary
-        """
-        pass
-
-    def plot(self, events, time_window=35):
-        """Summary
-
-        Args:
-            events (TYPE): Description
-            time_window (int, optional): Description
-        """
-        global stim
-        self.time_window = time_window
-
-        self.app = QtGui.QApplication.instance()
-        if self.app is None:
-            self.app = QtGui.QApplication(sys.argv)
-        else:
-            print('QApplication instance already exists: %s' % str(self.app))
-
-        pg.setConfigOptions(antialias=True)
-        colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-                  (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-        labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-        win = pg.GraphicsWindow(title="Stimuli visualization")
-        win.resize(1024, 768)
-        event_plot = win.addPlot(title="Input events in ")
-        event_plot.addLegend()
-
-        self.win = win
-
-        if type(events) == str:
-            self.events = np.load(events)
-        else:
-            self.events = events
-
-        event_plot.setLabel('left', "Y", **labelStyle)
-        event_plot.setLabel('bottom', "X", **labelStyle)
-        event_plot.setXRange(0, np.max(events[0, :]))
-        event_plot.setYRange(0, np.max(events[1, :]))
-
-        b = QtGui.QFont("Sans Serif", 10)
-        event_plot.getAxis('bottom').tickFont = b
-        event_plot.getAxis('left').tickFont = b
-
-        # start visualizing
-        self.start = 0
-        self.stim = event_plot.plot(pen=None, symbol='o', symbolPen=None,
-                                    symbolSize=7, symbolBrush=colors[0],
-                                    name='ON Events')
-        # stop auto-scaling after the first data set is plotted
-        event_plot.enableAutoRange('xy', False)
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update)
-        self.timer.start(100)
-
-        self.app.exec_()
-
-    def update(self):
-        """Summary
-        """
-        global event_plot
-        c_ind_ts = np.logical_and(self.events[2, :] >= self.start, self.events[
-                                  2, :] <= self.start + self.time_window)
-        c_ind_on = np.logical_and(c_ind_ts, self.events[3, :] == 1)
-
-        data_x = self.events[0, c_ind_on]
-        data_y = self.events[1, c_ind_on]
-        self.start += self.time_window
-        # print(len(data_x))
-        # print(np.shape(self.events))
-        # print(self.events[2, :])
-        self.stim.setData(x=data_x, y=data_y)
-
-
-if __name__ == '__main__':
-    import tkinter as tk
-    from tkinter import filedialog
-
-    root = tk.Tk()
-    root.withdraw()
-    vis = Visualize()
-    eventsfile = filedialog.askopenfilename()
-    events = np.load(eventsfile)
-    vis.plot(events)

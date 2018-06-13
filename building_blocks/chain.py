@@ -1,15 +1,43 @@
 # -*- coding: utf-8 -*-
-# @Author: Alpha Renner
-# @Date:   2018-06-01 18:45:19
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-12 18:32:42
-
-"""
-This is a simple syn-fire chain of neurons
+"""This is a simple syn-fire chain of neurons
 
 Attributes:
-    chain_params (TYPE): Description
+    chain_params (dict): Dictionary of default parameters for syn-fire
+        chain
+
+Todo:
+    * Update docstrings
+        Not all Description of attributes are set. Please provide meaningful
+            docstrings
+
+Example:
+    To use the syn-fire chain building block in your simulation you need
+    to create an object of the class by:
+
+    >>> from teili.building_blocks.chain import Chain
+    >>> my_bb = Chain(name='my_chain')
+
+    if you want to change the underlying neuron and synapse model you need to provide
+    different equation_builder class:
+
+    >>> from teili.models.neuron_models import DPI
+    >>> from teili.models.synapse_models import DPISyn
+    >>> my_bb = Chain(name='my_chain',
+                      neuron_eq_builder=DPI,
+                      synapse_eq_builder=DPISyn)
+
+    if you want to change the default parameters of your building block
+    you need to define a dictionary, which you pass to the building_block
+
+    >>> chain_params = {'num_chains': 4,
+                        'num_neurons_per_chain': 15,
+                        'synChaCha1e_weight': 4,
+                        'synInpCha1e_weight': 1,
+                        'gChaGroup_refP': 1 * ms}
+    >>> my_bb = Chain(name='my_chain', block_params=chain_params)
 """
+# @Author: Alpha Renner
+# @Date:   2018-06-01 18:45:19
 
 import os
 import numpy as np
@@ -37,35 +65,35 @@ chain_params = {'num_chains': 4,
 
 class Chain(BuildingBlock):
 
-    """Summary
+    """This is a simple syn-fire chain of neurons.
 
     Attributes:
-        gChaGroup_refP (TYPE, optional): Parameter specifying the refractory period
-        group (TYPE): Description
-        input_group (TYPE): Description
-        num_chains (int, optional): Number of chains to generate
-        num_neurons_per_chain (int, optional): Number of neurons within one chain
-        spikemon_cha (brian2 SpikeMonitor obj.): Description
-        spikemon_cha_inp (brian2 SpikeMonitor obj.): Description
-        standalone_params (TYPE): Description
-        synapse (TYPE): Description
-        synChaCha1e_weight (int, optional): Parameter specifying the recurrent weight
-        synInpCha1e_weight (int, optional): Parameter specifying the input weight
+        gChaGroup_refP (str, optional): Parameter specifying the refractory period.
+        group (dict): List of keys of neuron population.
+        inputGroup (SpikeGenerator): SpikeGenerator obj. to stimulate syn-fire chain.
+        num_chains (int, optional): Number of chains to generate.
+        num_neurons_per_chain (int, optional): Number of neurons within one chain.
+        spikemon_cha (brian2 SpikeMonitor obj.): Description.
+        spikemon_cha_inp (brian2 SpikeMonitor obj.): Description.
+        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation.
+        synapse (TYPE): Description.
+        synChaCha1e_weight (int, optional): Parameter specifying the recurrent weight.
+        synInpCha1e_weight (int, optional): Parameter specifying the input weight.
     """
 
-    def __init__(self, name, neuron_eq_builder=ExpAdaptIF(1),
-                 synapse_eq_builder=ReversalSynV(),
+    def __init__(self, name, neuron_eq_builder=ExpAdaptIF,
+                 synapse_eq_builder=ReversalSynV,
                  block_params=chain_params,
                  num_inputs=1, debug=False):
         """Summary
 
         Args:
-            name (str, required): Base name for building block
-            neuron_eq_builder (teili.models.builder obj, optional): Neuron equation builder object
-            synapse_eq_builder (teili.models.builder obj, optional): Synapse equation builder object
-            block_params (dict, optional): Dictionary of parameters such as synChaCha1e_weight or gChaGroup_refP
-            num_inputs (int, optional): Number of inputs from different source populations
-            debug (bool, optional): Debug flag
+            name (str, required): Base name for building block.
+            neuron_eq_builder (teili.models.builder obj, optional): Neuron equation builder object.
+            synapse_eq_builder (teili.models.builder obj, optional): Synapse equation builder object.
+            block_params (dict, optional): Dictionary of parameters such as synChaCha1e_weight or gChaGroup_refP.
+            num_inputs (int, optional): Number of inputs from different source populations.
+            debug (bool, optional): Debug flag.
         """
         self.num_chains = block_params['num_chains']
         self.num_neurons_per_chain = block_params['num_neurons_per_chain']
@@ -96,13 +124,13 @@ class Chain(BuildingBlock):
         self.spikemon_cha_inp = self.Monitors['spikemon_cha_inp']
 
     def plot(self, savedir=None):
-        """Simple function to plot recorded state and spikemonitors
+        """Simple function to plot recorded state and spikemonitors.
 
         Args:
-            savedir (str, optional): Path to directory to save plaot
+            savedir (str, optional): Path to directory to save plot.
 
         Returns:
-            matplotlib.pyplot object: Returns figure
+            matplotlib.pyplot object: Returns figure.
         """
         if len(self.spikemon_cha.t) < 1:
             print(
@@ -140,22 +168,24 @@ def gen_chain(groupname='Cha',
               synInpCha1e_weight=1,
               gChaGroup_refP=1 * ms,
               debug=False):
-    """create chains of neurons
+    """Creates chains of neurons
 
     Args:
-        groupname (str, optional): Base name for building block
-        neuron_eq_builder (TYPE, optional): Neuron equation builder object
-        synapse_eq_builder (TYPE, optional): Synapse equation builder object
-        num_chains (int, optional): Number of chains to generate
-        num_neurons_per_chain (int, optional): Number of neurons within one chain
-        num_inputs (int, optional): Number of inputs from different source populations
-        synChaCha1e_weight (int, optional): Parameter specifying the recurrent weight
-        synInpCha1e_weight (int, optional): Parameter specifying the input weight
-        gChaGroup_refP (TYPE, optional): Parameter specifying the refractory period
-        debug (bool, optional): Debug flag
+        groupname (str, optional): Base name for building block.
+        neuron_eq_builder (TYPE, optional): Neuron equation builder object.
+        synapse_eq_builder (TYPE, optional): Synapse equation builder object.
+        num_chains (int, optional): Number of chains to generate.
+        num_neurons_per_chain (int, optional): Number of neurons within one chain.
+        num_inputs (int, optional): Number of inputs from different source populations.
+        synChaCha1e_weight (int, optional): Parameter specifying the recurrent weight.
+        synInpCha1e_weight (int, optional): Parameter specifying the input weight.
+        gChaGroup_refP (TYPE, optional): Parameter specifying the refractory period.
+        debug (bool, optional): Debug flag.
 
     Returns:
-        TYPE: Description
+        Groups (dictionary): Keys to all neuron and synapse groups.
+        Monitors (dictionary): Keys to all spike- and statemonitors.
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     """
 
     # empty input SpikeGenerator

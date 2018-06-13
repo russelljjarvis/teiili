@@ -1,20 +1,55 @@
 # -*- coding: utf-8 -*-
+"""This module provides different Winner-Takes_all (WTA) circuits.
+
+Beside different dimensionality of the WTA, i.e 1D & 2D, you can select
+different spatial connectivity and neuron and synapse models.
+
+Attributes:
+    wta_params (dict): Dictionary of default parameters for wta.
+
+Todo:
+    * Generalize for n dimensions
+
+Example:
+    To use the WTA building block in your simulation you need
+    to create an object of the class by:
+
+    >>> from teili.building_blocks.wta import WTA
+    >>> my_bb = WTA(name='my_wta')
+
+    if you want to change the underlying neuron and synapse model you need to provide
+    different equation_builder class:
+
+    >>> from teili.models.neuron_models import ExpAdaptIF
+    >>> from teili.models.synapse_models import ReversalSynV
+    >>> my_bb = WTA(name='my_wta',
+                      neuron_eq_builder=ExpAdaptIF,
+                      synapse_eq_builder=ReversalSynV)
+
+    if you want to change the default parameters of your building block
+    you need to define a dictionary, which you pass to the building_block
+
+    >>> wta_params = {'weInpWTA': 1.5,
+                      'weWTAInh': 1,
+                      'wiInhWTA': -1,
+                      'weWTAWTA': 0.5,
+                      'sigm': 3,
+                      'rpWTA': 3 * ms,
+                      'rpInh': 1 * ms,
+                      'EI_connection_probability': 1,
+                      'IE_connection_probability': 1,
+                      'II_connection_probability': 0
+                      }
+    >>> my_bb = WTA(name='my_wta', block_params=wta_params)
+"""
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 10:46:44
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-04 10:08:51
 
-"""
-This files contains different WTA circuits
-1dWTA
-2dWTA
-"""
 
 import time
 import numpy as np
 import sys
 
-#import matplotlib.pyplot as plt
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
@@ -33,36 +68,37 @@ from teili.core.groups import Neurons, Connections
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 
-wtaParams = {'weInpWTA': 1.5,
-             'weWTAInh': 1,
-             'wiInhWTA': -1,
-             'weWTAWTA': 0.5,
-             'sigm': 3,
-             'rpWTA': 3 * ms,
-             'rpInh': 1 * ms,
-             'EI_connection_probability': 1,
-             'IE_connection_probability': 1,
-             'II_connection_probability': 0
-             }
+wta_params = {'weInpWTA': 1.5,
+              'weWTAInh': 1,
+              'wiInhWTA': -1,
+              'weWTAWTA': 0.5,
+              'sigm': 3,
+              'rpWTA': 3 * ms,
+              'rpInh': 1 * ms,
+              'EI_connection_probability': 1,
+              'IE_connection_probability': 1,
+              'II_connection_probability': 0
+              }
 
 
 class WTA(BuildingBlock):
-    '''a 1 or 2D square WTA
+    '''A 1 or 2D square Winner-Takes_all (WTA) Building block.
 
     Attributes:
-        dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is created
-        group (dict): List of keys of neuron population
-        inputGroup (SpikeGenerator): SpikeGenerator obj. to stimulate WTA
-        num_neurons (int, optional): Size of WTA neuron population
-        spikemonWTA (TYPE): Description
-        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation
+        dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is created.
+        group (dict): List of keys of neuron population.
+        inputGroup (brian2.SpikeGenerator obj.): SpikeGenerator obj. to stimulate WTA.
+        num_neurons (int, optional): Size of WTA neuron population.
+        spikemonWTA (brian2.SpikeMonitor obj.): A spikemonitor which monitors the activity of the WTA
+            population.
+        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation.
     '''
 
     def __init__(self, name,
                  dimensions=1,
                  neuron_eq_builder=DPI,
                  synapse_eq_builder=DPISyn,
-                 block_params=wtaParams,
+                 block_params=wta_params,
                  num_neurons=16,
                  num_inh_neurons=2,
                  num_input_neurons=None,
@@ -72,25 +108,25 @@ class WTA(BuildingBlock):
                  spatial_kernel=None,
                  monitor=True,
                  debug=False):
-        """Summary
+        """Initializes building block object with defined dimensionality and connectivity scheme
 
         Args:
-            groupname (str, required): Name of the WTA population
-            dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is created
-            neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
-            synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
-            block_params (dict, optional): Parameter for neuron populations
-            num_neurons (int, optional): Size of WTA neuron population
-            num_inh_neurons (int, optional): Size of inhibitory interneuron population
-            num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population
-            cutoff (int, optional): Radius of self-excitation
-            additional_statevars (list, optional): List of additonal statevariables which are not standard
-            num_inputs (int, optional): Number of input currents to WTA
-            monitor (bool, optional): Flag to auto-generate spike and statemonitors
-            debug (bool, optional): Flag to gain additional information
+            groupname (str, required): Name of the WTA population.
+            dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is created.
+            neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models.
+            synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models.
+            block_params (dict, optional): Parameter for neuron populations.
+            num_neurons (int, optional): Size of WTA neuron population.
+            num_inh_neurons (int, optional): Size of inhibitory interneuron population.
+            num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
+            cutoff (int, optional): Radius of self-excitation.
+            additional_statevars (list, optional): List of additonal statevariables which are not standard.
+            num_inputs (int, optional): Number of input currents to WTA.
+            monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+            debug (bool, optional): Flag to gain additional information.
 
         Raises:
-            NotImplementedError: If dimension is set larger than 2, error is raised
+            NotImplementedError: If dimension is set larger than 2, error is raised.
         """
         self.num_neurons = num_neurons
         self.dimensions = dimensions
@@ -103,32 +139,32 @@ class WTA(BuildingBlock):
 
         if dimensions == 1:
             self.Groups, self.Monitors, self.standalone_params = gen1dWTA(name,
-                                             neuron_eq_builder,
-                                             synapse_eq_builder,
-                                             num_neurons=num_neurons,
-                                             num_inh_neurons=num_inh_neurons,
-                                             additional_statevars=additional_statevars,
-                                             cutoff=cutoff,
-                                             num_input_neurons=num_input_neurons,
-                                             num_inputs=num_inputs,
-                                             monitor=monitor,
-                                             debug=debug,
-                                             spatial_kernel=spatial_kernel,
-                                             **block_params)
+                                                                          neuron_eq_builder,
+                                                                          synapse_eq_builder,
+                                                                          num_neurons=num_neurons,
+                                                                          num_inh_neurons=num_inh_neurons,
+                                                                          additional_statevars=additional_statevars,
+                                                                          cutoff=cutoff,
+                                                                          num_input_neurons=num_input_neurons,
+                                                                          num_inputs=num_inputs,
+                                                                          monitor=monitor,
+                                                                          debug=debug,
+                                                                          spatial_kernel=spatial_kernel,
+                                                                          **block_params)
         elif dimensions == 2:
             self.Groups, self.Monitors, self.standalone_params = gen2dWTA(name,
-                                             neuron_eq_builder,
-                                             synapse_eq_builder,
-                                             num_neurons=num_neurons,
-                                             num_inh_neurons=num_inh_neurons,
-                                             additional_statevars=additional_statevars,
-                                             cutoff=cutoff,
-                                             num_input_neurons=num_input_neurons,
-                                             num_inputs=num_inputs,
-                                             monitor=monitor,
-                                             debug=debug,
-                                             spatial_kernel=spatial_kernel,
-                                             **block_params)
+                                                                          neuron_eq_builder,
+                                                                          synapse_eq_builder,
+                                                                          num_neurons=num_neurons,
+                                                                          num_inh_neurons=num_inh_neurons,
+                                                                          additional_statevars=additional_statevars,
+                                                                          cutoff=cutoff,
+                                                                          num_input_neurons=num_input_neurons,
+                                                                          num_inputs=num_inputs,
+                                                                          monitor=monitor,
+                                                                          debug=debug,
+                                                                          spatial_kernel=spatial_kernel,
+                                                                          **block_params)
 
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
@@ -140,24 +176,20 @@ class WTA(BuildingBlock):
         if monitor:
             self.spikemonWTA = self.Monitors['spikemonWTA']
 
-    def plot(self, start_time=0 * ms, end_time=None, plot_states = True):
-        """Simple plot for WTA
+    def plot(self, start_time=0 * ms, end_time=None, plot_states=True):
+        """Simple plot for WTA.
 
         Args:
-            start_time (int, optional): Start time of plot in ms
-            end_time (int, optional): End time of plot in ms
+            start_time (int, optional): Start time of plot in ms.
+            end_time (int, optional): End time of plot in ms.
+
+        Returns:
+            pyqtgraph window: The window containing the plot.
         """
-#        if end_time is None:
-#            if len(self.spikemonWTA.t) > 0:
-#                end_time = max(self.spikemonWTA.t)
-#            else:
-#                end_time = end_time * ms
-        win = plotWTA(wta_monitors = self.Monitors, name = self.name,
-                start_time=start_time, end_time=end_time, plot_states=plot_states)
+        win = plotWTA(wta_monitors=self.Monitors, name=self.name,
+                      start_time=start_time, end_time=end_time, plot_states=plot_states)
         self.plot_win = win
         return win
-
-# TODO: Generalize for n dimensions
 
 
 def gen1dWTA(groupname,
@@ -169,32 +201,32 @@ def gen1dWTA(groupname,
              spatial_kernel="kernel_gauss_1d",
              EI_connection_probability=1, IE_connection_probability=1, II_connection_probability=0,
              monitor=True, additional_statevars=[], debug=False):
-    """Summary
+    """Creates a 1D WTA population of neurons, including the inhibitory interneuron population
 
     Args:
-        groupname (str, required): Name of the WTA population
-        neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
-        synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
-        weInpWTA (float, optional): Excitatory synaptic weight between input SpikeGenerator and WTA neurons
-        weWTAInh (int, optional): Excitatory synaptic weight between WTA population and inhibitory interneuron
-        wiInhWTA (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and WTA population
-        weWTAWTA (float, optional): Self-excitatory synaptic weight (WTA)
-        sigm (int, optional): Description
-        rpWTA (float, optional): Refractory period of WTA neurons
-        rpInh (float, optional): Refractory period of inhibitory neurons
-        num_neurons (int, optional): Size of WTA neuron population
-        num_inh_neurons (int, optional): Size of inhibitory interneuron population
-        num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population
-        cutoff (int, optional): Radius of self-excitation
-        num_inputs (int, optional): Number of input currents to WTA
-        monitor (bool, optional): Flag to auto-generate spike and statemonitors
-        additional_statevars (list, optional): List of additonal statevariables which are not standard
-        debug (bool, optional): Flag to gain additional information
+        groupname (str, required): Name of the WTA population.
+        neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models.
+        synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models.
+        weInpWTA (float, optional): Excitatory synaptic weight between input SpikeGenerator and WTA neurons.
+        weWTAInh (int, optional): Excitatory synaptic weight between WTA population and inhibitory interneuron.
+        wiInhWTA (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and WTA population.
+        weWTAWTA (float, optional): Self-excitatory synaptic weight (WTA).
+        sigm (int, optional): Standard deviation in number of neurons for Gaussian connectivity kernel.
+        rpWTA (float, optional): Refractory period of WTA neurons.
+        rpInh (float, optional): Refractory period of inhibitory neurons.
+        num_neurons (int, optional): Size of WTA neuron population.
+        num_inh_neurons (int, optional): Size of inhibitory interneuron population.
+        num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
+        cutoff (int, optional): Radius of self-excitation.
+        num_inputs (int, optional): Number of input currents to WTA.
+        monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+        additional_statevars (list, optional): List of additional state variables which are not standard.
+        debug (bool, optional): Flag to gain additional information.
 
     Returns:
-        Groups (dictionary): Keys to all neuron and synapse groups
-        Monitors (dictionary): Keys to all spike- and statemonitors
-        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
+        Groups (dictionary): Keys to all neuron and synapse groups.
+        Monitors (dictionary): Keys to all spike- and statemonitors.
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     """
     if spatial_kernel is None:
         spatial_kernel = "kernel_gauss_1d"
@@ -203,7 +235,8 @@ def gen1dWTA(groupname,
         spatial_kernel_func = spatial_kernel
         spatial_kernel_name = spatial_kernel.pyfunc.__name__
     else:
-        spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
+        spatial_kernel_func = getattr(
+            teili.tools.synaptic_kernel, spatial_kernel)
         spatial_kernel_name = spatial_kernel
 
     # time measurement
@@ -244,11 +277,13 @@ def gen1dWTA(groupname,
     synInpWTA1e.connect('i==j')
     # connect the nearest neighbors including itself
     synWTAWTA1e.connect('abs(i-j)<=cutoff')
-    synWTAInh1e.connect('True', p=EI_connection_probability)  # Generates all to all connectivity
+    # Generates all to all connectivity
+    synWTAInh1e.connect('True', p=EI_connection_probability)
     synInhWTA1i.connect('True', p=IE_connection_probability)
     synInhInh1i.connect('True', p=II_connection_probability)
 
-    synWTAWTA1e.add_state_variable(name='latWeight', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(
+        name='latWeight', shared=True, constant=True)
     synWTAWTA1e.add_state_variable(name='latSigma', shared=True, constant=True)
 
     # set weights
@@ -261,7 +296,8 @@ def gen1dWTA(groupname,
     synWTAWTA1e.latWeight = weWTAWTA
     synWTAWTA1e.latSigma = sigm
     synWTAWTA1e.namespace.update({spatial_kernel_name: spatial_kernel_func})
-    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel_name + '(i,j,latSigma)'
+    synWTAWTA1e.weight = 'latWeight * ' + \
+        spatial_kernel_name + '(i,j,latSigma)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -274,9 +310,12 @@ def gen1dWTA(groupname,
 
     # spikemons
     if monitor:
-        spikemonWTA = SpikeMonitor(gWTAGroup, name='spikemon' + groupname + '_WTA')
-        spikemonWTAInh = SpikeMonitor(gWTAInhGroup, name='spikemon' + groupname + '_WTAInh')
-        spikemonWTAInp = SpikeMonitor(gWTAInpGroup, name='spikemon' + groupname + '_WTAInp')
+        spikemonWTA = SpikeMonitor(
+            gWTAGroup, name='spikemon' + groupname + '_WTA')
+        spikemonWTAInh = SpikeMonitor(
+            gWTAInhGroup, name='spikemon' + groupname + '_WTAInh')
+        spikemonWTAInp = SpikeMonitor(
+            gWTAInpGroup, name='spikemon' + groupname + '_WTAInp')
         try:
             statemonWTA = StateMonitor(gWTAGroup, ('Vm', 'Ie', 'Ii'), record=True,
                                        name='statemon' + groupname + '_WTA')
@@ -323,43 +362,43 @@ def gen2dWTA(groupname,
              spatial_kernel="kernel_gauss_2d",
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
-    '''generates a new square 2d WTA
+    '''Creates a 2D squared WTA population of neurons, including the inhibitory interneuron population
 
     Args:
-        groupname (str, required): Name of the WTA population
-        neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
-        synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
-        weInpWTA (float, optional): Excitatory synaptic weight between input SpikeGenerator and WTA neurons
-        weWTAInh (int, optional): Excitatory synaptic weight between WTA population and inhibitory interneuron
-        wiInhWTA (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and WTA population
-        weWTAWTA (float, optional): Self-excitatory synaptic weight (WTA)
-        sigm (int, optional): Description
-        rpWTA (float, optional): Refractory period of WTA neurons
-        rpInh (float, optional): Refractory period of inhibitory neurons
-        num_neurons (int, optional): Size of WTA neuron population
-        num_inh_neurons (int, optional): Size of inhibitory interneuron population
-        num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population
-        cutoff (int, optional): Radius of self-excitation
-        num_inputs (int, optional): Number of input currents to WTA
-        monitor (bool, optional): Flag to auto-generate spike and statemonitors
-        additional_statevars (list, optional): List of additonal statevariables which are not standard
-        debug (bool, optional): Flag to gain additional information
+        groupname (str, required): Name of the WTA population.
+        neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models.
+        synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models.
+        weInpWTA (float, optional): Excitatory synaptic weight between input SpikeGenerator and WTA neurons.
+        weWTAInh (int, optional): Excitatory synaptic weight between WTA population and inhibitory interneuron.
+        wiInhWTA (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and WTA population.
+        weWTAWTA (float, optional): Self-excitatory synaptic weight (WTA).
+        sigm (int, optional): Standard deviation in number of neurons for Gaussian connectivity kernel.
+        rpWTA (float, optional): Refractory period of WTA neurons.
+        rpInh (float, optional): Refractory period of inhibitory neurons.
+        num_neurons (int, optional): Size of WTA neuron population.
+        num_inh_neurons (int, optional): Size of inhibitory interneuron population.
+        num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
+        cutoff (int, optional): Radius of self-excitation.
+        num_inputs (int, optional): Number of input currents to WTA.
+        monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+        additional_statevars (list, optional): List of additional state variables which are not standard.
+        debug (bool, optional): Flag to gain additional information.
 
     Returns:
-        Groups (dictionary): Keys to all neuron and synapse groups
-        Monitors (dictionary): Keys to all spike- and statemonitors
-        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
+        Groups (dictionary): Keys to all neuron and synapse groups.
+        Monitors (dictionary): Keys to all spike- and statemonitors.
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     '''
 
     if spatial_kernel is None:
         spatial_kernel = "kernel_gauss_2d"
 
-
     if type(spatial_kernel) == brian2.core.functions.Function:
         spatial_kernel_func = spatial_kernel
         spatial_kernel_name = spatial_kernel.pyfunc.__name__
     else:
-        spatial_kernel_func = getattr(teili.tools.synaptic_kernel, spatial_kernel)
+        spatial_kernel_func = getattr(
+            teili.tools.synaptic_kernel, spatial_kernel)
         spatial_kernel_name = spatial_kernel
     # time measurement
     start = time.clock()
@@ -409,11 +448,13 @@ def gen2dWTA(groupname,
     synInpWTA1e.connect('i==j')
     # connect the nearest neighbors including itself
     synWTAWTA1e.connect('dist1d2dint(i,j,num_neurons,num_neurons)<=cutoff')
-    synWTAInh1e.connect('True', p=EI_connection_probability)  # Generates all to all connectivity
+    # Generates all to all connectivity
+    synWTAInh1e.connect('True', p=EI_connection_probability)
     synInhWTA1i.connect('True', p=IE_connection_probability)
     synInhInh1i.connect('True', p=II_connection_probability)
 
-    synWTAWTA1e.add_state_variable(name='latWeight', shared=True, constant=True)
+    synWTAWTA1e.add_state_variable(
+        name='latWeight', shared=True, constant=True)
     synWTAWTA1e.add_state_variable(name='latSigma', shared=True, constant=True)
 
     # set weights
@@ -429,7 +470,8 @@ def gen2dWTA(groupname,
     synWTAWTA1e.latSigma = sigm
     synWTAWTA1e.namespace[spatial_kernel_name] = spatial_kernel_func
     synWTAWTA1e.namespace['num_neurons'] = num_neurons
-    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel_name + '(i,j,latSigma,num_neurons,num_neurons)'
+    synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel_name + \
+        '(i,j,latSigma,num_neurons,num_neurons)'
 
     Groups = {
         'gWTAGroup': gWTAGroup,
@@ -443,8 +485,10 @@ def gen2dWTA(groupname,
 
     # spikemons
     spikemonWTA = SpikeMonitor(gWTAGroup, name='spikemon' + groupname + '_WTA')
-    spikemonWTAInh = SpikeMonitor(gWTAInhGroup, name='spikemon' + groupname + '_WTAInh')
-    spikemonWTAInp = SpikeMonitor(gWTAInpGroup, name='spikemon' + groupname + '_WTAInp')
+    spikemonWTAInh = SpikeMonitor(
+        gWTAInhGroup, name='spikemon' + groupname + '_WTAInh')
+    spikemonWTAInp = SpikeMonitor(
+        gWTAInpGroup, name='spikemon' + groupname + '_WTAInp')
     try:
         statemonWTA = StateMonitor(gWTAGroup, ('Vm', 'Ie', 'Ii'), record=True,
                                    name='statemon' + groupname + '_WTA')
@@ -473,8 +517,8 @@ def gen2dWTA(groupname,
 
     end = time.clock()
     if debug:
-        print ('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
-               groupname + ' took ' + str(end - start) + ' sec')
+        print('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
+              groupname + ' took ' + str(end - start) + ' sec')
         print('The keys of the output dict are:')
         for key in Groups:
             print(key)
@@ -482,16 +526,16 @@ def gen2dWTA(groupname,
     return Groups, Monitors, standalone_params
 
 
-def plotWTA(wta_monitors, name, start_time = None, end_time = None, plot_states=True):
+def plotWTA(wta_monitors, name, start_time=None, end_time=None, plot_states=True):
     """Function to easily visualize WTA activity.
 
     Args:
-        name (str, required): Name of the WTA population
+        name (str, required): Name of the WTA population.
         start_time (brian2.units.fundamentalunits.Quantity): Start time in ms
             from when network activity should be plotted.
         end_time (brian2.units.fundamentalunits.Quantity): End time in ms of plot.
-            Can be smaller than simulation time but not larger
-        wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors
+            Can be smaller than simulation time but not larger.
+        wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors.
     """
     app = QtGui.QApplication.instance()
     if app is None:
@@ -501,7 +545,8 @@ def plotWTA(wta_monitors, name, start_time = None, end_time = None, plot_states=
 
     pg.setConfigOptions(antialias=True)
 
-    win_raster = pg.GraphicsWindow(title='Winner-Take-All Test Simulation: Raster plots')
+    win_raster = pg.GraphicsWindow(
+        title='Winner-Take-All Test Simulation: Raster plots')
     win_raster.resize(1000, 1800)
     win_raster.setWindowTitle('Winner-Take-All Test Simulation: Raster plots')
 
@@ -509,10 +554,12 @@ def plotWTA(wta_monitors, name, start_time = None, end_time = None, plot_states=
     win_raster.nextRow()
     raster_wta = win_raster.addPlot(title="SpikeMonitor WTA")
     win_raster.nextRow()
-    raster_inh = win_raster.addPlot(title="SpikeMonitor inhibitory interneurons")
+    raster_inh = win_raster.addPlot(
+        title="SpikeMonitor inhibitory interneurons")
 
     plot_spikemon_qt(monitor=wta_monitors['spikemonWTAInp'], start_time=start_time, end_time=end_time,
-                     num_neurons=np.int(wta_monitors['spikemonWTAInp'].source.N),
+                     num_neurons=np.int(
+                         wta_monitors['spikemonWTAInp'].source.N),
                      window=raster_input)
     plot_spikemon_qt(monitor=wta_monitors['spikemonWTA'], start_time=start_time, end_time=end_time,
                      num_neurons=wta_monitors['spikemonWTA'].source.N,
@@ -522,13 +569,17 @@ def plotWTA(wta_monitors, name, start_time = None, end_time = None, plot_states=
                      window=raster_inh)
 
     if plot_states:
-        win_states = pg.GraphicsWindow(title='Winner-Take-All Test Simulation:State plots')
+        win_states = pg.GraphicsWindow(
+            title='Winner-Take-All Test Simulation:State plots')
         win_states.resize(1000, 1800)
-        win_states.setWindowTitle('Winner-Take-All Test Simulation:State plots')
+        win_states.setWindowTitle(
+            'Winner-Take-All Test Simulation:State plots')
 
-        state_membrane = win_states.addPlot(title='StateMonitor membrane potential')
+        state_membrane = win_states.addPlot(
+            title='StateMonitor membrane potential')
         win_states.nextRow()
-        state_syn_input = win_states.addPlot(title="StateMonitor synaptic input")
+        state_syn_input = win_states.addPlot(
+            title="StateMonitor synaptic input")
 
         plot_statemon_qt(start_time=start_time, end_time=end_time,
                          monitor=wta_monitors['statemonWTA'], neuron_id=128,

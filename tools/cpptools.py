@@ -12,7 +12,6 @@ Collection of tools necessary for cpp standalone mode
 from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
     prefs, figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel,\
     device, codegen, asarray, set_device
-from brian2 import *
 import numpy as np
 import os
 import time

@@ -25,22 +25,12 @@ from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 from teili.building_blocks.building_block import BuildingBlock
 from teili.core.groups import Neurons, Connections
 
-from teili.models.neuron_models import Izhikevich
-from teili.models.synapse_models import DoubleExponential
-# from teili.models.neuron_models import DPI
-# from teili.models.neuron_models import ExpAdaptIF
-# from teili.models.synapse_models import DPISyn
-
-from teili.models.parameters.izhikevich_param import parameters as IzhParams
-
-# RParams = {'weInpR': 1.5,
-#            'weRInh': 1,
-#            'wiInhR': -1,
-#            'weRR': 0.5,
-#            'sigm': 3,
-#            'rpR': 3 * ms,
-#            'rpInh': 1 * ms
-# }
+# from teili.models.neuron_models import DPI as neuron_model
+# from teili.models.synapse_models import DPISyn as syn_model
+# from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
+from teili.models.neuron_models import Izhikevich as neuron_model
+from teili.models.synapse_models import DoubleExponential as synapse_model
+from teili.models.parameters.izhikevich_param import parameters as neuron_model_params
 
 reservoir_params = {'weInpR': 1.5,
                    'weRInh': 1,
@@ -65,8 +55,9 @@ class Reservoir(BuildingBlock):
     '''
 
     def __init__(self, name,
-                 neuron_eq_builder=Izhikevich,
-                 synapse_eq_builder=DoubleExponential,
+                 neuron_eq_builder=neuron_model,
+                 synapse_eq_builder=synapse_model,
+                 neuron_params=neuron_model_params,
                  block_params=reservoir_params,
                  num_neurons=16,
                  num_input_neurons=1,
@@ -85,6 +76,7 @@ class Reservoir(BuildingBlock):
             synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
             block_params (dict, optional): Parameter for neuron populations
             num_neurons (int, optional): Size of Reservoir neuron population
+            num_input_neurons (int, optional): Size of input population. If None, equal to size of Reservoir population
             fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple
             additional_statevars (list, optional): List of additonal statevariables which are not standard
             num_inputs (int, optional): Number of input currents to Reservoir
@@ -106,7 +98,7 @@ class Reservoir(BuildingBlock):
             self.standalone_params = gen_reservoir(name,
                                                    neuron_eq_builder=neuron_eq_builder,
                                                    synapse_eq_builder=synapse_eq_builder,
-                                                   num_neurons=num_neurons,
+                                                   neuron_model_params=neuron_model_params,
                                                    num_inputs=num_inputs,
                                                    fraction_inh_neurons=fraction_inh_neurons,
                                                    spatial_kernel=spatial_kernel,
@@ -137,8 +129,9 @@ class Reservoir(BuildingBlock):
 
 
 def gen_reservoir(groupname,
-                  neuron_eq_builder=Izhikevich,
-                  synapse_eq_builder=DoubleExponential,
+                  neuron_eq_builder=neuron_model,
+                  synapse_eq_builder=synapse_model,
+                  neuron_model_params=neuron_model_params,
                   weInpR=1.5, weRInh=1, wiInhR=-1, weRR=0.5, sigm=3,
                   rpR=3 * ms, rpInh=1 * ms,
                   num_neurons=64, num_inputs=1,
@@ -185,11 +178,13 @@ def gen_reservoir(groupname,
                       equation_builder=neuron_eq_builder(
                           num_inputs=3 + num_inputs),
                       refractory=rpR, name='g' + groupname)
+    gRGroup.set_params(neuron_model_params)
 
     if fraction_inh_neurons is not None:
         gRInhGroup = Neurons(round(num_neurons * fraction_inh_neurons),
                              equation_builder=neuron_eq_builder(num_inputs=1),
                              refractory=rpInh, name='g' + groupname + '_Inh')
+        gRInhGroup.set_params(neuron_model_params)
 
     # empty input for Reservoir group
     ts_reservoir = np.asarray([]) * ms

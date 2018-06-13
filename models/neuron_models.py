@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
+"""This contains subclasses of NeuronEquationBuilder with predefined common parameters
+"""
 # @Author: mmilde
 # @Date:   2018-01-08 14:53:11
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-11 18:14:03
 
-""" This contains subclasses of NeuronEquationBuilder with predefined common parameters"""
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 import teili.models
 import os
 
 
 class Izhikevich(NeuronEquationBuilder):
-    """ This class provides you with all equations to simulate a voltage-based
+    """This class provides you with all equations to simulate a voltage-based
     quadratic, adaptive integrate and fire neuron.
     """
 
     def __init__(self, num_inputs=1):
+        """This initializes the NeuronEquationBuilder with Izhikevich neuron model.
+
+        Args:
+            num_inputs (int, optional): Description
+        """
         NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='calcium_feedback',
                                        integration_mode='quadratic', leak='non_leaky',
                                        position='spatial', noise='none')
@@ -23,11 +27,16 @@ class Izhikevich(NeuronEquationBuilder):
 
 
 class ExpAdaptIF(NeuronEquationBuilder):
-    """ This class provides you with all equations to simulate a voltage-based
+    """This class provides you with all equations to simulate a voltage-based
     exponential, adaptive integrate and fire neuron.
     """
 
     def __init__(self, num_inputs=1):
+        """This initializes the NeuronEquationBuilder with ExpAdaptIF neuron model.
+
+        Args:
+            num_inputs (int, optional): Description
+        """
         NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='calcium_feedback',
                                        integration_mode='exponential', leak='non_leaky',
                                        position='spatial', noise='none')
@@ -35,13 +44,18 @@ class ExpAdaptIF(NeuronEquationBuilder):
 
 
 class DPI(NeuronEquationBuilder):
-    """ This class provides you with all equations to simulate a current-based
+    """This class provides you with all equations to simulate a current-based
     exponential, adaptive leaky integrate and fire neuron as implemented on
     the neuromorphic chips by the NCS group. The neuronmodel follows the DPI neuron
     which was published in 2014 (Chicca et al. 2014).
     """
 
     def __init__(self, num_inputs=1):
+        """This initializes the NeuronEquationBuilder with DPI neuron model.
+
+        Args:
+            num_inputs (int, optional): Description
+        """
         NeuronEquationBuilder.__init__(self, base_unit='current', adaptation='calcium_feedback',
                                        integration_mode='exponential', leak='leaky',
                                        position='spatial', noise='none')

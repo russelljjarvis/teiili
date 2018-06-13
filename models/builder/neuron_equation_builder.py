@@ -1,17 +1,40 @@
 # -*- coding: utf-8 -*-
-# @Author: mrax, alpren, mmilde
-# @Date:   2018-01-12 11:34:34
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-11 18:16:20
-
-"""
-This file contains a class that manages a neuron equation.
+"""This file contains a class that manages a neuron equation.
 
 And it prepares a dictionary of keywords for easy synapse creation.
-
 It also provides a function to add lines to the model.
 
+Example:
+    To use the NeuronEquationBuilder "on the fly"
+    you can initialize it as DPI neuron:
+
+    >>> from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+    >>> num_inputs = 2
+    >>> my_neu_model = NeuronEquationBuilder.__init__(base_unit='current', adaptation='calcium_feedback',
+                                       integration_mode='exponential', leak='leaky',
+                                       position='spatial', noise='none')
+    >>> my_neuron.add_input_currents(num_inputs)
+
+    Or if you have a pre-defined neuron model you can import this dictionary as:
+
+    >>> from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+    >>> my_neu_model = NeuronEquationBuilder.import_eq(
+        'teili/models/equations/DPI', num_inputs=2)
+
+    in both cases you can pass it to Neurons:
+
+    >>> from teili.core.groups import Neurons
+    >>> my_neuron = Neurons(2, equation_builder=my_neu_model, name="my_neuron")
+
+    Another way of using it is to import the DPI class directly:
+
+    >>> from teili.models.neuron_models import DPI
+    >>> from teili.core.groups import Neurons
+    >>> my_neuron = Neurons(2, equation_builder=DPI(num_inputs=2), name="my_neuron")
 """
+# @Author: mrax, alpren, mmilde
+# @Date:   2018-01-12 11:34:34
+
 import os
 import importlib
 import re
@@ -28,34 +51,33 @@ class NeuronEquationBuilder():
     as spike-frequency adaptation, leakage etc.
 
     Attributes:
-        changeableParameters (list): List of changeable parameters during runtime
-        model (dict): Actually neuron model differential equation
-        parameters (dict): Dictionary of parameters
-        refractory (str): Refractory period of the neuron
-        reset (str): Reset level after spike
-        standaloneVars (dict): Dictionary of standalone variables
-        threshold (str): Neuron's spiking threshold
-        verbose (bool): Flag to print more detailed output of neuron equation builder
+        keywords (dict): Dictionary containing all relevant keywords and equations for
+            brian2, such as model, refractory, reset, threshold and parameters.
+        num_inputs (int): Number specifying how many distinct neuron population project
+            to the target neuron population.
+        verbose (bool): Flag to print more detailed output of neuron equation builder.
     """
 
     def __init__(self, keywords=None, base_unit='current', adaptation='calciumFeedback',
                  integration_mode='exponential', leak='leaky', position='spatial',
                  noise='gaussianNoise', refractory='refractory', num_inputs=1, verbose=False):
-        """Summary
+        """Initializes NeuronEquationBuilder with defined keyword arguments.
 
         Args:
-            model (dict, optional): Brian2 like model
-            base_unit (str, optional): Indicates if neuron is current- or conductance-based
+            keywords (dict, optional): Brian2 like model.
+            base_unit (str, optional): Indicates if neuron is current- or conductance-based.
             adaptation (str, optional): What type of adaptive feedback should be used.
-               So far only calciumFeedback is implemented
+               So far only calciumFeedback is implemented.
             integration_mode (str, optional): Sets if integration up to spike-generation is
-               linear or exponential
-            leak (str, optional): Enables leaky integration
-            position (str, optional): To enable spatial-like position indices on neuron
+               linear or exponential.
+            leak (str, optional): Enables leaky integration.
+            position (str, optional): To enable spatial-like position indices on neuron.
             noise (str, optional): NOT YET IMPLMENTED! This will in the future allow to
                add independent mismatch-like noise on each neuron.
-            refractory (str, optional): Refractory period of the neuron
-            verbose (bool, optional): Flag to print more detailed output of neuron equation builder
+            refractory (str, optional): Refractory period of the neuron.
+            num_inputs (int, optional): Number specifying how many distinct neuron population project
+            to the target neuron population.
+            verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
         """
         self.verbose = verbose
         if keywords is not None:
@@ -135,17 +157,28 @@ class NeuronEquationBuilder():
             self.print_all()
 
     def __call__(self, num_inputs):
-        """
-        This allows the user to call the object with the num_inputs argument, like it is done with the class
+        """This allows the user to call the object with the num_inputs argument, like it is done with the class.
+
         Maybe this use is a bit confusing, but it may be convenient.
+
+        Args:
+            num_inputs (int, required): Number specifying how many distinct neuron population project
+            to the target neuron population.
+
+        Returns:
+            NeuronEquationBuilder obj.: A deep copy of the NeuronEquationBuilder object.
         """
         builder_copy = copy.deepcopy(self)
         builder_copy.add_input_currents(num_inputs)
         return builder_copy
 
     def add_input_currents(self, num_inputs):
-        """automatically adds the line: Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = num_inputs)
-        it also adds all these input currents as state variables
+        """Automatically adds the input current line according to num_inputs.
+
+        It also adds all these input currents as state variables.
+
+        Example:
+            >>> Iin = Ie0 + Ii0 + Ie1 + Ii1 + ... + IeN + IiN (with N = num_inputs)
 
         Args:
             num_inputs (int): Number of inputs to the post-synaptic neuron
@@ -215,6 +248,11 @@ class NeuronEquationBuilder():
         print('-_-_-_-_-_-_-_-')
 
     def export_eq(self, filename):
+        """Function to export generated neuron model to a a file
+
+        Args:
+            filename (str): Path/to/location/to/store/neuron_model.py.
+        """
         with open(filename + ".py", 'w') as file:
             file.write('from brian2.units import * \n')
             file.write(os.path.basename(filename) + " = {")
@@ -244,10 +282,19 @@ class NeuronEquationBuilder():
 
     @classmethod
     def import_eq(cls, filename, num_inputs=1):
-        '''
+        """Function to import pre-defined neuron_model.
+
         num_inputs is used to add additional input currents that are used
-        for different synapses that are summed
-        '''
+        for different synapses that are summed.
+
+        Args:
+            filename (str): Path/to/location/where/model/is/stored/neuron_model.py.
+            num_inputs (int): Number of inputs to the post-synaptic neuron.
+
+        Returns:
+            NeuronEquationBuilder obj.: Object containing keywords (dict) with all relevant
+                keys, to generate neuron_model.
+        """
         # if only the filename without path is given, we assume it is one of
         # the predefined models
         if os.path.dirname(filename) is "":
@@ -275,10 +322,10 @@ class NeuronEquationBuilder():
 
 
 def print_param_dictionaries(Dict):
-    """Function to print dictionaries of parameters in an ordered way
+    """Function to print dictionaries of parameters in an ordered way.
 
     Args:
-        Dict (dict): Parameter dictionary to be printed
+        Dict (dict): Parameter dictionary to be printed.
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))

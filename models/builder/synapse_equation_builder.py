@@ -1,16 +1,39 @@
-"""Summary
+# -*- coding: utf-8 -*-
+"""This file contains a class that manages a synapse equation.
+
+And it prepares a dictionary of keywords for easy synapse creation.
+It also provides a function to add lines to the model.
+
+Example:
+    To use the SynapseEquationBuilder "on the fly"
+    you can initialize it as DPI neuron:
+
+    >>> from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+    >>> my_syn_model = SynapseEquationBuilder.__init__(base_unit='DPI',
+                                                       plasticity='non_plastic')
+
+
+    Or if you have a pre-defined synapse model you can import this dictionary as:
+
+    >>> from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+    >>> my_syn_model = SynapseEquationBuilder.import_eq(
+        'teili/models/equations/DPISyn')
+
+    in both cases you can pass it to Connections:
+
+    >>> from teili.core.groups import Connections
+    >>> my_synapse = Connections(testNeurons, testNeurons2,
+                                 equation_builder=DPISyn, name="my_synapse")
+
+    Another way of using it is to import the DPI class directly:
+
+    >>> from teili.models.synapse_models import DPISyn
+    >>> from teili.core.groups import Connections
+    >>> my_synapse = Connections(testNeurons, testNeurons2,
+                  equation_builder=DPISyn, name="my_synapse")
 """
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-15 17:53:31
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-12 18:15:41
-"""
-This file contains a class that manages a synapse equation.
-
-And it prepares a dictionary of keywords for easy synapse creation.
-
-It also provides a function to add lines to the model.
-"""
 
 import os
 import importlib
@@ -25,30 +48,26 @@ class SynapseEquationBuilder():
     """Class which builds synapse equation.
 
     Attributes:
-        keywords (dict): Total synapse model Brian2 compatible, composed of
-            model (string): Actually neuron model differential equation
-            on_post (string): Dictionary with equations specifying behaviour of synapse
-                in response to a post-synaptic spike
-            on_pre (string): Dictionary with equations specifying behaviour of synapse
-                in response to a pre-synaptic spike
-            parameters (dict): Dictionary of parameters
-        keywords_original (TYPE): Description
-        verbose (bool): Flag to print more detailed output of neuron equation builder
+        keywords (dict): Dictionary containing all relevant keywords and equations for
+            brian2, such as model, on_post, on_pre and parameters
+        keywords_original (dict): Dictionary containing all needed keywords for equation
+            builder.
+        verbose (bool): Flag to print more detailed output of neuron equation builder.
     """
 
     def __init__(self, keywords=None, base_unit='current', kernel='exponential',
                  plasticity='non_plastic', verbose=False):
-        """Summary
+        """Initializes SynapseEquationBuilder with defined keyword arguments.
 
         Args:
-            keywords (None, optional): Description
+            keywords (dict, optional): Brian2 like model.
             base_unit (str, optional): Indicates if synapse is current-, conductance-based
-                or a DPI current model (for reference see ) #let's add a paper here
-            kernel (str, optional): Specifying temporal kernel with which each spike gets convolved, i.e.
-                exponential, decay, or alpha function
-            plasticity (str, optional): Plasticity algorithm for the synaptic weight. Can either be
-                'non_plastic', 'fusi' or 'stdp'
-            verbose (bool, optional): Flag to print more detailed output of neuron equation builder
+                or a DPI current model (for reference see ).
+            kernel (str, optional): Specifying temporal kernel with which each spike gets
+                convolved, i.e. exponential, decay, or alpha function.
+            plasticity (str, optional): Plasticity algorithm for the synaptic weight.
+                Can either be 'non_plastic', 'fusi' or 'stdp'.
+            verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
         """
 
         self.verbose = verbose
@@ -168,10 +187,11 @@ class SynapseEquationBuilder():
 
     def __call__(self):
         """This allows the user to call the object like a class in order to make new objects.
+
         Maybe this use is a bit confusing, so rather not use it.
 
         Returns:
-            TYPE: Description
+            SynapseEquationBuilder obj.: A deep copy of the SynapseEquationBuilder object.
         """
 
         builder_copy = copy.deepcopy(self)
@@ -179,8 +199,9 @@ class SynapseEquationBuilder():
         return builder_copy
 
     def set_input_number(self, input_number):
-        """Sets the input number of synapse. This is needed to overcome
-        the summed issue in brian2.
+        """Sets the input number of synapse.
+
+        This is needed to overcome the summed issue in brian2.
 
         Args:
             input_number (int): Synapse's input number
@@ -212,7 +233,7 @@ class SynapseEquationBuilder():
         print('-_-_-_-_-_-_-_-')
 
     def export_eq(self, filename):
-        """Summary
+        """Function to export generated neuron model to a a file
 
         Args:
             filename (str): path/where/you/store/your/model.py
@@ -249,16 +270,16 @@ class SynapseEquationBuilder():
 
     @classmethod
     def import_eq(cls, filename):
-        """Summary
+        """Function to import pre-defined synapse_model.
 
         Args:
             filename (str): path/to/your/synapse/model.py
                 Usually synapse models can be found in
-                teili/models/equations
+                teili/models/equations.
 
         Returns:
-            obj: Initializes the class with its keywords, so Connections can use
-                this object
+            SynapseEquationBuilder obj.: Object containing keywords (dict) with all relevant
+                keys, to generate synapse_model.
 
         Examples:
             synapse_object = SynapseEquationBuilder.import_eq(
@@ -288,10 +309,10 @@ class SynapseEquationBuilder():
 
 
 def print_param_dictionaries(Dict):
-    """Function to print dictionaries of parameters in an ordered way
+    """Function to print dictionaries of parameters in an ordered way.
 
     Args:
-        Dict (dict): Parameter dictionary to be printed
+        Dict (dict): Parameter dictionary to be printed.
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))

@@ -1,30 +1,58 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Summary
+"""This module provides a sequence learning building block.
+This building block can be used to learn sequences of items
 
 Attributes:
-    sl_params (TYPE): Description
+    sl_params (dict): Dictionary of default parameters for reservoir.
+
+Example:
+    To use the Reservoir building block in your simulation you need
+    to create an object of the class by:
+
+    >>> from teili.building_blocks.reservoir import Reservoir
+    >>> my_bb = Reservoir(name='my_sequence')
+
+    if you want to change the underlying neuron and synapse model you need to provide
+    different equation_builder class:
+
+    >>> from teili.models.neuron_models import DPI
+    >>> from teili.models.synapse_models import DPISyn
+    >>> my_bb = Reservoir(name='my_sequence',
+                      neuron_eq_builder=DPI,
+                      synapse_eq_builder=DPISyn)
+
+    if you want to change the default parameters of your building block
+    you need to define a dictionary, which you pass to the building_block
+
+    >>> sl_params = {'synInpOrd1e_weight': 1.3,
+                     'synOrdMem1e_weight': 1.1,
+                     'synMemOrd1e_weight': 0.16,
+                     # local
+                     'synOrdOrd1e_weight': 1.04,
+                     'synMemMem1e_weight': 1.54,
+                     # inhibitory
+                     'synOrdOrd1i_weight': -1.95,
+                     'synMemOrd1i_weight': -0.384,
+                     'synCoSOrd1i_weight': -1.14,
+                     'synResetOrd1i_weight': -1.44,
+                     'synResetMem1i_weight': -2.6,
+                     # refractory
+                     'gOrdGroups_refP': 1.7 * ms,
+                     'gMemGroups_refP': 2.3 * ms
+                     }
+    >>> my_bb = Reservoir(name='my_sequence', block_params=sl_params)
 """
-# @Author: Alpha Renner
+# @Author: Alpha Renner, mmilde
 # @Date:   2018-06-01 18:45:19
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 11:24:44
-"""Summary
-
-Attributes:
-    sl_params (TYPE): Description
-"""
 
 import numpy as np
 
-#from brian2 import *
 from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     SpikeGeneratorGroup, NeuronGroup, SpikeMonitor, StateMonitor, figure, plot,\
     seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray,\
     defaultclock, profiling_summary, floor, title, xlabel, ylabel
 
-#from teili.models.neuron_models import ExpAdaptIF
-#from teili.models.synapse_models import ReversalSynV
 from teili import NeuronEquationBuilder, SynapseEquationBuilder
 
 ExpAdaptIF = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
@@ -52,14 +80,14 @@ sl_params = {'synInpOrd1e_weight': 1.3,
 
 
 class SequenceLearning(BuildingBlock):
-    '''a 1 or 2D square WTA
+    '''Sequence Learning Network.
 
     Attributes:
-        cos_group (TYPE): Description
-        group (TYPE): Description
-        input_group (TYPE): Description
-        reset_group (TYPE): Description
-        standalone_params (TYPE): Description
+        cos_group (neuron group): Condition of Satisfaction group.
+        group (dict): List of keys of neuron population.
+        input_group (SpikeGenerator): SpikeGenerator obj. to stimulate Reservoir.
+        reset_group (neuron group): Reset group, to reset network after CoS is met.
+        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation.
     '''
 
     def __init__(self, name,
@@ -70,14 +98,14 @@ class SequenceLearning(BuildingBlock):
         """Summary
 
         Args:
-            name (str, required): Base name for building block
-            neuron_eq_builder (teili.models.builder obj, optional): Neuron equation builder object
-            synapse_eq_builder (teili.models.builder obj, optional): Synapse equation builder object
-            block_params (dict, optional): Dictionary of parameters such as synChaCha1e_weight or gChaGroup_refP
-            num_elements (int, optional): Number oF elements in the sequence
-            num_neurons_per_group (int, optional): Number of neurons used to remember each item
-            num_inputs (int, optional): Number of inputs from different source populations
-            debug (bool, optional): Debug flag
+            name (str, required): Base name for building block.
+            neuron_eq_builder (teili.models.builder obj, optional): Neuron equation builder object.
+            synapse_eq_builder (teili.models.builder obj, optional): Synapse equation builder object.
+            block_params (dict, optional): Dictionary of parameters such as synChaCha1e_weight or gChaGroup_refP.
+            num_elements (int, optional): Number oF elements in the sequence.
+            num_neurons_per_group (int, optional): Number of neurons used to remember each item.
+            num_inputs (int, optional): Number of inputs from different source populations.
+            debug (bool, optional): Debug flag.
         """
         BuildingBlock.__init__(self, name, neuron_eq_builder, synapse_eq_builder,
                                block_params, debug)
@@ -96,14 +124,12 @@ class SequenceLearning(BuildingBlock):
         self.reset_group = self.Groups['gResetGroup']
 
     def plot(self):
-        """Summary
+        """Simple plot for sequence learning network.
 
         Returns:
-            TYPE: Description
+            pyqtgraph window: The window containing the plot.
         """
         return plot_sequence_learning(self.Monitors)
-
-
 
 
 def gen_sequence_learning(groupname='Seq',
@@ -124,31 +150,33 @@ def gen_sequence_learning(groupname='Seq',
                         gMemGroups_refP=2.3 * ms,
                         num_inputs=1,
                         debug=False):
-    """create Sequence Learning Network after the model from Sandamirskaya and Schoener (2010)
+    """Create Sequence Learning Network after the model from Sandamirskaya and Schoener (2010).
 
     Args:
-        groupname (str, optional): Base name for building block
-        neuron_eq_builder (teili.models.builder obj, optional): Neuron equation builder object
-        synapse_eq_builder (teili.models.builder obj, optional): Synapse equation builder object
-        num_elements (int, optional): Number of elements in the sequence
-        num_neurons_per_group (int, optional): Number of neurons used to remember each item
-        synInpOrd1e_weight (float, optional): Parameter specifying the input weight
-        synOrdMem1e_weight (float, optional): Parameter specifying the ordinary to memory weight
-        synMemOrd1e_weight (float, optional): Parameter specifying the memory to ordinary weight
-        synOrdOrd1e_weight (float, optional): Parameter specifying the recurrent weight (ord)
-        synMemMem1e_weight (float, optional): Parameter specifying the recurrent weight (memory)
-        synOrdOrd1i_weight (TYPE, optional): Parameter specifying the recurrent inhibitory weight
-        synMemOrd1i_weight (TYPE, optional): Parameter specifying the memory to ordinary inhibitory weight
-        synCoSOrd1i_weight (TYPE, optional): Parameter specifying the inhibitory weight from cos to ord
-        synResetOrd1i_weight (TYPE, optional): Parameter specifying the the inhibitory weight from reset to ord
-        synResetMem1i_weight (TYPE, optional): Parameter specifying the the inhibitory weight from reset cos to memory
-        gOrdGroups_refP (TYPE, optional): Parameter specifying the refractory period
-        gMemGroups_refP (TYPE, optional): Parameter specifying the refractory period
-        num_inputs (int, optional): Number of inputs from different source populations
-        debug (bool, optional): Debug flag
+        groupname (str, optional): Base name for building block.
+        neuron_eq_builder (teili.models.builder obj, optional): Neuron equation builder object.
+        synapse_eq_builder (teili.models.builder obj, optional): Synapse equation builder object.
+        num_elements (int, optional): Number of elements in the sequence.
+        num_neurons_per_group (int, optional): Number of neurons used to remember each item.
+        synInpOrd1e_weight (float, optional): Parameter specifying the input weight.
+        synOrdMem1e_weight (float, optional): Parameter specifying the ordinary to memory weight.
+        synMemOrd1e_weight (float, optional): Parameter specifying the memory to ordinary weight.
+        synOrdOrd1e_weight (float, optional): Parameter specifying the recurrent weight (ord).
+        synMemMem1e_weight (float, optional): Parameter specifying the recurrent weight (memory).
+        synOrdOrd1i_weight (TYPE, optional): Parameter specifying the recurrent inhibitory weight.
+        synMemOrd1i_weight (TYPE, optional): Parameter specifying the memory to ordinary inhibitory weight.
+        synCoSOrd1i_weight (TYPE, optional): Parameter specifying the inhibitory weight from cos to ord.
+        synResetOrd1i_weight (TYPE, optional): Parameter specifying the the inhibitory weight from reset to ord.
+        synResetMem1i_weight (TYPE, optional): Parameter specifying the the inhibitory weight from reset cos to memory.
+        gOrdGroups_refP (TYPE, optional): Parameter specifying the refractory period.
+        gMemGroups_refP (TYPE, optional): Parameter specifying the refractory period.
+        num_inputs (int, optional): Number of inputs from different source populations.
+        debug (bool, optional): Debug flag.
 
     Returns:
-        TYPE: Description
+        Groups (dictionary): Keys to all neuron and synapse groups.
+        Monitors (dictionary): Keys to all spike- and statemonitors.
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     """
 
     nOrdNeurons = num_neurons_per_group * num_elements
@@ -308,13 +336,14 @@ def gen_sequence_learning(groupname='Seq',
 
 
 def plot_sequence_learning(Monitors):
-    """Summary
+    """A simple matplotlib wrapper function to plot network activity.
 
     Args:
-        Monitors (TYPE): Description
+        Monitors (building_block.monitors): Dictionary containing all monitors
+            created by gen_sequence_learning().
 
     Returns:
-        TYPE: Description
+        plt.fig: Matplotlib figure.
     """
     spikemonOrd = Monitors['spikemonOrd']
     spikemonMem = Monitors['spikemonMem']

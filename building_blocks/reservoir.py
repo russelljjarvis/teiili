@@ -1,16 +1,44 @@
 # -*- coding: utf-8 -*-
-# @Author: mmilde, alpren
+"""This module provides a reservoir network, as described in
+Nicola and Clopath 2017.
+
+Attributes:
+    reservoir_params (dict): Dictionary of default parameters for reservoir.
+
+Example:
+    To use the Reservoir building block in your simulation you need
+    to create an object of the class by:
+
+    >>> from teili.building_blocks.reservoir import Reservoir
+    >>> my_bb = Reservoir(name='my_reservoir')
+
+    if you want to change the underlying neuron and synapse model you need to provide
+    different equation_builder class:
+
+    >>> from teili.models.neuron_models import DPI
+    >>> from teili.models.synapse_models import DPISyn
+    >>> my_bb = Reservoir(name='my_reservoir',
+                      neuron_eq_builder=DPI,
+                      synapse_eq_builder=DPISyn)
+
+    if you want to change the default parameters of your building block
+    you need to define a dictionary, which you pass to the building_block
+
+    >>> reservoir_params = {'weInpR': 1.5,
+                            'weRInh': 1,
+                            'wiInhR': -1,
+                            'weRR': 0.5,
+                            'sigm': 3,
+                            'rpR': 3 * ms,
+                            'rpInh': 1 * ms
+                            }
+    >>> my_bb = Reservoir(name='my_reservoir', block_params=reservoir_params)
+"""
+# @Author: ssolinas, mmilde, alpren
 # @Date:   2017-12-27 10:46:44
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 09:56:29
 
-"""
-This files contains different Reservoir circuits
-NicolaClopath2017
-...
-"""
-
-import time, sys
+import time
+import sys
 import numpy as np
 # import matplotlib.pyplot as plt
 from pyqtgraph.Qt import QtGui, QtCore
@@ -33,35 +61,27 @@ from teili.models.synapse_models import DoubleExponential
 
 from teili.models.parameters.izhikevich_param import parameters as IzhParams
 
-# RParams = {'weInpR': 1.5,
-#            'weRInh': 1,
-#            'wiInhR': -1,
-#            'weRR': 0.5,
-#            'sigm': 3,
-#            'rpR': 3 * ms,
-#            'rpInh': 1 * ms
-# }
-
 reservoir_params = {'weInpR': 1.5,
-                   'weRInh': 1,
-                   'wiInhR': -1,
-                   'weRR': 0.5,
-                   'sigm': 3,
-                   'rpR': 3 * ms,
-                   'rpInh': 1 * ms
-                   }
+                    'weRInh': 1,
+                    'wiInhR': -1,
+                    'weRR': 0.5,
+                    'sigm': 3,
+                    'rpR': 3 * ms,
+                    'rpInh': 1 * ms
+                    }
 
 
 class Reservoir(BuildingBlock):
-    '''A recurrent Neural Net inmplementing a Reservoir
+    '''A recurrent Neural Net implementing a Reservoir.
 
     Attributes:
-        group (dict): List of keys of neuron population
-        input_group (SpikeGenerator): SpikeGenerator obj. to stimulate Reservoir
-        num_neurons (int, optional): Size of Reservoir neuron population
-        fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple
-        spikemonR (TYPE): Description
-        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation
+        group (dict): List of keys of neuron population.
+        input_group (SpikeGenerator): SpikeGenerator obj. to stimulate Reservoir.
+        num_neurons (int, optional): Size of Reservoir neuron population.
+        fraction_inh_neurons (float, optional): Set to None to skip Dale's principle.
+        spikemonR brian2.SpikeMonitor obj.): A spikemonitor which monitors the activity of the
+            reservoir population.
+        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation.
     '''
 
     def __init__(self, name,
@@ -79,17 +99,17 @@ class Reservoir(BuildingBlock):
         """Summary
 
         Args:
-            groupname (str, required): Name of the Reservoir population
-            dimensions (int, optional): Specifies if 1 or 2 dimensional Reservoir is created
-            neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
-            synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
-            block_params (dict, optional): Parameter for neuron populations
-            num_neurons (int, optional): Size of Reservoir neuron population
-            fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple
-            additional_statevars (list, optional): List of additonal statevariables which are not standard
-            num_inputs (int, optional): Number of input currents to Reservoir
-            monitor (bool, optional): Flag to auto-generate spike and statemonitors
-            debug (bool, optional): Flag to gain additional information
+            groupname (str, required): Name of the Reservoir population.
+            dimensions (int, optional): Specifies if 1 or 2 dimensional Reservoir is created.
+            neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models.
+            synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models.
+            block_params (dict, optional): Parameter for neuron populations.
+            num_neurons (int, optional): Size of Reservoir neuron population.
+            fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple.
+            additional_statevars (list, optional): List of additional state variables which are not standard.
+            num_inputs (int, optional): Number of input currents to Reservoir.
+            monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+            debug (bool, optional): Flag to gain additional information.
 
         Raises:
             NotImplementedError:
@@ -145,32 +165,31 @@ def gen_reservoir(groupname,
                   fraction_inh_neurons=0.2,
                   spatial_kernel="kernel_mexican_1d",
                   monitor=True, additional_statevars=[], debug=False):
-
-    """Summary
+    """Generates a reservoir network.
 
     Args:
-        groupname (str, required): Name of the Reservoir population
-        neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
-        synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
-        weInpR (float, optional): Excitatory synaptic weight between input SpikeGenerator and Reservoir neurons
-        weRInh (int, optional): Excitatory synaptic weight between Reservoir population and inhibitory interneuron
-        wiInhR (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and Reservoir population
-        weRR (float, optional): Self-excitatory synaptic weight (Reservoir)
-        sigm (int, optional): Description
-        rpR (float, optional): Refractory period of Reservoir neurons
-        rpInh (float, optional): Refractory period of inhibitory neurons
-        num_neurons (int, optional): Size of Reservoir neuron population
-        fraction_inh_neurons (int, optional): Set to None to skip Dale's priciple
-        cutoff (int, optional): Radius of self-excitation
-        num_inputs (int, optional): Number of input currents to Reservoir
-        monitor (bool, optional): Flag to auto-generate spike and statemonitors
-        additional_statevars (list, optional): List of additonal statevariables which are not standard
-        debug (bool, optional): Flag to gain additional information
+        groupname (str, required): Name of the Reservoir population.
+        neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models.
+        synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models.
+        weInpR (float, optional): Excitatory synaptic weight between input SpikeGenerator and Reservoir neurons.
+        weRInh (int, optional): Excitatory synaptic weight between Reservoir population and inhibitory interneuron.
+        wiInhR (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and Reservoir population.
+        weRR (float, optional): Self-excitatory synaptic weight (Reservoir).
+        sigm (int, optional): Standard deviation in number of neurons for Gaussian connectivity kernel.
+        rpR (float, optional): Refractory period of Reservoir neurons.
+        rpInh (float, optional): Refractory period of inhibitory neurons.
+        num_neurons (int, optional): Size of Reservoir neuron population.
+        fraction_inh_neurons (int, optional): Set to None to skip Dale's principle.
+        cutoff (int, optional): Radius of self-excitation.
+        num_inputs (int, optional): Number of input currents to Reservoir.
+        monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+        additional_statevars (list, optional): List of additional state variables which are not standard.
+        debug (bool, optional): Flag to gain additional information.
 
     Returns:
-        Groups (dictionary): Keys to all neuron and synapse groups
-        Monitors (dictionary): Keys to all spike- and statemonitors
-        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network
+        Groups (dictionary): Keys to all neuron and synapse groups.
+        Monitors (dictionary): Keys to all spike- and statemonitors.
+        standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     """
     # time measurement
     start = time.clock()
@@ -281,11 +300,10 @@ def gen_reservoir(groupname,
         gRGroup.name + '_refP': rpR
     }
     if fraction_inh_neurons is not None:
-        standalone_params[synRInh1e.name + '_weight'] =  weRInh
+        standalone_params[synRInh1e.name + '_weight'] = weRInh
         standalone_params[synInhR1i.name + '_weight'] = wiInhR
         standalone_params[gRInhGroup.name + '_refP'] = rpInh,
 
-    
     end = time.clock()
     if debug:
         print('creating Reservoir of ' + str(num_neurons) + ' neurons with name ' +
@@ -305,9 +323,9 @@ def plot_reservoir(name, start_time, end_time, num_neurons, reservoir_monitors):
         start_time (brian2.units.fundamentalunits.Quantity, required): Start time in ms
             from when network activity should be plotted.
         end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
-            Can be smaller than simulation time but not larger
-        num_neurons (int, required): 1D number of neurons in Reservoir populations
-        reservoir_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in Reservoir.Monitors
+            Can be smaller than simulation time but not larger.
+        num_neurons (int, required): 1D number of neurons in Reservoir populations.
+        reservoir_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in Reservoir.Monitors.
     """
     app = QtGui.QApplication.instance()
     if app is None:
@@ -352,39 +370,3 @@ def plot_reservoir(name, start_time, end_time, num_neurons, reservoir_monitors):
                      variable="Iin", unit=pA, window=state_syn_input, name=name)
 
     app.exec_()
-
-    # fig = figure(figsize=(8, 3))
-    # plotSpikemon(start_time, end_time,
-    #              reservoir_monitors['spikemonR'], num_neurons, ylab='ind R_' + name)
-    # fig = figure(figsize=(8, 3))
-    # plotSpikemon(start_time, end_time,
-    #              reservoir_monitors['spikemonRInp'], None, ylab='ind RInp_' + name)
-    # fig = figure(figsize=(8, 3))
-    # plotSpikemon(start_time, end_time,
-    #              reservoir_monitors['spikemonRInh'], None, ylab='ind RInh_' + name)
-    # # fig.savefig('fig/'+name+'_Spikes.png')
-
-    # if num_neurons > 20:
-    #     plot_state_neurons = range(20)
-    # else:
-    #     plot_state_neurons = range(num_neurons)
-
-    # statemonR = reservoir_monitors['statemonR']
-    # if len(statemonR.t) > 0:
-    #     fig = figure(figsize=(8, 10))
-    #     nPlots = 3 * 100
-    #     subplot(nPlots + 11)
-    #     for ii in plot_state_neurons:
-    #         plotStatemon(start_time, end_time, statemonR,
-    #                      ii, variable='Imem', unit=pA, name=name)
-    #     subplot(nPlots + 12)
-    #     for ii in plot_state_neurons:
-    #         plotStatemon(start_time, end_time, statemonR,
-    #                      ii, variable='Iin', unit=pA, name=name)
-    #     # subplot(nPlots + 13)
-    #     # for ii in plot_state_neurons:
-    #     #     plotStatemon(start_time, end_time, statemonR,
-    #     #                  ii, variable='Ie1', unit=pA, name=name)
-    #     # fig.savefig('fig/'+name+'_States.png', dpi=300)
-    # plt.draw()
-    # plt.show()

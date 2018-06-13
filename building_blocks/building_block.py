@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""This module provides the parent class for (neuronal) building blocks.
+
+Todo:
+    * Hierarchy of building_blocks.
+        There is a problem, when 2 BBs of the same kind are added to another BB, as the
+        names collide. There is a problem, when 2 BBs of the same kind are added to
+        another BB, as the names collide.
+    * Monitor naming.
+        Important all Monitors of Building blocks have to be named and named uniquely!
+        Otherwise they will not be found, when a Network is rerun in standalone mode
+        after rebuild without recompile
+"""
+
 # @Author: alpren, mmilde
 # @Date:   2017-07-27 10:46:44
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 14:42:30
+
 
 from brian2 import asarray
 from collections import OrderedDict
 
-# TODO: There is a problem, when 2 BBs of the same kind are added to another BB, as the names collide.
-# We could use a hierarchy of blocks
-
-
-# TODO: Important all Monitors of Building blocks have to be named and named uniquely!
-# Otherwise they will not be found, when a Network is rerun in standalone mode after rebuild without recompile
 
 class BuildingBlock:
 
@@ -61,7 +67,8 @@ class BuildingBlock:
         allBrianObjects = self.Groups
         if self.monitor:
             allBrianObjects.update(self.Monitors)
-        # return iter([{**self.Groups,**self.Monitors}[key] for key in {**self.Groups,**self.Monitors}]) #not Python 2 compatible
+        # return iter([{**self.Groups,**self.Monitors}[key] for key in
+        # {**self.Groups,**self.Monitors}]) #not Python 2 compatible
         return iter([allBrianObjects[key] for key in allBrianObjects])
 
     def get_run_args(self):

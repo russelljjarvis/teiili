@@ -12,9 +12,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+import os
+import sys
 # sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath("../../"))
+sys.path.insert(0, os.path.abspath("../"))
 
 
 # -- Project information -----------------------------------------------------
@@ -38,27 +40,37 @@ release = '1'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-# extensions = [
-#     'sphinx.ext.autodoc',
-#     'sphinx.ext.doctest',
-#     'sphinx.ext.todo',
-#     'sphinx.ext.mathjax',
-#     'sphinx.ext.viewcode',
-#     'sphinx.ext.napoleon',
-#     'sphinx.ext.autosummary',
-# ]
 extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-]
-#autosummary_generate = True
+    'sphinx.ext.viewcode',
+    'sphinx.ext.todo']
+
+# Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = True
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_use_keyword = True
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
+# MARKDOWN PARSER
+source_parsers = {
+    '.md': 'recommonmark.parser.CommonMarkParser',
+}
 source_suffix = ['.rst', '.md']
 #source_suffix = '.rst'
 
@@ -92,21 +104,7 @@ html_theme = 'sphinx_rtd_theme'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-html_theme_options = {
-    # 'canonical_url': '',
-    'analytics_id': '',
-    'logo_only': False,
-    'display_version': True,
-    # 'prev_next_buttons_location': 'bottom',
-    # 'style_external_links': False,
-    # 'vcs_pageview_mode': '',
-    # Toc options
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    # 'navigation_depth': 4,
-    # 'includehidden': True,
-    # 'titles_only': False
-}
+# html_theme_options = {}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -121,7 +119,12 @@ html_static_path = ['static']
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-# html_sidebars = {}
+html_sidebars = {
+    '**': [
+        'relations.html',
+        'searchbox.html',
+    ]
+}
 
 
 # -- Options for HTMLHelp output ---------------------------------------------

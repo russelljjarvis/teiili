@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 """This file contains dictionaries of neuron equations or modules,
    combined by the neuron equation builder.
 
@@ -28,6 +28,38 @@ Modules:
     v_noise (TYPE): Description
     voltageEquationsets (TYPE): Description
     voltageParameters (TYPE): Description
+
+Attributes:
+    activity (TYPE): Description
+    current_equation_sets (TYPE): Description
+    current_parameters (TYPE): Description
+    i_a (TYPE): Description
+    i_a_params (TYPE): Description
+    i_ahp (TYPE): Description
+    i_ahp_params (TYPE): Description
+    i_exponential_params (TYPE): Description
+    i_model_template (TYPE): Description
+    i_model_template_params (TYPE): Description
+    i_noise (TYPE): Description
+    i_noise_params (TYPE): Description
+    i_non_leaky_params (TYPE): Description
+    modes (TYPE): Description
+    none (TYPE): Description
+    none_params (dict): Description
+    spatial (TYPE): Description
+    v_adapt (TYPE): Description
+    v_adapt_params (TYPE): Description
+    v_exp_current (TYPE): Description
+    v_exp_current_params (TYPE): Description
+    v_leak (TYPE): Description
+    v_leak_params (TYPE): Description
+    v_model_template (TYPE): Description
+    v_model_templatePara (TYPE): Description
+    v_noise (TYPE): Description
+    v_quad_current (TYPE): Description
+    v_quad_params (TYPE): Description
+    voltage_equation_sets (TYPE): Description
+    voltage_parameters (TYPE): Description
 """
 
 from brian2 import pF, nS, mV, ms, pA, nA

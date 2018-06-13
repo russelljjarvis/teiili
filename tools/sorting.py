@@ -24,7 +24,7 @@ Example:
 # @Author: Moritz Milde
 # @Date:   2018-06-05 11:09:20
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-13 11:13:47
+# @Last Modified time: 2018-06-13 11:33:45
 
 import numpy as np
 from tkinter import filedialog
@@ -82,11 +82,11 @@ class SortMatrix():
         self.sorted_matrix = self.sort_matrix()
 
     def load_matrix(self):
-        '''Load matrix from .npy file
+        """Load matrix from .npy file
 
         Returns:
             ndarray: loaded matrix from file.
-        '''
+        """
 
         if self.filename is not None:
             matrix = np.load(self.filename)
@@ -98,7 +98,7 @@ class SortMatrix():
         return self.matrix
 
     def compute_distance(self, x, y):
-        '''This function returns the euclidean distance
+        """This function returns the euclidean distance
         of any to vectors x and y
 
         Args:
@@ -107,19 +107,19 @@ class SortMatrix():
 
         Returns:
             ndarray: Element-wise euclidean distance of 2 1d vectors.
-        '''
+        """
         return np.linalg.norm(x - y)
 
     def get_similarity_matrix(self, axis=0):
-        '''This function computes a similarity matrix of a given
+        """This function computes a similarity matrix of a given
         matrix.
 
         Args:
-            axis (int, optional): Axis along which similarity should be computed
+            axis (int, optional): Axis along which similarity should be computed.
 
         Returns:
-            ndarray: Matrix containing similarities
-        '''
+            ndarray: Matrix containing similarities.
+        """
 
         self.similarity_matrix = np.zeros(
             (np.size(self.matrix, axis), np.size(self.matrix, axis))) * np.nan
@@ -144,7 +144,7 @@ class SortMatrix():
         return self.similarity_matrix
 
     def get_permutation(self, axis=0):
-        '''To sort a given matrix according to its similarity we need to construct
+        """To sort a given matrix according to its similarity we need to construct
         permutation indices, which are used to sort the matrix. First we find the most
         similar entry in the similarity matrix. This function allows each node in the similarity
         graph to be only used twice, i.e. each node has maximally two edges connected to it.
@@ -153,11 +153,11 @@ class SortMatrix():
         similarity graph to infinity.
 
         Args:
-            axis (int, optional): Axis along which similarity should be computed
+            axis (int, optional): Axis along which similarity should be computed.
 
         Returns:
-            list: Vector of permuted indices
-        '''
+            list: Vector of permuted indices.
+        """
         similarity_matrix = np.array(self.similarity_matrix)
         steps = []
         degree = np.zeros((np.size(similarity_matrix, 0)))
@@ -225,12 +225,12 @@ class SortMatrix():
         return self.permutation
 
     def sort_matrix(self):
-        '''This function returns the sorted matrix given
+        """This function returns the sorted matrix given
         the permutation indices.
 
         Returns:
-            ndarray: Sorted matrix according to similarity in euclidean distance
-        '''
+            ndarray: Sorted matrix according to similarity in euclidean distance.
+        """
         if len(self.permutation) == 0:
             self.permutation = self.get_permutation(matrix=self.matrix)
         tmp_matrix = self.matrix

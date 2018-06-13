@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Summary
+"""Function for external interfaces such as an event-based camera, e.g. DVS.
+
+Functions in this module convert data from or to brian2 compatible formats.
+In particular, there are functions to convert data coming from DVS cameras.
 """
 # @Author: mmilde
 # @Date:   2017-12-27 12:07:15
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 16:43:55
-
-"""
-Function for external interfaces such as an event-based camera, e.g. DVS.
-functions in this module convert data from or to brian2 compatible formats.
-In particular, there are functions to convert data coming from DVS cameras.
-"""
 
 import os
 import numpy as np
@@ -19,10 +14,10 @@ import itertools
 
 
 def skip_header(file_read):
-    '''skip header
+    '''skip header.
 
     Args:
-        file_read (TYPE): Description
+        file_read (TYPE): File
     '''
     line = file_read.readline()
     while line.startswith(b'#'):
@@ -33,7 +28,7 @@ def skip_header(file_read):
 
 
 def read_events(file_read, x_dim, y_dim):
-    """A simple function that read events from cAER tcp
+    """A simple function that read events from cAER tcp.
 
     Args:
         file_read (TYPE): Description
@@ -100,30 +95,31 @@ def read_events(file_read, x_dim, y_dim):
 
 
 def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit='ms'):
-    """
-    load AER data file and parse these properties of AE events:
-        - timestamps (in us),
-        - x,y-position [0..127]x[0..127] for DVS128 [0..239]x[0..127] for DAVIS240
-        - polarity (0/1)
+    """Loads AER data file and parse these properties of AE events.
+
+    Properties:
+        * timestamps (in us).
+        * x,y-position [0..127]x[0..127] for DVS128 [0..239]x[0..127] for DAVIS240.
+        * polarity (0/1).
 
     Args:
-        datafile (str, optional): Aedat recording as provided by jAER or cAER
-        length (int, optional): how many bytes(B) should be read; default 0=whole file
+        datafile (str, optional): Aedat recording as provided by jAER or cAER.
+        length (int, optional): how many bytes(B) should be read; default 0=whole file.
         version (str, optional): which file format version is used:
             - "dat" = V1 (old)
             - "aedat" jAER AEDAT 2.0 = V2
-            - "aedat" cAER AEDAT 3.1 = V3
-        debug (int, optional): Flag to provide more detailed report. 0 = silent, 1 (default) = print summary,
+            - "aedat" cAER AEDAT 3.1 = V3.
+        debug (int, optional): Flag to provide more detailed report. 0 = silent, 1 (default) = print summary.
             >=2 = print all debug
-        camera (str, optional): Description
+        camera (str, optional): Type of event-based camera.
         unit: output unit of timestamps specified as a string:
             - 'ms' (default), 'us' or 'sec'.
 
     Returns:
-        numpy.ndarray: (xpos, ypos, ts, pol) 2D numpy array containing data of all events
+        numpy.ndarray: (xpos, ypos, ts, pol) 2D numpy array containing data of all events.
 
     Raises:
-        ValueError: Indicates that a camera was specified which is not supported or the AEDAT file version is not supported
+        ValueError: Indicates that a camera was specified which is not supported or the AEDAT file version is not supported.
     """
     try:
         aerdatafh = open(datafile, 'rb')
@@ -310,21 +306,22 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
 
 
 def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True):
-    """Summary: Function which converts events extracted from an aedat file using aedat2numpy
-    into 1D vectors of neuron indices and timestamps. Function only returns index and timestamp
-    list for existing types (e.g. On & Off events)
+    """Function which converts events extracted from an aedat file using aedat2numpy
+    into 1D vectors of neuron indices and timestamps.
+
+    Function only returns index and timestamp list for existing types (e.g. On & Off events).
 
     Args:
-        Events (None, optional): 4D numpd.ndarray which contains pixel location (x,y), timestamps and polarity ((4,#events))
-        event_directory (None, optional): Path to stored events
+        Events (None, optional): 4D numpd.ndarray which contains pixel location (x,y), timestamps and polarity ((4,#events)).
+        event_directory (None, optional): Path to stored events.
         resolution (str/int, optional): Resolution of the camera.
-        scale (bool, optional): Flag to rescale the timestamps from micro- to milliseconds
+        scale (bool, optional): Flag to rescale the timestamps from micro- to milliseconds.
 
     Returns:
-        indices_on (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of ON events
-        ts_on (1d numpy.array): Unique timestamps of active indices of ON events
-        indices_off (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of OFF events
-        ts_off (1d numpy.array): Unique timestamps of active indices of OFF events
+        indices_on (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of ON events.
+        ts_on (1d numpy.array): Unique timestamps of active indices of ON events.
+        indices_off (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of OFF events.
+        ts_off (1d numpy.array): Unique timestamps of active indices of OFF events.
     """
     if event_directory is not None:
         assert type(event_directory) == str, 'event_directory must be a string'
@@ -433,21 +430,19 @@ def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True
 
 
 def dvs_csv2numpy(datafile='tmp/aerout.csv', debug=False):
-    """
-    load AER csv logfile and parse these properties of AE events:
-        - timestamps (in us),
-        - x,y-position [0..127]
-        - polarity (0/1)
+    """Loads AER csv logfile and parse these properties of AE events
+
+    Properties:
+        * timestamps (in us).
+        * x,y-position [0..127].
+        * polarity (0/1).
 
     Args:
-        datafile (str, optional): path to the csv file to read
+        datafile (str, optional): path to the csv file to read.
         debug (bool, optional): Flag to print more details about conversion.
 
     Returns:
-        numpy.ndarray: (ts, xpos, ypos, pol) 4D numpy array containing data of all events
-
-    Deleted Parameters:
-        exp_name (str, optional): Description
+        numpy.ndarray: (ts, xpos, ypos, pol) 4D numpy array containing data of all events.
     """
     import pandas as pd
 

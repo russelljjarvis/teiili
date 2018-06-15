@@ -75,8 +75,8 @@ class NeuronEquationBuilder():
             noise (str, optional): NOT YET IMPLMENTED! This will in the future allow to
                add independent mismatch-like noise on each neuron.
             refractory (str, optional): Refractory period of the neuron.
-            num_inputs (int, optional): Number specifying how many distinct neuron population project
-            to the target neuron population.
+            num_inputs (int, optional): Number specifying how many distinct neuron population
+                project to the target neuron population.
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
         """
         self.verbose = verbose

@@ -87,10 +87,14 @@ class WTA(BuildingBlock):
     Attributes:
         dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is created.
         group (dict): List of keys of neuron population.
+        inhGroup (TYPE): Description
         inputGroup (brian2.SpikeGenerator obj.): SpikeGenerator obj. to stimulate WTA.
         num_neurons (int, optional): Size of WTA neuron population.
+        plot_win (TYPE): Description
         spikemonWTA (brian2.SpikeMonitor obj.): A spikemonitor which monitors the activity of the WTA
             population.
+
+    Deleted Attributes:
         standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation.
     '''
 
@@ -111,7 +115,7 @@ class WTA(BuildingBlock):
         """Initializes building block object with defined dimensionality and connectivity scheme
 
         Args:
-            groupname (str, required): Name of the WTA population.
+            name (TYPE): Description
             dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is created.
             neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models.
             synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models.
@@ -122,11 +126,15 @@ class WTA(BuildingBlock):
             cutoff (int, optional): Radius of self-excitation.
             additional_statevars (list, optional): List of additonal statevariables which are not standard.
             num_inputs (int, optional): Number of input currents to WTA.
+            spatial_kernel (None, optional): Description
             monitor (bool, optional): Flag to auto-generate spike and statemonitors.
             debug (bool, optional): Flag to gain additional information.
 
         Raises:
             NotImplementedError: If dimension is set larger than 2, error is raised.
+
+        Deleted Parameters:
+            groupname (str, required): Name of the WTA population.
         """
         self.num_neurons = num_neurons
         self.dimensions = dimensions
@@ -182,6 +190,7 @@ class WTA(BuildingBlock):
         Args:
             start_time (int, optional): Start time of plot in ms.
             end_time (int, optional): End time of plot in ms.
+            plot_states (bool, optional): Description
 
         Returns:
             pyqtgraph window: The window containing the plot.
@@ -219,6 +228,10 @@ def gen1dWTA(groupname,
         num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
         cutoff (int, optional): Radius of self-excitation.
         num_inputs (int, optional): Number of input currents to WTA.
+        spatial_kernel (str, optional): Description
+        EI_connection_probability (float, optional): WTA to interneuron connectivity probability.
+        IE_connection_probability (float, optional): Interneuron to WTA connectivity probability
+        II_connection_probability (float, optional): Interneuron to Interneuron connectivity probability.
         monitor (bool, optional): Flag to auto-generate spike and statemonitors.
         additional_statevars (list, optional): List of additional state variables which are not standard.
         debug (bool, optional): Flag to gain additional information.
@@ -357,7 +370,7 @@ def gen2dWTA(groupname,
              synapse_eq_builder=DPISyn,
              weInpWTA=1.5, weWTAInh=1, wiInhWTA=-1, weWTAWTA=2, sigm=2.5,
              rpWTA=2.5 * ms, rpInh=1 * ms,
-             wiInhInh=0, EI_connection_probability=1, IE_connection_probability=1,
+             wiInhInh=0, EI_connection_probability=1., IE_connection_probability=1.,
              II_connection_probability=0.1,
              spatial_kernel="kernel_gauss_2d",
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
@@ -375,6 +388,11 @@ def gen2dWTA(groupname,
         sigm (int, optional): Standard deviation in number of neurons for Gaussian connectivity kernel.
         rpWTA (float, optional): Refractory period of WTA neurons.
         rpInh (float, optional): Refractory period of inhibitory neurons.
+        wiInhInh (int, optional): Self-inhibitory weight of the interneuron population.
+        EI_connection_probability (float, optional): WTA to interneuron connectivity probability.
+        IE_connection_probability (float, optional): Interneuron to WTA connectivity probability
+        II_connection_probability (float, optional): Interneuron to Interneuron connectivity probability.
+        spatial_kernel (str, optional): Description
         num_neurons (int, optional): Size of WTA neuron population.
         num_inh_neurons (int, optional): Size of inhibitory interneuron population.
         num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
@@ -530,12 +548,16 @@ def plotWTA(wta_monitors, name, start_time=None, end_time=None, plot_states=True
     """Function to easily visualize WTA activity.
 
     Args:
+        wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors.
         name (str, required): Name of the WTA population.
         start_time (brian2.units.fundamentalunits.Quantity): Start time in ms
             from when network activity should be plotted.
         end_time (brian2.units.fundamentalunits.Quantity): End time in ms of plot.
             Can be smaller than simulation time but not larger.
-        wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors.
+        plot_states (bool, optional): Description
+
+    Returns:
+        TYPE: Description
     """
     app = QtGui.QApplication.instance()
     if app is None:

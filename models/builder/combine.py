@@ -41,19 +41,16 @@ def combine_neu_dict(eq_templ, param_templ):
         To combine two dictionaries:
 
         >>> combine_neu_dict(eq_templ, param_templ)
-
     Args:
         eq_templ (dict): Dictionary containing different keywords and equations
         param_templ (dict): Dictionary containing different parameters for the
             equation
 
     Returns:
-        dict: model (string): Actually neuron model differential equation.
-        dict: threshold (string): Dictionary with equations specifying behaviour of synapse to
-            post-synaptic spike.
-        dict: reset (string): Dictionary with equations specifying behaviour of synapse to
-            pre-synaptic spike.
-        dict: parameters (dict): Dictionary of parameters.
+        dict: ['model'] Actually neuron model differential equation.
+        dict: ['threshold'] Dictionary with equations specifying behaviour of synapse to post-synaptic spike.
+        dict: ['reset'] Dictionary with equations specifying behaviour of synapse to pre-synaptic spike.
+        dict: ['parameters'] Dictionary of parameters.
     """
     model = ''
     threshold = ''
@@ -71,7 +68,8 @@ def combine_neu_dict(eq_templ, param_templ):
 
         newthreshold = eq['threshold']
         if '%' in newthreshold:
-            threshold, newthreshold, params = var_replacer(threshold, newthreshold, params)
+            threshold, newthreshold, params = var_replacer(
+                threshold, newthreshold, params)
         threshold += newthreshold
 
         newreset = eq['reset']
@@ -112,12 +110,10 @@ def combine_syn_dict(eq_templ, param_templ):
             equation.
 
     Returns:
-        dict: model (string): Actually neuron model differential equation.
-        dict: on_post (string): Dictionary with equations specifying behaviour of synapse to
-            post-synaptic spike.
-        dict: on_pre (string): Dictionary with equations specifying behaviour of synapse to
-            pre-synaptic spike.
-        dict: parameters (dict): Dictionary of parameters.
+        dict: ['model'] Actually neuron model differential equation.
+        dict: ['on_post'] Dictionary with equations specifying behaviour of synapse to post-synaptic spike.
+        dict: ['on_pre'] Dictionary with equations specifying behaviour of synapse to pre-synaptic spike.
+        dict: ['parameters'] Dictionary of parameters.
     """
     model = ''
     on_pre = ''
@@ -138,7 +134,8 @@ def combine_syn_dict(eq_templ, param_templ):
 
         newon_post = eq['on_post']
         if '%' in eq['on_post']:
-            on_post, newon_post, params = var_replacer(on_post, newon_post, params)
+            on_post, newon_post, params = var_replacer(
+                on_post, newon_post, params)
         on_post += newon_post
 
         params.update(param_templ[k])
@@ -165,8 +162,7 @@ def var_replacer(first_eq, second_eq, params):
 
     Returns:
         result_first_eq: The first_eq string containing the replaced variable equations.
-        result_second_eq: The second_eq string without the lines containing the
-            special character '%'.
+        result_second_eq: The second_eq string without the lines containing the special character '%'.
         params: The parameter dictionary not containing the removed/replaced variables.
 
     Examples:
@@ -202,11 +198,11 @@ def var_replacer(first_eq, second_eq, params):
                     # meaning it's followed by ":" or "="
                     # e.g. "var = x+1"  or "var : 1"
                     if ((var == line2.replace(':', '=').split('=', 1)[0].split()[0]) or
-                    (diffvar in line2.replace(':', '=').split('=', 1)[0].split()[0])):
+                            (diffvar in line2.replace(':', '=').split('=', 1)[0].split()[0])):
                         result_first_eq[kk] = line
 
-            #after replacing the "%" flagged line in the result_first_eq
-            #remove that line from the result_second_eq
+            # after replacing the "%" flagged line in the result_first_eq
+            # remove that line from the result_second_eq
             result_second_eq[k] = ""
             try:
                 params.pop(var)

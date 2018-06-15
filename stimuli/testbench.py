@@ -158,8 +158,7 @@ class OCTA_Testbench():
                 the larger of the 2 pixel dimension to unravel the coordinates into indices.
 
         Returns:
-            events (np.ndarray): 4D numpy array with #events entries. Array is organized as x, y, ts, pol
-                see aedat2numpy for more details.
+            events (np.ndarray): 4D numpy array with #events entries. Array is organized as x, y, ts, pol see aedat2numpy for more details.
         """
         assert(type(rec) == str), "rec has to be a string."
         assert(os.path.isfile(rec)), "File does not exist."

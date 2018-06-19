@@ -15,8 +15,8 @@ Example:
     if you want to change the underlying neuron and synapse model you need to provide
     different equation_builder class:
 
-    >>> from teili.models.neuron_models import DPI
-    >>> from teili.models.synapse_models import DPISyn
+    >>> from teili.models.neuron_models import DPI as neuron_model
+    >>> from teili.models.synapse_models import DPISyn as synapse_model
     >>> my_bb = Reservoir(name='my_reservoir',
                       neuron_eq_builder=DPI,
                       synapse_eq_builder=DPISyn)
@@ -60,13 +60,13 @@ from teili.models.neuron_models import Izhikevich as neuron_model
 from teili.models.synapse_models import DoubleExponential as synapse_model
 from teili.models.parameters.izhikevich_param import parameters as neuron_model_params
 
-reservoir_params = {'weInpR': 1.5,
-                    'weRInh': 1,
-                    'wiInhR': -1,
-                    'weRR': 0.5,
-                    'sigm': 3,
-                    'rpR': 3 * ms,
-                    'rpInh': 1 * ms
+reservoir_params = {'weInpR': 1.5, # Excitatory synaptic weight between input SpikeGenerator and Reservoir neurons.
+                    'weRInh': 1,   # Excitatory synaptic weight between Reservoir population and inhibitory interneuron.
+                    'wiInhR': -1,  # Inhibitory synaptic weight between inhibitory interneuron and Reservoir population.
+                    'weRR': 0.5,   # Self-excitatory synaptic weight (within Reservoir).
+                    'sigm': 3,     # Standard deviation in number of neurons for Gaussian connectivity kernel.
+                    'rpR': 3 * ms, # Refractory period of Reservoir neurons.
+                    'rpInh': 1 * ms# Refractory period of inhibitory neurons.
                     }
 
 
@@ -90,6 +90,9 @@ class Reservoir(BuildingBlock):
                  block_params=reservoir_params,
                  num_neurons=16,
                  num_input_neurons=1,
+                 Rconn_prob=None,
+                 adjecency_mtr=None,
+                 scale_weight_matrix=None,
                  fraction_inh_neurons=0.2,
                  additional_statevars=[],
                  num_inputs=1,
@@ -129,13 +132,18 @@ class Reservoir(BuildingBlock):
                                                    synapse_eq_builder=synapse_eq_builder,
                                                    neuron_model_params=neuron_model_params,
                                                    num_inputs=num_inputs,
+                                                   Rconn_prob=Rconn_prob,
+                                                   num_input_neurons=num_input_neurons,
+                                                   adjecency_mtr=adjecency_mtr,
+                                                   scale_weight_matrix=scale_weight_matrix,
                                                    fraction_inh_neurons=fraction_inh_neurons,
                                                    spatial_kernel=spatial_kernel,
                                                    monitor=monitor,
                                                    debug=debug,
                                                    **block_params)
 
-        self.input_group = self.Groups['gRInpGroup']
+        if num_input_neurons:
+            self.input_group = self.Groups['gRInpGroup']
         self.group = self.Groups['gRGroup']
         if monitor:
             self.spikemonR = self.Monitors['spikemonR']
@@ -163,7 +171,12 @@ def gen_reservoir(groupname,
                   neuron_model_params=neuron_model_params,
                   weInpR=1.5, weRInh=1, wiInhR=-1, weRR=0.5, sigm=3,
                   rpR=3 * ms, rpInh=1 * ms,
-                  num_neurons=64, num_inputs=1,
+                  num_neurons=64,
+                  Rconn_prob=None,
+                  adjecency_mtr=None,
+                  scale_weight_matrix=0,
+                  num_input_neurons=0,
+                  num_inputs=1,
                   fraction_inh_neurons=0.2,
                   spatial_kernel="kernel_mexican_1d",
                   monitor=True, additional_statevars=[], debug=False):
@@ -181,9 +194,14 @@ def gen_reservoir(groupname,
         rpR (float, optional): Refractory period of Reservoir neurons.
         rpInh (float, optional): Refractory period of inhibitory neurons.
         num_neurons (int, optional): Size of Reservoir neuron population.
+        Rconn_prob (float, optional): Float 0<p<1 to set connection probability within the reservoir
+        adjecency_mtr (numpy ndarray 3D of int and float, optional): Uses the adjecency matrix to set connections in the reservoir
         fraction_inh_neurons (int, optional): Set to None to skip Dale's principle.
         cutoff (int, optional): Radius of self-excitation.
-        num_inputs (int, optional): Number of input currents to Reservoir.
+        num_inputs (int, optional): Number of input currents to each neuron in the Reservoir.
+        num_input_neurons (int, optional): Number of neurons in the input stage.
+        num_readout_neurons (int, optional): Number of neurons in the readout stage.
+        spatial_kernel (str, optional):  None defaults to kernel_mexican_1d
         monitor (bool, optional): Flag to auto-generate spike and statemonitors.
         additional_statevars (list, optional): List of additional state variables which are not standard.
         debug (bool, optional): Flag to gain additional information.
@@ -207,51 +225,21 @@ def gen_reservoir(groupname,
                           num_inputs=3 + num_inputs),
                       refractory=rpR, name='g' + groupname)
     gRGroup.set_params(neuron_model_params)
-
-    if fraction_inh_neurons is not None:
-        gRInhGroup = Neurons(round(num_neurons * fraction_inh_neurons),
-                             equation_builder=neuron_eq_builder(num_inputs=1),
-                             refractory=rpInh, name='g' + groupname + '_Inh')
-        gRInhGroup.set_params(neuron_model_params)
-
-    # empty input for Reservoir group
-    ts_reservoir = np.asarray([]) * ms
-    ind_reservoir = np.asarray([])
-    gRInpGroup = SpikeGeneratorGroup(
-        num_neurons, indices=ind_reservoir, times=ts_reservoir, name='g' + groupname + '_Inp')
-
     # create synapses
-    synInpR1e = Connections(gRInpGroup, gRGroup,
-                            equation_builder=synapse_eq_builder(),
-                            method="euler", name='s' + groupname + '_Inp')
     synRR1e = Connections(gRGroup, gRGroup,
                           equation_builder=synapse_eq_builder(),
                           method="euler", name='s' + groupname + '_RR')
-
-    if fraction_inh_neurons is not None:
-        synInhR1i = Connections(gRInhGroup, gRGroup,
-                                equation_builder=synapse_eq_builder(),
-                                method="euler", name='s' + groupname + '_Inhi')
-        synRInh1e = Connections(gRGroup, gRInhGroup,
-                                equation_builder=synapse_eq_builder(),
-                                method="euler", name='s' + groupname + '_Inhe')
-
-    # connect synapses
-    synInpR1e.connect(p=1.0)
     # connect the nearest neighbors including itself
-    synRR1e.connect(p=1.0)
-    if fraction_inh_neurons is not None:
-        synRInh1e.connect(p=1.0)  # Generates all to all connectivity
-        synInhR1i.connect(p=1.0)
-
+    if Rconn_prob:
+        synRR1e.connect(p=Rconn_prob)
+    elif adjecency_mtr is not None:
+        from numpy import random,nonzero
+        rows,cols = nonzero(adjecency_mtr[:,:,0])
+        synRR1e.connect(i=rows,j=cols)
+        synRR1e.weight = adjecency_mtr[rows,cols,1]
+        
     synRR1e.add_state_variable(name='latWeight', shared=True, constant=True)
     synRR1e.add_state_variable(name='latSigma', shared=True, constant=True)
-
-    # set weights
-    synInpR1e.weight = weInpR
-    if fraction_inh_neurons is not None:
-        synRInh1e.weight = weRInh
-        synInhR1i.weight = wiInhR
     # lateral excitation kernel
     # we add an additional attribute to that synapse, which allows us to change
     # and retrieve that value more easily
@@ -260,18 +248,51 @@ def gen_reservoir(groupname,
     synRR1e.namespace.update({spatial_kernel: spatial_kernel_func})
     synRR1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma)'
 
-    Groups = {
-        'gRGroup': gRGroup,
-        'gRInpGroup': gRInpGroup,
-        'synInpR1e': synInpR1e,
-        'synRR1e': synRR1e}
+    Groups = {'gRGroup': gRGroup,
+              'synRR1e': synRR1e}
+
 
     if fraction_inh_neurons is not None:
-        Groups['gRInhGroup'] = gRInhGroup,
+        gRInhGroup = Neurons(round(num_neurons * fraction_inh_neurons),
+                             equation_builder=neuron_eq_builder(num_inputs=1),
+                             refractory=rpInh, name='g' + groupname + '_Inh')
+        gRInhGroup.set_params(neuron_model_params)        
+        # create synapses
+        synInhR1i = Connections(gRInhGroup, gRGroup,
+                                equation_builder=synapse_eq_builder(),
+                                method="euler", name='s' + groupname + '_Inhi')
+        synRInh1e = Connections(gRGroup, gRInhGroup,
+                                equation_builder=synapse_eq_builder(),
+                                method="euler", name='s' + groupname + '_Inhe')
+        synRInh1e.connect(p=1.0)  # Generates all to all connectivity
+        synInhR1i.connect(p=1.0)
+        synRInh1e.weight = weRInh
+        synInhR1i.weight = wiInhR
 
-    if fraction_inh_neurons is not None:
-        Groups['synRInh1e'] = synRInh1e
-        Groups['synInhR1i'] = synInhR1i
+        Groups.update({'gRInhGroup': gRInhGroup,
+                       'synRInh1e': synRInh1e,
+                       'synInhR1i': synInhR1i})
+
+    # empty input for Reservoir group
+    if num_input_neurons > 0:
+        # Create the input layer
+        ts_reservoir = np.asarray([]) * ms
+        ind_reservoir = np.asarray([])
+        gRInpGroup = SpikeGeneratorGroup(
+            num_input_neurons, indices=ind_reservoir, times=ts_reservoir, name='g' + groupname + '_Inp')
+
+        # create synapses
+        synInpR1e = Connections(gRInpGroup, gRGroup,
+                                equation_builder=synapse_eq_builder(),
+                                method="euler", name='s' + groupname + '_Inp')
+        # connect synapses
+        
+        synInpR1e.connect(p=1.0)
+        # set weights
+        synInpR1e.weight = weInpR
+
+        Groups.update({'gRInpGroup': gRInpGroup,
+                       'synInpR1e': synInpR1e})
 
     # spikemons
     if monitor:
@@ -279,8 +300,9 @@ def gen_reservoir(groupname,
         if fraction_inh_neurons is not None:
             spikemonRInh = SpikeMonitor(
                 gRInhGroup, name='spikemon' + groupname + '_RInh')
-        spikemonRInp = SpikeMonitor(
-            gRInpGroup, name='spikemon' + groupname + '_RInp')
+        if num_input_neurons > 0:
+            spikemonRInp = SpikeMonitor(
+                gRInpGroup, name='spikemon' + groupname + '_RInp')
         try:
             statemonR = StateMonitor(gRGroup, ('Vm', 'Iexp', 'Iin'), record=True,
                                      name='statemon' + groupname + '_R')
@@ -289,16 +311,15 @@ def gen_reservoir(groupname,
                                      name='statemon' + groupname + '_R')
         Monitors = {
             'spikemonR': spikemonR,
-            'spikemonRInp': spikemonRInp,
-            'statemonR': statemonR}
-        if fraction_inh_neurons is not None:
-            Monitors['spikemonRInh'] = spikemonRInh
+            'spikemonRInp' if num_input_neurons else None : spikemonRInp if num_input_neurons else None,
+            'statemonR': statemonR,
+            'spikemonRInh' if fraction_inh_neurons else None: spikemonRInh if fraction_inh_neurons else None}
 
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: weInpR, weRInh, wiInhR, weRR,rpR, rpInh,sigm
     standalone_params = {
-        synInpR1e.name + '_weight': weInpR,
+        synInpR1e.name + '_weight' if num_input_neurons else None: weInpR if num_input_neurons else None,
         synRR1e.name + '_latWeight': weRR,
         synRR1e.name + '_latSigma': sigm,
         gRGroup.name + '_refP': rpR

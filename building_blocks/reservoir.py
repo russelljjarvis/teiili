@@ -89,10 +89,9 @@ class Reservoir(BuildingBlock):
                  neuron_params=neuron_model_params,
                  block_params=reservoir_params,
                  num_neurons=16,
-                 num_input_neurons=1,
+                 num_input_neurons=0,
                  Rconn_prob=None,
                  adjecency_mtr=None,
-                 scale_weight_matrix=None,
                  fraction_inh_neurons=0.2,
                  additional_statevars=[],
                  num_inputs=1,
@@ -135,7 +134,6 @@ class Reservoir(BuildingBlock):
                                                    Rconn_prob=Rconn_prob,
                                                    num_input_neurons=num_input_neurons,
                                                    adjecency_mtr=adjecency_mtr,
-                                                   scale_weight_matrix=scale_weight_matrix,
                                                    fraction_inh_neurons=fraction_inh_neurons,
                                                    spatial_kernel=spatial_kernel,
                                                    monitor=monitor,
@@ -174,7 +172,6 @@ def gen_reservoir(groupname,
                   num_neurons=64,
                   Rconn_prob=None,
                   adjecency_mtr=None,
-                  scale_weight_matrix=0,
                   num_input_neurons=0,
                   num_inputs=1,
                   fraction_inh_neurons=0.2,
@@ -232,21 +229,22 @@ def gen_reservoir(groupname,
     # connect the nearest neighbors including itself
     if Rconn_prob:
         synRR1e.connect(p=Rconn_prob)
+    # commenct according to the adjecency and weight matrix
     elif adjecency_mtr is not None:
         from numpy import random,nonzero
         rows,cols = nonzero(adjecency_mtr[:,:,0])
         synRR1e.connect(i=rows,j=cols)
         synRR1e.weight = adjecency_mtr[rows,cols,1]
         
-    synRR1e.add_state_variable(name='latWeight', shared=True, constant=True)
-    synRR1e.add_state_variable(name='latSigma', shared=True, constant=True)
-    # lateral excitation kernel
-    # we add an additional attribute to that synapse, which allows us to change
-    # and retrieve that value more easily
-    synRR1e.latWeight = weRR
-    synRR1e.latSigma = sigm
-    synRR1e.namespace.update({spatial_kernel: spatial_kernel_func})
-    synRR1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma)'
+    # synRR1e.add_state_variable(name='latWeight', shared=True, constant=True)
+    # synRR1e.add_state_variable(name='latSigma', shared=True, constant=True)
+    # # lateral excitation kernel
+    # # we add an additional attribute to that synapse, which allows us to change
+    # # and retrieve that value more easily
+    # synRR1e.latWeight = weRR
+    # synRR1e.latSigma = sigm
+    # synRR1e.namespace.update({spatial_kernel: spatial_kernel_func})
+    # synRR1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma)'
 
     Groups = {'gRGroup': gRGroup,
               'synRR1e': synRR1e}
@@ -297,29 +295,27 @@ def gen_reservoir(groupname,
     # spikemons
     if monitor:
         spikemonR = SpikeMonitor(gRGroup, name='spikemon' + groupname + '_R')
+        Monitors = {'spikemonR': spikemonR}
         if fraction_inh_neurons is not None:
             spikemonRInh = SpikeMonitor(
                 gRInhGroup, name='spikemon' + groupname + '_RInh')
+            Monitors['spikemonRInh'] = spikemonRInh
         if num_input_neurons > 0:
-            spikemonRInp = SpikeMonitor(
+            Spikemonrinp = SpikeMonitor(
                 gRInpGroup, name='spikemon' + groupname + '_RInp')
+            Monitors['spikemonRInp'] = spikemonRInp
         try:
             statemonR = StateMonitor(gRGroup, ('Vm', 'Iexp', 'Iin'), record=True,
                                      name='statemon' + groupname + '_R')
         except KeyError:
             statemonR = StateMonitor(gRGroup, ('Iexp', 'Iin'), record=True,
                                      name='statemon' + groupname + '_R')
-        Monitors = {
-            'spikemonR': spikemonR,
-            'spikemonRInp' if num_input_neurons else None : spikemonRInp if num_input_neurons else None,
-            'statemonR': statemonR,
-            'spikemonRInh' if fraction_inh_neurons else None: spikemonRInh if fraction_inh_neurons else None}
+        Monitors['statemonR'] = statemonR
 
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: weInpR, weRInh, wiInhR, weRR,rpR, rpInh,sigm
     standalone_params = {
-        synInpR1e.name + '_weight' if num_input_neurons else None: weInpR if num_input_neurons else None,
         synRR1e.name + '_latWeight': weRR,
         synRR1e.name + '_latSigma': sigm,
         gRGroup.name + '_refP': rpR
@@ -328,6 +324,8 @@ def gen_reservoir(groupname,
         standalone_params[synRInh1e.name + '_weight'] = weRInh
         standalone_params[synInhR1i.name + '_weight'] = wiInhR
         standalone_params[gRInhGroup.name + '_refP'] = rpInh,
+    if num_input_neurons > 0:
+        standalone_params[synInpR1e.name + '_weight'] = weInpR
 
     end = time.clock()
     if debug:

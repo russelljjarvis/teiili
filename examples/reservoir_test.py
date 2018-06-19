@@ -26,7 +26,7 @@ nc17 = runpy.run_path('nicola_cloapth_2017_params.py')
 prefs.codegen.target = 'numpy'
 
 num_neurons = 50 # nc17['N']
-num_input_neurons = 1 # nc17['Xin'].shape[1]
+# num_input_neurons = 1 # nc17['Xin'].shape[1]
 
 Net = teiliNetwork()
 duration = nc17['T'] * ms
@@ -48,15 +48,13 @@ adjecency_mtr[:,:,1] = nc17['G'] * adjecency_mtr[:,:,1] * adjecency_mtr[:,:,0] /
 # Input Ein*Xin
 Itimed = np.dot(nc17['Ein'],nc17['Xin'].T).T # First dim is time, second is neuron index
 It = TimedArray(Itimed * nA, dt=defaultclock.dt)
-plt.plot(Itimed)
-plt.show()
+
 gtestR = Reservoir(name='testR',
                    num_neurons=num_neurons,
-                   fraction_inh_neurons=0.2,
-                   num_input_neurons=num_input_neurons,
+                   fraction_inh_neurons=None,
+                   # num_input_neurons=num_input_neurons,
                    Rconn_prob=None,
                    adjecency_mtr=adjecency_mtr,
-                   scale_weight_matrix=nc17['G'],
                    num_inputs=2,
                    block_params=reservoir_params)
 
@@ -69,17 +67,26 @@ gtestR.Groups['gRGroup'].namespace.update({"It":It, 'I_bias':I_bias})
 # gtestR.Groups['gRGroup'].add_subexpression('Ie4',nA.dim,'It(t,i)')
 gtestR.Groups['gRGroup'].run_regularly("Iconst = I_bias + It(t,i)",dt=1*ms)
 
-syn_in_ex = gtestR.Groups['synInpR1e']
+# syn_in_ex = gtestR.Groups['synInpR1e']
 syn_ex_ex = gtestR.Groups['synRR1e']
-syn_ex_ih = gtestR.Groups['synRInh1e']
-syn_ih_ex = gtestR.Groups['synInhR1i']
+# syn_ex_ih = gtestR.Groups['synRInh1e']
+# syn_ih_ex = gtestR.Groups['synInhR1i']
+
+# Feedback
+
+# FORCE
+# it should not start from 0*ms. Leave some time for initialization (imin)
+
+
+
 
 statemonRin = StateMonitor(gtestR.Groups['gRGroup'],
                            ('Ie0', 'Ii0','Ie1', 'Ii1','Ie2', 'Ii2','Ie3', 'Ii3','Iconst'),
                            record=True,
                            name='statemonRin')
 
-Net.add(gtestR, statemonRin)
+
+Net.add(gtestR)#, statemonRin)
 
 
 #%%
@@ -90,9 +97,9 @@ st = time.time()
 amplitudes_dict = {}
 sigmas_dict={}
 Net.run(duration)
-for cinj in statemonRin.Iconst:
-    plt.plot(statemonRin.t/ms,cinj/nA-I_bias/nA)
-plt.show()
+# for cinj in statemonRin.Iconst:
+#     plt.plot(statemonRin.t/ms,cinj/nA-I_bias/nA)
+# plt.show()
 
 
 # for par0 in range(0,300,20):

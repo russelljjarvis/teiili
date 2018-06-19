@@ -3,6 +3,8 @@
 # @Date:   2018-06-19 10:18:33
 
 from setuptools import setup
+from teili.models import neuron_models, synapse_models
+import os
 
 setup(
     name="teili",
@@ -21,6 +23,10 @@ setup(
         'teili.core',
         'teili.models',
         'teili.models.builder',
+        'teili.models.builder.templates',
+        'teili.models.equations',
+        'teili.models.parameters',
+        'teili.building_blocks',
         'teili.stimuli',
         'teili.tools'
     ],
@@ -43,3 +49,8 @@ setup(
         "License :: OSI Approved :: MIT License",
     ],
 )
+
+neuron_models.main()
+synapse_models.main()
+
+os.system('sudo chown -R $SUDO_USER:$SUDO_USER teili/models/equations/*')

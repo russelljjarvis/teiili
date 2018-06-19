@@ -1,18 +1,12 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Collection of tools necessary for cpp standalone mode
+"""
 # @Author: alpren
 # @Date:   2017-07-28 19:02:05
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 16:44:33
-#!/usr/bin/env python3
 
-"""
-Collection of tools necessary for cpp standalone mode
-"""
 
-from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
-    prefs, figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel,\
-    device, codegen, asarray, set_device
-import numpy as np
+from brian2 import prefs, device, codegen, set_device
 import os
 import time
 import warnings

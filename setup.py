@@ -26,21 +26,20 @@ setup(
     ],
 
     install_requires=[
-        'numpy',
-        'seaborn',
-        'sparse',
-        'brian2',
-        'scipy',
-        'pyqtgraph',
+        'numpy>=1.13.0',
+        'seaborn>=0.8.1',
+        'sparse>=0.3.0',
+        'brian2>=2.1.3.1',
+        'scipy>=1.0.1',
+        'pyqtgraph>=0.10.0',
         'pandas',
-        'matplotlib',
+        'matplotlib>=1.5.1',
         'h5py',
         'pyqt5'
     ],
 
     classifiers=[
         "Development Status :: 3 - Alpha",
-        "Topic :: Utilities",
-        "License :: OSI Approved :: BSD License",
+        "License :: OSI Approved :: MIT License",
     ],
 )

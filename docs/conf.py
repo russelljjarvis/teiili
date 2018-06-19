@@ -14,13 +14,26 @@
 #
 import os
 import sys
-# sys.path.insert(0, os.path.abspath('.'))
-# sys.path.insert(0, os.path.abspath("../../"))
-sys.path.insert(0, os.path.abspath("../"))
-sys.path.insert(0, os.path.abspath("../core/"))
-sys.path.insert(0, os.path.abspath("../building_blocks/"))
+from unittest.mock import MagicMock
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("../.."))
 
 
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+#'numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot',
+# 'matplotlib.cm', 'seaborn', 'sparse', 'pandas',
+# 'matplotlib.colors', 'pyqtgraph.colormap', 'pyqtgraph',
+# 'pyqtgraph.Qt',
+# 'pyqtgraph.exporters', 'itertools', 'sparse', 'tkinter'
+MOCK_MODULES = []
+
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 # -- Project information -----------------------------------------------------
 
 project = 'teili'

@@ -62,8 +62,7 @@ class DPI(NeuronEquationBuilder):
         self.add_input_currents(num_inputs)
 
 
-if __name__ == '__main__':
-
+def main():
     path = os.path.dirname(os.path.realpath(teili.models.__file__))
 
     path = os.path.join(path, "equations")
@@ -78,3 +77,7 @@ if __name__ == '__main__':
 
     izhikevich = Izhikevich()
     izhikevich.export_eq(os.path.join(path, "Izhikevich"))
+
+
+if __name__ == '__main__':
+    main()

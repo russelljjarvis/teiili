@@ -108,8 +108,7 @@ class StdpSynV(SynapseEquationBuilder):
                                         kernel='exponential', plasticity='stdp')
 
 
-if __name__ == '__main__':
-
+def main():
     path = os.path.dirname(os.path.realpath(teili.models.__file__))
 
     path = os.path.join(path, "equations")
@@ -140,3 +139,7 @@ if __name__ == '__main__':
     reversalSynVfusi = SynapseEquationBuilder(base_unit='conductance',
                                         kernel='exponential', plasticity='fusi')
     reversalSynVfusi.export_eq(os.path.join(path, "ReversalSynVfusi"))
+
+
+if __name__ == '__main__':
+    main()

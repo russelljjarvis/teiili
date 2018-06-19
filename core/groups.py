@@ -73,8 +73,10 @@ class TeiliGroup(Group):
             # self.__setattr__(name, value)  # TODO: Maybe do that always?
 
     def add_subexpression(self,name, dimensions, expr):
-        """THis method allows you to add a subexpression
+        """This method allows you to add a subexpression
         (like a state variable but a string that can be evaluated over time)
+        You can e.g. add a timedArray like that:
+            neuron_group.add_subexpression('I_in5',nA.dim,'timed_array(t)')
 
         Args:
             name (str): name of the expression.

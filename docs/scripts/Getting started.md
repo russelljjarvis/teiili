@@ -2,22 +2,32 @@
 
 Welcome to teili!
 
-To use teili
+To start using teili follow the instructions below.
 ```
 git clone https://code.ini.uzh.ch/ncs/teili.git
 cd teili/
-git checkout dev
 ```
 
-## Install dependencies
+## Install python requirements
 ```
-sudo apt install python3 python3-pip python3-matplotlib python3-setuptools cython
-pip3 install brian2 sparse seaborn h5py numpy scipy pyqtgraph pyqt5 easydict
+sudo apt install python3 python3-pip
 ```
-## Building pre-defined models
+and now install teili
+```
+sudo python3 setup.py install
+```
+This will install all dependencies, as well as requirements.
+Furthermore, it will build pre-defined neuron and synapse models and
+place them in `teili/models/equations`.
 
-To build default neuron and synapse models
+In case you want to re-build the pre-defined models you need to navigate to the `model` folder
 ```
-python -m models/neuron_models.py
-python -m models/synapse_models.py
+cd teili/models/
 ```
+and run the following two scripts:
+```
+python3 -m models/neuron_models.py
+python3 -m models/synapse_models.py
+```
+
+Have a look into our `examples` to see different use cases and tutorials.

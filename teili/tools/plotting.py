@@ -9,13 +9,13 @@ Attributes:
 # @Author: alpha, mmilde
 # @Date:   2017-07-31 16:13:59
 # @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-20 08:37:48
+# @Last Modified time: 2018-06-20 08:42:47
 
 """
 Plotting tools for different spike and state monitors
 """
 import numpy as np
-from brian2 import ms, mV, pA,
+from brian2 import ms, mV, pA
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import plot, xlabel, ylabel, xlim, ylim
 from pyqtgraph.Qt import QtGui, QtCore

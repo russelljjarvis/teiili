@@ -63,6 +63,7 @@ MOCK_MODULES = [
     'sparse',
     'seaborn',
     'brian2',
+    'teili.core.groups',
 ]
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

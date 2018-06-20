@@ -28,23 +28,6 @@ class Mock(MagicMock):
 
 
 MOCK_MODULES = [
-    # 'numpy',
-    # 'numpy.core.multiarray',
-    # 'matplotlib',
-    # 'matplotlib.pyplot',
-    # 'matplotlib.colorbar',
-    # 'matplotlib.cm',
-    # 'matplotlib.artist',
-    # 'matplotlib.transforms',
-    # 'matplotlib.pylab',
-    # 'pylab',
-    # 'scipy',
-    # 'pandas',
-    # 'PyQt5',
-    # 'PyQt5.Qt',
-    # 'PyQt5.QtGui',
-    # 'PyQt5.QtCore',
-    # 'PyQt5.QtWidgets',
     'pyqtgraph',
     'pyqtgraph.Qt',
     'pyqtgraph.Qt.QtCore',
@@ -59,19 +42,8 @@ MOCK_MODULES = [
     'pyqtgraph.parametertree',
     'pyqtgraph.parametertree.parameterTypes',
     'pyqtgraph.ptime',
-    # 'sip',
     'sparse',
     'seaborn',
-    # 'brian2',
-    # 'teili',
-    # 'teili.core',
-    # 'teili.models',
-    # 'teili.models.builder',
-    # 'teili.models.parameters',
-    # 'teili.models.equations',
-    # 'teili.building_blocks',
-    # 'teili.stimuli',
-    # 'teili.tools',
 ]
 
 # sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

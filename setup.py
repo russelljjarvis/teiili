@@ -3,8 +3,8 @@
 # @Date:   2018-06-19 10:18:33
 
 from setuptools import setup
-from teili.models import neuron_models, synapse_models
-import os
+# from teili.models import neuron_models, synapse_models
+# import os
 
 setup(
     name="teili",
@@ -32,6 +32,7 @@ setup(
     ],
 
     install_requires=[
+        'setuptools>=39.2.0',
         'numpy>=1.14.5',
         'seaborn>=0.8.1',
         'sparse>=0.3.0',
@@ -50,7 +51,7 @@ setup(
     ],
 )
 
-neuron_models.main()
-synapse_models.main()
+# neuron_models.main()
+# synapse_models.main()
 
-os.system('sudo chown -R $SUDO_USER:$SUDO_USER teili/models/equations/*')
+# os.system('sudo chown -R $SUDO_USER:$SUDO_USER teili/models/equations/*')

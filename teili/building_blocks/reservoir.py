@@ -45,7 +45,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
 from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
-    StateMonitor, figure, subplot, mV, pA
+    StateMonitor, pA
 
 import teili.tools.synaptic_kernel
 from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt

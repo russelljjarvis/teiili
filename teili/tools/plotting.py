@@ -8,15 +8,16 @@ Attributes:
 """
 # @Author: alpha, mmilde
 # @Date:   2017-07-31 16:13:59
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-05-09 11:57:06
+# @Last Modified by:   Moritz Milde
+# @Last Modified time: 2018-06-20 08:37:48
 
 """
 Plotting tools for different spike and state monitors
 """
 import numpy as np
-from brian2 import ms, mV, pA, plot, xlabel, ylabel, xlim, ylim
+from brian2 import ms, mV, pA,
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import plot, xlabel, ylabel, xlim, ylim
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
@@ -41,7 +42,8 @@ def plot_spikemon(start_time, end_time, monitor, num_neurons, ylab='ind'):
     if len(monitor.t) > 1:
         indstart = abs(monitor.t - start_time).argmin()
         indend = abs(monitor.t - end_time).argmin()
-        plot(np.asarray(monitor.t / ms)[indstart:indend], np.asarray(monitor.i)[indstart:indend], '.k')
+        plot(np.asarray(monitor.t / ms)
+             [indstart:indend], np.asarray(monitor.i)[indstart:indend], '.k')
         xlabel('Time [ms]')
         ylabel(ylab)
         xlim([start_time / ms, end_time / ms])
@@ -67,7 +69,7 @@ def plot_spikemon_qt(monitor, start_time=None, end_time=None, num_neurons=16, wi
             if str(monitor.t.dim) == 's':
                 unit = ms
             else:
-                pass #this should not happen
+                pass  # this should not happen
         except AttributeError:
             unit = 1
 
@@ -78,16 +80,17 @@ def plot_spikemon_qt(monitor, start_time=None, end_time=None, num_neurons=16, wi
             try:
                 start_time.dim
             except AttributeError:
-                start_time = start_time*unit
+                start_time = start_time * unit
         if end_time is None:
             end_time = monitor.t[-1]
         else:
             try:
                 start_time.dim
             except AttributeError:
-                start_time = start_time*unit
+                start_time = start_time * unit
         if window is None:
-            raise UserWarning("Please provide plot_statemon_qt with pyqtgraph window.")
+            raise UserWarning(
+                "Please provide plot_statemon_qt with pyqtgraph window.")
         if monitor is None:
             raise UserWarning("No statemonitor provided. Abort plotting")
         else:
@@ -102,7 +105,8 @@ def plot_spikemon_qt(monitor, start_time=None, end_time=None, num_neurons=16, wi
                         pen=None, symbol='o', symbolPen=None,
                         symbolSize=7, symbolBrush=colors[1])
             window.setLabel('left', "Neuron ID", **labelStyle)
-            window.setLabel('bottom', 'Time ({})'.format(str(unit)), **labelStyle)
+            window.setLabel('bottom', 'Time ({})'.format(
+                str(unit)), **labelStyle)
             b = QtGui.QFont("Sans Serif", 10)
             window.getAxis('bottom').tickFont = b
             window.getAxis('left').tickFont = b
@@ -127,7 +131,8 @@ def plot_statemon(start_time, end_time, monitor, neuron_id, variable='Vm', unit=
     """
     indstart = abs(monitor.t - start_time).argmin()
     indend = abs(monitor.t - end_time).argmin()
-    plot(monitor.t[indstart:indend] / ms, monitor[neuron_id].__getattr__(variable)[indstart:indend] / unit)
+    plot(monitor.t[indstart:indend] / ms,
+         monitor[neuron_id].__getattr__(variable)[indstart:indend] / unit)
     xlabel('Time [ms]')
     ylabel(name + '_' + variable + ' (' + str(unit) + ')')
     xlim([start_time / ms, end_time / ms])
@@ -155,7 +160,8 @@ def plot_statemon_qt(start_time=None, end_time=None, monitor=None, neuron_id=Tru
     if end_time is None:
         end_time = monitor.t[-1]
     if window is None:
-        raise UserWarning("Please provide plot_statemon_qt with pyqtgraph window.")
+        raise UserWarning(
+            "Please provide plot_statemon_qt with pyqtgraph window.")
     if monitor is None:
         raise UserWarning("No statemonitor provided. Abort plotting")
 
@@ -165,9 +171,10 @@ def plot_statemon_qt(start_time=None, end_time=None, monitor=None, neuron_id=Tru
     window.setXRange(0, end_time / ms, padding=0)
     for i, data in enumerate(np.asarray(monitor.__getattr__(variable) / unit)[start_ind:end_ind]):
         window.plot(x=np.asarray(monitor.t / ms)[start_ind:end_ind], y=data[:-1],
-                pen=pg.mkPen(colors[6], width=2))
+                    pen=pg.mkPen(colors[6], width=2))
 
-    window.setLabel('left', name + '_' + variable + ' (' + str(unit) + ')', **labelStyle)
+    window.setLabel('left', name + '_' + variable +
+                    ' (' + str(unit) + ')', **labelStyle)
     window.setLabel('bottom', "Time (ms)", **labelStyle)
     b = QtGui.QFont("Sans Serif", 10)
     window.getAxis('bottom').tickFont = b
@@ -188,7 +195,8 @@ def plot_weights_wta2group(name, n_wta2d_neurons, syn_g_wta, n_col):
     print(imgShape)
     nPlots = imgShape[2]
     #n_col = 10
-    fig, axarr = plt.subplots(nPlots // n_col, n_col)  # ,sharex=True,sharey=True)
+    # ,sharex=True,sharey=True)
+    fig, axarr = plt.subplots(nPlots // n_col, n_col)
     for i in range(nPlots):
         axarr[i // n_col, np.mod(i, n_col)].set_xlim(0, n_wta2d_neurons)
         axarr[i // n_col, np.mod(i, n_col)].set_ylim(0, n_wta2d_neurons)
@@ -198,7 +206,8 @@ def plot_weights_wta2group(name, n_wta2d_neurons, syn_g_wta, n_col):
         axarr[i // n_col, np.mod(i, n_col)].set_yticklabels([])
         axarr[i // n_col, np.mod(i, n_col)].autoscale(False)
         # axarr[i//n_col,np.mod(i,n_col)].set(aspect='equal')#adjustable='box-forced',
-        img = axarr[i // n_col, np.mod(i, n_col)].imshow(mat[:, :, i], cmap=plt.cm.binary, vmin=0, vmax=1)
+        img = axarr[i // n_col, np.mod(i, n_col)].imshow(
+            mat[:, :, i], cmap=plt.cm.binary, vmin=0, vmax=1)
         # img.set_aspect(1)
         # print(np.shape(mat[i,:,:]))
     #plt.colorbar(img, ax=axarr[i//n_col,np.mod(i,n_col)],ticks=[0,0.5,1])
@@ -219,7 +228,8 @@ def plot_weights_group2wta(name, n_wta2d_neurons, syn_g_wta, n_col):
     print(imgShape)
     nPlots = imgShape[0]
     #n_col = 10
-    fig, axarr = plt.subplots(nPlots // n_col, n_col)  # ,sharex=True,sharey=True)
+    # ,sharex=True,sharey=True)
+    fig, axarr = plt.subplots(nPlots // n_col, n_col)
     for i in range(nPlots):
         axarr[i // n_col, np.mod(i, n_col)].set_xlim(0, n_wta2d_neurons)
         axarr[i // n_col, np.mod(i, n_col)].set_ylim(0, n_wta2d_neurons)
@@ -229,7 +239,8 @@ def plot_weights_group2wta(name, n_wta2d_neurons, syn_g_wta, n_col):
         axarr[i // n_col, np.mod(i, n_col)].set_yticklabels([])
         axarr[i // n_col, np.mod(i, n_col)].autoscale(False)
         # axarr[i//n_col,np.mod(i,n_col)].set(aspect='equal')#adjustable='box-forced',
-        img = axarr[i // n_col, np.mod(i, n_col)].imshow(mat[i, :, :], cmap=plt.cm.binary, vmin=0, vmax=1)
+        img = axarr[i // n_col, np.mod(i, n_col)].imshow(
+            mat[i, :, :], cmap=plt.cm.binary, vmin=0, vmax=1)
         # img.set_aspect(1)
         # print(np.shape(mat[i,:,:]))
     #plt.colorbar(img, ax=axarr[i//n_col,np.mod(i,n_col)],ticks=[0,0.5,1])

@@ -49,7 +49,7 @@ MOCK_MODULES = [
     'pyqtgraph.Qt',
     'pyqtgraph.Qt.QtCore',
     'pyqtgraph.Qt.QtGui',
-    'pyqtgraph.QtGui.QPainterPath',
+    'pyqtgraph.Qt.QtGui.QPainterPath',
     'pyqtgraph.Qt.QApplication',
     'pyqtgraph.exporters',
     'pyqtgraph.colormap',

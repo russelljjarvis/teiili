@@ -27,11 +27,6 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-#'numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot',
-# 'matplotlib.cm', 'seaborn', 'sparse', 'pandas',
-# 'matplotlib.colors', 'pyqtgraph.colormap', 'pyqtgraph',
-# 'pyqtgraph.Qt',
-# 'pyqtgraph.exporters', 'itertools', 'sparse', 'tkinter'
 MOCK_MODULES = [
     'numpy',
     'matplotlib',
@@ -41,18 +36,22 @@ MOCK_MODULES = [
     'matplotlib.pyplot',
     'matplotlib.artist',
     'matplotlib.transforms',
+    'matplotlib.pylab',
+    'pylab',
     'numpy',
     'numpy.core.multiarray',
     'scipy',
     'pandas',
     'PyQt5',
+    'PyQt5.Qt',
     'PyQt5.QtGui',
     'PyQt5.QtCore',
     'PyQt5.QtWidgets',
     'pyqtgraph',
     'pyqtgraph.Qt',
     'pyqtgraph.Qt.QApplication',
-    'pyqtgraph.exporters'
+    'pyqtgraph.exporters',
+    'brian2',
 ]
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
@@ -85,27 +84,7 @@ extensions = [
     'sphinx.ext.todo']
 
 
-autodoc_mock_imports = ['numpy',
-                        'matplotlib',
-                        'matplotlib.pyplot',
-                        'matplotlib.colorbar',
-                        'matplotlib.cm',
-                        'matplotlib.pyplot',
-                        'matplotlib.artist',
-                        'matplotlib.transforms',
-                        'numpy',
-                        'numpy.core.multiarray',
-                        'scipy',
-                        'pandas',
-                        'PyQt5',
-                        'PyQt5.QtGui',
-                        'PyQt5.QtCore',
-                        'PyQt5.QtWidgets'
-                        'pyqtgraph',
-                        'pyqtgraph.Qt'
-                        'pyqtgraph.Qt.QApplication'
-                        'pyqtgraph.exporters'
-                        ]
+autodoc_mock_imports = MOCK_MODULES
 
 # Napoleon settings
 napoleon_google_docstring = True

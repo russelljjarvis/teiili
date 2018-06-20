@@ -48,9 +48,10 @@ MOCK_MODULES = [
     'PyQt5',
     'PyQt5.QtGui',
     'PyQt5.QtCore',
-    'PyQt5.QtWidgets'
+    'PyQt5.QtWidgets',
     'pyqtgraph',
-    'pyqtgraph.Qt'
+    'pyqtgraph.Qt',
+    'pyqtgraph.Qt.QApplication',
     'pyqtgraph.exporters'
 ]
 
@@ -82,6 +83,29 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo']
+
+
+autodoc_mock_imports = ['numpy',
+                        'matplotlib',
+                        'matplotlib.pyplot',
+                        'matplotlib.colorbar',
+                        'matplotlib.cm',
+                        'matplotlib.pyplot',
+                        'matplotlib.artist',
+                        'matplotlib.transforms',
+                        'numpy',
+                        'numpy.core.multiarray',
+                        'scipy',
+                        'pandas',
+                        'PyQt5',
+                        'PyQt5.QtGui',
+                        'PyQt5.QtCore',
+                        'PyQt5.QtWidgets'
+                        'pyqtgraph',
+                        'pyqtgraph.Qt'
+                        'pyqtgraph.Qt.QApplication'
+                        'pyqtgraph.exporters'
+                        ]
 
 # Napoleon settings
 napoleon_google_docstring = True

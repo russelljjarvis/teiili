@@ -62,7 +62,7 @@ MOCK_MODULES = [
     'sip',
     'sparse',
     'seaborn',
-    'brian2',
+    # 'brian2',
     # 'teili',
     # 'teili.core',
     # 'teili.models',

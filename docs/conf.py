@@ -37,8 +37,9 @@ MOCK_MODULES = [
     'matplotlib.pyplot',
     'matplotlib.colorbar',
     'matplotlib.pyplot',
+    'matplotlib.artist',
     'numpy',
-    'numpy.core.multiarray'
+    'numpy.core.multiarray',
     'scipy']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

@@ -31,7 +31,7 @@ class Mock(MagicMock):
 # 'matplotlib.colors', 'pyqtgraph.colormap', 'pyqtgraph',
 # 'pyqtgraph.Qt',
 # 'pyqtgraph.exporters', 'itertools', 'sparse', 'tkinter'
-MOCK_MODULES = ['brian2.figure']
+MOCK_MODULES = ['numpy', 'matplotlib', 'scipy']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 # -- Project information -----------------------------------------------------

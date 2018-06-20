@@ -41,7 +41,7 @@ setup(
         'pandas>=0.23.1',
         'matplotlib>=2.2.2',
         'h5py>=2.8.0',
-        'pyqt5>=5.10.1'
+        # 'pyqt5>=5.10.1'
     ],
 
     classifiers=[

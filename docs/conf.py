@@ -65,7 +65,8 @@ MOCK_MODULES = [
     'qt.qpa',
     'qt.qpa.screen',
     'sip',
-    'sparse'
+    'sparse',
+    'seaborn',
 ]
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

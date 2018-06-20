@@ -32,7 +32,7 @@ setup(
     ],
 
     install_requires=[
-        'numpy>=1.13.0',
+        'numpy>=1.14.5',
         'seaborn>=0.8.1',
         'sparse>=0.3.0',
         'brian2>=2.1.3.1',

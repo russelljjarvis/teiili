@@ -52,13 +52,11 @@ from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor
 from matplotlib.pyplot import xlim, figure, xlabel, \
     ylabel, plot, subplot, title
 
-from teili import NeuronEquationBuilder, SynapseEquationBuilder
-
-ExpAdaptIF = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
-ReversalSynV = SynapseEquationBuilder.import_eq('ReversalSynV')
-
 from teili.building_blocks.building_block import BuildingBlock
 from teili.core.groups import Neurons, Connections
+
+from teili.models.neuron_models import ExpAdaptIF
+from teili.models.synapse_models import ReversalSynV
 
 sl_params = {'synInpOrd1e_weight': 1.3,
              'synOrdMem1e_weight': 1.1,

@@ -49,13 +49,16 @@ MOCK_MODULES = [
     'pyqtgraph.Qt',
     'pyqtgraph.Qt.QtCore',
     'pyqtgraph.Qt.QtGui',
+    'pyqtgraph.QtGui.QPainterPath',
     'pyqtgraph.Qt.QApplication',
     'pyqtgraph.exporters',
     'pyqtgraph.colormap',
     'pyqtgraph.parametertree',
     'pyqtgraph.parametertree.parameterTypes',
     'pyqtgraph.ptime'
+    'pyqtgraph.arrayToQPa'
     'brian2',
+    'sip',
 ]
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

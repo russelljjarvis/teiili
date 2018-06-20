@@ -61,6 +61,9 @@ MOCK_MODULES = [
     'pyqtgraph.ptime',
     'pyqtgraph.functions.arrayToQPa',
     'brian2',
+    'qt',
+    'qt.qpa',
+    'qt.qpa.screen',
     'sip']
 
 # sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

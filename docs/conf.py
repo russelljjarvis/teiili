@@ -47,10 +47,17 @@ MOCK_MODULES = [
     'PyQt5.QtGui',
     'PyQt5.QtCore',
     'PyQt5.QtWidgets',
+    'PyQt5.qpa.screen',
     'pyqtgraph',
     'pyqtgraph.Qt',
+    'pyqtgraph.QtCore',
+    'pyqtgraph.QtGui',
     'pyqtgraph.Qt.QApplication',
     'pyqtgraph.exporters',
+    'pyqtgraph.colormap',
+    'pyqtgraph.parametertree',
+    'pyqtgraph.parametertree.parameterTypes',
+    'pyqtgraph.ptime'
     'brian2',
 ]
 

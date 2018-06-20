@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 
 
 class Mock(MagicMock):
+
     @classmethod
     def __getattr__(cls, name):
         return MagicMock()
@@ -38,9 +39,12 @@ MOCK_MODULES = [
     'matplotlib.colorbar',
     'matplotlib.pyplot',
     'matplotlib.artist',
+    'matplotlib.transforms',
     'numpy',
     'numpy.core.multiarray',
-    'scipy']
+    'scipy',
+    'pandas',
+]
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 # -- Project information -----------------------------------------------------

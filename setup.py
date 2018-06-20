@@ -35,13 +35,13 @@ setup(
         'numpy>=1.14.5',
         'seaborn>=0.8.1',
         'sparse>=0.3.0',
-        'brian2>=2.1.3.1',
-        'scipy>=1.0.1',
+        'Brian2>=2.1.3.1',
+        'scipy>=1.1.0',
         'pyqtgraph>=0.10.0',
-        'pandas',
-        'matplotlib>=1.5.1',
-        'h5py',
-        'pyqt5'
+        'pandas>=0.23.1',
+        'matplotlib>=2.2.2',
+        'h5py>=2.8.0',
+        'pyqt5>=5.10.1'
     ],
 
     classifiers=[

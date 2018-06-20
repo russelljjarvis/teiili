@@ -58,8 +58,8 @@ MOCK_MODULES = [
     'pyqtgraph.colormap',
     'pyqtgraph.parametertree',
     'pyqtgraph.parametertree.parameterTypes',
-    'pyqtgraph.ptime'
-    'pyqtgraph.arrayToQPa'
+    'pyqtgraph.ptime',
+    'pyqtgraph.functions.arrayToQPa',
     'brian2',
     'sip']
 

@@ -16,9 +16,11 @@ Todo:
 
 import warnings
 import inspect
-from brian2 import NeuronGroup, Synapses, plot, subplot, zeros, ones, xticks,\
-    ylabel, xlabel, xlim, ylim, figure, Group, Subgroup
+from brian2 import NeuronGroup, Synapses, Group, Subgroup
 from collections import OrderedDict
+from matplotlib.pyplot import figure, xlabel, \
+    ylabel, plot, subplot, xlim, ylim, xticks
+from numpy import ones, zeros
 
 from teili.models import neuron_models
 from teili.models import synapse_models

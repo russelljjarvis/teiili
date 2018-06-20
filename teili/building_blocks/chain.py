@@ -43,10 +43,10 @@ import os
 import numpy as np
 from datetime import datetime
 
-from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
-    SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
-    seed, xlim, ylim, subplot, network_operation, TimedArray,\
-    defaultclock, SpikeGeneratorGroup
+from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor
+
+from matplotlib.pyplot import xlim, figure, xlabel, \
+    ylabel, plot, subplot
 
 from teili.models.neuron_models import ExpAdaptIF
 from teili.models.synapse_models import ReversalSynV

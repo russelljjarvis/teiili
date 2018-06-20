@@ -47,11 +47,10 @@ Example:
 # @Date:   2018-06-01 18:45:19
 
 import numpy as np
-
-from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
-    SpikeGeneratorGroup, NeuronGroup, SpikeMonitor, StateMonitor, figure, plot,\
-    seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray,\
-    defaultclock, profiling_summary, floor, title, xlabel, ylabel
+from numpy import floor
+from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor
+from matplotlib.pyplot import xlim, figure, xlabel, \
+    ylabel, plot, subplot, title
 
 from teili import NeuronEquationBuilder, SynapseEquationBuilder
 

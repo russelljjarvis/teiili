@@ -1,17 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""A collection of helpful miscellaneous functions when working with brian2
+"""
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 11:54:09
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 16:50:56
-"""
-A collection of helpful miscellaneous functions when working with brian2
-"""
 
-from brian2 import implementation, check_units, ms, exp, mean, diff, declare_types,\
-    figure, subplot, plot, xlim, ylim, ones, zeros, xticks, xlabel, ylabel, device
-import numpy as np
-from teili.tools.indexing import ind2xy
+from brian2 import implementation, check_units, ms, mean, diff, declare_types
 
 
 # This function is a workaround to allow if statements in run_regularly code.

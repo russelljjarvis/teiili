@@ -37,6 +37,7 @@ MOCK_MODULES = [
     'matplotlib',
     'matplotlib.pyplot',
     'matplotlib.colorbar',
+    'matplotlib.cm',
     'matplotlib.pyplot',
     'matplotlib.artist',
     'matplotlib.transforms',
@@ -44,6 +45,13 @@ MOCK_MODULES = [
     'numpy.core.multiarray',
     'scipy',
     'pandas',
+    'PyQt5',
+    'PyQt5.QtGui',
+    'PyQt5.QtCore',
+    'PyQt5.QtWidgets'
+    'pyqtgraph',
+    'pyqtgraph.Qt'
+    'pyqtgraph.exporters'
 ]
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

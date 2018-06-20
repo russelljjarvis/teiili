@@ -126,7 +126,7 @@ class TeiliGroup(Group):
         return self.equation_builder.keywords['model']
 
 
-class Neurons(Group, NeuronGroup, TeiliGroup):
+class Neurons(NeuronGroup, TeiliGroup):
     """This class is a subclass of NeuronGroup.
 
     You can use it as a NeuronGroup, and everything will be passed to NeuronGroup.
@@ -263,7 +263,7 @@ class Neurons(Group, NeuronGroup, TeiliGroup):
         return TeiliSubgroup(self, start, stop)
 
 
-class Connections(Group, Synapses, TeiliGroup):
+class Connections(Synapses, TeiliGroup):
     """This class is a subclass of Synapses.
 
     You can use it as a Synapses, and everything will be passed to Synapses.

@@ -62,6 +62,16 @@ MOCK_MODULES = [
     'sip',
     'sparse',
     'seaborn',
+    'brian2',
+    'teili',
+    'teili.core',
+    'teili.models',
+    'teili.models.builder',
+    'teili.models.parameters',
+    'teili.models.equations',
+    'teili.building_blocks',
+    'teili.stimuli',
+    'teili.tools',
 ]
 
 # sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

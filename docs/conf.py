@@ -153,7 +153,14 @@ html_sidebars = {
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'teilidoc'
-
+html_context = {
+    "display_gitlab": True,  # Integrate Gitlab
+    "gitlab_user": "NCS",  # Username
+    "gitlab_repo": "teili",  # Repo name
+    "gitlab_version": "master",  # Version
+    "gitlab_host": "code.ini.uzh.ch",
+    "conf_py_path": "docs/",  # Path in the checkout to the docs root
+}
 
 # -- Options for LaTeX output ------------------------------------------------
 

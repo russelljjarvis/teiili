@@ -47,6 +47,12 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
+        "Intended Audience :: Computational neuroscientists",
+        "Intended Audience :: Neuromorphic engineers",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: POSIX",
+        "Programming Language :: Python3",
     ],
 )
 

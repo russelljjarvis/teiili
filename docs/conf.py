@@ -121,7 +121,7 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-html_logo = 'scripts/fig/teili_logo.png'
+html_logo = 'scripts/fig/logo.svg'
 html_theme_options = {
     'logo_only': True,
     'display_version': True,
@@ -161,11 +161,12 @@ html_sidebars = {
 htmlhelp_basename = 'teilidoc'
 html_context = {
     "display_gitlab": True,  # Integrate Gitlab
-    "gitlab_user": "NCS",  # Username
+    "gitlab_user": "ncs",  # Username
     "gitlab_repo": "teili",  # Repo name
     "gitlab_version": "master",  # Version
     "gitlab_host": "code.ini.uzh.ch",
     "conf_py_path": "/docs/",  # Path in the checkout to the docs root
+    "source_suffix": source_suffix,
 }
 
 # -- Options for LaTeX output ------------------------------------------------

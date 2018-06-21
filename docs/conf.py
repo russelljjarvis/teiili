@@ -121,6 +121,12 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+html_logo = 'scripts/fig/teili_logo.png'
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+}
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -159,7 +165,7 @@ html_context = {
     "gitlab_repo": "teili",  # Repo name
     "gitlab_version": "master",  # Version
     "gitlab_host": "code.ini.uzh.ch",
-    "conf_py_path": "docs/",  # Path in the checkout to the docs root
+    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
 }
 
 # -- Options for LaTeX output ------------------------------------------------

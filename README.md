@@ -3,7 +3,7 @@
 teili, das /taɪli/, swiss german diminutive for piece. <br />
 
 This toolbox was developed to provide computational neuroscientists and neuromorphic engineers with a playground for implementing neural algorithms which are simulated using **brian2**.<br />
-Please report issues at the gitlab issue tracker (https://code.ini.uzh.ch/ncs/teili/issues). You can find the documentation [https://teili.readthedocs.io/en/latest/](here).
+Please report issues at the gitlab [issue tracker](https://code.ini.uzh.ch/ncs/teili/issues). You can find the documentation [here](https://teili.readthedocs.io/en/latest/).
 
 
 By providing some pre-defined neural algorithms and an intuitive way to combine different aspects of those algorithms, e.g. plasticity, connectivity etc, we try to shorten the development time required to implement novel neural algorithms.
@@ -18,7 +18,7 @@ Please also contact the main contributors with feedback.
 git clone git@code.ini.uzh.ch:ncs/teili.git
 ```
 
-Please look at the examples here: teili/examples/ and our [https://teili.readthedocs.io/en/latest/](documentation)
+Please look at the examples here: teili/examples/ and our [Documentation](https://teili.readthedocs.io/en/latest/)
 
 ### Prerequisites
 
@@ -37,6 +37,7 @@ Please look at the examples here: teili/examples/ and our [https://teili.readthe
     ```
 
 *  teili
+
     You either use the `setup.py` by using (**recommended**)
     ```
     sudo python3 setup.py install
@@ -80,9 +81,9 @@ Synapse1 = Connections(Neuron1, Neuron1,
                       method='euler',
                       name='Synapse1')
 ```
-For a more detailed explanation have a look at our [https://teili.readthedocs.io/en/latest/scripts/Tutorials.html](Tutorial)
+For a more detailed explanation have a look at our [Tutorial](https://teili.readthedocs.io/en/latest/scripts/Tutorials.html)
 ## Examples
-Please look at the [https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#neuron-synapse-tutorial](Neuron & Synapse example), which is located in `examples/`.
+Please look at the [Neuron & Synapse example](https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#neuron-synapse-tutorial), which is located in `examples/`.
 You can also use them to test your installation.
 To run an example and test if eveything is working, run the following command
 ```
@@ -91,9 +92,9 @@ python3 neuron_synapse_test.py
 ```
 The output should look like this
 
-<img src="docs/scripts/fig/neuron_synapse_test.png" width="450" height="300">
+<img src="docs/scripts/fig/neuron_synapse_test.png" width="550" height="300">
 
-For more examples and use cases have look at our [https://teili.readthedocs.io/en/latest/index.html](Documentation)
+For more examples and use cases have look at our [Documentation](https://teili.readthedocs.io/en/latest/index.html)
 
 
 ## Brian2 debugging tips

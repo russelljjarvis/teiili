@@ -12,10 +12,31 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("../.."))
 
+
+MOCK_MODULES = [
+    'pyqtgraph',
+    'pyqtgraph.Qt',
+    'pyqtgraph.Qt.QtCore',
+    'pyqtgraph.Qt.QtGui',
+    'pyqtgraph.Qt.QtGui.QPainterPath',
+    'pyqtgraph.Qt.QApplication',
+    'pyqtgraph.QtGui',
+    'pyqtgraph.functions',
+    'pyqtgraph.QtCore',
+    'pyqtgraph.exporters',
+    'pyqtgraph.colormap',
+    'pyqtgraph.parametertree',
+    'pyqtgraph.parametertree.parameterTypes',
+    'pyqtgraph.ptime',
+    'sparse',
+    'seaborn',
+]
 
 # -- Project information -----------------------------------------------------
 
@@ -39,13 +60,28 @@ release = '1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
     'sphinx.ext.mathjax',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-]
+    'sphinx.ext.todo']
+
+
+autodoc_mock_imports = MOCK_MODULES
+
+# Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = True
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_use_keyword = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['templates']
@@ -53,6 +89,10 @@ templates_path = ['templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
+# MARKDOWN PARSER
+source_parsers = {
+    '.md': 'recommonmark.parser.CommonMarkParser',
+}
 source_suffix = ['.rst', '.md']
 #source_suffix = '.rst'
 
@@ -80,7 +120,13 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'classic'
+html_theme = 'sphinx_rtd_theme'
+html_logo = 'scripts/fig/logo.svg'
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+}
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -101,14 +147,27 @@ html_static_path = ['static']
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-# html_sidebars = {}
+html_sidebars = {
+    '**': [
+        'relations.html',
+        'searchbox.html',
+    ]
+}
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'teilidoc'
-
+html_context = {
+    "display_gitlab": True,  # Integrate Gitlab
+    "gitlab_user": "ncs",  # Username
+    "gitlab_repo": "teili",  # Repo name
+    "gitlab_version": "master",  # Version
+    "gitlab_host": "code.ini.uzh.ch",
+    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
+    "source_suffix": source_suffix,
+}
 
 # -- Options for LaTeX output ------------------------------------------------
 

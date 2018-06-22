@@ -26,6 +26,7 @@ before_script:
     - pip3 install sparse
     - pip3 install pyqtgraph
     - pip3 install pyqt5
+    - pip3 install seaborn
     - cd ..
     - export PYTHONPATH="$PYTHONPATH:$PWD"
 

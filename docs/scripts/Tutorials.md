@@ -1,15 +1,55 @@
-# -*- coding: utf-8 -*-
-# @Author: mmilde
-# @Date:   2017-25-08 13:43:10
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 18:46:24
-# -*- coding: utf-8 -*-
+# Tutorials
+Welcome to teili, a modular python-based framework for developing, testing and visualization of neural algorithms.
 
-"""
-This is a tutorial example used to learn the basics of the Brian2 INI library.
-The emphasise is on neuron groups and non-plastic synapses.
-"""
 
+## Class object vs. import_eq
+To generate all pre-defined neuron and synapse models, which are stored by default in `teili/models/equations/`, please execute the following two scripts:
+```
+cd models/
+python3 -m synapse_models.py
+python3 -m neuron_models.py
+```
+Once the pre-defined neuron and synapse models are exported to files you can choose between generating neuron/synapse models 'on the fly' or importing them from the generated files, which you can maually adapt to your needs without fiddling with the templates provided by teili.<br />
+See examplesb for how to generate or load neuron and/or synapse models.
+```
+from teili.core.groups import Neurons, Connections
+
+from teili.models.neuron_models import DPI as neuron_model
+from teili.models.synapse_models import DPISyn as syn_model
+
+test_neuron1 = Neurons(N=2, equation_builder=neuron_model(num_inputs=2),
+                       name="testNeuron")
+test_neuron2 = Neurons(N=2, equation_builder=neuron_model(num_inputs=2),
+                       name="testNeuron")
+
+test_synapse = Connections(test_neuron1, test_neuron2,
+                           equation_builder=syn_model,
+                           name="test_synapse")
+```
+If you prefer to import your model from a file you can do:
+
+```
+from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+
+my_neuron_model = NeuronEquationBuilder.import_eq(
+    'teili/models/equations/DPI', num_inputs=2)
+
+my_synapse_model = SynapseEquationBuilder.import_eq(
+    'teili/models/equations/DPISyn')
+
+test_neuron1 = Neurons(2, equation_builder=my_neuron_model,
+                       name="test_neuron1")
+test_neuron2 = Neurons(2, equation_builder=my_neuron_model,
+                       name="test_neuron2")
+
+test_synapse = Connections(test_neuron1, test_neuron2,
+                     equation_builder=my_synapse_model,
+                     name="test_synapse")
+```
+## Neuron & Synapse tutorial
+We created a simple example of how to simulate a small neural network either using the EquationBuilder:
+```
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
@@ -21,15 +61,12 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
 
 from teili.core.groups import Neurons, Connections
 from teili import teiliNetwork
-# from teili.models.neuron_models import DPI as neuron_model
-# from teili.models.synapse_models import DPISyn as syn_model
-# from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
-from teili.models.neuron_models import Izhikevich as neuron_model
-from teili.models.synapse_models import DoubleExponential as syn_model
-from teili.models.parameters.izhikevich_param import parameters as neuron_model_param
+
+from teili.models.neuron_models import DPI as neuron_model
+from teili.models.synapse_models import DPISyn as syn_model
+from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
 prefs.codegen.target = "numpy"
-# defaultclock.dt = 10 * us
 
 tsInp = asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 indInp = asarray([0, 0, 0, 0, 0, 0, 0, 0])
@@ -98,8 +135,39 @@ Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon
 
 duration = 500
 Net.run(duration * ms)
+```
+or using the import method of the EquationBuilder, which imports a pre-defined model. The only thing that changes from the example above is the import and neuron/synapse group definition:
+```
+from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
-# Visualize simulation results
+# For this example you must first run models/neuron_models.py and synapse_models.py,
+# which will create the equation template. This will be stored in models/equations
+# Building neuron objects
+builder_object1 = NeuronEquationBuilder.import_eq(
+    'teili/models/equations/DPI', num_inputs=2)
+builder_object2 = NeuronEquationBuilder.import_eq(
+    'teili/models/equations/DPI', num_inputs=2)
+# Building synapses objects
+builder_object3 = SynapseEquationBuilder.import_eq(
+    'teili/models/equations/DPISyn')
+builder_object4 = SynapseEquationBuilder.import_eq(
+    'teili/models/equations/DPISyn')
+
+testNeurons = Neurons(2, equation_builder=builder_object1, name="testNeuron")
+testNeurons2 = Neurons(2, equation_builder=builder_object2, name="testNeuron2")
+
+InpSyn = Connections(gInpGroup, testNeurons,
+                     equation_builder=builder_object3, name="testSyn", verbose=False)
+InpSyn.connect(True)
+Syn = Connections(testNeurons, testNeurons2,
+                  equation_builder=builder_object4, name="testSyn2")
+Syn.connect(True)
+```
+The way parameters are set remains the same.
+In order to visualize the behaviour the example script also plots a couple of spike and state monitors.
+
+```
 pg.setConfigOptions(antialias=True)
 
 labelStyle = {'color': '#FFF', 'font-size': '12pt'}
@@ -197,3 +265,12 @@ p6.getAxis('left').tickFont = b
 
 
 QtGui.QApplication.instance().exec_()
+```
+
+
+In both cases of model definition the resulting figure should look like this:
+<img src="fig/neuron_synapse_test.png" width="450" height="300">
+
+## STDP tutorial
+One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity mechanism.
+

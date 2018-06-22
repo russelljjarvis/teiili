@@ -23,14 +23,16 @@ from teili import teiliNetwork
 from teili.models.synapse_models import DPISyn, DPIstdp
 from teili.tools.synaptic_kernel import kernel_gauss_1d
 
-from teili import NeuronEquationBuilder, SynapseEquationBuilder
-DPI = NeuronEquationBuilder.import_eq('DPI', num_inputs=1)
-
-from teili.tools.live import ParameterGUI, PlotGUI
-
 prefs.codegen.target = 'numpy'
 
 run_as_standalone = True
+
+if run_as_standalone:
+    standaloneDir = os.path.expanduser('~/WTA_standalone')
+    set_device('cpp_standalone', directory=standaloneDir, build_on_run=False)
+    device.reinit()
+    device.activate(directory=standaloneDir, build_on_run=False)
+    prefs.devices.cpp_standalone.openmp_threads = 4
 
 num_neurons = 50
 num_input_neurons = num_neurons
@@ -51,8 +53,7 @@ wtaParams = {'weInpWTA': 500,
              'EI_connection_probability' : 0.7,
              }
 
-gtestWTA = WTA(name='testWTA', neuron_eq_builder=DPI, synapse_eq_builder=DPISyn,
-               dimensions=1, num_neurons=num_neurons, num_inh_neurons=40,
+gtestWTA = WTA(name='testWTA', dimensions=1, num_neurons=num_neurons, num_inh_neurons=40,
                num_input_neurons=num_input_neurons, num_inputs=2, block_params=wtaParams,
                spatial_kernel = "kernel_gauss_1d")
 
@@ -75,37 +76,43 @@ statemonWTAin = StateMonitor(gtestWTA.Groups['gWTAGroup'], ('Ie0', 'Ii0','Ie1', 
 
 Net.add(gtestWTA, testbench.noise_input, noise_syn, statemonWTAin)
 
+Net.standaloneParams.update({'gtestWTA_Iconst' : 1*pA})
+
+if run_as_standalone:
+    Net.build()
 
 #%%
+#parameters are nonsense, please find good ones!
+standaloneParams=OrderedDict([('duration', 0.5 * second),
+             ('stestWTA_e_latWeight', 400),#280),
+             ('stestWTA_e_latSigma', 2),
+             ('stestWTA_Inpe_weight', 300),
+             ('stestWTA_Inhe_weight', 200),#300),
+             ('stestWTA_Inhi_weight', -20),
 
-duration= 2000* ms
+             ('gtestWTA_refP', 5. * msecond),
+             ('gtestWTA_Inh_refP', 5. * msecond),
+             ('gtestWTA_Iconst', 5000 * pA)])
 
-plot_gui = PlotGUI(data = gtestWTA.group.Imem)
+duration=standaloneParams['duration']/ms
+Net.run(duration=duration*ms, standaloneParams=standaloneParams, report='text')
 
-param_gui = ParameterGUI(net = Net)
-param_gui.params
-param_gui.add_params(parameters = [gtestWTA.group.Cahp,gtestWTA.group.Ithahp])
-param_gui.showGUI()
-
-Net.run_as_thread(duration=duration)
-
-#gtestWTA.group.Ithahp
-#gtestWTA.group.Cahp
-
+wta_plot = gtestWTA.plot()
+wta_plot.show()
 
 #wta_plot = plotWTA(wta_monitors=gtestWTA.Monitors, name='testWTA',
-#                     start_time=0 * ms, end_time=duration, plot_states=False)
+#                     start_time=0 * ms, end_time=duration * ms, plot_states=False)
 #wta_plot.show()
-#
-#spikemonWTA = gtestWTA.Groups['spikemonWTA']
-#spiketimes = spikemonWTA.t
-#dt = defaultclock.dt
-#spikeinds = spiketimes/dt
-#
-#data_sparse = scipy.sparse.coo_matrix((np.ones(len(spikeinds)),(spikeinds,[i for i in spikemonWTA.i])))
-#data_dense = data_sparse.todense()
-#
-##data_dense.shape
-#filtersize = 500*ms
-#data_filtered = ndimage.uniform_filter1d(data_dense, size=int(filtersize / dt), axis=0, mode='constant') * second / dt
-#plt.plot(data_filtered[-10]) #[400,:])
+
+spikemonWTA = gtestWTA.Groups['spikemonWTA']
+spiketimes = spikemonWTA.t
+dt = defaultclock.dt
+spikeinds = spiketimes/dt
+
+data_sparse = scipy.sparse.coo_matrix((np.ones(len(spikeinds)),(spikeinds,[i for i in spikemonWTA.i])))
+data_dense = data_sparse.todense()
+
+#data_dense.shape
+filtersize = 500*ms
+data_filtered = ndimage.uniform_filter1d(data_dense, size=int(filtersize / dt), axis=0, mode='constant') * second / dt
+plt.plot(data_filtered[-10]) #[400,:])

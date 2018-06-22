@@ -29,7 +29,7 @@ def xy2ind(x, y, nrows, ncols):
     It is a wrapper around np.ravel_multi_index with a cpp implementation
 
     Beware that the cpp version does not check if your input is OK
-    (if your coordinates are actually inside of the array).
+    (i.e. whether your coordinates are actually inside the array).
 
 
     Args:
@@ -56,7 +56,7 @@ def ind2x(ind, nrows, ncols):
     you with the corresponding x coordinate.
 
     Beware that the cpp version does not check if your input is OK
-    (if your coordinates are actually inside of the array).
+    (whether your coordinates are actually inside the array).
 
     Args:
         ind (int, required): index of flattened array that should be converted
@@ -82,7 +82,7 @@ def ind2y(ind, nrows, ncols):
     you with the corresponding y coordinate.
 
     Beware that the cpp version does not check if your input is OK
-    (if your coordinates are actually inside of the array).
+    (whether your coordinates are actually inside the array).
 
     Args:
         ind (int, required): index of flattened array that should be converted

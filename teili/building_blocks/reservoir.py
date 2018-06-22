@@ -12,8 +12,8 @@ Example:
     >>> from teili.building_blocks.reservoir import Reservoir
     >>> my_bb = Reservoir(name='my_reservoir')
 
-    if you want to change the underlying neuron and synapse model you need to provide
-    different equation_builder class:
+    If you want to change the underlying neuron and synapse model you need to
+    provide a different equation_builder class:
 
     >>> from teili.models.neuron_models import DPI
     >>> from teili.models.synapse_models import DPISyn
@@ -21,7 +21,7 @@ Example:
                       neuron_eq_builder=DPI,
                       synapse_eq_builder=DPISyn)
 
-    if you want to change the default parameters of your building block
+    If you want to change the default parameters of your building block
     you need to define a dictionary, which you pass to the building_block
 
     >>> reservoir_params = {'weInpR': 1.5,
@@ -76,10 +76,10 @@ class Reservoir(BuildingBlock):
 
     Attributes:
         group (dict): List of keys of neuron population.
-        input_group (SpikeGenerator): SpikeGenerator obj. to stimulate Reservoir.
+        input_group (SpikeGenerator): SpikeGenerator object to stimulate Reservoir.
         num_neurons (int, optional): Size of Reservoir neuron population.
         fraction_inh_neurons (float, optional): Set to None to skip Dale's principle.
-        spikemonR brian2.SpikeMonitor obj.): A spikemonitor which monitors the activity of the
+        spikemonR (brian2.SpikeMonitor object): A spikemonitor which monitors the activity of the
             reservoir population.
         standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation.
     '''
@@ -108,7 +108,7 @@ class Reservoir(BuildingBlock):
             fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple.
             additional_statevars (list, optional): List of additional state variables which are not standard.
             num_inputs (int, optional): Number of input currents to Reservoir.
-            monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+            monitor (bool, optional): Flag to auto-generate spike and state monitors.
             debug (bool, optional): Flag to gain additional information.
 
         Raises:
@@ -182,7 +182,7 @@ def gen_reservoir(groupname,
         fraction_inh_neurons (int, optional): Set to None to skip Dale's principle.
         cutoff (int, optional): Radius of self-excitation.
         num_inputs (int, optional): Number of input currents to Reservoir.
-        monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+        monitor (bool, optional): Flag to auto-generate spike and state monitors.
         additional_statevars (list, optional): List of additional state variables which are not standard.
         debug (bool, optional): Flag to gain additional information.
 
@@ -325,7 +325,7 @@ def plot_reservoir(name, start_time, end_time, num_neurons, reservoir_monitors):
         end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
             Can be smaller than simulation time but not larger.
         num_neurons (int, required): 1D number of neurons in Reservoir populations.
-        reservoir_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in Reservoir.Monitors.
+        reservoir_monitors (dict.): Dictionary with keys to access spike and state monitors. in Reservoir.Monitors.
     """
     app = QtGui.QApplication.instance()
     if app is None:

@@ -13,9 +13,9 @@ setup(
     description=("This toolbox was developed to provide computational  "
                  "neuroscientists and neuromorphic engineers with a "
                  "playground for implementing neural algorithms which "
-                 "are simulated using brian2."),
+                 "are simulated using Brian 2."),
     license="MIT",
-    keywords="Neural algorithms, building blocks, Spiking Neurla Networks",
+    keywords="Neural algorithms, building blocks, Spiking Neural Networks",
     url="https://code.ini.uzh.ch/ncs/teili",
     packages=[
         'teili',

@@ -3,7 +3,7 @@
 TBA description of Building blocks
 
 ## Winner-takes-all (WTA)
-Every building block has a set of parameters such as weights and refractory period, which can be specified outside the building block gneration and unpacked to the building block. For the WTA building_block this dictionary looks as follows:
+Every building block has a set of parameters such as weights and refractory period, which can be specified outside the building block generation and unpacked to the building block. For the WTA building_block this dictionary looks as follows:
 ```
 wtaParams = {'weInpWTA': 100,
              'weWTAInh': 55,
@@ -36,13 +36,13 @@ from teili.building_blocks.wta import WTA
 from teili.models.neuron_models import DPI
 ```
 ### 1D
-The WTA building block comes in two slightly differen versions. The versions only differ in the dimensionality of the WTA.
+The WTA building block comes in two slightly different versions. The versions only differ in the dimensionality of the WTA.
 ```
 # The number of neurons in your WTA population.
-# Note that this number is squared in in the 2D WTA
+# Note that this number is squared in the 2D WTA
 num_neurons = 50
 # The number of neurons which project to your WTA.
-# Note that this number is squared in in the 2D WTA
+# Note that this number is squared in the 2D WTA
 num_input_neurons = 50
 my_wta = WTA(name='my_wta', dimensions=1,
              neuron_eq_builder=DPI,
@@ -55,10 +55,10 @@ my_wta = WTA(name='my_wta', dimensions=1,
 To generate a 2 dimensional WTA population you can do the following.
 ```
 # The number of neurons in your WTA population.
-# Note that this number is squared in in the 2D WTA
+# Note that this number is squared in the 2D WTA
 num_neurons = 7
 # The number of neurons which project to your WTA.
-# Note that this number is squared in in the 2D WTA
+# Note that this number is squared in the 2D WTA
 num_input_neurons = 10
 my_wta = WTA(name='my_wta', dimensions=2,
              neuron_eq_builder=DPI,
@@ -94,3 +94,4 @@ my_wta.Groups['synWTAWTA1e'].w_plast = 'w_mean + randn() * w_std'
 ## Sequence learning
 
 ## Threeway network
+

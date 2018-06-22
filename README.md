@@ -1,9 +1,9 @@
 # teili
 
-teili, das /taɪli/, swiss german diminutive for piece. <br />
+teili, das /taɪli/, Swiss german diminutive for piece. <br />
 
 This toolbox was developed to provide computational neuroscientists and neuromorphic engineers with a playground for implementing neural algorithms which are simulated using **brian2**.<br />
-Please report issues at the gitlab [issue tracker](https://code.ini.uzh.ch/ncs/teili/issues). You can find the documentation [here](https://teili.readthedocs.io/en/latest/).
+Please report issues via the gitlab [issue tracker](https://code.ini.uzh.ch/ncs/teili/issues). You can find the documentation [here](https://teili.readthedocs.io/en/latest/).
 
 
 By providing some pre-defined neural algorithms and an intuitive way to combine different aspects of those algorithms, e.g. plasticity, connectivity etc, we try to shorten the development time required to implement novel neural algorithms.
@@ -24,7 +24,7 @@ Please look at the examples here: teili/examples/ and our [Documentation](https:
 
 * python3
     ```
-    sudo apt install python3 pytthon3-pip
+    sudo apt install python3 python3-pip
     ```
 
 * brian2

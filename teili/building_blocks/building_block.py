@@ -4,9 +4,8 @@
 
 Todo:
     * Hierarchy of building_blocks.
-        There is a problem, when 2 BBs of the same kind are added to another BB, as the
-        names collide. There is a problem, when 2 BBs of the same kind are added to
-        another BB, as the names collide.
+        There is a problem when 2 BBs of the same kind are added to another BB, as the
+        names collide.
     * Monitor naming.
         Important all Monitors of Building blocks have to be named and named uniquely!
         Otherwise they will not be found, when a Network is rerun in standalone mode
@@ -28,8 +27,8 @@ class BuildingBlock:
     Attributes:
         debug (bool, optional): Flag to gain additional information
         Groups (dictionary): Keys to all neuron and synapse groups
-        monitor (bool, optional): Flag to auto-generate spike and statemonitors
-        Monitors (dictionary): Keys to all spike- and statemonitors
+        monitor (bool, optional): Flag to auto-generate spike and state monitors
+        Monitors (dictionary): Keys to all spike and state monitors
         name (str, required): Name of the building_block population
         neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
         params (TYPE): Description
@@ -46,7 +45,7 @@ class BuildingBlock:
             synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
             blockParams (dict): Dictionary which holds building_block specific parameters
             debug (bool, optional): Flag to gain additional information
-            monitor (bool, optional): Flag to auto-generate spike and statemonitors
+            monitor (bool, optional): Flag to auto-generate spike and state monitors
         """
         self.name = name
         self.neuron_eq_builder = neuron_eq_builder
@@ -72,7 +71,7 @@ class BuildingBlock:
         return iter([allBrianObjects[key] for key in allBrianObjects])
 
     def get_run_args(self):
-        """this collects the arguments to cpp main() for stadalone run
+        """this collects the arguments to cpp main() for standalone run
 
         Returns:
             TYPE: Description

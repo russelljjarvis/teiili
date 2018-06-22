@@ -4,7 +4,7 @@
 # @Last Modified by:   Moritz Milde
 # @Last Modified time: 2018-06-11 18:19:14
 """
-This file contains unittest for equations
+This file contains unit tests for equations.
 """
 
 import unittest

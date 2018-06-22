@@ -32,15 +32,15 @@ from teili.tools.indexing import ind2xy  # , xy2ind, ind2x, ind2y
 @declare_types(i='integer', j='integer', gsigma='float', result='float')
 @check_units(i=1, j=1, gsigma=1, result=1)
 def kernel_mexican_1d(i, j, gsigma):
-    """Summary: function that calculates mexican hat 1D kernel
+    """Summary: function that calculates mexican hat 1D kernel.
 
     Args:
-        i (int): presynaptic index
-        j (int): postsynaptic index
-        gsigma (float): sigma (sd) of kernel
+        i (int): presynaptic index.
+        j (int): postsynaptic index.
+        gsigma (float): sigma (sd) of kernel.
 
     Returns:
-        float: value of kernel that can be set as a weight
+        float: value of kernel that can be set as a weight.
     """
     x = i - j
     exponent = -(x**2) / (2 * gsigma**2)
@@ -56,15 +56,15 @@ def kernel_mexican_1d(i, j, gsigma):
 @declare_types(i='integer', j='integer', gsigma='float', result='float')
 @check_units(i=1, j=1, gsigma=1, result=1)
 def kernel_gauss_1d(i, j, gsigma):
-    """Summary: function that calculates 1D kernel
+    """Summary: function that calculates 1D kernel.
 
     Args:
-        i (int): presynaptic index
-        j (int): postsynaptic index
-        gsigma (float): sigma (SD) of kernel
+        i (int): presynaptic index.
+        j (int): postsynaptic index.
+        gsigma (float): sigma (SD) of kernel.
 
     Returns:
-        float: value of kernel that can be set as a weight
+        float: value of kernel that can be set as a weight.
     """
     res = exp(-((i - j)**2) / (2 * gsigma**2))  # gaussian, not normalized
     return res
@@ -85,18 +85,18 @@ def kernel_gauss_1d(i, j, gsigma):
 @declare_types(i='integer', j='integer', gsigma='float', nrows='integer', ncols='integer', result='float')
 @check_units(i=1, j=1, gsigma=1, nrows=1, ncols=1, result=1)
 def kernel_mexican_2d(i, j, gsigma, nrows, ncols):
-    """Summary: function that calculates 2D kernel
+    """Summary: function that calculates 2D kernel.
 
     Args:
-        i (int): presynaptic index
-        j (int): postsynaptic index
-        gsigma (float): sigma (SD) of kernel
-        ncols (int): number of cols in 2d array of neurons, needed to calcualate 1d index
+        i (int): presynaptic index.
+        j (int): postsynaptic index.
+        gsigma (float): sigma (SD) of kernel.
+        ncols (int): number of cols in 2d array of neurons, needed to calcualate 1d index.
         nrows (int): number of rows in 2d array of neurons, only needed to check
-                    if index is in array (this check is skipped in cpp version)
+                    if index is in array (this check is skipped in cpp version).
 
     Returns:
-        float: value of kernel that can be set as a weight
+        float: value of kernel that can be set as a weight.
     """
     # exponent = -(fdist(i,j,ncols)**2)/(2*gsigma**2) #alternative
     (ix, iy) = ind2xy(i, nrows, ncols)
@@ -124,15 +124,15 @@ def kernel_mexican_2d(i, j, gsigma, nrows, ncols):
 @declare_types(i='integer', j='integer', gsigma='float', nrows='integer', ncols='integer', result='float')
 @check_units(i=1, j=1, gsigma=1, nrows=1, ncols=1, result=1)
 def kernel_gauss_2d(i, j, gsigma, nrows, ncols):
-    """Summary: function that calculates symmetrical gaussian 2D kernel
+    """Summary: function that calculates symmetrical gaussian 2D kernel.
 
     Args:
-        i (int): presynaptic index
-        j (int): postsynaptic index
-        gsigma (float): sigma (SD) of kernel
-        ncols (int): number of cols in 2d array of neurons, needed to calcualate 1d index
+        i (int): presynaptic index.
+        j (int): postsynaptic index.
+        gsigma (float): sigma (SD) of kernel.
+        ncols (int): number of cols in 2d array of neurons, needed to calcualate 1d index.
         nrows (int): number of rows in 2d array of neurons, only needed to check
-                    if index is in array (this check is skipped in cpp version)
+                    if index is in array (this check is skipped in cpp version).
 
 
     Returns:
@@ -171,34 +171,34 @@ def kernel_gauss_2d(i, j, gsigma, nrows, ncols):
 @declare_types(i='integer', j='integer', offx='integer', offy='integer', theta='float', sigmax='float', sigmay='float', freq='float', input_size_x='integer', input_size_y='integer', window_size_x='integer', window_size_y='integer', rf_size='integer', result='float')
 @check_units(i=1, j=1, offx=1, offy=1, theta=1, sigmax=1, sigmay=1, freq=1, input_size_x=1, input_size_y=1, window_size_x=1, window_size_y=1, rf_size=1, result=1)
 def kernel_gabor_2d(i, j, offx, offy, theta, sigmax, sigmay, freq, input_size_x, input_size_y, window_size_x, window_size_y, rf_size):
-    """Summary: function that calculates Gabor 2D kernel
+    """Summary: function that calculates Gabor 2D kernel.
     Only works with odd-sized square Receptive Fields.
     It prints the weight values for a couple of neurons.
-    To spare computation, this connectivety kernel allows the use of a
+    To spare computation, this connectivity kernel allows the use of a
     smaller output layer which only accounts for a small portion of the input
     layer. The output layer can be displaced w.r.t. the input layer using offx
     and offy.
 
 
     Args:
-        i (int): First layer neuron's index
-        j (int): Second layer neuron's index
+        i (int): First layer neuron's index.
+        j (int): Second layer neuron's index.
         offx (int): x offset of the the second layer's center respective to
-            first layer's center
+            first layer's center.
         offy (int): y offset of the the second layer's center respective to
-            first layer's center
-        theta (float): orientation of the gabor filter
-        sigmax (float): variance along x
+            first layer's center.
+        theta (float): orientation of the gabor filter.
+        sigmax (float): variance along x.
         sigmay (float): variance along y
-        freq (float): frequency of the filter
-        input_size_x (int): x size of the input layer
-        input_size_y (int): y size of the input layer
-        window_size_x (int): x size of the output layer
-        window_size_y (int): y size of the output layer
-        rf_size (int): side size of the Receptive Field
+        freq (float): frequency of the filter.
+        input_size_x (int): x size of the input layer.
+        input_size_y (int): y size of the input layer.
+        window_size_x (int): x size of the output layer.
+        window_size_y (int): y size of the output layer.
+        rf_size (int): side size of the Receptive Field.
 
     Returns:
-        float: The weight between the ith and jth neuron
+        float: The weight between the ith and jth neuron.
     """
 
     (iy, ix) = np.unravel_index(i, (input_size_y, input_size_x))

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """To understand the structure of in the rasterplots but also in the learned weight matrices, we need to sort the weight matrices according to some similarity measure, such as euclidean distance.
 However, the sorting algorithm is completely agnostic to the similarity measure. It connects each node with maximum two edges and constructs a directed graph.
-This sorting is idea is similar to the travelling salesman problem.
+This is similar to the travelling salesman problem.
 
 Example:
     In order to use this class you need to initialize it
-    either without a filename
+    either without a filename:
 
     >>> from teili.tools.sorting import SortMatrix
     >>> import numpy as np
@@ -15,8 +15,8 @@ Example:
     >>> print(obj.permutation)
     >>> print(ob.sorted_matrix)
 
-    Instead of using a matrix you can also specify a
-    path to a stored matrix
+    or instead of using a matrix you can also specify a
+    path to a stored matrix:
 
     >>> filename = '/path/to/your/matrix.npy'
     >>> obj = SortMatrix(nrows=49, filename=filename)
@@ -56,10 +56,6 @@ class SortMatrix():
             matrix (ndarray, optional): Instead of providing filename and location
                 one can also pass the matrix to sort directly to the class.
             axis (int, optional): Axis along which similarity should be computed.
-
-        No Longer Raises:
-            UserWarning: In case you did not specify ncols, the Class assumes that the
-                matrix is squared
         """
         self.nrows = nrows
         self.ncols = ncols
@@ -106,7 +102,7 @@ class SortMatrix():
             y (ndarray, required): 1d vector.
 
         Returns:
-            ndarray: Element-wise euclidean distance of 2 1d vectors.
+            ndarray: Element-wise euclidean distance of two 1d vectors.
         """
         return np.linalg.norm(x - y)
 

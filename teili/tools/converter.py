@@ -28,7 +28,7 @@ def skip_header(file_read):
 
 
 def read_events(file_read, x_dim, y_dim):
-    """A simple function that read events from cAER tcp.
+    """A simple function that reads events from cAER tcp.
 
     Args:
         file_read (TYPE): Description
@@ -95,7 +95,7 @@ def read_events(file_read, x_dim, y_dim):
 
 
 def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit='ms'):
-    """Loads AER data file and parse these properties of AE events.
+    """Loads AER data file and parses these properties of AE events.
 
     Properties:
         * timestamps (in us).
@@ -110,7 +110,7 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
             - "aedat" jAER AEDAT 2.0 = V2
             - "aedat" cAER AEDAT 3.1 = V3.
         debug (int, optional): Flag to provide more detailed report. 0 = silent, 1 (default) = print summary.
-            >=2 = print all debug
+            >=2 = print all debug.
         camera (str, optional): Type of event-based camera.
         unit: output unit of timestamps specified as a string:
             - 'ms' (default), 'us' or 'sec'.
@@ -312,10 +312,10 @@ def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True
     Function only returns index and timestamp list for existing types (e.g. On & Off events).
 
     Args:
-        Events (None, optional): 4D numpd.ndarray which contains pixel location (x,y), timestamps and polarity ((4,#events)).
+        Events (None, optional): 4D numpy.ndarray which contains pixel location (x,y), timestamps and polarity ((4,#events)).
         event_directory (None, optional): Path to stored events.
         resolution (str/int, optional): Resolution of the camera.
-        scale (bool, optional): Flag to rescale the timestamps from micro- to milliseconds.
+        scale (bool, optional): Flag to rescale the timestamps from microseconds to milliseconds.
 
     Returns:
         indices_on (1d numpy.array): Unique indices which maps the pixel location of the camera to the 1D neuron indices of ON events.
@@ -329,7 +329,7 @@ def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True
             -4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
         events = np.load(event_directory)
     if events is not None:
-        assert event_directory is None, 'Either you specify a path to load events using event_directory. Or you pass the event numpy directly. NOT both.'
+        assert event_directory is None, 'Either you specify a path to load events using event_directory. Or you pass the event numpy array directly. NOT both.'
     if np.size(events, 0) > np.size(events, 1):
         events = np.transpose(events)
 
@@ -430,7 +430,7 @@ def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True
 
 
 def dvs_csv2numpy(datafile='tmp/aerout.csv', debug=False):
-    """Loads AER csv logfile and parse these properties of AE events
+    """Loads AER csv logfile and parses these properties of AE events
 
     Properties:
         * timestamps (in us).

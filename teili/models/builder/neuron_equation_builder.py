@@ -65,15 +65,15 @@ class NeuronEquationBuilder():
 
         Args:
             keywords (dict, optional): Brian2 like model.
-            base_unit (str, optional): Indicates if neuron is current- or conductance-based.
+            base_unit (str, optional): Indicates if neuron is current-based or conductance-based.
             adaptation (str, optional): What type of adaptive feedback should be used.
                So far only calciumFeedback is implemented.
             integration_mode (str, optional): Sets if integration up to spike-generation is
                linear or exponential.
             leak (str, optional): Enables leaky integration.
             position (str, optional): To enable spatial-like position indices on neuron.
-            noise (str, optional): NOT YET IMPLMENTED! This will in the future allow to
-               add independent mismatch-like noise on each neuron.
+            noise (str, optional): NOT YET IMPLMENTED! This will in the future allow independent
+            mismatch-like noise to be added on each neuron.
             refractory (str, optional): Refractory period of the neuron.
             num_inputs (int, optional): Number specifying how many distinct neuron population
                 project to the target neuron population.
@@ -162,7 +162,7 @@ class NeuronEquationBuilder():
         Maybe this use is a bit confusing, but it may be convenient.
 
         Args:
-            num_inputs (int, required): Number specifying how many distinct neuron population project
+            num_inputs (int, required): Number specifying how many distinct neuron populations project
             to the target neuron population.
 
         Returns:
@@ -248,7 +248,7 @@ class NeuronEquationBuilder():
         print('-_-_-_-_-_-_-_-')
 
     def export_eq(self, filename):
-        """Function to export generated neuron model to a a file
+        """Function to export generated neuron model to a file.
 
         Args:
             filename (str): Path/to/location/to/store/neuron_model.py.

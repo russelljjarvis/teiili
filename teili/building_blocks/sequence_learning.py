@@ -8,13 +8,13 @@ Attributes:
 
 Example:
     To use the Reservoir building block in your simulation you need
-    to create an object of the class by:
+    to create an object of the class by doing:
 
     >>> from teili.building_blocks.reservoir import Reservoir
     >>> my_bb = Reservoir(name='my_sequence')
 
-    if you want to change the underlying neuron and synapse model you need to provide
-    different equation_builder class:
+    If you want to change the underlying neuron and synapse model you need to
+    provide a different equation_builder class:
 
     >>> from teili.models.neuron_models import DPI
     >>> from teili.models.synapse_models import DPISyn
@@ -22,8 +22,8 @@ Example:
                       neuron_eq_builder=DPI,
                       synapse_eq_builder=DPISyn)
 
-    if you want to change the default parameters of your building block
-    you need to define a dictionary, which you pass to the building_block
+    If you want to change the default parameters of your building block
+    you need to define a dictionary, which you pass to the building_block:
 
     >>> sl_params = {'synInpOrd1e_weight': 1.3,
                      'synOrdMem1e_weight': 1.1,
@@ -82,7 +82,7 @@ class SequenceLearning(BuildingBlock):
     Attributes:
         cos_group (neuron group): Condition of Satisfaction group.
         group (dict): List of keys of neuron population.
-        input_group (SpikeGenerator): SpikeGenerator obj. to stimulate Reservoir.
+        input_group (SpikeGenerator): SpikeGenerator object to stimulate Reservoir.
         reset_group (neuron group): Reset group, to reset network after CoS is met.
         standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation.
     '''
@@ -99,7 +99,7 @@ class SequenceLearning(BuildingBlock):
             neuron_eq_builder (teili.models.builder obj, optional): Neuron equation builder object.
             synapse_eq_builder (teili.models.builder obj, optional): Synapse equation builder object.
             block_params (dict, optional): Dictionary of parameters such as synChaCha1e_weight or gChaGroup_refP.
-            num_elements (int, optional): Number oF elements in the sequence.
+            num_elements (int, optional): Number of elements in the sequence.
             num_neurons_per_group (int, optional): Number of neurons used to remember each item.
             num_inputs (int, optional): Number of inputs from different source populations.
             debug (bool, optional): Debug flag.

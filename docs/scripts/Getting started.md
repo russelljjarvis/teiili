@@ -2,7 +2,7 @@
 
 Welcome to teili!
 
-To start using teili follow the instructions below.
+To start using teili, follow the instructions below.
 ```
 git clone https://code.ini.uzh.ch/ncs/teili.git
 cd teili/
@@ -16,11 +16,11 @@ and now install teili
 ```
 sudo python3 setup.py install
 ```
-This will install all dependencies, as well as requirements.
-Furthermore, it will build pre-defined neuron and synapse models and
+This will install all requirements and dependencies.
+It will also build pre-defined neuron and synapse models and
 place them in `teili/models/equations`.
 
-In case you want to re-build the pre-defined models you need to navigate to the `model` folder
+In case you want to re-build the pre-defined models you need to navigate to the `model` folder:
 ```
 cd teili/models/
 ```
@@ -30,4 +30,5 @@ python3 -m models/neuron_models.py
 python3 -m models/synapse_models.py
 ```
 
-Have a look into our `examples` to see different use cases and tutorials.
+Have a look at our `examples` to see different use cases and tutorials.
+

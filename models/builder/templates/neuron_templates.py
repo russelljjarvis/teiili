@@ -62,7 +62,8 @@ Attributes:
     voltage_parameters (TYPE): Description
 """
 
-from brian2 import pF, nS, mV, ms, pA, nA
+from brian2 import pF, nS, mV, ms, pA, nA, psiemens
+pS = psiemens
 
 # voltage based equation building blocks
 v_model_template = {'model': """
@@ -137,10 +138,10 @@ v_quad_params = {
     "VR": -60.0 * mV,
     "VT": -20.0 * mV,
     "a": 0.01 / ms, # Nicola&Clopath2017
-    "b": 0.0 * nS, # Nicola&Clopath2017
+    "b": 0.0 * pS, # Nicola&Clopath2017
     "c": -65 * mV, # Nicola&Clopath2017
     "d": 200 * pA,  # Nicola&Clopath2017
-    "k":  2.5  * nS / mV} # k = 1/Rin Nicola&Clopath2017
+    "k":  2.5  * pS / mV} # k = 1/Rin Nicola&Clopath2017
 
 
 # leak

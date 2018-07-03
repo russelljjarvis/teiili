@@ -81,11 +81,12 @@ syn_ex_ex = gtestR.Groups['synRR1e']
 
 
 
-statemonRin = StateMonitor(gtestR.Groups['gRGroup'],
-                           ('Ie0', 'Ii0','Ie1', 'Ii1','Ie2', 'Ii2','Iconst','Vm','Iadapt'),
-                           record=True,
-                           name='statemonRin')
+# statemonRin = StateMonitor(gtestR.Groups['gRGroup'],
+#                            ('Ie0', 'Ii0','Ie1', 'Ii1','Ie2', 'Ii2','Iconst','Vm','Iadapt'),
+#                            record=True,
+#                            name='statemonRin')
 
+statemonR = gtestR.Monitors['statemonR']
 
 statemonRout = StateMonitor(gtestR.Groups['gROutGroup'],
                             {'rate'},
@@ -99,26 +100,50 @@ statemonRrates = StateMonitor(gtestR.Groups['synOutR1e'],
                            record=True,
                            name='statemonRrates')
 
-Net.add(gtestR, statemonRin, statemonRout, statemonRrates)
+Net.add(gtestR, statemonR, statemonRout, statemonRrates)
 
 
 #%%
 #Net.printParams()
 import time
-
 st = time.time()
 amplitudes_dict = {}
 sigmas_dict={}
-Net.run(duration)
-for cinj in statemonRin.Iconst:
-    plt.plot(statemonRin.t/ms,cinj / nA-I_bias/nA)
 
-for var in [statemonRout.rate.T, statemonRin.Vm.T, statemonRin.Iadapt.T]:
+# Run it !!!
+Net.run(duration)
+
+
+# Plot activity
+plt.figure()
+for cinj in statemonR.Iconst:
+    plt.title('Reservoir input')
+    plt.plot(statemonR.t/ms,cinj / pA-I_bias/pA)
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Injected current (pA)')
+
+to_plot = {'raster':{'var':statemonRout.rate.T,
+                     'x_unit':'ms',
+                     'y_unit':'spks/s',
+                     'x_label':'Time',
+                     'y_label':'Firing rate',
+                     'title':'Reservoir rate plot'},
+           'membrane_pot':{'var':statemonR.Vm.T,
+                           'x_unit':'ms',
+                           'y_unit':'mV',
+                           'x_label':'Time',
+                           'y_label':'Membrane potential',
+                           'title':'Reservoir rate plot'}}
+for tp_n,tp in to_plot.items():
     plt.figure()
-    plt.plot(statemonRin.t/ms, var)
+    plt.plot(statemonR.t/ms, tp['var'])
+    plt.title(tp['title'])
+    plt.xlabel('%s (%s)'%(tp['x_label'],tp['x_unit']))
+    plt.ylabel('%s (%s)'%(tp['y_label'],tp['y_unit']))
 
 if spikemonR.t.shape is not ():
     plt.figure()
+    plt.title('Reservoir raster plot')
     plt.plot(spikemonR.t/ms, spikemonR.i, '.k')
     plt.xlabel('Time (ms)')
     plt.ylabel('Neuron index')

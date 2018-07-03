@@ -365,7 +365,7 @@ def gen_reservoir(groupname,
                 gRInpGroup, name='spikemon' + groupname + '_RInp')
             Monitors['spikemonRInp'] = spikemonRInp
         try:
-            statemonR = StateMonitor(gRGroup, ('Vm', 'Iexp', 'Iin'), record=True,
+            statemonR = StateMonitor(gRGroup, ('Vm', 'Iexp', 'Iin', 'Iconst'), record=True,
                                      name='statemon' + groupname + '_R')
         except KeyError:
             statemonR = StateMonitor(gRGroup, ('Iexp', 'Iin'), record=True,
@@ -376,8 +376,8 @@ def gen_reservoir(groupname,
     # changed by the arguments of this function:
     # in this case: weInpR, weRInh, wiInhR, weRR,rpR, rpInh,sigm
     standalone_params = {
-        synRR1e.name + '_latWeight': weRR,
-        synRR1e.name + '_latSigma': sigm,
+        # synRR1e.name + '_latWeight': weRR,
+        # synRR1e.name + '_latSigma': sigm,
         gRGroup.name + '_refP': rpR
     }
     if fraction_inh_neurons is not None:

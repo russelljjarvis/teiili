@@ -13,8 +13,8 @@ from scipy.optimize import minimize
 from scipy import ndimage
 
 from brian2 import prefs, ms, pA, nA, StateMonitor, device, set_device,\
- second, msecond, defaultclock, TimedArray
-
+ second, msecond, defaultclock, TimedArray, psiemens, mV
+pS = psiemens
 from teili.building_blocks.reservoir import Reservoir, plot_reservoir
 from teili.core.groups import Neurons, Connections
 from teili import teiliNetwork
@@ -25,7 +25,7 @@ nc17 = runpy.run_path('nicola_cloapth_2017_params.py')
 
 prefs.codegen.target = 'numpy'
 
-num_neurons = 50 # nc17['N']
+num_neurons = nc17['N']
 # num_input_neurons = 1 # nc17['Xin'].shape[1]
 
 Net = teiliNetwork()
@@ -38,16 +38,18 @@ reservoir_params = {'weInpR': 1.5, # nc17['Ein']
                     'weRR': 0.5,
                     'sigm': 3,
                     'rpR': 3 * ms,
-                    'rpInh': 1 * ms}
+                    'rpInh': 1 * ms,
+                    'taud': nc17['td'] * ms,
+                    'taur': nc17['tr'] * ms}
 # OMEGA
 randn = np.random.randn
 adjecency_mtr = randn(num_neurons, num_neurons, 2)
 adjecency_mtr[:,:,0] = (adjecency_mtr[:,:,0]<nc17['p'])
-adjecency_mtr[:,:,1] = nc17['G'] * adjecency_mtr[:,:,1] * adjecency_mtr[:,:,0] / (nc17['p'] * np.sqrt(num_neurons))
+adjecency_mtr[:,:,1] = nc17['G'] * adjecency_mtr[:,:,1] * adjecency_mtr[:,:,0] / (nc17['p'] * np.sqrt(num_neurons)) 
 
 # Input Ein*Xin
 Itimed = np.dot(nc17['Ein'],nc17['Xin'].T).T # First dim is time, second is neuron index
-It = TimedArray(Itimed * nA, dt=defaultclock.dt)
+It = TimedArray(Itimed * pA, dt=defaultclock.dt)
 
 gtestR = Reservoir(name='testR',
                    num_neurons=num_neurons,
@@ -55,16 +57,15 @@ gtestR = Reservoir(name='testR',
                    # num_input_neurons=num_input_neurons,
                    Rconn_prob=None,
                    adjecency_mtr=adjecency_mtr,
-                   num_inputs=2,
+                   num_inputs=0,
+                   num_output_neurons=1,
+                   output_weights_init = [0],
                    block_params=reservoir_params)
 
 # BIAS
 # print('***********BIAS**************')
-I_bias = nc17['BIAS'] * nA
+I_bias = 1000 * pA #nc17['BIAS'] * pA
 gtestR.Groups['gRGroup'].namespace.update({"It":It, 'I_bias':I_bias})
-# gtestR.Groups['gRGroup'].Iconst = "I_bias" # Check Unit
-# print(gtestR.Groups['gRGroup'].Iconst)
-# gtestR.Groups['gRGroup'].add_subexpression('Ie4',nA.dim,'It(t,i)')
 gtestR.Groups['gRGroup'].run_regularly("Iconst = I_bias + It(t,i)",dt=1*ms)
 
 # syn_in_ex = gtestR.Groups['synInpR1e']
@@ -81,12 +82,24 @@ syn_ex_ex = gtestR.Groups['synRR1e']
 
 
 statemonRin = StateMonitor(gtestR.Groups['gRGroup'],
-                           ('Ie0', 'Ii0','Ie1', 'Ii1','Ie2', 'Ii2','Ie3', 'Ii3','Iconst'),
+                           ('Ie0', 'Ii0','Ie1', 'Ii1','Ie2', 'Ii2','Iconst','Vm','Iadapt'),
                            record=True,
                            name='statemonRin')
 
 
-Net.add(gtestR)#, statemonRin)
+statemonRout = StateMonitor(gtestR.Groups['gROutGroup'],
+                            {'rate'},
+                           record=True,
+                           name='statemonRout')
+
+spikemonR = gtestR.Monitors['spikemonR']
+
+statemonRrates = StateMonitor(gtestR.Groups['synOutR1e'],
+                            {'rate'},
+                           record=True,
+                           name='statemonRrates')
+
+Net.add(gtestR, statemonRin, statemonRout, statemonRrates)
 
 
 #%%
@@ -97,9 +110,19 @@ st = time.time()
 amplitudes_dict = {}
 sigmas_dict={}
 Net.run(duration)
-# for cinj in statemonRin.Iconst:
-#     plt.plot(statemonRin.t/ms,cinj/nA-I_bias/nA)
-# plt.show()
+for cinj in statemonRin.Iconst:
+    plt.plot(statemonRin.t/ms,cinj / nA-I_bias/nA)
+
+for var in [statemonRout.rate.T, statemonRin.Vm.T, statemonRin.Iadapt.T]:
+    plt.figure()
+    plt.plot(statemonRin.t/ms, var)
+
+if spikemonR.t.shape is not ():
+    plt.figure()
+    plt.plot(spikemonR.t/ms, spikemonR.i, '.k')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Neuron index')
+plt.show(0)
 
 
 # for par0 in range(0,300,20):

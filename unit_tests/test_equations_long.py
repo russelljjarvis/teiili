@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 #import os
 from teili import NeuronEquationBuilder, SynapseEquationBuilder, Neurons, teiliNetwork
+from teili.models.neuron_models import Izhikevich as neuron_model
 
 from brian2 import prefs, ms
 prefs.codegen.target = "numpy"
@@ -39,8 +40,10 @@ class TestEquations(unittest.TestCase):
     #     Net.run(5 * ms)
 
     def test_Izhikevich(self):
-        Izhikevich = NeuronEquationBuilder.import_eq(
-            'Izhikevich', num_inputs=1)
+        # Izhikevich = NeuronEquationBuilder.import_eq(
+        #     'Izhikevich', num_inputs=1)
+        Izhikevich = neuron_model(
+            num_inputs=1)
         testNeurons = Neurons(1, equation_builder=Izhikevich(
             num_inputs=1), name="testNeuron", verbose=False)
         Net = teiliNetwork()

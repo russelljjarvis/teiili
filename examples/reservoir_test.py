@@ -59,7 +59,7 @@ gtestR = Reservoir(name='testR',
                    adjecency_mtr=adjecency_mtr,
                    num_inputs=0,
                    num_output_neurons=1,
-                   output_weights_init = [0],
+                   output_weights_init = [1],
                    block_params=reservoir_params)
 
 # BIAS
@@ -88,8 +88,8 @@ syn_ex_ex = gtestR.Groups['synRR1e']
 
 statemonR = gtestR.Monitors['statemonR']
 
-statemonRout = StateMonitor(gtestR.Groups['gROutGroup'],
-                            {'rate'},
+statemonRout = StateMonitor(gtestR.Groups['synOutR1e'],
+                            {'r'},
                            record=True,
                            name='statemonRout')
 
@@ -122,7 +122,7 @@ for cinj in statemonR.Iconst:
     plt.xlabel('Time (ms)')
     plt.ylabel('Injected current (pA)')
 
-to_plot = {'raster':{'var':statemonRout.rate.T,
+to_plot = {'raster':{'var':statemonRout.r.T,
                      'x_unit':'ms',
                      'y_unit':'spks/s',
                      'x_label':'Time',

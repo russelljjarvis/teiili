@@ -12,13 +12,13 @@ Todo:
 
 Example:
     To use the WTA building block in your simulation you need
-    to create an object of the class by:
+    to create an object of the class by doing:
 
     >>> from teili.building_blocks.wta import WTA
     >>> my_bb = WTA(name='my_wta')
 
-    if you want to change the underlying neuron and synapse model you need to provide
-    different equation_builder class:
+    If you want to change the underlying neuron and synapse model you need to
+    provide a different equation_builder class:
 
     >>> from teili.models.neuron_models import ExpAdaptIF
     >>> from teili.models.synapse_models import ReversalSynV
@@ -26,8 +26,8 @@ Example:
                       neuron_eq_builder=ExpAdaptIF,
                       synapse_eq_builder=ReversalSynV)
 
-    if you want to change the default parameters of your building block
-    you need to define a dictionary, which you pass to the building_block
+    If you want to change the default parameters of your building block
+    you need to define a dictionary, which you pass to the building_block:
 
     >>> wta_params = {'weInpWTA': 1.5,
                       'weWTAInh': 1,
@@ -88,10 +88,10 @@ class WTA(BuildingBlock):
         dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is created.
         group (dict): List of keys of neuron population.
         inhGroup (TYPE): Description
-        inputGroup (brian2.SpikeGenerator obj.): SpikeGenerator obj. to stimulate WTA.
+        inputGroup (brian2.SpikeGenerator obj.): SpikeGenerator object to stimulate WTA.
         num_neurons (int, optional): Size of WTA neuron population.
         plot_win (TYPE): Description
-        spikemonWTA (brian2.SpikeMonitor obj.): A spikemonitor which monitors the activity of the WTA
+        spikemonWTA (brian2.SpikeMonitor obj.): A spike monitor which monitors the activity of the WTA
             population.
 
     Deleted Attributes:
@@ -127,11 +127,11 @@ class WTA(BuildingBlock):
             additional_statevars (list, optional): List of additonal statevariables which are not standard.
             num_inputs (int, optional): Number of input currents to WTA.
             spatial_kernel (None, optional): Description
-            monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+            monitor (bool, optional): Flag to auto-generate spike and state monitors.
             debug (bool, optional): Flag to gain additional information.
 
         Raises:
-            NotImplementedError: If dimension is set larger than 2, error is raised.
+            NotImplementedError: If dimensions is not 1 or 2, this error is raised.
 
         Deleted Parameters:
             groupname (str, required): Name of the WTA population.
@@ -232,13 +232,13 @@ def gen1dWTA(groupname,
         EI_connection_probability (float, optional): WTA to interneuron connectivity probability.
         IE_connection_probability (float, optional): Interneuron to WTA connectivity probability
         II_connection_probability (float, optional): Interneuron to Interneuron connectivity probability.
-        monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+        monitor (bool, optional): Flag to auto-generate spike and state monitors.
         additional_statevars (list, optional): List of additional state variables which are not standard.
         debug (bool, optional): Flag to gain additional information.
 
     Returns:
         Groups (dictionary): Keys to all neuron and synapse groups.
-        Monitors (dictionary): Keys to all spike- and statemonitors.
+        Monitors (dictionary): Keys to all spike and state monitors.
         standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     """
     if spatial_kernel is None:
@@ -375,7 +375,7 @@ def gen2dWTA(groupname,
              spatial_kernel="kernel_gauss_2d",
              num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
-    '''Creates a 2D squared WTA population of neurons, including the inhibitory interneuron population
+    '''Creates a 2D square WTA population of neurons, including the inhibitory interneuron population
 
     Args:
         groupname (str, required): Name of the WTA population.
@@ -404,7 +404,7 @@ def gen2dWTA(groupname,
 
     Returns:
         Groups (dictionary): Keys to all neuron and synapse groups.
-        Monitors (dictionary): Keys to all spike- and statemonitors.
+        Monitors (dictionary): Keys to all spike and state monitors.
         standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     '''
 
@@ -548,7 +548,7 @@ def plotWTA(wta_monitors, name, start_time=None, end_time=None, plot_states=True
     """Function to easily visualize WTA activity.
 
     Args:
-        wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors.
+        wta_monitors (dict.): Dictionary with keys to access spike and state monitors in WTA.Monitors.
         name (str, required): Name of the WTA population.
         start_time (brian2.units.fundamentalunits.Quantity): Start time in ms
             from when network activity should be plotted.

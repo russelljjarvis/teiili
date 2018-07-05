@@ -5,7 +5,7 @@ Created on Thu Sep  7 18:34:43 2017
 
 @author: alpha
 
-This is an idea, how live plotting and parameter changing in brian2 could work using pyqtgraph
+This is an idea how live plotting and parameter changing in brian2 could work using pyqtgraph
 It might not work properly and there is still a lot to be done
 
 Also be aware, that this is live, but not real time!

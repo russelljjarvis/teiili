@@ -12,5 +12,5 @@ parameters = {"Vm": -60.0 * mV,
               "b": 0.0 * nS, # gAdapt
               "c": -65.0 * mV,  # Vreset
               "d": 200.0 * pA, # wIadapt
-              "k": 2.5 * nS / mV 
+              "k": 2.5 * nS / mV
               }

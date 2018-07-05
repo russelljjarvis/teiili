@@ -3,8 +3,7 @@
 # @Date:   2018-06-19 10:18:33
 
 from setuptools import setup
-# from teili.models import neuron_models, synapse_models
-# import os
+import os
 
 setup(
     name="teili",
@@ -14,9 +13,9 @@ setup(
     description=("This toolbox was developed to provide computational  "
                  "neuroscientists and neuromorphic engineers with a "
                  "playground for implementing neural algorithms which "
-                 "are simulated using brian2."),
+                 "are simulated using Brian 2."),
     license="MIT",
-    keywords="Neural algorithms, building blocks, Spiking Neurla Networks",
+    keywords="Neural algorithms, building blocks, Spiking Neural Networks",
     url="https://code.ini.uzh.ch/ncs/teili",
     packages=[
         'teili',
@@ -48,10 +47,20 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
+        "Intended Audience :: Computational neuroscientists",
+        "Intended Audience :: Neuromorphic engineers",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: POSIX",
+        "Programming Language :: Python3",
     ],
 )
 
-# neuron_models.main()
-# synapse_models.main()
+if "readthedocs.org" not in os.getcwd():
+    from teili.models import neuron_models, synapse_models
 
-# os.system('sudo chown -R $SUDO_USER:$SUDO_USER teili/models/equations/*')
+    neuron_models.main()
+    synapse_models.main()
+
+    os.system('sudo chown -R $SUDO_USER:$SUDO_USER teili/models/equations/*')
+    print("Install successful! Models have been placed into teili/models/equations folder")

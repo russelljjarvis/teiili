@@ -75,7 +75,7 @@ class DPIShunt(SynapseEquationBuilder):
 
 
 class DPIstdp(SynapseEquationBuilder):
-    """This class provides the well-known DPI synapse with Spike-Time Dependent Plasticity
+    """This class provides the well-known DPI synapse with Spike-Timing Dependent Plasticity
     mechanism.
     """
 
@@ -83,7 +83,7 @@ class DPIstdp(SynapseEquationBuilder):
         """This class provides you with all the equations to simulate a Differential Pair
         Integrator (DPI) synapse as published in Chicca et al. 2014. However, additional
         equations are provided to make this synapse subject to learning based on
-        Spike-Time Dependent Plasticity (STDP) as published in Song, Miller and Abbott (2000)
+        Spike-Timing Dependent Plasticity (STDP) as published in Song, Miller and Abbott (2000)
         and Song and Abbott (2001). Also see another example at:
         https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
         """
@@ -93,12 +93,12 @@ class DPIstdp(SynapseEquationBuilder):
 
 class StdpSynV(SynapseEquationBuilder):
     """This class provides you with all the equations to simulate an exponential decaying
-    voltage-based synapse with learning based on Spike-Time Dependent Plasticity (STDP).
+    voltage-based synapse with learning based on Spike-Timing Dependent Plasticity (STDP).
     """
 
     def __init__(self):
         """This class provides you with all the equations to simulate an exponential decaying
-        voltage-based synapse with learning based on Spike-Time Dependent Plasticity (STDP)
+        voltage-based synapse with learning based on Spike-Timing Dependent Plasticity (STDP)
         as published in Song, Miller and Abbott (2000) and Song and Abbott (2001).
 
         Also see another example at:

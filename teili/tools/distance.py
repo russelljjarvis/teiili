@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Functions to compute distance (e.g. in 2d).
+"""Functions to compute distance (e.g. in 2D).
 
 The suffix "_cpp" avoids variables being string-replaced by brian2 if the same name
 is used in the network.
@@ -25,13 +25,13 @@ from teili.tools.indexing import ind2xy
 @declare_types(i='float', j='float', nrows='integer', ncols='integer', result='float')
 @check_units(i=1, j=1, ncols=1, nrows=1, result=1)
 def dist1d2dfloat(i, j, nrows, ncols):
-    """Function that calculates distance in 2D field from 2 1D indices.
+    """Function that calculates distance in 2D field from two 1D indices.
 
     Args:
         i (float, required): 1D index of source neuron.
         j (float, required): 1D index of target neuron.
-        nrows (int, required): number of rows of 2d neuron population.
-        ncols (int, required): number of colums of 2d neuron population.
+        nrows (int, required): number of rows of 2D neuron population.
+        ncols (int, required): number of colums of 2D neuron population.
 
     Returns:
         float: Distance in 2D field.
@@ -53,13 +53,13 @@ def dist1d2dfloat(i, j, nrows, ncols):
 @declare_types(i='integer', j='integer', nrows='integer', ncols='integer', result='float')
 @check_units(i=1, j=1, ncols=1, nrows=1, result=1)
 def dist1d2dint(i, j, nrows, ncols):
-    """Function that calculates distance in 2D field from 2 1D indices.
+    """Function that calculates distance in 2D field from two 1D indices.
 
     Args:
         i (int, required): 1D index of source neuron.
         j (int, required): 1D index of target neuron.
-        nrows (int, required): number of rows of 2d neuron population.
-        ncols (int, required): number of colums of 2d neuron population.
+        nrows (int, required): number of rows of 2D neuron population.
+        ncols (int, required): number of colums of 2D neuron population.
 
     Returns:
         int: Distance in 2D field.
@@ -77,7 +77,7 @@ def dist1d2dint(i, j, nrows, ncols):
 @declare_types(ix='integer', iy='integer', jx='integer', jy='integer', result='float')
 @check_units(ix=1, iy=1, jx=1, jy=1, result=1)
 def dist2d2dint(ix, iy, jx, jy):
-    """Function that calculates distance in 2D field from 4 integer 2D indices.
+    """Function that calculates distance in 2D field from four integer 2D indices.
 
     Args:
         ix (int, required): x component of 2D source neuron coordinate.
@@ -99,7 +99,7 @@ def dist2d2dint(ix, iy, jx, jy):
 @declare_types(ix='float', iy='float', jx='float', jy='float', result='float')
 @check_units(ix=1, iy=1, jx=1, jy=1, result=1)
 def dist2d2dfloat(ix, iy, jx, jy):
-    """Function that calculates distance in 2D field from 4 2D position values.
+    """Function that calculates distance in 2D field from four 2D position values.
 
     Args:
         ix (float, required): x component of 2D source neuron coordinate.

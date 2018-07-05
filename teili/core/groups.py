@@ -91,14 +91,14 @@ class TeiliGroup(Group):
         self.variables.add_subexpression(name, dimensions, expr)
 
     def set_params(self, params, **kwargs):
-        """THis function sets parameters to members of a Teiligroup.
+        """This function sets parameters on members of a Teiligroup.
 
         Args:
-            params (dict): Key adn value of parameter to be set.
+            params (dict): Key and value of parameter to be set.
             **kwargs: Additional keyword arguments.
 
         Returns:
-            dict: The set paraders
+            dict: The parameters set.
         """
         return set_params(self, params, **kwargs)
 
@@ -139,7 +139,7 @@ class Neurons(NeuronGroup, TeiliGroup):
         equation_builder (TYPE): Class which describes the neuron model equation and all
             properties and default parameters. See /model/builder/neuron_equation_builder.py and
             models/neuron_models.py.
-        initialized (bool): Flag to register Neurons population with TeiliGroups.
+        initialized (bool): Flag to register Neurons' population with TeiliGroups.
         num_inputs (int): Number of possible synaptic inputs. This overcomes the summed issue
             present in brian2.
         num_synapses (int): Number of synapses projecting to post-synaptic neuron group.
@@ -154,7 +154,7 @@ class Neurons(NeuronGroup, TeiliGroup):
         """Initializes wrapper for brian2's NeuronGroup class.
 
         Args:
-            N (int, required): Number of neurons in respective Neurons groups.
+            N (int, required): Number of neurons in respective Neurons' groups.
             equation_builder (None, optional): Class which describes the neuron model equation and all
                 porperties and default parameters. See /model/builder/neuron_equation_builder.py and
                 models/neuron_models.py.
@@ -415,7 +415,7 @@ class Connections(Synapses, TeiliGroup):
                 self.str_params.update({key: value})
 
     def plot(self):
-        """simple visualization of synapse connectivity (connected dots and connectivity matrix)
+        """Simple visualization of synapse connectivity (connected dots and connectivity matrix)
         """
         S = self
         sourceNeuron = len(S.source)
@@ -510,7 +510,7 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
 
 
 class TeiliSubgroup(Subgroup):
-    """this helps to make Subgroups compatible, otherwise the same as Subgroup
+    """This helps to make Subgroups compatible, otherwise the same as Subgroup.
 
     Attributes:
         register_synapse (fct): Register a synapse group to TeiliGroup.

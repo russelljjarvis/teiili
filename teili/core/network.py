@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Wrapper class for Netwotrk class of brian2.
+"""Wrapper class for Network class of brian2.
 
 This wrapper provides a more flexible interface, especially to
 change parameters on the fly after compilation
@@ -31,24 +31,24 @@ class teiliNetwork(Network):
 
     Attributes:
         blocks (list): Description
-        has_run (bool): Flag to indicate if network had been simulated already
-        standalone_params (dict): Dictionary of standalone parameters
+        has_run (bool): Flag to indicate if network has been simulated already.
+        standalone_params (dict): Dictionary of standalone parameters.
         thread (TYPE): Description
     """
     has_run = False
 
     @property
     def spikemonitors(self):
-        """A spikemonitor wrapper.
+        """A spike monitor wrapper.
 
         Returns:
-            dict: A dictionary of all spikemonitors (e.g. for looping over them)
+            dict: A dictionary of all spike monitors (e.g. for looping over them)
         """
         return {att.name: att for att in self.__dict__['objects'] if type(att) == SpikeMonitor}
 
     @property
     def statemonitors(self):
-        """A statemonitor wrapper.
+        """A state monitor wrapper.
 
         Returns:
             dict: A dictionary of all statemonitors (e.g. for looping over them)
@@ -102,7 +102,7 @@ class teiliNetwork(Network):
     def add(self, *objs):
         """Does the same thing as Network.add (adding Groups to the Network)
 
-        It furthermore adds the groups to a list for the parameter gui.
+        It also adds the groups to a list for the parameter gui.
 
         Args:
             *objs: arguments (brian2 objects which should be added to the network).
@@ -128,15 +128,15 @@ class teiliNetwork(Network):
 
         Args:
             report (bool, optional): Flag to provide more detailed information during run.
-            report_period (brian2.unit, optional): how often should be reported (unit time).
-            namespace (None, optional): Namespace containing all names of the network to be build.
+            report_period (brian2.unit, optional): How often should be reported (unit time).
+            namespace (None, optional): Namespace containing all names of the network to be built.
             profile (bool, optional): Flag to enable profiling of the network in terms of
-                executin time, resources etc. .
+                execution time, resources etc. .
             level (int, optional): Description.
             recompile (bool, optional): Flag to indicate if network should rather be recompiled
                 than used based on a prior build. Set this to False if you want to only change
                 parameters rather than network topology.
-            standalone_params (dict, optional): Dictionary with standalone parametes which
+            standalone_params (dict, optional): Dictionary with standalone parameters which
                 should be changed.
             clean (bool, optional): Flag to clean-up standalone directory.
         """
@@ -159,17 +159,17 @@ class teiliNetwork(Network):
                       This might lead to unexpected behavior.""")
         else:
             print('Network was compiled; as you have not set the device to \
-                  cpp_standalone, you can still run() it using numpy code generation')
+                  cpp_standalone, you can still run() it using numpy code generation.')
 
     def run(self, duration=None, standalone_params=dict(), **kwargs):
-        """Wrapper function to simulate a network given the duration time.
+        """Wrapper function to simulate a network for the given duration.
 
-        Parameters which should be changeable especially after cpp compilation need to
+        Parameters which should be changeable, especially after cpp compilation, need to
         be provided to standalone_params.
 
         Args:
-            duration (brain2.unit, optional): Simulation time in ms, i.e. 100 * ms.
-            standalone_params (dict, optional): Dictionary whichs keys refer to parameters
+            duration (brain2.unit, optional): Simulation time in s, i.e. 1000 * ms.
+            standalone_params (dict, optional): Dictionary whose keys refer to parameters
                 which should be changeable in cpp standalone mode.
             **kwargs (optional): Additional keyword arguments.
         """

@@ -56,7 +56,7 @@ import pyqtgraph as pg
 
 
 class STDP_Testbench():
-    """This class provides a stimulus to test your spike-time depenendent plasticity algorithm.
+    """This class provides a stimulus to test your spike-timing dependent plasticity algorithm.
 
     Attributes:
         N (int): Size of the pre and post neuronal population.
@@ -158,7 +158,7 @@ class OCTA_Testbench():
                 the larger of the 2 pixel dimension to unravel the coordinates into indices.
 
         Returns:
-            events (np.ndarray): 4D numpy array with #events entries. Array is organized as x, y, ts, pol see aedat2numpy for more details.
+            events (np.ndarray): 4D numpy array with #events entries. Array is organized as x, y, ts, pol. See aedat2numpy for more details.
         """
         assert(type(rec) == str), "rec has to be a string."
         assert(os.path.isfile(rec)), "File does not exist."
@@ -170,7 +170,7 @@ class OCTA_Testbench():
         """Given an angle cAngle this function returns the current position on an infinity trajectory.
 
         Args:
-            cAngle (float): current angle in rad which determines position on inifinity trajectory.
+            cAngle (float): current angle in rad which determines position on infinity trajectory.
 
         Returns:
             position (tuple): Postion in x, y coordinates.
@@ -194,18 +194,18 @@ class OCTA_Testbench():
     def rotating_bar(self, length=10, nrows=10, ncols=None, orientation='vertical', ts_offset=10,
                      angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None,
                      noise_probability=None, repetitions=1, debug=False):
-        """This function returns a single spikegenerator group (Brian object).
+        """This function returns a single SpikeGeneratorGroup (Brian object).
 
-        The scope of this function is to provide a simple test stimulus.
+        The purpose of this function is to provide a simple test stimulus.
         A bar is rotating in the center. The goal is to learn necessary
         spatio-temporal features of the moving bar and be able to make predictions
-        where the bar will move.
+        about where the bar will move.
 
         Args:
-            length (int): `length` of the bar in pixel.
+            length (int): Length of the bar in pixel.
             nrows (int, optional): X-Axis size of the pixel array.
             ncols (int, optional): Y-Axis size of the pixel array.
-            orientation (str): `orientation` of the bar. Can either be 'vertical'
+            orientation (str): Orientation of the bar. Can either be 'vertical'
                 or 'horizontal'.
             ts_offset (int): time between two pixel location.
             angle_step (int, optional): Angular velocity. Sets step width in np.arrange.
@@ -213,7 +213,7 @@ class OCTA_Testbench():
             rec_path (str, optional): Path/to/stored/location/of/recorded/stimulus.aedat.
             save_path (str, optional): Path to store generated events.
             noise_probability (float, optional): Probability of noise events between 0 and 1.
-            repetitions (int, optional): Number of revelations of the rotating bar.
+            repetitions (int, optional): Number of revolutions of the rotating bar.
             debug (bool, optional): Flag to print more detailed output of testbench.
 
         Returns:
@@ -232,7 +232,7 @@ class OCTA_Testbench():
             if rec_path is None:
                 raise UserWarning('No path to recording was provided')
             assert(os.path.isfile(rec_path + 'bar.aedat')
-                   ), "No recording exists. Please record the respective stimulus first."
+                   ), "No recording exists. Please record a stimulus first."
             self.events = aedat2numpy(
                 datafile=rec_path + 'bar.aedat', camera='DVS240')
         else:
@@ -329,16 +329,16 @@ class OCTA_Testbench():
             length (int, optional): length of the bar in pixel.
             nrows (int, optional): X-Axis size of the pixel array.
             ncols (int, optional): Y-Axis size of the pixel array.
-            orientation (str, optional): lag which determines if bar is orientated vertical or horizontal.
+            orientation (str, optional): lag which determines if bar is orientated vertically or horizontally.
             shift (int, optional): offset in x where the stimulus will start.
-            ts_offset (int, optional): Time in ms between consecutive pixel (stimulus velocity).
+            ts_offset (int, optional): Time in ms between consecutive pixels (stimulus velocity).
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file.
             rec_path (str, optional): Path/to/stored/location/of/recorded/stimulus.aedat.
             return_events (bool, optional): Flag to return events instead of SpikeGenerator.
 
         Returns:
             SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes.
-            events (numpy.ndarray, optional): If return_events is set events will be returned.
+            events (numpy.ndarray, optional): If return_events is set, events will be returned.
 
         Raises:
             UserWarning: If no filename is given but aedat recording should be loaded.
@@ -356,7 +356,7 @@ class OCTA_Testbench():
             elif orientation == 'horizontal':
                 fname = 'Infinity_bar_horizontal.aedat'
             assert(os.path.isfile(
-                fname)), "No recording exists. Please record the respective stimulus first."
+                fname)), "No recording exists. Please record a stimulus first."
             self.events = aedat2numpy(datafile=fname, camera='DVS240')
         else:
             x_coord = []
@@ -427,8 +427,8 @@ class OCTA_Testbench():
             nrows (int, optional): X-Axis size of the pixel array.
             ncols (int, optional): Y-Axis size of the pixel array.
             orthogonal (bool, optional): Flag which determines if bar is kept always orthogonal to trajectory,
-                if it kept aligned with trajectory or if it returns in "chaotic way".
-            shift (int, optional): offset in x where the stimulus will start.
+                if it kept aligned with the trajectory or if it returns in a "chaotic" way.
+            shift (int, optional): Offset in x where the stimulus will start.
             ts_offset (int, optional): Time in ms between consecutive pixels (stimulus velocity).
             artifical_stimulus (bool, optional): Flag if stimulus should be created or loaded from aedat file.
             rec_path (str, optional): Path/to/stored/location/of/recorded/stimulus.aedat.
@@ -436,7 +436,7 @@ class OCTA_Testbench():
 
         Returns:
             SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes.
-            events (numpy.ndarray, optional): If return_events is set events will be returned.
+            events (numpy.ndarray, optional): If return_events is set, events will be returned.
 
         Raises:
             UserWarning: If no filename is given but aedat recording should be loaded.
@@ -455,7 +455,7 @@ class OCTA_Testbench():
             elif orthogonal == 2:
                 fname = rec_path + 'Infinity_orthogonal_aligned_bar.aedat'
             assert(os.path.isfile(
-                fname)), "No recording exists. Please record the respective stimulus first."
+                fname)), "No recording exists. Please record a stimulus first."
             self.events = aedat2numpy(datafile=fname, camera='DVS240')
             return self.events
         else:
@@ -553,7 +553,7 @@ class OCTA_Testbench():
         and learn to predict its movement.
 
         Args:
-            rec_path (str, required): Path to recording
+            rec_path (str, required): Path to recording.
 
         Returns:
             SpikeGeneratorGroup (brian2.obj): A SpikeGenerator which has index (i) and spiketimes (t) as attributes
@@ -596,7 +596,7 @@ class WTA_Testbench():
 
     def stimuli(self, num_neurons=16, dimensions=2, start_time=10, end_time=500, isi=2):
         """This function provides simple test stimuli to test the selection mechanism
-        of a WTA population
+        of a WTA population.
 
         Args:
             num_neurons (int, optional): 1D size of WTA population.
@@ -606,7 +606,7 @@ class WTA_Testbench():
             isi (int, optional): Inter-spike between spike times.
 
         Raises:
-            NotImplementedError: If dimension is set larger than 2 error is raised
+            NotImplementedError: If dimension is not 1 or 2 this error is raised
         """
         self.times = np.arange(start_time, end_time + 1, isi)
         if dimensions == 1:
@@ -622,8 +622,8 @@ class WTA_Testbench():
         """Provides background noise as Poisson spike trains
 
         Args:
-            num_neurons (int, optional): 1D size of WTA population
-            rate (int, optional): Spike frequency f Poisson noise process
+            num_neurons (int, optional): 1D size of WTA population.
+            rate (int, optional): Spike frequency f Poisson noise process.
         """
         num2d_neurons = num_neurons**2
         self.noise_input = PoissonGroup(num2d_neurons, rate * Hz)

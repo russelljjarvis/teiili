@@ -6,20 +6,20 @@ It also provides a function to add lines to the model.
 
 Example:
     To use the SynapseEquationBuilder "on the fly"
-    you can initialize it as DPI neuron:
+    you can initialize it as a DPI neuron:
 
     >>> from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
     >>> my_syn_model = SynapseEquationBuilder.__init__(base_unit='DPI',
                                                        plasticity='non_plastic')
 
 
-    Or if you have a pre-defined synapse model you can import this dictionary as:
+    Or if you have a pre-defined synapse model you can import this dictionary as follows:
 
     >>> from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
     >>> my_syn_model = SynapseEquationBuilder.import_eq(
         'teili/models/equations/DPISyn')
 
-    in both cases you can pass it to Connections:
+    In both cases you can pass it to Connections:
 
     >>> from teili.core.groups import Connections
     >>> my_synapse = Connections(testNeurons, testNeurons2,
@@ -61,8 +61,8 @@ class SynapseEquationBuilder():
 
         Args:
             keywords (dict, optional): Brian2 like model.
-            base_unit (str, optional): Indicates if synapse is current-, conductance-based
-                or a DPI current model (for reference see ).
+            base_unit (str, optional): Indicates if synapse is current-based, conductance-based
+                or a DPI current model (for reference see TODO).
             kernel (str, optional): Specifying temporal kernel with which each spike gets
                 convolved, i.e. exponential, decay, or alpha function.
             plasticity (str, optional): Plasticity algorithm for the synaptic weight.
@@ -83,15 +83,15 @@ class SynapseEquationBuilder():
                     This class constructor builds a model for a synapse using pre-existing blocks.
 
                     The first entry is the type of model;
-                    choose between : 'current', 'conductance' or 'DPI' see this paper
-                    for reference #(add DPI paper here)
+                    choose between : 'current', 'conductance' or 'DPI'.
+                    See this paper for reference #(add DPI paper here) TODO
 
                     The second entry is the kernel of the synapse.
-                    This can be one of 'exponential', 'alpha', 'resonant' or 'gaussian'
+                    This can be one of 'exponential', 'alpha', 'resonant' or 'gaussian'.
 
                     The third entry is the plasticity of the synapse.
-                    This can be 'non_plastic', 'stdp' or 'fusi' see this paper
-                    for reference #(add fusi paper here)
+                    This can be 'non_plastic', 'stdp' or 'fusi'.
+                    See this paper for reference #(add fusi paper here) TODO
 
                     """
 
@@ -233,7 +233,7 @@ class SynapseEquationBuilder():
         print('-_-_-_-_-_-_-_-')
 
     def export_eq(self, filename):
-        """Function to export generated neuron model to a a file
+        """Function to export generated neuron model to a file.
 
         Args:
             filename (str): path/where/you/store/your/model.py

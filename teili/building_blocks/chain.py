@@ -17,8 +17,8 @@ Example:
     >>> from teili.building_blocks.chain import Chain
     >>> my_bb = Chain(name='my_chain')
 
-    if you want to change the underlying neuron and synapse model you need to provide
-    different equation_builder class:
+    If you want to change the underlying neuron and synapse model you need to
+    provide a different equation_builder class:
 
     >>> from teili.models.neuron_models import DPI
     >>> from teili.models.synapse_models import DPISyn
@@ -26,7 +26,7 @@ Example:
                       neuron_eq_builder=DPI,
                       synapse_eq_builder=DPISyn)
 
-    if you want to change the default parameters of your building block
+    If you want to change the default parameters of your building block
     you need to define a dictionary, which you pass to the building_block
 
     >>> chain_params = {'num_chains': 4,

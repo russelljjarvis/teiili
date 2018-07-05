@@ -166,7 +166,7 @@ conductance_params = {"gIe": 0 * nS,
                       "kernel_i": 0 * nS * ms**-1
                       }
 
-# Dpi type model
+# DPI type model
 dpi = {'model': '''
         dIe_syn/dt = (-Ie_syn - Ie_gain + 2*Io_syn*(Ie_syn<=Io_syn))/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
         dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
@@ -210,7 +210,7 @@ dpi = {'model': '''
        'on_post': ''' ''',
        }
 
-# standard parameters for Dpi models
+# standard parameters for DPI models
 dpi_params = {
     'Io_syn': 0.5 * pA,
     'kn_syn': 0.75,
@@ -276,7 +276,7 @@ dpi_shunt_params = {
 }
 
 
-'''ADDITIONAL EQUATIONS BLOCKS AND PARAMETERS
+"""ADDITIONAL EQUATIONS BLOCKS AND PARAMETERS
 
 Every block must specify additional model, pre- and post-spike equations, as well as
 two different sets (dictionaries) of parameters for conductance based
@@ -295,7 +295,7 @@ Plasticity Blocks:
 
 You need to declare two set of parameters for every block: (one for
 current based models and one for conductance based models)
-'''
+"""
 # Fusi learning rule ##
 fusi = {'model': '''
       dCa/dt = (-Ca/tau_ca) : volt (event-driven) #Calcium Potential
@@ -400,13 +400,13 @@ stdp_para_conductance = {"baseweight_e": 7 * nS,  # should we find a way to repl
                          "diffApre": 0.01,
                          "Q_diffAPrePost": 1.05,
                          "w_plast": 0}
-'''Kernels Blocks:
+"""Kernels Blocks:
 
 You need to declare two set of parameters for every block: one for
 current based models and one for conductance based models.
 
 TODO: THESE KERNELS ARE WRONG!
-'''
+"""
 # Alpha kernel ##
 
 alpha_kernel = {'model': '''
@@ -491,11 +491,11 @@ gaussian_params_conductance = {"sigma_gaussian_e": 6 * ms,
 
 none_params = {}
 
-'''Dictionary of keywords:
+"""Dictionary of keywords:
 
 These dictionaries contains keyword and models and parameters names useful for the __init__ subroutine
 Every new block dictionaries must be added to these definitions
-'''
+"""
 modes = {'current': current, 'conductance': conductance,
          'DPI': dpi, 'DPIShunting': dpi_shunt}
 

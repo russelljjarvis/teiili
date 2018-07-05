@@ -352,7 +352,9 @@ class Connections(Synapses, TeiliGroup):
                     synapse_models, equation_builder)
                 self.equation_builder = equation_builder()
             else:
-                self.equation_builder = equation_builder
+                self.equation_builder = equation_builder() # this copies the object using the call,
+                # it is convenient for the user, but maybe too confusing
+
             self.equation_builder.set_input_number(self.input_number - 1)
             Kwargs.update(self.equation_builder.keywords)
             Kwargs.pop('parameters')

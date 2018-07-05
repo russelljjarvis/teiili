@@ -138,6 +138,6 @@ def torus_dist2d2dfloat(ix, iy, jx, jy):
     Returns:
         float: Distance in 2D field with periodic boundary conditions.
     """
-    dx = min(abs(ix - jx), abs(ix - jx + 1), abs(ix - jx - 1))
-    dy = min(abs(iy - jy), abs(iy - jy + 1), abs(iy - jy - 1))
+    dx = np.minimum(abs(ix - jx), abs(ix - jx + 1), abs(ix - jx - 1))
+    dy = np.minimum(abs(iy - jy), abs(iy - jy + 1), abs(iy - jy - 1))
     return np.sqrt(dx**2 + dy**2)

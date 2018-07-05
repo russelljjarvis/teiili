@@ -78,7 +78,10 @@ class TeiliGroup(Group):
         """This method allows you to add a subexpression
         (like a state variable but a string that can be evaluated over time)
         You can e.g. add a timedArray like that:
-        >>> neuron_group.add_subexpression('I_in5',nA.dim,'timed_array(t)')
+        >>> neuron_group.add_subexpression('I_arr',nA.dim,'timed_array(t)')
+        (be aware, that you need to add a state variable I_arr first,
+        that is somehow connected to other variables, so run_regularly
+        may be an easier solution for your problem)
 
         Args:
             name (str): name of the expression.

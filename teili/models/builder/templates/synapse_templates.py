@@ -125,8 +125,8 @@ conductance = {'model': '''
                Ie{input_number}_post = Ie_syn : amp (summed)
                Ii{input_number}_post = -Ii_syn : amp (summed)
 
-               EIe : volt (shared,constant)             # excitatory reversal potential
-               EIi : volt (shared,constant)             # inhibitory reversal potential
+               EIe : volt (constant)             # excitatory reversal potential
+               EIi : volt (constant)             # inhibitory reversal potential
 
                kernel_e : siemens * second **-1
                kernel_i : siemens * second **-1
@@ -305,20 +305,20 @@ fusi = {'model': '''
 
       dw/dt = (alpha*updrift)-(beta*downdrift) : 1 (event-driven) # internal weight variable
 
-      wplus: 1 (shared)
-      wminus: 1 (shared)
-      theta_upl: volt (shared, constant)
-      theta_uph: volt (shared, constant)
-      theta_downh: volt (shared, constant)
-      theta_downl: volt (shared, constant)
-      theta_V: volt (shared, constant)
-      alpha: 1/second (shared,constant)
-      beta: 1/second (shared, constant)
-      tau_ca: second (shared, constant)
-      w_min: 1 (shared, constant)
-      w_max: 1 (shared, constant)
-      theta_w: 1 (shared, constant)
-      w_ca: volt (shared, constant)     ''',
+      wplus: 1 
+      wminus: 1 
+      theta_upl: volt (constant)
+      theta_uph: volt (constant)
+      theta_downh: volt (constant)
+      theta_downl: volt (constant)
+      theta_V: volt (constant)
+      alpha: 1/second (constant)
+      beta: 1/second (constant)
+      tau_ca: second (constant)
+      w_min: 1 (constant)
+      w_max: 1 (constant)
+      theta_w: 1 (constant)
+      w_ca: volt (constant)     ''',
 
         'on_pre': '''
       up = 1. * (Vm_post>theta_V) * (Ca>theta_upl) * (Ca<theta_uph)
@@ -368,11 +368,11 @@ fusi_params_conductance = {"wplus": 0.2,
 stdp = {'model': '''
       dApre/dt = -Apre / taupre : 1 (event-driven)
       dApost/dt = -Apost / taupost : 1 (event-driven)
-      w_max: 1 (shared, constant)
-      taupre : second (shared, constant)
-      taupost : second (shared, constant)
-      dApre : 1 (shared, constant)
-      Q_diffAPrePost : 1 (shared, constant)
+      w_max: 1 (constant)
+      taupre : second (constant)
+      taupost : second (constant)
+      dApre : 1 (constant)
+      Q_diffAPrePost : 1 (constant)
       ''',
 
         'on_pre': '''

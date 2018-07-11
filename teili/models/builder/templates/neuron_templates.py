@@ -72,10 +72,10 @@ v_model_template = {'model': """
          Iadapt  : amp                            # adaptation current
          Inoise  : amp                            # noise current
          Iconst  : amp                            # additional input current
-         Cm      : farad     (shared, constant)   # membrane capacitance
-         refP    : second    (shared, constant)   # refractory period (It is still possible to set it to False)
-         Vthr    : volt      (shared)
-         Vres    : volt      (shared, constant)   # reset potential
+         Cm      : farad     (constant)           # membrane capacitance
+         refP    : second    (constant)           # refractory period (It is still possible to set it to False)
+         Vthr    : volt      
+         Vres    : volt      (constant)           # reset potential
          """,
                     'threshold': "Vm > Vthr",
                     'reset': "Vm = Vres;"}
@@ -95,10 +95,10 @@ v_model_templatePara = {"Cm": 281 * pF,
 #exponential
 v_exp_current = {'model': """
             %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
-            VT      : volt      (shared, constant)        #
-            DeltaT  : volt      (shared, constant)        # slope factor
-            gL      : siemens   (shared, constant)        # leak conductance
-            %Vthr = (VT + 5 * DeltaT) : volt  (shared)
+            VT      : volt      (constant)        #
+            DeltaT  : volt      (constant)        # slope factor
+            gL      : siemens   (constant)        # leak conductance
+            %Vthr = (VT + 5 * DeltaT) : volt  
             """,
                 'threshold': '',
                 'reset': ''}
@@ -112,22 +112,22 @@ v_exp_current_params = {"gL" : 4.3 * nS,
 v_quad_current = {'model': """
             #quadratic
             %Iexp = k*(Vm - VR)*(Vm - VT) : amp
-            %tauIadapt = 1.0/a  : second    (shared)        # adaptation time constant
-            %gAdapt = b         : siemens   (shared)        # adaptation decay parameter
-            %wIadapt = d         : amp      (shared)        # adaptation weight
+            %tauIadapt = 1.0/a  : second           # adaptation time constant
+            %gAdapt = b         : siemens          # adaptation decay parameter
+            %wIadapt = d         : amp             # adaptation weight
             %EL = VR : volt
-            VT      : volt                (shared, constant)        # V threshold
-            VR      : volt                (shared, constant)        # V rest
-            k       : siemens * volt **-1 (shared, constant)        # slope factor
-            a       : second **-1         (shared, constant)        # recovery time constant
-            b       : siemens             (shared, constant)        # 1/Rin
-            c       : volt                (shared, constant)        # potential reset value
-            d       : amp                 (shared, constant)        # outward minus inward currents
+            VT      : volt                (constant)        # V threshold
+            VR      : volt                (constant)        # V rest
+            k       : siemens * volt **-1 (constant)        # slope factor
+            a       : second **-1         (constant)        # recovery time constant
+            b       : siemens             (constant)        # 1/Rin
+            c       : volt                (constant)        # potential reset value
+            d       : amp                 (constant)        # outward minus inward currents
                                                                     # activated during the spike
                                                                     # and affecting the after-spike
                                                                     # behavior
-            %Vthr = VT : volt  (shared)
-            %Vres = VR : volt  (shared)
+            %Vthr = VT : volt  
+            %Vres = VR : volt
             """,
                   'threshold': '',
                   'reset': "%Vm = c; Iadapt += wIadapt;"}
@@ -146,8 +146,8 @@ v_quad_params = {
 # leak
 v_leak = {'model': """
           %Ileak = -gL*(Vm - EL) : amp
-          gL      : siemens   (shared, constant)        # leak conductance
-          EL      : volt      (shared, constant)        # leak reversal potential
+          gL      : siemens   (constant)        # leak conductance
+          EL      : volt      (constant)        # leak reversal potential
          """,
           'threshold': '',
           'reset': ''}
@@ -159,10 +159,10 @@ v_leak_params = {"gL" : 4.3 * nS,
 # adaptation
 v_adapt = {'model': """
         %dIadapt/dt = -(gAdapt*(EL - Vm) + Iadapt)/tauIadapt : amp
-        tauIadapt  : second    (shared, constant)        # adaptation time constant
-        gAdapt     : siemens   (shared, constant)        # adaptation decay parameter
-        wIadapt    : amp       (shared, constant)        # adaptation weight
-        EL      : volt      (shared, constant)        # reversal potential
+        tauIadapt  : second    (constant)        # adaptation time constant
+        gAdapt     : siemens   (constant)        # adaptation decay parameter
+        wIadapt    : amp       (constant)        # adaptation weight
+        EL      : volt      (constant)        # reversal potential
         """,
            'threshold': '',
            'reset': 'Iadapt += wIadapt;'}
@@ -198,7 +198,7 @@ spatial = {'model': """
 # activity
 activity = {'model': """
         dActivity/dt = -Activity/tauAct : 1
-        tauAct : second (shared, constant)
+        tauAct : second (constant)
         """,
             'threshold': '',
             'reset': 'Activity += 1;'}
@@ -233,14 +233,14 @@ i_model_template = {'model': '''
 
             Inoise  : amp                                    # Noise due to mismatch
 
-            kn      : 1 (shared, constant)                   # subthreshold slope factor for nFETs
-            kp      : 1 (shared, constant)                   # subthreshold slope factor for pFETs
-            Ut      : volt (shared, constant)                # Thermal voltage
-            Io      : amp (shared, constant)                 # Dark current
-            Cmem    : farad (shared, constant)               # Membrane capacitance
+            kn      : 1 (constant)                   # subthreshold slope factor for nFETs
+            kp      : 1 (constant)                   # subthreshold slope factor for pFETs
+            Ut      : volt (constant)                # Thermal voltage
+            Io      : amp (constant)                 # Dark current
+            Cmem    : farad (constant)               # Membrane capacitance
             Ispkthr : amp (constant)                         # Spiking threshold
-            Ireset  : amp (shared, constant)                 # Reset current
-            refP    : second    (shared, constant)           # refractory period (It is still possible to set it to False)
+            Ireset  : amp (constant)                 # Reset current
+            refP    : second    (constant)           # refractory period (It is still possible to set it to False)
             Ith     : amp (constant)                         # DPI threshold (low pass filter).
             Itau    : amp (constant)                         # Leakage current
             Iconst  : amp (constant)                         # Additional input current similar to constant current injection

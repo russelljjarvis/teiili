@@ -13,7 +13,7 @@ Todo:
 """
 # @Author: alpren, mmilde
 # @Date:   2017-27-07 17:28:16
-
+import numpy as np
 import warnings
 import inspect
 from brian2 import NeuronGroup, Synapses, Group, Subgroup
@@ -24,6 +24,9 @@ from numpy import ones, zeros
 
 from teili.models import neuron_models
 from teili.models import synapse_models
+from teili import constants
+from scipy import size
+from scipy.stats import truncnorm
 
 
 class TeiliGroup(Group):
@@ -128,7 +131,115 @@ class TeiliGroup(Group):
         """
         return self.equation_builder.keywords['model']
 
-
+    def add_mismatch(self, std, seed=None, verbose=False):
+        """
+        This function is a wrapper for the method _set_mismatch() to add mismatch to 
+        the parameters specified in the input dictionary (std).
+        Mismatch is drawn from a Gaussian distribution with mean equal to 
+        the parameter current value. The standard deviation (std) is a dictionary 
+        with parameter names as keys and with standard deviations as values.
+        
+        Note: 
+            if you want to specify also lower and upper bound of mismatch see
+            _set_mismatch() which sets mismatch separately for each parameter drawing
+            samples from a truncated Gaussian distribution.
+        
+        Args:
+            std (dict): dictionary of parameter names as keys and standard deviations
+                as values. Standard deviations are expressed as fraction of the 
+                current parameter value. 
+                (example: if std = 0.1 the new parameter value will be sampled
+                from a normal distribution with standard deviation of 0.1*param_value,
+                with param_value being the old parameter value)
+            seed (int, optional): seed value for the random generator.
+                Set the seed if you want to make the mismatch values reproducible
+                across simulations. (default = None)
+            verbose (bool, optional): Flag to print more details of neuron group 
+                generation. (default = False) 
+                    
+        Example:   
+            Adding mismatch to 2 neurons from the DPI model. 
+            First create the neuron population (this sets parameter default values):   
+            >>> from teili.models.neuron_models import DPI
+            >>> testNeurons = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron")
+                
+            Then add mismatch to Iath, Itau with a standard deviation of 10% of the 
+            current bias values:
+            >>> testNeurons.add_mismatch(std={'Iath': .1, 'Itau': .1})
+        """
+                             
+        changes = {}
+        for parameter, std in std.items():    
+            changes[parameter] = self._set_mismatch(parameter, std, seed=seed)
+        
+        if verbose:
+            print('mismatch added to the following parameters:')
+            for parameter, mismatch in changes.items():
+                print('{:<10}'.format(parameter),
+                      ''.join('{:>10.2f}%'.format(m) for m in mismatch))
+        
+    def _set_mismatch(self, param, std, lower=None, upper=None, seed=None):
+        """This function sets the input parameter (param) to a value drawn from 
+        a normal distribution with standard deviation (std) expressed 
+        as a fraction of the current value.
+        
+        Args:
+            param (str): name of the parameter to which the mismatch has to be added
+            std (float): standard deviation of the normal distribution that models 
+                the chip mismatch, expressed as fraction of the current parameter
+                value. (example: if std = 0.1 means the new value will be sampled
+                from a normal distribution with standard deviation of 0.1*param_value,
+                with param_value being the old parameter value)
+            lower (float, optional): lower bound for the parameter mismatch,
+                expressed as multiple of the standard deviations. 
+                (example: lower = 2 means lower = 2*std, default = 1/std)
+            upper (float, optional): upper bound for the parameter mismatch,
+                expressed as multiple of the standard deviations.  
+                (example: upper = 2 means upper = 2*std, default = None)
+            seed (int, optional): seed value for the random generator.
+                Set the seed if you want to make the mismatch values reproducible
+                across simulations. (default = None)
+                
+        Returns:
+            percent_change (float): fraction of the added mismatch, expressed
+                as percentage of the original parameter value.
+                
+        Raises:
+            NameError: if one of the specified parameters in the disctionary is
+                not included in the model.
+            UserWarning: if the current parameter values across the neurons in the
+                population are already different. This warns the user that 
+                mismatch might have been added already to the given parameter.
+                
+        TODO: Consider the mismatch for the parameter 'Cm' as a separate case.            
+        """
+                    
+        if hasattr(self, param):            
+            np_current_state = np.random.get_state()
+            if seed is not None:
+                np.random.seed(seed)
+            if lower is None:
+                lower = -1/std
+            else:
+                lower = -lower*std
+            if upper is None:
+                upper = float('inf')
+            old_param = getattr(self, param)
+            unit = old_param.unit
+            std = std * old_param
+            new_param = truncnorm.rvs(lower, upper, loc=old_param, scale=std, size=size(old_param))
+            old_param_array = np.asarray(old_param)
+            if len(np.unique(old_param_array)) > 1:
+                warnings.warn("Current values of {} are different across neurons."
+                              " Mismatch might have been added already.".format(param))             
+            percent_change = ((new_param - old_param_array) / old_param_array)*100
+            setattr(self, param, new_param * unit)       
+            np.random.set_state(np_current_state)
+        else:
+            raise NameError('Mismatch not added to {} because not included in the model parameters'.format(param))
+            
+        return percent_change
+    
 class Neurons(NeuronGroup, TeiliGroup):
     """This class is a subclass of NeuronGroup.
 
@@ -264,8 +375,8 @@ class Neurons(NeuronGroup, TeiliGroup):
                              (start, stop))
 
         return TeiliSubgroup(self, start, stop)
-
-
+    
+    
 class Connections(Synapses, TeiliGroup):
     """This class is a subclass of Synapses.
 

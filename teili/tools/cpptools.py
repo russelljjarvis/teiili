@@ -5,12 +5,12 @@
 # @Author: alpren
 # @Date:   2017-07-28 19:02:05
 
-
-from brian2 import prefs, device, codegen, set_device
 import os
 import time
 import warnings
+import numpy as np
 from collections import OrderedDict
+from brian2 import prefs, device, codegen, set_device
 
 
 def activate_standalone(directory='Brian2Network_standalone', build_on_run=False):
@@ -162,7 +162,7 @@ def params2run_args(standalone_params):
         list: run arguments
     """
     # asarray is to remove units. It is the way proposed in the tutorial
-    run_args = [str(asarray(standalone_params[key])) for key in standalone_params]
+    run_args = [str(np.asarray(standalone_params[key])) for key in standalone_params]
     return run_args
 
 

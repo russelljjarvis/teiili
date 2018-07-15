@@ -105,7 +105,33 @@ class TeiliGroup(Group):
         """
         return set_params(self, params, **kwargs)
 
-    def update_param(self, parameter_name):
+    def get_params(self, params = None, verbose=False):
+        """This function gets parameter values of neurons or synapses.
+        In standalone mode, it only works after the simulation has been run.
+
+        Args:
+            params (list, optional): list of parameters that should be retrieved.
+                If params = None (default), a dictionary of all parameters with their
+                current values is returned
+
+        Returns:
+            dict: dictionary of parameters with their values
+        """
+        states = self.get_states()
+
+        if params is None:
+            params = self._init_parameters
+
+        paramdict = {p : states[p] for p in params}
+
+        if verbose:
+            print('\n')
+            print('Parameters of ' + str(self.name) + ':')
+            print_paramdict(paramdict)
+
+        return paramdict
+
+    def update_param(self, parameter_name, verbose=True):
         """This is used to update string based params during run (e.g. with gui).
 
         Args:
@@ -113,8 +139,9 @@ class TeiliGroup(Group):
         """
         for strPar in self.str_params:
             if parameter_name in self.str_params[strPar]:
-                print(strPar, 'set to', self.str_params[strPar])
                 self.__setattr__(strPar, self.str_params[strPar])
+                if verbose:
+                    print(strPar, 'set to', self.str_params[strPar])
 
     def print_equations(self):
         """This function print the equation underlying the TeiliGroup member.
@@ -133,90 +160,90 @@ class TeiliGroup(Group):
 
     def add_mismatch(self, std, seed=None, verbose=False):
         """
-        This function is a wrapper for the method _set_mismatch() to add mismatch to 
+        This function is a wrapper for the method _set_mismatch() to add mismatch to
         the parameters specified in the input dictionary (std).
-        Mismatch is drawn from a Gaussian distribution with mean equal to 
-        the parameter's current value. The standard deviation (std) is a dictionary 
+        Mismatch is drawn from a Gaussian distribution with mean equal to
+        the parameter's current value. The standard deviation (std) is a dictionary
         with parameter names as keys and with standard deviations as values.
-        
-        Note: 
+
+        Note:
             if you want to specify also lower and upper bound of mismatch see
             _set_mismatch() which sets mismatch separately for each parameter drawing
             samples from a truncated Gaussian distribution.
-        
+
         Args:
             std (dict): dictionary of parameter names as keys and standard deviations
-                as values. Standard deviations are expressed as fraction of the 
-                current parameter value. 
+                as values. Standard deviations are expressed as fraction of the
+                current parameter value.
                 (example: if std = 0.1, the new parameter value will be sampled
                 from a normal distribution with standard deviation of 0.1*param_value,
                 with param_value being the old parameter value)
             seed (int, optional): seed value for the random generator.
                 Set the seed if you want to make the mismatch values reproducible
-                across simulations. The random generator state before calling this 
+                across simulations. The random generator state before calling this
                 method will be restored after the call in order to avoid effects to
-                the rest of your simulation (default = None) 
+                the rest of your simulation (default = None)
             verbose (bool, optional): Flag to print which parameter got what amount
-                of mismatch. (default = False) 
-                    
-        Example:   
-            Adding mismatch to 2 neurons from the DPI model. 
-            First create the neuron population (this sets parameter default values):   
+                of mismatch. (default = False)
+
+        Example:
+            Adding mismatch to 2 neurons from the DPI model.
+            First create the neuron population (this sets parameter default values):
             >>> from teili.models.neuron_models import DPI
             >>> testNeurons = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron")
-                
-            Then add mismatch to Iath, Itau with a standard deviation of 10% of the 
+
+            Then add mismatch to Iath, Itau with a standard deviation of 10% of the
             current bias values:
             >>> testNeurons.add_mismatch(std={'Iath': .1, 'Itau': .1})
         """
-                             
+
         changes = {}
-        for parameter, std in std.items():    
+        for parameter, std in std.items():
             changes[parameter] = self._set_mismatch(parameter, std, seed=seed)
-        
+
         if verbose:
             print('mismatch added to the following parameters:')
             for parameter, mismatch in changes.items():
                 print('{:<10}'.format(parameter),
                       ''.join('{:>10.2f}%'.format(m) for m in mismatch))
-        
+
     def _set_mismatch(self, param, std, lower=None, upper=None, seed=None):
-        """This function sets the input parameter (param) to a value drawn from 
-        a normal distribution with standard deviation (std) expressed 
+        """This function sets the input parameter (param) to a value drawn from
+        a normal distribution with standard deviation (std) expressed
         as a fraction of the current value.
-        
+
         Args:
             param (str): name of the parameter to which the mismatch has to be added
-            std (float): standard deviation of the normal distribution that models 
+            std (float): standard deviation of the normal distribution that models
                 the chip mismatch, expressed as fraction of the current parameter
                 value. (example: std = 0.1 means that the new value will be sampled
                 from a normal distribution with standard deviation of 0.1*param_value,
                 with param_value being the old parameter value)
             lower (float, optional): lower bound for the parameter mismatch,
-                expressed as multiple of the standard deviations. 
+                expressed as multiple of the standard deviations.
                 (example: lower = 2 means lower = 2*std, default = 1/std)
             upper (float, optional): upper bound for the parameter mismatch,
-                expressed as multiple of the standard deviations.  
+                expressed as multiple of the standard deviations.
                 (example: upper = 2 means upper = 2*std, default = None)
             seed (int, optional): seed value for the random generator.
                 Set the seed if you want to make the mismatch values reproducible
                 across simulations. (default = None)
-                
+
         Returns:
             percent_change (float): fraction of the added mismatch, expressed
                 as percentage of the original parameter value.
-                
+
         Raises:
             NameError: if one of the specified parameters in the disctionary is
                 not included in the model.
             UserWarning: if the current parameter values across the neurons in the
-                population are already different. This warns the user that 
+                population are already different. This warns the user that
                 mismatch might have been added already to the given parameter.
-                
-        TODO: Consider the mismatch for the parameter 'Cm' as a separate case.            
+
+        TODO: Consider the mismatch for the parameter 'Cm' as a separate case.
         """
-                    
-        if hasattr(self, param):            
+
+        if hasattr(self, param):
             np_current_state = np.random.get_state()
             if seed is not None:
                 np.random.seed(seed)
@@ -233,15 +260,15 @@ class TeiliGroup(Group):
             old_param_array = np.asarray(old_param)
             if len(np.unique(old_param_array)) > 1:
                 warnings.warn("Current values of {} are different across neurons."
-                              " Mismatch might have been added already.".format(param))             
+                              " Mismatch might have been added already.".format(param))
             percent_change = ((new_param - old_param_array) / old_param_array)*100
-            setattr(self, param, new_param * unit)       
+            setattr(self, param, new_param * unit)
             np.random.set_state(np_current_state)
         else:
             raise NameError('Mismatch not added to {} because not included in the model parameters'.format(param))
-            
+
         return percent_change
-    
+
 class Neurons(NeuronGroup, TeiliGroup):
     """This class is a subclass of NeuronGroup.
 
@@ -297,17 +324,17 @@ class Neurons(NeuronGroup, TeiliGroup):
             Kwargs.pop('parameters')
 
             if parameters is not None:
-                self.parameters = parameters
+                self._init_parameters = parameters
                 print(
                     "parameters you provided overwrite parameters from EquationBuilder ")
             else:
-                self.parameters = self.equation_builder.keywords['parameters']
+                self._init_parameters = self.equation_builder.keywords['parameters']
 
         self.initialized = True
         TeiliGroup.__init__(self)
         NeuronGroup.__init__(self, N, **Kwargs)
 
-        set_params(self, self.parameters, verbose=verbose)
+        set_params(self, self._init_parameters, verbose=verbose)
 
     def register_synapse(self, synapsename):
         """Registers a Synapse so we know the input number.
@@ -377,8 +404,8 @@ class Neurons(NeuronGroup, TeiliGroup):
                              (start, stop))
 
         return TeiliSubgroup(self, start, stop)
-    
-    
+
+
 class Connections(Synapses, TeiliGroup):
     """This class is a subclass of Synapses.
 
@@ -455,7 +482,7 @@ class Connections(Synapses, TeiliGroup):
                 raise e
 
         if parameters is not None:
-            self.parameters = parameters
+            self._init_parameters = parameters
 
         if equation_builder is not None:
             if inspect.isclass(equation_builder):
@@ -473,7 +500,7 @@ class Connections(Synapses, TeiliGroup):
             Kwargs.pop('parameters')
 
             if parameters is None:
-                self.parameters = self.equation_builder.keywords['parameters']
+                self._init_parameters = self.equation_builder.keywords['parameters']
             else:
                 print(
                     "parameters you provided overwrite parameters from EquationBuilder")
@@ -508,7 +535,7 @@ class Connections(Synapses, TeiliGroup):
         Synapses.connect(self, condition=condition, i=i, j=j, p=p, n=n,
                          skip_if_invalid=skip_if_invalid,
                          namespace=namespace, level=level + 1, **Kwargs)
-        set_params(self, self.parameters, verbose=self.verbose)
+        set_params(self, self._init_parameters, verbose=self.verbose)
 
     def __setattr__(self, key, value):
         """Function to set arguments to synapses
@@ -563,6 +590,7 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
             if a parameter does not exist as a state variable of the group.
         ndargs (dict, optional): Addtional attribute arguments.
         verbose (bool, optional): Flag to get more details about parameter setting process.
+            States are not printed in cpp standalone mode before the simulation has been run
     """
     for par in params:
         if hasattr(briangroup, par):
@@ -597,15 +625,9 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
             print('\n')
             print('-_-_-_-_-_-_-_\nParameters set by set_params for',
                   briangroup.name, ':')
-            print('List of first value of each parameter:')
-            for key in states.keys():
-                if key in params:
-                    if states[key].size > 1:
-                        print(key, states[key][1])
-                    else:
-                        print(key, states[key])
+            paramdict = {p : states[p] for p in params}
+            print_paramdict(paramdict)
             print('----------')
-
             dellist = list(params.keys()) + \
                 ['N', 'i', 't', 'dt', 'not_refractory', 'lastspike']
             for k in dellist:
@@ -614,15 +636,22 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
                 except:
                     pass
             print('In this set_params call, you have not set the following parameters:')
-            for key in states.keys():
-                if states[key].size > 1:
-                    print(key, states[key][1])
-                else:
-                    print(key, states[key])
-
+            print_paramdict(states)
         except:
             print('Printing of states does not work in cpp standalone mode')
 
+def print_paramdict(paramdict):
+    """This function prints a params dictionary for get and set_params.
+
+    Args:
+        paramdict (dict, required): Parameter keys and values to be set.
+    """
+    print('Printing the first value of each parameter:')
+    for key in paramdict.keys():
+            if paramdict[key].size > 1:
+                print(key, '=', paramdict[key][1])
+            else:
+                print(key, '=', paramdict[key])
 
 class TeiliSubgroup(Subgroup):
     """This helps to make Subgroups compatible, otherwise the same as Subgroup.

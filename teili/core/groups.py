@@ -136,7 +136,7 @@ class TeiliGroup(Group):
         This function is a wrapper for the method _set_mismatch() to add mismatch to 
         the parameters specified in the input dictionary (std).
         Mismatch is drawn from a Gaussian distribution with mean equal to 
-        the parameter current value. The standard deviation (std) is a dictionary 
+        the parameter's current value. The standard deviation (std) is a dictionary 
         with parameter names as keys and with standard deviations as values.
         
         Note: 
@@ -148,14 +148,16 @@ class TeiliGroup(Group):
             std (dict): dictionary of parameter names as keys and standard deviations
                 as values. Standard deviations are expressed as fraction of the 
                 current parameter value. 
-                (example: if std = 0.1 the new parameter value will be sampled
+                (example: if std = 0.1, the new parameter value will be sampled
                 from a normal distribution with standard deviation of 0.1*param_value,
                 with param_value being the old parameter value)
             seed (int, optional): seed value for the random generator.
                 Set the seed if you want to make the mismatch values reproducible
-                across simulations. (default = None)
-            verbose (bool, optional): Flag to print more details of neuron group 
-                generation. (default = False) 
+                across simulations. The random generator state before calling this 
+                method will be restored after the call in order to avoid effects to
+                the rest of your simulation (default = None) 
+            verbose (bool, optional): Flag to print which parameter got what amount
+                of mismatch. (default = False) 
                     
         Example:   
             Adding mismatch to 2 neurons from the DPI model. 
@@ -187,7 +189,7 @@ class TeiliGroup(Group):
             param (str): name of the parameter to which the mismatch has to be added
             std (float): standard deviation of the normal distribution that models 
                 the chip mismatch, expressed as fraction of the current parameter
-                value. (example: if std = 0.1 means the new value will be sampled
+                value. (example: std = 0.1 means that the new value will be sampled
                 from a normal distribution with standard deviation of 0.1*param_value,
                 with param_value being the old parameter value)
             lower (float, optional): lower bound for the parameter mismatch,
@@ -313,8 +315,8 @@ class Neurons(NeuronGroup, TeiliGroup):
         It counts all synapses connected with one neuron group.
 
         Raises:
-            ValueError: If too many synapses project to a given post-synaptic neuron groups
-                this error is been raised. You need to increae the number of inputs counter.
+            ValueError: If too many synapses project to a given post-synaptic neuron group
+                this error is raised. You need to increae the number of inputs parameter.
 
         Args:
             synapsename (str): Name of the synapse group to be registered.

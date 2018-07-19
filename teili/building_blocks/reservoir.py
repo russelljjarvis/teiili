@@ -321,7 +321,7 @@ def gen_reservoir(groupname,
     if num_output_neurons > 0:
         # Create a simple integrator neuron
         simple_integrator = 'rate : 1'
-        simple_integrator_on_pre = '''h += weight /(taur * taud / second)'''
+        simple_integrator_on_pre = '''h += weight /(taur * taud / ms)'''
         # Create the output layer
         gROutGroup = Neurons(
             num_output_neurons,
@@ -354,7 +354,7 @@ def gen_reservoir(groupname,
     # Set rate reader for Reservoir group
     # Create a simple integrator neuron
     simple_integrator = 'rate : 1'
-    simple_integrator_on_pre = '''h += 1 /(taur * taud / second)'''
+    simple_integrator_on_pre = '''h += 1 /(taur * taud / ms)'''
     # Create the output layer
     gRateOutGroup = Neurons(
         1,

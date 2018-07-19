@@ -91,22 +91,27 @@ def FORCE(t):
         # ipdb.set_trace()
         # Store firign rate of individial reservoir neurons
         # r.shape = (num_output_neurons,)
-        r = np.array(gtestR.Groups['synOutRate1e'].r)
-        if log: print('r',r, r.shape)
-        if log: print('BPhi',nc17['BPhi'],nc17['BPhi'].shape)
+        firing_rare = np.array(gtestR.Groups['synOutRate1e'].r)
+        read_out = np.array(gtestR.Groups['gROutGroup'].rate)
+        if log: print('firing_rare', firing_rare)
+        if log: print('read_out', read_out)
         #  z = BPhi'*r
-        z = np.dot(nc17['BPhi'].T,r)
-        if log: print('z',z,z.shape)
+        z = read_out #np.dot(nc17['BPhi'].T,r)
+        if log: print('z',z,)
+        zx = nc17['zx'][round(t/nc17['dt']/ms)]
+        if log: print('zx',zx)
         #  err = z - zx(i)
-        err = z - nc17['zx'][round(t/nc17['dt']/ms)] # scalar error
+        err = z - zx # scalar error
+        if log: print('err',err)
         # cd = Pinv*r
-        cd = np.dot(nc17['Pinv'],r)
-        if log: print('cd,err',cd,err)
+        cd = np.dot(nc17['Pinv'], firing_rare)
+        if log: print('cd',cd)
         #    BPhi = BPhi - (cd*err')
         nc17['BPhi'] = (nc17['BPhi'].T - cd*err).T
-        if log: print('BPhi',nc17['BPhi'],nc17['BPhi'].shape)
+        if log: print('BPhi',nc17['BPhi'].T)
+        gtestR.Groups['synOutR1e'].weight = nc17['BPhi']
         #    Pinv = Pinv -((cd)*(cd'))/( 1 + (r')*(cd))
-        nc17['Pinv'] = nc17['Pinv'] - np.dot(cd,cd.T)/( 1 + np.dot(r.T,cd))
+        nc17['Pinv'] = nc17['Pinv'] - np.dot(cd,cd.T)/( 1 + np.dot(firing_rare.T,cd))
         
     
 # BIAS

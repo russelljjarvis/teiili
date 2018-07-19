@@ -61,8 +61,10 @@ gtestR = Reservoir(name='testR',
                    adjecency_mtr=adjecency_mtr,
                    num_inputs=0,
                    num_output_neurons=1,
-                   output_weights_init = [1],
+                   output_weights_init = nc17['BPhi'],
                    block_params=reservoir_params)
+
+
 
 # Initial code for run_regularly fuction for FORCE: very difficult to implement matrix operations and passing vectors.
 # @implementation('cpp', '''
@@ -81,6 +83,7 @@ gtestR = Reservoir(name='testR',
 # gtestR.Groups['synOutR1e'].run_regularly("print_rates = matrixfunction(r,...)",dt=1*ms)
 
 nc17['imin'] = 10
+log = True
 # Network operation setup for FORCE Learning
 @network_operation(dt=nc17['dt']*nc17['step'] * ms, when = 'end')
 def FORCE(t):
@@ -88,20 +91,20 @@ def FORCE(t):
         # ipdb.set_trace()
         # Store firign rate of individial reservoir neurons
         # r.shape = (num_output_neurons,)
-        r = np.array(gtestR.Groups['synOutR1e'].r)
-        print('r',r, r.shape)
-        print('BPhi',nc17['BPhi'],nc17['BPhi'].shape)
+        r = np.array(gtestR.Groups['synOutRate1e'].r)
+        if log: print('r',r, r.shape)
+        if log: print('BPhi',nc17['BPhi'],nc17['BPhi'].shape)
         #  z = BPhi'*r
         z = np.dot(nc17['BPhi'].T,r)
-        print('z',z,z.shape)
+        if log: print('z',z,z.shape)
         #  err = z - zx(i)
         err = z - nc17['zx'][round(t/nc17['dt']/ms)] # scalar error
         # cd = Pinv*r
         cd = np.dot(nc17['Pinv'],r)
-        print('cd,err',cd,err)
+        if log: print('cd,err',cd,err)
         #    BPhi = BPhi - (cd*err')
         nc17['BPhi'] = (nc17['BPhi'].T - cd*err).T
-        print('BPhi',nc17['BPhi'],nc17['BPhi'].shape)
+        if log: print('BPhi',nc17['BPhi'],nc17['BPhi'].shape)
         #    Pinv = Pinv -((cd)*(cd'))/( 1 + (r')*(cd))
         nc17['Pinv'] = nc17['Pinv'] - np.dot(cd,cd.T)/( 1 + np.dot(r.T,cd))
         
@@ -109,7 +112,7 @@ def FORCE(t):
 # BIAS
 # print('***********BIAS**************')
 I_bias = 1000 * pA #nc17['BIAS'] * pA
-rates = gtestR.Groups['synOutR1e']
+# rates = gtestR.Groups['synOutRate1e']
 gtestR.Groups['gRGroup'].namespace.update({"It":It, 'I_bias':I_bias})
 gtestR.Groups['gRGroup'].run_regularly("Iconst = I_bias + It(t,i)",dt=1*ms)
 # syn_in_ex = gtestR.Groups['synInpR1e']
@@ -130,22 +133,18 @@ syn_ex_ex = gtestR.Groups['synRR1e']
 #                            record=True,
 #                            name='statemonRin')
 
-statemonR = gtestR.Monitors['statemonR']
-
-statemonRout = StateMonitor(gtestR.Groups['synOutR1e'],
+statemonRout = StateMonitor(gtestR.Groups['synOutRate1e'],
                             {'r'},
                            record=True,
                            name='statemonRout')
 
-spikemonR = gtestR.Monitors['spikemonR']
 
-statemonRrates = StateMonitor(gtestR.Groups['synOutR1e'],
-                            {'rate'},
-                           record=True,
-                           name='statemonRrates')
-
-Net.add(gtestR, statemonR, statemonRout, statemonRrates, FORCE)
-
+Net.add(gtestR)
+for to_add_name,to_add in gtestR.Groups.items():
+    Net.add(to_add)
+for to_add_name,to_add in gtestR.Monitors.items():
+    Net.add(to_add)
+Net.add(statemonRout, FORCE)
 
 #%%
 #Net.printParams()
@@ -158,40 +157,40 @@ sigmas_dict={}
 Net.run(duration)
 
 
-# # Plot activity
-# plt.figure()
-# for cinj in statemonR.Iconst:
-#     plt.title('Reservoir input')
-#     plt.plot(statemonR.t/ms,cinj / pA-I_bias/pA)
-#     plt.xlabel('Time (ms)')
-#     plt.ylabel('Injected current (pA)')
+# Plot activity
+plt.figure()
+for cinj in gtestR.Monitors['statemonR'].Iconst:
+    plt.title('Reservoir input')
+    plt.plot(gtestR.Monitors['statemonR'].t/ms,cinj / pA-I_bias/pA)
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Injected current (pA)')
 
-# to_plot = {'raster':{'var':statemonRout.r.T,
-#                      'x_unit':'ms',
-#                      'y_unit':'spks/s',
-#                      'x_label':'Time',
-#                      'y_label':'Firing rate',
-#                      'title':'Reservoir rate plot'},
-#            'membrane_pot':{'var':statemonR.Vm.T,
-#                            'x_unit':'ms',
-#                            'y_unit':'mV',
-#                            'x_label':'Time',
-#                            'y_label':'Membrane potential',
-#                            'title':'Reservoir rate plot'}}
-# for tp_n,tp in to_plot.items():
-#     plt.figure()
-#     plt.plot(statemonR.t/ms, tp['var'])
-#     plt.title(tp['title'])
-#     plt.xlabel('%s (%s)'%(tp['x_label'],tp['x_unit']))
-#     plt.ylabel('%s (%s)'%(tp['y_label'],tp['y_unit']))
+to_plot = {'raster':{'var':statemonRout.r.T,
+                     'x_unit':'ms',
+                     'y_unit':'spks/s',
+                     'x_label':'Time',
+                     'y_label':'Firing rate',
+                     'title':'Reservoir rate plot'},
+           'membrane_pot':{'var':gtestR.Monitors['statemonR'].Vm.T,
+                           'x_unit':'ms',
+                           'y_unit':'mV',
+                           'x_label':'Time',
+                           'y_label':'Membrane potential',
+                           'title':'Reservoir rate plot'}}
+for tp_n,tp in to_plot.items():
+    plt.figure()
+    plt.plot(gtestR.Monitors['statemonR'].t/ms, tp['var'])
+    plt.title(tp['title'])
+    plt.xlabel('%s (%s)'%(tp['x_label'],tp['x_unit']))
+    plt.ylabel('%s (%s)'%(tp['y_label'],tp['y_unit']))
 
-# if spikemonR.t.shape is not ():
-#     plt.figure()
-#     plt.title('Reservoir raster plot')
-#     plt.plot(spikemonR.t/ms, spikemonR.i, '.k')
-#     plt.xlabel('Time (ms)')
-#     plt.ylabel('Neuron index')
-# plt.show(0)
+if gtestR.Monitors['spikemonR'].t.shape is not ():
+    plt.figure()
+    plt.title('Reservoir raster plot')
+    plt.plot(gtestR.Monitors['spikemonR'].t/ms, gtestR.Monitors['spikemonR'].i, '.k')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Neuron index')
+plt.show(0)
 
 
 # for par0 in range(0,300,20):

@@ -350,6 +350,38 @@ def gen_reservoir(groupname,
 
         Groups.update({'gROutGroup': gROutGroup,
                        'synOutR1e': synOutR1e})
+
+    # Set rate reader for Reservoir group
+    # Create a simple integrator neuron
+    simple_integrator = 'rate : 1'
+    simple_integrator_on_pre = '''h += 1 /(taur * taud / second)'''
+    # Create the output layer
+    gRateOutGroup = Neurons(
+        1,
+        model=simple_integrator,
+        name='g' + groupname + '_RateOut',
+        parameters='')
+
+    # create synapses
+    synOutRate1e = Connections(gRGroup, gRateOutGroup,
+                            model = """dr/dt = -r/taud + h : 1 (clock-driven)
+                            dh/dt = -h/taur : second **-1 (clock-driven)
+                            rate_post = r : 1 (summed)
+                            taud = %f * ms : second
+                            taur = %f * ms : second
+                            weight : 1
+                            """%(taud / ms,taur / ms),
+                            on_pre = simple_integrator_on_pre,
+                            method="euler",
+                            name='s' + groupname + '_RateOut',
+                            parameters = '')
+    # connect synapses
+
+    synOutRate1e.connect()
+
+    Groups.update({'gRateOutGroup': gRateOutGroup,
+                   'synOutRate1e': synOutRate1e})
+
         
     # spikemons
     if monitor:

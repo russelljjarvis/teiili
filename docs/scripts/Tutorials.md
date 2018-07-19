@@ -3,14 +3,14 @@ Welcome to teili, a modular python-based framework for developing, testing and v
 
 
 ## Class object vs. import_eq
-To generate all pre-defined neuron and synapse moldes, which are stored by default in `teili/models/equations/` please execute the following two scripts
+To generate all pre-defined neuron and synapse models, which are stored by default in `teili/models/equations/`, please execute the following two scripts:
 ```
 cd models/
 python3 -m synapse_models.py
 python3 -m neuron_models.py
 ```
-Once the pre-defined neuron and synapse models are exported to files you can choose between generating neuron/synapse models 'on the fly' or import them from the generated files, which you can maually adapat to your needs without fiddeling with the templates provided by teili.<br />
-See examples, of how to generate or load neuron/synapse models.
+Once the pre-defined neuron and synapse models are exported to files you can choose between generating neuron/synapse models 'on the fly' or importing them from the generated files, which you can maually adapt to your needs without fiddling with the templates provided by teili.<br />
+See examplesb for how to generate or load neuron and/or synapse models.
 ```
 from teili.core.groups import Neurons, Connections
 
@@ -26,7 +26,7 @@ test_synapse = Connections(test_neuron1, test_neuron2,
                            equation_builder=syn_model,
                            name="test_synapse")
 ```
-or if yu prefer to import your model from a file you can do by:
+If you prefer to import your model from a file you can do:
 
 ```
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
@@ -136,7 +136,7 @@ Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon
 duration = 500
 Net.run(duration * ms)
 ```
-or using the import method of the EquationBuilder, which imports a pre-defined model. The only thing that changes to the aforementioned example is the import and neuron/synapse group definition
+or using the import method of the EquationBuilder, which imports a pre-defined model. The only thing that changes from the example above is the import and neuron/synapse group definition:
 ```
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
@@ -165,7 +165,7 @@ Syn = Connections(testNeurons, testNeurons2,
 Syn.connect(True)
 ```
 The way parameters are set remains the same.
-In order to visualize the behaviour the example script also plots a couple Spike- and Statemonitors.
+In order to visualize the behaviour the example script also plots a couple of spike and state monitors.
 
 ```
 pg.setConfigOptions(antialias=True)
@@ -268,10 +268,9 @@ QtGui.QApplication.instance().exec_()
 ```
 
 
-In both cases of the model definition the resulting figure should look like:
+In both cases of model definition the resulting figure should look like this:
 <img src="fig/neuron_synapse_test.png" width="450" height="300">
 
 ## STDP tutorial
-One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extend a given synapse model with e.g. Spike-Time Depenedent Plasticity mechansim.
-
+One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity mechanism.
 

@@ -14,26 +14,30 @@
 #
 import os
 import sys
-from unittest.mock import MagicMock
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath(".."))
 sys.path.insert(0, os.path.abspath("../.."))
 
 
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
+MOCK_MODULES = [
+    'pyqtgraph',
+    'pyqtgraph.Qt',
+    'pyqtgraph.Qt.QtCore',
+    'pyqtgraph.Qt.QtGui',
+    'pyqtgraph.Qt.QtGui.QPainterPath',
+    'pyqtgraph.Qt.QApplication',
+    'pyqtgraph.QtGui',
+    'pyqtgraph.functions',
+    'pyqtgraph.QtCore',
+    'pyqtgraph.exporters',
+    'pyqtgraph.colormap',
+    'pyqtgraph.parametertree',
+    'pyqtgraph.parametertree.parameterTypes',
+    'pyqtgraph.ptime',
+    'sparse',
+    'seaborn',
+]
 
-
-#'numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot',
-# 'matplotlib.cm', 'seaborn', 'sparse', 'pandas',
-# 'matplotlib.colors', 'pyqtgraph.colormap', 'pyqtgraph',
-# 'pyqtgraph.Qt',
-# 'pyqtgraph.exporters', 'itertools', 'sparse', 'tkinter'
-MOCK_MODULES = []
-
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 # -- Project information -----------------------------------------------------
 
 project = 'teili'
@@ -61,6 +65,9 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo']
+
+
+autodoc_mock_imports = MOCK_MODULES
 
 # Napoleon settings
 napoleon_google_docstring = True
@@ -114,6 +121,12 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+html_logo = 'scripts/fig/logo.svg'
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+}
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -146,7 +159,15 @@ html_sidebars = {
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'teilidoc'
-
+html_context = {
+    "display_gitlab": True,  # Integrate Gitlab
+    "gitlab_user": "ncs",  # Username
+    "gitlab_repo": "teili",  # Repo name
+    "gitlab_version": "master",  # Version
+    "gitlab_host": "code.ini.uzh.ch",
+    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
+    "source_suffix": source_suffix,
+}
 
 # -- Options for LaTeX output ------------------------------------------------
 

@@ -1,8 +1,11 @@
 # teili
 
-teili, das /taɪli/ <br />
-swiss german diminutive for piece. <br />
+teili, das /taɪli/, Swiss german diminutive for piece. <br />
+
 This toolbox was developed to provide computational neuroscientists and neuromorphic engineers with a playground for implementing neural algorithms which are simulated using **brian2**.<br />
+Please report issues via the gitlab [issue tracker](https://code.ini.uzh.ch/ncs/teili/issues). You can find the documentation [here](https://teili.readthedocs.io/en/latest/).
+
+
 By providing some pre-defined neural algorithms and an intuitive way to combine different aspects of those algorithms, e.g. plasticity, connectivity etc, we try to shorten the development time required to implement novel neural algorithms.
 Furthermore, by providing an easy and modular way to construct those algorithms from the basic building blocks of computaton, e.g. neurons and synapses, we aim to reduce the gap between software simulation and hardware emulation.
 
@@ -15,11 +18,14 @@ Please also contact the main contributors with feedback.
 git clone git@code.ini.uzh.ch:ncs/teili.git
 ```
 
-Please look at the examples here: teili/examples/
+Please look at the examples here: teili/examples/ and our [Documentation](https://teili.readthedocs.io/en/latest/)
 
 ### Prerequisites
 
 * python3
+    ```
+    sudo apt install python3 python3-pip
+    ```
 
 * brian2
 
@@ -30,13 +36,19 @@ Please look at the examples here: teili/examples/
     conda install brian2
     ```
 
-    If you don't use Anaconda, you can install all dependencies using:
+*  teili
+
+    You either use the `setup.py` by using (**recommended**)
     ```
-    sudo apt install python3 python3-pip python3-matplotlib python3-setuptools cython
+    sudo python3 setup.py install
+    ```
+    Or if you want to install all dependencies separately:
+    ```
+    sudo apt install python3-matplotlib python3-setuptools cython
     pip3 install brian2 sparse seaborn h5py numpy scipy pyqtgraph pyqt5 easydict
     ```
+    if you did **not** use the setup.py you need to update your `$PYTHONPATH`:
 
-* Add the parent folder of teili to the PYTHONPATH
     You can add the following line to your `~/.bashrc`<sup>1</sup>:
     ```
     export PYTHONPATH=$PYTHONPATH:"/path/to/parent_folder/of/teili"
@@ -69,20 +81,20 @@ Synapse1 = Connections(Neuron1, Neuron1,
                       method='euler',
                       name='Synapse1')
 ```
-
+For a more detailed explanation have a look at our [Tutorial](https://teili.readthedocs.io/en/latest/scripts/Tutorials.html)
 ## Examples
-Please look at the examples here: teili/examples/
+Please look at the [Neuron & Synapse example](https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#neuron-synapse-tutorial), which is located in `examples/`.
 You can also use them to test your installation.
 To run an example and test if eveything is working, run the following command
 ```
-cd teili/examples
+cd examples/
 python3 neuron_synapse_test.py
 ```
 The output should look like this
 
-<img src="examples/.example_behaviour.png" width="450" height="300">
+<img src="docs/scripts/fig/neuron_synapse_test.png" width="550" height="300">
 
-
+For more examples and use cases have look at our [Documentation](https://teili.readthedocs.io/en/latest/index.html)
 
 
 ## Brian2 debugging tips
@@ -107,7 +119,7 @@ Simulation is not going as expected?
 
 
 ## License
-
+MIT License
 
 
 ## Acknowledgments

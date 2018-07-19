@@ -1,0 +1,687 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Wrapper class for brian2 Group class.
+
+Todo:
+    * Check if `shared` works for neuron as well.
+    * Raise error (understandable)
+        if addStateVariable is called before synapses are connected.
+    * Find out, if it is possible to have delay as state variable for Connections.
+    * Some functionality of the package is not compatible with subgroups yet.
+    * This: `self.register_synapse = self.source.register_synapse` is not ideal,
+        as it is not necessary to register a synapse for subgroups!
+"""
+# @Author: alpren, mmilde
+# @Date:   2017-27-07 17:28:16
+import numpy as np
+import warnings
+import inspect
+from brian2 import NeuronGroup, Synapses, Group, Subgroup
+from collections import OrderedDict
+from matplotlib.pyplot import figure, xlabel, \
+    ylabel, plot, subplot, xlim, ylim, xticks
+from numpy import ones, zeros
+
+from teili.models import neuron_models
+from teili.models import synapse_models
+from teili import constants
+from scipy import size
+from scipy.stats import truncnorm
+
+
+class TeiliGroup(Group):
+    """just a bunch of methods that are shared between neurons and connections
+    class Group is already used by brian2.
+
+    Attributes:
+        standalone_params (dict): Dictionary of standalone parameters.
+        standalone_vars (list): List of standalone variables.
+        str_params (dict): Name of parameters to be updated.
+    """
+
+    def __init__(self):
+        """Summary
+        """
+        self.standalone_vars = []
+        self.standalone_params = OrderedDict()
+        self.str_params = {}
+
+    def add_state_variable(self, name, unit=1, shared=False, constant=False, changeInStandalone=True):
+        """This method allows you to add a state variable.
+
+        Usually a state variable is defined in equations, that is changeable in standalone mode.
+        If you pass a value, it will directly set it and decide based on that value,
+        if the variable should be shared (scalar) or not (vector).
+
+        Args:
+            name (str): Name of state variable.
+            unit (int, optional): Unit of respective state variable.
+            shared (bool, optional): Flag to indicate if state variable is shared.
+            constant (bool, optional): Flag to indicate if state variable is constant.
+            changeInStandalone (bool, optional): Flag to indicate if state variable should be subject
+                to on-line change in cpp standalone mode.
+        """
+        if shared:
+            size = 1
+        else:
+            size = self.variables['N'].get_value()
+
+        try:
+            self.variables.add_array(name, size=size, dimensions=unit.dim,
+                                     constant=constant, scalar=shared)
+        except AttributeError:  # value.dim will throw an exception, if it has no unit
+            self.variables.add_array(name, size=size,
+                                     constant=constant, scalar=shared)  # dimensionless
+
+        if changeInStandalone:
+            self.standalone_vars += [name]
+            # self.__setattr__(name, value)  # TODO: Maybe do that always?
+
+    def add_subexpression(self, name, dimensions, expr):
+        """This method allows you to add a subexpression
+        (like a state variable but a string that can be evaluated over time)
+        You can e.g. add a timedArray like that:
+        >>> neuron_group.add_subexpression('I_arr',nA.dim,'timed_array(t)')
+        (be aware, that you need to add a state variable I_arr first,
+        that is somehow connected to other variables, so run_regularly
+        may be an easier solution for your problem)
+
+        Args:
+            name (str): name of the expression.
+            dimensions (brian2.units.fundamentalunits.Dimension): dimension of the expression.
+            expr (str): the expression.
+        """
+        self.variables.add_subexpression(name, dimensions, expr)
+
+    def set_params(self, params, **kwargs):
+        """This function sets parameters on members of a Teiligroup.
+
+        Args:
+            params (dict): Key and value of parameter to be set.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            dict: The parameters set.
+        """
+        return set_params(self, params, **kwargs)
+
+    def get_params(self, params = None, verbose=False):
+        """This function gets parameter values of neurons or synapses.
+        In standalone mode, it only works after the simulation has been run.
+
+        Args:
+            params (list, optional): list of parameters that should be retrieved.
+                If params = None (default), a dictionary of all parameters with their
+                current values is returned
+
+        Returns:
+            dict: dictionary of parameters with their values
+        """
+        states = self.get_states()
+
+        if params is None:
+            params = self._init_parameters
+
+        paramdict = {p : states[p] for p in params}
+
+        if verbose:
+            print('\n')
+            print('Parameters of ' + str(self.name) + ':')
+            print_paramdict(paramdict)
+
+        return paramdict
+
+    def update_param(self, parameter_name, verbose=True):
+        """This is used to update string based params during run (e.g. with gui).
+
+        Args:
+            parameter_name (str): Name of parameter to be updated.
+        """
+        for strPar in self.str_params:
+            if parameter_name in self.str_params[strPar]:
+                self.__setattr__(strPar, self.str_params[strPar])
+                if verbose:
+                    print(strPar, 'set to', self.str_params[strPar])
+
+    def print_equations(self):
+        """This function print the equation underlying the TeiliGroup member.
+        """
+        for key, value in sorted(self.equation_builder.keywords.items()):
+            print("{} : {}".format(key, value))
+
+    @property
+    def model(self):
+        """This property allows the user to only show the model of a given member.
+
+        Returns:
+            dict: Dictionary only containing model equations.
+        """
+        return self.equation_builder.keywords['model']
+
+    def add_mismatch(self, std, seed=None, verbose=False):
+        """
+        This function is a wrapper for the method _set_mismatch() to add mismatch to
+        the parameters specified in the input dictionary (std).
+        Mismatch is drawn from a Gaussian distribution with mean equal to
+        the parameter's current value. The standard deviation (std) is a dictionary
+        with parameter names as keys and with standard deviations as values.
+
+        Note:
+            if you want to specify also lower and upper bound of mismatch see
+            _set_mismatch() which sets mismatch separately for each parameter drawing
+            samples from a truncated Gaussian distribution.
+
+        Args:
+            std (dict): dictionary of parameter names as keys and standard deviations
+                as values. Standard deviations are expressed as fraction of the
+                current parameter value.
+                (example: if std = 0.1, the new parameter value will be sampled
+                from a normal distribution with standard deviation of 0.1*param_value,
+                with param_value being the old parameter value)
+            seed (int, optional): seed value for the random generator.
+                Set the seed if you want to make the mismatch values reproducible
+                across simulations. The random generator state before calling this
+                method will be restored after the call in order to avoid effects to
+                the rest of your simulation (default = None)
+            verbose (bool, optional): Flag to print which parameter got what amount
+                of mismatch. (default = False)
+
+        Example:
+            Adding mismatch to 2 neurons from the DPI model.
+            First create the neuron population (this sets parameter default values):
+            >>> from teili.models.neuron_models import DPI
+            >>> testNeurons = Neurons(2, equation_builder=DPI(num_inputs=2), name="testNeuron")
+
+            Then add mismatch to Iath, Itau with a standard deviation of 10% of the
+            current bias values:
+            >>> testNeurons.add_mismatch(std={'Iath': .1, 'Itau': .1})
+        """
+
+        changes = {}
+        for parameter, std in std.items():
+            changes[parameter] = self._set_mismatch(parameter, std, seed=seed)
+
+        if verbose:
+            print('mismatch added to the following parameters:')
+            for parameter, mismatch in changes.items():
+                print('{:<10}'.format(parameter),
+                      ''.join('{:>10.2f}%'.format(m) for m in mismatch))
+
+    def _set_mismatch(self, param, std, lower=None, upper=None, seed=None):
+        """This function sets the input parameter (param) to a value drawn from
+        a normal distribution with standard deviation (std) expressed
+        as a fraction of the current value.
+
+        Args:
+            param (str): name of the parameter to which the mismatch has to be added
+            std (float): standard deviation of the normal distribution that models
+                the chip mismatch, expressed as fraction of the current parameter
+                value. (example: std = 0.1 means that the new value will be sampled
+                from a normal distribution with standard deviation of 0.1*param_value,
+                with param_value being the old parameter value)
+            lower (float, optional): lower bound for the parameter mismatch,
+                expressed as multiple of the standard deviations.
+                (example: lower = 2 means lower = 2*std, default = 1/std)
+            upper (float, optional): upper bound for the parameter mismatch,
+                expressed as multiple of the standard deviations.
+                (example: upper = 2 means upper = 2*std, default = None)
+            seed (int, optional): seed value for the random generator.
+                Set the seed if you want to make the mismatch values reproducible
+                across simulations. (default = None)
+
+        Returns:
+            percent_change (float): fraction of the added mismatch, expressed
+                as percentage of the original parameter value.
+
+        Raises:
+            NameError: if one of the specified parameters in the disctionary is
+                not included in the model.
+            UserWarning: if the current parameter values across the neurons in the
+                population are already different. This warns the user that
+                mismatch might have been added already to the given parameter.
+
+        TODO: Consider the mismatch for the parameter 'Cm' as a separate case.
+        """
+
+        if hasattr(self, param):
+            np_current_state = np.random.get_state()
+            if seed is not None:
+                np.random.seed(seed)
+            if lower is None:
+                lower = -1/std
+            else:
+                lower = -lower*std
+            if upper is None:
+                upper = float('inf')
+            old_param = getattr(self, param)
+            unit = old_param.unit
+            std = std * old_param
+            new_param = truncnorm.rvs(lower, upper, loc=old_param, scale=std, size=size(old_param))
+            old_param_array = np.asarray(old_param)
+            if len(np.unique(old_param_array)) > 1:
+                warnings.warn("Current values of {} are different across neurons."
+                              " Mismatch might have been added already.".format(param))
+            percent_change = ((new_param - old_param_array) / old_param_array)*100
+            setattr(self, param, new_param * unit)
+            np.random.set_state(np_current_state)
+        else:
+            raise NameError('Mismatch not added to {} because not included in the model parameters'.format(param))
+
+        return percent_change
+
+class Neurons(NeuronGroup, TeiliGroup):
+    """This class is a subclass of NeuronGroup.
+
+    You can use it as a NeuronGroup, and everything will be passed to NeuronGroup.
+    Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters.
+
+    Attributes:
+        equation_builder (TYPE): Class which describes the neuron model equation and all
+            properties and default parameters. See /model/builder/neuron_equation_builder.py and
+            models/neuron_models.py.
+        initialized (bool): Flag to register Neurons' population with TeiliGroups.
+        num_inputs (int): Number of possible synaptic inputs. This overcomes the summed issue
+            present in brian2.
+        num_synapses (int): Number of synapses projecting to post-synaptic neuron group.
+        synapses_dict (dict): Dictionary with all synapse names and their respective synapse index.
+        verbose (bool): Flag to print more details of neuron group generation.
+    """
+
+    def __init__(self, N, equation_builder=None,
+                 parameters=None,
+                 method='euler',
+                 verbose=False, **Kwargs):
+        """Initializes wrapper for brian2's NeuronGroup class.
+
+        Args:
+            N (int, required): Number of neurons in respective Neurons' groups.
+            equation_builder (None, optional): Class which describes the neuron model equation and all
+                porperties and default parameters. See /model/builder/neuron_equation_builder.py and
+                models/neuron_models.py.
+            params (dict, optional): Dictionary of parameter's keys and values.
+            method (str, optional): Integration method to solve the differential equation
+                present in brian2.
+            verbose (bool, optional): Flag to print more details of neuron group generation.
+            **Kwargs: Additional keyword arguments.
+        """
+        self.verbose = verbose
+        self.num_synapses = 0
+        self.synapses_dict = {}
+        self.parameters = parameters
+        
+        if equation_builder is not None:
+            # if inspect.isclass(equation_builder):
+            #    self.equation_builder = equation_builder()
+            if isinstance(equation_builder, str):
+                equation_builder = getattr(
+                    neuron_models, equation_builder)
+                self.equation_builder = equation_builder()
+            else:
+                self.equation_builder = equation_builder
+            # self.equation_builder.add_input_currents(num_inputs)
+
+            Kwargs.update(self.equation_builder.keywords)
+            Kwargs.update({'method': method})
+            Kwargs.pop('parameters')
+
+            if parameters is not None:
+                self._init_parameters = parameters
+                print(
+                    "parameters you provided overwrite parameters from EquationBuilder ")
+            else:
+                self._init_parameters = self.equation_builder.keywords['parameters']
+
+        self.initialized = True
+        TeiliGroup.__init__(self)
+        NeuronGroup.__init__(self, N, **Kwargs)
+
+        set_params(self, self._init_parameters, verbose=verbose)
+
+    def register_synapse(self, synapsename):
+        """Registers a Synapse so we know the input number.
+
+        It counts all synapses connected with one neuron group.
+
+        Raises:
+            ValueError: If too many synapses project to a given post-synaptic neuron group
+                this error is raised. You need to increae the number of inputs parameter.
+
+        Args:
+            synapsename (str): Name of the synapse group to be registered.
+
+        Returns:
+            dict: dictionary with all synapse names and their respective synapse index.
+        """
+        if synapsename not in self.synapses_dict:
+            self.num_synapses += 1
+            self.synapses_dict[synapsename] = self.num_synapses
+        if self.verbose:
+            print('increasing number of registered Synapses of ' +
+                  self.name + ' to ', self.num_synapses)
+
+        return self.synapses_dict[synapsename]
+
+    def __setattr__(self, key, value):
+        """Set attribute method.
+
+        Args:
+            key (TYPE): key of attribute to be set.
+            value (TYPE): value of respective key to be set.
+        """
+        NeuronGroup.__setattr__(self, key, value)
+        if hasattr(self, 'name'):
+            if key in self.standalone_vars and not isinstance(value, str):
+                # we have to check if the variable has a value assigned or
+                # is assigned a string that is evaluated by brian2 later
+                # as in that case we do not want it here
+                self.standalone_params.update({self.name + '_' + key: value})
+
+            if isinstance(value, str) and value != 'name' and value != 'when':
+                # store this for later update
+                self.str_params.update({key: value})
+
+    def __getitem__(self, item):
+        """Taken from brian2/brian2/groups/neurongroup.py
+
+        Args:
+            item (TYPE): Description
+
+        Returns:
+            TeiliSubgroup: The respective neuron subgroup.
+
+        Raises:
+            IndexError: Error that indicates that size of subgroup set by start
+                and stop is out of bounds.
+            TypeError: Error to indicate that wrong syntax has been used.
+        """
+        if not isinstance(item, slice):
+            raise TypeError(
+                'Subgroups can only be constructed using slicing syntax')
+        start, stop, step = item.indices(self._N)
+        if step != 1:
+            raise IndexError('Subgroups have to be contiguous')
+        if start >= stop:
+            raise IndexError('Illegal start/end values for subgroup, %d>=%d' %
+                             (start, stop))
+
+        return TeiliSubgroup(self, start, stop)
+
+
+class Connections(Synapses, TeiliGroup):
+    """This class is a subclass of Synapses.
+
+    You can use it as a Synapses, and everything will be passed to Synapses.
+    Alternatively, you can also pass an EquationBuilder object that has all keywords and parameters.
+
+    Attributes:
+        equation_builder (teili): Class which builds the synapse model.
+        input_number (int): Number of input to post synaptic neuron. This variable takes care of the summed
+            issue present in brian2.
+        parameters (dict): Dictionary of parameter keys and values of the synapse model.
+        verbose (bool): Flag to print more detail about synapse generation.
+    """
+
+    def __init__(self, source, target,
+                 equation_builder=None,
+                 parameters=None,
+                 method='euler',
+                 input_number=None,
+                 name='synapses*',
+                 verbose=False, **Kwargs):
+        """Initializes wrapper for brian2's Synapses class.
+
+        Args:
+            source (NeuronGroup, Neurons obj.): Pre-synaptic neuron population.
+            target (NeuronGroup, Neurons obj.): Post-synaptic neuron population.
+            equation_builder (None, optional): Class which builds the synapse model.
+            params (dict, optional): Non-default parameter dictionary.
+            method (str, optional): Integration/Differentiation method used to solve differential equation.
+            input_number (int, optional): Number of input to post synaptic neuron. This variable takes care of the summed
+                issue present in brian2.
+            name (str, optional): Name of synapse group.
+            verbose (bool, optional): Flag to print more detail about synapse generation.
+            **Kwargs: Additional keyword arguments.
+
+        Raises:
+            AttributeError e: Warning to indicate that an input_number was specified even though this is taken care of automatically.
+            type: Unit mismatch in equations.
+        """
+        TeiliGroup.__init__(self)
+
+        self.verbose = verbose
+        self.input_number = 0
+
+        # check if it is a building block, if yes, set bb.group as
+        # source/target
+        try:
+            target = target.group
+        except:
+            pass
+        try:
+            source = source.group
+        except:
+            pass
+
+        try:
+            if self.verbose:
+                print(name, ': target', target.name, 'has',
+                      target.num_synapses, 'synapses')
+                print('trying to add one more...')
+            self.input_number = target.register_synapse(name)
+            if self.verbose:
+                print('OK!')
+                print('input number is: ' + str(self.input_number))
+
+        except ValueError as e:
+            raise e
+        except AttributeError as e:
+            if input_number is not None:
+                self.input_number = input_number
+            else:
+                warnings.warn('you seem to be using brian2 NeuronGroups instead of teili Neurons for ' +
+                              str(target.name) + ', therefore, please specify an input_number yourself')
+                raise e
+
+        if parameters is not None:
+            self._init_parameters = parameters
+
+        if equation_builder is not None:
+            if inspect.isclass(equation_builder):
+                self.equation_builder = equation_builder()
+            elif isinstance(equation_builder, str):
+                equation_builder = getattr(
+                    synapse_models, equation_builder)
+                self.equation_builder = equation_builder()
+            else:
+                self.equation_builder = equation_builder() # this copies the object using the call,
+                # it is convenient for the user, but maybe too confusing
+
+            self.equation_builder.set_input_number(self.input_number - 1)
+            Kwargs.update(self.equation_builder.keywords)
+            Kwargs.pop('parameters')
+
+            if parameters is None:
+                self._init_parameters = self.equation_builder.keywords['parameters']
+            else:
+                print(
+                    "parameters you provided overwrite parameters from EquationBuilder")
+
+        try:
+            Synapses.__init__(self, source, target=target,
+                              method=method,
+                              name=name, **Kwargs)
+        except Exception as e:
+            import sys
+            raise type(e)(str(e) + '\n\nCheck Equation for errors!\n' +
+                          'e.g. are all units specified correctly at the end \
+                          of every line?').with_traceback(sys.exc_info()[2])
+
+    def connect(self, condition=None, i=None, j=None, p=1., n=1,
+                skip_if_invalid=False,
+                namespace=None, level=0, **Kwargs):
+        """Wrapper function to make synaptic connections among neurongroups.
+
+        Args:
+            condition (bool, str, optional): A boolean or string expression that evaluates to a boolean. The expression can depend
+                on indices i and j and on pre- and post-synaptic variables. Can be combined with arguments n, and p but not i or j.
+            i (int, str, optional): Source neuron index.
+            j (int, str, optional): Target neuron index.
+            p (float, optional): Probability of connection.
+            n (int, optional): The number of synapses to create per pre/post connection pair. Defaults to 1.
+            skip_if_invalid (bool, optional): Flag to skip connection if invalid indices are given.
+            namespace (str, optional): namespace of this synaptic connection.
+            level (int, optional): Description.
+            **Kwargs: Additional keyword arguments.
+        """
+        Synapses.connect(self, condition=condition, i=i, j=j, p=p, n=n,
+                         skip_if_invalid=skip_if_invalid,
+                         namespace=namespace, level=level + 1, **Kwargs)
+        set_params(self, self._init_parameters, verbose=self.verbose)
+
+    def __setattr__(self, key, value):
+        """Function to set arguments to synapses
+
+        Args:
+            key (str): Name of attribute to be set
+            value (TYPE): Description
+        """
+        Synapses.__setattr__(self, key, value)
+        if hasattr(self, 'name'):
+            if key in self.standalone_vars and not isinstance(value, str):
+                # we have to check if the variable has a value assigned or
+                # is assigned a string that is evaluated by brian2 later
+                # as in that case we do not want it here
+                self.standalone_params.update({self.name + '_' + key: value})
+
+            if isinstance(value, str) and value != 'name' and value != 'when':
+                # store this for later update
+                self.str_params.update({key: value})
+
+    def plot(self):
+        """Simple visualization of synapse connectivity (connected dots and connectivity matrix)
+        """
+        S = self
+        sourceNeuron = len(S.source)
+        targetNeuron = len(S.target)
+        figure(figsize=(8, 4))
+        subplot(121)
+        plot(zeros(sourceNeuron), range(sourceNeuron), 'ok', ms=10)
+        plot(ones(targetNeuron), range(targetNeuron), 'ok', ms=10)
+        for i, j in zip(S.i, S.j):
+            plot([0, 1], [i, j], '-k')
+        xticks([0, 1], [self.source.name, self.target.name])
+        ylabel('Neuron index')
+        xlim(-0.1, 1.1)
+        ylim(-1, max(sourceNeuron, targetNeuron))
+        subplot(122)
+        plot(S.i, S.j, 'ok')
+        xlim(-1, sourceNeuron)
+        ylim(-1, targetNeuron)
+        xlabel('Source neuron index')
+        ylabel('Target neuron index')
+
+
+def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False):
+    """This function takes a params dictionary and sets the parameters of a briangroup.
+
+    Args:
+        brianggroup(brian2.groups.group, required): Neuron or Synapsegroup to set parameters on.
+        params (dict, required): Parameter keys and values to be set.
+        raise_error (boolean, optional): determines if an error is raised
+            if a parameter does not exist as a state variable of the group.
+        ndargs (dict, optional): Addtional attribute arguments.
+        verbose (bool, optional): Flag to get more details about parameter setting process.
+            States are not printed in cpp standalone mode before the simulation has been run
+    """
+    for par in params:
+        if hasattr(briangroup, par):
+            if ndargs is not None and par in ndargs:
+                if ndargs[par] is None:
+                    setattr(briangroup, par, params[par])
+                else:
+                    print(par, ndargs, ndargs[par])
+                    setattr(briangroup, par, ndargs[par])
+            else:
+                setattr(briangroup, par, params[par])
+        else:
+            # print and warn, as warnings are sometimes harder to see
+            print("Group " + str(briangroup.name) +
+                  " has no state variable " + str(par) +
+                  ", but you tried to set it with set_params")
+            warnings.warn("Group " + str(briangroup.name) +
+                          " has no state variable " + str(par) +
+                          ", but you tried to set it with set_params")
+            if raise_error:
+                raise AttributeError("Group " + str(briangroup.name) +
+                                     " has no state variable " + str(par) +
+                                     ', but you tried to set it with set_params ' +
+                                     'if you want to ignore this error, pass raise_error = False')
+
+    if verbose:
+        # This fails with synapses coming from SpikeGenerator groups, unidentified bug?
+        # This does not work in standalone mode as values of state variables
+        # cannot be retrieved before the simulation has been run
+        try:
+            states = briangroup.get_states()
+            print('\n')
+            print('-_-_-_-_-_-_-_\nParameters set by set_params for',
+                  briangroup.name, ':')
+            paramdict = {p : states[p] for p in params}
+            print_paramdict(paramdict)
+            print('----------')
+            dellist = list(params.keys()) + \
+                ['N', 'i', 't', 'dt', 'not_refractory', 'lastspike']
+            for k in dellist:
+                try:
+                    states.pop(k)
+                except:
+                    pass
+            print('In this set_params call, you have not set the following parameters:')
+            print_paramdict(states)
+        except:
+            print('Printing of states does not work in cpp standalone mode')
+
+def print_paramdict(paramdict):
+    """This function prints a params dictionary for get and set_params.
+
+    Args:
+        paramdict (dict, required): Parameter keys and values to be set.
+    """
+    print('Printing the first value of each parameter:')
+    for key in paramdict.keys():
+            if paramdict[key].size > 1:
+                print(key, '=', paramdict[key][1])
+            else:
+                print(key, '=', paramdict[key])
+
+class TeiliSubgroup(Subgroup):
+    """This helps to make Subgroups compatible, otherwise the same as Subgroup.
+
+    Attributes:
+        register_synapse (fct): Register a synapse group to TeiliGroup.
+    """
+
+    def __init__(self, source, start, stop, name=None):
+        """Summary
+
+        Args:
+            source (neurongroup): Neuron group to be split into subgroups.
+            start (int, required): Start index of source neuron group which should be in subgroup.
+            stop (int, required): End index of source neuron group which should be in subgroup.
+            name (str, optional): Name of subgroup.
+        """
+        warnings.warn(
+            'Some functionality of this package is not compatible with subgroups yet')
+        self.register_synapse = None
+        Subgroup.__init__(self, source, start, stop, name)
+
+        self.register_synapse = self.source.register_synapse
+
+    @property
+    def num_synapses(self):
+        """Property to overcome summed issue present in brian2.
+
+        Returns:
+            int: Number of synapse which originate at the same pre-synaptic neuron group.
+        """
+        return self.source.num_synapses

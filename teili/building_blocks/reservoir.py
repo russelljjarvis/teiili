@@ -278,21 +278,21 @@ def gen_reservoir(groupname,
                              equation_builder=neuron_eq_builder(num_inputs=1),
                              refractory=rpInh, name='g' + groupname + '_Inh')
         gRInhGroup.set_params(neuron_model_params)        
-        # # create synapses
-        # synInhR1i = Connections(gRInhGroup, gRGroup,
-        #                         equation_builder=synapse_eq_builder(),
-        #                         method="euler", name='s' + groupname + '_Inhi')
-        # synRInh1e = Connections(gRGroup, gRInhGroup,
-        #                         equation_builder=synapse_eq_builder(),
-        #                         method="euler", name='s' + groupname + '_Inhe')
-        # synRInh1e.connect(p=1.0)  # Generates all to all connectivity
-        # synInhR1i.connect(p=1.0)
-        # synRInh1e.weight = weRInh
-        # synInhR1i.weight = wiInhR
+        # create synapses
+        synInhR1i = Connections(gRInhGroup, gRGroup,
+                                equation_builder=synapse_eq_builder(),
+                                method="euler", name='s' + groupname + '_Inhi')
+        synRInh1e = Connections(gRGroup, gRInhGroup,
+                                equation_builder=synapse_eq_builder(),
+                                method="euler", name='s' + groupname + '_Inhe')
+        synRInh1e.connect(p=1.0)  # Generates all to all connectivity
+        synInhR1i.connect(p=1.0)
+        synRInh1e.weight = weRInh
+        synInhR1i.weight = wiInhR
 
-        # Groups.update({'gRInhGroup': gRInhGroup,
-        #                'synRInh1e': synRInh1e,
-        #                'synInhR1i': synInhR1i})
+        Groups.update({'gRInhGroup': gRInhGroup,
+                       'synRInh1e': synRInh1e,
+                       'synInhR1i': synInhR1i})
 
     # Set input for Reservoir group
     if num_input_neurons > 0:
@@ -319,7 +319,6 @@ def gen_reservoir(groupname,
 
     # Set output readout layer for Reservoir group
     if num_output_neurons > 0:
-        assert len(output_weights_init) == num_output_neurons, 'ERROR: The length of output_weights_init must be equal to the num_output_neurons'
         # Create a simple integrator neuron
         simple_integrator = 'rate : 1'
         simple_integrator_on_pre = '''h += weight /(taur * taud / second)'''
@@ -347,7 +346,7 @@ def gen_reservoir(groupname,
         
         synOutR1e.connect()
         # set weights
-        synOutR1e.weight = output_weights_init
+        synOutR1e.weight = output_weights_init.reshape(synOutR1e.weight.shape)
 
         Groups.update({'gROutGroup': gROutGroup,
                        'synOutR1e': synOutR1e})

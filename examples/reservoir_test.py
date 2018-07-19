@@ -4,6 +4,7 @@
 # @Last Modified by:   mmilde
 # @Last Modified time: 2018-01-25 16:29:42
 import os
+import ipdb
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
@@ -84,21 +85,26 @@ nc17['imin'] = 10
 @network_operation(dt=nc17['dt']*nc17['step'] * ms, when = 'end')
 def FORCE(t):
     if t > nc17['imin']*nc17['dt']*ms and t < nc17['icrit']*nc17['dt']*ms:
+        # ipdb.set_trace()
+        # Store firign rate of individial reservoir neurons
+        # r.shape = (num_output_neurons,)
         r = np.array(gtestR.Groups['synOutR1e'].r)
-        print('r',r)
-        print('BPhi',nc17['BPhi'])
+        print('r',r, r.shape)
+        print('BPhi',nc17['BPhi'],nc17['BPhi'].shape)
         #  z = BPhi'*r
         z = np.dot(nc17['BPhi'].T,r)
-        print('z',z)
+        print('z',z,z.shape)
         #  err = z - zx(i)
-        err = z - nc17['zx'][round(t/nc17['dt']/ms)]
+        err = z - nc17['zx'][round(t/nc17['dt']/ms)] # scalar error
         # cd = Pinv*r
         cd = np.dot(nc17['Pinv'],r)
         print('cd,err',cd,err)
         #    BPhi = BPhi - (cd*err')
-        nc17['BPhi'] = nc17['BPhi'] - np.dot(cd,err.T)
+        nc17['BPhi'] = (nc17['BPhi'].T - cd*err).T
+        print('BPhi',nc17['BPhi'],nc17['BPhi'].shape)
         #    Pinv = Pinv -((cd)*(cd'))/( 1 + (r')*(cd))
         nc17['Pinv'] = nc17['Pinv'] - np.dot(cd,cd.T)/( 1 + np.dot(r.T,cd))
+        
     
 # BIAS
 # print('***********BIAS**************')

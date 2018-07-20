@@ -23,7 +23,14 @@ from teili import teiliNetwork
 
 import runpy
 
-nc17 = runpy.run_path('nicola_cloapth_2017_params.py')
+# nc17 = runpy.run_path('nicola_cloapth_2017_params.py')
+from scipy.io import loadmat
+nc17 ={}
+loadmat('config1.mat',nc17)
+nc17['E'] = nc17['E'].reshape((20))
+nc17['zx'] = nc17['zx'].T
+nc17['BPhi'] = nc17['BPhi'].reshape((20))
+
 
 prefs.codegen.target = 'numpy'
 
@@ -44,10 +51,13 @@ reservoir_params = {'weInpR': 1.5, # nc17['Ein']
                     'taud': nc17['td'] * ms,
                     'taur': nc17['tr'] * ms}
 # OMEGA
-randn = np.random.randn
-adjecency_mtr = randn(num_neurons, num_neurons, 2)
-adjecency_mtr[:,:,0] = (adjecency_mtr[:,:,0]<nc17['p'])
-adjecency_mtr[:,:,1] = nc17['G'] * adjecency_mtr[:,:,1] * adjecency_mtr[:,:,0] / (nc17['p'] * np.sqrt(num_neurons)) 
+# randn = np.random.randn
+# adjecency_mtr = randn(num_neurons, num_neurons, 2)
+# adjecency_mtr[:,:,0] = (adjecency_mtr[:,:,0]<nc17['p'])
+# adjecency_mtr[:,:,1] = nc17['G'] * adjecency_mtr[:,:,1] * adjecency_mtr[:,:,0] / (nc17['p'] * np.sqrt(num_neurons)) 
+adjecency_mtr = np.zeros((nc17['OMEGA'].shape[0], nc17['OMEGA'].shape[1], 2))
+adjecency_mtr[:,:,0] = nc17['OMEGA']>0
+# adjecency_mtr[:,:,1] = nc17['OMEGA']
 
 # Input Ein*Xin
 Itimed = np.dot(nc17['Ein'],nc17['Xin'].T).T # First dim is time, second is neuron index
@@ -64,7 +74,8 @@ gtestR = Reservoir(name='testR',
                    output_weights_init = nc17['BPhi'],
                    block_params=reservoir_params)
 
-
+# Initialise menbrane potentials
+gtestR.Groups['gRGroup'].Vm = nc17['v'].reshape((nc17['N'][0][0])) *mV
 
 # Initial code for run_regularly fuction for FORCE: very difficult to implement matrix operations and passing vectors.
 # @implementation('cpp', '''
@@ -82,45 +93,50 @@ gtestR = Reservoir(name='testR',
 # gtestR.Groups['synOutR1e'].namespace.update({'matrixfunction':matrixfunction})
 # gtestR.Groups['synOutR1e'].run_regularly("print_rates = matrixfunction(r,...)",dt=1*ms)
 
-nc17['imin'] = 10
 log = True
 # Network operation setup for FORCE Learning
 @network_operation(dt=nc17['dt']*nc17['step'] * ms, when = 'end')
 def FORCE(t):
     if t > nc17['imin']*nc17['dt']*ms and t < nc17['icrit']*nc17['dt']*ms:
-        # ipdb.set_trace()
         # Store firign rate of individial reservoir neurons
         # r.shape = (num_output_neurons,)
         firing_rate = np.array(gtestR.Groups['synOutRate1e'].r)
-        read_out = np.array(gtestR.Groups['gROutGroup'].rate)
+        read_out = np.array(gtestR.Groups['gROutGroup'].rate)[0]
         if log: print('firing_rate', firing_rate)
         if log: print('read_out', read_out)
         #  z = BPhi'*r
         z = read_out #np.dot(nc17['BPhi'].T,r)
         if log: print('z',z,)
-        zx = nc17['zx'][round(t/nc17['dt']/ms)]
+        zx = nc17['zx'][round(t/nc17['dt'][0][0]/ms)]
         if log: print('zx',zx)
         #  err = z - zx(i)
         err = z - zx # scalar error
-        err = -err
+        # err = -err
         if log: print('err',err)
         # cd = Pinv*r
-        cd = np.dot(nc17['Pinv'], firing_rate)
+        cd = np.dot(nc17['Pinv'], firing_rate).reshape((nc17['N'][0][0],1))
         if log: print('cd',cd)
         #    BPhi = BPhi - (cd*err')
-        nc17['BPhi'] = (nc17['BPhi'].T - cd*err).T
+        nc17['BPhi'] = (nc17['BPhi'] -(cd*err).reshape((20)) )
         if log: print('BPhi',nc17['BPhi'].T)
         gtestR.Groups['synOutR1e'].weight = nc17['BPhi']
         #    Pinv = Pinv -((cd)*(cd'))/( 1 + (r')*(cd))
-        nc17['Pinv'] = nc17['Pinv'] - np.dot(cd,cd.T)/( 1 + np.dot(firing_rate.T,cd))
-        
-    
+        if log: print('Pinvz',nc17['Pinv'])
+        nc17['Pinv'] = nc17['Pinv'] - (cd * cd.T)/( 1 + np.dot(firing_rate.T,cd))
+        # ipdb.set_trace()
+
+# Network operation setup for feddback connections
+@network_operation(dt=nc17['dt'] * ms, when = 'start')
+def feed_back(t):
+    z = np.array(gtestR.Groups['gROutGroup'].rate)[0]
+    print('z',z)
+    gtestR.Groups['gRGroup'].Iconst = gtestR.Groups['gRGroup'].Iconst + nc17['E'] * z * pA
 # BIAS
 # print('***********BIAS**************')
 I_bias = 1000 * pA #nc17['BIAS'] * pA
 # rates = gtestR.Groups['synOutRate1e']
-gtestR.Groups['gRGroup'].namespace.update({"It":It, 'I_bias':I_bias})
-gtestR.Groups['gRGroup'].run_regularly("Iconst = I_bias + It(t,i)",dt=1*ms)
+gtestR.Groups['gRGroup'].namespace.update({"It":It, 'I_bias':I_bias}) #, 'E':nc17['E']})
+gtestR.Groups['gRGroup'].run_regularly("Iconst = I_bias + It(t,i)",dt=nc17['dt']*ms)
 # syn_in_ex = gtestR.Groups['synInpR1e']
 syn_ex_ex = gtestR.Groups['synRR1e']
 # syn_ex_ih = gtestR.Groups['synRInh1e']
@@ -150,7 +166,7 @@ for to_add_name,to_add in gtestR.Groups.items():
     Net.add(to_add)
 for to_add_name,to_add in gtestR.Monitors.items():
     Net.add(to_add)
-Net.add(statemonRout, FORCE)
+Net.add(statemonRout, FORCE, feed_back)
 
 #%%
 #Net.printParams()

@@ -329,7 +329,7 @@ def gen_reservoir(groupname,
             name='g' + groupname + '_Out',
             parameters='')
 
-        # create synapses
+        # create readout synapses
         synOutR1e = Connections(gRGroup, gROutGroup,
                                 model = """dr/dt = -r/taud + h : 1 (clock-driven)
                                 dh/dt = -h/taur : second **-1 (clock-driven)
@@ -347,7 +347,7 @@ def gen_reservoir(groupname,
         synOutR1e.connect()
         # set weights
         synOutR1e.weight = output_weights_init.reshape(synOutR1e.weight.shape)
-
+        
         Groups.update({'gROutGroup': gROutGroup,
                        'synOutR1e': synOutR1e})
 

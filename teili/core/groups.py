@@ -243,9 +243,9 @@ class TeiliGroup(Group):
         TODO: Consider the mismatch for the parameter 'Cm' as a separate case.
         """
 
-        if hasattr(self, param):
-            np_current_state = np.random.get_state()
+        if hasattr(self, param):            
             if seed is not None:
+                np_current_state = np.random.get_state()
                 np.random.seed(seed)
             if lower is None:
                 lower = -1/std
@@ -263,7 +263,8 @@ class TeiliGroup(Group):
                               " Mismatch might have been added already.".format(param))
             percent_change = ((new_param - old_param_array) / old_param_array)*100
             setattr(self, param, new_param * unit)
-            np.random.set_state(np_current_state)
+            if seed is not None:
+                np.random.set_state(np_current_state)
         else:
             raise NameError('Mismatch not added to {} because not included in the model parameters'.format(param))
 

@@ -279,7 +279,7 @@ class TeiliGroup(Group):
                 np.random.seed(seed)  
             
             if std==0:
-                percent_change = 0
+                percent_change = np.zeros(np.shape(getattr(self, param)))
             else:
                 if lower is None:
                     lower = -1/std                   

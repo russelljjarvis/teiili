@@ -66,13 +66,14 @@ mismatch_synap_param = {
 'baseweight_e' : 0.2,
 'baseweight_i' : 0,
 }
+
 # Input layer
 ts_input = asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 ids_input = asarray([0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegen = SpikeGeneratorGroup(1, indices=ids_input,
                                   times=ts_input, name='gtestInp')
 
-# Middle layer
+# Output layer
 output_neurons = Neurons(1000, equation_builder=neuron_model(num_inputs=2), 
                      name='output_neurons') 
 output_neurons.refP = 3 * ms

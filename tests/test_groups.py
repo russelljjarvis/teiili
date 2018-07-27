@@ -33,7 +33,7 @@ class TestGroups(unittest.TestCase):
         self.assertFalse(any(old_param_value == np.asarray(getattr(testNeurons, 'Itau'))))
         
         # Adding mismatch twice:
-        testNeurons.add_mismatch({'Itau': 0.1})          
+        testNeurons.add_mismatch({'Itau': 0.1})
         self.assertWarns(UserWarning, testNeurons.add_mismatch({'Itau': 0.1}))
         
         # Trying to add mismatch to one parameter not included in the neuron model
@@ -63,10 +63,6 @@ class TestGroups(unittest.TestCase):
         testNeurons._add_mismatch_param(param, std, lower)
         expected_lower = lower * std * old_param + old_param     
         self.assertTrue(all(new_param_value > expected_lower for new_param_value in getattr(testNeurons, param)))
-
-        # Negative lower bound:
-        with self.assertWarns(UserWarning):
-            testNeurons._add_mismatch_param(param='Ith', std=0.1, lower=-11)
         
     def test_mismatch_seed(self):
         """

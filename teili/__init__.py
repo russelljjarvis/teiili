@@ -7,7 +7,7 @@ from teili.tools.plotting import *
 from teili.tools.synaptic_kernel import *
 from teili.tools.plotter2d import *
 from teili.tools.distance import *
-from teili.tools.math_functions import *
+from teili.tools.prob_distributions import *
 from teili.tools.sorting import *
 
 from teili.models.parameters import constants

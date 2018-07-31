@@ -16,6 +16,41 @@ import numpy as np
 
 
 @implementation('cpp', '''
+    float normal1d_density(float x_cpp, float mu_cpp, float sigma_cpp, bool normalized_cpp) {
+        float dist_x = x_cpp-mu_cpp;
+        float f;
+        if (normalized_cpp)
+            f = 1.0 / sqrt(2.0 * M_PI * pow(sigma_cpp,2));
+        else
+            f = 1.0;
+        float density = f * exp(-0.5*pow((dist_x / sigma_cpp),2));
+        return density;
+    }
+                ''')
+@declare_types(x='float', mu='float', sigma='float', result='float', normalized='boolean')
+@check_units(x=1, mu=1, sigma=1, normalized=1, result=1)
+def normal1d_density(x, mu=0, sigma=1, normalized=True):
+    """
+    Args:
+        x, (float): x values at which density is calculated.
+        mu (float): Mean of Gaussian.
+        sigma (float, optional): Standard deviation Gaussian distribution.
+        normalized (bool, optional): Description
+
+    Returns:
+        float: (probability) density at a specific distance to the mean of a Gaussian distribution.
+    """
+    dist_x = x - mu
+    if normalized:
+        f = 1 / np.sqrt(2 * np.pi * sigma**2)
+    else:
+        f = 1
+    density = f * np.exp(-(1/2)*(dist_x / sigma)**2)
+    # print(density)
+    return density
+
+
+@implementation('cpp', '''
     float normal2d_density(float x_cpp, float y_cpp, float mu_x_cpp, float mu_y_cpp,
                            float sigma_x_cpp, float sigma_y_cpp, float rho_cpp, bool normalized_cpp) {
         float dist_x = x_cpp-mu_x_cpp;
@@ -39,7 +74,7 @@ import numpy as np
 def normal2d_density(x, y, mu_x=0, mu_y=0, sigma_x=1, sigma_y=1, rho=0, normalized=True):
     """
     Args:
-        x, y (float): x and y coordinates.
+        x, y (float): x and y values at which density is calculated.
         mu_x, mu_y (float): Means of Gaussian in x and y dimension.
         sigma_x, sigma_y (float, optional): Standard deviations of Gaussian distribution.
         rho (float, optional): correlation coefficient of the 2 variables.
@@ -48,7 +83,6 @@ def normal2d_density(x, y, mu_x=0, mu_y=0, sigma_x=1, sigma_y=1, rho=0, normaliz
     Returns:
         float: normal (probability) density at a specific distance to the mean (dist_x,dist_y) of a 2d distribution.
     """
-    #print(dist_x, dist_y, sigma_x, sigma_y, rho, normalized )
     dist_x = x - mu_x
     dist_y = y - mu_y
     if normalized:
@@ -121,5 +155,15 @@ if __name__ == '__main__':
     plt.figure()
     plt.imshow(img)
     plt.colorbar()
-    # the sum is almost one, if the sigmas are not much larger than
+    # the sum is almost one, if the sigmas are much smaller than the range
     print(np.sum(img))
+
+    dx = 0.1
+    normal1drange = np.arange(-10,10,dx)
+    # thanks to the brian2 decorators, keyword arguments don't work, but you can add all args as positional arguments
+    gaussian = [normal1d_density(x, 0, 1, True) for x in normal1drange]
+    print(np.sum(gaussian)*dx)
+
+    plt.figure()
+    plt.plot(normal1drange,gaussian)
+    plt.show()

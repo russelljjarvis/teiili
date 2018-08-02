@@ -259,7 +259,7 @@ def gen_reservoir(groupname,
     synRR1e.tausyne_rise = taur
     synRR1e.tausyni_rise = taur
     synRR1e.baseweight_e = 1. * pA
-    synRR1e.baseweight_i = 1. * pA
+    synRR1e.baseweight_i = -1. * pA
 
     # synRR1e.add_state_variable(name='latWeight', shared=True, constant=True)
     # synRR1e.add_state_variable(name='latSigma', shared=True, constant=True)
@@ -398,7 +398,7 @@ def gen_reservoir(groupname,
                 gRInpGroup, name='spikemon' + groupname + '_RInp')
             Monitors['spikemonRInp'] = spikemonRInp
         try:
-            statemonR = StateMonitor(gRGroup, ('Vm', 'Iexp', 'Iin', 'Iconst'), record=True,
+            statemonR = StateMonitor(gRGroup, ('Vm', 'Iexp', 'Iin', 'Iconst', 'Ie0', 'Ii0'), record=True,
                                      name='statemon' + groupname + '_R')
         except KeyError:
             statemonR = StateMonitor(gRGroup, ('Iexp', 'Iin'), record=True,

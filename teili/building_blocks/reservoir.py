@@ -29,8 +29,8 @@ Example:
                             'wiInhR': -1,
                             'weRR': 0.5,
                             'sigm': 3,
-                            'rpR': 3 * ms,
-                            'rpInh': 1 * ms
+                            'rpR': 0 * ms,
+                            'rpInh': 0 * ms
                             }
     >>> my_bb = Reservoir(name='my_reservoir', block_params=reservoir_params)
 """
@@ -66,8 +66,8 @@ reservoir_params = {'weInpR': 1.5, # Excitatory synaptic weight
                     'wiInhR': -1,  # Inhibitory synaptic weight between inhibitory interneuron and Reservoir population.
                     'weRR': 0.5,   # Self-excitatory synaptic weight (within Reservoir).
                     'sigm': 3,     # Standard deviation in number of neurons for Gaussian connectivity kernel.
-                    'rpR': 3 * ms, # Refractory period of Reservoir neurons.
-                    'rpInh': 1 * ms# Refractory period of inhibitory neurons.
+                    'rpR': 0 * ms, # Refractory period of Reservoir neurons.
+                    'rpInh': 0 * ms# Refractory period of inhibitory neurons.
                     }
 
 
@@ -175,7 +175,7 @@ def gen_reservoir(groupname,
                   synapse_eq_builder=synapse_model,
                   neuron_model_params=neuron_model_params,
                   weInpR=1.5, weRInh=1, wiInhR=-1, weRR=0.5, sigm=3,
-                  rpR=3 * ms, rpInh=1 * ms,
+                  rpR=0 * ms, rpInh=0 * ms,
                   num_neurons=64,
                   Rconn_prob=None,
                   adjecency_mtr=None,
@@ -236,7 +236,8 @@ def gen_reservoir(groupname,
     # The set_params command is changing something else then just the parameters!!!
     # gRGroup.set_params(neuron_model_params)
     gRGroup.Vm = gRGroup.VR
-
+    gRGroup.refP = rpR
+    
     # create synapses
     synRR1e = Connections(gRGroup, gRGroup,
                           equation_builder=synapse_eq_builder(),
@@ -246,16 +247,17 @@ def gen_reservoir(groupname,
         synRR1e.connect(p=Rconn_prob)
     # commenct according to the adjecency and weight matrix
     elif adjecency_mtr is not None:
-        from numpy import random,nonzero
-        rows,cols = nonzero(adjecency_mtr[:,:,0])
+        rows,cols = np.nonzero(adjecency_mtr[:,:,0])
         synRR1e.connect(i=rows,j=cols)
         synRR1e.weight = adjecency_mtr[rows,cols,1]
     else:
         print('Set either Rconn_prob or adjecency_mtr')
     # Initialize the time of last spike to a large number
-    synRR1e.t_spike = 5000 * ms
+    # synRR1e.t_spike = 5000 * ms
     synRR1e.tausyne = taud
+    synRR1e.tausyni = taud
     synRR1e.tausyne_rise = taur
+    synRR1e.tausyni_rise = taur
     synRR1e.baseweight_e = 1. * pA
     synRR1e.baseweight_i = 1. * pA
 
@@ -402,7 +404,9 @@ def gen_reservoir(groupname,
             statemonR = StateMonitor(gRGroup, ('Iexp', 'Iin'), record=True,
                                      name='statemon' + groupname + '_R')
         Monitors['statemonR'] = statemonR
-
+        Monitors['statemon_readout_rate'] = StateMonitor(gRateOutGroup, ('rate'), record=True,
+                                                         name='statemon' + groupname + '_readout_rate')
+        
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: weInpR, weRInh, wiInhR, weRR,rpR, rpInh,sigm

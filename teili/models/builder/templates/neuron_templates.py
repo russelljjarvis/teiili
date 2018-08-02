@@ -117,7 +117,8 @@ v_quad_current = {'model': """
             %gAdapt = b         : siemens          # adaptation decay parameter
             %wIadapt = d         : amp             # adaptation weight
             %EL = VR : volt
-            VT      : volt                (constant)        # V threshold
+            VT      : volt                (constant)        # V integration threshold
+            Vpeak   : volt                (constant)        # V spike threshold
             VR      : volt                (constant)        # V rest
             k       : siemens * volt **-1 (constant)        # slope factor
             a       : second **-1         (constant)        # recovery time constant
@@ -127,7 +128,7 @@ v_quad_current = {'model': """
                                                                     # activated during the spike
                                                                     # and affecting the after-spike
                                                                     # behavior
-            %Vthr = VT : volt  
+            %Vthr = Vpeak : volt  
             %Vres = VR : volt
             """,
                   'threshold': '',
@@ -135,6 +136,7 @@ v_quad_current = {'model': """
 
 v_quad_params = {
     "Cm": 250.0 * pF,
+    "Vpeak": 30.0 * mV,
     "VR": -60.0 * mV,
     "VT": -20.0 * mV,
     "a": 0.01 / ms, # Nicola&Clopath2017

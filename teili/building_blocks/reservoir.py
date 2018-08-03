@@ -323,7 +323,7 @@ def gen_reservoir(groupname,
     if num_output_neurons > 0:
         # Create a simple integrator neuron
         simple_integrator = 'rate : 1'
-        simple_integrator_on_pre = '''h += weight /(taur * taud / ms)'''
+        simple_integrator_on_pre = '''h += 1 /(taur * taud / ms)'''
         # Create the output layer
         gROutGroup = Neurons(
             num_output_neurons,
@@ -335,7 +335,7 @@ def gen_reservoir(groupname,
         synOutR1e = Connections(gRGroup, gROutGroup,
                                 model = """dr/dt = -r/taud + h : 1 (clock-driven)
                                 dh/dt = -h/taur : second **-1 (clock-driven)
-                                rate_post =  r : 1 (summed)
+                                rate_post =  weight * r : 1 (summed)
                                 taud = %f * ms : second
                                 taur = %f * ms : second
                                 weight : 1

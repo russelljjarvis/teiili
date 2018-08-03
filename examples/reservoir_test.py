@@ -43,7 +43,7 @@ num_neurons = nc17['N']
 # num_input_neurons = 1 # nc17['Xin'].shape[1]
 
 Net = teiliNetwork()
-duration = 40* ms #nc17['T'] * ms
+duration = nc17['T'] * ms
 defaultclock.dt = nc17['dt'] * ms
 
 reservoir_params = {'weInpR': 1.5, # nc17['Ein']
@@ -119,7 +119,10 @@ error = []
 
 log = False
 # Store weights
-BPhi = np.zeros((nc17['N'][0][0], 1000))#nc17['nt'][0][0]))
+BPhi = []
+BPhi.append(nc17['BPhi'].tolist())
+BPhi_updates = [0.]
+
 # Network operation setup for FORCE Learning
 @network_operation(dt=nc17['dt'] * nc17['step'] * ms, when = 'end')
 def FORCE(t):
@@ -145,7 +148,8 @@ def FORCE(t):
         if log: print('cd',cd)
         #    BPhi = BPhi - (cd*err')
         nc17['BPhi'] = (nc17['BPhi'] -(cd*err).reshape((20)) )
-        BPhi[:,int(t/ms/nc17['dt'][0][0])] = nc17['BPhi']
+        BPhi.append(nc17['BPhi'].tolist())
+        BPhi_updates.append(t/ms)
         if log: print('BPhi',nc17['BPhi'].T)
         gtestR.Groups['synOutR1e'].weight = nc17['BPhi']
         #    Pinv = Pinv -((cd)*(cd'))/( 1 + (r')*(cd))
@@ -309,8 +313,9 @@ fig_managers.append(plt.get_current_fig_manager())
 fig_managers[-1].window.wm_geometry("+%d+%d" % tuple(initial_position))
 initial_position += np.array([100,100])
 plt.title('Readout weights')
-plt.plot(gtestR.Monitors['statemon_readout_rate'].t/ms, BPhi.T)
-# plt.plot(nc17_data['time'].T, nc17_data['current'],'g')
+BPhi = np.array(BPhi)
+plt.plot(BPhi_updates, BPhi)
+plt.plot(nc17_data['record_update_times'], nc17_data['record_BPhi'],'g')
 # plt.plot(nc17_data['time'].T, nc17_data['zx'].T,'r')
 plt.xlabel('Time (ms)')
 plt.ylabel('Weights')

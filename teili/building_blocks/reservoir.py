@@ -335,7 +335,7 @@ def gen_reservoir(groupname,
         synOutR1e = Connections(gRGroup, gROutGroup,
                                 model = """dr/dt = -r/taud + h : 1 (clock-driven)
                                 dh/dt = -h/taur : second **-1 (clock-driven)
-                                rate_post = r : 1 (summed)
+                                rate_post =  r : 1 (summed)
                                 taud = %f * ms : second
                                 taur = %f * ms : second
                                 weight : 1
@@ -353,7 +353,7 @@ def gen_reservoir(groupname,
         Groups.update({'gROutGroup': gROutGroup,
                        'synOutR1e': synOutR1e})
 
-    # Set rate reader for Reservoir group
+    # Set individual neuron  rate reader for Reservoir group
     # Create a simple integrator neuron
     simple_integrator = 'rate : 1'
     simple_integrator_on_pre = '''h += 1 /(taur * taud / ms)'''
@@ -404,8 +404,11 @@ def gen_reservoir(groupname,
             statemonR = StateMonitor(gRGroup, ('Iexp', 'Iin'), record=True,
                                      name='statemon' + groupname + '_R')
         Monitors['statemonR'] = statemonR
-        Monitors['statemon_readout_rate'] = StateMonitor(gRateOutGroup, ('rate'), record=True,
-                                                         name='statemon' + groupname + '_readout_rate')
+        Monitors['statemon_neurons_rate'] = StateMonitor(gRateOutGroup, ('rate'), record=True,
+                                                         name='statemon' + groupname + '_neurons_rate')
+        if num_output_neurons > 0:
+            Monitors['statemon_readout_rate'] = StateMonitor(gROutGroup, ('rate'), record=True,
+                                                             name='statemon' + groupname + '_readout_rate')
         
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:

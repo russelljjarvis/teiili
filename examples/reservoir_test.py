@@ -129,7 +129,7 @@ def FORCE(t):
     if t > nc17['imin']*nc17['dt']*ms and t < nc17['icrit']*nc17['dt']*ms:
         # Store firign rate of individial reservoir neurons
         # r.shape = (num_output_neurons,)
-        firing_rate = np.array(gtestR.Groups['synOutRate1e'].r)
+        firing_rate = np.array(gtestR.Groups['synOutR1e'].r)
         read_out = np.array(gtestR.Groups['gROutGroup'].rate)[0]
         if log: print('firing_rate', firing_rate)
         if log: print('read_out', read_out)
@@ -173,10 +173,6 @@ def feed_back(t):
 #                            record=True,
 #                            name='statemonRin')
 
-statemonRout = StateMonitor(gtestR.Groups['synOutRate1e'],
-                            {'r'},
-                           record=True,
-                           name='statemonRout')
 
 
 Net.add(gtestR)
@@ -184,7 +180,6 @@ for to_add_name,to_add in gtestR.Groups.items():
     Net.add(to_add)
 for to_add_name,to_add in gtestR.Monitors.items():
     Net.add(to_add)
-Net.add(statemonRout)
 Net.add(FORCE)
 Net.add(feed_back)
 # net.add(debug)
@@ -239,7 +234,7 @@ fig_managers.append(plt.get_current_fig_manager())
 fig_managers[-1].window.wm_geometry("+%d+%d" % tuple(initial_position))
 initial_position += np.array([100,100])
 plt.title('Individual neuron rates')
-plt.plot(gtestR.Monitors['statemonR'].t/ms, statemonRout.r.T)
+plt.plot(gtestR.Monitors['statemon_neuron_rates'].t/ms, gtestR.Monitors['statemon_neuron_rates'].r.T)
 plt.plot(nc17_data['time'].T, nc17_data['current_r']-0.001,'r')
 plt.xlabel('Time (ms)')
 plt.ylabel('Rate')

@@ -78,7 +78,7 @@ gtestR = Reservoir(name='testR',
 # Initialise menbrane potentials
 gtestR.Groups['gRGroup'].Vm = nc17['v_init'].reshape((nc17['N'][0][0])) *mV
 # Tume threshold to match matlab simulations
-gtestR.Groups['gRGroup'].Vpeak = 29 * mV
+gtestR.Groups['gRGroup'].Vpeak = 28 * mV # tuned based on the diff in firing rate with the matlab simulation at the first weight update (t = 10.4, index = 260)
 # Set synaptic baseweight
 gtestR.Groups['synRR1e'].baseweight_e = 0.18397145542145726 * pA
 gtestR.Groups['synRR1e'].baseweight_i = -0.18397145542145726 * pA
@@ -120,13 +120,15 @@ error = []
 log = False
 # Store weights
 BPhi = []
-BPhi.append(nc17['BPhi'].tolist())
-BPhi_updates = [0.]
+# BPhi.append(nc17['BPhi'].tolist())
+cxd = []
+# cxd.append(np.zeros_like(nc17['BPhi']).tolist())
+BPhi_updates = []
 
 # Network operation setup for FORCE Learning
 @network_operation(dt=nc17['dt'] * nc17['step'] * ms, when = 'end')
 def FORCE(t):
-    if t > nc17['imin']*nc17['dt']*ms and t < nc17['icrit']*nc17['dt']*ms:
+    if t > (nc17['imin']-1)*nc17['dt']*ms and t < nc17['icrit']*nc17['dt']*ms:
         # Store firign rate of individial reservoir neurons
         # r.shape = (num_output_neurons,)
         firing_rate = np.array(gtestR.Groups['synOutR1e'].r)
@@ -145,6 +147,9 @@ def FORCE(t):
         if log: print('err',err)
         # cd = Pinv*r
         cd = np.dot(nc17['Pinv'], firing_rate).reshape((nc17['N'][0][0],1))
+        cxd.append(cd.T.tolist()[0])
+        print("UPDATE!!",t.variable.get_value_with_unit(),t/nc17['dt'][0][0]/ nc17['step']/ms, t/nc17['dt'][0][0]/ms)
+        # ipdb.set_trace()
         if log: print('cd',cd)
         #    BPhi = BPhi - (cd*err')
         nc17['BPhi'] = (nc17['BPhi'] -(cd*err).reshape((20)) )
@@ -155,8 +160,17 @@ def FORCE(t):
         #    Pinv = Pinv -((cd)*(cd'))/( 1 + (r')*(cd))
         if log: print('Pinvz',nc17['Pinv'])
         nc17['Pinv'] = nc17['Pinv'] - (cd * cd.T)/( 1 + np.dot(firing_rate.T,cd))
-        # ipdb.set_trace()
-
+    else:
+        print(t.variable.get_value_with_unit(),t/nc17['dt'][0][0]/ nc17['step']/ms, t/nc17['dt'][0][0]/ms)
+        firing_rate = np.array(gtestR.Groups['synOutR1e'].r)
+        read_out = np.array(gtestR.Groups['gROutGroup'].rate)[0]
+        z = read_out #np.dot(nc17['BPhi'].T,r)
+        zx = nc17['zx'][round(t/nc17['dt'][0][0]/ms)]
+        err = z - zx # scalar error
+        error.append([np.array(t.variable.get_value_with_unit())[0], err[0]])
+        cxd.append(np.zeros_like(nc17['BPhi']).tolist())
+        BPhi.append(nc17['BPhi'].tolist())
+        BPhi_updates.append(t/ms)
 # Network operation setup for feddback connections
 @network_operation(dt=nc17['dt'] * ms, when = 'end')
 def feed_back(t):

@@ -62,7 +62,8 @@ Attributes:
     voltage_parameters (TYPE): Description
 """
 
-from brian2 import pF, nS, mV, ms, pA, nA
+from brian2 import pF, nS, mV, ms, pA, nA, psiemens
+pS = psiemens
 
 # voltage based equation building blocks
 v_model_template = {'model': """
@@ -116,7 +117,8 @@ v_quad_current = {'model': """
             %gAdapt = b         : siemens          # adaptation decay parameter
             %wIadapt = d         : amp             # adaptation weight
             %EL = VR : volt
-            VT      : volt                (constant)        # V threshold
+            VT      : volt                (constant)        # V integration threshold
+            Vpeak   : volt                (constant)        # V spike threshold
             VR      : volt                (constant)        # V rest
             k       : siemens * volt **-1 (constant)        # slope factor
             a       : second **-1         (constant)        # recovery time constant
@@ -126,7 +128,7 @@ v_quad_current = {'model': """
                                                                     # activated during the spike
                                                                     # and affecting the after-spike
                                                                     # behavior
-            %Vthr = VT : volt  
+            %Vthr = Vpeak : volt  
             %Vres = VR : volt
             """,
                   'threshold': '',
@@ -134,10 +136,11 @@ v_quad_current = {'model': """
 
 v_quad_params = {
     "Cm": 250.0 * pF,
+    "Vpeak": 30.0 * mV,
     "VR": -60.0 * mV,
     "VT": -20.0 * mV,
     "a": 0.01 / ms, # Nicola&Clopath2017
-    "b": 0.0 * nS, # Nicola&Clopath2017
+    "b": 0.0 * pS, # Nicola&Clopath2017
     "c": -65 * mV, # Nicola&Clopath2017
     "d": 200 * pA,  # Nicola&Clopath2017
     "k":  2.5  * nS / mV} # k = 1/Rin Nicola&Clopath2017

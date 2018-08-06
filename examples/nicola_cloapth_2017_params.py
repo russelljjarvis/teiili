@@ -20,7 +20,7 @@ import ipdb
 np.random.seed(123456789)
 
 
-T = 10e4#1000000 #Total time 
+T = 1000 #Total time in seconds
 dt = 0.01 #integration time step 
 nt = int(round(T/dt))
 N =  20  #number of neurons 

@@ -253,23 +253,13 @@ def gen_reservoir(groupname,
     else:
         print('Set either Rconn_prob or adjecency_mtr')
     # Initialize the time of last spike to a large number
-    # synRR1e.t_spike = 5000 * ms
+    synRR1e.t_spike = 5000 * ms
     synRR1e.tausyne = taud
     synRR1e.tausyni = taud
     synRR1e.tausyne_rise = taur
     synRR1e.tausyni_rise = taur
     synRR1e.baseweight_e = 1. * pA
     synRR1e.baseweight_i = -1. * pA
-
-    # synRR1e.add_state_variable(name='latWeight', shared=True, constant=True)
-    # synRR1e.add_state_variable(name='latSigma', shared=True, constant=True)
-    # # lateral excitation kernel
-    # # we add an additional attribute to that synapse, which allows us to change
-    # # and retrieve that value more easily
-    # synRR1e.latWeight = weRR
-    # synRR1e.latSigma = sigm
-    # synRR1e.namespace.update({spatial_kernel: spatial_kernel_func})
-    # synRR1e.weight = 'latWeight * ' + spatial_kernel + '(i,j,latSigma)'
 
     Groups = {'gRGroup': gRGroup,
               'synRR1e': synRR1e}
@@ -352,37 +342,6 @@ def gen_reservoir(groupname,
         
         Groups.update({'gROutGroup': gROutGroup,
                        'synOutR1e': synOutR1e})
-
-    # # Set individual neuron  rate reader for Reservoir group
-    # # Create a simple integrator neuron
-    # simple_integrator = 'rate : 1'
-    # simple_integrator_on_pre = '''h += 1 /(taur * taud / ms)'''
-    # # Create the output layer
-    # gRateOutGroup = Neurons(
-    #     1,
-    #     model=simple_integrator,
-    #     name='g' + groupname + '_RateOut',
-    #     parameters='')
-
-    # # create synapses
-    # synOutRate1e = Connections(gRGroup, gRateOutGroup,
-    #                         model = """dr/dt = -r/taud + h : 1 (clock-driven)
-    #                         dh/dt = -h/taur : second **-1 (clock-driven)
-    #                         rate_post = r : 1 (summed)
-    #                         taud = %f * ms : second
-    #                         taur = %f * ms : second
-    #                         weight : 1
-    #                         """%(taud / ms,taur / ms),
-    #                         on_pre = simple_integrator_on_pre,
-    #                         method="euler",
-    #                         name='s' + groupname + '_RateOut',
-    #                         parameters = '')
-    # # connect synapses
-
-    # synOutRate1e.connect()
-
-    # Groups.update({'gRateOutGroup': gRateOutGroup,
-    #                'synOutRate1e': synOutRate1e})
 
         
     # spikemons

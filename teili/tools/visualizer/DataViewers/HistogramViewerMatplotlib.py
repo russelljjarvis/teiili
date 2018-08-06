@@ -61,9 +61,12 @@ class HistogramViewerMatplotlib(HistogramViewer):
                 )
                 + 2)
         # get max value of y axis based on max count in histogram + 5% to set
-        # y_lim slightly above y_max
-        y_lim = (max([self.get_highest_count(lst) for lst in data])) * 1.05
-        self.subfig.set_ylim(bottom=0, top=y_lim)
+        # axis_lim of count slightly above y_max
+        axis_lim = (max([self.get_highest_count(lst) for lst in data])) * 1.05
+        if orientation == 'vertical':
+            self.subfig.set_ylim(bottom=0, top=axis_lim)
+        elif orientation == 'horizontal':
+            self.subfig.set_xlim(left=0, right=axis_lim)
 
         # check if num colors ok
         assert len(

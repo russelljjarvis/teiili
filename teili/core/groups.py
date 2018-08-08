@@ -378,7 +378,11 @@ class Neurons(NeuronGroup, TeiliGroup):
             else:
                 self._init_parameters = self.equation_builder.keywords[
                     'parameters']
-
+        else:
+            if parameters is None:
+                self._init_parameters = {}
+            else:
+                self._init_parameters = parameters
         self.initialized = True
         TeiliGroup.__init__(self)
         NeuronGroup.__init__(self, N, **Kwargs)

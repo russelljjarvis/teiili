@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde
 # @Date:   2018-01-16 17:57:35
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-01 16:59:19
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-08-08 15:14:47
 
 """this file provides an example of how to use neuron and synapse models which are present
 on neurmorphic chips in the context of synaptic plasticity based on precise timing of spikes.
@@ -15,13 +15,11 @@ import numpy as np
 import os
 
 
-from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
-    SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
-    seed, xlim, ylim, subplot, network_operation, TimedArray,\
-    defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
+from brian2 import ms, us, pA, prefs,\
+    SpikeMonitor, StateMonitor, defaultclock
 
 from teili.core.groups import Neurons, Connections
-from teili import NCSNetwork, activate_standalone, deactivate_standalone
+from teili import teiliNetwork
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn, DPIstdp
 from teili.stimuli.testbench import STDP_Testbench
@@ -30,7 +28,7 @@ save_plot = False
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 50 * us
-Net = NCSNetwork()
+Net = teiliNetwork()
 
 stdp = STDP_Testbench()
 gPre, gPost = stdp.stimuli(isi=30)

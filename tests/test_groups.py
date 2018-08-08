@@ -34,8 +34,7 @@ class TestGroups(unittest.TestCase):
             any(old_param_value == np.asarray(getattr(testNeurons, 'Itau'))))
 
         # Adding mismatch twice:
-        testNeurons.add_mismatch({'Itau': 0.1})
-        self.assertWarns(UserWarning, testNeurons.add_mismatch({'Itau': 0.1}))
+        self.assertWarns(UserWarning, testNeurons.add_mismatch, std_dict={'Itau': 0.1})
 
         # Trying to add mismatch to one parameter not included in the neuron
         # model

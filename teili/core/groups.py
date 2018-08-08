@@ -355,7 +355,6 @@ class Neurons(NeuronGroup, TeiliGroup):
         self.num_synapses = 0
         self.synapses_dict = {}
         self.parameters = parameters
-        self._init_parameters = parameters
 
         if equation_builder is not None:
             # if inspect.isclass(equation_builder):

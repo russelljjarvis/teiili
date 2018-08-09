@@ -6,7 +6,7 @@ from .DataModel import DataModel
 class EventsModel(DataModel):
     """ Model to hold data of spike events (neuron ids and spike times)"""
 
-    def __init__(self, neuron_ids, spike_times):
+    def __init__(self, neuron_ids=None, spike_times=None):
         """ Setup EventsModel
         Args:
             neuron_ids (list/array): neuron ids which spiked

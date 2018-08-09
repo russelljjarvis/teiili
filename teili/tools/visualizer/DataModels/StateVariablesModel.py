@@ -9,21 +9,25 @@ class StateVariablesModel(DataModel):
 
     def __init__(
             self,
-            state_variable_names,
-            state_variables,
-            state_variables_times):
+            state_variable_names=None,
+            state_variables=None,
+            state_variables_times=None):
         """ Setup StateVariablesModel
         Args:
             state_variable_names (list of str): list of names (str) of state variables
             state_variables (list of list/array): list of state variable values
             state_variables_times (list of list/array): list of time points where state variables were measured
         """
-        for state_var_name, state_var, state_var_times in zip(
-                state_variable_names, state_variables, state_variables_times):
-            self.add_one_state_variable(
-                state_variable_name=state_var_name,
-                state_variable=state_var,
-                state_variable_times=state_var_times)
+
+        if state_variable_names is None and state_variables is None and state_variables_times is None:
+            pass
+        else:
+            for state_var_name, state_var, state_var_times in zip(
+                    state_variable_names, state_variables, state_variables_times):
+                self.add_one_state_variable(
+                    state_variable_name=state_var_name,
+                    state_variable=state_var,
+                    state_variable_times=state_var_times)
 
     @classmethod
     def from_brian_state_monitors(

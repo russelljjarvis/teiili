@@ -81,7 +81,6 @@ class HistogramViewerPyqtgraph(HistogramViewer):
                 zip(data, self.MyPlotSettings.colors)):
             y, x = np.histogram(subgroup, bins=bins)
             color = np.asarray(pg.colorTuple(pg.mkColor(color)))
-            color[-1] = 0.6 * 255
 
             if orientation == 'horizontal':
                 barchart = pg.BarGraphItem(

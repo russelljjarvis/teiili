@@ -115,7 +115,7 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
         for subgroup_nr, (spike_times, neuron_ids, color) in enumerate(
                 zip(all_spike_times, all_neuron_ids, self.MyPlotSettings.colors)):
             if not isinstance(color, str):
-                color = tuple(np.asarray(color) * 255)
+                color = tuple(np.asarray(color))
             if subgroup_labels is not None:
                 label = subgroup_labels[subgroup_nr]
             self.subfig_rasterplot.plot(

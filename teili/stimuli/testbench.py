@@ -120,6 +120,67 @@ class STDP_Testbench():
         return pre, post
 
 
+class STDGM_Testbench():
+    """This class provides a stimulus to test your
+    spike-timing dependent gain modulation algorithm.
+    """
+    def __init__(self, N=1, stimulus_length=1200):
+        """Initializes the testbench class.
+
+        Args:
+            N (int, optional): Size of the pre and post neuronal population.
+            stimulus_length (int, optional): Length of stimuli in ms.
+        """
+        self.N = N  # Number of Neurons per input group
+        self.stimulus_length = stimulus_length
+
+    def stimuli(self, isi):
+        """Stimulus gneration for STDGM protocols.
+
+        This function returns two brian2 objects.
+        Both are Spikegeneratorgroups which hold a single index each
+        and varying spike times.
+        The protocol follows homoeostasis, weak LTP, weak LTD, strong LTP,
+        strong LTD, homoeostasis.
+
+        Args:
+            isi (int, optional): Interspike Interval. How many spikes per stimulus phase.
+
+        Returns:
+            SpikeGeneratorGroup (brian2.obj: Brian2 objects which hold the spiketimes and
+                the respective neuron indices.
+        """
+        t_pre_homoeotasis_1 = np.arange(20, 222, isi)
+        t_pre_weakLTP = np.arange(301, 502, isi)
+        t_pre_weakLTD = np.arange(601, 802, isi)
+        t_pre_strongLTP = np.arange(901, 1102, isi)
+        t_pre_strongLTD = np.arange(1201, 1402, isi)
+        t_pre_homoeotasis_2 = np.arange(1501, 1702, isi)
+        t_pre = np.hstack((t_pre_homoeotasis_1, t_pre_weakLTP, t_pre_weakLTD,
+                           t_pre_strongLTP, t_pre_strongLTD, t_pre_homoeotasis_2))
+
+        # Normal distributed shift of spike times to ensure homoeotasis
+        t_post_homoeotasis_1 = t_pre_homoeotasis_1 + \
+            np.random.randint(-20, 20, len(t_pre_homoeotasis_1))
+        t_post_weakLTP = t_pre_weakLTP + 7   # post neuron spikes 7 ms after pre
+        t_post_weakLTD = t_pre_weakLTD - 7   # post neuron spikes 7 ms before pre
+        t_post_strongLTP = t_pre_strongLTP + 1  # post neurons spikes 1 ms after pre
+        t_post_strongLTD = t_pre_strongLTD - 1  # post neurons spikes 1 ms before pre
+        t_post_homoeotasis_2 = t_pre_homoeotasis_2 + \
+            np.random.randint(-20, 20, len(t_pre_homoeotasis_2))
+
+        t_post = np.hstack((t_post_homoeotasis_1, t_post_weakLTP, t_post_weakLTD,
+                            t_post_strongLTP, t_post_strongLTD, t_post_homoeotasis_2))
+        ind_pre = np.zeros(len(t_pre))
+        ind_post = np.zeros(len(t_post))
+
+        pre = SpikeGeneratorGroup(
+            self.N, indices=ind_pre, times=t_pre * ms, name='gPre')
+        post = SpikeGeneratorGroup(
+            self.N, indices=ind_post, times=t_post * ms, name='gPost')
+        return pre, post
+
+
 class OCTA_Testbench():
     """This class holds all relevant stimuli to test modules provided with the
     Online Clustering of Temporal Activity (OCTA) framework.

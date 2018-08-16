@@ -10,7 +10,17 @@ from brian2 import seed
 from teili.core.groups import Neurons
 from teili.models.neuron_models import DPI
 
-
+"""
+NOTE: 
+    if using python=3.6.3, line 38
+    
+    self.assertWarns(UserWarning, testNeurons.add_mismatch, std_dict={'Itau': 0.1})
+    
+    will raise the following error:
+    RuntimeError: dictionary changed size during iteration
+    
+    Issue solved in python 3.6.6
+"""
 class TestGroups(unittest.TestCase):
 
     @classmethod

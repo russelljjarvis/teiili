@@ -173,7 +173,7 @@ class TeiliGroup(Group):
             std_dict (dict): dictionary of parameter names as keys and standard
                 deviation as values. Standard deviations are expressed as fraction
                 of the current parameter value.
-                (example: if std_param = {'Itau': 0.1}, the new parameter value
+                (example: if std_dict = {'Itau': 0.1}, the new parameter value
                 will be sampled from a normal distribution with standard deviation of
                 0.1*old_param, with old_param being the old parameter value)
             seed (int, optional): seed value for the random generator.

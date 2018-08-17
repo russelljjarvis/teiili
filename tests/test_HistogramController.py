@@ -123,7 +123,7 @@ class TestHistogramController(unittest.TestCase):
         EM2 = EventsModel.from_brian_spike_monitor(spikemonN2)
         SVM = StateVariablesModel.from_brian_state_monitors(
             [statemonN1, statemonN2], skip_not_rec_neuron_ids=False)
-        DataModel_to_attr = {EM1: 'neuron_ids', EM2: 'neuron_ids', SVM: 'Imem'}
+        DataModel_to_attr = [(EM1, 'neuron_ids'), (EM2, 'neuron_ids'), (SVM, 'Imem')]
 
         HC = HistogramController(
             MyPlotSettings=get_plotsettings(),
@@ -138,10 +138,10 @@ class TestHistogramController(unittest.TestCase):
                     spikemonN1, 'i')))
 
         # from brian state monitor and spike monitors
-        DataModel_to_attr = {
-            spikemonN1: 'i',
-            spikemonN2: 'i',
-            statemonN1: 'Imem'}
+        DataModel_to_attr = [
+            (spikemonN1, 'i'),
+            (spikemonN2, 'i'),
+            (statemonN1, 'Imem')]
 
         HC = HistogramController(
             MyPlotSettings=get_plotsettings(),
@@ -163,7 +163,7 @@ class TestHistogramController(unittest.TestCase):
         EM2 = EventsModel.from_brian_spike_monitor(spikemonN2)
         SVM = StateVariablesModel.from_brian_state_monitors(
             [statemonN1, statemonN2], skip_not_rec_neuron_ids=False)
-        DataModel_to_attr = {EM1: 'neuron_ids', EM2: 'neuron_ids', SVM: 'Imem'}
+        DataModel_to_attr = [(EM1, 'neuron_ids'), (EM2, 'neuron_ids'), (SVM, 'Imem')]
 
         subgroup_labels = ['EM1', 'EM2', 'SVM']
 

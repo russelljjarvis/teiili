@@ -33,8 +33,8 @@ class HistogramController(DataController):
         """ Setup Histogram Controller and create histogram plot
         Args:
             MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
-            DataModel_to_attr (dict): dict ::class DataModel::  attr_of_DataModel_to_consider
-                                                (data model can also be a brian state monitor or spike monitor)
+            DataModel_to_attr (list of tuples): [tuple(::class DataModel::  attr_of_DataModel_to_consider), ( ..., ...), ... ]
+                                                for every subgroups one tuple (data model can also be a brian state monitor or spike monitor)
             subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
             bins (array, list): array with edges of bins in histogram
             orientation (str): orientation of histogram (vertical or horizontal)
@@ -48,6 +48,7 @@ class HistogramController(DataController):
                                             only required if backend is pyqtgraph
             show_immediately (bool): if True: plot is shown immediately after it has been created
         """
+
         self.subgroup_labels = subgroup_labels
         self.bins = bins
         self.orientation = orientation
@@ -74,7 +75,7 @@ class HistogramController(DataController):
         """ get data from DataModel_to_attr. Reformat it as list (self.data) of attributes considered"""
 
         self.data = []
-        for data_model, attr_to_consider in DataModel_to_attr.items():
+        for data_model, attr_to_consider in DataModel_to_attr:
             self.data.append(
                 np.asarray(
                     getattr(
@@ -82,7 +83,7 @@ class HistogramController(DataController):
                         attr_to_consider)).flatten())
 
     def create_histogram(self):
-        """ Function to create histogram in subfigure with data from DataModel_to_attr with subgroups  defined above"""
+        """ Function to create histogram in subfigure with data from DataModel_to_attr with subgroups defined above"""
 
         self.my_histogram.create_histogram(
             data=self.data,

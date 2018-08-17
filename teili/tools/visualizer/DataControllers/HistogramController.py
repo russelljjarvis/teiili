@@ -99,7 +99,7 @@ class HistogramController(DataController):
 
         self.my_histogram.show_histogram()
 
-    def save_histogram(self, path_to_save, figure_size):
+    def save_histogram(self, path_to_save, figure_size=None):
         """ Save figure to path_to_save with size figure_size
         Args:
             path_to_save (str): path to location where to save figure incl filename

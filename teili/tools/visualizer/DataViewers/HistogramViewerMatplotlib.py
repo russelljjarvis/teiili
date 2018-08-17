@@ -118,14 +118,13 @@ class HistogramViewerMatplotlib(HistogramViewer):
     def save_histogram(
         self,
         path_to_save='histogram.png',
-        figure_size=(
-            9,
-            12)):
-        """ Save figure to path_to_save with size figure_size
+        figure_size=None):
+        """ Save figure to path_to_save with size figure_size as png, pdf, ps, eps and svg.
         Args:
             path_to_save (str): path to location where to save figure incl filename
-            figure_size (2-tuple): tuple of width and height in inch of figure to save
+            figure_size (tuple): tuple of width and height in inch of figure to save
         """
-        self.mainfig.set_size_inches(figure_size[0], figure_size[1])
-        plt.savefig(path_to_save)
+        if figure_size is not None:
+            self.mainfig.set_size_inches(figure_size[0], figure_size[1])
+        self.mainfig.savefig(path_to_save)
         print('Figure saved to: ' + path_to_save)

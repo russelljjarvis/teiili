@@ -15,7 +15,7 @@ class StateVariablesModel(DataModel):
         """ Setup StateVariablesModel
         Args:
             state_variable_names (list of str): list of names (str) of state variables
-            state_variables (list of list/array): list of state variable values
+            state_variables (list of list/array): list of state variable values [n_timesteps, n_traces]
             state_variables_times (list of list/array): list of time points where state variables were measured
         """
 
@@ -42,6 +42,11 @@ class StateVariablesModel(DataModel):
         Args:
             brian_state_monitors: brian2 state monitor
             skip_not_rec_neuron_ids (bool): if True: not recorded neurons are not considered and index of recorded neurons is lost
+
+        Remarks:
+            The state variable array will be transposed from the brian state monitor, to consistenly represent time
+            along axis 0 in state_variables and in state_variables_times
+
             """
 
         state_variable_names, state_variables, state_variables_times = [], [], []
@@ -56,18 +61,18 @@ class StateVariablesModel(DataModel):
 
                 if skip_not_rec_neuron_ids:
                     state_var_array = np.empty(
-                        [num_neurons_recorded, num_timesteps])
+                        [num_timesteps, num_neurons_recorded])
                     state_var_array.fill(np.nan)
                     neuron_nrs = range(num_neurons_recorded)
                 else:
                     state_var_array = np.empty(
-                        [max_neuron_ids_recorded + 1, num_timesteps])
+                        [num_timesteps, max_neuron_ids_recorded + 1])
                     state_var_array.fill(np.nan)
                     neuron_nrs = brian_state_mon.record
 
                 for state_var_per_neuron, neuron_nr in zip(
                         getattr(brian_state_mon, state_var_name), neuron_nrs):
-                    state_var_array[neuron_nr, :] = np.asarray(
+                    state_var_array[:, neuron_nr] = np.asarray(
                         state_var_per_neuron)
 
                 state_variable_names.append(state_var_name)

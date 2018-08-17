@@ -119,18 +119,18 @@ class TestDataModel(unittest.TestCase):
 
         SVM = StateVariablesModel.from_brian_state_monitors(
             [statemonN1, statemonN2], skip_not_rec_neuron_ids=False)
-        self.assertTrue(SVM.Imem.shape[1] == len(statemonN1.t))
+        self.assertTrue(SVM.Imem.shape[0] == len(statemonN1.t))
         self.assertTrue(len(SVM.t_Imem) == len(statemonN1.t))
-        self.assertTrue(SVM.Iin.shape[1] == len(statemonN1.t))
+        self.assertTrue(SVM.Iin.shape[0] == len(statemonN1.t))
         self.assertTrue(len(SVM.t_Iin) == len(statemonN1.t))
-        self.assertTrue(SVM.Iahp.shape[1] == len(statemonN2.t))
+        self.assertTrue(SVM.Iahp.shape[0] == len(statemonN2.t))
         self.assertTrue(len(SVM.t_Iahp) == len(statemonN2.t))
 
         SVM = StateVariablesModel.from_brian_state_monitors(
             [statemonN1, statemonN2], skip_not_rec_neuron_ids=True)
-        self.assertTrue(SVM.Imem.shape[0] == len(statemonN1.record))
-        self.assertTrue(SVM.Iin.shape[0] == len(statemonN1.record))
-        self.assertTrue(SVM.Iahp.shape[0] == len(statemonN2.record))
+        self.assertTrue(SVM.Imem.shape[1] == len(statemonN1.record))
+        self.assertTrue(SVM.Iin.shape[1] == len(statemonN1.record))
+        self.assertTrue(SVM.Iahp.shape[1] == len(statemonN2.record))
 
 
 if __name__ == '__main__':

@@ -326,14 +326,16 @@ class TestLineplotController(unittest.TestCase):
         DataModel_to_x_and_y_attr = [
             (SVM, ('t_Imem', 'Imem')), (SVM, ('t_Iin', 'Iin'))]
         subgroup_labels = ['Imem', 'Iin']
+        x_range = (0.02, 0.13)
+        y_range = (0, 5e-9)
 
         backend = 'matplotlib'
         LC = LineplotController(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             subgroup_labels=subgroup_labels,
-            x_range=None,
-            y_range=None,
+            x_range=x_range,
+            y_range=y_range,
             title='Lineplot matplotlib with Imem (in red) and Iin (in blue)',
             xlabel='my x label',
             ylabel='my y label',
@@ -349,15 +351,15 @@ class TestLineplotController(unittest.TestCase):
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             subgroup_labels=subgroup_labels,
-            x_range=None,
-            y_range=None,
+            x_range=x_range,
+            y_range=y_range,
             title='Lineplot pyqt with Imem (r) and Iin (b)',
             xlabel='my x label',
             ylabel='my y label',
             backend=backend,
             mainfig=None,
             subfig=None,
-            QtApp=None,
+            QtApp=QtApp,
             show_immediately=SHOW_PLOTS_IN_TESTS)
         LC.create_lineplot()
 

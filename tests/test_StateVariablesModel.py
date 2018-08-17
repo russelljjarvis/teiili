@@ -12,7 +12,7 @@ from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
-from teili.tools.visualizer.DataModels import StateVariablesModel
+from teili.tools.visualizer.DataModels import StateVariablesModel, VariableNameDuplicateException
 
 
 def run_teili_network():
@@ -83,6 +83,11 @@ def run_teili_network():
         variables=['Iahp'],
         record=0,
         name='statemonNeuOut')
+    statemonN2_2 = StateMonitor(
+        testNeurons2,
+        variables=['Imem'],
+        record=0,
+        name='statemonNeuOut_2')
 
     Net.add(gInpGroup, testNeurons1, testNeurons2,
             InpSyn, Syn,
@@ -92,7 +97,7 @@ def run_teili_network():
     Net.run(duration_sim * ms)
     print('Simulation run for {} ms'.format(duration_sim))
 
-    return Net, spikemonN1, statemonN1, statemonN2
+    return Net, spikemonN1, statemonN1, statemonN2, statemonN2_2
 
 
 class TestDataModel(unittest.TestCase):
@@ -113,9 +118,24 @@ class TestDataModel(unittest.TestCase):
         self.assertTrue(SVM.var_name.shape == (num_neurons, num_timesteps))
         self.assertTrue(len(SVM.t_var_name) == num_timesteps)
 
+
+        # test that raise Exception if variable names are not unique
+        state_variable_names = ['var_name', 'var_name']
+        num_neurons = 6
+        num_timesteps = 50
+        state_variables = [np.random.random((num_neurons, num_timesteps)), np.random.random((num_neurons, num_timesteps))]
+        state_variables_times = [np.linspace(0, 100, num_timesteps), np.linspace(0, 100, num_timesteps)]
+
+        with self.assertRaises(Exception) as context:
+            SVM = StateVariablesModel(
+                state_variable_names,
+                state_variables,
+                state_variables_times)
+
+
     def test_StateVariablesModel_from_brian_statemonitors(self):
 
-        Net, spikemonN1, statemonN1, statemonN2 = run_teili_network()
+        Net, spikemonN1, statemonN1, statemonN2, statemonN2_2 = run_teili_network()
 
         SVM = StateVariablesModel.from_brian_state_monitors(
             [statemonN1, statemonN2], skip_not_rec_neuron_ids=False)
@@ -131,6 +151,12 @@ class TestDataModel(unittest.TestCase):
         self.assertTrue(SVM.Imem.shape[1] == len(statemonN1.record))
         self.assertTrue(SVM.Iin.shape[1] == len(statemonN1.record))
         self.assertTrue(SVM.Iahp.shape[1] == len(statemonN2.record))
+
+        # statemonN1 & statemonN2_2 store the a variable called 'Imem'
+        with self.assertRaises(Exception) as context:
+            SVM = StateVariablesModel.from_brian_state_monitors(
+                [statemonN1, statemonN2_2], skip_not_rec_neuron_ids=False)
+
 
 
 if __name__ == '__main__':

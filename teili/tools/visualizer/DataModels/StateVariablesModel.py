@@ -3,6 +3,13 @@ import numpy as np
 from .DataModel import DataModel
 
 
+class VariableNameDuplicateException(Exception):
+    def __init__(self, all_state_variable_names):
+        for unique_var_name in np.unique(all_state_variable_names):
+            all_state_variable_names.remove(unique_var_name)
+        print("The variable name(s) {} occur(s) more than once. Please provide unique state_variable_names.".format(all_state_variable_names))
+
+
 class StateVariablesModel(DataModel):
     """ Model to hold data on several state variables and their measurement time points
         self.var_name ([n_neurons, n_timepoints]), t_var_name ([n_timepoints]))"""
@@ -18,6 +25,9 @@ class StateVariablesModel(DataModel):
             state_variables (list of list/array): list of state variable values [n_timesteps, n_traces]
             state_variables_times (list of list/array): list of time points where state variables were measured
         """
+
+        if len(state_variable_names) != len(np.unique(state_variable_names)):
+            raise VariableNameDuplicateException(all_state_variable_names=state_variable_names)
 
         if state_variable_names is None and state_variables is None and state_variables_times is None:
             pass
@@ -44,11 +54,19 @@ class StateVariablesModel(DataModel):
             skip_not_rec_neuron_ids (bool): if True: not recorded neurons are not considered and index of recorded neurons is lost
 
         Remarks:
-            The state variable array will be transposed from the brian state monitor, to consistenly represent time
+            The state variable array will be transposed from the brian state monitor, to consistently represent time
             along axis 0 in state_variables and in state_variables_times
 
             """
+        # check if variable names are unique
+        all_var_names = []
+        for brian_state_mon in brian_state_monitors:
+            for state_var_name in brian_state_mon.recorded_variables:
+                all_var_names.append(state_var_name)
+        if len(all_var_names) != len(np.unique(all_var_names)):
+            raise VariableNameDuplicateException(all_var_names)
 
+        # if no exception was raised --> proceed in creating class
         state_variable_names, state_variables, state_variables_times = [], [], []
 
         for brian_state_mon in brian_state_monitors:

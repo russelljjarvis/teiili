@@ -269,7 +269,7 @@ QtGui.QApplication.instance().exec_()
 
 
 In both cases of model definition the resulting figure should look like this:
-<img src="fig/neuron_synapse_test.png" width="450" height="300">
+![altText](fig/neuron_synapse_test.png)
 
 ## STDP tutorial
 One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity mechanism.
@@ -383,9 +383,8 @@ output_neurons.add_mismatch(std_dict=mismatch_neuron_param, seed=10)
 input_syn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
 ```
 
-Once we run the simulation, we can visualize the parameter distribution across neurons 
-and the effect of device mismatch on the EPSC and on the output membrane current Imem 
-of five randomly selected neurons. 
+Once we run the simulation, we can visualize the effect of device mismatch on the EPSC and on the output membrane current Imem 
+of five randomly selected neurons:
 
 ```
 # Setting monitors:
@@ -455,7 +454,11 @@ for i, data in enumerate(np.asarray(statemon_output.Imem[neuron_ids_to_plot])):
 p4.setLabel('left', "Membrane current Imem", units="A", **labelStyle)
 p4.setLabel('bottom', "Time (ms)", **labelStyle)    
 p4.setXRange(0, duration, padding=0)    
+```
+![altText](fig/Mismatch_NN.png)
 
+and the parameter distribution across neurons:
+```
 # Mismatch distribution
 win2 = pg.GraphicsWindow(title='teili Test Simulation')
 win2.resize(1900, 600)
@@ -478,3 +481,7 @@ p2.plot(x=np.asarray([mean_neuron_param, mean_neuron_param]), y=np.asarray([0, n
         pen=pg.mkPen((255, 0, 0), width=2))
 p2.setLabel('bottom', units=str(unit_old_param_neu), **labelStyle)
 ```
+
+
+![altText](fig/Mismatch_distribution.png)
+

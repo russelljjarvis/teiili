@@ -77,7 +77,7 @@ def run_brian_network():
             0, 3], name='statemonNeu')
     statemonN2 = StateMonitor(
         testNeurons2,
-        variables=['Imem'],
+        variables=['Iahp'],
         record=0,
         name='statemonNeuOut')
 

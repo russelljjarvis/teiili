@@ -7,7 +7,8 @@ class VariableNameDuplicateException(Exception):
     def __init__(self, all_state_variable_names):
         for unique_var_name in np.unique(all_state_variable_names):
             all_state_variable_names.remove(unique_var_name)
-        print("The variable name(s) {} occur(s) more than once. Please provide unique state_variable_names.".format(all_state_variable_names))
+        print("The variable name(s) {} occur(s) more than once. Please provide unique state_variable_names.".format(
+            all_state_variable_names))
 
 
 class StateVariablesModel(DataModel):
@@ -26,12 +27,15 @@ class StateVariablesModel(DataModel):
             state_variables_times (list of list/array): list of time points where state variables were measured
         """
 
-        if len(state_variable_names) != len(np.unique(state_variable_names)):
-            raise VariableNameDuplicateException(all_state_variable_names=state_variable_names)
-
         if state_variable_names is None and state_variables is None and state_variables_times is None:
             pass
         else:
+
+            if len(state_variable_names) != len(
+                    np.unique(state_variable_names)):
+                raise VariableNameDuplicateException(
+                    all_state_variable_names=state_variable_names)
+
             for state_var_name, state_var, state_var_times in zip(
                     state_variable_names, state_variables, state_variables_times):
                 self.add_one_state_variable(

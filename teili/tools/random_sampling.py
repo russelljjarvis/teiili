@@ -40,6 +40,7 @@ def _randn_trunc_generate_cpp_code(lower, upper, name):
     }
     '''
     cpp_code = replace(cpp_code, {'%NAME%': name, '%UPPER%': str(upper), '%LOWER%': str(lower)})
+    cpp_code = cpp_code.replace('inf','std::numeric_limits<float>::max()')
     dependencies = {'_randn': DEFAULT_FUNCTIONS['randn']}
     return {'support_code': cpp_code}, dependencies
 

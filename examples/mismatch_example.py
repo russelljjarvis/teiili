@@ -15,20 +15,28 @@ Created on Wed Jul 25 18:32:44 2018
 @author: nrisi
 """
 import os
+import numpy as np
 
 import pyqtgraph as pg
-import numpy as np
+from pyqtgraph.Qt import QtGui
 from brian2 import SpikeGeneratorGroup, SpikeMonitor, StateMonitor, ms, asarray, nA, prefs, set_device
 from teili.core.groups import Neurons, Connections
 from teili import teiliNetwork
 from teili.models.neuron_models import DPI as neuron_model
 from teili.models.synapse_models import DPISyn as syn_model
 
-standalone = True
+standalone = False
 if standalone:
     standalone_dir = os.path.expanduser('~/mismatch_standalone')
     set_device('cpp_standalone', directory=standalone_dir)
 prefs.codegen.target = "numpy"
+
+app = QtGui.QApplication.instance()
+if app is None:
+    app = QtGui.QApplication(sys.argv)
+else:
+    print('QApplication instance already exists: %s' % str(app))
+
 
 Net = teiliNetwork()
 
@@ -102,6 +110,11 @@ if not standalone:
     unit_old_param_neu = getattr(output_neurons, 'refP').unit
     mean_synapse_param = np.copy(getattr(input_syn, 'baseweight_e'))[0]
     unit_old_param_syn = getattr(input_syn, 'baseweight_e').unit
+else:
+    mean_neuron_param = output_neurons.get_params()['refP'][0]
+    unit_old_param_neu = output_neurons.get_params()['refP'].unit
+    mean_synapse_param = input_syn.get_params()['baseweight_e'][0]
+    unit_old_param_syn = input_syn.get_params()['baseweight_e'].unit
 
 output_neurons.add_mismatch(std_dict=mismatch_neuron_param, seed=10)
 input_syn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
@@ -188,15 +201,15 @@ p2 = win2.addPlot(title='refP')
 y, x = np.histogram(np.asarray(getattr(input_syn, 'baseweight_e')), bins="auto")
 curve = pg.PlotCurveItem(x=x, y=y, stepMode=True, brush=(0, 0, 255, 80))
 p1.addItem(curve)
-if not standalone:
-    p1.plot(x=np.asarray([mean_synapse_param, mean_synapse_param]), y=np.asarray([0, np.max(y)]),
-            pen=pg.mkPen((255, 0, 0), width=2))
-    p1.setLabel('bottom', units=str(unit_old_param_syn), **labelStyle)
+p1.plot(x=np.asarray([mean_synapse_param, mean_synapse_param]), y=np.asarray([0, np.max(y)]),
+        pen=pg.mkPen((255, 0, 0), width=2))
+p1.setLabel('bottom', units=str(unit_old_param_syn), **labelStyle)
 
 y, x = np.histogram(np.asarray(getattr(output_neurons, 'refP')), bins="auto")
 curve = pg.PlotCurveItem(x=x, y=y, stepMode=True, brush=(0, 0, 255, 80))
 p2.addItem(curve)
-if not standalone:
-    p2.plot(x=np.asarray([mean_neuron_param, mean_neuron_param]), y=np.asarray([0, np.max(y)]),
-            pen=pg.mkPen((255, 0, 0), width=2))
-    p2.setLabel('bottom', units=str(unit_old_param_neu), **labelStyle)
+p2.plot(x=np.asarray([mean_neuron_param, mean_neuron_param]), y=np.asarray([0, np.max(y)]),
+        pen=pg.mkPen((255, 0, 0), width=2))
+p2.setLabel('bottom', units=str(unit_old_param_neu), **labelStyle)
+
+app.exec()

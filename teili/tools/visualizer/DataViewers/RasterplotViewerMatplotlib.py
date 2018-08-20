@@ -102,7 +102,7 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
 
         # set parameters on plot dimensions along time and neuron_id axis
         if time_range_axis is None:
-            time_range_axis = (0, max(map(lambda x: max(x), all_spike_times)))
+            time_range_axis = (0, max(map(lambda x: np.nanmax(x), all_spike_times)))
         if neuron_id_range_axis is None:
             neuron_id_range_axis = (
                 0, max(map(lambda x: max(x), all_neuron_ids)) + 1)
@@ -189,12 +189,12 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
         self,
         path_to_save='rasterplot.png',
         figure_size=None):
-        """ Save figure to path_to_save with size figure_size as png, pdf, ps, eps and svg.
+        """ Save figure to path_to_save with size figure_size
         Args:
             path_to_save (str): path to location where to save figure incl filename
-            figure_size (tuple): tuple of width and height in inch of figure to save
+            figure_size (2-tuple): tuple of width and height in inch of figure to save
         """
         if figure_size is not None:
             self.mainfig.set_size_inches(figure_size[0], figure_size[1])
-        self.mainfig.savefig(path_to_save)
+        plt.savefig(path_to_save)
         print('Figure saved to: ' + path_to_save)

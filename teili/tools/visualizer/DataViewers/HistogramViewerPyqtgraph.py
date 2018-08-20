@@ -1,6 +1,7 @@
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtGui
+import warnings
 
 try:
     from teili.tools.visualizer.DataViewers.HistogramViewer import HistogramViewer
@@ -65,7 +66,7 @@ class HistogramViewerPyqtgraph(HistogramViewer):
             """
 
         if bins is None:
-            bins = range(max(map(lambda x: max(x), data)) + 2)
+            bins = range(max(map(lambda x: np.nanmax(x), data)) + 2)
 
         # check if num colors ok
         assert len(
@@ -79,6 +80,11 @@ class HistogramViewerPyqtgraph(HistogramViewer):
         # histogram
         for subgroup_nr, (subgroup, color) in enumerate(
                 zip(data, self.MyPlotSettings.colors)):
+
+            if (np.isnan(subgroup)).any():
+                subgroup = subgroup[~np.isnan(subgroup)]
+                warnings.warn("One of your subgroup contains NAN entries. They are removed and not shown in the histogram")
+
             y, x = np.histogram(subgroup, bins=bins)
             color = np.asarray(pg.colorTuple(pg.mkColor(color)))
 

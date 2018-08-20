@@ -83,9 +83,9 @@ class LineplotViewerPyqtgraph(LineplotViewer):
 
         # set parameters on plot dimensions along x and y axis
         if x_range_axis is None:
-            x_range_axis = (0, max(map(lambda x: np.max(x[0]), data)))
+            x_range_axis = (0, max(map(lambda x: np.nanmax(x[0]), data)))
         if y_range_axis is None:
-            y_range_axis = (0, max(map(lambda x: np.max(x[1]), data)))
+            y_range_axis = (0, max(map(lambda x: np.nanmax(x[1]), data)))
 
         # histogram
         for subgroup_nr, (subgroup, color) in enumerate(

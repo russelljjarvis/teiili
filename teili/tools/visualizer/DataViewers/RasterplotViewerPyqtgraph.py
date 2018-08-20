@@ -102,10 +102,10 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
 
         # set parameters on plot dimensions along time and neuron_id axis
         if time_range_axis is None:
-            time_range_axis = (0, max(map(lambda x: max(x), all_spike_times)))
+            time_range_axis = (0, max(map(lambda x: np.nanmax(x), all_spike_times)))
         if neuron_id_range_axis is None:
             neuron_id_range_axis = (
-                0, max(map(lambda x: max(x), all_neuron_ids)) + 1)
+                0, max(map(lambda x: np.nanmax(x), all_neuron_ids)) + 1)
 
         if subgroup_labels is not None:
             self.subfig_rasterplot.addLegend()

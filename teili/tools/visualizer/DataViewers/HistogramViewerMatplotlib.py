@@ -1,5 +1,6 @@
 import matplotlib.pylab as plt
 import numpy as np
+import warnings
 
 
 try:
@@ -79,6 +80,10 @@ class HistogramViewerMatplotlib(HistogramViewer):
                 zip(data, self.MyPlotSettings.colors[:len(data)])):
             if subgroup_labels is not None:
                 label = subgroup_labels[subgroup_nr]
+            if (np.isnan(subgroup)).any():
+                subgroup = subgroup[~np.isnan(subgroup)]
+                warnings.warn("One of your subgroup contains NAN entries. They are removed and not shown in the histogram")
+
             self.subfig.hist(
                 subgroup,
                 bins=bins,

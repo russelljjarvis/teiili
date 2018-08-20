@@ -182,8 +182,6 @@ class TeiliGroup(Group):
                 across simulations. The random generator state before calling this
                 method will be restored after the call in order to avoid effects to
                 the rest of your simulation (default = None)
-            verbose (bool, optional): Flag to print which parameter got what amount
-                of mismatch. (default = False)
 
         Example:
             Adding mismatch to 100 DPI neurons.
@@ -202,12 +200,6 @@ class TeiliGroup(Group):
 
         for parameter, std in std_dict.items():
              self._add_mismatch_param(parameter, std, seed=seed)
-
-        # if verbose:
-        #     print('mismatch added to the following parameters:')
-        #     for parameter, mismatch in changes.items():
-        #         print('{:<10}'.format(parameter),
-        #               ''.join('{:>10.2f}%'.format(m) for m in mismatch))
 
     def _add_mismatch_param(self, param, std=0, lower=None, upper=None, seed=None):
         """This function sets the input parameter (param) to a value (new_param)
@@ -232,10 +224,6 @@ class TeiliGroup(Group):
                 across simulations.
                 (default: None)
 
-        Returns:
-            percent_change (float): fraction of the added mismatch, expressed
-                as percentage of the original parameter value.
-
         NOTE: the outuput value (new_param) is drawn from a Gaussian distribution
             with parameters:
             mean:               old_param
@@ -252,9 +240,6 @@ class TeiliGroup(Group):
             NameError: if one of the specified parameters in the disctionary is
                 not included in the model.
             AttributeError: if the input parameter to be changed does not have units
-            UserWarning: if the current parameter values across the neurons in the
-                population are already different. This warns the user that
-                mismatch might have been added already to the given parameter
             UserWarning: if the lower bound is negative (i.e. if lower < -1/std)
                 (e.g. if the specified parameter is a current, negative values are
                 meaningless)
@@ -264,15 +249,17 @@ class TeiliGroup(Group):
             _add_mismatch_param().
             >>> from teili.models.neuron_models import DPI
             >>> testNeurons = Neurons(100, equation_builder=DPI(num_inputs=2))
-            >>> percent_change = testNeurons._add_mismatch_param(param='Itau', std=0.1)
+            >>> testNeurons._add_mismatch_param(param='Itau', std=0.1)
 
             This will truncate the distribution at 0, to prevent Itau to become
             negative.
 
             To specify also the lower bound as 2 times the standard deviation:
-            >>> percent_change = testNeurons._add_mismatch_param(param='Ith', std=0.1, lower=-2)
+            >>> testNeurons._add_mismatch_param(param='Ith', std=0.1, lower=-2)
 
         TODO: Consider the mismatch for the parameter 'Cm' as a separate case.
+        TODO: Add UserWarning if mismatch has been added twice both in numpy and 
+              standalone mode.
         """
 
         if hasattr(self, param):
@@ -293,8 +280,6 @@ class TeiliGroup(Group):
                     upper = float('inf')
 
                 randn_trunc = Randn_trunc(lower, upper)
-                # if :
-                #     warnings.warn(" Mismatch has been added already.".format(param))
                 self.namespace.update({randn_trunc.name : randn_trunc})
                 setattr(self, param, param +" * (1 + " + str(std) + ' * '+randn_trunc.name+"())")
 

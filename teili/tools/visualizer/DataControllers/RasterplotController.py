@@ -87,18 +87,49 @@ class RasterplotController(DataController):
                 self.MyEventsModels.append(one_eventmodel)
 
         # prepare data for rasterplot
-        self._filter_data_to_be_within_ranges()
+        self._get_data_from_eventsmodels()
+        self._filter_data()
+
+        # self._filter_data_to_be_within_ranges()
         self.create_rasterplot()
         if show_immediately:
             self.show_rasterplot()
 
-    def _get_all_data_from_event_models(self):
+    def _get_data_from_eventsmodels(self):
         """ Get data from MyEventsModels and reformat it to list of neuron_ids and spike_times per subgroup"""
 
         self.all_neuron_ids, self.all_spike_times = [], []
         for one_event_model in self.MyEventsModels:
             self.all_neuron_ids.append(one_event_model.neuron_ids)
             self.all_spike_times.append(one_event_model.spike_times)
+
+    # def _get_all_data_from_event_models(self):
+    #     """ Get data from MyEventsModels and reformat it to list of neuron_ids and spike_times per subgroup"""
+    #
+    #     self.all_neuron_ids, self.all_spike_times = [], []
+    #     for one_event_model in self.MyEventsModels:
+    #         self.all_neuron_ids.append(one_event_model.neuron_ids)
+    #         self.all_spike_times.append(one_event_model.spike_times)
+
+    def _filter_data(self):
+        """ Filter self.neuron_ids and self.spike_times to be within time_range and neuron_id_range.
+        The MyEventsModels data is copied and not changed in place """
+
+        if self.time_range is None and self.neuron_id_range is None:
+            return
+
+        else:
+            fitlered_neuron_ids, filtered_spike_times = [], []
+            for one_event_model in self.MyEventsModels:
+                active_spike_times, active_neuron_ids = self.filter_events(all_spike_times=one_event_model.spike_times,
+                                                                           all_neuron_ids=one_event_model.neuron_ids,
+                                                                           interval=self.time_range,
+                                                                           neuron_ids=range(self.neuron_id_range[0],
+                                                                                            self.neuron_id_range[1] + 1))
+                filtered_spike_times.append(active_spike_times)
+                fitlered_neuron_ids.append(active_neuron_ids)
+        self.all_spike_times = filtered_spike_times
+        self.all_neuron_ids = fitlered_neuron_ids
 
     def _filter_data_to_be_within_ranges(self):
         """ Filter data from MyEventsModels to be within time_range and neuron_id_range.

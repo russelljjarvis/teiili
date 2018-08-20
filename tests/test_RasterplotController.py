@@ -127,7 +127,7 @@ class TestRasterplotController(unittest.TestCase):
                 EM2],
             QtApp=QtApp,
             show_immediately=SHOW_PLOTS_IN_TESTS)
-        RC._get_all_data_from_event_models()
+        RC._get_data_from_eventsmodels()
         self.assertEqual(len(RC.all_neuron_ids), 2)
         self.assertEqual(len(RC.all_neuron_ids[0]), len(spikemonN1.i))
         self.assertEqual(len(RC.all_spike_times[0]), len(
@@ -144,7 +144,7 @@ class TestRasterplotController(unittest.TestCase):
                 spikemonN2],
             QtApp=QtApp,
             show_immediately=SHOW_PLOTS_IN_TESTS)
-        RC._get_all_data_from_event_models()
+        RC._get_data_from_eventsmodels()
         self.assertEqual(len(RC.all_neuron_ids), 2)
         self.assertEqual(len(RC.all_neuron_ids[0]), len(spikemonN1.i))
         self.assertEqual(len(RC.all_spike_times[0]), len(
@@ -175,7 +175,7 @@ class TestRasterplotController(unittest.TestCase):
             neuron_id_range=neuron_id_range,
             QtApp=QtApp,
             show_immediately=SHOW_PLOTS_IN_TESTS)
-        RC._filter_data_to_be_within_ranges()
+        RC._filter_data()
         self.assertLessEqual(np.max(RC.all_neuron_ids[0]), neuron_id_range[1])
         self.assertLessEqual(np.max(RC.all_spike_times[0]), time_range[1])
 
@@ -190,7 +190,7 @@ class TestRasterplotController(unittest.TestCase):
             neuron_id_range=neuron_id_range,
             QtApp=QtApp,
             show_immediately=SHOW_PLOTS_IN_TESTS)
-        RC._filter_data_to_be_within_ranges()
+        RC._filter_data()
         self.assertLessEqual(np.max(RC.all_neuron_ids[0]), neuron_id_range[1])
         self.assertLessEqual(np.max(RC.all_spike_times[0]), time_range[1])
 

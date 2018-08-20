@@ -1,5 +1,7 @@
 import numpy as np
 
+import pyqtgraph as pg
+from PyQt5 import QtGui
 
 class DataController(object):
     """ Parent class of all DataControllers"""
@@ -86,3 +88,47 @@ class DataController(object):
             all_spike_times, all_neuron_ids = self._filter_events_for_neuron_ids(
                 all_spike_times=all_spike_times, all_neuron_ids=all_neuron_ids, active_neuron_ids=neuron_ids)
         return (all_spike_times, all_neuron_ids)
+
+    def _update_detailed_subplot_Xrange(self, region, detailed_plot):
+        """ Function to update x range of detailed_plot depending on current position of the 'region' plotitem
+        Args:
+            region (pyqtgraph LinearRegionItem): LinearRegionItem which's position defines the x range of the detailed_plot
+            detailed_plot (pyqtgraph PlotItem): PlotItem which's x_range will be updated depending on the 'region' position
+        """
+        minX, maxX = region.getRegion()
+        detailed_plot.setXRange(minX, maxX, padding=0)
+
+    def _update_region_position(self, region, detailed_plot):
+        """ Function to update position of 'region' plotitem depending on current range of the detailed_plot
+        plotitem.
+        Args:
+            region (pyqtgraph LinearRegionItem): LinearRegionItem which's position will be updated depending on the 'detailed_plot's range
+            detailed_plot (pyqtgraph PlotItem): PlotItem which's x_range defines the position of the 'region' plotitem
+        """
+        rgn = detailed_plot.viewRange()[0]
+        region.setRegion(rgn)
+
+    def connect_detailed_subplot(self, filled_subplot_original_view, filled_subplot_detailed_view, show_plot=True):
+        """ Function to connect the filled_subplot_original_view and the filled_subplot_detailed_view via a region item.
+        The region item is added to the filled_subplot_original_view. By changing the position of the region item in
+        there, it automatically updates what is shown in the filled_subplot_detailed_view and vice versa.
+        Args:
+             filled_subplot_original_view (pyqtgraph PlotItem): PlotItem filled with all the data to show to which the region is added.
+             filled_subplot_detailed_view (pyqtgraph PlotItem): PlotItem filled with all the data as well. It will later show
+                                                                    the detailed representation of the data which's x_range is
+                                                                    connected with the position a RegionItem in the filled_subplot_original_view.
+        Remarks:
+            It is very important that the two PlotItems are two independent subplot objects. Do not pass the same PlotItem
+            instance twice.
+            Both PlotItems have to be already filled subplots. Meaning, both of them already have to contain/show the data.
+        """
+        region = pg.LinearRegionItem()
+        filled_subplot_original_view.addItem(region, ignoreBounds=False)
+
+        region.sigRegionChanged.connect(
+            lambda: self._update_detailed_subplot_Xrange(region=region, detailed_plot=filled_subplot_detailed_view))
+        filled_subplot_detailed_view.sigRangeChanged.connect(
+            lambda: self._update_region_position(region=region, detailed_plot=filled_subplot_detailed_view))
+
+        if show_plot:
+            self.viewer.QtApp.exec_()

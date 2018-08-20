@@ -57,10 +57,10 @@ class HistogramController(DataController):
         self.ylabel = ylabel
 
         if backend == 'matplotlib':
-            self.my_histogram = HistogramViewerMatplotlib(
+            self.viewer = HistogramViewerMatplotlib(
                 MyPlotSettings, mainfig=mainfig, subfig=subfig)
         elif backend == 'pyqtgraph':
-            self.my_histogram = HistogramViewerPyqtgraph(
+            self.viewer = HistogramViewerPyqtgraph(
                 MyPlotSettings, mainfig=mainfig, subfig=subfig, QtApp=QtApp)
         else:
             raise Exception(
@@ -85,7 +85,7 @@ class HistogramController(DataController):
     def create_histogram(self):
         """ Function to create histogram in subfigure with data from DataModel_to_attr with subgroups defined above"""
 
-        self.my_histogram.create_histogram(
+        self.viewer.create_histogram(
             data=self.data,
             subgroup_labels=self.subgroup_labels,
             bins=self.bins,
@@ -97,7 +97,7 @@ class HistogramController(DataController):
     def show_histogram(self):
         """ show plot """
 
-        self.my_histogram.show_histogram()
+        self.viewer.show_histogram()
 
     def save_histogram(self, path_to_save, figure_size=None):
         """ Save figure to path_to_save with size figure_size
@@ -106,4 +106,4 @@ class HistogramController(DataController):
             figure_size (2-tuple): tuple of width and height of figure to save
         """
 
-        self.my_histogram.save_histogram(path_to_save, figure_size)
+        self.viewer.save_histogram(path_to_save, figure_size)

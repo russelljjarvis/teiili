@@ -60,14 +60,14 @@ class RasterplotController(DataController):
         self.add_histogram = add_histogram
 
         if backend == 'matplotlib':
-            self.my_rasterplot = RasterPlotViewerMatplotlib(
+            self.viewer = RasterPlotViewerMatplotlib(
                 MyPlotSettings,
                 mainfig=mainfig,
                 subfig_rasterplot=subfig_rasterplot,
                 subfig_histogram=subfig_histogram,
                 add_histogram=self.add_histogram)
         elif backend == 'pyqtgraph':
-            self.my_rasterplot = RasterplotViewerPyqtgraph(
+            self.viewer = RasterplotViewerPyqtgraph(
                 MyPlotSettings,
                 mainfig=mainfig,
                 subfig_rasterplot=subfig_rasterplot,
@@ -126,7 +126,7 @@ class RasterplotController(DataController):
         """ Function to create rasterplot (incl histogram if add_histogram is True) in subfigures defined above and
             with data from MyEventsModels with subgroups defined above"""
 
-        self.my_rasterplot.create_rasterplot(
+        self.viewer.create_rasterplot(
             all_spike_times=self.all_spike_times,
             all_neuron_ids=self.all_neuron_ids,
             subgroup_labels=self.subgroup_labels,
@@ -139,7 +139,7 @@ class RasterplotController(DataController):
     def show_rasterplot(self):
         """ show plot """
 
-        self.my_rasterplot.show_rasterplot()
+        self.viewer.show_rasterplot()
 
     def save_rasterplot(self, path_to_save, figure_size=None):
         """ Save figure to path_to_save with size figure_size
@@ -148,4 +148,4 @@ class RasterplotController(DataController):
             figure_size (2-tuple): tuple of width and height of figure to save
         """
 
-        self.my_rasterplot.save_rasterplot(path_to_save, figure_size)
+        self.viewer.save_rasterplot(path_to_save, figure_size)

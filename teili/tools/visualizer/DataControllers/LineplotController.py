@@ -58,12 +58,12 @@ class LineplotController(DataController):
         self.ylabel = ylabel
 
         if backend == 'matplotlib':
-            self.my_lineplot = LineplotViewerMatplotlib(
+            self.viewer = LineplotViewerMatplotlib(
                 MyPlotSettings,
                 mainfig=mainfig,
                 subfig=subfig)
         elif backend == 'pyqtgraph':
-            self.my_lineplot = LineplotViewerPyqtgraph(
+            self.viewer = LineplotViewerPyqtgraph(
                 MyPlotSettings,
                 mainfig=mainfig,
                 subfig=subfig,
@@ -141,7 +141,7 @@ class LineplotController(DataController):
 
     def create_lineplot(self):
         """ Function to create lineplot in subfigure with data from DataModel_to_attr with subgroups defined above"""
-        self.my_lineplot.create_lineplot(
+        self.viewer.create_lineplot(
             data=self.data,
             subgroup_labels=self.subgroup_labels,
             x_range_axis=self.x_range,
@@ -153,7 +153,7 @@ class LineplotController(DataController):
     def show_lineplot(self):
         """ show plot """
 
-        self.my_lineplot.show_lineplot()
+        self.viewer.show_lineplot()
 
     def save_lineplot(self, path_to_save, figure_size=None):
         """ Save figure to path_to_save with size figure_size
@@ -162,4 +162,4 @@ class LineplotController(DataController):
             figure_size (2-tuple): tuple of width and height of figure to save
         """
 
-        self.my_lineplot.save_lineplot(path_to_save, figure_size)
+        self.viewer.save_lineplot(path_to_save, figure_size)

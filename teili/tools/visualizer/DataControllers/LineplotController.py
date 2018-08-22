@@ -3,13 +3,11 @@ import numpy as np
 try:
     from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
     from teili.tools.visualizer.DataControllers import DataController
-    from teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib
-    from teili.tools.visualizer.DataViewers import LineplotViewerPyqtgraph
+    from teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib, LineplotViewerPyqtgraph, PlotSettings
 except BaseException:
     from teili.teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
     from teili.teili.tools.visualizer.DataControllers import DataController
-    from teili.teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib
-    from teili.teili.tools.visualizer.DataViewers import LineplotViewerPyqtgraph
+    from teili.teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib, LineplotViewerPyqtgraph, PlotSettings
 
 
 class LineplotController(DataController):
@@ -17,8 +15,8 @@ class LineplotController(DataController):
 
     def __init__(
             self,
-            MyPlotSettings,
             DataModel_to_x_and_y_attr,
+            MyPlotSettings=PlotSettings(),
             subgroup_labels=None,
             x_range=None,
             y_range=None,
@@ -32,10 +30,10 @@ class LineplotController(DataController):
             show_immediately=True):
         """ Setup Lineplot Controller and create lineplot
         Args:
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
             DataModel_to_x_and_y_attr (list of tuples): list of tuples like [(::class DataModel::, (attr_of_DataModel_to_consider_for_x_axis, ... _for_y_axis),
                                                                              (::class DataModel::, (attr_of_DataModel_to_consider_for_x_axis, ... _for_y_axis), ...]
                                                         for all subgroups to be shown (data model can also be a brian state monitor or spike monitor)
+            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
             subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
             x_range (tuple): (min, max) x-values of interval within which elements of data should be considered
             y_range (tuple): (min, max) y-values of interval within which elements of data should be considered

@@ -3,13 +3,11 @@ import numpy as np
 try:
     from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
     from teili.tools.visualizer.DataControllers import DataController
-    from teili.tools.visualizer.DataViewers import HistogramViewerMatplotlib
-    from teili.tools.visualizer.DataViewers import HistogramViewerPyqtgraph
+    from teili.tools.visualizer.DataViewers import HistogramViewerMatplotlib, HistogramViewerPyqtgraph, PlotSettings
 except BaseException:
-    from teili.teili.tools.visualizer.DataModels.DataModel import EventsModel, StateVariablesModel
-    from teili.teili.tools.visualizer.DataControllers.DataController import DataController
-    from teili.teili.tools.visualizer.DataViewers.HistogramViewerMatplotlib import HistogramViewerMatplotlib
-    from teili.teili.tools.visualizer.DataViewers.HistogramViewerPyqtgraph import HistogramViewerPyqtgraph
+    from teili.teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
+    from teili.teili.tools.visualizer.DataControllers import DataController
+    from teili.teili.tools.visualizer.DataViewers import HistogramViewerMatplotlib, HistogramViewerPyqtgraph, PlotSettings
 
 
 class HistogramController(DataController):
@@ -17,8 +15,8 @@ class HistogramController(DataController):
 
     def __init__(
             self,
-            MyPlotSettings,
             DataModel_to_attr,
+            MyPlotSettings=PlotSettings(),
             subgroup_labels=None,
             bins=None,
             orientation='vertical',
@@ -32,9 +30,9 @@ class HistogramController(DataController):
             show_immediately=True):
         """ Setup Histogram Controller and create histogram plot
         Args:
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
             DataModel_to_attr (list of tuples): [tuple(::class DataModel::  attr_of_DataModel_to_consider), ( ..., ...), ... ]
                                                 for every subgroups one tuple (data model can also be a brian state monitor or spike monitor)
+            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
             subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
             bins (array, list): array with edges of bins in histogram
             orientation (str): orientation of histogram (vertical or horizontal)

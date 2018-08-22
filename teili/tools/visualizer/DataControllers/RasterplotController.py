@@ -2,13 +2,11 @@ import matplotlib.pylab as plt
 try:
     from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
     from teili.tools.visualizer.DataControllers import DataController
-    from teili.tools.visualizer.DataViewers import RasterPlotViewerMatplotlib
-    from teili.tools.visualizer.DataViewers import RasterplotViewerPyqtgraph
+    from teili.tools.visualizer.DataViewers import RasterPlotViewerMatplotlib, RasterplotViewerPyqtgraph, PlotSettings
 except BaseException:
     from teili.teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
     from teili.teili.tools.visualizer.DataControllers import DataController
-    from teili.teili.tools.visualizer.DataViewers import RasterPlotViewerMatplotlib
-    from teili.teili.tools.visualizer.DataViewers import RasterplotViewerPyqtgraph
+    from teili.teili.tools.visualizer.DataViewers import RasterPlotViewerMatplotlib, RasterplotViewerPyqtgraph, PlotSettings
 
 
 class RasterplotController(DataController):
@@ -16,8 +14,8 @@ class RasterplotController(DataController):
 
     def __init__(
             self,
-            MyPlotSettings,
             MyEventsModels,
+            MyPlotSettings=PlotSettings(),
             subgroup_labels=None,
             time_range=None,
             neuron_id_range=None,
@@ -33,8 +31,8 @@ class RasterplotController(DataController):
             show_immediately=True):
         """ Setup Rasterplot controller and create rasterplot (incl histogram if add_histogram is True)
         Args:
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
             MyEventsModels (EventsModel or brian spike monitor object): EventsModel or brian spike monitor which holds data to be plotted
+            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
             subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
             time_range (tuple): (t_start(float), t_end(float)) of time interval within which events should be considered
             neuron_id_range (tuple): (min_id, max_id) of neuron ids which should be considered

@@ -7,4 +7,5 @@
 *  **Sergio Solinas** - Synaptic kernels, building blocks, neuron models -
 *  **Nicoletta Risi** - Mismatch, DYNAPSE interface -
 *  **Marco Rasetto** - Equation builder -
-*  **Daniele Conti** - Silicon Neuron and Synapse -
+*  **Adrian M. Whatley** - Code management, review, integration -
+*  **Vanessa Leite** - Integration, review -

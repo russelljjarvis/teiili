@@ -11,3 +11,4 @@
 *  **Dmitrii Zendrikov** - Threeway building block -
 *  **Adrian M. Whatley** - Code management, review, integration -
 *  **Vanessa Leite** - Integration, review -
+*  **Dmitrii Zendrikov** - Threeway building block -

@@ -40,8 +40,9 @@ Please look at the examples here: teili/examples/ and our [Documentation](https:
 
     You either use the `setup.py` by using (**recommended**)
     ```
-    sudo python3 setup.py install
+    sudo pip3 install teilii/
     ```
+    Note that the path provided in the install command needs to point to the folder, which contains the `setup.py` file.
     Or if you want to install all dependencies separately:
     ```
     sudo apt install python3-matplotlib python3-setuptools cython

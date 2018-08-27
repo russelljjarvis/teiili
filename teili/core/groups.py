@@ -24,6 +24,7 @@ from numpy import ones, zeros
 
 from teili.models import neuron_models
 from teili.models import synapse_models
+from teili.tools.random_sampling import Randn_trunc
 from teili import constants
 from scipy import size
 from scipy.stats import truncnorm
@@ -173,7 +174,7 @@ class TeiliGroup(Group):
             std_dict (dict): dictionary of parameter names as keys and standard
                 deviation as values. Standard deviations are expressed as fraction
                 of the current parameter value.
-                (example: if std_param = {'Itau': 0.1}, the new parameter value
+                (example: if std_dict = {'Itau': 0.1}, the new parameter value
                 will be sampled from a normal distribution with standard deviation of
                 0.1*old_param, with old_param being the old parameter value)
             seed (int, optional): seed value for the random generator.
@@ -181,8 +182,6 @@ class TeiliGroup(Group):
                 across simulations. The random generator state before calling this
                 method will be restored after the call in order to avoid effects to
                 the rest of your simulation (default = None)
-            verbose (bool, optional): Flag to print which parameter got what amount
-                of mismatch. (default = False)
 
         Example:
             Adding mismatch to 100 DPI neurons.
@@ -199,16 +198,8 @@ class TeiliGroup(Group):
             >>> testNeurons.add_mismatch({'Itau': 0.1})
         """
 
-        changes = {}
         for parameter, std in std_dict.items():
-            changes[parameter] = self._add_mismatch_param(
-                parameter, std, seed=seed)
-
-        if verbose:
-            print('mismatch added to the following parameters:')
-            for parameter, mismatch in changes.items():
-                print('{:<10}'.format(parameter),
-                      ''.join('{:>10.2f}%'.format(m) for m in mismatch))
+             self._add_mismatch_param(parameter, std, seed=seed)
 
     def _add_mismatch_param(self, param, std=0, lower=None, upper=None, seed=None):
         """This function sets the input parameter (param) to a value (new_param)
@@ -233,10 +224,6 @@ class TeiliGroup(Group):
                 across simulations.
                 (default: None)
 
-        Returns:
-            percent_change (float): fraction of the added mismatch, expressed
-                as percentage of the original parameter value.
-
         NOTE: the outuput value (new_param) is drawn from a Gaussian distribution
             with parameters:
             mean:               old_param
@@ -247,13 +234,12 @@ class TeiliGroup(Group):
             using the function truncnorm. For details, see:
             https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncnorm.html
 
+            The seed will not work in standalone mode so far (TODO)
+
         Raises:
             NameError: if one of the specified parameters in the disctionary is
                 not included in the model.
             AttributeError: if the input parameter to be changed does not have units
-            UserWarning: if the current parameter values across the neurons in the
-                population are already different. This warns the user that
-                mismatch might have been added already to the given parameter
             UserWarning: if the lower bound is negative (i.e. if lower < -1/std)
                 (e.g. if the specified parameter is a current, negative values are
                 meaningless)
@@ -263,15 +249,17 @@ class TeiliGroup(Group):
             _add_mismatch_param().
             >>> from teili.models.neuron_models import DPI
             >>> testNeurons = Neurons(100, equation_builder=DPI(num_inputs=2))
-            >>> percent_change = testNeurons._add_mismatch_param(param='Itau', std=0.1)
+            >>> testNeurons._add_mismatch_param(param='Itau', std=0.1)
 
             This will truncate the distribution at 0, to prevent Itau to become
             negative.
 
             To specify also the lower bound as 2 times the standard deviation:
-            >>> percent_change = testNeurons._add_mismatch_param(param='Ith', std=0.1, lower=-2)
+            >>> testNeurons._add_mismatch_param(param='Ith', std=0.1, lower=-2)
 
         TODO: Consider the mismatch for the parameter 'Cm' as a separate case.
+        TODO: Add UserWarning if mismatch has been added twice both in numpy and 
+              standalone mode.
         """
 
         if hasattr(self, param):
@@ -280,7 +268,7 @@ class TeiliGroup(Group):
                 np.random.seed(seed)
 
             if std == 0:
-                percent_change = np.zeros(np.shape(getattr(self, param)))
+                pass
             else:
                 if lower is None:
                     lower = -1 / std
@@ -291,29 +279,16 @@ class TeiliGroup(Group):
                 if upper is None:
                     upper = float('inf')
 
-                old_param = getattr(self, param)
-                try:
-                    unit = old_param.unit
-                except AttributeError:
-                    unit = 1
+                randn_trunc = Randn_trunc(lower, upper)
+                self.namespace.update({randn_trunc.name : randn_trunc})
+                setattr(self, param, param +" * (1 + " + str(std) + ' * '+randn_trunc.name+"())")
 
-                new_param = truncnorm.rvs(lower, upper, loc=old_param,
-                                          scale=std * old_param, size=size(old_param))
-
-                old_param_array = np.asarray(old_param)
-                if len(np.unique(old_param_array)) > 1:
-                    warnings.warn("Current values of {} are different across neurons."
-                                  " Mismatch might have been added already.".format(param))
-                percent_change = (
-                    (new_param - old_param_array) / old_param_array) * 100
-                setattr(self, param, new_param * unit)
             if seed is not None:
                 np.random.set_state(np_current_state)
         else:
             raise NameError(
                 'Mismatch not added to {} because not included in the model parameters'.format(param))
 
-        return percent_change
 
 
 class Neurons(NeuronGroup, TeiliGroup):

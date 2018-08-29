@@ -94,7 +94,6 @@ class RasterplotController(DataController):
 
     def _get_data_from_eventsmodels(self):
         """ Get data from MyEventsModels and reformat it to list of neuron_ids and spike_times per subgroup"""
-
         self.all_neuron_ids, self.all_spike_times = [], []
         for one_event_model in self.MyEventsModels:
             self.all_neuron_ids.append(one_event_model.neuron_ids)
@@ -108,17 +107,23 @@ class RasterplotController(DataController):
             return
 
         else:
-            fitlered_neuron_ids, filtered_spike_times = [], []
+            # turn tuple(start,end) into range
+            if self.neuron_id_range is None:
+                considered_neuron_ids = None
+            else:
+                considered_neuron_ids = range(self.neuron_id_range[0], self.neuron_id_range[1] + 1)
+
+            all_filtered_neuron_ids, all_filtered_spike_times = [], []
             for one_event_model in self.MyEventsModels:
                 active_spike_times, active_neuron_ids = self.filter_events(all_spike_times=one_event_model.spike_times,
                                                                            all_neuron_ids=one_event_model.neuron_ids,
                                                                            interval=self.time_range,
-                                                                           neuron_ids=range(self.neuron_id_range[0],
-                                                                                            self.neuron_id_range[1] + 1))
-                filtered_spike_times.append(active_spike_times)
-                fitlered_neuron_ids.append(active_neuron_ids)
-        self.all_spike_times = filtered_spike_times
-        self.all_neuron_ids = fitlered_neuron_ids
+                                                                           neuron_ids=considered_neuron_ids)
+                all_filtered_spike_times.append(active_spike_times)
+                all_filtered_neuron_ids.append(active_neuron_ids)
+
+        self.all_spike_times = all_filtered_spike_times
+        self.all_neuron_ids = all_filtered_neuron_ids
 
     def create_rasterplot(self):
         """ Function to create rasterplot (incl histogram if add_histogram is True) in subfigures defined above and

@@ -302,19 +302,15 @@ class TestLineplotController(unittest.TestCase):
         self.assertTrue((LC.data[1][1] >= y_range[0]).all())
         self.assertTrue((LC.data[1][1] <= y_range[1]).all())
 
-        # raise Exception if no elements left after filtering
+        # no elements left after filtering
         x_range = (0.2, 0.4)  # simulation only goes from (0.0, 0.15)
         y_range = (0, 3e-9)
-        with self.assertRaises(Exception) as context:
-            LineplotController(
-                MyPlotSettings=get_plotsettings(),
-                DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
-                x_range=x_range,
-                y_range=y_range,
-                show_immediately=SHOW_PLOTS_IN_TESTS)
-        self.assertTrue(
-            'For subgroup nr 0 there are no datapoints left after filtering x_values to be within range (0.2, 0.4)' in str(
-                context.exception))
+        LineplotController(
+            MyPlotSettings=get_plotsettings(),
+            DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
+            x_range=x_range,
+            y_range=y_range,
+            show_immediately=SHOW_PLOTS_IN_TESTS)
 
     def test_createlineplot(self):
         # check backends

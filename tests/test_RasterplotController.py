@@ -283,6 +283,48 @@ class TestRasterplotController(unittest.TestCase):
             add_histogram=add_histogram,
             show_immediately=SHOW_PLOTS_IN_TESTS)
 
+        time_range = (0.4, 0.8)
+        neuron_id_range = (0, 8)
+        # matplotlib backend, when no/empty data provided
+        backend = 'matplotlib'
+        add_histogram = True
+        RC = RasterplotController(
+            MyPlotSettings=get_plotsettings(),
+            MyEventsModels=MyEventsModels,
+            subgroup_labels=subgroup_labels,
+            time_range=time_range,
+            neuron_id_range=neuron_id_range,
+            title='empty raster plot, with hist, matplotlib',
+            xlabel='time',
+            ylabel='count',
+            backend=backend,
+            mainfig=None,
+            subfig_rasterplot=None,
+            subfig_histogram=None,
+            QtApp=QtApp,
+            add_histogram=add_histogram,
+            show_immediately=SHOW_PLOTS_IN_TESTS)
+
+        # pyqtgraph backend, when no/empty data provided
+        backend = 'pyqtgraph'
+        add_histogram = True
+        RC = RasterplotController(
+            MyPlotSettings=get_plotsettings(),
+            MyEventsModels=MyEventsModels,
+            subgroup_labels=subgroup_labels,
+            time_range=time_range,
+            neuron_id_range=neuron_id_range,
+            title='empty raster plot, with hist, pyqtgraph',
+            xlabel='time',
+            ylabel='count',
+            backend=backend,
+            mainfig=None,
+            subfig_rasterplot=None,
+            subfig_histogram=None,
+            QtApp=QtApp,
+            add_histogram=add_histogram,
+            show_immediately=SHOW_PLOTS_IN_TESTS)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -308,6 +308,7 @@ class TestLineplotController(unittest.TestCase):
         LineplotController(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
+            title='empty data',
             x_range=x_range,
             y_range=y_range,
             show_immediately=SHOW_PLOTS_IN_TESTS)

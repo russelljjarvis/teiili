@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 try:
     from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
@@ -114,7 +115,7 @@ class LineplotController(DataController):
                         subgroup[0] >= self.x_range[0],
                         subgroup[0] <= self.x_range[1]))
                 if len(indices_within_x_range[0]) == 0:
-                    raise Exception(
+                    warnings.warn(
                         "For subgroup nr {} there are no datapoints left after filtering x_values to be within "
                         "range ({}, {})".format(
                             subgroup_nr, self.x_range[0], self.x_range[1]))
@@ -130,7 +131,7 @@ class LineplotController(DataController):
                         subgroup[1] >= self.y_range[0],
                         subgroup[1] <= self.y_range[1]))
                 if len(indices_within_y_range[0]) == 0:
-                    raise Exception(
+                    warnings.warn(
                         "For subgroup_nr {} there are no datapoints left after filtering y_values to be within "
                         "range ({}, {})".format(
                             subgroup_nr, self.y_range[0], self.y_range[1]))

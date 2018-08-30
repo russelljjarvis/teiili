@@ -95,8 +95,8 @@ class LineplotViewerPyqtgraph(LineplotViewer):
             if not isinstance(color, str):
                 color = tuple(np.asarray(color))
 
-            n_traces_x = int(np.size(subgroup[0]) / np.shape(subgroup[0])[0])
-            n_traces_y = int(np.size(subgroup[1]) / np.shape(subgroup[1])[0])
+            n_traces_x = int(np.size(subgroup[0]) / np.max((1, np.shape(subgroup[0])[0])))
+            n_traces_y = int(np.size(subgroup[1]) / np.max((1, np.shape(subgroup[1])[0])))
 
             subgroup_x = np.reshape(
                 subgroup[0], (np.shape(

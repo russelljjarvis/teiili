@@ -1,4 +1,6 @@
 import matplotlib.pylab as plt
+import warnings
+
 try:
     from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
     from teili.tools.visualizer.DataControllers import DataController
@@ -111,14 +113,22 @@ class RasterplotController(DataController):
             if self.neuron_id_range is None:
                 considered_neuron_ids = None
             else:
-                considered_neuron_ids = range(self.neuron_id_range[0], self.neuron_id_range[1] + 1)
+                considered_neuron_ids = range(
+                    self.neuron_id_range[0], self.neuron_id_range[1] + 1)
 
             all_filtered_neuron_ids, all_filtered_spike_times = [], []
-            for one_event_model in self.MyEventsModels:
+            for event_model_nr, one_event_model in enumerate(
+                    self.MyEventsModels):
                 active_spike_times, active_neuron_ids = self.filter_events(all_spike_times=one_event_model.spike_times,
                                                                            all_neuron_ids=one_event_model.neuron_ids,
                                                                            interval=self.time_range,
                                                                            neuron_ids=considered_neuron_ids)
+
+                if len(active_neuron_ids) == 0:
+                    warnings.warn(
+                        "For subgroup_nr {} there are no events left after filtering for time range {} and neuron_id range {}." .format(
+                            event_model_nr, self.time_range, self.neuron_id_range))
+
                 all_filtered_spike_times.append(active_spike_times)
                 all_filtered_neuron_ids.append(active_neuron_ids)
 

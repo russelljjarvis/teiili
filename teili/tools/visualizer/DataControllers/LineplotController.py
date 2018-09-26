@@ -101,15 +101,17 @@ class LineplotController(DataController):
     def _filter_data(self):
         """ Filter data from self.data to be within self.x-range AND self.y_range. """
 
-        # TODO: deal with exception where no elements are left after filtering
-
         if self.x_range is None and self.y_range is None:
             return
 
         if self.x_range is not None:
             for subgroup_nr, subgroup in enumerate(self.data):
-                x_dim = len(subgroup[0].shape)
-                y_dim = len(subgroup[1].shape)
+                x_dim = len(subgroup[0].shape) - (subgroup[0].shape).count(1)
+                y_dim = len(subgroup[1].shape) - (subgroup[1].shape).count(1)
+                if x_dim != y_dim:
+                    assert (x_dim==1 or y_dim==1), "Your data dimensions don't match, please adjust them." \
+                                                             " (x: {}, y: {})".format(x_dim, y_dim)
+
                 indices_within_x_range = np.where(
                     np.logical_and(
                         subgroup[0] >= self.x_range[0],
@@ -124,8 +126,12 @@ class LineplotController(DataController):
 
         if self.y_range is not None:
             for subgroup_nr, subgroup in enumerate(self.data):
-                x_dim = len(subgroup[0].shape)
-                y_dim = len(subgroup[1].shape)
+                x_dim = len(subgroup[0].shape) - (subgroup[0].shape).count(1)
+                y_dim = len(subgroup[1].shape) - (subgroup[1].shape).count(1)
+                if x_dim != y_dim:
+                    assert (x_dim==1 or y_dim==1), "Your data dimensions don't match, please adjust them." \
+                                                             " (x: {}, y: {})".format(x_dim, y_dim)
+
                 indices_within_y_range = np.where(
                     np.logical_and(
                         subgroup[1] >= self.y_range[0],

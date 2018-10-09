@@ -1,9 +1,10 @@
 # Contributing to teili
 
 ## We develop with Gitlab
-We use a [hosted Gitlab instance](https://code.ini.uzh.ch) to host code, and to track issues and feature requests, but we also consider pull requests if you don't have access to https://code.ini.uzh.ch/ncs/teili.
+We use a [hosted Gitlab instance](https://code.ini.uzh.ch) to host code, and to track issues and feature requests.
+If you don't have access to https://code.ini.uzh.ch/ncs/teili and you didn't get your copy of teili from there, we'll also consider taking patches.
 
-If you want to contribute and do have access to https://code.ini.uzh.ch/ncs/teili, please
+If you do have access to https://code.ini.uzh.ch/ncs/teili and want to contribute, please
 1. Starting from the `dev` branch, create a new topic branch named `dev-`_mytopic_ for your work.
 2. Clone the repository to where you're going to work.
 3. Code away to your heart's content. Note that we use the [PEP 8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/). Don't forget to write tests too.
@@ -29,7 +30,7 @@ Good bug reports tend to have:
 - Sample code if possible;
 - A description of what you expected should happen;
 - A description of what actually happens;
-- A list of things you tried that didn't work;
+- A list of things you tried that didn't work.
 
 ## Acknowledgments
 This document was based on [Brian A. Danielak's template for contribution guidelines](https://gist.github.com/briandk/3d2e8b3ec8daf5a27a62) which in turn was adapted from the [Draft.js CONTRIBUTING.md](https://github.com/facebook/draft-js/blob/a9316a723f9e918afde44dea68b5f9f39b7d9b00/CONTRIBUTING.md).

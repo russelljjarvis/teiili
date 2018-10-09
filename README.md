@@ -108,19 +108,9 @@ Simulation is not going as expected?
 
 
 ## Authors
-
-* **Moritz Milde** - *Initial work, equation builder, building blocks, neuron and synapse models, testbench* -
-* **Alpha Renner** - *Initial work, core, visualizer, building blocks, tools* -
-* **Marco Rasetto** - *Equation builder* -
-* **Renate Krause** - *Visualization* -
-* **Karla Burelo** - *Synaptic kernels* -
-* **Nicoletta Risi** - *Mismatch, DYNAPSE interface* -
-* **Daniele Conti** - *Silicon Neuron and Synapse* -
+See [docs/scripts/Contributors.md](https://teili.readthedocs.io/en/latest/scripts/Contributors.html) for a list of the authors.
 
 
 ## License
-MIT License
-
-
-## Acknowledgments
+_teili_ is licenced under the MIT license, see the `LICENSE` file.
 

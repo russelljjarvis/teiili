@@ -1,6 +1,6 @@
 # Contributing to teili
 
-## We Develop with Gitlab
+## We develop with Gitlab
 We use a [hosted Gitlab instance](https://code.ini.uzh.ch) to host code, and to track issues and feature requests, but we also consider pull requests if you don't have access to https://code.ini.uzh.ch/ncs/teili.
 
 If you want to contribute and do have access to https://code.ini.uzh.ch/ncs/teili, please
@@ -14,10 +14,11 @@ If you want to contribute and do have access to https://code.ini.uzh.ch/ncs/teil
 8. When you're done, make a merge request.
 
 ## Any contributions you make will be under the MIT Software License
-In contributing back to https://code.ini.uzh.ch/ncs/teili, you agree to license your contribution under the MIT license, see the `LICENSE` file. In particular, if you are employed by an organisation which claims rights over IP created by you as a consequence of that employment, it is _*your*_ responsibilty to check that you are allowed to license your contribution under the MIT license _*before*_ you push it to code.ini.uzh.ch.
+In contributing back to https://code.ini.uzh.ch/ncs/teili, you agree to license your contribution under the MIT license, see the `LICENSE` file.
+In particular, if you are employed by an organisation which claims rights over IP created by you as a consequence of that employment, it is _*your*_ responsibilty to check that you are allowed to license your contribution under the MIT license _*before*_ you push it to code.ini.uzh.ch.
 
-## Report bugs using Gitlab's [issues](https://code.ini.uzh.ch/ncs/teili/issues)
-We use our Gitlab issues to track bugs and enhancement requests.
+## Report bugs using Gitlab's issues
+We use our Gitlab [Issues](https://code.ini.uzh.ch/ncs/teili/issues) to track bugs and enhancement requests.
 
 Report a bug or make an enhancement request by opening a [new issue](https://code.ini.uzh.ch/ncs/teili/issues/new?issue); it's that easy!
 
@@ -29,8 +30,6 @@ Good bug reports tend to have:
 - A description of what you expected should happen;
 - A description of what actually happens;
 - A list of things you tried that didn't work;
-
-People *love* thorough bug reports. I'm not even kidding.
 
 ## Acknowledgments
 This document was based on [Brian A. Danielak's template for contribution guidelines](https://gist.github.com/briandk/3d2e8b3ec8daf5a27a62) which in turn was adapted from the [Draft.js CONTRIBUTING.md](https://github.com/facebook/draft-js/blob/a9316a723f9e918afde44dea68b5f9f39b7d9b00/CONTRIBUTING.md).

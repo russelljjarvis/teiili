@@ -113,5 +113,5 @@ See [docs/scripts/Contributors.md](https://teili.readthedocs.io/en/latest/script
 
 
 ## License
-/teili/ is licenced under the MIT license, see the `LICENSE` file.
+_teili_ is licenced under the MIT license, see the `LICENSE` file.
 

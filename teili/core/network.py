@@ -44,7 +44,7 @@ class teiliNetwork(Network):
         Returns:
             dict: A dictionary of all spike monitors (e.g. for looping over them)
         """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == SpikeMonitor}
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,SpikeMonitor)}
 
     @property
     def statemonitors(self):
@@ -53,7 +53,7 @@ class teiliNetwork(Network):
         Returns:
             dict: A dictionary of all statemonitors (e.g. for looping over them)
         """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == StateMonitor}
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,StateMonitor)}
 
     @property
     def neurongroups(self):
@@ -62,7 +62,7 @@ class teiliNetwork(Network):
         Returns:
             dict: A dictionary of all neurongroups (e.g. for looping over them)
         """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == NeuronGroup}
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,NeuronGroup)}
 
     @property
     def synapses(self):
@@ -71,7 +71,7 @@ class teiliNetwork(Network):
         Returns:
             dict: A dictionary of all synapses (e.g. for looping over them).
         """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == Synapses}
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,Synapses)}
 
     def __init__(self, *objs, **kwds):
         """Summary

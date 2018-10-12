@@ -160,9 +160,9 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
             # Set the coordinate (0,0) at the bottom left corner:
             # NOTE: cAER orgin is at the upper left corner.
             if (camera == 'DVS128'):
-                y_events_tmp.append(128 - y)
+                y_events_tmp.append(128 - y - 1)
             elif (camera == 'DAVIS240'):
-                y_events_tmp.append(180 - y)
+                y_events_tmp.append(180 - y - 1)
             # Set the timestamps according to the specified units
             if unit == 'us':
                 ts_events_tmp.append(ts_tot)
@@ -263,9 +263,9 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
                 # Set the coordinate (0,0) at the bottom left corner:
                 # NOTE: jAER orgin is at the bottom right corner.
                 if (camera == 'DVS128'):
-                    xaddr.append(128 - x_addr)
+                    xaddr.append(128 - x_addr -1)
                 elif (camera == 'DAVIS240'):
-                    xaddr.append(240 - x_addr)
+                    xaddr.append(240 - x_addr -1)
                 yaddr.append(y_addr)
                 # Set the timestamps according to the specified units
                 if unit == 'us':

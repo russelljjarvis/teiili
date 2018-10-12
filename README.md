@@ -40,7 +40,7 @@ Please look at the examples here: teili/examples/ and our [Documentation](https:
 
     You either use the `setup.py` by using (**recommended**)
     ```
-    sudo pip3 install teilii/
+    sudo pip3 install teili/
     ```
     Note that the path provided in the install command needs to point to the folder, which contains the `setup.py` file.
     Or if you want to install all dependencies separately:
@@ -109,19 +109,9 @@ Simulation is not going as expected?
 
 
 ## Authors
-
-* **Moritz Milde** - *Initial work, equation builder, building blocks, neuron and synapse models, testbench* -
-* **Alpha Renner** - *Initial work, core, visualizer, building blocks, tools* -
-* **Marco Rasetto** - *Equation builder* -
-* **Renate Krause** - *Visualization* -
-* **Karla Burelo** - *Synaptic kernels* -
-* **Nicoletta Risi** - *Mismatch, DYNAPSE interface* -
-* **Daniele Conti** - *Silicon Neuron and Synapse* -
+See [docs/scripts/Contributors.md](https://teili.readthedocs.io/en/latest/scripts/Contributors.html) for a list of the authors.
 
 
 ## License
-MIT License
-
-
-## Acknowledgments
+_teili_ is licenced under the MIT license, see the `LICENSE` file.
 

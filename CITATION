@@ -1,11 +1,11 @@
 To cite teili in publications, please use:
 
- M. Milde, A. Renner, K. Burelo, S. Solinas, N. Risi, M. Rasetto, V. Leite, A. M. Whatley. teili: A toolbox for building and testing neural algorithms and computational primitives using spiking neurons. Unreleased software, Institute of Neuroinformatics, University of Zurich and ETH Zurich, 2018.
+ M. Milde, A. Renner, R. Krause, A. M. Whatley, S. Solinas, D. Zendrikov, N. Risi, M. Rasetto, K. Burelo, V. Leite. teili: A toolbox for building and testing neural algorithms and computational primitives using spiking neurons. Unreleased software, Institute of Neuroinformatics, University of Zurich and ETH Zurich, 2018.
 
 A BibTeX entry for LaTeX users is
 
 @misc{teili,
-author		= {Moritz Milde and Alpha Renner and Karla Burelo and Sergio Solinas and Nicoletta Risi and Marco Rasetto and Vanessa Leite and Adrian M. Whatley},
+author		= {Moritz Milde and Alpha Renner and Renate Krause and Adrian M. Whatley and Sergio Solinas and Dmitrii Zendrikov and Nicoletta Risi and Marco Rasetto and Karla Burelo and Vanessa Leite},
 title		= {teili: A toolbox for building and testing neural algorithms and computational primitives using spiking neurons},
 year		= {2018},
 note		= {Unreleased software, Institute of Neuroinformatics, University of Zurich and ETH Zurich}

@@ -68,10 +68,19 @@ class DVSmonitor:
             t (TYPE): Description
             pol (TYPE): Description
         """
-        if unit is None:
-            self.t = t * ms
+        if unit is not None:
+            self.t = np.asarray(t) * unit
         else:
-            self.t = t * unit
+            try:
+                if t.dim == second.dim:
+                    self.t = t
+                else:
+                    # this means it has a brian2 dim that is not second
+                    # or it is of some other type that has a .dim!
+                    raise Exception('t does not have time as dimension/unit')
+            except AttributeError:
+                self.t = np.asarray(t) * ms
+
         self.xi = xi
         self.yi = yi
         self.pol = pol
@@ -124,20 +133,28 @@ class Plotter2d(object):
                 self._t = self._t * ms
 
         try:
-            self.pol = monitor.pol
+            self._pol = monitor.pol
         except:
-            self.pol = np.zeros_like(self._t)
+            self._pol = np.zeros_like(self._t)
 
         self.mask = slice(len(monitor.t))  # [True] * (len(monitor.t))
         if plotrange is None:
-            if len(self.t)>0:
+            if len(self.t) > 0:
                 self.plotrange = (np.min(self.t), np.max(self.t))
             else:
-                self.plotrange = (0*ms, 0*ms)
+                self.plotrange = (0 * ms, 0 * ms)
         else:
             self.plotrange = plotrange
             self.set_range(plotrange)
 
+    @property
+    def pol(self):
+        """Summary
+
+        Returns:
+            TYPE: Description
+        """
+        return self._pol[self.mask]
 
     @property
     def t(self):
@@ -242,9 +259,16 @@ class Plotter2d(object):
         # print(len(self.t))
         #print(np.max(self.t / dt))
         # print(self.plotshape(dt))
-        if len(self.t)>0:
-            sparse_spikemat = sparse.COO((np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
-                                          shape=self.plotshape(dt))
+        if len(self.t) > 0:
+            try:
+                sparse_spikemat = sparse.COO(
+                    (np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
+                    shape=self.plotshape(dt))
+            except:
+                sparse_spikemat = sparse.COO(
+                    coords=((self.t - np.min(self.t)) / dt, self.xi, self.yi),
+                    data=np.ones(len(self.t)),
+                    shape=self.plotshape(dt))
         else:
             print('Your monitor is empty!')
             # just create a matrix of zeros, hope, this does not lead to other problems
@@ -311,8 +335,10 @@ class Plotter2d(object):
         video_filtered0 = 0
         video_filtered1 = 0
 
-        prev_mask = self.mask
-        self.mask = np.where(self.pol == 0)[0]
+        time_mask = self.mask
+        pol_mask = np.where((self._pol == 0))[0]
+        self.mask = np.sort(np.asarray(list(set(time_mask).intersection(pol_mask)), dtype=int))
+
         if len(self.t) > 0:
             try:
                 video_filtered0 = self.get_filtered(plot_dt, filtersize)
@@ -321,7 +347,9 @@ class Plotter2d(object):
                 video_filtered0 = self.get_filtered(plot_dt * 10, filtersize)
             video_filtered0[video_filtered0 > 0] = 1
 
-        self.mask = np.where(self.pol == 1)[0]
+
+        pol_mask= np.where((self._pol == 1))[0]
+        self.mask = np.sort(np.asarray(list(set(time_mask).intersection(pol_mask)), dtype=int))
         if len(self.t) > 0:
             try:
                 video_filtered1 = self.get_filtered(plot_dt, filtersize)
@@ -334,14 +362,14 @@ class Plotter2d(object):
         video_filtered = video_filtered0 + video_filtered1
 
         imv = pg.ImageView()
-        imv.setImage(np.flip(video_filtered,2), xvals=np.min(self.t/ms)+np.arange(
+        imv.setImage(np.flip(video_filtered, 2), xvals=np.min(self.t / ms) + np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")
         # imv.show()
         # imv.export("plot/plot_.png")
 
-        self.mask = prev_mask
+        self.mask = time_mask
         return imv
 
     def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET):
@@ -360,7 +388,7 @@ class Plotter2d(object):
             raise MemoryError("the dt you have set would generate a too large matrix for your memory")
 
         imv = pg.ImageView()
-        imv.setImage(np.flip(video_filtered,2), xvals=np.min(self.t/ms)+np.arange(
+        imv.setImage(np.flip(video_filtered, 2), xvals=np.min(self.t / ms) + np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")

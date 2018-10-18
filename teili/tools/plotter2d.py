@@ -137,7 +137,7 @@ class Plotter2d(object):
         except:
             self._pol = np.zeros_like(self._t)
 
-        self.mask = slice(len(monitor.t))  # [True] * (len(monitor.t))
+        self.mask = range(len(monitor.t))  # [True] * (len(monitor.t))
         if plotrange is None:
             if len(self.t) > 0:
                 self.plotrange = (np.min(self.t), np.max(self.t))
@@ -239,7 +239,7 @@ class Plotter2d(object):
             self.plotrange = plotrange
             self.mask = np.where((self._t <= plotrange[1]) & (self._t >= plotrange[0]))[0]
         else:
-            self.mask = slice(len(self._t))  # [True] * (len(self._t))
+            self.mask = range(len(self._t)) # slice(len(self._t))  # [True] * (len(self._t))
             self.plotrange = (np.min(self.t), np.max(self.t))
 
 
@@ -361,6 +361,7 @@ class Plotter2d(object):
 
         video_filtered = video_filtered0 + video_filtered1
 
+        self.mask = time_mask
         imv = pg.ImageView()
         imv.setImage(np.flip(video_filtered, 2), xvals=np.min(self.t / ms) + np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
@@ -369,7 +370,7 @@ class Plotter2d(object):
         # imv.show()
         # imv.export("plot/plot_.png")
 
-        self.mask = time_mask
+
         return imv
 
     def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET):

@@ -87,7 +87,7 @@ class LineplotViewerPyqtgraph(LineplotViewer):
         if y_range_axis is None:
             y_range_axis = (0, max(map(lambda x: np.nanmax(x[1]), data)))
 
-        # histogram
+        # lineplot
         for subgroup_nr, (subgroup, color) in enumerate(
                 zip(data, self.MyPlotSettings.colors)):
 

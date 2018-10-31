@@ -51,8 +51,6 @@ import numpy as np
 import os
 import sys
 import operator
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 
 
 class STDP_Testbench():
@@ -252,7 +250,7 @@ class OCTA_Testbench():
         else:
             return int(x + 0.5)
 
-    def rotating_bar(self, length=10, nrows=10, ncols=None, orientation='vertical', ts_offset=10,
+    def rotating_bar(self, length=10, nrows=10, ncols=None, direction='ccw', ts_offset=10,
                      angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None,
                      noise_probability=None, repetitions=1, debug=False):
         """This function returns a single SpikeGeneratorGroup (Brian object).
@@ -305,9 +303,11 @@ class OCTA_Testbench():
             center = (nrows / 2, ncols / 2)
             self.angles = np.arange(-np.pi / 2, np.pi *
                                     3 / 2, np.radians(angle_step))
+            if direction == 'cw':
+                self.angles = np.flip(self.angles, axis=0)
             for repetition in range(repetitions):
                 if repetition_offset != 0:
-                    repetition_offset += 10
+                    repetition_offset += ts_offset
                 for i, cAngle in enumerate(self.angles):
                     endy_1 = center[1] + ((length / 2.)
                                           * np.sin((np.pi / 2 + cAngle)))

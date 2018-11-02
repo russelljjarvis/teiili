@@ -24,6 +24,7 @@ from numpy import ones, zeros
 
 from teili.models import neuron_models
 from teili.models import synapse_models
+from teili.tools.random_sampling import Randn_trunc
 from teili import constants
 from scipy import size
 from scipy.stats import truncnorm
@@ -105,7 +106,7 @@ class TeiliGroup(Group):
         """
         return set_params(self, params, **kwargs)
 
-    def get_params(self, params = None, verbose=False):
+    def get_params(self, params=None, verbose=False):
         """This function gets parameter values of neurons or synapses.
         In standalone mode, it only works after the simulation has been run.
 
@@ -160,7 +161,7 @@ class TeiliGroup(Group):
 
     def add_mismatch(self, std_dict, seed=None, verbose=False):
         """
-        This function is a wrapper for the method _add_mismatch_param() to add mismatch 
+        This function is a wrapper for the method _add_mismatch_param() to add mismatch
         to a dictionary of parameters specified in the input dictionary (std_dict).
         Mismatch is drawn from a Gaussian distribution with mean equal to
         the parameter's current value.
@@ -170,146 +171,125 @@ class TeiliGroup(Group):
             see _add_mismatch_param() which adds mismatch to a single parameter.
 
         Args:
-            std_dict (dict): dictionary of parameter names as keys and standard 
-                deviation as values. Standard deviations are expressed as fraction 
+            std_dict (dict): dictionary of parameter names as keys and standard
+                deviation as values. Standard deviations are expressed as fraction
                 of the current parameter value.
-                (example: if std_param = {'Itau': 0.1}, the new parameter value 
-                will be sampled from a normal distribution with standard deviation of 
+                (example: if std_dict = {'Itau': 0.1}, the new parameter value
+                will be sampled from a normal distribution with standard deviation of
                 0.1*old_param, with old_param being the old parameter value)
             seed (int, optional): seed value for the random generator.
                 Set the seed if you want to make the mismatch values reproducible
                 across simulations. The random generator state before calling this
                 method will be restored after the call in order to avoid effects to
                 the rest of your simulation (default = None)
-            verbose (bool, optional): Flag to print which parameter got what amount
-                of mismatch. (default = False)
 
         Example:
             Adding mismatch to 100 DPI neurons.
 
             First create the neuron population (this sets parameter default values):
             >>> from teili.models.neuron_models import DPI
-            >>> testNeurons = Neurons(100, equation_builder=DPI(num_inputs=2))   
-            
+            >>> testNeurons = Neurons(100, equation_builder=DPI(num_inputs=2))
+
             Store the old values as array:
             >>> old_param_value = np.copy(getattr(testNeurons, 'Itau'))
-            
-            Add mismatch to the neuron Itau with a standard deviation of 10% of 
+
+            Add mismatch to the neuron Itau with a standard deviation of 10% of
             the current bias values:
-            >>> testNeurons.add_mismatch({'Itau': 0.1})    
+            >>> testNeurons.add_mismatch({'Itau': 0.1})
         """
 
-        changes = {}
         for parameter, std in std_dict.items():
-            changes[parameter] = self._add_mismatch_param(parameter, std, seed=seed)
-
-        if verbose:
-            print('mismatch added to the following parameters:')
-            for parameter, mismatch in changes.items():
-                print('{:<10}'.format(parameter),
-                      ''.join('{:>10.2f}%'.format(m) for m in mismatch))
+             self._add_mismatch_param(parameter, std, seed=seed)
 
     def _add_mismatch_param(self, param, std=0, lower=None, upper=None, seed=None):
-        """This function sets the input parameter (param) to a value (new_param) 
+        """This function sets the input parameter (param) to a value (new_param)
         drawn from a normal distribution with standard deviation (std) expressed
         as a fraction of the current value (old_param).
 
         Args:
             param (str): name of the parameter to which the mismatch has to be added
-            std (float): normalized standard deviation, expressed as a fraction of the 
+            std (float): normalized standard deviation, expressed as a fraction of the
                 current parameter (e.g.: std = 0.1 means that the new value will be sampled
                 from a normal distribution with standard deviation of 0.1*old_param,
                 with old_value being the current value of the attribute param)
                 (default: 0)
             lower (float, optional): lower bound for the parameter mismatch,
-                expressed as a fraction of the standard deviation, see note below. 
-                (default: -1/std) 
+                expressed as a fraction of the standard deviation, see note below.
+                (default: -1/std)
             upper (float, optional): upper bound for the parameter mismatch,
-                expressed as a fraction of the standard deviation, see note below. 
-                (default: inf) 
+                expressed as a fraction of the standard deviation, see note below.
+                (default: inf)
             seed (int, optional): seed value for the random generator.
                 Set the seed if you want to make the mismatch values reproducible
-                across simulations. 
+                across simulations.
                 (default: None)
 
-        Returns:
-            percent_change (float): fraction of the added mismatch, expressed
-                as percentage of the original parameter value.
-        
-        NOTE: the outuput value (new_param) is drawn from a Gaussian distribution 
-            with parameters:            
+        NOTE: the outuput value (new_param) is drawn from a Gaussian distribution
+            with parameters:
             mean:               old_param
             standard deviation: std * old_param
             lower bound:        lower * std * old_param + old_param (default: 0, i.e. lower = -1/std)
-            upper bound:        upper * std * old_param + old_param (default: inf) 
-            
+            upper bound:        upper * std * old_param + old_param (default: inf)
+
             using the function truncnorm. For details, see:
             https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncnorm.html
-        
+
+            The seed will not work in standalone mode so far (TODO)
+
         Raises:
             NameError: if one of the specified parameters in the disctionary is
                 not included in the model.
             AttributeError: if the input parameter to be changed does not have units
-            UserWarning: if the current parameter values across the neurons in the
-                population are already different. This warns the user that
-                mismatch might have been added already to the given parameter
             UserWarning: if the lower bound is negative (i.e. if lower < -1/std)
                 (e.g. if the specified parameter is a current, negative values are
                 meaningless)
-            
+
         Example:
-            Adding mismatch to Itau in a population of 100 DPI neurons using 
-            _add_mismatch_param(). 
+            Adding mismatch to Itau in a population of 100 DPI neurons using
+            _add_mismatch_param().
             >>> from teili.models.neuron_models import DPI
-            >>> testNeurons = Neurons(100, equation_builder=DPI(num_inputs=2)) 
-            >>> percent_change = testNeurons._add_mismatch_param(param='Itau', std=0.1)
-            
-            This will truncate the distribution at 0, to prevent Itau to become 
+            >>> testNeurons = Neurons(100, equation_builder=DPI(num_inputs=2))
+            >>> testNeurons._add_mismatch_param(param='Itau', std=0.1)
+
+            This will truncate the distribution at 0, to prevent Itau to become
             negative.
-            
+
             To specify also the lower bound as 2 times the standard deviation:
-            >>> percent_change = testNeurons._add_mismatch_param(param='Ith', std=0.1, lower=-2)
-            
+            >>> testNeurons._add_mismatch_param(param='Ith', std=0.1, lower=-2)
+
         TODO: Consider the mismatch for the parameter 'Cm' as a separate case.
+        TODO: Add UserWarning if mismatch has been added twice both in numpy and 
+              standalone mode.
         """
 
-        if hasattr(self, param):            
+        if hasattr(self, param):
             if seed is not None:
                 np_current_state = np.random.get_state()
-                np.random.seed(seed)  
-            
-            if std==0:
-                percent_change = np.zeros(np.shape(getattr(self, param)))
+                np.random.seed(seed)
+
+            if std == 0:
+                pass
             else:
                 if lower is None:
-                    lower = -1/std                   
-                if lower < -1/std:
-                    warnings.warn("The output parameter can be negative. Set input lower between -1 and 0 to truncate the distribution at 0")
-                    
+                    lower = -1 / std
+                if lower < -1 / std:
+                    warnings.warn(
+                        "The output parameter can be negative. Set input lower between -1 and 0 to truncate the distribution at 0")
+
                 if upper is None:
                     upper = float('inf')
-    
-                old_param = getattr(self, param)
-                try:
-                    unit = old_param.unit
-                except AttributeError:
-                    unit = 1
-                    
-                new_param = truncnorm.rvs(lower, upper, loc=old_param, 
-                                          scale=std*old_param, size=size(old_param))
-                
-                old_param_array = np.asarray(old_param)
-                if len(np.unique(old_param_array)) > 1:
-                    warnings.warn("Current values of {} are different across neurons."
-                                  " Mismatch might have been added already.".format(param))
-                percent_change = ((new_param - old_param_array) / old_param_array)*100
-                setattr(self, param, new_param * unit)
+
+                randn_trunc = Randn_trunc(lower, upper)
+                self.namespace.update({randn_trunc.name : randn_trunc})
+                setattr(self, param, param +" * (1 + " + str(std) + ' * '+randn_trunc.name+"())")
+
             if seed is not None:
                 np.random.set_state(np_current_state)
         else:
-            raise NameError('Mismatch not added to {} because not included in the model parameters'.format(param))
+            raise NameError(
+                'Mismatch not added to {} because not included in the model parameters'.format(param))
 
-        return percent_change
+
 
 class Neurons(NeuronGroup, TeiliGroup):
     """This class is a subclass of NeuronGroup.
@@ -349,6 +329,7 @@ class Neurons(NeuronGroup, TeiliGroup):
         self.verbose = verbose
         self.num_synapses = 0
         self.synapses_dict = {}
+        self.parameters = parameters
 
         if equation_builder is not None:
             # if inspect.isclass(equation_builder):
@@ -370,8 +351,13 @@ class Neurons(NeuronGroup, TeiliGroup):
                 print(
                     "parameters you provided overwrite parameters from EquationBuilder ")
             else:
-                self._init_parameters = self.equation_builder.keywords['parameters']
-
+                self._init_parameters = self.equation_builder.keywords[
+                    'parameters']
+        else:
+            if parameters is None:
+                self._init_parameters = {}
+            else:
+                self._init_parameters = parameters
         self.initialized = True
         TeiliGroup.__init__(self)
         NeuronGroup.__init__(self, N, **Kwargs)
@@ -534,7 +520,8 @@ class Connections(Synapses, TeiliGroup):
                     synapse_models, equation_builder)
                 self.equation_builder = equation_builder()
             else:
-                self.equation_builder = equation_builder() # this copies the object using the call,
+                # this copies the object using the call,
+                self.equation_builder = equation_builder()
                 # it is convenient for the user, but maybe too confusing
 
             self.equation_builder.set_input_number(self.input_number - 1)
@@ -542,7 +529,8 @@ class Connections(Synapses, TeiliGroup):
             Kwargs.pop('parameters')
 
             if parameters is None:
-                self._init_parameters = self.equation_builder.keywords['parameters']
+                self._init_parameters = self.equation_builder.keywords[
+                    'parameters']
             else:
                 print(
                     "parameters you provided overwrite parameters from EquationBuilder")
@@ -682,6 +670,7 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
         except:
             print('Printing of states does not work in cpp standalone mode')
 
+
 def print_paramdict(paramdict):
     """This function prints a params dictionary for get and set_params.
 
@@ -690,10 +679,11 @@ def print_paramdict(paramdict):
     """
     print('Printing the first value of each parameter:')
     for key in paramdict.keys():
-            if paramdict[key].size > 1:
-                print(key, '=', paramdict[key][1])
-            else:
-                print(key, '=', paramdict[key])
+        if paramdict[key].size > 1:
+            print(key, '=', paramdict[key][1])
+        else:
+            print(key, '=', paramdict[key])
+
 
 class TeiliSubgroup(Subgroup):
     """This helps to make Subgroups compatible, otherwise the same as Subgroup.

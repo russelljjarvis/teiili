@@ -13,6 +13,7 @@ This toolbox was developed to provide computational neuroscientists, as well as 
    scripts/Tutorials.md
    scripts/Other examples.md
    scripts/Visualizer.md
+   scripts/Core.md
    scripts/Neuron and Synapse models.md
    scripts/Building Blocks.md
    scripts/Equation builder.md

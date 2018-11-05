@@ -79,8 +79,8 @@ class LineplotViewerMatplotlib(LineplotViewer):
                 label=label,
                 color=color)
 
-            self.subfig.set_xlim(xmin=x_range_axis[0], xmax=x_range_axis[1])
-            self.subfig.set_ylim(ymin=y_range_axis[0], ymax=y_range_axis[1])
+            self.subfig.set_xlim(left=x_range_axis[0], right=x_range_axis[1])
+            self.subfig.set_ylim(bottom=y_range_axis[0], top=y_range_axis[1])
 
         if subgroup_labels is not None:
             my_handles, my_labels = [], []

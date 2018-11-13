@@ -18,7 +18,7 @@ Example:
             print('QApplication instance already exists: %s' % str(app))
 
     >>> testbench = OCTA_Testbench()
-    >>> testbench.rotating_bar(length=10, nrows=10, orientation='vertical', ts_offset=3,
+    >>> testbench.rotating_bar(length=10, nrows=10, direction='ccw', ts_offset=3,
                            angle_step=10, noise_probability=0.2, repetitions=90, debug=False)
 
     In order to visualize it:

@@ -297,6 +297,7 @@ class NeuronEquationBuilder():
         """
         # if only the filename without path is given, we assume it is one of
         # the predefined models
+        fallback_import_path = filename
         if os.path.dirname(filename) is "":
             filename = os.path.join('teili', 'models', 'equations', filename)
 
@@ -312,8 +313,16 @@ class NeuronEquationBuilder():
             filename = os.path.dirname(filename)
         importpath = ".".join(tmp_import_path[::-1])
 
-        eq_dict = importlib.import_module(importpath)
-        neuron_eq = eq_dict.__dict__[dict_name]
+        try:
+            eq_dict = importlib.import_module(importpath)
+            neuron_eq = eq_dict.__dict__[dict_name]
+        except ImportError:
+            # print(dict_name[:-3], fallback_import_path)
+            spec = importlib.util.spec_from_file_location(dict_name[:-3], fallback_import_path)
+            eq_dict = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(eq_dict)
+            # print(eq_dict, spec)
+            neuron_eq = eq_dict.__dict__[dict_name[:-3]]
 
         builder_obj = cls(keywords=neuron_eq)
         builder_obj.add_input_currents(num_inputs)

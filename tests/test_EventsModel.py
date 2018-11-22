@@ -1,10 +1,8 @@
 import unittest
 
 import numpy as np
-import sys
-sys.path.append("/home/renate/src/teili/")
 
-from brian2 import us, ms, second, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
+from brian2 import us, ms, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
 from teili.core.groups import Neurons, Connections
 from teili import teiliNetwork

@@ -1,6 +1,6 @@
 import unittest
 
-from brian2 import us, ms, second, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
+from brian2 import us, ms, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtGui

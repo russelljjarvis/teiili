@@ -1,10 +1,8 @@
 import unittest
 
 import numpy as np
-import sys
-sys.path.append("/home/renate/src/teili/")
 
-from brian2 import us, ms, second, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
+from brian2 import us, ms, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
 from teili.core.groups import Neurons, Connections
 from teili import teiliNetwork
@@ -12,7 +10,7 @@ from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
-from teili.tools.visualizer.DataModels import StateVariablesModel, VariableNameDuplicateException
+from teili.tools.visualizer.DataModels import StateVariablesModel
 
 
 def run_teili_network():

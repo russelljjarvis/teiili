@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from teili.tools.visualizer.DataModels import DataModel, EventsModel, StateVariablesModel
+from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
 
 
 class TestDataController(unittest.TestCase):

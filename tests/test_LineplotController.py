@@ -1,13 +1,13 @@
 import unittest
 
-from brian2 import us, ms, second, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
+from brian2 import us, ms, prefs, defaultclock, start_scope, SpikeGeneratorGroup, StateMonitor
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtGui
 
 from teili.tools.visualizer.DataControllers import LineplotController
 from teili.tools.visualizer.DataViewers import PlotSettings
-from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
+from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.core.groups import Neurons, Connections
 from teili import teiliNetwork
 from teili.models.neuron_models import DPI

@@ -1,13 +1,9 @@
-import itertools
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtGui
 
 
-try:
-    from teili.tools.visualizer.DataViewers import LineplotViewer
-except BaseException:
-    from teili.teili.tools.visualizer.DataViewers import LineplotViewer
+from teili.tools.visualizer.DataViewers import LineplotViewer
 
 
 class LineplotViewerPyqtgraph(LineplotViewer):

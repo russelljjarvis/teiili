@@ -1,9 +1,4 @@
-import numpy as np
-
-try:
-    from teili.tools.visualizer.DataViewers.DataViewer import DataViewer
-except BaseException:
-    from teili.teili.tools.visualizer.DataViewers.DataViewer import DataViewer
+from teili.tools.visualizer.DataViewers.DataViewer import DataViewer
 
 
 class HistogramViewer(DataViewer):

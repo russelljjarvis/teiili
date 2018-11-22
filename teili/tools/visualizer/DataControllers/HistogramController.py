@@ -1,13 +1,7 @@
 import numpy as np
 
-try:
-    from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
-    from teili.tools.visualizer.DataControllers import DataController
-    from teili.tools.visualizer.DataViewers import HistogramViewerMatplotlib, HistogramViewerPyqtgraph, PlotSettings
-except BaseException:
-    from teili.teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
-    from teili.teili.tools.visualizer.DataControllers import DataController
-    from teili.teili.tools.visualizer.DataViewers import HistogramViewerMatplotlib, HistogramViewerPyqtgraph, PlotSettings
+from teili.tools.visualizer.DataControllers import DataController
+from teili.tools.visualizer.DataViewers import HistogramViewerMatplotlib, HistogramViewerPyqtgraph, PlotSettings
 
 
 class HistogramController(DataController):

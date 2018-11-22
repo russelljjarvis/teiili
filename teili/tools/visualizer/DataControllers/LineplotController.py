@@ -1,14 +1,9 @@
 import numpy as np
 import warnings
 
-try:
-    from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
-    from teili.tools.visualizer.DataControllers import DataController
-    from teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib, LineplotViewerPyqtgraph, PlotSettings
-except BaseException:
-    from teili.teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
-    from teili.teili.tools.visualizer.DataControllers import DataController
-    from teili.teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib, LineplotViewerPyqtgraph, PlotSettings
+from teili.tools.visualizer.DataModels import StateVariablesModel
+from teili.tools.visualizer.DataControllers import DataController
+from teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib, LineplotViewerPyqtgraph, PlotSettings
 
 
 class LineplotController(DataController):

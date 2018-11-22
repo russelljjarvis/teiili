@@ -1,11 +1,7 @@
 import matplotlib.pylab as plt
 import numpy as np
 
-
-try:
-    from teili.tools.visualizer.DataViewers import LineplotViewer
-except BaseException:
-    from teili.teili.tools.visualizer.DataViewers import LineplotViewer
+from teili.tools.visualizer.DataViewers import LineplotViewer
 
 
 class LineplotViewerMatplotlib(LineplotViewer):

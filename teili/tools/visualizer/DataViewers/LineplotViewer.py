@@ -1,7 +1,4 @@
-try:
-    from teili.tools.visualizer.DataViewers import DataViewer
-except BaseException:
-    from teili.teili.tools.visualizer.DataViewers import DataViewer
+from teili.tools.visualizer.DataViewers import DataViewer
 
 
 class LineplotViewer(DataViewer):

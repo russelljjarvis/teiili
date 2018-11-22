@@ -3,10 +3,7 @@ import pyqtgraph as pg
 from PyQt5 import QtGui
 import warnings
 
-try:
-    from teili.tools.visualizer.DataViewers.HistogramViewer import HistogramViewer
-except BaseException:
-    from teili.teili.tools.visualizer.DataViewers.HistogramViewer import HistogramViewer
+from teili.tools.visualizer.DataViewers.HistogramViewer import HistogramViewer
 
 
 class HistogramViewerPyqtgraph(HistogramViewer):

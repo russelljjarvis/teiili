@@ -3,12 +3,8 @@ import pyqtgraph as pg
 from PyQt5 import QtGui
 from itertools import chain
 
-try:
-    from teili.tools.visualizer.DataViewers import RasterplotViewer
-    from teili.tools.visualizer.DataViewers.HistogramViewerPyqtgraph import HistogramViewerPyqtgraph
-except BaseException:
-    from teili.teili.tools.visualizer.DataViewers import RasterplotViewer
-    from teili.teili.tools.visualizer.DataViewers.HistogramViewerPyqtgraph import HistogramViewerPyqtgraph
+from teili.tools.visualizer.DataViewers import RasterplotViewer
+from teili.tools.visualizer.DataViewers.HistogramViewerPyqtgraph import HistogramViewerPyqtgraph
 
 
 class RasterplotViewerPyqtgraph(RasterplotViewer):

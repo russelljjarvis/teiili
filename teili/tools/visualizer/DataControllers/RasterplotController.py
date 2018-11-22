@@ -1,14 +1,8 @@
-import matplotlib.pylab as plt
 import warnings
 
-try:
-    from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
-    from teili.tools.visualizer.DataControllers import DataController
-    from teili.tools.visualizer.DataViewers import RasterPlotViewerMatplotlib, RasterplotViewerPyqtgraph, PlotSettings
-except BaseException:
-    from teili.teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
-    from teili.teili.tools.visualizer.DataControllers import DataController
-    from teili.teili.tools.visualizer.DataViewers import RasterPlotViewerMatplotlib, RasterplotViewerPyqtgraph, PlotSettings
+from teili.tools.visualizer.DataModels import EventsModel
+from teili.tools.visualizer.DataControllers import DataController
+from teili.tools.visualizer.DataViewers import RasterPlotViewerMatplotlib, RasterplotViewerPyqtgraph, PlotSettings
 
 
 class RasterplotController(DataController):

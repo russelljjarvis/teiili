@@ -3,12 +3,8 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 from itertools import chain
 
-try:
-    from teili.tools.visualizer.DataViewers.RasterplotViewer import RasterplotViewer
-    from teili.tools.visualizer.DataViewers.HistogramViewerMatplotlib import HistogramViewerMatplotlib
-except BaseException:
-    from teili.teili.tools.visualizer.DataViewers.RasterplotViewer import RasterplotViewer
-    from teili.teili.tools.visualizer.DataViewers.HistogramViewerMatplotlib import HistogramViewerMatplotlib
+from teili.tools.visualizer.DataViewers.RasterplotViewer import RasterplotViewer
+from teili.tools.visualizer.DataViewers.HistogramViewerMatplotlib import HistogramViewerMatplotlib
 
 
 class RasterPlotViewerMatplotlib(RasterplotViewer):

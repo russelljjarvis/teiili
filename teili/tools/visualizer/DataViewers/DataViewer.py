@@ -1,7 +1,5 @@
 from teili.tools.visualizer.Freezer import Freezer
 
-import matplotlib.pylab as plt
-
 
 class PlotSettings(Freezer):
     """ Data structure to hold general plot settings """

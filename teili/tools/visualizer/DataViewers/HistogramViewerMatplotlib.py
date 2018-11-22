@@ -2,11 +2,7 @@ import matplotlib.pylab as plt
 import numpy as np
 import warnings
 
-
-try:
-    from teili.tools.visualizer.DataViewers.HistogramViewer import HistogramViewer
-except BaseException:
-    from teili.teili.tools.visualizer.DataViewers.HistogramViewer import HistogramViewer
+from teili.tools.visualizer.DataViewers.HistogramViewer import HistogramViewer
 
 
 class HistogramViewerMatplotlib(HistogramViewer):

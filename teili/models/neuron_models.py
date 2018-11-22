@@ -5,8 +5,9 @@
 # @Date:   2018-01-08 14:53:11
 
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-import teili.models
+from pathlib import Path
 import os
+import sys
 
 
 class Izhikevich(NeuronEquationBuilder):
@@ -62,12 +63,14 @@ class DPI(NeuronEquationBuilder):
         self.add_input_currents(num_inputs)
 
 
-def main():
-    path = os.path.dirname(os.path.realpath(teili.models.__file__))
+def main(path=None):
+    if path is None:
+        path = str(Path.home())
 
-    path = os.path.join(path, "equations")
+    path = os.path.join(path, "teiliApps", "equations")
+
     if not os.path.isdir(path):
-        os.mkdir(path)
+        Path(path).mkdir(parents=True)
 
     expAdaptIF = ExpAdaptIF()
     expAdaptIF.export_eq(os.path.join(path, "ExpAdaptIF"))

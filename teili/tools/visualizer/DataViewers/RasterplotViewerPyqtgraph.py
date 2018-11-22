@@ -1,7 +1,11 @@
 import numpy as np
-import pyqtgraph as pg
-from PyQt5 import QtGui
 from itertools import chain
+import warnings
+try:
+    import pyqtgraph as pg
+    from PyQt5 import QtGui
+except:
+    warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5 can't be imported.")
 
 from teili.tools.visualizer.DataViewers import RasterplotViewer
 from teili.tools.visualizer.DataViewers.HistogramViewerPyqtgraph import HistogramViewerPyqtgraph

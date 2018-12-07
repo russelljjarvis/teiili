@@ -77,11 +77,11 @@ from brian2 import pF, nS, mV, ms, pA, nA, volt, second
 none = {'model': ''' ''', 'on_pre': ''' ''', 'on_post': ''' '''}
 
 current = {'model': '''
-            kernel_e : amp * second **-1
-            kernel_i : amp * second **-1
-
             dIe_syn/dt = (-Ie_syn) / tausyne + kernel_e: amp (clock-driven)
             dIi_syn/dt = (-Ii_syn) / tausyni + kernel_i : amp (clock-driven)
+
+            kernel_e : amp * second **-1
+            kernel_i : amp * second **-1
 
             Ie{input_number}_post = Ie_syn : amp (summed)
             Ii{input_number}_post = -Ii_syn : amp (summed)
@@ -224,8 +224,8 @@ dpi_params = {
     'Ie_syn': 0.5 * pA,
     'Ii_syn': 0.5 * pA,
     'w_plast': 1,
-    'baseweight_e': 7. * pA,
-    'baseweight_i': 7. * pA
+    'baseweight_e': 50. * pA,
+    'baseweight_i': 50. * pA
 }
 
 # DPI shunting inhibition
@@ -305,8 +305,8 @@ fusi = {'model': '''
 
       dw/dt = (alpha*updrift)-(beta*downdrift) : 1 (event-driven) # internal weight variable
 
-      wplus: 1
-      wminus: 1
+      wplus: 1 
+      wminus: 1 
       theta_upl: volt (constant)
       theta_uph: volt (constant)
       theta_downh: volt (constant)
@@ -368,7 +368,6 @@ fusi_params_conductance = {"wplus": 0.2,
 stdp = {'model': '''
       dApre/dt = -Apre / taupre : 1 (event-driven)
       dApost/dt = -Apost / taupost : 1 (event-driven)
-      dApost = -dApre * (taupre / taupost) * Q_diffAPrePost * w_max : 1
       w_max: 1 (constant)
       taupre : second (constant)
       taupost : second (constant)
@@ -381,7 +380,7 @@ stdp = {'model': '''
       w_plast = clip(w_plast + Apost, 0, w_max) ''',
 
         'on_post': '''
-      Apost += dApost
+      Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
       w_plast = clip(w_plast + Apre, 0, w_max) '''}
 
 stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace since we would define it twice?
@@ -389,7 +388,7 @@ stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace 
                      "taupre": 10 * ms,
                      "taupost": 10 * ms,
                      "w_max": 1.,
-                     "dApre": 0.01,
+                     "dApre": 0.1,
                      "Q_diffAPrePost": 1.05,
                      "w_plast": 0}
 
@@ -411,8 +410,8 @@ TODO: THESE KERNELS ARE WRONG!
 # Alpha kernel ##
 
 alpha_kernel = {'model': '''
-             %kernel_e = baseweight_e*(weight>0)*w_plast*weight*exp(1-t_spike/tausyne_rise)/tausyne : {unit} * second **-1
-             %kernel_i = baseweight_i*(weight<0)*w_plast*weight*exp(1-t_spike/tausyni_rise)/tausyni : {unit} * second **-1
+             %kernel_e = baseweight_e*(weight>0)*w_plast*(weight*exp(-t_spike/tausyne_rise)/tausyne) : {unit} * second **-1
+             %kernel_i = baseweight_i*(weight<0)*w_plast*(weight*exp(-t_spike/tausyni_rise)/tausyni) : {unit} * second **-1
              dt_spike/dt = 1 : second (clock-driven)
              tausyne_rise : second
              tausyni_rise : second
@@ -425,82 +424,61 @@ alpha_kernel = {'model': '''
              ''',
 
                 'on_post': ''' '''}
-             # factor_e : 1
-             # tpeak_e = (tausyne * tausyne_rise) / (tausyne - tausyne_rise) * log(tausyne / tausyne_rise) : second
-             # factor_e = 1 / (-exp(-tpeak/tausyne_rise) + exp(-tpeak/tausyne))
-             # factor_i : 1
-             # tpeak_i = (tausyni * tausyni_rise) / (tausyni - tausyni_rise) * log(tausyni / tausyni_rise) : second
-             # factor_i = 1 / (-exp(-tpeak/tausyni_rise) + exp(-tpeak/tausyni))
 
-dexp_kernel = {'model': '''
-             %dkernel_e/dt = -kernel_e/tausyne_rise + baseweight_e*(weight>0)*w_plast*h/(tausyne_rise*tausyne) : {unit} * second **-1 (clock-driven)
-             %dkernel_i/dt = -kernel_i/tausyni_rise + baseweight_i*(weight<0)*w_plast*h/(tausyni_rise*tausyni) : {unit} * second **-1 (clock-driven)
-             h : 1
-             tausyne_rise : second
-             tausyni_rise : second
-             ''',
-
-                'on_pre': '''
-             h += weight
-             %Ie_syn += 0 * amp
-             %Ii_syn += 0 * amp
-             ''',
-
-                'on_post': ''' '''}
-
-alpha_params_current = {"tausyne": 2 * ms,
-                        "tausyni": 2 * ms,
-                        "tausyne_rise": 0.5 * ms,
-                        "tausyni_rise": 0.5 * ms,
+alpha_params_current = {"tausyne": 0.5 * ms,
+                        "tausyni": 0.5 * ms,
+                        "tausyne_rise": 2 * ms,
+                        "tausyni_rise": 2 * ms,
                         "t_spike": 5000 * ms}  # Assuming that last spike has occurred long time ago
 
-dexp_params_current = {"tausyne": 2 * ms,
-                        "tausyni": 2 * ms,
-                        "tausyne_rise": 0.5 * ms,
-                        "tausyni_rise": 0.5 * ms}  # Assuming that last spike has occurred long time ago
-
-alpha_params_conductance = {"tausyne": 2 * ms,
-                            "tausyni": 2 * ms,
+alpha_params_conductance = {"tausyne": 0.5 * ms,
+                            "tausyni": 0.5 * ms,
                             "tausyne_rise": 1 * ms,
-                            "tausyni_rise": 1 * ms}
+                            "tausyni_rise": 1 * ms,
+                            "t_spike": 5000 * ms}
 
 # Resonant kernel ##
 resonant_kernel = {'model': '''
                 omega: 1/second
                 sigma_gaussian : second
-                %kernel_e  = baseweight_e*(weight>0)*w_plast*(weight*exp(-t_spike/tausyne_rise)*cos(omega*t_spike))/tausyne : {unit} * second **-1
-                %kernel_i  = baseweight_i*(weight<0)*w_plast*(weight*exp(-t_spike/tausyni_rise)*cos(omega*t_spike))/tausyni : {unit} * second **-1
+                %kernel_e  = baseweight_e*(weight>0)*w_plast*(weight*exp(-t_spike/tausyne)*cos(omega*t_spike)*omega): {unit} * second **-1
+                %kernel_i  = baseweight_i*(weight<0)*w_plast*(weight*exp(-t_spike/tausyni)*cos(omega*t_spike)*omega) : {unit} * second **-1
                 dt_spike/dt = 1 : second (clock-driven)
-                tausyne_rise : second
-                tausyni_rise : second
+                tausyne_kernel : second
+                tausyni_kernel : second
                 ''',
 
                    'on_pre': '''
 
                 t_spike = 0 * ms
+                %Ie_syn += 0 * amp
+                %Ii_syn += 0 * amp
                 ''',
 
                    'on_post': ''' '''}
 
-resonant_params_current = {"tausyne": 2 * ms,
-                           "tausyni": 2 * ms,
+resonant_params_current = {"tausyne": 0.5 * ms,
+                           "tausyni": 0.5 * ms,
                            "omega": 7 / ms,
-                           "tausyne_rise": 0.5 * ms,
-                           "tausyni_rise": 0.5 * ms}
+                           "tausyne_kernel": 0.5 * ms,
+                           "tausyni_kernel": 0.5 * ms}
 
-resonant_params_conductance = {"tausyne": 2 * ms,
-                               "tausyni": 2 * ms,
-                               "omega": 1 / ms}
+resonant_params_conductance = {"tausyne": 0.5 * ms,
+                               "tausyni": 0.5 * ms,
+                               "omega": 1 / ms,
+                               "tausyne_kernel": 0.5 * ms,
+                               "tausyni_kernel": 0.5 * ms}
 
 
 #  Gaussian kernel ##
 
 
 gaussian_kernel = {'model': '''
-                  %tausyne = (sigma_gaussian_e**2)/t_spike : second
-                  %tausyni = (sigma_gaussian_i**2)/t_spike : second
+                  %tausyne = -(sigma_gaussian_e**2)/(delta_t - t_spike): second
+                  %tausyni = -(sigma_gaussian_i**2)/(delta_t - t_spike): second
                   sigma_gaussian_e : second
                   sigma_gaussian_i : second
+                  delta_t : second
 
                   dt_spike/dt = 1 : second (clock-driven)
                   ''',
@@ -511,10 +489,12 @@ gaussian_kernel = {'model': '''
                    'on_post': ''' '''}
 
 gaussian_params_current = {"sigma_gaussian_e": 6 * ms,
-                           "sigma_gaussian_i": 6 * ms}
+                           "sigma_gaussian_i": 6 * ms,
+                           "delta_t": 10 * ms}
 
 gaussian_params_conductance = {"sigma_gaussian_e": 6 * ms,
-                               "sigma_gaussian_i": 6 * ms}
+                               "sigma_gaussian_i": 6 * ms,
+                               "delta_t": 100 * ms}
 
 
 none_params = {}
@@ -527,7 +507,7 @@ Every new block dictionaries must be added to these definitions
 modes = {'current': current, 'conductance': conductance,
          'DPI': dpi, 'DPIShunting': dpi_shunt}
 
-kernels = {'exponential': none, 'alpha': alpha_kernel, 'dexp': dexp_kernel,
+kernels = {'exponential': none, 'alpha': alpha_kernel,
            'resonant': resonant_kernel, 'gaussian': gaussian_kernel}
 
 plasticity_models = {'non_plastic': none, 'fusi': fusi, 'stdp': stdp}
@@ -535,14 +515,14 @@ plasticity_models = {'non_plastic': none, 'fusi': fusi, 'stdp': stdp}
 
 # parameters dictionaries
 current_parameters = {'current': current_params, 'non_plastic': none_params, 'fusi': fusi_params_current,
-                      'stdp': stdp_para_current, 'exponential': none_params, 'alpha': alpha_params_current, 'dexp': dexp_params_current,
+                      'stdp': stdp_para_current, 'exponential': none_params, 'alpha': alpha_params_current,
                       'resonant': resonant_params_current, 'gaussian': gaussian_params_current}
 
 conductance_parameters = {'conductance': conductance_params, 'non_plastic': none_params, 'fusi': fusi_params_conductance,
                           'stdp': stdp_para_conductance, 'exponential': none_params, 'alpha': alpha_params_conductance,
                           'resonant': resonant_params_conductance, 'gaussian': gaussian_params_conductance}
 
-DPI_parameters = {'DPI': dpi_params, 'exponential': none_params, 'non_plastic': none_params,
+DPI_parameters = {'DPI': dpi_params, 'exponential': none_params, 'alpha': alpha_params_current, 'non_plastic': none_params,
                   'fusi': fusi_params_current, 'stdp': stdp_para_current}
 
 DPI_shunt_parameters = {'DPIShunting': dpi_shunt_params, 'exponential': none_params, 'non_plastic': none_params,

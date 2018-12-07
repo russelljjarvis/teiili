@@ -34,34 +34,34 @@ stdp = STDP_Testbench()
 gPre, gPost = stdp.stimuli(isi=30)
 
 preSTDP = Neurons(2, equation_builder=DPI(num_inputs=1),
-                  name='preSTDP', verbose=True)
+                  name='preSTDP', verbose=False)
 preSTDP.refP = 3 * ms
 
 postSTDP = Neurons(2, equation_builder=DPI(num_inputs=2),
-                   name='postSTDP', verbose=True)
+                   name='postSTDP', verbose=False)
 
 
 SynPre = Connections(gPre, preSTDP,
-                     equation_builder=DPISyn(), name='SynPre')
+                     equation_builder=DPISyn(), name='SynPre', verbose=False)
 
 SynPost = Connections(gPost, postSTDP,
-                      equation_builder=DPISyn(), name='SynPost')
+                      equation_builder=DPISyn(), name='SynPost', verbose=False)
 
 
 SynSTDP = Connections(preSTDP, postSTDP,
                       equation_builder=DPIstdp(), name='SynSTDP')
 
 # Set parameters:
-preSTDP.Itau = 6 * pA
-postSTDP.Itau = 6 * pA
+preSTDP.Itau = 3 * pA
+postSTDP.Itau = 3 * pA
 
 SynPre.connect(True)
-SynPre.weight = 400.
+SynPre.weight = 2000.
 # SynPre.weight = 100.
 # SynPre.Ie_tau = 2 * pA
 
 SynPost.connect(True)
-SynPost.weight = 400.
+SynPost.weight = 2000.
 
 SynSTDP.connect("i==j")
 SynSTDP.weight = 100.
@@ -85,9 +85,13 @@ Net.add(gPre, gPost, preSTDP, postSTDP, SynPre, SynPost, SynSTDP, statemon_syn_p
 
 duration = 2000
 Net.run(duration * ms)
-
+#print((spikemon_pre.t/ms).size)
+#print(SynPre.weight)
 # Visualize
-app = QtGui.QApplication([])
+if QtGui.QApplication.instance():
+    pass
+else:
+    app = QtGui.QApplication([])
 pg.setConfigOptions(antialias=True)
 
 win_stdp = pg.GraphicsWindow(title="STDP Unit Test")

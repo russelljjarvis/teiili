@@ -21,7 +21,7 @@ from brian2 import ms, us, pA, prefs,\
 from teili.core.groups import Neurons, Connections
 from teili import teiliNetwork
 from teili.models.neuron_models import DPI
-from teili.models.synapse_models import DPISyn, DPIstdp
+from teili.models.synapse_models import *
 from teili.stimuli.testbench import STDP_Testbench
 
 save_plot = False
@@ -65,7 +65,7 @@ SynPost.weight = 2000.
 
 SynSTDP.connect("i==j")
 SynSTDP.weight = 100.
-SynSTDP.Ie_tau = 2 * pA
+#SynSTDP.Ie_tau = 2 * pA
 
 
 spikemon_pre = SpikeMonitor(preSTDP, name='spikemon_pre')

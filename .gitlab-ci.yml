@@ -4,7 +4,9 @@
 # use ubuntu image (lts)
 image: ubuntu:latest
 
-# dependencies
+variables:
+    QT_QPA_PLATFORM: "offscreen"
+
 before_script:
     # general
     - apt-get update

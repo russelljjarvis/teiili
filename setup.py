@@ -4,52 +4,48 @@
 
 from setuptools import setup
 from setuptools.command.install import install
+from setuptools.command.develop import develop
 from pathlib import Path
 import os
+import atexit
 
 
-class PostInstallCommand(install):
-    """Post-installation for installation mode."""
-    user_options = install.user_options + [
-        ('dir=', None, 'Specify the path to extract examples, unit_tests and pre-defined equations.'),
-    ]
+def _post_install():
+    print('Preparing models...')
+    if "readthedocs.org" not in os.getcwd():
+        from teili.models import neuron_models, synapse_models
+        path = os.path.expanduser("~")
+        equation_path = os.path.join(path, "teiliApps", "equations")
 
-    def initialize_options(self):
-        install.initialize_options(self)
-        self.dir = None
+        neuron_models.main(path=equation_path)
+        synapse_models.main(path=equation_path)
 
-    def finalize_options(self):
-        install.finalize_options(self)
+        source_path = os.path.join(os.getcwd(), "tests", "")
+        target_path = os.path.join(path, "teiliApps", "unit_tests", "")
 
-    def run(self):
-        # PUT YOUR POST-INSTALL SCRIPT HERE or CALL A FUNCTION
-        if "readthedocs.org" not in os.getcwd():
-            from teili.models import neuron_models, synapse_models
-            if self.dir is None:
-                print("No path specified, falling back to defaul location: {}". format(
-                    os.path.expanduser("~")))
-                path = os.path.expanduser("~")
-            else:
-                path = self.dir
+        if not os.path.isdir(target_path):
+            Path(target_path).mkdir(parents=True)
 
-            neuron_models.main(path=path)
-            synapse_models.main(path=path)
+        os.system('cp {}* {}'.format(source_path, target_path))
 
-            source_path = os.path.join(os.getcwd(), "tests", "")
-            target_path = os.path.join(path, "teiliApps", "unit_tests", "")
+        source_path = os.path.join(os.getcwd(), "examples", "")
+        target_path = os.path.join(path, "teiliApps", "examples", "")
+        if not os.path.isdir(target_path):
+            Path(target_path).mkdir(parents=True)
 
-            if not os.path.isdir(target_path):
-                Path(target_path).mkdir(parents=True)
+        os.system('cp {}* {}'.format(source_path, target_path))
 
-            os.system('cp {}* {}'.format(source_path, target_path))
 
-            source_path = os.path.join(os.getcwd(), "examples", "")
-            target_path = os.path.join(path, "teiliApps", "examples", "")
-            if not os.path.isdir(target_path):
-                Path(target_path).mkdir(parents=True)
+class new_install(install):
+    def __init__(self, *args, **kwargs):
+        super(new_install, self).__init__(*args, **kwargs)
+        atexit.register(_post_install)
 
-            os.system('cp {}* {}'.format(source_path, target_path))
-        install.run(self)
+
+class new_develop(develop):
+    def __init__(self, *args, **kwargs):
+        super(new_develop, self).__init__(*args, **kwargs)
+        atexit.register(_post_install)
 
 
 setup(
@@ -78,7 +74,8 @@ setup(
         'pyqt5>=5.10.1'
     ],
     cmdclass={
-        'install': PostInstallCommand
+        'install': new_install,
+        'develop': new_develop,
     },
     packages=[
         'teili',

@@ -224,8 +224,8 @@ dpi_params = {
     'Ie_syn': 0.5 * pA,
     'Ii_syn': 0.5 * pA,
     'w_plast': 1,
-    'baseweight_e': 50. * pA,
-    'baseweight_i': 50. * pA
+    'baseweight_e': 7. * pA,
+    'baseweight_i': 7. * pA
 }
 
 # DPI shunting inhibition
@@ -305,8 +305,8 @@ fusi = {'model': '''
 
       dw/dt = (alpha*updrift)-(beta*downdrift) : 1 (event-driven) # internal weight variable
 
-      wplus: 1 
-      wminus: 1 
+      wplus: 1
+      wminus: 1
       theta_upl: volt (constant)
       theta_uph: volt (constant)
       theta_downh: volt (constant)
@@ -368,6 +368,7 @@ fusi_params_conductance = {"wplus": 0.2,
 stdp = {'model': '''
       dApre/dt = -Apre / taupre : 1 (event-driven)
       dApost/dt = -Apost / taupost : 1 (event-driven)
+      dApost = -dApre * (taupre / taupost) * Q_diffAPrePost * w_max : 1
       w_max: 1 (constant)
       taupre : second (constant)
       taupost : second (constant)
@@ -380,7 +381,7 @@ stdp = {'model': '''
       w_plast = clip(w_plast + Apost, 0, w_max) ''',
 
         'on_post': '''
-      Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
+      Apost += dApost
       w_plast = clip(w_plast + Apre, 0, w_max) '''}
 
 stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace since we would define it twice?
@@ -388,7 +389,7 @@ stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace 
                      "taupre": 10 * ms,
                      "taupost": 10 * ms,
                      "w_max": 1.,
-                     "dApre": 0.1,
+                     "dApre": 0.01,
                      "Q_diffAPrePost": 1.05,
                      "w_plast": 0}
 

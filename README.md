@@ -60,13 +60,7 @@ Please look at the examples here: teili/examples/ and our [Documentation](https:
     ```
 
     You are good to go!<br />
-    If you want to specify the location of `teiliApps` just provide the path to the `setup.py`:
-    ```
-    cd teili/
-    pip install . --install-option="--dir='/your/custom/path'"
-    or
-    pip install tar --install-option="--dir='/your/custom/path'"
-    ```
+
 ### Alternative installation **NOT RECOMMENDED**
     If, however, you want to install all dependencies separately you can run the following commands **NOT RECOMMENDED**:
     ```

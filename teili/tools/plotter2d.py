@@ -123,7 +123,7 @@ class Plotter2d(object):
             # print(self._i)
             self._xi, self._yi = np.unravel_index(self._i, (dims[0], dims[1]))
             #assert(len(self._i) == len(self._t))
-        except:  # that should work, if it is a DVSmonitor (it has xi and yi instead of y)
+        except AttributeError:  # that should work, if it is a DVSmonitor (it has xi and yi instead of y)
             self._xi = np.asarray(monitor.xi, dtype='int')
             self._yi = np.asarray(monitor.yi, dtype='int')
             self._i = np.ravel_multi_index((self._xi, self._yi), dims)  # neuron index number of spike
@@ -243,7 +243,7 @@ class Plotter2d(object):
             self.plotrange = (np.min(self.t), np.max(self.t))
 
 
-    def get_sparse3d(self, dt):
+    def get_sparse3d(self, dt, align_to_min_t=True):
         """Using the package sparse (based of scipy sparse, but for 3d), the spiketimes
         are converted into a sparse matrix. This step is basically just for easy
         conversion into a dense matrix later, as you cannot do so many computations
@@ -260,13 +260,15 @@ class Plotter2d(object):
         #print(np.max(self.t / dt))
         # print(self.plotshape(dt))
         if len(self.t) > 0:
+            # t = (self.t - np.min(self.t)) / dt
+            t = (self.t) / dt
             try:
                 sparse_spikemat = sparse.COO(
-                    (np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
+                    (np.ones(len(self.t)), (t, self.xi, self.yi)),
                     shape=self.plotshape(dt))
             except:
                 sparse_spikemat = sparse.COO(
-                    coords=((self.t - np.min(self.t)) / dt, self.xi, self.yi),
+                    coords=(t, self.xi, self.yi),
                     data=np.ones(len(self.t)),
                     shape=self.plotshape(dt))
         else:

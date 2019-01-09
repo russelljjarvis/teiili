@@ -31,7 +31,7 @@ before_script:
     - pip3 install seaborn
 
     # teili itself
-    - python3 install setup.py
+    - python3 setup.py install
 
 unit-tests:
     stage: test

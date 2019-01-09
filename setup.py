@@ -16,9 +16,12 @@ def _post_install():
         from teili.models import neuron_models, synapse_models
         path = os.path.expanduser("~")
         equation_path = os.path.join(path, "teiliApps", "equations")
+        teili_equation_path = "./teili/models/equations"
 
         neuron_models.main(path=equation_path)
         synapse_models.main(path=equation_path)
+        neuron_models.main(path=teili_equation_path)
+        synapse_models.main(path=teili_equation_path)
 
         source_path = os.path.join(os.getcwd(), "tests", "")
         target_path = os.path.join(path, "teiliApps", "unit_tests", "")

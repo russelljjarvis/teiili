@@ -37,5 +37,5 @@ unit-tests:
     stage: test
     script:
         - cd $CI_PROJECT_DIR/tests/
-        - python3 -m unittest
+        - python3 -m unittest discover
 

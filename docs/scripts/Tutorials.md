@@ -41,10 +41,10 @@ path = os.path.expanduser("~")
 model_path = os.path.join(path, "teiliApps", "equations", "")
 
 my_neuron_model = NeuronEquationBuilder.import_eq(
-    model_path + 'DPI', num_inputs=2)
+    model_path + 'DPI.py', num_inputs=2)
 
 my_synapse_model = SynapseEquationBuilder.import_eq(
-    model_path + 'DPISyn')
+    model_path + 'DPISyn.py')
 
 test_neuron1 = Neurons(2, equation_builder=my_neuron_model,
                        name="test_neuron1")
@@ -185,14 +185,14 @@ path = os.path.expanduser("~")
 model_path = os.path.join(path, "teiliApps", "equations", "")
 
 builder_object1 = NeuronEquationBuilder.import_eq(
-    model_path + 'DPI', num_inputs=2)
+    model_path + 'DPI.py', num_inputs=2)
 builder_object2 = NeuronEquationBuilder.import_eq(
     model_path + 'DPI.py', num_inputs=2)
 
 builder_object3 = SynapseEquationBuilder.import_eq(
-    model_path + 'DPISyn')
+    model_path + 'DPISyn.py')
 builder_object4 = SynapseEquationBuilder.import_eq(
-    model_path + 'DPISyn')
+    model_path + 'DPISyn.py')
 
 test_neurons1 = Neurons(2, equation_builder=builder_object1, name="test_neurons1")
 test_neurons2 = Neurons(2, equation_builder=builder_object2, name="test_neurons2")

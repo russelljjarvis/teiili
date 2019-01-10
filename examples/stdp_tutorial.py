@@ -19,7 +19,7 @@ from brian2 import ms, us, pA, prefs,\
     SpikeMonitor, StateMonitor, defaultclock
 
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn, DPIstdp
 from teili.stimuli.testbench import STDP_Testbench
@@ -27,7 +27,7 @@ from teili.stimuli.testbench import STDP_Testbench
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 50 * us
-Net = teiliNetwork()
+Net = TeiliNetwork()
 
 stdp = STDP_Testbench()
 pre_spikegenerator, post_spikegenerator = stdp.stimuli(isi=30)

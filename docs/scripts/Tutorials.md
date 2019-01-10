@@ -74,7 +74,7 @@ from brian2 import ms, pA, nA, prefs,\
     SpikeGeneratorGroup
 
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.neuron_models import DPI as neuron_model
 from teili.models.synapse_models import DPISyn as syn_model
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
@@ -91,9 +91,9 @@ input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
                                            times=input_timestamps, name='gtestInp')
 ```
-After defining the input group, we can build a teiliNetwork.
+After defining the input group, we can build a TeiliNetwork.
 ```
-Net = teiliNetwork()
+Net = TeiliNetwork()
 
 test_neurons1 = Neurons(2, equation_builder=neuron_model(
     num_inputs=2), name="test_neurons1")
@@ -163,7 +163,7 @@ elif 'Vm' in neuron_model().keywords['model']:
     statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
         "Iin", "Vm", "Iadapt"], record=[0, 1], name='statemon_test_neurons1')
 ```
-We can now finally add all defined `Neurons` and `Connections`, as well as the monitors to our `teiliNetwork` and run the simulation.
+We can now finally add all defined `Neurons` and `Connections`, as well as the monitors to our `TeiliNetwork` and run the simulation.
 ```
 Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon,
         spikemonOut, statemonNeuIn, statemonNeuOut, statemonSynOut, statemonInpSyn)
@@ -338,16 +338,16 @@ from brian2 import ms, us, pA, prefs,\
     SpikeMonitor, StateMonitor, defaultclock
 
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn, DPIstdp
 from teili.stimuli.testbench import STDP_Testbench
 ```
-As before we can define the backend, as well as our `teiliNetwork`:
+As before we can define the backend, as well as our `TeiliNetwork`:
 ```
 prefs.codegen.target = "numpy"
 defaultclock.dt = 50 * us
-Net = teiliNetwork()
+Net = TeiliNetwork()
 ```
 Note that we changed the `defaultclock`. This is usually helpful to prevent numerical integration error and to be sure that the network performs the desired computation. But keep in mind
 by decreasing the `defaultclock.dt` the simulation takes longer!
@@ -634,13 +634,13 @@ import pyqtgraph as pg
 import numpy as np
 from brian2 import SpikeGeneratorGroup, SpikeMonitor, StateMonitor, ms, asarray, nA, prefs
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.neuron_models import DPI as neuron_model
 from teili.models.synapse_models import DPISyn as syn_model
 
 prefs.codegen.target = "numpy"
 
-Net = teiliNetwork()
+Net = TeiliNetwork()
 
 mismatch_neuron_param = {
 'Inoise' : 0,

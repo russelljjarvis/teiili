@@ -16,7 +16,7 @@ from brian2 import ms, pA, nA, prefs,\
     SpikeGeneratorGroup
 
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.neuron_models import DPI as neuron_model
 from teili.models.synapse_models import DPISyn as syn_model
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
@@ -29,7 +29,7 @@ input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
                                            times=input_timestamps, name='gtestInp')
 
 
-Net = teiliNetwork()
+Net = TeiliNetwork()
 
 test_neurons1 = Neurons(2, equation_builder=neuron_model(
     num_inputs=2), name="test_neurons1")

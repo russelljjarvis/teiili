@@ -18,7 +18,7 @@ from brian2 import ms, mV, pA, nS, nA, uA, pF, us, volt, second, Network, prefs,
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili import NeuronEquationBuilder, SynapseEquationBuilder
 from teili.tools.random_walk import pink
 
@@ -29,7 +29,7 @@ prefs.codegen.target = "numpy"
 defaultclock.dt = 10 * us
 
 start_scope()
-Net = teiliNetwork()
+Net = TeiliNetwork()
 
 parameters = {
 'Cm' : '281. * pfarad',

@@ -22,7 +22,7 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
@@ -50,7 +50,7 @@ input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
                                            times=input_timestamps, name='gtestInp')
 
-Net = teiliNetwork()
+Net = TeiliNetwork()
 
 test_neurons1 = Neurons(2, equation_builder=builder_object1, name="test_neurons1")
 

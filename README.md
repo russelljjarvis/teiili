@@ -36,18 +36,14 @@ Please look at the examples here: teili/examples/ and our [Documentation](https:
     source activate myenv
     ```
 
-*  Navigate to the folder containing the cloned repository
-    ```
-    cd teili/
-    ```
-    or the downloaded `tar.gz` file
+*  Navigate to the parent folder containing the cloned repository or the downloaded `tar.gz` file
     ```
     cd Downloads/
     ```
 *  Install teili using pip
     ```
     # Point pip to the location of the setup.py
-    pip install .
+    pip install teili/
     # or point pip to the downloaded tar.gz file
     pip install teili*.tar.gz
     ```

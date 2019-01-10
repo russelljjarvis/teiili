@@ -22,7 +22,7 @@ from brian2 import prefs, ms, pA, nA, StateMonitor, device, set_device,\
 pS = psiemens
 from teili.building_blocks.reservoir import Reservoir, plot_reservoir
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 
 import runpy
 
@@ -79,7 +79,7 @@ prefs.codegen.target = 'numpy'
 num_neurons = nc17['N']
 # num_input_neurons = 1 # nc17['Xin'].shape[1]
 
-Net = teiliNetwork()
+Net = TeiliNetwork()
 duration = nc17['T'] * ms
 defaultclock.dt = nc17['dt'] * ms
 

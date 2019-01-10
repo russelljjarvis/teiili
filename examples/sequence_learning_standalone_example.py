@@ -32,7 +32,7 @@ ExpAdaptIF = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
 ReversalSynV = SynapseEquationBuilder.import_eq('ReversalSynV')
 
 #from teili.tools.cpptools import build_cpp_and_replace, collect_standalone_params, run_standalone
-from teili.core.network import teiliNetwork
+from teili.core.network import TeiliNetwork
 
 standaloneDir = os.path.expanduser('~/SL_standalone')
 #isStandalone = True
@@ -113,7 +113,7 @@ tsReset = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 300, np.ones((nP
 indReset = np.mod(np.arange(size(tsReset)), nPerGroup)
 SequenceLearningExample.reset_group.set_spikes(indices=indReset, times=tsReset)
 
-seqNet = teiliNetwork()
+seqNet = TeiliNetwork()
 #seqNet = Network()
 seqNet.add(SequenceLearningExample,SequenceLearningExample.Monitors)
 
@@ -140,7 +140,7 @@ standaloneParams = OrderedDict([('duration', 0.33 * second),
                              #('taugIi', 6. * msecond)
                              ])
 
-seqNet.build(standaloneParams = standaloneParams)
+seqNet.build(standalone_params = standaloneParams)
 
 #%%
 # Simulation

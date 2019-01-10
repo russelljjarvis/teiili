@@ -16,12 +16,13 @@ Created on Wed Jul 25 18:32:44 2018
 """
 import os
 import numpy as np
+import sys
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 from brian2 import SpikeGeneratorGroup, SpikeMonitor, StateMonitor, ms, asarray, nA, prefs, set_device
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.neuron_models import DPI as neuron_model
 from teili.models.synapse_models import DPISyn as syn_model
 
@@ -38,7 +39,7 @@ else:
     print('QApplication instance already exists: %s' % str(app))
 
 
-Net = teiliNetwork()
+Net = TeiliNetwork()
 
 mismatch_neuron_param = {
     'Inoise': 0,

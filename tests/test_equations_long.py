@@ -11,7 +11,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 #import os
-from teili import NeuronEquationBuilder, SynapseEquationBuilder, Neurons, teiliNetwork
+from teili import NeuronEquationBuilder, SynapseEquationBuilder, Neurons, TeiliNetwork
 from teili.models.neuron_models import Izhikevich as neuron_model
 
 from brian2 import prefs, ms
@@ -28,7 +28,7 @@ class TestEquations(unittest.TestCase):
     #         'ExpAdaptIF', num_inputs=1)
     #     testNeurons = Neurons(1, equation_builder=ExpAdaptIF(
     #         num_inputs=1), name="testNeuron", verbose=False)
-    #     Net = teiliNetwork()
+    #     Net = TeiliNetwork()
     #     Net.add(testNeurons)
     #     Net.run(5 * ms)
 
@@ -36,7 +36,7 @@ class TestEquations(unittest.TestCase):
     #     DPI = NeuronEquationBuilder.import_eq('DPI', num_inputs=1)
     #     testNeurons = Neurons(1, equation_builder=DPI(
     #         num_inputs=1), name="testNeuron", verbose=False)
-    #     Net = teiliNetwork()
+    #     Net = TeiliNetwork()
     #     Net.add(testNeurons)
     #     Net.run(5 * ms)
 
@@ -47,7 +47,7 @@ class TestEquations(unittest.TestCase):
             num_inputs=1)
         testNeurons = Neurons(1, equation_builder=Izhikevich(
             num_inputs=1), name="testNeuron", verbose=False)
-        Net = teiliNetwork()
+        Net = TeiliNetwork()
         I_bias = 1000 * pA + 500 * pA
         testNeurons.namespace.update({'I_bias': I_bias})
         testNeurons.run_regularly("Iconst = I_bias", dt=1 * ms)

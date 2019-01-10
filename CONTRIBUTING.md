@@ -11,7 +11,7 @@ If you do have access to https://code.ini.uzh.ch/ncs/teili and want to contribut
 4. Update the documentation if necessary.
 5. Commit often, using good commit messages. (See https://chris.beams.io/posts/git-commit/)
 6. Push back to code.ini.uzh.ch fairly often too, to enable the rest of us to see what you're up to.
-7. Make sure that the CI pipeline runs successfully. (But note that this is broken at the time of writing - see #51.)
+7. Make sure that the CI pipeline runs successfully.
 8. When you're done, make a merge request.
 
 ## Any contributions you make will be under the MIT Software License

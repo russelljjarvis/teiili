@@ -112,8 +112,7 @@ class StdpSynV(SynapseEquationBuilder):
 def main(path=None):
     if path is None:
         path = str(Path.home())
-
-    path = os.path.join(path, "teiliApps", "equations")
+        path = os.path.join(path, "teiliApps", "equations")
 
     if not os.path.isdir(path):
         Path(path).mkdir(parents=True)

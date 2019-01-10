@@ -181,22 +181,6 @@ class WTA(BuildingBlock):
         if monitor:
             self.spikemonWTA = self.Monitors['spikemonWTA']
 
-    def plot(self, start_time=0 * ms, end_time=None, plot_states=True):
-        """Simple plot for WTA.
-
-        Args:
-            start_time (int, optional): Start time of plot in ms.
-            end_time (int, optional): End time of plot in ms.
-            plot_states (bool, optional): Description
-
-        Returns:
-            pyqtgraph window: The window containing the plot.
-        """
-        win = plotWTA(wta_monitors=self.Monitors, name=self.name,
-                      start_time=start_time, end_time=end_time, plot_states=plot_states)
-        self.plot_win = win
-        return win
-
 
 def gen1dWTA(groupname,
              neuron_eq_builder=DPI,

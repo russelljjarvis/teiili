@@ -41,9 +41,6 @@ class PostInstallCommand(install):
             neuron_models.main(path=teili_equation_path)
             synapse_models.main(path=teili_equation_path)
 
-            neuron_models.main(path=path)
-            synapse_models.main(path=path)
-
             source_path = os.path.join(os.getcwd(), "tests", "")
             target_path = os.path.join(path, "teiliApps", "unit_tests", "")
 

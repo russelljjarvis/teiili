@@ -45,8 +45,8 @@ testbench = WTA_Testbench()
 
 wtaParams = {'weInpWTA': 900,
              'weWTAInh': 500,
-             'wiInhWTA': -550,  # -250,
-             'weWTAWTA': 650,  # 75,
+             'wiInhWTA': -550,
+             'weWTAWTA': 650,
              'sigm': 2,
              'rpWTA': 3 * ms,
              'rpInh': 1 * ms,
@@ -56,11 +56,6 @@ wtaParams = {'weInpWTA': 900,
 test_WTA = WTA(name='test_WTA', dimensions=1, num_neurons=num_neurons, num_inh_neurons=40,
                num_input_neurons=num_input_neurons, num_inputs=2, block_params=wtaParams,
                spatial_kernel="kernel_gauss_1d")
-
-syn_in_ex = test_WTA.Groups["synInpWTA1e"]
-syn_ex_ex = test_WTA.Groups['synWTAWTA1e']
-syn_ex_ih = test_WTA.Groups['synWTAInh1e']
-syn_ih_ex = test_WTA.Groups['synInhWTA1i']
 
 testbench.stimuli(num_neurons=num_neurons, dimensions=1,
                   start_time=100, end_time=duration)
@@ -91,21 +86,18 @@ Net.standalone_params.update({'test_WTA_Iconst': 1 * pA})
 if run_as_standalone:
     Net.build()
 
-# %%
-# parameters are nonsense, please find good ones!
 standalone_params = OrderedDict([('duration', 0.7 * second),
-                                 ('stestWTA_e_latWeight', 200),  # 280),
+                                 ('stestWTA_e_latWeight', 650),
                                  ('stestWTA_e_latSigma', 2),
-                                 ('stestWTA_Inpe_weight', 300),
-                                 ('stestWTA_Inhe_weight', 200),  # 300),
-                                 ('stestWTA_Inhi_weight', -20),
+                                 ('stestWTA_Inpe_weight', 900),
+                                 ('stestWTA_Inhe_weight', 500),
+                                 ('stestWTA_Inhi_weight', -650),
 
-                                 ('test_WTA_refP', 5. * msecond),
-                                 ('gtestWTA_Inh_refP', 5. * msecond),
-                                 ('gtestWTA_Iconst', 4000 * pA)])
+                                 ('test_WTA_refP', 1. * msecond),
+                                 ('gtestWTA_Inh_refP', 1. * msecond)])
 
 duration = standalone_params['duration'] / ms
-Net.run(duration=duration  * ms, standalone_params=standalone_params, report='text')
+Net.run(duration=duration * ms, standalone_params=standalone_params, report='text')
 
 # Visualization
 app = QtGui.QApplication.instance()

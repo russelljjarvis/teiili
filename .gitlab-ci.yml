@@ -31,11 +31,11 @@ before_script:
     - pip3 install seaborn
 
     # teili itself
-    - python3 setup.py install
+    - pip3 install .
 
 unit-tests:
     stage: test
     script:
-        - cd $CI_PROJECT_DIR/tests/
-        - python3 -m unittest discover
+        - cd ~/teiliApps
+        - python3 -m unittest discover unit_tests/
 

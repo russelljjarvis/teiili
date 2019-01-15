@@ -37,11 +37,11 @@ builder_object6 = NeuronEquationBuilder.import_eq(
     'teili/models/equations/DPI', num_inputs=2)
 # Building synapses objects
 builder_object3 = SynapseEquationBuilder.import_eq(
-    'teili/models/equations/Alpha_1')
+    'teili/models/equations/Alpha')
 builder_object4 = SynapseEquationBuilder.import_eq(
-    'teili/models/equations/Resonant_1')
+    'teili/models/equations/Resonant')
 builder_object5 = SynapseEquationBuilder.import_eq(
-    'teili/models/equations/Gaussian_1')
+    'teili/models/equations/Gaussian')
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us

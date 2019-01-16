@@ -372,12 +372,13 @@ class Plotter2d(object):
 
         return imv
 
-    def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET):
+    def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET, levels = None):
         """
         Args:
             plot_dt (TYPE, optional): Description
             filtersize (TYPE, optional): Description
             colormap (TYPE, optional): Description
+            levels (tuple): (min, max); the white and black level values to use (passed to pyqtgraph)
 
         Returns:
             TYPE: Description
@@ -389,7 +390,7 @@ class Plotter2d(object):
 
         imv = pg.ImageView()
         imv.setImage(np.flip(video_filtered, 2), xvals=np.min(self.t / ms) + np.arange(
-            0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
+            0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms), levels = levels)
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")
         # imv.show()

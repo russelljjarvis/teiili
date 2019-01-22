@@ -492,7 +492,7 @@ app.exec()
 The resulting figure should look like this:
 ![altText](fig/wta_tutorial.png)
 ## STDP tutorial
-One key property of Teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity (STDP) mechanism.
+One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity (STDP) mechanism.
 STDP is one mechanism which has been identified experimentally how neurons adjust their synaptic weight according to some correlated firing pattern.
 Feel free to read more about STDP [here](https://scholar.google.com/scholar?&q=STDP).
 The following tutorial can be found at `~/teiliApps/examples/stdp_tutorial.py`

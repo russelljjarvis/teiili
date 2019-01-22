@@ -410,15 +410,17 @@ TODO: THESE KERNELS ARE WRONG!
 # Alpha kernel ##
 
 alpha_kernel = {'model': '''
-             %kernel_e = baseweight_e*(weight>0)*w_plast*(weight*exp(-t_spike/tausyne_rise)/tausyne) : {unit} * second **-1
-             %kernel_i = baseweight_i*(weight<0)*w_plast*(weight*exp(-t_spike/tausyni_rise)/tausyni) : {unit} * second **-1
-             dt_spike/dt = 1 : second (clock-driven)
+             %kernel_e = s_e/tausyne  : {unit} * second **-1
+             %kernel_i = s_i/tausyni  : {unit} * second **-1
+             ds_e/dt = -s_e/tausyne : amp
+             ds_i/dt = -s_i/tausyni : amp
              tausyne_rise : second
              tausyni_rise : second
              ''',
 
                 'on_pre': '''
-             t_spike = 0 * ms
+             s_e += baseweight_e * w_plast * weight
+             s_i += baseweight_i * w_plast * -weight
              %Ie_syn += 0 * amp
              %Ii_syn += 0 * amp
              ''',
@@ -428,38 +430,35 @@ alpha_kernel = {'model': '''
 alpha_params_current = {"tausyne": 0.5 * ms,
                         "tausyni": 0.5 * ms,
                         "tausyne_rise": 2 * ms,
-                        "tausyni_rise": 2 * ms,
-                        "t_spike": 5000 * ms}  # Assuming that last spike has occurred long time ago
+                        "tausyni_rise": 2 * ms}  # Assuming that last spike has occurred long time ago
 
 alpha_params_conductance = {"tausyne": 0.5 * ms,
                             "tausyni": 0.5 * ms,
                             "tausyne_rise": 1 * ms,
-                            "tausyni_rise": 1 * ms,
-                            "t_spike": 5000 * ms}
+                            "tausyni_rise": 1 * ms}
 
 # Resonant kernel ##
 resonant_kernel = {'model': '''
                 omega: 1/second
                 sigma_gaussian : second
-                %kernel_e  = baseweight_e*(weight>0)*w_plast*(weight*exp(-t_spike/tausyne)*cos(omega*t_spike)*omega): {unit} * second **-1
-                %kernel_i  = baseweight_i*(weight<0)*w_plast*(weight*exp(-t_spike/tausyni)*cos(omega*t_spike)*omega) : {unit} * second **-1
-                dt_spike/dt = 1 : second (clock-driven)
+                %kernel_e  = s_e * omega : {unit} * second **-1
+                %kernel_i  = s_i * omega : {unit} * second **-1
+                ds_e/dt = -s_e/tausyne - Ie_syn*omega : amp
+                ds_i/dt = -s_i/tausyni - Ii_syn*omega : amp
                 tausyne_kernel : second
                 tausyni_kernel : second
                 ''',
 
                    'on_pre': '''
-
-                t_spike = 0 * ms
-                %Ie_syn += 0 * amp
-                %Ii_syn += 0 * amp
+                s_e += baseweight_e * w_plast * weight
+                s_i += baseweight_i * w_plast * -weight
                 ''',
 
                    'on_post': ''' '''}
 
 resonant_params_current = {"tausyne": 0.5 * ms,
                            "tausyni": 0.5 * ms,
-                           "omega": 7 / ms,
+                           "omega": 3 / ms,
                            "tausyne_kernel": 0.5 * ms,
                            "tausyni_kernel": 0.5 * ms}
 

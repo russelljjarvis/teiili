@@ -22,75 +22,57 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
 
 from teili.core.groups import Neurons, Connections
 from teili import teiliNetwork
+from teili.models.neuron_models import DPI as neuron_model
 from teili.models.parameters.dpi_neuron_param import parameters as DPIparam
+from teili.models.synapse_models import Alpha, Resonant, Gaussian
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
-
-# For this example you must first run models/neuron_models.py and synapse_models.py,
-# which will create the equation template. This will be stored in models/equations
-# Building neuron objects
-builder_object1 = NeuronEquationBuilder.import_eq(
-    'teili/models/equations/DPI', num_inputs=2)
-builder_object2 = NeuronEquationBuilder.import_eq(
-    'teili/models/equations/DPI', num_inputs=2)
-builder_object6 = NeuronEquationBuilder.import_eq(
-    'teili/models/equations/DPI', num_inputs=2)
-# Building synapses objects
-builder_object3 = SynapseEquationBuilder.import_eq(
-    'teili/models/equations/Alpha')
-builder_object4 = SynapseEquationBuilder.import_eq(
-    'teili/models/equations/Resonant')
-builder_object5 = SynapseEquationBuilder.import_eq(
-    'teili/models/equations/Gaussian')
 
 prefs.codegen.target = "numpy"
 # defaultclock.dt = 10 * us
 
-tsInp = asarray([1, 1.1, 1.25, 1.38, 1.5, 1.67, 1.8, 2.5, 4, 4.2, 4.37, 9]) * ms
-indInp = np.zeros(tsInp.size)
+input_timestamps = asarray([1, 1.1, 1.25, 1.38, 1.5, 1.67, 1.8, 2.5, 4, 4.2, 4.37, 9]) * ms
+input_indices = np.zeros(input_timestamps.size)
 
-gInpGroup = SpikeGeneratorGroup(1, indices=indInp,
-                                times=tsInp, name='gtestInp')
+input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
+                                times=input_timestamps, name='gtestInp')
 
 Net = teiliNetwork()
 
-testNeurons = Neurons(1, equation_builder=builder_object1, name="testNeuron")
+testNeurons = Neurons(1, equation_builder=neuron_model(num_inputs=2), name="testNeuron")
 # Example of how to set parameters, saved as a dictionary
 testNeurons.set_params(DPIparam)
 testNeurons.refP = 1 * ms
 
-testNeurons2 = Neurons(1, equation_builder=builder_object2, name="testNeuron2")
+testNeurons2 = Neurons(1, equation_builder=neuron_model(num_inputs=2), name="testNeuron2")
 # Example of how to set parameters, saved as a dictionary
 testNeurons2.set_params(DPIparam)
 testNeurons2.refP = 1 * ms
 
-testNeurons3 = Neurons(1, equation_builder=builder_object6, name="testNeuron3")
+testNeurons3 = Neurons(1, equation_builder=neuron_model(num_inputs=2), name="testNeuron3")
 # Example of how to set parameters, saved as a dictionary
 testNeurons3.set_params(DPIparam)
 testNeurons3.refP = 1 * ms
 
 #Set synapses using different kernels
-InpSynAlpha = Connections(gInpGroup, testNeurons,
-                     equation_builder=builder_object3, name="testSynAlpha", verbose=False)
+InpSynAlpha = Connections(input_spikegenerator, testNeurons,
+                     equation_builder=Alpha(), name="testSynAlpha", verbose=False)
 InpSynAlpha.connect(True)
-InpSynAlpha.t_spike = 0 * ms
 InpSynAlpha.weight = 10
 
-InpSynResonant = Connections(gInpGroup, testNeurons2,
-                     equation_builder=builder_object4, name="testSynResonant", verbose=False)
+InpSynResonant = Connections(input_spikegenerator, testNeurons2,
+                     equation_builder=Resonant(), name="testSynResonant", verbose=False)
 InpSynResonant.connect(True)
-InpSynResonant.t_spike = 0 * ms
 InpSynResonant.weight = 30
 
-InpSynGaussian = Connections(gInpGroup, testNeurons3,
-                     equation_builder=builder_object5, name="testSynGaussian", verbose=False)
+InpSynGaussian = Connections(input_spikegenerator, testNeurons3,
+                     equation_builder=Gaussian(), name="testSynGaussian", verbose=False)
 InpSynGaussian.connect(True)
-InpSynGaussian.t_spike = 40 * ms
 InpSynGaussian.weight = 5
 InpSynGaussian.delta_t = 5 * ms
 
 #Set monitors
-spikemonInp = SpikeMonitor(gInpGroup, name='spikemonInp')
+spikemonInp = SpikeMonitor(input_spikegenerator, name='spikemonInp')
 statemonInpSynAlpha = StateMonitor(
     InpSynAlpha, variables='Ie_syn', record=True, name='statemonInpSynAlpha')
 statemonInpSynResonant = StateMonitor(
@@ -104,12 +86,12 @@ statemonNeuOut2 = StateMonitor(testNeurons2, variables=[
 statemonNeuOut3 = StateMonitor(testNeurons3, variables=[
                               'Imem'], record=0, name='statemonNeuOut3')
 
-Net.add(gInpGroup, testNeurons, testNeurons2, testNeurons3,
+Net.add(input_spikegenerator, testNeurons, testNeurons2, testNeurons3,
         InpSynAlpha, InpSynResonant, InpSynGaussian, spikemonInp,
         statemonInpSynAlpha, statemonInpSynResonant, statemonInpSynGaussian, 
         statemonNeuOut, statemonNeuOut2, statemonNeuOut3)
 
-duration = 40 #500
+duration = 40
 Net.run(duration * ms)
 
 #Visualize simulation results

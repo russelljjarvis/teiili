@@ -34,6 +34,7 @@ If you prefer to import your model from a file you can do so:
 
 ```
 import os
+from teili.core.groups import Neurons, Connections
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
@@ -1003,4 +1004,3 @@ p2.setLabel('bottom', units=str(unit_old_param_neu), **labelStyle)
 
 
 ![altText](fig/Mismatch_distribution.png)
-

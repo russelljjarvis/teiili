@@ -8,7 +8,7 @@ This script is adapted from https://code.ini.uzh.ch/alpren/gridcells/blob/master
 
 This script contains a simple event based way to simulate complex STDP kernels
 """
-# comment
+
 from brian2 import ms, prefs, SpikeMonitor, run
 from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg

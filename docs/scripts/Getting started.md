@@ -28,18 +28,14 @@ git clone https://code.ini.uzh.ch/ncs/teili.git
     source activate myenv
     ```
 
-*  Navigate to the folder containing the cloned repository
-    ```
-    cd teili/
-    ```
-    or the downloaded `tar.gz` file
+*  Navigate to the parent folder containing the cloned repository or the downloaded `tar.gz` file
     ```
     cd Downloads/
     ```
 *  Install teili using pip
     ```
     # Point pip to the location of the setup.py
-    pip install .
+    pip install teili/
     # or point pip to the downloaded tar.gz file
     pip install teili*.tar.gz
     ```
@@ -54,11 +50,11 @@ git clone https://code.ini.uzh.ch/ncs/teili.git
     You are good to go!<br />
     If you want to specify the location of `teiliApps` just provide the path to the `setup.py`:
     ```
-    cd teili/
-    pip install . --install-option="--dir='/your/custom/path'"
+    pip install teili/ --install-option="--dir='/your/custom/path'"
     or
     pip install tar --install-option="--dir='/your/custom/path'"
     ```
+
 ### Alternative installation **NOT RECOMMENDED** as it will not create the pre-defined neuron models
     If, however, you want to install all dependencies separately you can run the following commands **NOT RECOMMENDED**:
     ```
@@ -96,6 +92,6 @@ from teili import neuron_models, synapse_models
 neuron_models.main("/path/to/my/equations/")
 synapse_models.main("/path/to/my/equations/")
 ```
-Note, that the followinf folder structure is generated in the specified location: `/path/to/my/equations/teiliApps/equations/`.
+Note, that the following folder structure is generated in the specified location: `/path/to/my/equations/teiliApps/equations/`.
 Have a look at our `examples` to see different use cases and tutorials.
 

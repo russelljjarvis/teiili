@@ -7,12 +7,13 @@ If you don't have access to https://code.ini.uzh.ch/ncs/teili and you didn't get
 If you do have access to https://code.ini.uzh.ch/ncs/teili and want to contribute, please
 1. Starting from the `dev` branch, create a new topic branch named `dev-`_mytopic_ for your work.
 2. Clone the repository to where you're going to work.
-3. Code away to your heart's content. Note that we use the [PEP 8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/). Don't forget to write tests too.
-4. Update the documentation if necessary.
-5. Commit often, using good commit messages. (See https://chris.beams.io/posts/git-commit/)
-6. Push back to code.ini.uzh.ch fairly often too, to enable the rest of us to see what you're up to.
-7. Make sure that the CI pipeline runs successfully. (But note that this is broken at the time of writing - see #51.)
-8. When you're done, make a merge request.
+3. Copy `.pre-push-hook.sh` to `.git/hooks/pre-push` and make sure it is executable. This will run the test code every time you push, and prevent the push from completing if a test fails!
+4. Code away to your heart's content. Note that we use the [PEP 8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/). Don't forget to write tests too.
+5. Update the documentation if necessary.
+6. Commit often, using good commit messages. (See https://chris.beams.io/posts/git-commit/)
+7. Push back to code.ini.uzh.ch fairly often too, to enable the rest of us to see what you're up to.
+8. Make sure that the CI pipeline runs successfully.
+9. When you're done, make a merge request.
 
 ## Any contributions you make will be under the MIT Software License
 In contributing back to https://code.ini.uzh.ch/ncs/teili, you agree to license your contribution under the MIT license, see the `LICENSE` file.

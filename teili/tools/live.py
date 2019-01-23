@@ -73,10 +73,14 @@ class ParameterGUI(QtGui.QWidget):
         self.setWindowTitle('Parameter settings')
         self.resize(500, 1000)
 
+        self.params += [{'name': 'Save/Restore functionality', 'type': 'group', 'children': [
+                {'name': 'Save State', 'type': 'action'},
+                {'name': 'Restore State', 'type': 'action'}]}]
+
         self.net = net
 
-        if net is not None:
-            self.add_net(net)
+#        if net is not None:
+#            self.add_net(net)
 
     def add_params(self, parameters):
         """Summary
@@ -97,20 +101,20 @@ class ParameterGUI(QtGui.QWidget):
 
         for par in parameters:
             try:
-                self.units.update({par.group_name + '_' + par.name: par.dim})
+                self.units.update({par.group_name + '__' + par.name: par.dim})
             except Exception as e:
                 print(str(e))
                 #units.update({par : ''})
                 pass
-        children = [{'name': par.group_name + '_' + par.name,
-                     'type': 'float', 'suffix': ' ' + str(self.units[par.group_name + '_' + par.name]),
+        children = [{'name': par.group_name + '__' + par.name,
+                     'type': 'float', 'suffix': ' ' + str(self.units[par.group_name + '__' + par.name]),
                      'value': np.asarray(par), 'step': abs(asarray(par) / 10)} for par in parameters]
 
         self.params += [{'name': 'manually added',
                          'type': 'group', 'children': children}]
 
     def add_net(self, net):
-        """Summary
+        """This does not work with arrays!
 
         Args:
             net (TYPE): Description
@@ -153,10 +157,6 @@ class ParameterGUI(QtGui.QWidget):
         # make parameter groups for building blocks
         self.params += [{'name': block.name, 'type': 'group', 'children': self.make_children(block)}
                         for block in net.blocks]
-
-        self.params += [{'name': 'Save/Restore functionality', 'type': 'group', 'children': [
-            {'name': 'Save State', 'type': 'action'},
-            {'name': 'Restore State', 'type': 'action'}]}]
 
     def showGUI(self):
         """Summary
@@ -222,11 +222,11 @@ class ParameterGUI(QtGui.QWidget):
         """
         print("Value changing: %s %s" % (param, value))
 
-        # This won't work if there is a '_' in the parameter name!
-        groupname = param.name().rpartition('_')[0]
-        parname = param.name().rpartition('_')[-1]
+        # This won't work if there is a '__' in the parameter name!
+        groupname = param.name().rpartition('__')[0]
+        parname = param.name().rpartition('__')[-1]
 
-        print(groupname, parname)
+        print('groupname: ', groupname, 'parname: ', parname)
 
         # Quantity.with_dimensions(value,self.standalone_params[param.name()].dim)
         valWithUnit = Quantity.with_dimensions(value, self.units[param.name()])

@@ -20,9 +20,9 @@ import sys
 from brian2 import ms, Hz, defaultclock, second
 import numpy as np
 import shutil
-#import matplotlib.animation as animation
+# import matplotlib.animation as animation
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui #, QtCore
+from pyqtgraph.Qt import QtGui  # , QtCore
 import pyqtgraph.exporters  # looks redundant, but this is necessary for export
 import sparse
 from scipy import ndimage
@@ -33,6 +33,7 @@ import pandas as pd
 import subprocess
 # pg.setConfigOption('background', 'w') # makes  background white
 from pyqtgraph.colormap import ColorMap
+
 CM_JET = ColorMap([0.0, 0.33, 0.66, 1.0],
                   [(0, 0, 255, 255), (0, 255, 255, 255),
                    (255, 255, 0, 255), (255, 10, 10, 255)], mode=2)
@@ -49,7 +50,6 @@ else:
 
 
 class DVSmonitor:
-
     """Summary
 
     Attributes:
@@ -59,7 +59,7 @@ class DVSmonitor:
         yi (TYPE): Description
     """
 
-    def __init__(self, xi, yi, t, pol, unit = None):
+    def __init__(self, xi, yi, t, pol, unit=None):
         """Summary
 
         Args:
@@ -115,15 +115,15 @@ class Plotter2d(object):
         self._t = monitor.t  # times of spikes
         self.shape = (dims[0], dims[1], len(monitor.t))
 
-        self.monitor = monitor #mainly for debugging!
+        self.monitor = monitor  # mainly for debugging!
 
-        #self.name = monitor.name
+        # self.name = monitor.name
         try:  # that should work if the monitor is a Brian2 Spikemonitor
             self._i = monitor.i  # neuron index number of spike
             # print(self._i)
             self._xi, self._yi = np.unravel_index(self._i, (dims[0], dims[1]))
-            #assert(len(self._i) == len(self._t))
-        except:  # that should work, if it is a DVSmonitor (it has xi and yi instead of y)
+            # assert(len(self._i) == len(self._t))
+        except AttributeError:  # that should work, if it is a DVSmonitor (it has xi and yi instead of y)
             self._xi = np.asarray(monitor.xi, dtype='int')
             self._yi = np.asarray(monitor.yi, dtype='int')
             self._i = np.ravel_multi_index((self._xi, self._yi), dims)  # neuron index number of spike
@@ -140,7 +140,7 @@ class Plotter2d(object):
         self.mask = range(len(monitor.t))  # [True] * (len(monitor.t))
         if plotrange is None:
             if len(self.t) > 0:
-                self.plotrange = (np.min(self.t), np.max(self.t))
+                self.plotrange = (0 * second, np.max(self.t))
             else:
                 self.plotrange = (0 * ms, 0 * ms)
         else:
@@ -239,11 +239,10 @@ class Plotter2d(object):
             self.plotrange = plotrange
             self.mask = np.where((self._t <= plotrange[1]) & (self._t >= plotrange[0]))[0]
         else:
-            self.mask = range(len(self._t)) # slice(len(self._t))  # [True] * (len(self._t))
-            self.plotrange = (np.min(self.t), np.max(self.t))
+            self.mask = range(len(self._t))  # slice(len(self._t))  # [True] * (len(self._t))
+            self.plotrange = (0 * second, np.max(self.t))
 
-
-    def get_sparse3d(self, dt):
+    def get_sparse3d(self, dt, align_to_min_t=True):
         """Using the package sparse (based of scipy sparse, but for 3d), the spiketimes
         are converted into a sparse matrix. This step is basically just for easy
         conversion into a dense matrix later, as you cannot do so many computations
@@ -257,22 +256,24 @@ class Plotter2d(object):
             TYPE: Description
         """
         # print(len(self.t))
-        #print(np.max(self.t / dt))
+        # print(np.max(self.t / dt))
         # print(self.plotshape(dt))
         if len(self.t) > 0:
+            # t = (self.t - np.min(self.t)) / dt
+            t = (self.t - self.plotrange[0]) / dt
             try:
                 sparse_spikemat = sparse.COO(
-                    (np.ones(len(self.t)), ((self.t - np.min(self.t)) / dt, self.xi, self.yi)),
+                    (np.ones(len(self.t)), (t, self.xi, self.yi)),
                     shape=self.plotshape(dt))
             except:
                 sparse_spikemat = sparse.COO(
-                    coords=((self.t - np.min(self.t)) / dt, self.xi, self.yi),
+                    coords=(t, self.xi, self.yi),
                     data=np.ones(len(self.t)),
                     shape=self.plotshape(dt))
         else:
             print('Your monitor is empty!')
             # just create a matrix of zeros, hope, this does not lead to other problems
-            sparse_spikemat = sparse.COO(([0], ([0], [0], [0])),shape=self.plotshape(dt))
+            sparse_spikemat = sparse.COO(([0], ([0], [0], [0])), shape=self.plotshape(dt))
         return sparse_spikemat
 
     # Example:
@@ -308,8 +309,9 @@ class Plotter2d(object):
         dense3d = self.get_dense3d(dt)
         filtered = ndimage.uniform_filter1d(dense3d, size=int(filtersize / dt),
                                             axis=0, mode='constant') * second / dt
-        #filtered  = ndimage.zoom(filtered, (1, 2, 2))
+        # filtered  = ndimage.zoom(filtered, (1, 2, 2))
         return filtered
+
     #    import timeit
     #    timeit.timeit("ndimage.uniform_filter(dense3d, size=(0,0,10))",
     #                  setup = 'from scipy import ndimage',
@@ -347,8 +349,7 @@ class Plotter2d(object):
                 video_filtered0 = self.get_filtered(plot_dt * 10, filtersize)
             video_filtered0[video_filtered0 > 0] = 1
 
-
-        pol_mask= np.where((self._pol == 1))[0]
+        pol_mask = np.where((self._pol == 1))[0]
         self.mask = np.sort(np.asarray(list(set(time_mask).intersection(pol_mask)), dtype=int))
         if len(self.t) > 0:
             try:
@@ -357,7 +358,6 @@ class Plotter2d(object):
                 raise MemoryError("the dt you have set would generate a too large matrix for your memory")
                 video_filtered1 = self.get_filtered(plot_dt * 10, filtersize)
             video_filtered1[video_filtered1 > 0] = 2
-
 
         video_filtered = video_filtered0 + video_filtered1
 
@@ -370,15 +370,15 @@ class Plotter2d(object):
         # imv.show()
         # imv.export("plot/plot_.png")
 
-
         return imv
 
-    def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET):
+    def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET, levels = None):
         """
         Args:
             plot_dt (TYPE, optional): Description
             filtersize (TYPE, optional): Description
             colormap (TYPE, optional): Description
+            levels (tuple): (min, max); the white and black level values to use (passed to pyqtgraph)
 
         Returns:
             TYPE: Description
@@ -390,7 +390,7 @@ class Plotter2d(object):
 
         imv = pg.ImageView()
         imv.setImage(np.flip(video_filtered, 2), xvals=np.min(self.t / ms) + np.arange(
-            0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
+            0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms), levels = levels)
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")
         # imv.show()
@@ -423,7 +423,7 @@ class Plotter2d(object):
         hist2d = np.flip(hist2d, 1)
         densetimes = np.arange(
             self.plotrange[0] / ms, self.plotrange[1] / ms, plot_dt / ms)
-        pddf_rate = pd.DataFrame(data=hist2d.T,    # values
+        pddf_rate = pd.DataFrame(data=hist2d.T,  # values
                                  # 1st column as index
                                  index=np.flip(
                                      np.round(hist[1][0:(len(hist[1]) - 1)], 0), 0),
@@ -460,10 +460,10 @@ class Plotter2d(object):
                 denseisis[:, i] = interpf(densetimes)
             else:
                 denseisis[:, i] = 0  # np.nan
-#        imv = pg.ImageView()
-#        imv.setImage(np.reshape(1/(denseisis/1000),(denseisis.shape[0],self.cols,self.rows)))
-#        imv.setPredefinedGradient("thermal")
-#        imv.show()
+        #        imv = pg.ImageView()
+        #        imv.setImage(np.reshape(1/(denseisis/1000),(denseisis.shape[0],self.cols,self.rows)))
+        #        imv.setPredefinedGradient("thermal")
+        #        imv.show()
 
         denseifrs = 1 / (denseisis / 1000)
         denseifrs[denseifrs == np.inf] = 0
@@ -490,7 +490,7 @@ class Plotter2d(object):
         hist2difr[hist2difr == np.nan] = 0
 
         # Make pandas df with colnames and rownames for nicer plotting with sns
-        pddf_ifr = pd.DataFrame(data=hist2difr.T,    # values
+        pddf_ifr = pd.DataFrame(data=hist2difr.T,  # values
                                 # 1st column as index
                                 index=np.flip(
                                     np.round(histifr[1][0:(len(histifr[1]) - 1)], 0), 0),
@@ -499,7 +499,7 @@ class Plotter2d(object):
         plt.figure()
         sns_fig = sns.heatmap(pddf_ifr, cmap='jet', vmax=None,
                               cbar_kws={'label': 'log(n)'}).get_figure()
-        #sns_fig = sns.heatmap(hist2difr.T,cmap = 'jet',xticklabels=densetimes,yticklabels=np.flip(np.round(histifr[1][0:(len(histifr[1])-1)],0),0),vmax=None).get_figure()
+        # sns_fig = sns.heatmap(hist2difr.T,cmap = 'jet',xticklabels=densetimes,yticklabels=np.flip(np.round(histifr[1][0:(len(histifr[1])-1)],0),0),vmax=None).get_figure()
         plt.xlabel('time in s')
         plt.ylabel('ifr in Hz')
         if filename is None:
@@ -508,14 +508,14 @@ class Plotter2d(object):
             sns_fig.savefig(str(filename) + '_ifrhistogram' + '.png')
             plt.close()
 
-#        plt.figure()
-#        sns_fig = sns.heatmap(hist2disi.T,yticklabels=np.flip(np.round(histisi[1][0:(len(histisi[1])-1)],0),0),vmax=100).get_figure()
-#        plt.xlabel('timestep')
-#        plt.ylabel('isi in ms')
-#        #plt.show()
-#        sns_fig.savefig(str(filename) + '_ratehistogram'+ '.png')
-#        #plt.figure()
-        # plt.imshow(hist2d.T/np.max(hist2d))#, vmax = 0.1)
+    #        plt.figure()
+    #        sns_fig = sns.heatmap(hist2disi.T,yticklabels=np.flip(np.round(histisi[1][0:(len(histisi[1])-1)],0),0),vmax=100).get_figure()
+    #        plt.xlabel('timestep')
+    #        plt.ylabel('isi in ms')
+    #        #plt.show()
+    #        sns_fig.savefig(str(filename) + '_ratehistogram'+ '.png')
+    #        #plt.figure()
+    # plt.imshow(hist2d.T/np.max(hist2d))#, vmax = 0.1)
 
     def savez(self, filename):
         """
@@ -545,6 +545,7 @@ class Plotter2d(object):
         Returns:
             TYPE: Description
         """
+
         def mon():
             """Summary
 
@@ -552,6 +553,7 @@ class Plotter2d(object):
                 TYPE: Description
             """
             return 0
+
         try:
             with np.load(str(filename)) as loaded_npz:
                 i, t, pol, dims = [loaded_npz[arr] for arr in loaded_npz]
@@ -560,7 +562,7 @@ class Plotter2d(object):
             mon.i = i
             mon.pol = pol
             return cls(mon, dims)
-        except: # This is for backwards compatibility
+        except:  # This is for backwards compatibility
             print("You are probably loading an old saved monitor!")
             try:
                 with np.load(str(filename)) as loaded_npz:
@@ -576,7 +578,7 @@ class Plotter2d(object):
                 return cls(mon, (rows, cols))
 
     @classmethod
-    def loaddvs(cls, eventsfile, dims = None):
+    def loaddvs(cls, eventsfile, dims=None):
         """
         loads a dvs numpy (events file) from aedat2numpy and returns a
         SpikeMonitor2d object, you can also directly pass an events array
@@ -670,9 +672,9 @@ class Plotter2d(object):
 
         return gw_paneplot
 
-    def generate_movie(self, filename, scale = None, speed = 1, plotfunction = 'plot3d',
-                       plot_dt = 10*ms, tempfolder=os.path.expanduser('~'),
-                       ffmpegoptions = '', **plotkwargs):
+    def generate_movie(self, filename, scale=None, speed=1, plotfunction='plot3d',
+                       plot_dt=10 * ms, tempfolder=os.path.expanduser('~'),
+                       ffmpegoptions='', **plotkwargs):
         """
         This exports a movie or gif from an imageview
         Existing outputfiles will be overwritten
@@ -702,21 +704,21 @@ class Plotter2d(object):
             plotter2dobject.generate_gif('~/gifname.gif', plotfunction = 'plot3d_on_off', filtersize=100 * ms, plot_dt=50 * ms)
         """
 
-        fps = np.asarray(speed/plot_dt/Hz,dtype = 'int')
-        if abs(speed/plot_dt/Hz-fps)>0.0000001:
-            plot_dt = 1/fps*second
-            print('Your plot_dt was rounded to',plot_dt,'in order to fit framerate of',fps)
+        fps = np.asarray(speed / plot_dt / Hz, dtype='int')
+        if abs(speed / plot_dt / Hz - fps) > 0.0000001:
+            plot_dt = 1 / fps * second
+            print('Your plot_dt was rounded to', plot_dt, 'in order to fit framerate of', fps)
 
         gif_temp_dir = os.path.join(tempfolder, "gif_temp")
-        #pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
+        # pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
         if type(plotfunction) == str:
-            plotfunction = getattr(self,plotfunction)
-        pgImage = plotfunction(plot_dt = plot_dt, **plotkwargs)
+            plotfunction = getattr(self, plotfunction)
+        pgImage = plotfunction(plot_dt=plot_dt, **plotkwargs)
         if not os.path.exists(gif_temp_dir):
             os.makedirs(gif_temp_dir)
         pgImage.export(os.path.join(gif_temp_dir, "gif.png"))
 
-        #before switching to ffmpeg we used convert, which is less flexible concerning framerates
+        # before switching to ffmpeg we used convert, which is less flexible concerning framerates
         #        linux_command = "cd " + str(gif_temp_dir) + ";" + \
         #                "convert -delay "+str(delay)+" *.png "+ os.path.abspath(filename)
 
@@ -724,13 +726,13 @@ class Plotter2d(object):
             filename = filename + '.gif'
 
         ffmpeg_command = "cd " + \
-                str(gif_temp_dir) + ";" + \
-                "ffmpeg -f image2 -framerate "+str(fps)+" -pattern_type glob -i '*.png' "
+                         str(gif_temp_dir) + ";" + \
+                         "ffmpeg -f image2 -framerate " + str(fps) + " -pattern_type glob -i '*.png' "
         if scale is not None:
-            ffmpeg_command += "-vf scale=" + scale+' '
+            ffmpeg_command += "-vf scale=" + scale + ' '
 
-        ffmpeg_command += '-y ' #overwrite existing output files
-        ffmpeg_command += ffmpegoptions +' '
+        ffmpeg_command += '-y '  # overwrite existing output files
+        ffmpeg_command += ffmpegoptions + ' '
 
         ffmpeg_command += os.path.abspath(filename)
 

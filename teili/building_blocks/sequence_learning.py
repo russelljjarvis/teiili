@@ -120,13 +120,13 @@ class SequenceLearning(BuildingBlock):
         self.cos_group = self.Groups['gCoSGroup']
         self.reset_group = self.Groups['gResetGroup']
 
-    def plot(self):
+    def plot(self, duration = None):
         """Simple plot for sequence learning network.
 
         Returns:
             pyqtgraph window: The window containing the plot.
         """
-        return plot_sequence_learning(self.Monitors)
+        return plot_sequence_learning(self.Monitors, duration)
 
 
 def gen_sequence_learning(groupname='Seq',
@@ -332,7 +332,7 @@ def gen_sequence_learning(groupname='Seq',
     return Groups, Monitors, standalone_params
 
 
-def plot_sequence_learning(Monitors):
+def plot_sequence_learning(Monitors, duration=None):
     """A simple matplotlib wrapper function to plot network activity.
 
     Args:
@@ -347,7 +347,8 @@ def plot_sequence_learning(Monitors):
     spikemonInp = Monitors['spikemonInp']
     spikemonCoS = Monitors['spikemonCoS']
     spikemonReset = Monitors['spikemonReset']
-    duration = max(spikemonOrd.t) + 10 * ms
+    if duration is None:
+        duration = max(spikemonOrd.t) + 10 * ms
     print('plot...')
     fig = figure(figsize=(8, 12))
     title('sequence learning')

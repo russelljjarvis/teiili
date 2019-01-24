@@ -9,11 +9,12 @@ If you do have access to https://code.ini.uzh.ch/ncs/teili and want to contribut
 2. Clone the repository to where you're going to work.
 3. Copy `.pre-push-hook.sh` to `.git/hooks/pre-push` and make sure it is executable. This will run the test code every time you push, and prevent the push from completing if a test fails!
 4. Code away to your heart's content. Note that we use the [PEP 8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/). Don't forget to write tests too.
-5. Update the documentation if necessary.
-6. Commit often, using good commit messages. (See https://chris.beams.io/posts/git-commit/)
-7. Push back to code.ini.uzh.ch fairly often too, to enable the rest of us to see what you're up to.
-8. Make sure that the CI pipeline runs successfully.
-9. When you're done, make a merge request.
+5. Run `pycodestyle` over your code to check that it conforms to PEP 8.
+6. Update the documentation if necessary.
+7. Commit often, using good commit messages. (See https://chris.beams.io/posts/git-commit/)
+8. Push back to code.ini.uzh.ch fairly often too, to enable the rest of us to see what you're up to.
+9. Make sure that the CI pipeline runs successfully.
+10. When you're done, make a merge request.
 
 ## Any contributions you make will be under the MIT Software License
 In contributing back to https://code.ini.uzh.ch/ncs/teili, you agree to license your contribution under the MIT license, see the `LICENSE` file.

@@ -38,6 +38,7 @@ If you prefer to import your model from a file you can do so:
 
 ```
 import os
+from teili.core.groups import Neurons, Connections
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
@@ -66,7 +67,7 @@ test_neuron1 = Neurons(2, equation_builder=my_neuron_model,
 ```
 ## Neuron & Synapse tutorial
 We created a simple example of how to simulate a small neural network either using the EquationBuilder.
-The example is located in `~\teiliApps/examples/neuron_synpse_example.py`.
+The example is located in `~\teiliApps/examples/neuron_synapse_tutorial.py`.
 First we import all required libraries
 ```
 from pyqtgraph.Qt import QtGui
@@ -119,8 +120,8 @@ After initializing the neuronal population and connecting them via synapses, we 
 Note that parameters are set by default. This example only shows how you would need to go about if you want to set non-standard (self-defined) parameters.
 Example parameter dictionaries can be found `teili/models/parameters`.
 You can change all the parameters like this after creation of the neurongroup or synapsegroup.
-Note that the if condition is inly there for convinience to switch between voltage- or current-based models.
-Normally, you have one or the other in yur simulation, thus you will not need the if condition.
+Note that the if condition is only there for convenience to switch between voltage- or current-based models.
+Normally, you have one or the other in your simulation, thus you will not need the if condition.
 ```
 # Example of how to set parameters, saved as a dictionary
 test_neurons1.set_params(neuron_model_param)
@@ -139,8 +140,8 @@ elif 'Vm' in neuron_model().keywords['model']:
     test_synapse.weight = 8.0
     test_neurons1.Iconst = 3 * nA
 ```
-Now our simple siking neural network is defined. In order to visualize what is happing during the simulation
-we need to monitor the spiking behaviour of our neurons and other state variables of neurons and synapses.
+Now our simple spiking neural network is defined. In order to visualize what is happening during the simulation
+we need to monitor the spiking behavior of our neurons and other state variables of neurons and synapses.
 ```
 spikemon_input = SpikeMonitor(input_spikegenerator, name='spikemon_input')
 spikemon_test_neurons1 = SpikeMonitor(
@@ -209,7 +210,7 @@ test_synapse = Connections(test_neurons1, test_neurons2,
 test_synapse.connect(True)
 ```
 The way parameters are set remains the same.
-In order to visualize the behaviour the example script also plots a couple of spike and state monitors.
+In order to visualize the behavior the example script also plots a couple of spike and state monitors.
 
 ```
 app = QtGui.QApplication.instance()
@@ -323,7 +324,7 @@ In both cases of model definition the resulting figure should look like this:
 ![altText](fig/neuron_synapse_tutorial_dark.png)
 
 ## Winner-takes-all tutorial
-Teili not only offers simple neuron-synapse models, but rather aims to provide high-level description of neuronal algorithm which can be formalised as scalable building block.
+Teili not only offers simple neuron-synapse models, but rather aims to provide high-level description of neuronal algorithm which can be formalized as scalable building block.
 One example `BuildingBlock` is the winner-takes-all (WTA).
 To show the basic interface of how to use a WTA we start with the imports.
 The original file can be found in `teiliApps/examples/wta_standalone_tutorial.py`
@@ -363,7 +364,7 @@ if run_as_standalone:
     device.activate(directory=standaloneDir, build_on_run=False)
     prefs.devices.cpp_standalone.openmp_threads = 2
 ```
-We need to define two hyperparameters of our WTA and to illustrate its working behaviour, we initialize an instance of a stimulus test class specifically designed for WTA's.
+We need to define two hyperparameters of our WTA and to illustrate its working behavior, we initialize an instance of a stimulus test class specifically designed for WTA's.
 ```
 num_neurons = 50
 num_input_neurons = num_neurons
@@ -422,7 +423,7 @@ spikemonitor_input = SpikeMonitor(
 spikemonitor_noise = SpikeMonitor(
     testbench.noise_input, name="spikemonitor_noise")
 ```
-Add all objects to the network object and define standalone parameters, if you are uisng standalone mode.
+Add all objects to the network object and define standalone parameters, if you are using standalone mode.
 ```
 Net.add(test_WTA, testbench.noise_input, noise_syn,
         statemonWTAin, spikemonitor_noise, spikemonitor_input)
@@ -496,10 +497,10 @@ The resulting figure should look like this:
 ![altText](fig/wta_tutorial.png)
 ## STDP tutorial
 One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity (STDP) mechanism.
-STDP is one mechanism which has been identified experimentally how neurons adjust their synaptic weigth according to some correlated firing pattern.
+STDP is one mechanism which has been identified experimentally how neurons adjust their synaptic weight according to some correlated firing pattern.
 Feel free to read more about STDP [here](https://scholar.google.com/scholar?&q=STDP).
 The following tutorial can be found at `~/teiliApps/examples/stdp_tutorial.py`
-If we want to add an activity dependent plasticity mechanism to our network we again start by importing the requiered packes.
+If we want to add an activity dependent plasticity mechanism to our network we again start by importing the required packages.
 ```
 from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
@@ -529,7 +530,7 @@ In the next step we will load a simple STDP-protocol from `teili/stimuli/testben
 stdp = STDP_Testbench()
 pre_spikegenerator, post_spikegenerator = stdp.stimuli(isi=30)
 ```
-Now we generate our test_neurons and connect via non-platic synpses to our `SpikeGeneratorGroups` and via plastic synapses between them.
+Now we generate our test_neurons and connect via non-platic synapses to our `SpikeGeneratorGroups` and via plastic synapses between them.
 ```
 pre_neurons = Neurons(2, equation_builder=DPI(num_inputs=1),
                       name='pre_neurons')
@@ -690,7 +691,7 @@ The resulting figure should look like this:
 ![altText](fig/stdp_tutorial.png)
 
 ### Visualizing plasticity kernel
-In order to better understand why the changes the way it does given the specific pre and post spike pairs we can visualize the STDP kernel.
+In order to better understand why the changes the way it does given the specific pre and post spike pairs we can visualize the STDP kernel. The following tutorial can be found at `~/teiliApps/examples/stdp_kernel_tutorial.py`
 We start again by importing the required dependencies.
 ```
 from brian2 import ms, prefs, SpikeMonitor, run
@@ -702,7 +703,7 @@ import numpy as np
 from teili.core.groups import Neurons, Connections
 from teili.models.synapse_models import DPIstdp
 ```
-We define the simulation and visualization backend. And specify explicitely the font used by the visualization.
+We define the simulation and visualization backend. And specify explicitly the font used by the visualization.
 ```
 prefs.codegen.target = "numpy"
 visualization_backend = 'pyqt'  # Or set it to 'pyplot' to use matplotlib.pyplot to plot
@@ -713,7 +714,7 @@ font = {'family': 'serif',
         'size': 16,
         }
 ```
-We need to define to varaibles used to visualize the kernel:
+We need to define to variables used to visualize the kernel:
 ```
 tmax = 30 * ms
 N = 100
@@ -739,7 +740,7 @@ stdp_synapse = Connections(pre_neurons, post_neurons,
 
 stdp_synapse.connect('i==j')
 ```
-Adjust the respective paramters
+Adjust the respective parameters
 ```
 stdp_synapse.w_plast = 0.5
 stdp_synapse.dApre = 0.01
@@ -755,7 +756,7 @@ Now we run the simulation
 ```
 run(tmax + 1 * ms)
 ```
-And visualizing the kernel, using either matplotlib or pyqtgraph as backenend depending on `visualization_backend`
+And visualizing the kernel, using either matplotlib or pyqtgraph as backend depending on `visualization_backend`
 ```
 if visualization_backend == 'pyqt':
     app = QtGui.QApplication.instance()
@@ -800,7 +801,7 @@ The resulting figure should look like this:
 ## Add mismatch
 This example shows how to add device mismatch to a neural network with one input neuron connected to 1000 output neurons.
 Once our population is created, we will add device mismatch to the selected parameters
-by specifying a dictionary with parameter names as keys and mismatch standard deviation as values.
+by specifying a dictionary with parameter names as keys and mismatch standard deviation as values. The following tutorial can be found at `~/teiliApps/examples/mismatch_tutorial.py`
 Here neuron and synapse selected parameters are specified in mismatch_neuron_param and mismatch_synap_param respectively.
 ```
 import pyqtgraph as pg
@@ -889,7 +890,7 @@ compare them to those generated by adding mismatch (see mismatch distribution pl
 Notice that getattr(output_neurons, mism_param_neu) returns an array of length equal to the
 number of neurons. Assuming that mismatch has not been added yet (e.g. if you
 have just created the neuron population), the values of the selected parameter
-will be the same for all the neurons in the population. Here we will arbitarily choose to store
+will be the same for all the neurons in the population. Here we will arbitrarily choose to store
 the first one.
 ```
 mean_neuron_param = np.copy(getattr(output_neurons, 'refP'))[0]
@@ -898,7 +899,7 @@ mean_synapse_param = np.copy(getattr(input_syn, 'baseweight_e'))[0]
 unit_old_param_syn = getattr(input_syn, 'baseweight_e').unit
 ```
 
-Now we can add mismatch to neurons and synapses by using the method add_mismatch(). To be able to reproduce the same mismatch across multiple simualtions,
+Now we can add mismatch to neurons and synapses by using the method add_mismatch(). To be able to reproduce the same mismatch across multiple simulations,
 here we will also set the seed.
 
 ```
@@ -1007,4 +1008,3 @@ p2.setLabel('bottom', units=str(unit_old_param_neu), **labelStyle)
 
 
 ![altText](fig/Mismatch_distribution.png)
-

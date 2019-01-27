@@ -234,7 +234,7 @@ def gen1dWTA(groupname,
         spatial_kernel_name = spatial_kernel
 
     # time measurement
-    start = time.clock()
+    start = time.time()
 
     # create neuron groups
     gWTAGroup = Neurons(num_neurons, equation_builder=neuron_eq_builder(num_inputs=3 + num_inputs),
@@ -335,7 +335,7 @@ def gen1dWTA(groupname,
         gWTAInhGroup.name + '_refP': rpInh,
     }
 
-    end = time.clock()
+    end = time.time()
     if debug:
         print('creating WTA of ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
@@ -400,7 +400,7 @@ def gen2dWTA(groupname,
             teili.tools.synaptic_kernel, spatial_kernel)
         spatial_kernel_name = spatial_kernel
     # time measurement
-    start = time.clock()
+    start = time.time()
 
     # create neuron groups
     num2dNeurons = num_neurons**2
@@ -514,7 +514,7 @@ def gen2dWTA(groupname,
         gWTAInhGroup.name + '_refP': rpInh,
     }
 
-    end = time.clock()
+    end = time.time()
     if debug:
         print('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')

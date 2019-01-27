@@ -11,7 +11,7 @@ git clone https://code.ini.uzh.ch/ncs/teili.git
 ### Installation
 
 *  Checkout the [repository](https://code.ini.uzh.ch/ncs/teili) or [download](https://code.ini.uzh.ch/ncs/teili) the tar.gz file<br />
-    ```
+    ```bash
     git clone git@code.ini.uzh.ch:ncs/teili.git
     ```
 <div class="alert alert-info">
@@ -19,27 +19,32 @@ git clone https://code.ini.uzh.ch/ncs/teili.git
 **Note:** Curently the master branch is broken, please use dev by doing `git checkout dev`.
 
 </div>
+
 * Create a virtual environment using [conda](https://conda.io/docs/user-guide/install/index.html)
-    ```
-    # Replace myenv with the desired name for your virtual environment
+    ```bash
     conda create --name myenv python=3.5
     ```
+    <div class="alert alert-info">
+
+    **Note:** Replace myenv with the desired name for your virtual environment
+
+    </div>
   If you want to use a specific version, as needed e.g. to use [CTXLCTL](http://ai-ctx.gitlab.io/ctxctl/index.html) add the particular python version to the conda environment
-   ```
+   ```bash
    conda create --name myenv python=3.7.1
    ```
 
 *  Activate your conda environment
-    ```
+    ```bash
     source activate myenv
     ```
 
 *  Navigate to the parent folder containing the cloned repository or the downloaded `tar.gz` file
-    ```
+    ```bash
     cd Downloads/
     ```
 *  Install teili using pip
-    ```
+    ```bash
     # Point pip to the location of the setup.py
     pip install teili/
     # or point pip to the downloaded tar.gz file
@@ -48,7 +53,7 @@ git clone https://code.ini.uzh.ch/ncs/teili.git
     The `setup.py` will by default create a folder in your home directory called `teiliApps`.
     This folder contains a selection of neuron and synapse models, example scripts, as well as unit tests.
     Please run the unit tests to check if everything is working as expected by:
-    ```
+    ```bash
     cd ~/teiliApps
     python -m unittest discover unit_tests/
     ```
@@ -64,7 +69,7 @@ Note that the path provided in the install command needs to point to the folder,
 
 ### Alternative installation **NOT RECOMMENDED**
     If, however, you want to install all dependencies separately you can run the following commands **NOT RECOMMENDED**:
-    ```
+    ```bash
     git clone git@code.ini.uzh.ch:ncs/teili.git
     sudo apt install python3 python3-pip, python3-matplotlib python3-setuptools cython
     pip3 install brian2 sparse seaborn h5py numpy scipy pyqtgraph pyqt5 easydict
@@ -72,7 +77,7 @@ Note that the path provided in the install command needs to point to the folder,
     if you did **not** use the setup.py you need to update your `$PYTHONPATH`:
 
     You can add the following line to your `~/.bashrc`<sup>1</sup>:
-    ```
+    ```bash
     export PYTHONPATH=$PYTHONPATH:"/path/to/parent_folder/of/teili"
     ```
 
@@ -85,19 +90,21 @@ Note that the path provided in the install command needs to point to the folder,
 
 
 In case you want to re-build the pre-defined models you need to navigate to the `model` folder:
-```
+```bash
 cd teili/models/
 source activate myenv
 ```
 and run the following two scripts (if you want to use the default location `/home/you/`):
-```
+```bash
 python -m neuron_models
 python -m synapse_models
 ```
 By default the models will be placed in `~/teiliApps/equations`. If you want to place them at a different location follow the instructions below:
-```
+```bash
 source activate myenv
 python
+```
+```python
 from teili import neuron_models, synapse_models
 neuron_models.main("/path/to/my/equations/")
 synapse_models.main("/path/to/my/equations/")

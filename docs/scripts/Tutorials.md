@@ -7,10 +7,14 @@ Before going through our tutorials we highly recommend doing the tutorials provi
 To generate all pre-defined neuron and synapse models, which are stored by default in `~/teiliApps/equations/`, please execute the following two scripts:
 ```
 cd teili/models/
-python -m synapse_models.py
-python -m neuron_models.py
+python -m synapse_models
+python -m neuron_models
 ```
-Note that during installation of teili models are already generated.
+<div class="alert alert-info">
+
+**Note:** During installation the pre-defined models are generated. You only need to regenerate them if you manualy deleted them.
+
+</div>
 ### Working with pre-compiled models
 Once the pre-defined neuron and synapse models are exported to files you can choose between generating neuron/synapse models 'on the fly' or importing them from the generated files, which you can maually adapt to your needs without fiddling with the templates provided by teili.<br />
 See an example for how to work with pre-compiled neuron and/or synapse models below.

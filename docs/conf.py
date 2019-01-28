@@ -64,9 +64,11 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary',
     'sphinx.ext.todo']
 
 
+autosummary_generate = True
 autodoc_mock_imports = MOCK_MODULES
 
 # Napoleon settings
@@ -125,7 +127,7 @@ html_logo = 'scripts/fig/logo.svg'
 html_theme_options = {
     'logo_only': True,
     'display_version': True,
-    'codebgcolor': '#5F9EA0',
+    'codebgcolor': "CadetBlue",
 }
 
 

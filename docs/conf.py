@@ -125,6 +125,7 @@ html_logo = 'scripts/fig/logo.svg'
 html_theme_options = {
     'logo_only': True,
     'display_version': True,
+    'codebgcolor': '#5F9EA0',
 }
 
 

@@ -64,11 +64,9 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
-    'sphinx.ext.autosummary',
     'sphinx.ext.todo']
 
 
-autosummary_generate = True
 autodoc_mock_imports = MOCK_MODULES
 
 # Napoleon settings

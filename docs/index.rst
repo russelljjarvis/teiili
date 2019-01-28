@@ -9,7 +9,7 @@ This toolbox was developed to provide computational neuroscientists, as well as 
    :maxdepth: 2
    :caption: Contents:
 
-   scripts/Getting started.md
+   scripts/Getting started.rst
    scripts/Tutorials.md
    scripts/Other examples.md
    scripts/Visualizer.md

@@ -4,11 +4,8 @@ Getting started
 
 Welcome to teili!
 
-To start using teili, follow the instructions below.
+To start using teili, follow the instructions_ below and see our tutorials_.
 
-.. code-block:: bash
-
-    git clone https://code.ini.uzh.ch/ncs/teili.git
 
 
 Install python requirements
@@ -34,7 +31,7 @@ Installation
 .. note:: Replace myenv with the desired name for your virtual environment
 
 
-- If you want to use CTXCTL_ add the particular python version to the conda environment
+..note:: If you want to use CTXCTL_ add the particular python version to the conda environment
 
 .. code-block:: bash
 
@@ -62,9 +59,9 @@ Installation
     pip install teili*.tar.gz
 
 
-The `setup.py` will by default create a folder in your home directory called `teiliApps`.
-This folder contains a selection of neuron and synapse models, example scripts, as well as unit tests.
-Please run the unit tests to check if everything is working as expected by
+| The `setup.py` will by default create a folder in your home directory called `teiliApps`.
+| This folder contains a selection of neuron and synapse models, example scripts, as well as unit tests.
+| Please run the unit tests to check if everything is working as expected by
 
 .. code-block:: bash
 
@@ -72,14 +69,13 @@ Please run the unit tests to check if everything is working as expected by
     python -m unittest discover unit_tests/
 
 
-**You are good to go!**
+| **You are good to go!**
+| If you want to change the location of `teiliApps`, you can do so by moving the folder manually.
+|
+| The installation instructions above will install all requirements and dependencies.
+| It will also build pre-defined neuron and synapse models and place them in `~/teiliApps/equations/`.
 
-If you want to change the location of `teiliApps`, you can do so by moving the folder manually.
-
-
-This will install all requirements and dependencies. It will also build pre-defined neuron and synapse models and place them in `~/teiliApps/equations/`.
-
-.. note:: Note that the path provided in the install command needs to point to the folder which contains the `setup.py` file.
+.. note:: Note that the *path* provided in the install command needs to point to the folder which contains the *setup.py* file.
 
 
 Alternative installation **NOT RECOMMENDED**
@@ -89,14 +85,12 @@ If, however, you want to install all dependencies separately you can run the fol
 .. code-block:: bash
 
     git clone git@code.ini.uzh.ch:ncs/teili.git
-
     git checkout dev
-
     sudo apt install python3 python3-pip, python3-matplotlib python3-setuptools cython
     pip3 install brian2 sparse seaborn h5py numpy scipy pyqtgraph pyqt5 easydict
 
-if you did **not** use the setup.py you need to update your `$PYTHONPATH`:
-You can add the following line to your `~/.bashrc`<sup>1</sup>:
+| if you did **not** use the setup.py you need to update your `$PYTHONPATH`:
+| You can add the following line to your *~/.bashrc*
 
 .. code-block:: bash
 
@@ -106,8 +100,7 @@ You can add the following line to your `~/.bashrc`<sup>1</sup>:
 Re-building models after installation
 =====================================
 
-.. note:: By default models are generated during installation. Only if you accidentally deleted them manually you need to rebuild models.
-
+.. note:: By default models are generated during installation. **Only if** you accidentally deleted them manually you need to rebuild models.
 
 
 In case you want to re-build the pre-defined models you need to navigate to the `model` folder:
@@ -139,11 +132,12 @@ By default the models will be placed in `~/teiliApps/equations`. If you want to 
     synapse_models.main("/path/to/my/equations/")
 
 
-Note, that the following folder structure is generated in the specified location: `/path/to/my/equations/teiliApps/equations/`.
-Have a look at our tutorials_ to see how to use teili and which features it provides to you.
+| Note, that the following folder structure is generated in the specified location: `/path/to/my/equations/teiliApps/equations/`.
+| Have a look at our tutorials_ to see how to use teili and which features it provides to you.
 
 .. _conda: https://conda.io/docs/user-guide/install/index.html
 .. _tutorials: https://teili.readthedocs.io/en/latest/scripts/Tutorials.html
+.. _instructions: https://teili.readthedocs.io/en/latest/scripts/Getting%20started.html#installation
 .. _CTXCTL: http://ai-ctx.gitlab.io/ctxctl/index.html
 .. _repository: https://code.ini.uzh.ch/ncs/teili
 .. _download: https://code.ini.uzh.ch/ncs/teili

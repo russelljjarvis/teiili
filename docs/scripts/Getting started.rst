@@ -31,7 +31,7 @@ Installation
 .. note:: Replace myenv with the desired name for your virtual environment
 
 
-..note:: If you want to use CTXCTL_ add the particular python version to the conda environment
+.. note:: If you want to use CTXCTL_ add the particular python version to the conda environment
 
 .. code-block:: bash
 

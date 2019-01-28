@@ -19,7 +19,7 @@ Installation
 
     git clone git@code.ini.uzh.ch:ncs/teili.git
 
-.. warning:: Curently the master branch is broken, please use dev by doing `git checkout dev`.
+.. warning:: | Curently the master branch is broken, please use dev branch by doing **git checkout dev**.
 
 
 - Create a virtual environment using conda_

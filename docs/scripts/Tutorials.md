@@ -10,11 +10,13 @@ cd teili/models/
 python -m synapse_models
 python -m neuron_models
 ```
-<div class="alert alert-info">
 
-**Note:** During installation the pre-defined models are generated. You only need to regenerate them if you manualy deleted them.
+<div class="Note">
+
+During installation the pre-defined models are generated. You only need to regenerate them if you manualy deleted them.
 
 </div>
+
 ### Working with pre-compiled models
 Once the pre-defined neuron and synapse models are exported to files you can choose between generating neuron/synapse models 'on the fly' or importing them from the generated files, which you can maually adapt to your needs without fiddling with the templates provided by teili.<br />
 See an example for how to work with pre-compiled neuron and/or synapse models below.

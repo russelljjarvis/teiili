@@ -14,9 +14,9 @@ git clone https://code.ini.uzh.ch/ncs/teili.git
     ```bash
     git clone git@code.ini.uzh.ch:ncs/teili.git
     ```
-<div class="alert alert-info">
+<div class="Warning">
 
-**Note:** Curently the master branch is broken, please use dev by doing `git checkout dev`.
+Curently the master branch is broken, please use dev by doing `git checkout dev`.
 
 </div>
 
@@ -24,11 +24,12 @@ git clone https://code.ini.uzh.ch/ncs/teili.git
     ```bash
     conda create --name myenv python=3.5
     ```
-    <div class="alert alert-info">
+    <div class="Note">
 
     **Note:** Replace myenv with the desired name for your virtual environment
 
     </div>
+
   If you want to use a specific version, as needed e.g. to use [CTXLCTL](http://ai-ctx.gitlab.io/ctxctl/index.html) add the particular python version to the conda environment
    ```bash
    conda create --name myenv python=3.7.1
@@ -82,9 +83,10 @@ Note that the path provided in the install command needs to point to the folder,
     ```
 
 ### Re-building models after installation
-<div class="alert alert-info">
 
-**Note:** By default models are generated during installation. Only if you accidentally deleted them manually you need to rebuild models.
+<div class="Note">
+
+By default models are generated during installation. Only if you accidentally deleted them manually you need to rebuild models.
 
 </div>
 

@@ -13,13 +13,15 @@ Install python requirements
 Installation
 ------------
 
-- Checkout the repository_ or download_ the tar.gz file.
+- Etiher clone the repository_ as shown below or download_ the tar.gz file.
 
 .. code-block:: bash
 
-    git clone git@code.ini.uzh.ch:ncs/teili.git
+    git clone https://code.ini.uzh.ch/ncs/teili.git
 
-.. warning:: | Curently the master branch is broken, please use dev branch by doing **git checkout dev**.
+.. note:: If you have set up git properly you can use of course **git clone git@code.ini.uzh.ch:ncs/teili.git**
+
+.. warning:: Curently, the master branch is broken, please use the `dev` branch by doing **git checkout dev**.
 
 
 - Create a virtual environment using conda_
@@ -140,4 +142,4 @@ By default the models will be placed in `~/teiliApps/equations`. If you want to 
 .. _instructions: https://teili.readthedocs.io/en/latest/scripts/Getting%20started.html#installation
 .. _CTXCTL: http://ai-ctx.gitlab.io/ctxctl/index.html
 .. _repository: https://code.ini.uzh.ch/ncs/teili
-.. _download: https://code.ini.uzh.ch/ncs/teili
+.. _download: https://code.ini.uzh.ch/ncs/teili/repository/archive.tar.gz?ref=dev

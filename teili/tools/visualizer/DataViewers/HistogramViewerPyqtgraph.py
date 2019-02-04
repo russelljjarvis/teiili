@@ -4,7 +4,8 @@ try:
     import pyqtgraph as pg
     from PyQt5 import QtGui
 except BaseException:
-    warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5 can't be imported.")
+    warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5"
+                  "can't be imported.")
 
 from teili.tools.visualizer.DataViewers.HistogramViewer import HistogramViewer
 
@@ -13,13 +14,18 @@ class HistogramViewerPyqtgraph(HistogramViewer):
     """ Class to plot histogram with pyqtgraph backend """
 
     def __init__(self, MyPlotSettings, mainfig=None, subfig=None, QtApp=None):
-        """ Setup HistogramViewer by initializing main figure and subfigure. If any of them is set to None, it will be
-        created internally.
+        """ Setup HistogramViewer by initializing main figure and subfigure.
+            If any of them is set to None, it will be created internally.
+
         Args:
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
-            mainfig (pyqtgraph window object): pyqtgraph main window ( pg.GraphicsWindow() )
-            subfig (pyqtgraph subplot): pyqtgraph subplot of mainfig which will hold the histogram
-            QtApp (pyqtgraph application): pyqtgraph application to run plots ( QtGui.QApplication([]) )
+            MyPlotSettings (PlotSettings object): instance of class
+                PlotSettings holding basic plot settings (e.g. fontsize, ...)
+            mainfig (pyqtgraph window object): pyqtgraph main window
+                (pg.GraphicsWindow())
+            subfig (pyqtgraph subplot): pyqtgraph subplot of mainfig which will
+                hold the histogram
+            QtApp (pyqtgraph application): pyqtgraph application to run plots
+                (QtGui.QApplication([]))
         """
 
         self.MyPlotSettings = MyPlotSettings

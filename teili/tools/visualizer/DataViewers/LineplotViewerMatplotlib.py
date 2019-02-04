@@ -8,12 +8,15 @@ class LineplotViewerMatplotlib(LineplotViewer):
     """ Class to plot lineplots with matplotlib backend """
 
     def __init__(self, MyPlotSettings, mainfig=None, subfig=None):
-        """ Setup LineplotViewer by initializing main figure and subfigure. If any of them is set to None, it will be
-        created internally.
+        """ Setup LineplotViewer by initializing main figure and subfigure.
+            If any of them is set to None, it will be created internally.
         Args:
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
-            mainfig (matplotlib figure object): matplotlib figure which holds the subfig (subplots)
-            subfig (matplotlib subplot): matplotlib subplot of mainfig which will hold the lineplot
+            MyPlotSettings (PlotSettings object): instance of class
+                PlotSettings holding basic plot settings (e.g. fontsize, ...)
+            mainfig (matplotlib figure object): matplotlib figure which holds
+                the subfig (subplots)
+            subfig (matplotlib subplot): matplotlib subplot of mainfig which
+                will hold the lineplot
         """
         self.MyPlotSettings = MyPlotSettings
 
@@ -39,13 +42,18 @@ class LineplotViewerMatplotlib(LineplotViewer):
             title='Lineplot',
             xlabel=None,
             ylabel=None):
-        """ Function to create lineplot for groups of event sets in self.subfig with matplotlib
+        """ Function to create lineplot for groups of event sets in self.subfig
+            with matplotlib
         Args:
-            data (list of tuples): list of tuples, whereby each tuple is one subgroup which will be plotted,
-                                        e.g.: [(x_values_A, y_values_A), (x_values_B, y_values_B), ... ]
-            subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
-            x_range_axis (tuple): (min, max) of interval within which elements are shown along x-axis
-            y_range_axis (tuple): (min, max) of interval within which elements are shown along y-axis
+            data (list of tuples): list of tuples, whereby each tuple is one
+                subgroup which will be plotted, e.g.:[(x_values_A, y_values_A),
+                (x_values_B, y_values_B), ... ]
+            subgroup_labels (list of str): list of labels for the different
+                subgroups (e.g. ['exc', 'inh'])
+            x_range_axis (tuple): (min, max) of interval within which elements
+                are shown along x-axis
+            y_range_axis (tuple): (min, max) of interval within which elements
+                are shown along y-axis
             title (str): title of plot
             xlabel (str): label of x-axis
             ylabel (str): label for y-axis

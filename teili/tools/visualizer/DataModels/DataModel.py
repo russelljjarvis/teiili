@@ -12,7 +12,8 @@ class DataModel(object):
 
     @classmethod
     def from_file(cls, path_to_file):
-        """ Classmethod to initialize DataModel object from DataModel object stored in pickle-file at path_to_file"""
+        """ Classmethod to initialize DataModel object from DataModel object
+            stored in pickle-file at path_to_file """
         newDataModel = cls()
         newDataModel.load_datamodel(path_to_file)
         return newDataModel

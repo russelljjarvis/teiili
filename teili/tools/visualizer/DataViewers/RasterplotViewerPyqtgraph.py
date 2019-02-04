@@ -6,7 +6,8 @@ try:
     import pyqtgraph as pg
     from PyQt5 import QtGui
 except BaseException:
-    warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5 can't be imported.")
+    warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5"
+                  "can't be imported.")
 
 from teili.tools.visualizer.DataViewers import RasterplotViewer
 from teili.tools.visualizer.DataViewers.HistogramViewerPyqtgraph import HistogramViewerPyqtgraph
@@ -23,16 +24,22 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
             subfig_histogram=None,
             QtApp=None,
             add_histogram=False):
-        """ Setup RasterplotViewer by initializing main figure and subfigures. If any of them is set to None, it will be
-        created internally.
+        """ Setup RasterplotViewer by initializing main figure and subfigures.
+            If any of them is set to None, it will be created internally.
         If add_histogram is False, subfig_histogram is set to None.
         Args:
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
-            mainfig (pyqtgraph window object): pyqtgraph main window ( pg.GraphicsWindow() )
-            subfig_rasterplot (pyqtgraph subplot): pyqtgraph subplot of mainfig which will hold the rasterplot
-            subfig_histogram (pyqtgraph subplot): pyqtgraph subplot of mainfig which will hold the histogram
-            QtApp (pyqtgraph application): pyqtgraph application to run plots ( QtGui.QApplication([]) )
-            add_histogram (bool): if True: add histogram of spike count per neuron on right side of plot
+            MyPlotSettings (PlotSettings object): instance of class
+                PlotSettings holding basic plot settings (e.g. fontsize, ...)
+            mainfig (pyqtgraph window object): pyqtgraph main window
+                (pg.GraphicsWindow())
+            subfig_rasterplot (pyqtgraph subplot): pyqtgraph subplot of mainfig
+                which will hold the rasterplot
+            subfig_histogram (pyqtgraph subplot): pyqtgraph subplot of mainfig
+                which will hold the histogram
+            QtApp (pyqtgraph application): pyqtgraph application to run plots
+                (QtGui.QApplication([]))
+            add_histogram (bool): if True: add histogram of spike count per
+                neuron on right side of plot
         """
 
         self.MyPlotSettings = MyPlotSettings
@@ -78,22 +85,28 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
             title='raster plot',
             xlabel='time (s)',
             ylabel='neuron ids'):
-        """ Function to generate raster plot (incl histogram of events per neuron id) from groups of event sets
-            (spike times, neuron ids)
+        """ Function to generate raster plot (incl histogram of events per
+            neuron id) from groups of event sets (spike times, neuron ids)
         Args:
-            all_spike_times (list of lists): list of lists of spike times of events, (e.g. [[t0, t1, t2],[tt1, tt2, tt3]])
-            all_neuron_ids (list of lists): list of lists of neuron ids of events (e.g. [[3,4,5,2],[9,7,7 8]]
-            subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
-            time_range_axis (tuple): (t_start(float), t_end(float)) of time interval within which events should be shown
-            neuron_id_range_axis (tuple): (min_id, max_id) of neuron ids which should be shown
+            all_spike_times (list of lists): list of lists of spike times of
+                events, (e.g. [[t0, t1, t2],[tt1, tt2, tt3]])
+            all_neuron_ids (list of lists): list of lists of neuron ids of
+                events (e.g. [[3,4,5,2],[9,7,7 8]]
+            subgroup_labels (list of str): list of labels for the different
+                subgroups (e.g. ['exc', 'inh'])
+            time_range_axis (tuple): (t_start(float), t_end(float)) of time
+                interval within which events should be shown
+            neuron_id_range_axis (tuple): (min_id, max_id) of neuron ids which
+                should be shown
             title (str): title of plot
             xlabel (str): label of x-axis
             ylabel (str): label for y-axis
 
         Remarks:
-            time_range_axis and neuron_id_range_axis do not filter the spike times and neuron ids. It only defines the
-            region which is shown in the plot. Hence, for the histogram ALL events provided are considered to calculate
-            the histogram.
+            time_range_axis and neuron_id_range_axis do not filter the spike
+            times and neuron ids. It only defines the region which is shown in
+            the plot. Hence, for the histogram ALL events provided are
+            considered to calculate the histogram.
         """
 
         # check if colours ok
@@ -104,10 +117,17 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
 
         # set parameters on plot dimensions along time and neuron_id axis
         if time_range_axis is None:
-            time_range_axis = (0, np.nanmax(list(map(lambda x: x, chain.from_iterable(all_spike_times+[[1e-9]])))))
+            time_range_axis = (0,
+                               np.nanmax(list(map(lambda x: x,
+                                                  chain.from_iterable(
+                                                      all_spike_times + [
+                                                          [1e-9]])))))
         if neuron_id_range_axis is None:
             # +[0] to deal wit cases where no spikes were detected
-            neuron_id_range_axis = (0, max(map(lambda x: x, chain.from_iterable(all_neuron_ids+[[0]]))) + 1)
+            neuron_id_range_axis = (0, max(map(lambda x: x,
+                                               chain.from_iterable(
+                                                   all_neuron_ids + [
+                                                       [0]]))) + 1)
 
         if subgroup_labels is not None:
             self.subfig_rasterplot.addLegend()
@@ -154,7 +174,8 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
     def _add_histogram_to_rasterplot(self, all_neuron_ids, num_neurons):
         """ Function to add histogram of spikes per neuron to raster plot
         Args:
-            all_neuron_ids (list of lists): list of lists of neuron ids of events (e.g. [[3,4,5,2],[9,7,7 8]]
+            all_neuron_ids (list of lists): list of lists of neuron ids of events
+                (e.g. [[3,4,5,2],[9,7,7 8]]
             num_neurons (int): total number of neurons to show on y-axis
         """
 

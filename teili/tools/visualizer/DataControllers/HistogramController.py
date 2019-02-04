@@ -25,21 +25,29 @@ class HistogramController(DataController):
         """ Setup Histogram Controller and create histogram plot
         
         Args:
-            DataModel_to_attr (list of tuples): [tuple(::class DataModel::  attr_of_DataModel_to_consider), ( ..., ...), ... ]
-                                                for every subgroups one tuple (data model can also be a brian state monitor or spike monitor)
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
-            subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
+            DataModel_to_attr (list of tuples): [tuple(::class DataModel::
+                attr_of_DataModel_to_consider), ( ..., ...), ... ] for every
+                subgroups one tuple (data model can also be a brian state
+                monitor or spike monitor)
+            MyPlotSettings (PlotSettings object): instance of class
+                PlotSettings holding basic plot settings (e.g. fontsize, ...)
+            subgroup_labels (list of str): list of labels for the different
+                subgroups (e.g. ['exc', 'inh'])
             bins (array, list): array with edges of bins in histogram
-            orientation (str): orientation of histogram (vertical or horizontal)
+            orientation (str): orientation of histogram (vertical/horizontal)
             title (str): title of plot
             xlabel (str): label of x-axis
             ylabel (str): label for y-axis
-            backend (str): 'matplotlib' or 'pyqtgraph', defines which backend should be used for plotting
-            mainfig (figure object): figure which holds the subfig (subplots) (plt.figure or  pg.GraphicsWindow())
+            backend (str): 'matplotlib' or 'pyqtgraph', defines which backend
+                should be used for plotting
+            mainfig (figure object): figure which holds the subfig (subplots)
+                (plt.figure or  pg.GraphicsWindow())
             subfig (subplot): subplot of mainfig which will hold the histogram
-            QtApp (pyqtgraph application): pyqtgraph application to run plots ( QtGui.QApplication([]) ),
-                                            only required if backend is pyqtgraph
-            show_immediately (bool): if True: plot is shown immediately after it has been created
+            QtApp (pyqtgraph application): pyqtgraph application to run plots
+                (QtGui.QApplication([]) ), only required if backend is
+                pyqtgraph show_immediately (bool): if True: plot is shown
+                immediately after
+                it has been created
         """
 
         self.subgroup_labels = subgroup_labels

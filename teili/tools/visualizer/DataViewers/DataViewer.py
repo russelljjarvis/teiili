@@ -24,8 +24,9 @@ class PlotSettings(Freezer):
             fontsize_legend (int): font size of legend in plot
             fontsize_axis_labels (int): font size of axis labels
             marker_size (int): size of markers shown in plot
-            colors (list): list of str indicating colors (e.g. 'r', 'b', ...) OR list of RGBA tuples indicating colours
-                                for matplotlib backend ([0:1], for pyqtgraph backend [0:255])
+            colors (list): list of str indicating colors (e.g. 'r', 'b', ...)
+                OR list of RGBA tuples indicating colours for matplotlib
+                backend ([0:1], for pyqtgraph backend [0:255])
         """
         self.fontsize_title = fontsize_title
         self.fontsize_legend = fontsize_legend

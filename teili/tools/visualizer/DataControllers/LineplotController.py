@@ -6,7 +6,8 @@ from teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib, Lineplo
 
 
 class LineplotController(DataController):
-    """ Class to plot lineplots with different backends and from different DataModels"""
+    """ Class to plot lineplots with different backends and from different
+    DataModels"""
 
     def __init__(
             self,
@@ -25,22 +26,36 @@ class LineplotController(DataController):
             show_immediately=True):
         """ Setup Lineplot Controller and create lineplot
         Args:
-            DataModel_to_x_and_y_attr (list of tuples): list of tuples like [(::class DataModel::, (attr_of_DataModel_to_consider_for_x_axis, ... _for_y_axis),
-                                                                             (::class DataModel::, (attr_of_DataModel_to_consider_for_x_axis, ... _for_y_axis), ...]
-                                                        for all subgroups to be shown (data model can also be a brian state monitor or spike monitor)
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
-            subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
-            x_range (tuple): (min, max) x-values of interval within which elements of data should be considered
-            y_range (tuple): (min, max) y-values of interval within which elements of data should be considered
+            DataModel_to_x_and_y_attr (list of tuples): list of tuples like
+                [
+                 (::class DataModel::,
+                  (attr_of_DataModel_for_x_axis, ..._for_y_axis),
+                 (::class DataModel::,
+                  (attr_of_DataModel_to_consider_for_x_axis, ... _for_y_axis),
+                  ...
+                ]
+                for all subgroups to be shown (data model can also be a brian
+                state monitor or spike monitor)
+            MyPlotSettings (PlotSettings object): instance of class
+                PlotSettings holding basic plot settings (e.g. fontsize, ...)
+            subgroup_labels (list of str): list of labels for the different
+                subgroups (e.g. ['exc', 'inh'])
+            x_range (tuple): (min, max) x-values of interval within which
+                elements of data should be considered
+            y_range (tuple): (min, max) y-values of interval within which
+                elements of data should be considered
             title (str): title of plot
             xlabel (str): label of x-axis
             ylabel (str): label for y-axis
-            backend (str): 'matplotlib' or 'pyqtgraph', defines which backend should be used for plotting
-            mainfig (figure object): figure which holds the subfig (subplots) (plt.figure or  pg.GraphicsWindow())
+            backend (str): 'matplotlib' or 'pyqtgraph', defines which backend
+                should be used for plotting
+            mainfig (figure object): figure which holds the subfig (subplots)
+                (plt.figure or  pg.GraphicsWindow())
             subfig (subplot): subplot of mainfig which will hold the histogram
-            QtApp (pyqtgraph application): pyqtgraph application to run plots ( QtGui.QApplication([]) ),
-                                            only required if backend is pyqtgraph
-            show_immediately (bool): if True: plot is shown immediately after it has been created
+            QtApp (pyqtgraph application): pyqtgraph application to run plots
+                (QtGui.QApplication([])), only required if backend is pyqtgraph
+            show_immediately (bool): if True: plot is shown immediately after
+                it has been created
         """
 
         self.subgroup_labels = subgroup_labels
@@ -76,9 +91,13 @@ class LineplotController(DataController):
         """ Get data from data model which will be shown along x and y axis of plot.
 
         Args:
-            DataModel_to_x_and_y_attr (list of tuples): list of tuples like [(::class DataModel::, (attr_of_DataModel_to_consider_for_x_axis, ... _for_y_axis),
-                                                                             (::class DataModel::, (attr_of_DataModel_to_consider_for_x_axis, ... _for_y_axis), ...]
-                                                        for all subgroups to be shown (data model can also be a brian state monitor or spike monitor)
+            DataModel_to_x_and_y_attr (list of tuples): list of tuples like
+                [(::class DataModel::,
+                 (attr_of_DataModel_for_x_axis, ..._for_y_axis),
+                (::class DataModel::,
+                 (attr_of_DataModel_for_x_axis, ..._for_y_axis), ...]
+                for all subgroups to be shown (data model can also be a brian
+                state monitor or spike monitor)
         """
 
         self.data = []
@@ -110,8 +129,8 @@ class LineplotController(DataController):
                 x_dim = len(subgroup[0].shape) - (subgroup[0].shape).count(1)
                 y_dim = len(subgroup[1].shape) - (subgroup[1].shape).count(1)
                 if x_dim != y_dim:
-                    assert (x_dim==1 or y_dim==1), "Your data dimensions don't match, please adjust them." \
-                                                             " (x: {}, y: {})".format(x_dim, y_dim)
+                    assert (x_dim == 1 or y_dim == 1), "Your data dimensions don't match, please adjust them." \
+                                                   "(x: {}, y: {})".format(x_dim, y_dim)
 
                 indices_within_x_range = np.where(
                     np.logical_and(
@@ -130,8 +149,8 @@ class LineplotController(DataController):
                 x_dim = len(subgroup[0].shape) - (subgroup[0].shape).count(1)
                 y_dim = len(subgroup[1].shape) - (subgroup[1].shape).count(1)
                 if x_dim != y_dim:
-                    assert (x_dim==1 or y_dim==1), "Your data dimensions don't match, please adjust them." \
-                                                             " (x: {}, y: {})".format(x_dim, y_dim)
+                    assert (x_dim == 1 or y_dim == 1), "Your data dimensions don't match, please adjust them." \
+                                                    " (x: {}, y: {})".format(x_dim, y_dim)
 
                 indices_within_y_range = np.where(
                     np.logical_and(
@@ -146,7 +165,8 @@ class LineplotController(DataController):
                     subgroup[0][indices_within_y_range[:x_dim]], subgroup[1][indices_within_y_range[:y_dim]])
 
     def create_lineplot(self):
-        """ Function to create lineplot in subfigure with data from DataModel_to_attr with subgroups defined above"""
+        """ Function to create lineplot in subfigure with data from
+            DataModel_to_attr with subgroups defined above"""
         self.viewer.create_lineplot(
             data=self.data,
             subgroup_labels=self.subgroup_labels,

@@ -25,24 +25,36 @@ class RasterplotController(DataController):
             QtApp=None,
             add_histogram=False,
             show_immediately=True):
-        """ Setup Rasterplot controller and create rasterplot (incl histogram if add_histogram is True)
+        """ Setup Rasterplot controller and create rasterplot (incl histogram
+                if add_histogram is True)
         Args:
-            MyEventsModels (EventsModel or brian spike monitor object): EventsModel or brian spike monitor which holds data to be plotted
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
-            subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
-            time_range (tuple): (t_start(float), t_end(float)) of time interval within which events should be considered
-            neuron_id_range (tuple): (min_id, max_id) of neuron ids which should be considered
+            MyEventsModels (EventsModel or brian spike monitor object):
+                EventsModel or brian spike monitor which holds data to plot
+            MyPlotSettings (PlotSettings object): instance of class
+                PlotSettings holding basic plot settings (e.g. fontsize, ...)
+            subgroup_labels (list of str): list of labels for the different
+                subgroups (e.g. ['exc', 'inh'])
+            time_range (tuple): (t_start(float), t_end(float)) of time interval
+                within which events should be considered
+            neuron_id_range (tuple): (min_id, max_id) of neuron ids which
+                should be considered
             title (str): title of plot
             xlabel (str): label of x-axis
             ylabel (str): label for y-axis
-            backend (str): 'matplotlib' or 'pyqtgraph', defines which backend should be used for plotting
-            mainfig (figure object): figure which holds the subfig (subplots) (plt.figure or  pg.GraphicsWindow())
-            subfig_rasterplot (subplot): subplot of mainfig which will hold the rasterplot
-            subfig_histogram (subplot): subplot of mainfig which will hold the histogram (if add_histogram is True)
-            QtApp (pyqtgraph application): pyqtgraph application to run plots ( QtGui.QApplication([]) ),
-                                            only required if backend is pyqtgraph
-            add_histogram (bool): if True: add histogram of spike count per neuron on right side of plot
-            show_immediately (bool): if True: plot is shown immediately after it has been created
+            backend (str): 'matplotlib' or 'pyqtgraph', defines which backend
+                should be used for plotting
+            mainfig (figure object): figure which holds the subfig (subplots)
+                (plt.figure or  pg.GraphicsWindow())
+            subfig_rasterplot (subplot): subplot of mainfig which will hold the
+                rasterplot
+            subfig_histogram (subplot): subplot of mainfig which will hold the
+                histogram (if add_histogram is True)
+            QtApp (pyqtgraph application): pyqtgraph application to run plots
+                (QtGui.QApplication([])), only required if backend is pyqtgraph
+            add_histogram (bool): if True: add histogram of spike count per
+                neuron on right side of plot
+            show_immediately (bool): if True: plot is shown immediately after
+                it has been created
         """
 
         self.subgroup_labels = subgroup_labels
@@ -89,15 +101,17 @@ class RasterplotController(DataController):
             self.show_rasterplot()
 
     def _get_data_from_eventsmodels(self):
-        """ Get data from MyEventsModels and reformat it to list of neuron_ids and spike_times per subgroup"""
+        """ Get data from MyEventsModels and reformat it to list of neuron_ids
+            and spike_times per subgroup"""
         self.all_neuron_ids, self.all_spike_times = [], []
         for one_event_model in self.MyEventsModels:
             self.all_neuron_ids.append(one_event_model.neuron_ids)
             self.all_spike_times.append(one_event_model.spike_times)
 
     def _filter_data(self):
-        """ Filter self.neuron_ids and self.spike_times to be within time_range and neuron_id_range.
-        The MyEventsModels data is copied and not changed in place """
+        """ Filter self.neuron_ids and self.spike_times to be within time_range
+            and neuron_id_range. The MyEventsModels data is copied and not
+            changed in place """
 
         if self.time_range is None and self.neuron_id_range is None:
             return
@@ -113,10 +127,12 @@ class RasterplotController(DataController):
             all_filtered_neuron_ids, all_filtered_spike_times = [], []
             for event_model_nr, one_event_model in enumerate(
                     self.MyEventsModels):
-                active_spike_times, active_neuron_ids = self.filter_events(all_spike_times=one_event_model.spike_times,
-                                                                           all_neuron_ids=one_event_model.neuron_ids,
-                                                                           interval=self.time_range,
-                                                                           neuron_ids=considered_neuron_ids)
+                active_spike_times, active_neuron_ids = self.filter_events(
+                    all_spike_times=one_event_model.spike_times,
+                    all_neuron_ids=one_event_model.neuron_ids,
+                    interval=self.time_range,
+                    neuron_ids=considered_neuron_ids
+                    )
 
                 if len(active_neuron_ids) == 0:
                     warnings.warn(
@@ -130,8 +146,9 @@ class RasterplotController(DataController):
         self.all_neuron_ids = all_filtered_neuron_ids
 
     def create_rasterplot(self):
-        """ Function to create rasterplot (incl histogram if add_histogram is True) in subfigures defined above and
-            with data from MyEventsModels with subgroups defined above"""
+        """ Function to create rasterplot (incl histogram if add_histogram is True)
+            in subfigures defined above and with data from MyEventsModels with
+            subgroups defined above"""
 
         self.viewer.create_rasterplot(
             all_spike_times=self.all_spike_times,

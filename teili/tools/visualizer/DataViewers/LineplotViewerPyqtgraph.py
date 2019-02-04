@@ -4,7 +4,8 @@ try:
     import pyqtgraph as pg
     from PyQt5 import QtGui
 except BaseException:
-    warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5 can't be imported.")
+    warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5"
+                  "can't be imported.")
 
 from teili.tools.visualizer.DataViewers import LineplotViewer
 
@@ -18,13 +19,17 @@ class LineplotViewerPyqtgraph(LineplotViewer):
             mainfig=None,
             subfig=None,
             QtApp=None):
-        """ Setup LineplotViewer by initializing main figure and subfigure. If any of them is set to None, it will be
-        created internally.
+        """ Setup LineplotViewer by initializing main figure and subfigure.
+            If any of them is set to None, it will be created internally.
         Args:
-            MyPlotSettings (PlotSettings object): instance of class PlotSettings holding basic plot settings (e.g. fontsize, ...)
-            mainfig (pyqtgraph window object): pyqtgraph main window ( pg.GraphicsWindow() )
-            subfig (pyqtgraph subplot): pyqtgraph subplot of mainfig which will hold the lineplot
-            QtApp (pyqtgraph application): pyqtgraph application to run plots ( QtGui.QApplication([]) )
+            MyPlotSettings (PlotSettings object): instance of class
+                PlotSettings holding basic plot settings (e.g. fontsize, ...)
+            mainfig (pyqtgraph window object): pyqtgraph main window
+                (pg.GraphicsWindow())
+            subfig (pyqtgraph subplot): pyqtgraph subplot of mainfig which will
+                hold the lineplot
+            QtApp (pyqtgraph application): pyqtgraph application to run plots
+                (QtGui.QApplication([]))
         """
 
         self.MyPlotSettings = MyPlotSettings
@@ -59,13 +64,18 @@ class LineplotViewerPyqtgraph(LineplotViewer):
             title='Lineplot',
             xlabel=None,
             ylabel=None):
-        """ Function to create lineplot for groups of event sets in self.subfig with matplotlib
+        """ Function to create lineplot for groups of event sets in self.subfig
+                with matplotlib
         Args:
-            data (list of tuples): list of tuples, whereby each tuple is one subgroup which will be plotted,
-                                        e.g.: [(x_values_A, y_values_A), (x_values_B, y_values_B), ... ]
-            subgroup_labels (list of str): list of labels for the different subgroups (e.g. ['exc', 'inh'])
-            x_range_axis (tuple): (min, max) of interval within which elements are shown along x-axis
-            y_range_axis (tuple): (min, max) of interval within which elements are shown along y-axis
+            data (list of tuples): list of tuples, whereby each tuple is one
+                subgroup which will be plotted, e.g.:[(x_values_A, y_values_A),
+                (x_values_B, y_values_B), ... ]
+            subgroup_labels (list of str): list of labels for the different
+                subgroups (e.g. ['exc', 'inh'])
+            x_range_axis (tuple): (min, max) of interval within which elements
+                are shown along x-axis
+            y_range_axis (tuple): (min, max) of interval within which elements
+                are shown along y-axis
             title (str): title of plot
             xlabel (str): label of x-axis
             ylabel (str): label for y-axis

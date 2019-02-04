@@ -3,7 +3,7 @@ import warnings
 try:
     import pyqtgraph as pg
     from PyQt5 import QtGui
-except:
+except BaseException:
     warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5 can't be imported.")
 
 from teili.tools.visualizer.DataViewers.HistogramViewer import HistogramViewer

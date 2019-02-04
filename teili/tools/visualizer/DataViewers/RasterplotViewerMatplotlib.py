@@ -1,10 +1,9 @@
 import matplotlib.pylab as plt
-from matplotlib.ticker import MaxNLocator
 import numpy as np
 from itertools import chain
-
-from teili.tools.visualizer.DataViewers.RasterplotViewer import RasterplotViewer
+from matplotlib.ticker import MaxNLocator
 from teili.tools.visualizer.DataViewers.HistogramViewerMatplotlib import HistogramViewerMatplotlib
+from teili.tools.visualizer.DataViewers.RasterplotViewer import RasterplotViewer
 
 
 class RasterPlotViewerMatplotlib(RasterplotViewer):

@@ -1,8 +1,7 @@
 import numpy as np
 import warnings
-
-from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataControllers import DataController
+from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib, LineplotViewerPyqtgraph, PlotSettings
 
 

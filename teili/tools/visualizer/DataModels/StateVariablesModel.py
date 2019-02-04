@@ -4,6 +4,7 @@ from .DataModel import DataModel
 
 
 class VariableNameDuplicateException(Exception):
+    """ Expection class for exception where a variable name occurs twice in one instance of a StateVariablesModel """
     def __init__(self, all_state_variable_names):
         for unique_var_name in np.unique(all_state_variable_names):
             all_state_variable_names.remove(unique_var_name)

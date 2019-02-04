@@ -73,6 +73,13 @@ class LineplotController(DataController):
             self.show_lineplot()
 
     def _get_data_from_datamodels(self, DataModel_to_x_and_y_attr):
+        """ Get data from data model which will be shown along x and y axis of plot.
+
+        Args:
+            DataModel_to_x_and_y_attr (list of tuples): list of tuples like [(::class DataModel::, (attr_of_DataModel_to_consider_for_x_axis, ... _for_y_axis),
+                                                                             (::class DataModel::, (attr_of_DataModel_to_consider_for_x_axis, ... _for_y_axis), ...]
+                                                        for all subgroups to be shown (data model can also be a brian state monitor or spike monitor)
+        """
 
         self.data = []
         for data_model, x_y_attributes in DataModel_to_x_and_y_attr:

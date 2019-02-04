@@ -60,7 +60,8 @@ class HistogramViewerMatplotlib(HistogramViewer):
         if bins is None:
             bins = range(max(map(lambda x: np.max(x), data)) + 2)
         # get max value of y axis based on max count in histogram + 5% to set
-        # axis_lim of count slightly above y_max
+        # axis_lim of count slightly above y_max otherwise the points at the
+        # border are hard to see in the plot
         axis_lim = (max([self.get_highest_count(lst) for lst in data])) * 1.05
         if orientation == 'vertical':
             self.subfig.set_ylim(bottom=0, top=axis_lim)

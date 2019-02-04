@@ -116,6 +116,8 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
                 self.MyPlotSettings.colors))
 
         # set parameters on plot dimensions along time and neuron_id axis
+        # +[1e-9] to to deal with cases where no spikes or only nan spiek times
+        # were detected
         if time_range_axis is None:
             time_range_axis = (0,
                                np.nanmax(list(map(lambda x: x,
@@ -123,7 +125,7 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
                                                       all_spike_times + [
                                                           [1e-9]])))))
         if neuron_id_range_axis is None:
-            # +[0] to deal wit cases where no spikes were detected
+            # +[[0]] to deal with cases where no spikes were detected
             neuron_id_range_axis = (0, max(map(lambda x: x,
                                                chain.from_iterable(
                                                    all_neuron_ids + [

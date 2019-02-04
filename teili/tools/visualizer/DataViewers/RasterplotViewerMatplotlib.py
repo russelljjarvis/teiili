@@ -110,14 +110,16 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
             len(all_neuron_ids), len(
                 self.MyPlotSettings.colors))
 
-        # set parameters on plot dimensions along time and neuron_id axis
+        # set parameters on plot dimensions along time and neuron_id axes
+        # +[1e-9] to to deal with cases where no spikes or only nan spiek times
+        # were detected
         if time_range_axis is None:
             time_range_axis = (0, np.nanmax(list(map(lambda x: x,
                                                      chain.from_iterable(
                                                          all_spike_times + [
                                                              [1e-9]])))))
         if neuron_id_range_axis is None:
-            # +[0] to deal wit cases where no spikes were detected
+            # +[[0]] to deal with cases where no spikes were detected
             neuron_id_range_axis = (0, max(list(map(lambda x: x,
                                                     chain.from_iterable(
                                                         all_neuron_ids + [

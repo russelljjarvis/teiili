@@ -2,7 +2,9 @@ from teili.tools.visualizer.Freezer import Freezer
 
 
 class PlotSettings(Freezer):
-    """ Data structure to hold general plot settings """
+    """ Data structure to hold general plot settings. Derived from Freezer to
+        ensure that the correct attribute names are used (e.g. avoid creating
+        the same attribute twice but spelled differently) """
 
     def __init__(
         self,

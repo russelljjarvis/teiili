@@ -77,17 +77,16 @@ class DataController(object):
             neuron_ids=None):
         """Function to filter for events which are within a given time interval
            (t_start, t_end) and of a subset of neuron ids.
-            If interval is set to None, the interval is set to the duration of
-            the entire spike train.
-            If neuron_ids is set to None, all neuron ids are considered.
 
         Args:
             all_spike_times (list): list of spike times of events
             all_neuron_ids (list): list of neuron ids of events
             interval (tuple(float, float)): (t_start, t_end) of time interval
-                within which events should be considered
-            active_neuron_ids (list): list of neuron ids to filter for (neurons
-                with these ids are returned)
+                within which events should be considered. If interval is set to
+                None, the interval is set to the duration of the entire spike train.
+            neuron_ids (list): list of neuron ids to filter for (neurons
+                with these ids are returned). If neuron_ids is set to None,
+                all neuron ids are considered.
 
         Returns:
             all_spike_times (array): array of all spike times of events of

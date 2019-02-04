@@ -119,9 +119,9 @@ class DataController(object):
             position of the 'region' plotitem
 
         Args:
-            region (pyqtgraph LinearRegionItem): LinearRegionItem which's
+            region (pyqtgraph LinearRegionItem): LinearRegionItem whose
                 position defines the x range of the detailed_plot
-            detailed_plot (pyqtgraph PlotItem): PlotItem which's x_range will
+            detailed_plot (pyqtgraph PlotItem): PlotItem whose x_range will
                 be updated depending on the 'region' position
         """
         minX, maxX = region.getRegion()
@@ -133,9 +133,9 @@ class DataController(object):
         plotitem.
 
         Args:
-            region (pyqtgraph LinearRegionItem): LinearRegionItem which's
+            region (pyqtgraph LinearRegionItem): LinearRegionItem whose
                 position will be updated depending on the 'detailed_plot's range
-            detailed_plot (pyqtgraph PlotItem): PlotItem which's x_range
+            detailed_plot (pyqtgraph PlotItem): PlotItem whose x_range
                 defines the position of the 'region' plotitem
         """
         rgn = detailed_plot.viewRange()[0]
@@ -154,7 +154,7 @@ class DataController(object):
                 with all the data to show to which the region is added.
              filled_subplot_detailed_view (pyqtgraph PlotItem): PlotItem filled
                 with all the data as well. It will later show the detailed
-                representation of the data which's x_range is connected with
+                representation of the data whose x_range is connected with
                 the position a RegionItem in the filled_subplot_original_view.
         Remarks:
             It is very important that the two PlotItems are two independent

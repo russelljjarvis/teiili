@@ -1,6 +1,6 @@
-
 class Freezer(object):
     ''' class to freeze a class so that no new attributes can be added after self._freeze() is called '''
+    
     __isfrozen = False
 
     def __setattr__(self, key, value):

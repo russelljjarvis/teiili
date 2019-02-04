@@ -5,7 +5,7 @@ try:
     from PyQt5 import QtGui
 except:
     warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5 can't be imported.")
-    
+
 
 class DataController(object):
     """ Parent class of all DataControllers"""
@@ -28,6 +28,7 @@ class DataController(object):
             all_spike_times (array): array of all spike times of events within specified time interval
             all_neuron_ids (array): array of all neuron ids of events within specified time interval
         """
+
         all_spike_times = np.asarray(all_spike_times)
         all_neuron_ids = np.asarray(all_neuron_ids)
         shown_indices = np.where(
@@ -95,6 +96,7 @@ class DataController(object):
 
     def _update_detailed_subplot_Xrange(self, region, detailed_plot):
         """ Function to update x range of detailed_plot depending on current position of the 'region' plotitem
+
         Args:
             region (pyqtgraph LinearRegionItem): LinearRegionItem which's position defines the x range of the detailed_plot
             detailed_plot (pyqtgraph PlotItem): PlotItem which's x_range will be updated depending on the 'region' position
@@ -105,6 +107,7 @@ class DataController(object):
     def _update_region_position(self, region, detailed_plot):
         """ Function to update position of 'region' plotitem depending on current range of the detailed_plot
         plotitem.
+
         Args:
             region (pyqtgraph LinearRegionItem): LinearRegionItem which's position will be updated depending on the 'detailed_plot's range
             detailed_plot (pyqtgraph PlotItem): PlotItem which's x_range defines the position of the 'region' plotitem
@@ -116,6 +119,7 @@ class DataController(object):
         """ Function to connect the filled_subplot_original_view and the filled_subplot_detailed_view via a region item.
         The region item is added to the filled_subplot_original_view. By changing the position of the region item in
         there, it automatically updates what is shown in the filled_subplot_detailed_view and vice versa.
+        
         Args:
              filled_subplot_original_view (pyqtgraph PlotItem): PlotItem filled with all the data to show to which the region is added.
              filled_subplot_detailed_view (pyqtgraph PlotItem): PlotItem filled with all the data as well. It will later show

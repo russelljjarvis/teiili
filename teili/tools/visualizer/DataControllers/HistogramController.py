@@ -23,6 +23,7 @@ class HistogramController(DataController):
             QtApp=None,
             show_immediately=True):
         """ Setup Histogram Controller and create histogram plot
+        
         Args:
             DataModel_to_attr (list of tuples): [tuple(::class DataModel::  attr_of_DataModel_to_consider), ( ..., ...), ... ]
                                                 for every subgroups one tuple (data model can also be a brian state monitor or spike monitor)

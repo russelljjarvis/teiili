@@ -25,6 +25,7 @@ Every building block has a set of parameters such as weights and refractory peri
                    'II_connection_probability': 0.1
 
 where each key is defined as:
+
 * **weInpWTA**: Excitatory synaptic weight between input SpikeGenerator and WTA neurons.
 * **weWTAInh**: Excitatory synaptic weight between WTA population and inhibitory interneuron.
 * **wiInhWTA**: Inhibitory synaptic weight between inhibitory interneuron and WTA population.

@@ -5,10 +5,12 @@ Equation Builder
 The equation builder serves as a dynamic model generator. It takes model templates, located in ``teili/models/builder/templates/`` and combines these template snippets using ``teili/models/builder/combine.py``.
 
 There are two distinct equation builder classes:
+
 * NeuronEquationBuilder
 * SynapseEquationBuilder
 
-Each builder is wrapped by a neuron/synapse model generator class located in `teili/models/`:
+Each builder is wrapped by a neuron/synapse model generator class located in ``teili/models/``:
+
 * neuron_model
 * synapse_model
 
@@ -29,6 +31,7 @@ NeuronEuqationBuilder keywords
     my_neuron.add_input_currents(num_inputs)
 
 The keywords explained:
+
 * **base_unit**: Indicates whether neuron is current or conductance based.
 * **adaptation**: What type of adaptive feedback should be used. So far only calciumFeedback is implemented.
 * **integration_mode: Determines whether integration up to spike-generation is linear or exponential.
@@ -47,6 +50,7 @@ SynapseEquationBuilder keywords
                                                    plasticity='non_plastic')
 
 The keywords explained:
+
 * **base_unit**: Indicates whether synapse is current-based, conductance-based or a DPI current model.
 * **kernel**: Specifying temporal kernel with which each spike gets convolved, i.e. exponential decay, or alpha
   function.

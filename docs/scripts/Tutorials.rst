@@ -45,6 +45,7 @@ Import equation from a file
 If you prefer to import your model from a file you can do so:
 
 .. code-block:: python
+
     import os
     from teili.core.groups import Neurons, Connections
     from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
@@ -71,6 +72,7 @@ If you prefer to import your model from a file you can do so:
 If you want to see a more detailed report on which equations were used during the generation you can set `verbose=True`, such that it looks like this
 
 .. code-block:: python
+
     test_neuron1 = Neurons(2, equation_builder=my_neuron_model,
                            name="test_neuron1", verbose=True)
 
@@ -805,6 +807,7 @@ In order to better understand why the changes the way it does given the specific
 We start again by importing the required dependencies.
 
 .. code-block:: python
+
     from brian2 import ms, prefs, SpikeMonitor, run
     from pyqtgraph.Qt import QtGui
     import pyqtgraph as pg
@@ -882,6 +885,7 @@ Now we run the simulation
 And visualizing the kernel, using either matplotlib or pyqtgraph as backend depending on `visualization_backend`
 
 .. code-block:: python
+
     if visualization_backend == 'pyqt':
             app = QtGui.QApplication.instance()
             if app is None:
@@ -937,6 +941,7 @@ by specifying a dictionary with parameter names as keys and mismatch standard de
 Here neuron and synapse selected parameters are specified in mismatch_neuron_param and mismatch_synap_param respectively.
 
 .. code-block:: python
+
     import pyqtgraph as pg
     import numpy as np
     from brian2 import SpikeGeneratorGroup, SpikeMonitor, StateMonitor, ms, asarray, nA, prefs
@@ -997,6 +1002,7 @@ Let's first create the input SpikeGeneratorGroup, the output layer and the synap
 Notice that a constant input current has been set for the output neurons.
 
 .. code-block:: python
+
     # Input layer
     ts_input = asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
     ids_input = asarray([0, 0, 0, 0, 0, 0, 0, 0])
@@ -1046,6 +1052,7 @@ Once we run the simulation, we can visualize the effect of device mismatch on th
 of five randomly selected neurons:
 
 .. code-block:: python
+
     # Setting monitors:
     spikemon_input = SpikeMonitor(input_spikegen, name='spikemon_input')
     spikemon_output = SpikeMonitor(output_neurons, name='spikemon_output')

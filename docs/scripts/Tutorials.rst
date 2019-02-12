@@ -615,8 +615,8 @@ In the next step we will load a simple STDP-protocol from `teili/stimuli/testben
 
 .. code-block:: python
 
-stdp = STDP_Testbench()
-pre_spikegenerator, post_spikegenerator = stdp.stimuli(isi=30)
+    stdp = STDP_Testbench()
+    pre_spikegenerator, post_spikegenerator = stdp.stimuli(isi=30)
 
 
 Now we generate our test_neurons and connect via non-platic synapses to our `SpikeGeneratorGroups` and via plastic synapses between them.

@@ -34,7 +34,7 @@ The keywords explained:
 
 * **base_unit**: Indicates whether neuron is current or conductance based.
 * **adaptation**: What type of adaptive feedback should be used. So far only calciumFeedback is implemented.
-* **integration_mode: Determines whether integration up to spike-generation is linear or exponential.
+* **integration_mode**: Determines whether integration up to spike-generation is linear or exponential.
 * **leak**: Enables leaky integration.
 * **position**: To enable spatial-like position indices on neuron.
 * **noise**: *NOT YET IMPLMENTED!* This will in the future allow independent mismatch-like noise to be added to

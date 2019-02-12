@@ -2,7 +2,7 @@
 Tutorials
 *********
 Welcome to teili, a modular python-based framework for developing, testing and visualization of neural algorithms.
-Before going through our tutorials we highly recommend doing the tutorials provided by [brian2](https://brian2.readthedocs.io/en/stable/resources/tutorials/index.html)
+Before going through our tutorials we highly recommend doing the tutorials provided by brian2_
 
 
 Class object vs. import_eq
@@ -100,7 +100,7 @@ First we import all required libraries
 
 
 We now can define the target for the code generation. Typically we use the `numpy` backend.
-For more details on how to run your code more efficient and faster have a look at brian's [standalone mode](https://brian2.readthedocs.io/en/stable/advanced/preferences.html)
+For more details on how to run your code more efficient and faster have a look at brian's `standalone mode`_
 
 .. code-block:: python
 
@@ -361,6 +361,7 @@ In order to visualize the behavior the example script also plots a couple of spi
 
 
 In both cases of model definition the resulting figure should look like this:
+
 .. figure:: fig/neuron_synapse_tutorial_dark.png
     :width: 800px
     :align: center
@@ -563,6 +564,7 @@ Now we visualize the activity of our WTA.
     app.exec()
 
 The resulting figure should look like this:
+
 .. figure:: fig/wta_tutorial.png
     :width: 800px
     :align: center
@@ -578,7 +580,7 @@ STDP tutorial
 
 One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity (STDP) mechanism.
 STDP is one mechanism which has been identified experimentally how neurons adjust their synaptic weight according to some correlated firing pattern.
-Feel free to read more about STDP [here](https://scholar.google.com/scholar?&q=STDP).
+Feel free to read more about STDP_.
 The following tutorial can be found at `~/teiliApps/examples/stdp_tutorial.py`
 If we want to add an activity dependent plasticity mechanism to our network we again start by importing the required packages.
 
@@ -917,6 +919,7 @@ And visualizing the kernel, using either matplotlib or pyqtgraph as backend depe
             plt.show()
 
 The resulting figure should look like this:
+
 .. figure:: fig/stdp_kernel_tutorial.png
     :width: 800px
     :align: center
@@ -1162,3 +1165,6 @@ of five randomly selected neurons:
 .. _Building block development: https://teili.readthedocs.io/en/latest/scripts/Developing%20Building%20Blocks.html
 .. _BuildingBlocks: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html
 .. _source code: https://teili.readthedocs.io/en/latest/modules/teili.building_blocks.html#module-teili.building_blocks.wta
+.. _standalone mode: https://brian2.readthedocs.io/en/stable/advanced/preferences.html
+.. _brian2: https://brian2.readthedocs.io/en/stable/resources/tutorials/index.html
+.. _STDP: https://scholar.google.com/scholar?&q=STDP

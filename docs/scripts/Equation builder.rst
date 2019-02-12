@@ -45,6 +45,7 @@ SynapseEquationBuilder keywords
 -------------------------------
 
 .. code-block:: python
+
     from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
     my_syn_model = SynapseEquationBuilder.__init__(base_unit='DPI',
                                                    plasticity='non_plastic')
@@ -67,6 +68,7 @@ The keywords, given to the EquationBuilder class are used to select template dic
 This is done by passing these keywords to ``current_equation_sets`` and ``current_parameters`` in case of neurons and to ``modes``, ``kernels``, ``plasticity_models`` and ``current_parameters``.
 
 .. code-block:: python
+
     # In case of neurons
     keywords = combine_neu_dict(eq_templ, param_templ)
     # In case of synapses

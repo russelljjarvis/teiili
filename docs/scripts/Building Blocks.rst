@@ -97,7 +97,7 @@ Changing a certain synapse group from being static to plastic:
                                                  name=my_wta.Groups['synWTAWTA1e'].name)
       my_wta.Groups['synWTAWTA1e'].connect(True)
 
-Now we changed the standard DPI synapse for the recurrent connection within a WTA population to an All-to-All STDP-based DPI synapse. In order to initialize the plastic weight `w_plast` we need to do:
+Now we changed the standard DPI synapse for the recurrent connection within a WTA population to an All-to-All STDP-based DPI synapse. In order to initialize the plastic weight ``w_plast`` we need to do:
 
 .. code-block:: python
 

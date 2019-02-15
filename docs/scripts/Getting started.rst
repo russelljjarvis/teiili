@@ -45,7 +45,7 @@ Installation
 
     source activate myenv
 
-- Navigate to the parent folder containing the cloned repository or the downloaded `tar.gz` file
+- Navigate to the parent folder containing the cloned repository or the downloaded ``tar.gz`` file
 
 .. code-block:: bash
 
@@ -61,7 +61,7 @@ Installation
     pip install teili*.tar.gz
 
 
-| The `setup.py` will by default create a folder in your home directory called `teiliApps`.
+| The ``setup.py`` will by default create a folder in your home directory called ``teiliApps``.
 | This folder contains a selection of neuron and synapse models, example scripts, as well as unit tests.
 | Please run the unit tests to check if everything is working as expected by
 
@@ -72,17 +72,18 @@ Installation
 
 
 | **You are good to go!**
-| If you want to change the location of `teiliApps`, you can do so by moving the folder manually.
+| If you want to change the location of ``teiliApps``, you can do so by moving the folder manually.
 |
 | The installation instructions above will install all requirements and dependencies.
-| It will also build pre-defined neuron and synapse models and place them in `~/teiliApps/equations/`.
+| It will also build pre-defined neuron and synapse models and place them in ``~/teiliApps/equations/``.
 
-.. note:: Note that the *path* provided in the install command needs to point to the folder which contains the *setup.py* file.
+.. note:: Note that the *path* provided in the install command needs to point to the folder which contains the **setup.py** file.
 
 
 Alternative installation **NOT RECOMMENDED**
 --------------------------------------------
-If, however, you want to install all dependencies separately you can run the following commands **NOT RECOMMENDED**:
+| If, however, you want to install all dependencies separately you can run the following commands
+| **NOT RECOMMENDED**:
 
 .. code-block:: bash
 
@@ -105,14 +106,14 @@ Re-building models after installation
 .. note:: By default models are generated during installation. **Only if** you accidentally deleted them manually you need to rebuild models.
 
 
-In case you want to re-build the pre-defined models you need to navigate to the `model` folder:
+In case you want to re-build the pre-defined models you need to navigate to the ``model`` folder:
 
 .. code-block:: bash
 
     cd teili/models/
     source activate myenv
 
-and run the following two scripts (if you want to use the default location `/home/you/`):
+and run the following two scripts (if you want to use the default location ``/home/you/``):
 
 .. code-block:: bash
 
@@ -120,7 +121,7 @@ and run the following two scripts (if you want to use the default location `/hom
     python -m synapse_models
 
 
-By default the models will be placed in `~/teiliApps/equations`. If you want to place them at a different location follow the instructions below:
+By default the models will be placed in ``~/teiliApps/equations``. If you want to place them at a different location follow the instructions below:
 
 .. code-block:: bash
 
@@ -134,7 +135,7 @@ By default the models will be placed in `~/teiliApps/equations`. If you want to 
     synapse_models.main("/path/to/my/equations/")
 
 
-| Note, that the following folder structure is generated in the specified location: `/path/to/my/equations/teiliApps/equations/`.
+| Note, that the following folder structure is generated in the specified location: ``/path/to/my/equations/teiliApps/equations/``.
 | Have a look at our tutorials_ to see how to use teili and which features it provides to you.
 
 .. _conda: https://conda.io/docs/user-guide/install/index.html

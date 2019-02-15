@@ -62,9 +62,8 @@ The keywords explained:
 Dictionary structure
 ====================
 
-Both equation builders have a dictionary attribute which keys represent the respective necessary keywords to generate a neuron/synapse model, in order to simulate it using brian2.
-
-The keywords, given to the EquationBuilder class are used to select template dictionaries which are combined.
+| Both equation builders have a dictionary attribute which keys represent the respective necessary keywords to generate a neuron/synapse model, in order to simulate it using brian2.
+| The keywords, given to the EquationBuilder class are used to select template dictionaries which are combined.
 This is done by passing these keywords to ``current_equation_sets`` and ``current_parameters`` in case of neurons and to ``modes``, ``kernels``, ``plasticity_models`` and ``current_parameters``.
 
 .. code-block:: python
@@ -91,7 +90,7 @@ The dictionary ``keywords`` has the following keys:
 Synapse model keywords
 ----------------------
 
-The dictionary `keywords` has the following keys:
+The dictionary ``keywords`` has the following keys:
 
 .. code-block:: python
 
@@ -127,7 +126,7 @@ For synapses the import works as follows:
 export_eq
 ---------
 
-In order to generate models, which can later be changed manually and imported again the EuqationBuilder class features an export method which can be used as:
+In order to generate models, which can later be changed manually and imported again the ``EquationBuilder`` class features an export method which can be used as:
 
 .. code-block:: python
 

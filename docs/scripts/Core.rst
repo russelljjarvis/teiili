@@ -15,7 +15,7 @@ Mismatch is an inherent property of analog VLSI devices due to fabrication varia
 chip behavior can be studied, for example, with Monte Carlo simulations [2]_.
 Thus, if you are simulating neuron and synapse models of neuromorphic chips, e.g. the DPI neuron (DPI)
 and the DPI synapse (DPISyn), you might also want to simulate device mismatch.
-To this end, the class method add_mismatch() allows you to add a Gaussian distributed mismatch [3]_ with mean equal to the current
+To this end, the class method ``add_mismatch()`` allows you to add a Gaussian distributed mismatch [3]_ with mean equal to the current
 parameter value and standard deviation set as a fraction of the current parameter value.
 
 As an example, once neurons and synapses are created, device mismatch can be added to some selected parameters (e.g. Itau and refP for the DPI neuron)
@@ -37,16 +37,15 @@ Let's assume that the estimated mismatch distribution has a standard deviation o
     mismatch_param = {'Itau': 0.1, 'refP': 0.1}
     testNeurons.add_mismatch(mismatch_param, seed=10)
 
-This will change the current parameter values by drawing random values from the specified Gaussian distribution.
+| This will change the current parameter values by drawing random values from the specified Gaussian distribution.
 If you set the mismatch seed in the input parameters, the random samples will be reproducible across simulations.
-
-Notice that self.add_mismatch() will automatically truncate the gaussian distribution
+| Notice that ``self.add_mismatch()`` will automatically truncate the gaussian distribution
 at zero for the lower bound. This will prevent from setting neuron/synapse parameters (which
 are mainly transistor currents for the DPI model) to negative values. No upper bound is specified by default.
 
-However, if you want to manually specify lower bound and upper bound of the mismatch
-gaussian distribution, you can use the method _add_mismatch_param(), as shown below.
-With old_param being the current parameter value, this will draw samples from a Gaussian distribution with the following parameters:
+| However, if you want to manually specify lower bound and upper bound of the mismatch
+gaussian distribution, you can use the method ``_add_mismatch_param()``, as shown below.
+| With old_param being the current parameter value, this will draw samples from a Gaussian distribution with the following parameters:
 
 * **mean**: old_param
 * **standard deviation**: std * old_param

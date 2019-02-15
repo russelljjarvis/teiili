@@ -149,6 +149,8 @@ You can change all the parameters like this after creation of the neurongroup or
 Note that the if condition is only there for convenience to switch between voltage- or current-based models.
 Normally, you have one or the other in your simulation, thus you will not need the if condition.
 
+.. attention:: The ``weight`` multiplies the baseweight, which is currently initialised to 7 pA by default. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3500.
+
 .. code-block:: python
 
     # Example of how to set parameters, saved as a dictionary
@@ -206,8 +208,10 @@ We can now finally add all defined `Neurons` and `Connections`, as well as the m
 
 .. code-block:: python
 
-    Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn, Syn, spikemonInp, spikemon,
-            spikemonOut, statemonNeuIn, statemonNeuOut, statemonSynOut, statemonInpSyn)
+    Net.add(input_spikegenerator, test_neurons1, test_neurons2,
+            input_synapse, test_synapse,
+            spikemon_input, spikemon_test_neurons1, spikemon_test_neurons2,
+            statemon_test_neurons1, statemon_test_neurons2, statemon_test_synapse, statemon_input_synapse)
 
     duration = 500
     Net.run(duration * ms)

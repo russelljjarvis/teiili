@@ -94,7 +94,7 @@ class TeiliGroup(Group):
             dimensions (brian2.units.fundamentalunits.Dimension): dimension of the expression.
             expr (str): the expression.
         """
-        self.variables.add_subexpression(name, dimensions, expr)
+        self.variables.add_subexpression(name=name, dimensions=dimensions, expr=expr)
 
     def set_params(self, params, **kwargs):
         """This function sets parameters on members of a Teiligroup.

@@ -125,6 +125,8 @@ html_logo = 'scripts/fig/logo.svg'
 html_theme_options = {
     'logo_only': True,
     'display_version': True,
+    'sticky_navigation': False,
+    # 'codebgcolor': '#5F9EA0',
 }
 
 
@@ -137,7 +139,7 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['static']
+html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

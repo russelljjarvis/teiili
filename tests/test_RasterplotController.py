@@ -176,8 +176,8 @@ class TestRasterplotController(unittest.TestCase):
             QtApp=QtApp,
             show_immediately=SHOW_PLOTS_IN_TESTS)
         RC._filter_data()
-        self.assertLessEqual(np.max(RC.all_neuron_ids[0]), neuron_id_range[1])
-        self.assertLessEqual(np.max(RC.all_spike_times[0]), time_range[1])
+        self.assertLessEqual(max(RC.all_neuron_ids[0], default=0), neuron_id_range[1])
+        self.assertLessEqual(max(RC.all_spike_times[0], default=0), time_range[1])
 
         # from brian state monitor and spike monitors
         RC = RasterplotController(
@@ -191,8 +191,8 @@ class TestRasterplotController(unittest.TestCase):
             QtApp=QtApp,
             show_immediately=SHOW_PLOTS_IN_TESTS)
         RC._filter_data()
-        self.assertLessEqual(np.max(RC.all_neuron_ids[0]), neuron_id_range[1])
-        self.assertLessEqual(np.max(RC.all_spike_times[0]), time_range[1])
+        self.assertLessEqual(max(RC.all_neuron_ids[0], default=0), neuron_id_range[1])
+        self.assertLessEqual(max(RC.all_spike_times[0], default=0), time_range[1])
 
     def test_createrasterplot(self):
 

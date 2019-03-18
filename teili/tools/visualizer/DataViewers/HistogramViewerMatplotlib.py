@@ -58,8 +58,14 @@ class HistogramViewerMatplotlib(HistogramViewer):
         """
 
         if bins is None:
-            bins = range(max(map(lambda x: np.max(x), data)) + 2)
-        # get max value of y axis based on max count in histogram + 5% to set
+            max_per_dataset = []
+            for x in data:
+                if np.size(x) > 0:  # to avoid error by finding max of emtpy dataset
+                    max_per_dataset.append(np.nanmax(x))
+                else:
+                    max_per_dataset.append(0)
+            bins = range(int(max(max_per_dataset))+2)  # +2 to always have at least 1 bin        # get max value of y axis based on max count in histogram + 5% to set
+
         # axis_lim of count slightly above y_max otherwise the points at the
         # border are hard to see in the plot
         axis_lim = (max([self.get_highest_count(lst) for lst in data])) * 1.05

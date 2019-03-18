@@ -60,3 +60,20 @@ class DataViewerUtilsPyqtgraph(DataViewerUtils):
             subfig.setLabel('left', ylabel, **labelStyle)
         subfig.getAxis('bottom').tickFont = QtGui.QFont('arial', fontsize_axis_labels)
         subfig.getAxis('left').tickFont = QtGui.QFont('arial', fontsize_axis_labels)
+
+    def add_legend(self, subgroup_labels, subfig, fontsize_legend):
+        """ Add legend to plot subfig
+        Args:
+            subgroup_labels (list of str): list of labels for the different
+                subgroups (e.g. ['exc', 'inh'])
+            subfig (pyqtgraph subplot): subfigure to which title,
+                x- & y-axis-label are added
+            fontsize_legend (int): fontsize of legend
+        """
+        if subgroup_labels is not None:
+            legendStyle = {'color': '#FFF', 'size': str(fontsize_legend) + 'pt'}
+            for item in subfig.legend.items:
+                for single_item in item:
+                    if isinstance(single_item,
+                                  pg.graphicsItems.LabelItem.LabelItem):
+                        single_item.setText(single_item.text, **legendStyle)

@@ -118,17 +118,9 @@ class HistogramViewerPyqtgraph(HistogramViewer):
                 self.subfig.legend.addItem(style, subgroup_labels[subgroup_nr])
             self.subfig.addItem(barchart)
 
-        if subgroup_labels is not None:
-            legendStyle = {
-                'color': '#FFF', 'size': str(
-                    self.MyPlotSettings.fontsize_legend) + 'pt'}
-            for item in self.subfig.legend.items:
-                for single_item in item:
-                    if isinstance(single_item,
-                                  pg.graphicsItems.LabelItem.LabelItem):
-                        single_item.setText(single_item.text, **legendStyle)
-
-        self._set_title_and_labels(title=title, xlabel=xlabel, ylabel=ylabel)
+        self.DVUtils.add_legend(subgroup_labels=subgroup_labels,
+                                subfig=self.subfig,
+                                fontsize_legend=self.MyPlotSettings.fontsize_legend)
 
         self.DVUtils._set_title_and_labels(subfig=self.subfig, title=title,
                                            xlabel=xlabel, ylabel=ylabel,

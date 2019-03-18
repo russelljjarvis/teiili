@@ -167,15 +167,9 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
                 time_range_axis[0], time_range_axis[1]), yRange=(
                 neuron_id_range_axis[0], neuron_id_range_axis[1]))
 
-        if subgroup_labels is not None:
-            legendStyle = {
-                'color': '#FFF', 'size': str(
-                    self.MyPlotSettings.fontsize_legend) + 'pt'}
-            for item in self.subfig_rasterplot.legend.items:
-                for single_item in item:
-                    if isinstance(single_item,
-                                  pg.graphicsItems.LabelItem.LabelItem):
-                        single_item.setText(single_item.text, **legendStyle)
+        self.DVUtils.add_legend(subgroup_labels=subgroup_labels,
+                                subfig=self.subfig_rasterplot,
+                                fontsize_legend=self.MyPlotSettings.fontsize_legend)
 
         if self.add_histogram:
             self._add_histogram_to_rasterplot(

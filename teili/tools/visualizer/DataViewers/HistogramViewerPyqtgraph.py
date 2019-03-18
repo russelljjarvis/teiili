@@ -78,13 +78,7 @@ class HistogramViewerPyqtgraph(HistogramViewer):
             """
 
         if bins is None:
-            max_per_dataset = []
-            for x in data:
-                if np.size(x) > 0:  # to avoid error by finding max of emtpy dataset
-                    max_per_dataset.append(np.nanmax(x))
-                else:
-                    max_per_dataset.append(0)
-            bins = range(int(max(max_per_dataset))+2)  # +2 to always have at least 1 bin
+            bins = self.set_bins(data=data)
 
         # check if num colors ok
         assert len(

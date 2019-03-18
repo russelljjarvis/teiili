@@ -2,6 +2,7 @@ import matplotlib.pylab as plt
 import numpy as np
 
 from teili.tools.visualizer.DataViewers import LineplotViewer
+from teili.tools.visualizer.DataViewers.DataViewerUtilsMatplotlib import DataViewerUtilsMatplotlib
 
 
 class LineplotViewerMatplotlib(LineplotViewer):
@@ -32,6 +33,12 @@ class LineplotViewerMatplotlib(LineplotViewer):
         self.subfig = subfig
         if not self.subfig:
             self.subfig = self.mainfig.add_subplot(111)
+
+        self.set_DataViewerUtils()
+
+    def set_DataViewerUtils(self):
+        """ Set which DataViewerUtils class should be considered"""
+        self.DVUtils = DataViewerUtilsMatplotlib(mainfig=self.mainfig)
 
     def create_plot(
             self,
@@ -119,21 +126,3 @@ class LineplotViewerMatplotlib(LineplotViewer):
         if ylabel is not None:
             self.subfig.set_ylabel(
                 ylabel, fontsize=self.MyPlotSettings.fontsize_axis_labels)
-
-    def show(self):
-        """ show plot """
-        plt.show()
-
-    def save(
-            self,
-            path_to_save='lineplot.png',
-            figure_size=None):
-        """ Save figure to path_to_save with size figure_size as png, pdf, ps, eps and svg.
-        Args:
-            path_to_save (str): path to location where to save figure incl filename
-            figure_size (tuple): tuple of width and height in inch of figure to save
-        """
-        if figure_size is not None:
-            self.mainfig.set_size_inches(figure_size[0], figure_size[1])
-        self.mainfig.savefig(path_to_save)
-        print('Figure saved to: ' + path_to_save)

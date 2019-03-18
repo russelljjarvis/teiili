@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 from teili.tools.visualizer.Freezer import Freezer
 
 
@@ -39,6 +41,25 @@ class PlotSettings(Freezer):
         self._freeze()
 
 
-class DataViewer(object):
+class DataViewer(ABC):
     """ Parent class of all DataViewer classes """
-    pass
+    def __init__(self):
+        super().__init__()
+
+    @abstractmethod
+    def set_DataViewerUtils(self):
+        """ Set which DataViewerUtils class should be considered"""
+        self.DVUtils = None
+
+    @abstractmethod
+    def create_plot(self):
+        """ Method to create plot """
+        pass
+
+    def show(self, *args):
+        """ Method to show plot """
+        self.DVUtils.show(*args)
+
+    def save(self, *args):
+        """ Method to save plot """
+        self.DVUtils.save(*args)

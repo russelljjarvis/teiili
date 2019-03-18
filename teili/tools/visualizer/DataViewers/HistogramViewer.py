@@ -7,6 +7,14 @@ class HistogramViewer(DataViewer):
     def __init__(self):
         pass
 
+    def set_DataViewerUtils(self):
+        """ Set which DataViewerUtils class should be considered"""
+        super().set_DataViewerUtils()
+
+    def create_plot(self):
+        """ Method to create plot """
+        super().create_plot()
+
     def _get_most_common_element(self, lst):
         """ Get element which occurs most often in lst
         Args:

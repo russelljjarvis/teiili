@@ -4,6 +4,7 @@ from itertools import chain
 from matplotlib.ticker import MaxNLocator
 from teili.tools.visualizer.DataViewers.HistogramViewerMatplotlib import HistogramViewerMatplotlib
 from teili.tools.visualizer.DataViewers.RasterplotViewer import RasterplotViewer
+from teili.tools.visualizer.DataViewers.DataViewerUtilsMatplotlib import DataViewerUtilsMatplotlib
 
 
 class RasterPlotViewerMatplotlib(RasterplotViewer):
@@ -69,6 +70,12 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
                     hspace=0.2)
         else:
             self.subfig_histogram = None
+
+        self.set_DataViewerUtils()
+
+    def set_DataViewerUtils(self):
+        """ Set which DataViewerUtils class should be considered"""
+        self.DVUtils = DataViewerUtilsMatplotlib(mainfig=self.mainfig)
 
     def create_plot(
             self,
@@ -199,21 +206,3 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
         if ylabel is not None:
             self.subfig_rasterplot.set_ylabel(
                 ylabel, fontsize=self.MyPlotSettings.fontsize_axis_labels)
-
-    def show(self):
-        """ show plot """
-        plt.show()
-
-    def save(
-        self,
-        path_to_save='rasterplot.png',
-        figure_size=None):
-        """ Save figure to path_to_save with size figure_size
-        Args:
-            path_to_save (str): path to location where to save figure incl filename
-            figure_size (2-tuple): tuple of width and height in inch of figure to save
-        """
-        if figure_size is not None:
-            self.mainfig.set_size_inches(figure_size[0], figure_size[1])
-        plt.savefig(path_to_save)
-        print('Figure saved to: ' + path_to_save)

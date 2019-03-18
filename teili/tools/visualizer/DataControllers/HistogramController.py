@@ -68,9 +68,9 @@ class HistogramController(DataController):
                 'You asked for the backend "{}" which is not supported'.format(backend))
 
         self._get_data(DataModel_to_attr)
-        self.create_histogram()
+        self.create_plot()
         if show_immediately:
-            self.show_histogram()
+            self.show()
 
     def _get_data(self, DataModel_to_attr):
         """ get data from DataModel_to_attr. Reformat it as list (self.data) of attributes considered"""
@@ -83,10 +83,10 @@ class HistogramController(DataController):
                         data_model,
                         attr_to_consider)).flatten())
 
-    def create_histogram(self):
+    def create_plot(self):
         """ Function to create histogram in subfigure with data from DataModel_to_attr with subgroups defined above"""
 
-        self.viewer.create_histogram(
+        self.viewer.create_plot(
             data=self.data,
             subgroup_labels=self.subgroup_labels,
             bins=self.bins,
@@ -95,16 +95,16 @@ class HistogramController(DataController):
             xlabel=self.xlabel,
             ylabel=self.ylabel)
 
-    def show_histogram(self):
+    def show(self):
         """ show plot """
 
-        self.viewer.show_histogram()
+        self.viewer.show()
 
-    def save_histogram(self, path_to_save, figure_size=None):
+    def save(self, path_to_save, figure_size=None):
         """ Save figure to path_to_save with size figure_size
         Args:
             path_to_save (str): path to location where to save figure incl filename
             figure_size (2-tuple): tuple of width and height of figure to save
         """
 
-        self.viewer.save_histogram(path_to_save, figure_size)
+        self.viewer.save(path_to_save, figure_size)

@@ -25,7 +25,7 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
         self.assertNotEqual(LV.subfig, None)
 
         if SHOW_PLOTS_IN_TESTS:
-            LV.show_lineplot()
+            LV.show()
 
         # with mainfig/subfig
         mainfig = pg.GraphicsWindow()
@@ -39,7 +39,7 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
         self.assertNotEqual(LV.subfig, None)
 
         if SHOW_PLOTS_IN_TESTS:
-            LV.show_lineplot()
+            LV.show()
 
     def test_create_lineplot(self):
         MyPlotSettings = PlotSettings()
@@ -59,7 +59,7 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
             mainfig=mainfig,
             subfig=subfig,
             QtApp=QtApp)
-        LV.create_lineplot(
+        LV.create_plot(
             data=data,
             subgroup_labels=subgroup_labels,
             x_range_axis=x_range_axis,
@@ -69,7 +69,7 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
             ylabel='y-axis-label')
 
         if SHOW_PLOTS_IN_TESTS:
-            LV.show_lineplot()
+            LV.show()
 
         # create two subgroups
         data_x_axis = [np.arange(0, 1, 0.1), np.arange(0, 1.4, 0.1)]
@@ -87,7 +87,7 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
             mainfig=mainfig,
             subfig=subfig,
             QtApp=QtApp)
-        LV.create_lineplot(
+        LV.create_plot(
             data=data,
             subgroup_labels=subgroup_labels,
             x_range_axis=x_range_axis,
@@ -97,7 +97,7 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
             ylabel='y-axis-label')
 
         if SHOW_PLOTS_IN_TESTS:
-            LV.show_lineplot()
+            LV.show()
 
         # introduce x_range_axis and y_range_axis
         data_x_axis = [np.arange(0, 1, 0.1), np.arange(0, 1.4, 0.1)]
@@ -117,7 +117,7 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
             mainfig=mainfig,
             subfig=subfig,
             QtApp=QtApp)
-        LV.create_lineplot(
+        LV.create_plot(
             data=data,
             subgroup_labels=subgroup_labels,
             x_range_axis=x_range_axis,
@@ -127,7 +127,7 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
             ylabel='y-axis-label')
 
         if SHOW_PLOTS_IN_TESTS:
-            LV.show_lineplot()
+            LV.show()
 
 
 if __name__ == '__main__':

@@ -29,7 +29,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
         self.assertEqual(RV.subfig_histogram, None)
 
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
 
         # with mainfig/subfig but without histogram
         mainfig = pg.GraphicsWindow()
@@ -47,7 +47,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
         self.assertEqual(RV.subfig_histogram, None)
 
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
 
         # with mainfig/subfig and with histogram
         mainfig = pg.GraphicsWindow()
@@ -65,7 +65,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
         self.assertNotEqual(RV.subfig_histogram, None)
 
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
 
     def test_create_rasterplot(self):
         MyPlotSettings = PlotSettings()
@@ -88,7 +88,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             subfig_histogram=subfig_histogram,
             QtApp=QtApp,
             add_histogram=add_histogram)
-        RV.create_rasterplot(
+        RV.create_plot(
             all_spike_times=all_spike_times,
             all_neuron_ids=all_neuron_ids,
             subgroup_labels=subgroup_labels,
@@ -98,7 +98,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             xlabel='time (s)',
             ylabel='neuron ids')
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
 
         # create two subgroups
         all_spike_times = [np.arange(0, 1, 0.1), np.arange(0, 1.4, 0.1)]
@@ -119,7 +119,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             subfig_histogram=subfig_histogram,
             QtApp=QtApp,
             add_histogram=add_histogram)
-        RV.create_rasterplot(
+        RV.create_plot(
             all_spike_times=all_spike_times,
             all_neuron_ids=all_neuron_ids,
             subgroup_labels=subgroup_labels,
@@ -129,7 +129,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             xlabel='time (s)',
             ylabel='neuron ids')
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
 
         # introduce time_range_axis and neuron_id_range_axis
         all_spike_times = [np.arange(0, 1, 0.1), np.arange(0, 1.4, 0.1)]
@@ -150,7 +150,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             subfig_histogram=subfig_histogram,
             QtApp=QtApp,
             add_histogram=add_histogram)
-        RV.create_rasterplot(
+        RV.create_plot(
             all_spike_times=all_spike_times,
             all_neuron_ids=all_neuron_ids,
             subgroup_labels=subgroup_labels,
@@ -160,7 +160,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             xlabel='time (s)',
             ylabel='neuron ids')
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
 
         # add histogram
         all_spike_times = [np.arange(0, 1, 0.1), np.arange(0, 1.4, 0.1)]
@@ -181,7 +181,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             subfig_histogram=subfig_histogram,
             QtApp=QtApp,
             add_histogram=add_histogram)
-        RV.create_rasterplot(
+        RV.create_plot(
             all_spike_times=all_spike_times,
             all_neuron_ids=all_neuron_ids,
             subgroup_labels=subgroup_labels,
@@ -191,7 +191,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             xlabel='time (s)',
             ylabel='neuron ids')
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
 
 
 if __name__ == '__main__':

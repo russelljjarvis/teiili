@@ -34,7 +34,7 @@ class TestLineplotViewerMatplotlib(unittest.TestCase):
         self.assertNotEqual(LV.subfig, None)
 
         if SHOW_PLOTS_IN_TESTS:
-            LV.show_lineplot()
+            LV.show()
         plt.close('all')
 
     def test_create_lineplot(self):
@@ -53,7 +53,7 @@ class TestLineplotViewerMatplotlib(unittest.TestCase):
             MyPlotSettings=MyPlotSettings,
             mainfig=mainfig,
             subfig=subfig)
-        LV.create_lineplot(
+        LV.create_plot(
             data=data,
             subgroup_labels=subgroup_labels,
             x_range_axis=x_range_axis,
@@ -62,7 +62,7 @@ class TestLineplotViewerMatplotlib(unittest.TestCase):
             xlabel='x-axis-label',
             ylabel='y-axis-label')
         if SHOW_PLOTS_IN_TESTS:
-            LV.show_lineplot()
+            LV.show()
         plt.close('all')
 
         # create two subgroups
@@ -80,7 +80,7 @@ class TestLineplotViewerMatplotlib(unittest.TestCase):
             MyPlotSettings=MyPlotSettings,
             mainfig=mainfig,
             subfig=subfig)
-        LV.create_lineplot(
+        LV.create_plot(
             data=data,
             subgroup_labels=subgroup_labels,
             x_range_axis=x_range_axis,
@@ -89,7 +89,7 @@ class TestLineplotViewerMatplotlib(unittest.TestCase):
             xlabel='x-axis-label',
             ylabel='y-axis-label')
         if SHOW_PLOTS_IN_TESTS:
-            LV.show_lineplot()
+            LV.show()
         plt.close('all')
 
         # introduce x_range_axis and y_range_axis
@@ -109,7 +109,7 @@ class TestLineplotViewerMatplotlib(unittest.TestCase):
             MyPlotSettings=MyPlotSettings,
             mainfig=mainfig,
             subfig=subfig)
-        LV.create_lineplot(
+        LV.create_plot(
             data=data,
             subgroup_labels=subgroup_labels,
             x_range_axis=x_range_axis,
@@ -118,7 +118,7 @@ class TestLineplotViewerMatplotlib(unittest.TestCase):
             xlabel='x-axis-label',
             ylabel='y-axis-label')
         if SHOW_PLOTS_IN_TESTS:
-            LV.show_lineplot()
+            LV.show()
         plt.close('all')
 
 

@@ -33,7 +33,7 @@ class LineplotViewerMatplotlib(LineplotViewer):
         if not self.subfig:
             self.subfig = self.mainfig.add_subplot(111)
 
-    def create_lineplot(
+    def create_plot(
             self,
             data,
             subgroup_labels=None,
@@ -120,11 +120,11 @@ class LineplotViewerMatplotlib(LineplotViewer):
             self.subfig.set_ylabel(
                 ylabel, fontsize=self.MyPlotSettings.fontsize_axis_labels)
 
-    def show_lineplot(self):
+    def show(self):
         """ show plot """
         plt.show()
 
-    def save_lineplot(
+    def save(
             self,
             path_to_save='lineplot.png',
             figure_size=None):

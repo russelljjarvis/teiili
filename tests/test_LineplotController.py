@@ -341,7 +341,7 @@ class TestLineplotController(unittest.TestCase):
             subfig=None,
             QtApp=None,
             show_immediately=SHOW_PLOTS_IN_TESTS)
-        LC.create_lineplot()
+        LC.create_plot()
 
         backend = 'pyqtgraph'
         LC = LineplotController(
@@ -358,7 +358,7 @@ class TestLineplotController(unittest.TestCase):
             subfig=None,
             QtApp=QtApp,
             show_immediately=SHOW_PLOTS_IN_TESTS)
-        LC.create_lineplot()
+        LC.create_plot()
 
 
 if __name__ == '__main__':

@@ -83,9 +83,9 @@ class LineplotController(DataController):
         # prepare data for lineplot
         self._get_data_from_datamodels(DataModel_to_x_and_y_attr)
         self._filter_data()
-        self.create_lineplot()
+        self.create_plot()
         if show_immediately:
-            self.show_lineplot()
+            self.show()
 
     def _get_data_from_datamodels(self, DataModel_to_x_and_y_attr):
         """ Get data from data model which will be shown along x and y axis of plot.
@@ -164,10 +164,10 @@ class LineplotController(DataController):
                 self.data[subgroup_nr] = (
                     subgroup[0][indices_within_y_range[:x_dim]], subgroup[1][indices_within_y_range[:y_dim]])
 
-    def create_lineplot(self):
+    def create_plot(self):
         """ Function to create lineplot in subfigure with data from
             DataModel_to_attr with subgroups defined above"""
-        self.viewer.create_lineplot(
+        self.viewer.create_plot(
             data=self.data,
             subgroup_labels=self.subgroup_labels,
             x_range_axis=self.x_range,
@@ -176,16 +176,16 @@ class LineplotController(DataController):
             xlabel=self.xlabel,
             ylabel=self.ylabel)
 
-    def show_lineplot(self):
+    def show(self):
         """ show plot """
 
-        self.viewer.show_lineplot()
+        self.viewer.show()
 
-    def save_lineplot(self, path_to_save, figure_size=None):
+    def save(self, path_to_save, figure_size=None):
         """ Save figure to path_to_save with size figure_size
         Args:
             path_to_save (str): path to location where to save figure incl filename
             figure_size (2-tuple): tuple of width and height of figure to save
         """
 
-        self.viewer.save_lineplot(path_to_save, figure_size)
+        self.viewer.save(path_to_save, figure_size)

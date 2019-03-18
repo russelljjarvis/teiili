@@ -70,7 +70,7 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
         else:
             self.subfig_histogram = None
 
-    def create_rasterplot(
+    def create_plot(
             self,
             all_spike_times,
             all_neuron_ids,
@@ -168,7 +168,7 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
             self.MyPlotSettings,
             mainfig=self.mainfig,
             subfig=self.subfig_histogram)
-        HV.create_histogram(data=all_neuron_ids,
+        HV.create_plot(data=all_neuron_ids,
                             subgroup_labels=None,
                             bins=np.arange(-0.5,
                                            num_neurons + 0.5,
@@ -200,11 +200,11 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
             self.subfig_rasterplot.set_ylabel(
                 ylabel, fontsize=self.MyPlotSettings.fontsize_axis_labels)
 
-    def show_rasterplot(self):
+    def show(self):
         """ show plot """
         plt.show()
 
-    def save_rasterplot(
+    def save(
         self,
         path_to_save='rasterplot.png',
         figure_size=None):

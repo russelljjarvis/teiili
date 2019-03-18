@@ -86,7 +86,7 @@ class TestRasterplotViewerMatplotlib(unittest.TestCase):
             subfig_rasterplot=subfig_rasterplot,
             subfig_histogram=subfig_histogram,
             add_histogram=add_histogram)
-        RV.create_rasterplot(
+        RV.create_plot(
             all_spike_times=all_spike_times,
             all_neuron_ids=all_neuron_ids,
             subgroup_labels=subgroup_labels,
@@ -96,7 +96,7 @@ class TestRasterplotViewerMatplotlib(unittest.TestCase):
             xlabel='time (s)',
             ylabel='neuron ids')
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
         plt.close('all')
 
         # craete two subgroups
@@ -118,7 +118,7 @@ class TestRasterplotViewerMatplotlib(unittest.TestCase):
             subfig_rasterplot=subfig_rasterplot,
             subfig_histogram=subfig_histogram,
             add_histogram=add_histogram)
-        RV.create_rasterplot(
+        RV.create_plot(
             all_spike_times=all_spike_times,
             all_neuron_ids=all_neuron_ids,
             subgroup_labels=subgroup_labels,
@@ -128,7 +128,7 @@ class TestRasterplotViewerMatplotlib(unittest.TestCase):
             xlabel='time (s)',
             ylabel='neuron ids')
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
         plt.close('all')
 
         # introduce time_range and neuron_id_range
@@ -149,7 +149,7 @@ class TestRasterplotViewerMatplotlib(unittest.TestCase):
             subfig_rasterplot=subfig_rasterplot,
             subfig_histogram=subfig_histogram,
             add_histogram=add_histogram)
-        RV.create_rasterplot(
+        RV.create_plot(
             all_spike_times=all_spike_times,
             all_neuron_ids=all_neuron_ids,
             subgroup_labels=subgroup_labels,
@@ -159,7 +159,7 @@ class TestRasterplotViewerMatplotlib(unittest.TestCase):
             xlabel='time (s)',
             ylabel='neuron ids')
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
         plt.close('all')
 
         # add histogram
@@ -180,7 +180,7 @@ class TestRasterplotViewerMatplotlib(unittest.TestCase):
             subfig_rasterplot=subfig_rasterplot,
             subfig_histogram=subfig_histogram,
             add_histogram=add_histogram)
-        RV.create_rasterplot(
+        RV.create_plot(
             all_spike_times=all_spike_times,
             all_neuron_ids=all_neuron_ids,
             subgroup_labels=subgroup_labels,
@@ -190,7 +190,7 @@ class TestRasterplotViewerMatplotlib(unittest.TestCase):
             xlabel='time (s)',
             ylabel='neuron ids')
         if SHOW_PLOTS_IN_TESTS:
-            RV.show_rasterplot()
+            RV.show()
         plt.close('all')
 
 

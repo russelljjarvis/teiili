@@ -55,7 +55,7 @@ class LineplotViewerPyqtgraph(LineplotViewer):
 
         pg.setConfigOptions(antialias=True)
 
-    def create_lineplot(
+    def create_plot(
             self,
             data,
             subgroup_labels=None,
@@ -164,11 +164,11 @@ class LineplotViewerPyqtgraph(LineplotViewer):
         self.subfig.getAxis('left').tickFont = QtGui.QFont(
             'arial', self.MyPlotSettings.fontsize_axis_labels)
 
-    def show_lineplot(self):
+    def show(self):
         """ show plot """
         self.QtApp.exec_()
 
-    def save_lineplot(
+    def save(
             self,
             path_to_save='lineplot.svg',
             figure_size=None):

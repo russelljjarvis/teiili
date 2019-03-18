@@ -35,7 +35,7 @@ class TestHistogramViewerPyqtgraph(unittest.TestCase):
         self.assertNotEqual(HV.mainfig, None)
 
         if SHOW_PLOTS_IN_TESTS:
-            HV.show_histogram()
+            HV.show()
 
     def test_create_histogram(self):
         MyPlotSettings = PlotSettings()
@@ -56,7 +56,7 @@ class TestHistogramViewerPyqtgraph(unittest.TestCase):
             mainfig=mainfig,
             subfig=subfig,
             QtApp=QtApp)
-        HV.create_histogram(
+        HV.create_plot(
             data=data,
             subgroup_labels=subgroup_labels,
             bins=bins,
@@ -66,7 +66,7 @@ class TestHistogramViewerPyqtgraph(unittest.TestCase):
             ylabel='count')
 
         if SHOW_PLOTS_IN_TESTS:
-            HV.show_histogram()
+            HV.show()
 
 
 if __name__ == '__main__':

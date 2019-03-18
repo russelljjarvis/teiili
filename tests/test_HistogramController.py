@@ -182,7 +182,7 @@ class TestHistogramController(unittest.TestCase):
             subfig=None,
             QtApp=None,
             show_immediately=SHOW_PLOTS_IN_TESTS)
-        HC.create_histogram()
+        HC.create_plot()
 
         backend = 'pyqtgraph'
         HC = HistogramController(
@@ -199,7 +199,7 @@ class TestHistogramController(unittest.TestCase):
             subfig=None,
             QtApp=QtApp,
             show_immediately=SHOW_PLOTS_IN_TESTS)
-        HC.create_histogram()
+        HC.create_plot()
 
 
 if __name__ == '__main__':

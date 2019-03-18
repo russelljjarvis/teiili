@@ -96,9 +96,9 @@ class RasterplotController(DataController):
         self._get_data_from_eventsmodels()
         self._filter_data()
 
-        self.create_rasterplot()
+        self.create_plot()
         if show_immediately:
-            self.show_rasterplot()
+            self.show()
 
     def _get_data_from_eventsmodels(self):
         """ Get data from MyEventsModels and reformat it to list of neuron_ids
@@ -145,12 +145,12 @@ class RasterplotController(DataController):
         self.all_spike_times = all_filtered_spike_times
         self.all_neuron_ids = all_filtered_neuron_ids
 
-    def create_rasterplot(self):
+    def create_plot(self):
         """ Function to create rasterplot (incl histogram if add_histogram is True)
             in subfigures defined above and with data from MyEventsModels with
             subgroups defined above"""
 
-        self.viewer.create_rasterplot(
+        self.viewer.create_plot(
             all_spike_times=self.all_spike_times,
             all_neuron_ids=self.all_neuron_ids,
             subgroup_labels=self.subgroup_labels,
@@ -160,16 +160,16 @@ class RasterplotController(DataController):
             xlabel=self.xlabel,
             ylabel=self.ylabel)
 
-    def show_rasterplot(self):
+    def show(self):
         """ show plot """
 
-        self.viewer.show_rasterplot()
+        self.viewer.show()
 
-    def save_rasterplot(self, path_to_save, figure_size=None):
+    def save(self, path_to_save, figure_size=None):
         """ Save figure to path_to_save with size figure_size
         Args:
             path_to_save (str): path to location where to save figure incl filename
             figure_size (2-tuple): tuple of width and height of figure to save
         """
 
-        self.viewer.save_rasterplot(path_to_save, figure_size)
+        self.viewer.save(path_to_save, figure_size)

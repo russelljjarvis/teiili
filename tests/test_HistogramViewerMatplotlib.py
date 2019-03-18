@@ -32,7 +32,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
         self.assertNotEqual(HV.subfig, None)
 
         if SHOW_PLOTS_IN_TESTS:
-            HV.show_histogram()
+            HV.show()
         plt.close('all')
 
     def test_create_histogram(self):
@@ -53,7 +53,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             MyPlotSettings=MyPlotSettings,
             mainfig=mainfig,
             subfig=subfig)
-        HV.create_histogram(
+        HV.create_plot(
             data=data,
             subgroup_labels=subgroup_labels,
             bins=bins,
@@ -63,7 +63,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             ylabel='count')
 
         if SHOW_PLOTS_IN_TESTS:
-            HV.show_histogram()
+            HV.show()
         plt.close('all')
 
 

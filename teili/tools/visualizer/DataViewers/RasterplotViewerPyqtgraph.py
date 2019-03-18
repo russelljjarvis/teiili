@@ -116,10 +116,8 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
         """
 
         # check if colours ok
-        assert len(
-            self.MyPlotSettings.colors) >= len(all_neuron_ids), 'You have {} subgroups but only {} colors in your MyPlotSettings.colors'.format(
-            len(all_neuron_ids), len(
-                self.MyPlotSettings.colors))
+        self.check_num_colors(n_provided_colors=len(
+            self.MyPlotSettings.colors), n_required_colors=len(all_neuron_ids))
 
         # set parameters on plot dimensions along time and neuron_id axis
         # +[1e-9] to to deal with cases where no spikes or only nan spiek times
@@ -153,6 +151,7 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
                 y=neuron_ids,
                 name=label,
                 pen=None,
+
                 symbol='o',
                 symbolPen=None,
                 symbolSize=self.MyPlotSettings.marker_size,

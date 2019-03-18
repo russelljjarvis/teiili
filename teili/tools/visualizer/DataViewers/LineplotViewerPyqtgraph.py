@@ -88,10 +88,8 @@ class LineplotViewerPyqtgraph(LineplotViewer):
         """
 
         # check if num colors ok
-        assert len(
-            self.MyPlotSettings.colors) >= len(data), 'You have {} subgroups but only {} colors in your MyPlotSettings.colors'.format(
-            len(data), len(
-                self.MyPlotSettings.colors))
+        self.check_num_colors(n_provided_colors=len(
+            self.MyPlotSettings.colors), n_required_colors=len(data))
 
         if subgroup_labels is not None:
             self.subfig.addLegend()

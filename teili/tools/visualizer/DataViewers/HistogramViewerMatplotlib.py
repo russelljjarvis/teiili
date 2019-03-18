@@ -76,11 +76,8 @@ class HistogramViewerMatplotlib(HistogramViewer):
             self.subfig.set_xlim(left=0, right=axis_lim)
 
         # check if num colors ok
-        assert len(
-            self.MyPlotSettings.colors) >= len(data), \
-                'You have {} subgroups but only {} colors in your MyPlotSettings.colors'.format(
-                    len(data), len(self.MyPlotSettings.colors)
-                    )
+        self.check_num_colors(n_provided_colors=len(
+            self.MyPlotSettings.colors), n_required_colors=len(data))
 
         label = None
         for subgroup_nr, (subgroup, color) in enumerate(

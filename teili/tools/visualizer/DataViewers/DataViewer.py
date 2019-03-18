@@ -63,3 +63,14 @@ class DataViewer(ABC):
     def save(self, *args):
         """ Method to save plot """
         self.DVUtils.save(*args)
+
+    def check_num_colors(self, n_provided_colors, n_required_colors):
+        """ check if provided number of colors matches the required number
+         of colors
+         Args:
+             n_provided_colors (int): number of colors provided
+             n_required_colors (int): number of colors required
+         """
+        if n_provided_colors < n_required_colors:
+            raise BaseException('You have {} subgroups but only {} colors in ' \
+                    'your MyPlotSettings.colors'.format(n_required_colors, n_provided_colors))

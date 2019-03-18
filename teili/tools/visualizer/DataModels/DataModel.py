@@ -1,8 +1,4 @@
-try:
-    import _pickle as pickle
-except BaseException:
-    import cPickle as pickle
-
+import _pickle as pickle
 
 class DataModel(object):
     """ Parent class of all DataModels """

@@ -36,3 +36,27 @@ class DataViewerUtilsPyqtgraph(DataViewerUtils):
 
         ex.export(fileName=path_to_save)
         print('Figure saved to: ' + path_to_save)
+
+    def _set_title_and_labels(self, subfig, title, xlabel, ylabel,
+                              fontsize_title, fontsize_axis_labels):
+        """ Set title and label of x- and y-axis in plot
+        Args:
+            subfig (pyqtgraph subplot): subfigure to which title,
+                                            x- & y-axis-label are added
+            title (str): title of plot
+            xlabel (str): label for x-axis
+            ylabel (str): label for y-axis
+            fontsize_title (int): fontsize for title
+            fontsize_axis_labels(int)): fontsize for x-&y-axis-label
+        """
+        if title is not None:
+            titleStyle = {'color': '#FFF', 'size': str(fontsize_title) + 'pt'}
+            subfig.setTitle(title, **titleStyle)
+
+        labelStyle = {'color': '#FFF', 'font-size': str(fontsize_axis_labels) + 'pt'}
+        if xlabel is not None:
+            subfig.setLabel('bottom', xlabel, **labelStyle)
+        if ylabel is not None:
+            subfig.setLabel('left', ylabel, **labelStyle)
+        subfig.getAxis('bottom').tickFont = QtGui.QFont('arial', fontsize_axis_labels)
+        subfig.getAxis('left').tickFont = QtGui.QFont('arial', fontsize_axis_labels)

@@ -152,8 +152,10 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
             self.subfig_rasterplot.yaxis.set_major_locator(
                 MaxNLocator(integer=True))
 
-        self._set_title_and_labels(title=title, xlabel=xlabel, ylabel=ylabel)
-
+        self.DVUtils._set_title_and_labels(subfig=self.subfig_rasterplot,
+                                   title=title, xlabel=xlabel, ylabel=ylabel,
+                                   fontsize_title=self.MyPlotSettings.fontsize_title,
+                                   fontsize_axis_labels=self.MyPlotSettings.fontsize_axis_labels)
         if subgroup_labels is not None:
             self.subfig_rasterplot.legend(
                 fontsize=self.MyPlotSettings.fontsize_legend)
@@ -189,20 +191,3 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
         self.subfig_histogram.patch.set_visible(False)
         self.subfig_histogram.xaxis.set_major_locator(
             MaxNLocator(integer=True))
-
-    def _set_title_and_labels(self, title, xlabel, ylabel):
-        """ Set title and label of x- and y-axis in plot
-        Args:
-            title (str): title of plot
-            xlabel (str): label for x-axis
-            ylabel (str): label for y-axis
-        """
-        if title is not None:
-            self.subfig_rasterplot.set_title(
-                title, fontsize=self.MyPlotSettings.fontsize_title)
-        if xlabel is not None:
-            self.subfig_rasterplot.set_xlabel(
-                xlabel, fontsize=self.MyPlotSettings.fontsize_axis_labels)
-        if ylabel is not None:
-            self.subfig_rasterplot.set_ylabel(
-                ylabel, fontsize=self.MyPlotSettings.fontsize_axis_labels)

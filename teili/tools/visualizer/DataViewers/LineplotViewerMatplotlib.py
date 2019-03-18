@@ -108,21 +108,6 @@ class LineplotViewerMatplotlib(LineplotViewer):
                 labels=my_labels,
                 fontsize=self.MyPlotSettings.fontsize_legend)
 
-        self._set_title_and_labels(title=title, xlabel=xlabel, ylabel=ylabel)
-
-    def _set_title_and_labels(self, title, xlabel, ylabel):
-        """ Set title and label of x- and y-axis in plot
-        Args:
-            title (str): title of plot
-            xlabel (str): label for x-axis
-            ylabel (str): label for y-axis
-        """
-        if title is not None:
-            self.subfig.set_title(
-                title, fontsize=self.MyPlotSettings.fontsize_title)
-        if xlabel is not None:
-            self.subfig.set_xlabel(
-                xlabel, fontsize=self.MyPlotSettings.fontsize_axis_labels)
-        if ylabel is not None:
-            self.subfig.set_ylabel(
-                ylabel, fontsize=self.MyPlotSettings.fontsize_axis_labels)
+        self.DVUtils._set_title_and_labels(subfig=self.subfig, title=title, xlabel=xlabel, ylabel=ylabel,
+                                   fontsize_title=self.MyPlotSettings.fontsize_title,
+                                   fontsize_axis_labels=self.MyPlotSettings.fontsize_axis_labels)

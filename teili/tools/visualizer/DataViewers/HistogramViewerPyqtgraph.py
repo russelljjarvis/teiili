@@ -130,26 +130,7 @@ class HistogramViewerPyqtgraph(HistogramViewer):
 
         self._set_title_and_labels(title=title, xlabel=xlabel, ylabel=ylabel)
 
-    def _set_title_and_labels(self, title, xlabel, ylabel):
-        """ Set title and label of x- and y-axis in plot
-        Args:
-            title (str): title of plot
-            xlabel (str): label for x-axis
-            ylabel (str): label for y-axis
-        """
-        if title is not None:
-            titleStyle = {
-                'color': '#FFF', 'size': str(
-                    self.MyPlotSettings.fontsize_title) + 'pt'}
-            self.subfig.setTitle(title, **titleStyle)
-
-        labelStyle = {'color': '#FFF',
-                      'font-size': str(self.MyPlotSettings.fontsize_axis_labels) + 'pt'}
-        if xlabel is not None:
-            self.subfig.setLabel('bottom', xlabel, **labelStyle)
-        if ylabel is not None:
-            self.subfig.setLabel('left', ylabel, **labelStyle)
-        self.subfig.getAxis('bottom').tickFont = QtGui.QFont(
-            'arial', self.MyPlotSettings.fontsize_axis_labels)
-        self.subfig.getAxis('left').tickFont = QtGui.QFont(
-            'arial', self.MyPlotSettings.fontsize_axis_labels)
+        self.DVUtils._set_title_and_labels(subfig=self.subfig, title=title,
+                                           xlabel=xlabel, ylabel=ylabel,
+                                           fontsize_title=self.MyPlotSettings.fontsize_title,
+                                           fontsize_axis_labels=self.MyPlotSettings.fontsize_axis_labels)

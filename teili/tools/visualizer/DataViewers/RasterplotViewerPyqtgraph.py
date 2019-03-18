@@ -158,7 +158,10 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
                 symbolSize=self.MyPlotSettings.marker_size,
                 symbolBrush=color)
 
-        self._set_title_and_labels(title=title, xlabel=xlabel, ylabel=ylabel)
+        self.DVUtils._set_title_and_labels(subfig=self.subfig_rasterplot, title=title,
+                                           xlabel=xlabel, ylabel=ylabel,
+                                           fontsize_title=self.MyPlotSettings.fontsize_title,
+                                           fontsize_axis_labels=self.MyPlotSettings.fontsize_axis_labels)
         self.subfig_rasterplot.setRange(
             xRange=(
                 time_range_axis[0], time_range_axis[1]), yRange=(
@@ -209,28 +212,3 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
 
         self.subfig_histogram.setYRange(0, num_neurons)
         self.subfig_histogram.getAxis('left').setStyle(showValues=False)
-
-    def _set_title_and_labels(self, title=None, xlabel=None, ylabel=None):
-        """ Set title and label of x- and y-axis in plot
-        Args:
-            title (str): title of plot
-            xlabel (str): label for x-axis
-            ylabel (str): label for y-axis
-        """
-
-        if title is not None:
-            titleStyle = {
-                'color': '#FFF', 'size': str(
-                    self.MyPlotSettings.fontsize_title) + 'pt'}
-            self.subfig_rasterplot.setTitle(title, **titleStyle)
-
-        labelStyle = {'color': '#FFF',
-                      'font-size': str(self.MyPlotSettings.fontsize_axis_labels) + 'pt'}
-        if xlabel is not None:
-            self.subfig_rasterplot.setLabel('bottom', xlabel, **labelStyle)
-        if ylabel is not None:
-            self.subfig_rasterplot.setLabel('left', ylabel, **labelStyle)
-        self.subfig_rasterplot.getAxis('bottom').tickFont = QtGui.QFont(
-            'arial', self.MyPlotSettings.fontsize_axis_labels)
-        self.subfig_rasterplot.getAxis('left').tickFont = QtGui.QFont(
-            'arial', self.MyPlotSettings.fontsize_axis_labels)

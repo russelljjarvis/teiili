@@ -159,17 +159,3 @@ class RasterplotController(DataController):
             title=self.title,
             xlabel=self.xlabel,
             ylabel=self.ylabel)
-
-    def show(self):
-        """ show plot """
-
-        self.viewer.show()
-
-    def save(self, path_to_save, figure_size=None):
-        """ Save figure to path_to_save with size figure_size
-        Args:
-            path_to_save (str): path to location where to save figure incl filename
-            figure_size (2-tuple): tuple of width and height of figure to save
-        """
-
-        self.viewer.save(path_to_save, figure_size)

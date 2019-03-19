@@ -46,21 +46,12 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
         """
 
         self.MyPlotSettings = MyPlotSettings
+        self.set_DataViewerUtils()
         self.add_histogram = add_histogram
 
-        # QtApp
-        self.QtApp = QtApp
-        if not self.QtApp:
-            self.QtApp = QtGui.QApplication([])
-
-        # figure
-        self.mainfig = mainfig
-        if not self.mainfig:
-            if subfig_rasterplot:
-                raise Exception('Please also provide the main pyqtgraph window' \
-                                'as input (mainfig) to the Viewer')
-            else:
-                self.mainfig = pg.GraphicsWindow()
+        # set up qt application, main-figure
+        self.QtApp = self.DVUtils.set_up_QtApp(QtApp=QtApp)
+        self.mainfig = self.DVUtils.set_up_mainfig(mainfig=mainfig, subfig=subfig_rasterplot)
 
         # subplots
         self.subfig_rasterplot = subfig_rasterplot
@@ -77,8 +68,6 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
             self.subfig_histogram = None
 
         pg.setConfigOptions(antialias=True)
-
-        self.set_DataViewerUtils()
 
     def set_DataViewerUtils(self):
         """ Set which DataViewerUtils class should be considered"""

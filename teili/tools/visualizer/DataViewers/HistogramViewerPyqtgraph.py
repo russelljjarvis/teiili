@@ -32,29 +32,14 @@ class HistogramViewerPyqtgraph(HistogramViewer):
         """
 
         self.MyPlotSettings = MyPlotSettings
+        self.set_DataViewerUtils()
 
-        # QtApp
-        self.QtApp = QtApp
-        if not self.QtApp:
-            self.QtApp = QtGui.QApplication([])
-
-        # figure
-        self.mainfig = mainfig
-        if not self.mainfig:
-            if subfig:
-                raise Exception('Please also provide the main pyqtgraph window'\
-                                'as input (mainfig) to the Viewer')
-            else:
-                self.mainfig = pg.GraphicsWindow()
-
-        # subplot
-        self.subfig = subfig
-        if not self.subfig:
-            self.subfig = self.mainfig.addPlot(row=1, column=1)
+        # set up qt application, main- and sub-figure
+        self.QtApp = self.DVUtils.set_up_QtApp(QtApp=QtApp)
+        self.mainfig = self.DVUtils.set_up_mainfig(mainfig=mainfig, subfig=subfig)
+        self.subfig = self.DVUtils.set_up_subfig(mainfig=self.mainfig, subfig=subfig)
 
         pg.setConfigOptions(antialias=True)
-
-        self.set_DataViewerUtils()
 
     def set_DataViewerUtils(self):
         """ Set which DataViewerUtils class should be considered"""

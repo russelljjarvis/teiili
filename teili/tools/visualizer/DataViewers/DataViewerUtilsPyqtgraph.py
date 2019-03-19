@@ -21,6 +21,50 @@ class DataViewerUtilsPyqtgraph(DataViewerUtils):
         """
         self.viewer = viewer
 
+    def set_up_QtApp(self, QtApp):
+        """ Method to set up qt application in viewer class
+            If QtApp is set to None, it will be created internally.
+        Args:
+            QtApp (pyqtgraph application): pyqtgraph application to run plots
+                (QtGui.QApplication([]))
+        """
+        new_QtApp = QtApp
+        if not new_QtApp:
+            new_QtApp = QtGui.QApplication([])
+        return new_QtApp
+
+    def set_up_mainfig(self, mainfig, subfig):
+        """ Method to set up main figure in viewer class
+            If mainfig is set to None, it will be created internally.
+        Args:
+            mainfig (pyqtgraph window object): pyqtgraph main window
+                (pg.GraphicsWindow())
+            subfig (pyqtgraph subplot): pyqtgraph subplot of mainfig which will
+                hold the histogram
+        """
+        new_mainfig = mainfig
+        if not new_mainfig:
+            if subfig:
+                raise Exception('Please also provide the main pyqtgraph window' \
+                                'as input (mainfig) to the Viewer')
+            else:
+                new_mainfig = pg.GraphicsWindow()
+        return new_mainfig
+
+    def set_up_subfig(self, mainfig, subfig):
+        """ Method to set up main figure in viewer class
+            If subfig is set to None, it will be created internally.
+        Args:
+            mainfig (pyqtgraph window object): pyqtgraph main window
+                (pg.GraphicsWindow())
+            subfig (pyqtgraph subplot): pyqtgraph subplot of mainfig which will
+                hold the histogram
+        """
+        new_subfig = subfig
+        if not new_subfig:
+            new_subfig = mainfig.addPlot(row=1, column=1)
+        return new_subfig
+
     def show(self):
         """ show plot """
         self.viewer.QtApp.exec_()

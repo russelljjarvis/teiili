@@ -9,6 +9,14 @@ from teili.tools.visualizer.DataViewers.HistogramViewerMatplotlib import Histogr
 from teili.tools.visualizer.DataViewers.RasterplotViewer import RasterplotViewer
 from teili.tools.visualizer.DataViewers.DataViewerUtilsMatplotlib import DataViewerUtilsMatplotlib
 
+HIST_PLOT_BORDER_LEFT=0.125  # the left side of the subplots of the figure
+HIST_PLOT_BORDER_RIGHT=0.9  # the right side of the subplots of the figure
+HIST_PLOT_BORDER_BOTTOM=0.1  # the bottom of the subplots of the figure
+HIST_PLOT_BORDER_TOP=0.9  # the top of the subplots of the figure
+HIST_PLOT_WSPACE=0.05  # the amount of width reserved for space between subplots,
+                       # expressed as a fraction of the average axis width
+HIST_PLOT_HSPACE=0.2  # the amount of height reserved for space between subplots,
+                      # expressed as a fraction of the average axis height
 
 class RasterPlotViewerMatplotlib(RasterplotViewer):
     """ Class to plot raster plot with matplotlib backend """
@@ -65,12 +73,12 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
                                                          frameon=0,
                                                          fig=self.mainfig)
                 plt.subplots_adjust(
-                    left=0.125,
-                    right=0.9,
-                    bottom=0.1,
-                    top=0.9,
-                    wspace=0.05,
-                    hspace=0.2)
+                    left=HIST_PLOT_BORDER_LEFT,
+                    right=HIST_PLOT_BORDER_RIGHT,
+                    bottom=HIST_PLOT_BORDER_BOTTOM,
+                    top=HIST_PLOT_BORDER_TOP,
+                    wspace=HIST_PLOT_WSPACE,
+                    hspace=HIST_PLOT_HSPACE)
         else:
             self.subfig_histogram = None
 

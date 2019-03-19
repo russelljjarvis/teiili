@@ -12,20 +12,18 @@ from teili.tools.visualizer.DataViewers.DataViewerUtils import DataViewerUtils
 class DataViewerUtilsPyqtgraph(DataViewerUtils):
     """ Class holding pyqtgraph specific methods which
         are shared between different Viewers"""
-    def __init__(self, QtApp, mainfig):
+    def __init__(self, viewer):
         """ Set up DataViewerUtils for matplotlib backend
         Args:
-            mainfig (pyqtgraph window object): pyqtgraph main window
-                (pg.GraphicsWindow())
-            QtApp (pyqtgraph application): pyqtgraph application to run plots
-                (QtGui.QApplication([]))
+            viewer (DataViewer class object): instance of DataViewer subclass object which
+                                                is refered to in the here created DataViewerUtils
+                                                instance
         """
-        self.QtApp = QtApp
-        self.mainfig = mainfig
+        self.viewer = viewer
 
     def show(self):
         """ show plot """
-        self.QtApp.exec_()
+        self.viewer.QtApp.exec_()
 
     def save(self, path_to_save='plot.png', figure_size=None):
         """ Save figure to path_to_save with size figure_size as svg, png, jpg and tiff
@@ -35,20 +33,19 @@ class DataViewerUtilsPyqtgraph(DataViewerUtils):
             figure_size (tuple): tuple of width and height of figure to save
                                     (default: None, figure size won't be changed)
         """
-        self.QtApp.processEvents()
+        self.viewer.QtApp.processEvents()
         if figure_size is not None:
-            self.mainfig.resize(figure_size[0], figure_size[1])
+            self.viewer.mainfig.resize(figure_size[0], figure_size[1])
 
         if path_to_save.split('.')[-1] == 'svg':
-            ex = pg.exporters.SVGExporter(self.mainfig.scene())
+            ex = pg.exporters.SVGExporter(self.viewer.mainfig.scene())
         else:
-            ex = pg.exporters.ImageExporter(self.mainfig.scene())
+            ex = pg.exporters.ImageExporter(self.viewer.mainfig.scene())
 
         ex.export(fileName=path_to_save)
         print('Figure saved to: ' + path_to_save)
 
-    def _set_title_and_labels(self, subfig, title, xlabel, ylabel,
-                              fontsize_title, fontsize_axis_labels):
+    def _set_title_and_labels(self, subfig, title, xlabel, ylabel):
         """ Set title and label of x- and y-axis in plot
         Args:
             subfig (pyqtgraph subplot): subfigure to which title,
@@ -60,18 +57,18 @@ class DataViewerUtilsPyqtgraph(DataViewerUtils):
             fontsize_axis_labels(int)): fontsize for x-&y-axis-label
         """
         if title is not None:
-            titleStyle = {'color': '#FFF', 'size': str(fontsize_title) + 'pt'}
+            titleStyle = {'color': '#FFF', 'size': str(self.viewer.MyPlotSettings.fontsize_title) + 'pt'}
             subfig.setTitle(title, **titleStyle)
 
-        labelStyle = {'color': '#FFF', 'font-size': str(fontsize_axis_labels) + 'pt'}
+        labelStyle = {'color': '#FFF', 'font-size': str(self.viewer.MyPlotSettings.fontsize_axis_labels) + 'pt'}
         if xlabel is not None:
             subfig.setLabel('bottom', xlabel, **labelStyle)
         if ylabel is not None:
             subfig.setLabel('left', ylabel, **labelStyle)
-        subfig.getAxis('bottom').tickFont = QtGui.QFont('arial', fontsize_axis_labels)
-        subfig.getAxis('left').tickFont = QtGui.QFont('arial', fontsize_axis_labels)
+        subfig.getAxis('bottom').tickFont = QtGui.QFont('arial', self.viewer.MyPlotSettings.fontsize_axis_labels)
+        subfig.getAxis('left').tickFont = QtGui.QFont('arial', self.viewer.MyPlotSettings.fontsize_axis_labels)
 
-    def add_legend(self, subgroup_labels, subfig, fontsize_legend):
+    def add_legend(self, subgroup_labels, subfig):
         """ Add legend to plot subfig
         Args:
             subgroup_labels (list of str): list of labels for the different
@@ -81,7 +78,7 @@ class DataViewerUtilsPyqtgraph(DataViewerUtils):
             fontsize_legend (int): fontsize of legend
         """
         if subgroup_labels is not None:
-            legendStyle = {'color': '#FFF', 'size': str(fontsize_legend) + 'pt'}
+            legendStyle = {'color': '#FFF', 'size': str(self.viewer.MyPlotSettings.fontsize_legend) + 'pt'}
             for item in subfig.legend.items:
                 for single_item in item:
                     if isinstance(single_item,

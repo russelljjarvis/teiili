@@ -58,7 +58,7 @@ class HistogramViewerPyqtgraph(HistogramViewer):
 
     def set_DataViewerUtils(self):
         """ Set which DataViewerUtils class should be considered"""
-        self.DVUtils = DataViewerUtilsPyqtgraph(QtApp=self.QtApp, mainfig=self.mainfig)
+        self.DVUtils = DataViewerUtilsPyqtgraph(viewer=self)
 
     def create_plot(
             self,
@@ -111,10 +111,7 @@ class HistogramViewerPyqtgraph(HistogramViewer):
             self.subfig.addItem(barchart)
 
         self.DVUtils.add_legend(subgroup_labels=subgroup_labels,
-                                subfig=self.subfig,
-                                fontsize_legend=self.MyPlotSettings.fontsize_legend)
+                                subfig=self.subfig)
 
         self.DVUtils._set_title_and_labels(subfig=self.subfig, title=title,
-                                           xlabel=xlabel, ylabel=ylabel,
-                                           fontsize_title=self.MyPlotSettings.fontsize_title,
-                                           fontsize_axis_labels=self.MyPlotSettings.fontsize_axis_labels)
+                                           xlabel=xlabel, ylabel=ylabel)

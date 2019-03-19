@@ -82,7 +82,7 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
 
     def set_DataViewerUtils(self):
         """ Set which DataViewerUtils class should be considered"""
-        self.DVUtils = DataViewerUtilsPyqtgraph(QtApp=self.QtApp, mainfig=self.mainfig)
+        self.DVUtils = DataViewerUtilsPyqtgraph(viewer=self)
 
     def create_plot(
             self,
@@ -161,17 +161,14 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
                 symbolBrush=color)
 
         self.DVUtils._set_title_and_labels(subfig=self.subfig_rasterplot, title=title,
-                                           xlabel=xlabel, ylabel=ylabel,
-                                           fontsize_title=self.MyPlotSettings.fontsize_title,
-                                           fontsize_axis_labels=self.MyPlotSettings.fontsize_axis_labels)
+                                           xlabel=xlabel, ylabel=ylabel)
         self.subfig_rasterplot.setRange(
             xRange=(
                 time_range_axis[0], time_range_axis[1]), yRange=(
                 neuron_id_range_axis[0], neuron_id_range_axis[1]))
 
         self.DVUtils.add_legend(subgroup_labels=subgroup_labels,
-                                subfig=self.subfig_rasterplot,
-                                fontsize_legend=self.MyPlotSettings.fontsize_legend)
+                                subfig=self.subfig_rasterplot)
 
         if self.add_histogram:
             self._add_histogram_to_rasterplot(

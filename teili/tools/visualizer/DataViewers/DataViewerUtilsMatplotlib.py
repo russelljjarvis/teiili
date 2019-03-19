@@ -5,13 +5,14 @@ from teili.tools.visualizer.DataViewers.DataViewerUtils import DataViewerUtils
 class DataViewerUtilsMatplotlib(DataViewerUtils):
     """ Class holding matplotlib specific methods which
         are shared between different Viewers"""
-    def __init__(self, mainfig):
+    def __init__(self, viewer):
         """ Set up DataViewerUtils for matplotlib backend
         Args:
-            mainfig (matplotlib figure object): matplotlib figure which holds
-                the subfig (subplots)
+            viewer (DataViewer class object): instance of DataViewer subclass object which
+                                                is refered to in the here created DataViewerUtils
+                                                instance
         """
-        self.mainfig = mainfig
+        self.viewer = viewer
 
     def show(self):
         """ show plot """
@@ -28,12 +29,11 @@ class DataViewerUtilsMatplotlib(DataViewerUtils):
                                     (default: None, figure size won't be changed)
         """
         if figure_size is not None:
-            self.mainfig.set_size_inches(figure_size[0], figure_size[1])
-        self.mainfig.savefig(path_to_save)
+            self.viewer.mainfig.set_size_inches(figure_size[0], figure_size[1])
+        self.viewer.mainfig.savefig(path_to_save)
         print('Figure saved to: ' + path_to_save)
 
-    def _set_title_and_labels(self, subfig, title, xlabel, ylabel,
-                                fontsize_title, fontsize_axis_labels):
+    def _set_title_and_labels(self, subfig, title, xlabel, ylabel):
         """ Set title and label of x- and y-axis in plot subfig
         Args:
             subfig (matplotlib subfigure): subfigure to which title,
@@ -45,8 +45,11 @@ class DataViewerUtilsMatplotlib(DataViewerUtils):
             fontsize_axis_labels(int)): fontsize for x-&y-axis-label
         """
         if title is not None:
-            subfig.set_title(title, fontsize=fontsize_title)
+            subfig.set_title(title,
+                             fontsize=self.viewer.MyPlotSettings.fontsize_title)
         if xlabel is not None:
-            subfig.set_xlabel(xlabel, fontsize=fontsize_axis_labels)
+            subfig.set_xlabel(xlabel,
+                              fontsize=self.viewer.MyPlotSettings.fontsize_axis_labels)
         if ylabel is not None:
-            subfig.set_ylabel(ylabel, fontsize=fontsize_axis_labels)
+            subfig.set_ylabel(ylabel,
+                              fontsize=self.viewer.MyPlotSettings.fontsize_axis_labels)

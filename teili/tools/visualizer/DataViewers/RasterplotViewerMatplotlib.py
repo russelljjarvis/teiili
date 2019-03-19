@@ -86,7 +86,7 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
 
     def set_DataViewerUtils(self):
         """ Set which DataViewerUtils class should be considered"""
-        self.DVUtils = DataViewerUtilsMatplotlib(mainfig=self.mainfig)
+        self.DVUtils = DataViewerUtilsMatplotlib(viewer=self)
 
     def create_plot(
             self,
@@ -161,9 +161,7 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
                 MaxNLocator(integer=True))
 
         self.DVUtils._set_title_and_labels(subfig=self.subfig_rasterplot,
-                                   title=title, xlabel=xlabel, ylabel=ylabel,
-                                   fontsize_title=self.MyPlotSettings.fontsize_title,
-                                   fontsize_axis_labels=self.MyPlotSettings.fontsize_axis_labels)
+                                   title=title, xlabel=xlabel, ylabel=ylabel)
         if subgroup_labels is not None:
             self.subfig_rasterplot.legend(
                 fontsize=self.MyPlotSettings.fontsize_legend)

@@ -62,7 +62,7 @@ class LineplotViewerPyqtgraph(LineplotViewer):
 
     def set_DataViewerUtils(self):
         """ Set which DataViewerUtils class should be considered"""
-        self.DVUtils = DataViewerUtilsPyqtgraph(QtApp=self.QtApp, mainfig=self.mainfig)
+        self.DVUtils = DataViewerUtilsPyqtgraph(viewer=self)
 
     def create_plot(
             self,
@@ -132,13 +132,10 @@ class LineplotViewerPyqtgraph(LineplotViewer):
                 self.subfig.legend.addItem(style, subgroup_labels[subgroup_nr])
 
         self.DVUtils.add_legend(subgroup_labels=subgroup_labels,
-                                subfig=self.subfig,
-                                fontsize_legend=self.MyPlotSettings.fontsize_legend)
+                                subfig=self.subfig)
 
         self.DVUtils._set_title_and_labels(subfig=self.subfig, title=title,
-                                           xlabel=xlabel, ylabel=ylabel,
-                                           fontsize_title=self.MyPlotSettings.fontsize_title,
-                                           fontsize_axis_labels=self.MyPlotSettings.fontsize_axis_labels)
+                                           xlabel=xlabel, ylabel=ylabel)
         self.subfig.setRange(
             xRange=(
                 x_range_axis[0], x_range_axis[1]), yRange=(

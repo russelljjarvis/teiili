@@ -93,10 +93,7 @@ class HistogramViewerPyqtgraph(HistogramViewer):
         # histogram
         for subgroup_nr, (subgroup, color) in enumerate(
                 zip(data, self.MyPlotSettings.colors)):
-
-            if (np.isnan(subgroup)).any():
-                subgroup = subgroup[~np.isnan(subgroup)]
-                warnings.warn("One of your subgroup contains NAN entries. They are removed and not shown in the histogram")
+            subgroup = self.remove_nans(subgroup)
 
             y, x = np.histogram(subgroup, bins=bins)
             color = np.asarray(pg.colorTuple(pg.mkColor(color)))

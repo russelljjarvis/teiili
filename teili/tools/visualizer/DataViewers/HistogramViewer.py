@@ -2,6 +2,7 @@
 # Copyright (c) 2018 University of Zurich
 
 import numpy as np
+import warnings
 
 from teili.tools.visualizer.DataViewers.DataViewer import DataViewer
 
@@ -60,5 +61,13 @@ class HistogramViewer(DataViewer):
         bins = range(int(max(max_per_dataset))+2)  # +2 to always have at least 1 bin
         return bins
 
-
+    def remove_nans(self, subgroup):
+        """ Method to remove nans from data
+        Args:
+            subgroup (array-like): data to filtered out nans
+        """
+        if (np.isnan(subgroup)).any():
+            subgroup = subgroup[~np.isnan(subgroup)]
+            warnings.warn("One of your subgroup contains NAN entries. They are removed and not shown in the histogram")
+        return subgroup
 

@@ -57,8 +57,8 @@ class RasterplotViewerPyqtgraph(RasterplotViewer):
         self.mainfig = mainfig
         if not self.mainfig:
             if subfig_rasterplot:
-                pass  # TODO: !1
-                # self.mainfig = subfig.figure get pyqt win
+                raise Exception('Please also provide the main pyqtgraph window' \
+                                'as input (mainfig) to the Viewer')
             else:
                 self.mainfig = pg.GraphicsWindow()
 

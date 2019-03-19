@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2018 University of Zurich
+
 import _pickle as pickle
 
 class DataModel(object):

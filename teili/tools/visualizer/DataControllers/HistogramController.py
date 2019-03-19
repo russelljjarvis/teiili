@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2018 University of Zurich
+
 import numpy as np
 
 from teili.tools.visualizer.DataControllers import DataController

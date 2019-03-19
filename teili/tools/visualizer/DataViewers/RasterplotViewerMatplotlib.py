@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2018 University of Zurich
+
 import matplotlib.pylab as plt
 import numpy as np
 from itertools import chain

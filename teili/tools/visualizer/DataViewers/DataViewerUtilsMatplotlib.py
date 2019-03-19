@@ -3,8 +3,14 @@ import matplotlib.pylab as plt
 from teili.tools.visualizer.DataViewers.DataViewerUtils import DataViewerUtils
 
 class DataViewerUtilsMatplotlib(DataViewerUtils):
-
+    """ Class holding matplotlib specific methods which
+        are shared between different Viewers"""
     def __init__(self, mainfig):
+        """ Set up DataViewerUtils for matplotlib backend
+        Args:
+            mainfig (matplotlib figure object): matplotlib figure which holds
+                the subfig (subplots)
+        """
         self.mainfig = mainfig
 
     def show(self):

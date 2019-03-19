@@ -10,8 +10,16 @@ from teili.tools.visualizer.DataViewers.DataViewerUtils import DataViewerUtils
 
 
 class DataViewerUtilsPyqtgraph(DataViewerUtils):
-
+    """ Class holding pyqtgraph specific methods which
+        are shared between different Viewers"""
     def __init__(self, QtApp, mainfig):
+        """ Set up DataViewerUtils for matplotlib backend
+        Args:
+            mainfig (pyqtgraph window object): pyqtgraph main window
+                (pg.GraphicsWindow())
+            QtApp (pyqtgraph application): pyqtgraph application to run plots
+                (QtGui.QApplication([]))
+        """
         self.QtApp = QtApp
         self.mainfig = mainfig
 

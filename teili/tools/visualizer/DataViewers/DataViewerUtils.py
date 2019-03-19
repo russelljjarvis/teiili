@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
 class DataViewerUtils(ABC):
+    """ Parent class to classes which hold backend specific methods which
+        are shared between different Viewers of the same backend"""
     def __init__(self):
         super().__init__()
 

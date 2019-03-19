@@ -31,7 +31,9 @@ class DataViewerUtilsPyqtgraph(DataViewerUtils):
         """ Save figure to path_to_save with size figure_size as svg, png, jpg and tiff
         Args:
             path_to_save (str): path to location where to save figure incl filename
+                                    (default: save to 'plot.png')
             figure_size (tuple): tuple of width and height of figure to save
+                                    (default: None, figure size won't be changed)
         """
         self.QtApp.processEvents()
         if figure_size is not None:

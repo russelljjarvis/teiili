@@ -23,7 +23,9 @@ class DataViewerUtilsMatplotlib(DataViewerUtils):
         """ Save figure to path_to_save with size figure_size as png, pdf, ps, eps and svg.
         Args:
             path_to_save (str): path to location where to save figure incl filename
+                                    (default: save to 'plot.png')
             figure_size (tuple): tuple of width and height in inch of figure to save
+                                    (default: None, figure size won't be changed)
         """
         if figure_size is not None:
             self.mainfig.set_size_inches(figure_size[0], figure_size[1])

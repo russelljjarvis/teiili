@@ -93,7 +93,7 @@ class HistogramViewerMatplotlib(HistogramViewer):
                 bins=bins,
                 orientation=orientation,
                 label=label,
-                color=color)  # rwidth=0.9)
+                color=color)
             self.subfig.set_autoscale_on(False)
 
         if subgroup_labels is not None:

@@ -45,15 +45,11 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
         """
 
         self.MyPlotSettings = MyPlotSettings
+        self.set_DataViewerUtils()
         self.add_histogram = add_histogram
 
-        # figure
-        self.mainfig = mainfig
-        if not self.mainfig:
-            if subfig_rasterplot:
-                self.mainfig = subfig_rasterplot.figure
-            else:
-                self.mainfig = plt.figure()
+        # set up main-figure
+        self.mainfig = self.DVUtils.set_up_mainfig(mainfig=mainfig, subfig=subfig_rasterplot)
 
         # subplot
         self.subfig_rasterplot = subfig_rasterplot
@@ -82,7 +78,6 @@ class RasterPlotViewerMatplotlib(RasterplotViewer):
         else:
             self.subfig_histogram = None
 
-        self.set_DataViewerUtils()
 
     def set_DataViewerUtils(self):
         """ Set which DataViewerUtils class should be considered"""

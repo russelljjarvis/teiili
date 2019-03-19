@@ -23,21 +23,12 @@ class LineplotViewerMatplotlib(LineplotViewer):
                 will hold the lineplot
         """
         self.MyPlotSettings = MyPlotSettings
-
-        # figure
-        self.mainfig = mainfig
-        if not self.mainfig:
-            if subfig:
-                self.mainfig = subfig.figure
-            else:
-                self.mainfig = plt.figure()
-
-        # subplot
-        self.subfig = subfig
-        if not self.subfig:
-            self.subfig = self.mainfig.add_subplot(111)
-
         self.set_DataViewerUtils()
+
+        # set up main- and subfigure
+        self.mainfig = self.DVUtils.set_up_mainfig(mainfig=mainfig, subfig=subfig)
+        self.subfig = self.DVUtils.set_up_subfig(mainfig=self.mainfig, subfig=subfig)
+
 
     def set_DataViewerUtils(self):
         """ Set which DataViewerUtils class should be considered"""

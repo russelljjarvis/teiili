@@ -14,6 +14,40 @@ class DataViewerUtilsMatplotlib(DataViewerUtils):
         """
         self.viewer = viewer
 
+    def set_up_mainfig(self, mainfig, subfig):
+        """ Method to set up main figure in viewer class
+            If mainfig is set to None, it will be created internally.
+        Args:
+            mainfig (matplotlib figure object): matplotlib figure which holds
+                the subfig (subplots)
+            subfig (matplotlib subplot): matplotlib subplot of mainfig which
+                will hold the lineplot
+        """
+
+        new_mainfig = mainfig
+        if not new_mainfig:
+            if subfig:
+                new_mainfig = subfig.figure
+            else:
+                new_mainfig = plt.figure()
+
+        return new_mainfig
+
+    def set_up_subfig(self, mainfig, subfig):
+        """ Method to set up main figure in viewer class
+            If subfig is set to None, it will be created internally.
+        Args:
+            mainfig (matplotlib figure object): matplotlib figure which holds
+                the subfig (subplots)
+            subfig (matplotlib subplot): matplotlib subplot of mainfig which
+                will hold the lineplot
+        """
+        new_subfig = subfig
+        if not new_subfig:
+            new_subfig = mainfig.add_subplot(111)
+
+        return new_subfig
+
     def show(self):
         """ show plot """
         plt.show()
@@ -53,3 +87,4 @@ class DataViewerUtilsMatplotlib(DataViewerUtils):
         if ylabel is not None:
             subfig.set_ylabel(ylabel,
                               fontsize=self.viewer.MyPlotSettings.fontsize_axis_labels)
+

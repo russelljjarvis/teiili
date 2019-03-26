@@ -44,6 +44,38 @@ class ExpAdaptIF(NeuronEquationBuilder):
         self.add_input_currents(num_inputs)
 
 
+class ExpAdaptLIF(NeuronEquationBuilder):
+    """This class provides you with all equations to simulate a voltage-based
+    exponential, adaptive integrate and fire neuron.
+    """
+
+    def __init__(self, num_inputs=1):
+        """This initializes the NeuronEquationBuilder with ExpAdaptIF neuron model.
+
+        Args:
+            num_inputs (int, optional): Description
+        """
+        NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='calcium_feedback',
+                                       integration_mode='exponential', leak='leaky',
+                                       position='spatial', noise='none')
+        self.add_input_currents(num_inputs)
+
+class LinearLIF(NeuronEquationBuilder):
+    """This class provides you with all equations to simulate a voltage-based
+    exponential, adaptive integrate and fire neuron.
+    """
+
+    def __init__(self, num_inputs=1):
+        """This initializes the NeuronEquationBuilder with ExpAdaptIF neuron model.
+
+        Args:
+            num_inputs (int, optional): Description
+        """
+        NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='none',
+                                       integration_mode='linear', leak='leaky',
+                                       position='spatial', noise='none')
+        self.add_input_currents(num_inputs)
+
 class DPI(NeuronEquationBuilder):
     """This class provides you with all equations to simulate a current-based
     exponential, adaptive leaky integrate and fire neuron as implemented on
@@ -73,6 +105,12 @@ def main(path=None):
 
     expAdaptIF = ExpAdaptIF()
     expAdaptIF.export_eq(os.path.join(path, "ExpAdaptIF"))
+
+    expAdaptLIF = ExpAdaptLIF()
+    expAdaptLIF.export_eq(os.path.join(path, "ExpAdaptLIF"))
+
+    linearLIF = LinearLIF()
+    linearLIF.export_eq(os.path.join(path, "LinearLIF"))
 
     dpi = DPI()
     dpi.export_eq(os.path.join(path, "DPI"))

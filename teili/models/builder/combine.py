@@ -188,6 +188,10 @@ def var_replacer(first_eq, second_eq, params):
             line = line.replace("%", "")
             if '/' in var:
                 var = var.split('/', 1)[0][1:]
+                remove_flag = False
+            else:
+                remove_flag = True
+
             diffvar = 'd' + var + '/dt'
 
             for kk, line2 in enumerate(first_eq.splitlines()):
@@ -204,7 +208,14 @@ def var_replacer(first_eq, second_eq, params):
             # after replacing the "%" flagged line in the result_first_eq
             # remove that line from the result_second_eq
             result_second_eq[k] = ""
-            
+            try:
+                if remove_flag:
+                    params.pop(var)
+                else:
+                    pass
+            except KeyError:
+                pass
+
     result_first_eq = "\n".join(result_first_eq)
     result_second_eq = "\n".join(result_second_eq)
 

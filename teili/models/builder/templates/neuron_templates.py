@@ -72,7 +72,11 @@ v_model_template = {'model': """
          Iexp    : amp                            # exponential current
          Iadapt  : amp                            # adaptation current
          Inoise  : amp                            # noise current
-         Iconst  : amp                            # additional input current
+
+
+
+
+Iconst  : amp                            # additional input current
          Cm      : farad     (constant)           # membrane capacitance
          refP    : second    (constant)           # refractory period (It is still possible to set it to False)
          Vthr    : volt      
@@ -345,9 +349,10 @@ i_ahp = {'model': """
                   '''}
 
 i_ahp_params = {"Itauahp": 1 * pA,
-             "Ithahp": 1 * pA,
-             "Ica": 2 * pA,
-             "Cahp": 1 * pF}
+                "Ithahp": 1 * pA,
+                "Ica": 2 * pA,
+                "Cahp": 1 * pF,
+                "Iahp": 0.5 * pA}
 
 
 i_exponential_params = {"Ith": 0.9 * pA,

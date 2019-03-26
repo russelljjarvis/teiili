@@ -62,7 +62,7 @@ class BuildingBlock:
         self.monitors = {}
         self.monitor = monitor
         self.standalone_params = OrderedDict()
-        self.sub_blocks{}
+        self.sub_blocks = {}
         self.input = {}
         self.output = {}
         self.hidden = {}

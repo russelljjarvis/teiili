@@ -77,6 +77,7 @@ v_model_template = {'model': """
          refP    : second    (constant)           # refractory period (It is still possible to set it to False)
          Vthr    : volt      
          Vres    : volt      (constant)           # reset potential
+         gL      : siemens   (constant)        # leak conductance
          """,
                     'threshold': "Vm > Vthr",
                     'reset': "Vm = Vres;"}
@@ -98,7 +99,6 @@ v_exp_current = {'model': """
             %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
             VT      : volt      (constant)        #
             DeltaT  : volt      (constant)        # slope factor
-            gL      : siemens   (constant)        # leak conductance
             %Vthr = (VT + 5 * DeltaT) : volt  
             """,
                 'threshold': '',
@@ -149,7 +149,6 @@ v_quad_params = {
 # leak
 v_leak = {'model': """
           %Ileak = -gL*(Vm - EL) : amp
-          gL      : siemens   (constant)        # leak conductance
           EL      : volt      (constant)        # leak reversal potential
          """,
           'threshold': '',

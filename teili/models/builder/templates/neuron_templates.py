@@ -351,8 +351,7 @@ i_ahp = {'model': """
 i_ahp_params = {"Itauahp": 1 * pA,
                 "Ithahp": 1 * pA,
                 "Ica": 2 * pA,
-                "Cahp": 1 * pF,
-                "Iahp": 0.5 * pA}
+                "Cahp": 1 * pF}
 
 
 i_exponential_params = {"Ith": 0.9 * pA,

@@ -204,11 +204,7 @@ def var_replacer(first_eq, second_eq, params):
             # after replacing the "%" flagged line in the result_first_eq
             # remove that line from the result_second_eq
             result_second_eq[k] = ""
-            try:
-                params.pop(var)
-            except KeyError:
-                pass
-
+            
     result_first_eq = "\n".join(result_first_eq)
     result_second_eq = "\n".join(result_second_eq)
 

@@ -94,18 +94,68 @@ class BuildingBlock:
     @property
     def groups(self):
         """ This property will collect all available groups from the respective building block.
-        To use it as a property it can easily be updated, if for example one building block is
-        incorporated in another one.
-        Recursive strategy
-        Add note that loops between bb are forbidden and lead to infinite loops
+        The property follows a recursive strategy to collect all available groups.
+        The intention is to easily update all available groups for stacked building blocks.
+        NOTE Avoid any kind of loops between Building Blocks. Loops are forbidden as they lead to
+        infinite collection of groups.
         """
         # Collects all groups including all sub_blocks
         tmp_groups = {}
         tmp_groups.update(_groups)
-        for g in self.sub_blocks
-             tmp_groups.update(g.groups)
+        for sub_block in self.sub_blocks:
+             tmp_groups.update(sub_block.groups)
         return tmp_groups
 
 
-    def get_eq_builder_dict(self):
-        # Check name in dict if nkey erro than use default if not use specified eq builder obj.
+    def _set_tags(self, list_of_tags, target_group):
+        """ This method allows the user to set a list of tags to a specific
+        target group. Normally the tags are already assigned by each building block.
+        So this method only adds convinience and a way to replace the default tags if this
+        is needed by any user. Typically this should not be the user's concern, that's why
+        it is private method.
+
+        Args:
+            list_of_tags (dict): A dictionary of tags
+               {'level': '1',       # '2',..., '10'
+               'type': 'wta'       # 'reservoir', 'octa'
+               'sign': 'exc',      # 'inh'
+               'conn_type': 'rec', # 'ff', 'fb' or '' for neurons
+              }
+            target_group (str): Name of group to set tags
+        """
+        self.group[target_group]._tags = list_of_tags
+
+
+    def print_tags(self, target_group):
+        """ Get the currently set tags for a given group.
+
+        Args:
+            target_group (str): Name of group to get tags from
+        """
+        print(target_group._tags)
+
+
+    def get_tags(self, target_group):
+        """ Get the currently set tags for a given group.
+
+        Args:
+            target_group (str): Name of group to get tags from
+        """
+        return self.groups[target_group]._tags
+
+
+    def get_groups(self, list_of_tags):
+        """ Get all groups which have a certain set of tags
+
+        Args:
+            list_of_tags (dict): A dictionary of tags
+
+        """
+        target_groups = []
+        for group in self.groups:
+            if group._tag == list_of_tags:
+                target_groups.append(group)
+            else:
+                continue
+
+        return target_groups

@@ -16,11 +16,12 @@ Todo:
 # @Date:   2017-07-27 10:46:44
 
 
-from brian2 import asarray
+import numpy as np
+from brian2 import Nameable
 from collections import OrderedDict
 
 
-class BuildingBlock:
+class BuildingBlock(Nameable):
     """This class is the parent class to all building blocks such as WTA, SOM etc.
 
     Attributes:
@@ -87,9 +88,10 @@ class BuildingBlock:
             TYPE: Arguments which can be changed during/between runs
         """
         # asarray is to remove units. It is the way proposed in the tutorial
-        run_args = [str(asarray(self.standalone_params[key]))
+        run_args = [str(np.asarray(self.standalone_params[key]))
                     for key in self.standalone_params]
         return run_args
+
 
     @property
     def groups(self):
@@ -107,7 +109,7 @@ class BuildingBlock:
         return tmp_groups
 
 
-    def _set_tags(self, list_of_tags, target_group):
+    def _set_tags(self, tags, target_group):
         """ This method allows the user to set a list of tags to a specific
         target group. Normally the tags are already assigned by each building block.
         So this method only adds convinience and a way to replace the default tags if this
@@ -115,7 +117,7 @@ class BuildingBlock:
         it is private method.
 
         Args:
-            list_of_tags (dict): A dictionary of tags
+            tags (dict): A dictionary of tags
                {'level': '1',       # '2',..., '10'
                'type': 'wta'       # 'reservoir', 'octa'
                'sign': 'exc',      # 'inh'
@@ -123,7 +125,7 @@ class BuildingBlock:
               }
             target_group (str): Name of group to set tags
         """
-        self.group[target_group]._tags = list_of_tags
+        self.group[target_group]._tags = tags
 
 
     def print_tags(self, target_group):
@@ -132,7 +134,7 @@ class BuildingBlock:
         Args:
             target_group (str): Name of group to get tags from
         """
-        print(target_group._tags)
+        print(self.groups[target_group]._tags)
 
 
     def get_tags(self, target_group):
@@ -144,7 +146,7 @@ class BuildingBlock:
         return self.groups[target_group]._tags
 
 
-    def get_groups(self, list_of_tags):
+    def get_groups(self, tags):
         """ Get all groups which have a certain set of tags
 
         Args:
@@ -153,7 +155,7 @@ class BuildingBlock:
         """
         target_groups = []
         for group in self.groups:
-            if group._tag == list_of_tags:
+            if group._tag == tags:
                 target_groups.append(group)
             else:
                 continue

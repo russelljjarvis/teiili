@@ -72,6 +72,7 @@ Attributes:
 # @Date:   2018-06-01 11:57:02
 
 
+from teili import constants
 from brian2 import pF, nS, mV, ms, pA, nA, volt, second
 
 none = {'model': ''' ''', 'on_pre': ''' ''', 'on_post': ''' '''}
@@ -212,17 +213,17 @@ dpi = {'model': '''
 
 # standard parameters for DPI models
 dpi_params = {
-    'Io_syn': 0.5 * pA,
-    'kn_syn': 0.75,
-    'kp_syn': 0.66,
+    'Io_syn': constants.I0,
+    'kn_syn': constants.KAPPA_N,
+    'kp_syn': constants.KAPPA_P,
     'Ut_syn': 25. * mV,
     'Csyn': 1.5 * pF,
     'Ie_tau': 10. * pA,
     'Ii_tau': 10. * pA,
     'Ie_th': 10 * pA,
     'Ii_th': 10 * pA,
-    'Ie_syn': 0.5 * pA,
-    'Ii_syn': 0.5 * pA,
+    'Ie_syn': constants.I0,
+    'Ii_syn': constants.I0,
     'w_plast': 1,
     'baseweight_e': 7. * pA,
     'baseweight_i': 7. * pA
@@ -264,7 +265,7 @@ dpi_shunt = {'model': """
 
 dpi_shunt_params = {
     'Csyn': 1.5 * pF,
-    'Io_syn': 0.5 * pA,
+    'Io_syn': constants.I0,
     'Ii_tau': 10. * pA,
     'Ut_syn': 25. * mV,
     'baseweight_i': 50. * pA,
@@ -272,7 +273,7 @@ dpi_shunt_params = {
     'kp_syn': 0.66,
     'wPlast': 1,
     'Ii_th': 10 * pA,
-    'Ii_syn': 0.5 * pA
+    'Ii_syn': constants.I0
 }
 
 

@@ -54,7 +54,6 @@ class BuildingBlock(Nameable):
             debug (bool, optional): Flag to gain additional information
             monitor (bool, optional): Flag to auto-generate spike and state monitors
         """
-        # self.name = name
         self.neuron_eq_builder = neuron_eq_builder
         self.synapse_eq_builder = synapse_eq_builder
         self.params = block_params

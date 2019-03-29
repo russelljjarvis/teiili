@@ -39,7 +39,7 @@ class BuildingBlock(Nameable):
         input (dictionary): Dictionary containing all possible groups which are potential inputs
         output (dictionary): Dictionary containing all possible groups which are potential outputs
         hidden (dictionary): Dictionary containing all remaining groups which are neither
-            inputs nor outputs 
+            inputs nor outputs
     """
 
     def __init__(self, name, neuron_eq_builder, synapse_eq_builder, block_params, debug, monitor=False):

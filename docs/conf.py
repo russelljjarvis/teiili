@@ -42,12 +42,12 @@ MOCK_MODULES = [
 
 project = 'teili'
 copyright = '2018, Moritz Milde'
-author = 'Moritz Milde'
+author = 'Moritz Milde, Alpha Renner, Renate Krause, Adrian Whatley, Nicoletta Risi, Dmitrii Zendirkov, Karla Burelo, Vanessa Leite'
 
 # The short X.Y version
 version = '0.2'
 # The full version, including alpha/beta/rc tags
-release = '1'
+release = 'Alpha'
 
 
 # -- General configuration ---------------------------------------------------

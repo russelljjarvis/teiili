@@ -1,3 +1,11 @@
+[![Documentation Status](https://readthedocs.org/projects/teili/badge/?version=latest)](https://teili.readthedocs.io/en/latest/?badge=latest)
+ 
+[![build status](https://code.ini.uzh.ch/ncs/teili/badges/dev/build.svg)](https://code.ini.uzh.ch/ncs/teili/commits/dev)     
+
+
+[![coverage report](https://code.ini.uzh.ch/ncs/teili/badges/dev/coverage.svg)](https://code.ini.uzh.ch/ncs/teili/commits/dev)
+
+
 # teili
 
 teili, das /taɪli/, Swiss german diminutive for piece. <br />

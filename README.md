@@ -1,10 +1,13 @@
-[![Documentation Status](https://readthedocs.org/projects/teili/badge/?version=latest)](https://teili.readthedocs.io/en/latest/?badge=latest)
- 
-[![build status](https://code.ini.uzh.ch/ncs/teili/badges/dev/build.svg)](https://code.ini.uzh.ch/ncs/teili/commits/dev)     
-
-
-[![coverage report](https://code.ini.uzh.ch/ncs/teili/badges/dev/coverage.svg)](https://code.ini.uzh.ch/ncs/teili/commits/dev)
-
+<p align="center">
+ <a href='https://teili.readthedocs.io/en/latest/?badge=latest' alt="Documentation Status">
+    <img src='https://readthedocs.org/projects/teili/badge/?version=latest' /></a>
+ <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev" alt="build status">
+       <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/build.svg" /></a>
+ <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev" alt="Coverage">
+       <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/coverage.svg" /></a>
+ <a href="https://code.ini.uzh.ch/ncs/teili/graphs/contributors" alt="Contributors">
+        <img src="https://img.shields.io/github/contributors/badges/shields.svg" /></a>
+</p>
 
 # teili
 

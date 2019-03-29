@@ -5,8 +5,6 @@
        <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/build.svg" /></a>
  <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev" alt="Coverage">
        <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/coverage.svg" /></a>
- <a href="https://code.ini.uzh.ch/ncs/teili/graphs/contributors" alt="Contributors">
-        <img src="https://img.shields.io/github/contributors/badges/shields.svg" /></a>
 </p>
 
 # teili

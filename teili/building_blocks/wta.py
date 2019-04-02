@@ -50,7 +50,7 @@ import time
 import numpy as np
 import sys
 
-import brian2
+# import brian2
 from brian2 import ms, mV, pA, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
 import teili.tools.synaptic_kernel
@@ -82,20 +82,23 @@ class WTA(BuildingBlock):
     '''A 1 or 2D square Winner-Takes_all (WTA) Building block.
 
     Attributes:
-        dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is created.
+        dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is
+            created.
         group (dict): List of keys of neuron population.
         inhGroup (TYPE): Description
-        inputGroup (brian2.SpikeGenerator obj.): SpikeGenerator object to stimulate WTA.
+        inputGroup (brian2.SpikeGenerator obj.): SpikeGenerator object to
+             stimulate WTA.
         num_neurons (int, optional): Size of WTA neuron population.
         plot_win (TYPE): Description
-        spikemonWTA (brian2.SpikeMonitor obj.): A spike monitor which monitors the activity of the WTA
-            population.
+        spikemonWTA (brian2.SpikeMonitor obj.): A spike monitor which monitors
+            the activity of the WTA population.
 
     Deleted Attributes:
-        standalone_params (dict): Keys for all standalone parameters necessary for cpp code generation.
+        standalone_params (dict): Keys for all standalone parameters necessary
+            for cpp code generation.
     '''
 
-    def __init__(self, name,
+    def __init__(self, name='wta*',
                  dimensions=1,
                  neuron_eq_builder=DPI,
                  synapse_eq_builder=DPISyn,
@@ -109,33 +112,42 @@ class WTA(BuildingBlock):
                  spatial_kernel=None,
                  monitor=True,
                  debug=False):
-        """Initializes building block object with defined dimensionality and connectivity scheme
+        """Initializes building block object with defined dimensionality and
+        connectivity scheme.
 
         Args:
-            name (TYPE): Description
-            dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is created.
-            neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models.
-            synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models.
+            name (str): Name of the WTA BuildingBlock
+            dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is
+                created.
+            neuron_eq_builder (class, optional): neuron class as imported from
+                models/neuron_models.
+            synapse_eq_builder (class, optional): synapse class as imported from
+                models/synapse_models.
             block_params (dict, optional): Parameter for neuron populations.
             num_neurons (int, optional): Size of WTA neuron population.
-            num_inh_neurons (int, optional): Size of inhibitory interneuron population.
-            num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
+            num_inh_neurons (int, optional): Size of inhibitory interneuron
+                population.
+            num_input_neurons (int, optional): Size of input population.
+                If None, equal to size of WTA population.
             cutoff (int, optional): Radius of self-excitation.
-            additional_statevars (list, optional): List of additonal statevariables which are not standard.
+            additional_statevars (list, optional): List of additonal state
+                variables which are not standard.
             num_inputs (int, optional): Number of input currents to WTA.
             spatial_kernel (None, optional): Description
-            monitor (bool, optional): Flag to auto-generate spike and state monitors.
+            monitor (bool, optional): Flag to auto-generate spike and state
+                monitors.
             debug (bool, optional): Flag to gain additional information.
 
         Raises:
-            NotImplementedError: If dimensions is not 1 or 2, this error is raised.
+            NotImplementedError: If dimensions is not 1 or 2.
 
         Deleted Parameters:
             groupname (str, required): Name of the WTA population.
         """
         self.num_neurons = num_neurons
         self.dimensions = dimensions
-        BuildingBlock.__init__(self, name,
+        BuildingBlock.__init__(self,
+                               name,
                                neuron_eq_builder,
                                synapse_eq_builder,
                                block_params,
@@ -143,43 +155,49 @@ class WTA(BuildingBlock):
                                monitor)
 
         if dimensions == 1:
-            self.Groups, self.Monitors, self.standalone_params = gen1dWTA(name,
-                                                                          neuron_eq_builder,
-                                                                          synapse_eq_builder,
-                                                                          num_neurons=num_neurons,
-                                                                          num_inh_neurons=num_inh_neurons,
-                                                                          additional_statevars=additional_statevars,
-                                                                          cutoff=cutoff,
-                                                                          num_input_neurons=num_input_neurons,
-                                                                          num_inputs=num_inputs,
-                                                                          monitor=monitor,
-                                                                          debug=debug,
-                                                                          spatial_kernel=spatial_kernel,
-                                                                          **block_params)
+            self._groups,\
+            self.monitors,\
+            self.standalone_params = gen1dWTA(name,
+                                              neuron_eq_builder,
+                                              synapse_eq_builder,
+                                              num_neurons=num_neurons,
+                                              num_inh_neurons=num_inh_neurons,
+                                              additional_statevars=additional_statevars,
+                                              cutoff=cutoff,
+                                              num_input_neurons=num_input_neurons,
+                                              num_inputs=num_inputs,
+                                              monitor=monitor,
+                                              debug=debug,
+                                              spatial_kernel=spatial_kernel,
+                                              **block_params)
         elif dimensions == 2:
-            self.Groups, self.Monitors, self.standalone_params = gen2dWTA(name,
-                                                                          neuron_eq_builder,
-                                                                          synapse_eq_builder,
-                                                                          num_neurons=num_neurons,
-                                                                          num_inh_neurons=num_inh_neurons,
-                                                                          additional_statevars=additional_statevars,
-                                                                          cutoff=cutoff,
-                                                                          num_input_neurons=num_input_neurons,
-                                                                          num_inputs=num_inputs,
-                                                                          monitor=monitor,
-                                                                          debug=debug,
-                                                                          spatial_kernel=spatial_kernel,
-                                                                          **block_params)
+            self._groups,\
+            self.monitors,\
+            self.standalone_params = gen2dWTA(name,
+                                              neuron_eq_builder,
+                                              synapse_eq_builder,
+                                              num_neurons=num_neurons,
+                                              num_inh_neurons=num_inh_neurons,
+                                              additional_statevars=additional_statevars,
+                                              cutoff=cutoff,
+                                              num_input_neurons=num_input_neurons,
+                                              num_inputs=num_inputs,
+                                              monitor=monitor,
+                                              debug=debug,
+                                              spatial_kernel=spatial_kernel,
+                                              **block_params)
 
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 
-        self.inputGroup = self.Groups['gWTAInpGroup']
-        self.inhGroup = self.Groups['gWTAInhGroup']
-        self.group = self.Groups['gWTAGroup']
+        BuildingBlock.input = self._groups['gWTAInpGroup']
+        BuildingBlock.output =
+        BuildingBlock.hidden = self._groups['']
+        self.inhGroup = self._groups['gWTAInhGroup']
+        self._group = self._groups['gWTAGroup']
 
         if monitor:
-            self.spikemonWTA = self.Monitors['spikemonWTA']
+            self.spikemonWTA = self.monitors['spikemonWTA']
 
 
 def gen1dWTA(groupname,
@@ -218,7 +236,7 @@ def gen1dWTA(groupname,
         debug (bool, optional): Flag to gain additional information.
 
     Returns:
-        Groups (dictionary): Keys to all neuron and synapse groups.
+        _groups (dictionary): Keys to all neuron and synapse groups.
         Monitors (dictionary): Keys to all spike and state monitors.
         standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     """
@@ -293,7 +311,7 @@ def gen1dWTA(groupname,
     synWTAWTA1e.weight = 'latWeight * ' + \
         spatial_kernel_name + '(i,j,latSigma)'
 
-    Groups = {
+    _groups = {
         'gWTAGroup': gWTAGroup,
         'gWTAInhGroup': gWTAInhGroup,
         'gWTAInpGroup': gWTAInpGroup,
@@ -316,7 +334,7 @@ def gen1dWTA(groupname,
         except KeyError:
             statemonWTA = StateMonitor(gWTAGroup, ('Imem', 'Iin'), record=True,
                                        name='statemon' + groupname + '_WTA')
-        Monitors = {
+        monitors = {
             'spikemonWTA': spikemonWTA,
             'spikemonWTAInh': spikemonWTAInh,
             'spikemonWTAInp': spikemonWTAInp,
@@ -340,10 +358,10 @@ def gen1dWTA(groupname,
         print('creating WTA of ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
         print('The keys of the output dict are:')
-        for key in Groups:
+        for key in _groups:
             print(key)
 
-    return Groups, Monitors, standalone_params
+    return _groups, monitors, standalone_params
 
 
 def gen2dWTA(groupname,
@@ -384,7 +402,7 @@ def gen2dWTA(groupname,
         debug (bool, optional): Flag to gain additional information.
 
     Returns:
-        Groups (dictionary): Keys to all neuron and synapse groups.
+        _groups (dictionary): Keys to all neuron and synapse groups.
         Monitors (dictionary): Keys to all spike and state monitors.
         standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     '''
@@ -472,7 +490,7 @@ def gen2dWTA(groupname,
     synWTAWTA1e.weight = 'latWeight * ' + spatial_kernel_name + \
         '(i,j,latSigma,num_neurons,num_neurons)'
 
-    Groups = {
+    _groups = {
         'gWTAGroup': gWTAGroup,
         'gWTAInhGroup': gWTAInhGroup,
         'gWTAInpGroup': gWTAInpGroup,
@@ -494,7 +512,7 @@ def gen2dWTA(groupname,
     except KeyError:
         statemonWTA = StateMonitor(gWTAGroup, ('Imem', 'Iin'), record=True,
                                    name='statemon' + groupname + '_WTA')
-    Monitors = {
+    monitors = {
         'spikemonWTA': spikemonWTA,
         'spikemonWTAInh': spikemonWTAInh,
         'spikemonWTAInp': spikemonWTAInp,
@@ -519,7 +537,7 @@ def gen2dWTA(groupname,
         print('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
         print('The keys of the output dict are:')
-        for key in Groups:
+        for key in _groups:
             print(key)
 
-    return Groups, Monitors, standalone_params
+    return _groups, monitors, standalone_params

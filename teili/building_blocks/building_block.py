@@ -4,12 +4,12 @@
 
 Todo:
     * Hierarchy of building_blocks.
-        There is a problem when 2 BBs of the same kind are added to another BB, as the
-        names collide.
+        There is a problem when 2 BBs of the same kind are added to another BB,
+        as the names collide.
     * Monitor naming.
-        Important all Monitors of Building blocks have to be named and named uniquely!
-        Otherwise they will not be found, when a Network is rerun in standalone mode
-        after rebuild without recompile
+        Important all Monitors of Building blocks have to be named and named
+        uniquely! Otherwise they will not be found, when a Network is rerun
+        in standalone mode after rebuild without recompile
 """
 
 # @Author: alpren, mmilde
@@ -22,37 +22,47 @@ from collections import OrderedDict
 
 
 class BuildingBlock(Nameable):
-    """This class is the parent class to all building blocks such as WTA, SOM etc.
+    """This class is the parent class to all building blocks, e.g. WTA, SOM.
 
     Attributes:
         name (str, required): Name of the building_block population
-        neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
-        synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models
-        params (dictionary, optional): Dictionary containing all relevant parameters for
-            each building block
+        neuron_eq_builder (class, optional): neuron class as imported from
+            models/neuron_models
+        synapse_eq_builder (class, optional): synapse class as imported from
+            models/synapse_models
+        params (dictionary, optional): Dictionary containing all relevant
+            parameters for each building block
         debug (bool, optional): Flag to gain additional information
         groups (dictionary): Keys to all neuron and synapse groups
         monitors (dictionary): Keys to all spike and state monitors
         monitor (bool, optional): Flag to auto-generate spike and state monitors
-        standalone_params (dictionary): Dictionary for all parameters to create a standalone network
+        standalone_params (dictionary): Dictionary for all parameters to create
+            a standalone network
         sub_blocks (dictionary): Dictionary for all parent building blocks
-        input (dictionary): Dictionary containing all possible groups which are potential inputs
-        output (dictionary): Dictionary containing all possible groups which are potential outputs
-        hidden (dictionary): Dictionary containing all remaining groups which are neither
-            inputs nor outputs
+        input (dictionary): Dictionary containing all possible groups which are
+            potential inputs
+        output (dictionary): Dictionary containing all possible groups which are
+            potential outputs
+        hidden (dictionary): Dictionary containing all remaining groups which are
+            neither inputs nor outputs
     """
 
-    def __init__(self, name, neuron_eq_builder, synapse_eq_builder, block_params, debug, monitor=False):
-        """This function initializes the BuildBlock parent class. All attributes are shared among
-        building_blocks, such as WTA, OCTA etc.
+    def __init__(self, name, neuron_eq_builder, synapse_eq_builder,
+                 block_params, debug, monitor=False):
+        """This function initializes the BuildBlock parent class. All attributes
+        are shared among building_blocks, such as WTA, OCTA etc.
 
         Args:
             name (str, required): Name of the building_block population
-            neuron_eq_builder (class, optional): Class as imported from models/neuron_models
-            synapse_eq_builder (class, optional): Class as imported from models/synapse_models
-            block_params (dict): Dictionary which holds building_block specific parameters
+            neuron_eq_builder (class, optional): Class as imported from
+                models/neuron_models
+            synapse_eq_builder (class, optional): Class as imported from
+                models/synapse_models
+            block_params (dict): Dictionary which holds building_block specific
+                parameters
             debug (bool, optional): Flag to gain additional information
-            monitor (bool, optional): Flag to auto-generate spike and state monitors
+            monitor (bool, optional): Flag to auto-generate spike and state
+                monitors
         """
         self.neuron_eq_builder = neuron_eq_builder
         self.synapse_eq_builder = synapse_eq_builder
@@ -68,7 +78,8 @@ class BuildingBlock(Nameable):
         self.hidden = {}
 
     def __iter__(self):
-        """this allows us to iterate over the BrianObjects and directly add the Block to a Network
+        """this allows us to iterate over the BrianObjects and directly add the
+        Block to a Network
 
         Returns:
             TYPE: Returns a dictionary wich contains all brian objects
@@ -94,11 +105,15 @@ class BuildingBlock(Nameable):
 
     @property
     def groups(self):
-        """ This property will collect all available groups from the respective building block.
-        The property follows a recursive strategy to collect all available groups.
-        The intention is to easily update all available groups for stacked building blocks.
-        NOTE Avoid any kind of loops between Building Blocks. Loops are forbidden as they lead to
-        infinite collection of groups.
+        """ This property will collect all available groups from the respective
+        building block. The property follows a recursive strategy to collect all
+        available groups. The intention is to easily update all available groups
+        for stacked building blocks.
+        NOTE Avoid any kind of loops between Building Blocks. Loops are
+        forbidden as they lead to infinite collection of groups.
+
+        Returns:
+            tmp_groups (dict): Dictionary containing all groups of all sub_blocks
         """
         # Collects all groups including all sub_blocks
         tmp_groups = {}
@@ -110,10 +125,10 @@ class BuildingBlock(Nameable):
 
     def _set_tags(self, tags, target_group):
         """ This method allows the user to set a list of tags to a specific
-        target group. Normally the tags are already assigned by each building block.
-        So this method only adds convinience and a way to replace the default tags if this
-        is needed by any user. Typically this should not be the user's concern, that's why
-        it is private method.
+        target group. Normally the tags are already assigned by each building
+        block. So this method only adds convinience and a way to replace the
+        default tags if this is needed by any user. Typically this should not
+        be the user's concern, that's why it is private method.
 
         Args:
             tags (dict): A dictionary of tags
@@ -141,6 +156,10 @@ class BuildingBlock(Nameable):
 
         Args:
             target_group (str): Name of group to get tags from
+
+        Returns:
+           (dict): Dictionary containing all assigned _tags of provided
+               group
         """
         return self.groups[target_group]._tags
 
@@ -149,8 +168,11 @@ class BuildingBlock(Nameable):
         """ Get all groups which have a certain set of tags
 
         Args:
-            list_of_tags (dict): A dictionary of tags
+            tags (dict): A dictionary of tags
 
+        Returns:
+            target_group (list): List of all group objects which
+                share the same tags as specified.
         """
         target_groups = []
         for group in self.groups:

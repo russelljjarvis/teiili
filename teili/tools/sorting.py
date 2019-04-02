@@ -23,8 +23,6 @@ Example:
 """
 # @Author: Moritz Milde
 # @Date:   2018-06-05 11:09:20
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-13 11:33:45
 
 import numpy as np
 from tkinter import filedialog
@@ -69,7 +67,7 @@ class SortMatrix():
         if matrix is None:
             self.matrix = self.load_matrix()
         elif matrix is not None:
-            self.matrix = matrix
+            self.matrix = np.reshape(matrix, (nrows, ncols))
         # Compute similarity along specified axis
         self.similarity_matrix = self.get_similarity_matrix(axis=axis)
         # Get permutation along specified axis

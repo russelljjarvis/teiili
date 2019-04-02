@@ -181,22 +181,6 @@ class WTA(BuildingBlock):
         if monitor:
             self.spikemonWTA = self.Monitors['spikemonWTA']
 
-    def plot(self, start_time=0 * ms, end_time=None, plot_states=True):
-        """Simple plot for WTA.
-
-        Args:
-            start_time (int, optional): Start time of plot in ms.
-            end_time (int, optional): End time of plot in ms.
-            plot_states (bool, optional): Description
-
-        Returns:
-            pyqtgraph window: The window containing the plot.
-        """
-        win = plotWTA(wta_monitors=self.Monitors, name=self.name,
-                      start_time=start_time, end_time=end_time, plot_states=plot_states)
-        self.plot_win = win
-        return win
-
 
 def gen1dWTA(groupname,
              neuron_eq_builder=DPI,
@@ -250,7 +234,7 @@ def gen1dWTA(groupname,
         spatial_kernel_name = spatial_kernel
 
     # time measurement
-    start = time.clock()
+    start = time.time()
 
     # create neuron groups
     gWTAGroup = Neurons(num_neurons, equation_builder=neuron_eq_builder(num_inputs=3 + num_inputs),
@@ -351,7 +335,7 @@ def gen1dWTA(groupname,
         gWTAInhGroup.name + '_refP': rpInh,
     }
 
-    end = time.clock()
+    end = time.time()
     if debug:
         print('creating WTA of ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
@@ -416,7 +400,7 @@ def gen2dWTA(groupname,
             teili.tools.synaptic_kernel, spatial_kernel)
         spatial_kernel_name = spatial_kernel
     # time measurement
-    start = time.clock()
+    start = time.time()
 
     # create neuron groups
     num2dNeurons = num_neurons**2
@@ -530,7 +514,7 @@ def gen2dWTA(groupname,
         gWTAInhGroup.name + '_refP': rpInh,
     }
 
-    end = time.clock()
+    end = time.time()
     if debug:
         print('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')

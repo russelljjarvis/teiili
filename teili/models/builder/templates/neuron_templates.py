@@ -61,7 +61,7 @@ Attributes:
     voltage_equation_sets (TYPE): Description
     voltage_parameters (TYPE): Description
 """
-
+from teili import constants
 from brian2 import pF, nS, mV, ms, pA, nA, psiemens
 pS = psiemens
 
@@ -72,11 +72,16 @@ v_model_template = {'model': """
          Iexp    : amp                            # exponential current
          Iadapt  : amp                            # adaptation current
          Inoise  : amp                            # noise current
-         Iconst  : amp                            # additional input current
+
+
+
+
+Iconst  : amp                            # additional input current
          Cm      : farad     (constant)           # membrane capacitance
          refP    : second    (constant)           # refractory period (It is still possible to set it to False)
-         Vthr    : volt      
+         Vthr    : volt
          Vres    : volt      (constant)           # reset potential
+         gL      : siemens   (constant)        # leak conductance
          """,
                     'threshold': "Vm > Vthr",
                     'reset': "Vm = Vres;"}
@@ -98,8 +103,7 @@ v_exp_current = {'model': """
             %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
             VT      : volt      (constant)        #
             DeltaT  : volt      (constant)        # slope factor
-            gL      : siemens   (constant)        # leak conductance
-            %Vthr = (VT + 5 * DeltaT) : volt  
+            %Vthr = (VT + 5 * DeltaT) : volt
             """,
                 'threshold': '',
                 'reset': ''}
@@ -128,7 +132,7 @@ v_quad_current = {'model': """
                                                                     # activated during the spike
                                                                     # and affecting the after-spike
                                                                     # behavior
-            %Vthr = Vpeak : volt  
+            %Vthr = Vpeak : volt
             %Vres = VR : volt
             """,
                   'threshold': '',
@@ -149,7 +153,6 @@ v_quad_params = {
 # leak
 v_leak = {'model': """
           %Ileak = -gL*(Vm - EL) : amp
-          gL      : siemens   (constant)        # leak conductance
           EL      : volt      (constant)        # leak reversal potential
          """,
           'threshold': '',
@@ -257,15 +260,15 @@ i_model_template_params = {
     #--------------------------------------------------------
     # Default equations disabled
     #--------------------------------------------------------
-    "Inoise": 0.5 * pA,                                # Noise due to mismatch
-    "Iconst": 0.5 * pA,
+    "Inoise": constants.I0,                                # Noise due to mismatch
+    "Iconst": constants.I0,
     #--------------------------------------------------------
     # VLSI process parameters
     #--------------------------------------------------------
-    "kn": 0.75,
-    "kp": 0.66,
-    "Ut": 25 * mV,
-    "Io": 0.5 * pA,
+    "kn": constants.KAPPA_N,
+    "kp": constants.KAPPA_P,
+    "Ut": constants.UT,
+    "Io": constants.I0,
     #---------------------------------------------------------
     # Silicon neuron parameters
     #---------------------------------------------------------
@@ -273,22 +276,22 @@ i_model_template_params = {
     #---------------------------------------------------------
     # Positive feedback parameters
     #---------------------------------------------------------
-    "Ia": 0.5 * pA,                                # Feedback current
+    "Ia": constants.I0,                                # Feedback current
     "Iath": 0.5 * nA,
     "Iagain": 50. * pA,
     "Ianorm": 10. * pA,
     #---------------------------------------------------------
     # Adaptative and Calcium parameters
     #---------------------------------------------------------
-    "Ica": 0.5 * pA,
-    "Itauahp": 0.5 * pA,
-    "Ithahp": 0.5 * pA,
+    "Ica": constants.I0,
+    "Itauahp": constants.I0,
+    "Ithahp": constants.I0,
     "Cahp": 0.5 * pF,
-    "Iahp": 0.5 * pA,                                # Adaptation current
+    "Iahp": constants.I0,                                # Adaptation current
     #---------------------------------------------------------
     # Shunting inhibition
     #---------------------------------------------------------
-    "Ishunt": 0.5 * pA,
+    "Ishunt": constants.I0,
     #---------------------------------------------------------
     # Neuron parameters
     #---------------------------------------------------------
@@ -346,9 +349,9 @@ i_ahp = {'model': """
                   '''}
 
 i_ahp_params = {"Itauahp": 1 * pA,
-             "Ithahp": 1 * pA,
-             "Ica": 2 * pA,
-             "Cahp": 1 * pF}
+                "Ithahp": 1 * pA,
+                "Ica": 2 * pA,
+                "Cahp": 1 * pF}
 
 
 i_exponential_params = {"Ith": 0.9 * pA,
@@ -357,7 +360,7 @@ i_exponential_params = {"Ith": 0.9 * pA,
                      "Ianorm": 10 * pA,
                      "Itau": 8 * pA}
 
-i_non_leaky_params = {"Itau": 0.5 * pA}
+i_non_leaky_params = {"Itau": constants.I0}
 
 none_params = {}
 

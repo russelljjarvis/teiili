@@ -122,6 +122,7 @@ class STDGM_Testbench():
     """This class provides a stimulus to test your
     spike-timing dependent gain modulation algorithm.
     """
+
     def __init__(self, N=1, stimulus_length=1200):
         """Initializes the testbench class.
 
@@ -341,7 +342,8 @@ class OCTA_Testbench():
                         pol.append(1)
                         if noise_probability is not None and noise_probability >= np.random.rand():
                             noise_index = np.random.randint(0, num_neurons)
-                            noise_x, noise_y = ind2xy(noise_index, nrows, ncols)
+                            noise_x, noise_y = ind2xy(
+                                noise_index, nrows, ncols)
                             if (noise_x, noise_y) not in list_of_coord:
                                 # print(noise_x, noise_y)
                                 # print(list_of_coord)
@@ -468,7 +470,8 @@ class OCTA_Testbench():
                 self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
                 self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
-                                      np.asarray(self.events[1, :], dtype='int'),
+                                      np.asarray(
+                                          self.events[1, :], dtype='int'),
                                       nrows, ncols)
                 print(np.max(self.indices), np.min(self.indices))
             nPixel = np.int(np.max(self.indices))
@@ -599,7 +602,8 @@ class OCTA_Testbench():
                 self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
                 self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
-                                      np.asarray(self.events[1, :], dtype='int'),
+                                      np.asarray(
+                                          self.events[1, :], dtype='int'),
                                       nrows, ncols)
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(
@@ -672,10 +676,10 @@ class WTA_Testbench():
         self.times = np.arange(start_time, end_time + 1, isi)
         if dimensions == 1:
             self.indices = np.round(np.linspace(
-                0, num_neurons, len(self.times)))
+                0, num_neurons - 1, len(self.times)))
         elif dimensions == 2:
             self.indices = np.round(np.linspace(
-                0, num_neurons, len(self.times))) + (num_neurons**2 / 2)
+                0, num_neurons - 1, len(self.times))) + (num_neurons**2 / 2)
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 

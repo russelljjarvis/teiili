@@ -39,14 +39,15 @@ import os
 import importlib
 import re
 import copy
+import warnings
 from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_neu_dict
-from teili.models.builder.templates.neuron_templates import modes, current_equation_sets, voltage_equation_sets, \
+from teili.models.builder.templates.neuron_templates import modes, current_equation_sets, \
+    voltage_equation_sets, \
     current_parameters, voltage_parameters
 
 
 class NeuronEquationBuilder():
-
     """Class which builds neuron equation according to pre-defined properties such
     as spike-frequency adaptation, leakage etc.
 
@@ -184,6 +185,13 @@ class NeuronEquationBuilder():
             num_inputs (int): Number of inputs to the post-synaptic neuron
         """
         self.num_inputs = num_inputs
+
+        if num_inputs > 10:
+            warnings.warn(
+                '''num_inputs of this Neuron is larger than 10. Too large values may cause parser problems, 
+                please check the documentation if you are using num_inputs correctly (only different groups
+                need different inputs)''')
+
         # remove previously added inputcurrent lines
         inputcurrent_e_pattern = re.compile("Ie\d+ : amp")
         inputcurrent_i_pattern = re.compile("Ii\d+ : amp")
@@ -212,7 +220,7 @@ class NeuronEquationBuilder():
                           str(i + 1) + " " for i in range(num_inputs - 1)]
 
         self.keywords['model'] = self.keywords['model'] + "\nIin = " + \
-            "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
+                                 "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
         Iesline = ["        Ie" + str(i) + " : amp" for i in range(num_inputs)]
         Iisline = ["        Ii" + str(i) + " : amp" for i in range(num_inputs)]
         self.add_state_vars(Iesline)

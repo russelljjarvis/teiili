@@ -1,3 +1,12 @@
+<p align="center">
+ <a href='https://teili.readthedocs.io/en/latest/?badge=latest' alt="Documentation Status">
+    <img src='https://readthedocs.org/projects/teili/badge/?version=latest' /></a>
+ <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev" alt="build status">
+       <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/build.svg" /></a>
+ <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev" alt="Coverage">
+       <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/coverage.svg" /></a>
+</p>
+
 # teili
 
 teili, das /taɪli/, Swiss german diminutive for piece. <br />
@@ -36,18 +45,14 @@ Please look at the examples here: teili/examples/ and our [Documentation](https:
     source activate myenv
     ```
 
-*  Navigate to the folder containing the cloned repository
-    ```
-    cd teili/
-    ```
-    or the downloaded `tar.gz` file
+*  Navigate to the parent folder containing the cloned repository or the downloaded `tar.gz` file
     ```
     cd Downloads/
     ```
 *  Install teili using pip
     ```
     # Point pip to the location of the setup.py
-    pip install .
+    pip install teili/
     # or point pip to the downloaded tar.gz file
     pip install teili*.tar.gz
     ```
@@ -60,13 +65,7 @@ Please look at the examples here: teili/examples/ and our [Documentation](https:
     ```
 
     You are good to go!<br />
-    If you want to specify the location of `teiliApps` just provide the path to the `setup.py`:
-    ```
-    cd teili/
-    pip install . --install-option="--dir='/your/custom/path'"
-    or
-    pip install tar --install-option="--dir='/your/custom/path'"
-    ```
+
 ### Alternative installation **NOT RECOMMENDED**
     If, however, you want to install all dependencies separately you can run the following commands **NOT RECOMMENDED**:
     ```

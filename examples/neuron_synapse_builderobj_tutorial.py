@@ -27,6 +27,10 @@ from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
+from teili.tools.visualizer.DataControllers.RasterplotController import RasterplotController
+from teili.tools.visualizer.DataControllers.LineplotController import LineplotController
+from teili.tools.visualizer.DataViewers import PlotSettings
+
 # For this example you must first run models/neuron_models.py and synapse_models.py,
 # which will create the equation template. This will be stored in models/equations
 # Building neuron objects
@@ -119,8 +123,9 @@ Net.add(input_spikegenerator, test_neurons1, test_neurons2,
         spikemon_input, spikemon_test_neurons1, spikemon_test_neurons2,
         statemon_test_neurons1, statemon_test_neurons2, statemon_test_synapse, statemon_input_synapse)
 
-duration = 500
-Net.run(duration * ms)
+duration = 0.500
+Net.run(duration * second)
+
 
 # Visualize simulation results
 app = QtGui.QApplication.instance()
@@ -130,101 +135,113 @@ else:
     print('QApplication instance already exists: %s' % str(app))
 
 pg.setConfigOptions(antialias=True)
+labelStyle = {'color': '#FFF', 'font-size': 12}
+MyPlotSettings = PlotSettings(fontsize_title=labelStyle['font-size'],
+                              fontsize_legend=labelStyle['font-size'],
+                              fontsize_axis_labels=10,
+                              marker_size=7)
 
-labelStyle = {'color': '#FFF', 'font-size': '12pt'}
 win = pg.GraphicsWindow()
 win.resize(2100, 1200)
 win.setWindowTitle('Simple Spiking Neural Network')
-
-p1 = win.addPlot(title="Input spike generator")
-p2 = win.addPlot(title="Input synapses")
+p1 = win.addPlot()
+p2 = win.addPlot()
 win.nextRow()
-p3 = win.addPlot(title='Intermediate test neurons 1')
-p4 = win.addPlot(title="Test synapses")
+p3 = win.addPlot()
+p4 = win.addPlot()
 win.nextRow()
-p5 = win.addPlot(title="Rasterplot of output test neurons 2")
-p6 = win.addPlot(title="Output test neurons 2")
+p5 = win.addPlot()
+p6 = win.addPlot()
 
-colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-          (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-
-
-p1.setXRange(0, duration, padding=0)
-p2.setXRange(0, duration, padding=0)
-p3.setXRange(0, duration, padding=0)
-p4.setXRange(0, duration, padding=0)
-p5.setXRange(0, duration, padding=0)
-p6.setXRange(0, duration, padding=0)
 
 # Spike generator
-p1.plot(x=np.asarray(spikemon_input.t / ms), y=np.asarray(spikemon_input.i),
-        pen=None, symbol='o', symbolPen=None,
-        symbolSize=7, symbolBrush=(255, 255, 255))
+RasterplotController(MyEventsModels=[spikemon_input],
+                     MyPlotSettings=MyPlotSettings,
+                     time_range=[0, duration],
+                     neuron_id_range=None,
+                     title="Input spike generator",
+                     xlabel='Time (ms)',
+                     ylabel="Neuron ID",
+                     backend='pyqtgraph',
+                     mainfig=win,
+                     subfig_rasterplot=p1,
+                     QtApp=app,
+                     show_immediately=False)
 
-# Input synapses
-for i, data in enumerate(np.asarray(statemon_input_synapse.Ie_syn)):
-    name = 'Syn_{}'.format(i)
-    p2.plot(x=np.asarray(statemon_input_synapse.t / ms), y=data,
-            pen=pg.mkPen(colors[3], width=2), name=name)
+LineplotController(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'Ie_syn'))],
+                   MyPlotSettings=MyPlotSettings,
+                   x_range=[0, duration],
+                   title="Input synapses",
+                   xlabel="Time (ms)",
+                   ylabel="EPSC (A)",
+                   backend='pyqtgraph',
+                   mainfig=win,
+                   subfig=p2,
+                   QtApp=app,
+                   show_immediately=False)
 
 # Intermediate neurons
 if hasattr(statemon_test_neurons1, 'Imem'):
-    for i, data in enumerate(np.asarray(statemon_test_neurons1.Imem)):
-        p3.plot(x=np.asarray(statemon_test_neurons1.t / ms), y=data,
-                pen=pg.mkPen(colors[6], width=2))
+    MyData_intermed_neurons = [(statemon_test_neurons1, ('t', 'Imem'))]
 if hasattr(statemon_test_neurons1, 'Vm'):
-    for i, data in enumerate(np.asarray(statemon_test_neurons1.Vm)):
-        p3.plot(x=np.asarray(statemon_test_neurons1.t / ms), y=data,
-                pen=pg.mkPen(colors[6], width=2))
+    MyData_intermed_neurons = [(statemon_test_neurons1, ('t', 'Vm'))]
 
-# Output synapses
-for i, data in enumerate(np.asarray(statemon_test_synapse.Ie_syn)):
-    name = 'Syn_{}'.format(i)
-    p4.plot(x=np.asarray(statemon_test_synapse.t / ms), y=data,
-            pen=pg.mkPen(colors[1], width=2), name=name)
+i_current_name = 'Imem' if 'Imem' in builder_object1.keywords['model'] else 'Vm'
+LineplotController(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
+                   MyPlotSettings=MyPlotSettings,
+                   x_range=[0, duration],
+                   title='Intermediate test neurons 1',
+                   xlabel="Time (ms)",
+                   ylabel=i_current_name,
+                   backend='pyqtgraph',
+                   mainfig=win,
+                   subfig=p3,
+                   QtApp=app,
+                   show_immediately=False)
+
+
+LineplotController(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'Ie_syn'))],
+                   MyPlotSettings=MyPlotSettings,
+                   x_range=[0, duration],
+                   title="Test synapses",
+                   xlabel="Time (ms)",
+                   ylabel="EPSC (A)",
+                   backend='pyqtgraph',
+                   mainfig=win,
+                   subfig=p4,
+                   QtApp=app,
+                   show_immediately=False)
+
+
+RasterplotController(MyEventsModels=[spikemon_test_neurons2],
+                     MyPlotSettings=MyPlotSettings,
+                     time_range=[0, duration],
+                     neuron_id_range=None,
+                     title="Rasterplot of output test neurons 2",
+                     xlabel='Time (ms)',
+                     ylabel="Neuron ID",
+                     backend='pyqtgraph',
+                     mainfig=win,
+                     subfig_rasterplot=p5,
+                     QtApp=app,
+                     show_immediately=False)
+
 
 if hasattr(statemon_test_neurons2, 'Imem'):
-    for data in np.asarray(statemon_test_neurons2.Imem):
-        p6.plot(x=np.asarray(statemon_test_neurons2.t / ms), y=data,
-                pen=pg.mkPen(colors[5], width=3))
+    MyData_output = [(statemon_test_neurons2, ('t','Imem'))]
 if hasattr(statemon_test_neurons2, 'Vm'):
-    for data in np.asarray(statemon_test_neurons2.Vm):
-        p6.plot(x=np.asarray(statemon_test_neurons2.t / ms), y=data,
-                pen=pg.mkPen(colors[5], width=3))
+    MyData_output = [(statemon_test_neurons2, ('t','Vm'))]
 
-p5.plot(x=np.asarray(spikemon_test_neurons2.t / ms), y=np.asarray(spikemon_test_neurons2.i),
-        pen=None, symbol='o', symbolPen=None,
-        symbolSize=7, symbolBrush=(255, 0, 0))
-
-p1.setLabel('left', "Neuron ID", **labelStyle)
-p1.setLabel('bottom', "Time (ms)", **labelStyle)
-p2.setLabel('left', "EPSC", units='A', **labelStyle)
-p2.setLabel('bottom', "Time (ms)", **labelStyle)
-i_current_name = 'Imem' if 'Imem' in builder_object1.keywords['model'] else 'Vm'
-p3.setLabel('left', "%s" %
-            i_current_name, units="A", **labelStyle)
-p3.setLabel('bottom', "Time (ms)", **labelStyle)
-p4.setLabel('left', "EPSC", units="A", **labelStyle)
-p4.setLabel('bottom', "Time (ms)", **labelStyle)
-p6.setLabel('left', "%s" %
-            i_current_name, units="A", **labelStyle)
-p6.setLabel('bottom', "Time (ms)", **labelStyle)
-p5.setLabel('left', "Neuron ID", **labelStyle)
-p5.setLabel('bottom', "Time (ms)", **labelStyle)
-
-b = QtGui.QFont("Sans Serif", 10)
-p1.getAxis('bottom').tickFont = b
-p1.getAxis('left').tickFont = b
-p2.getAxis('bottom').tickFont = b
-p2.getAxis('left').tickFont = b
-p3.getAxis('bottom').tickFont = b
-p3.getAxis('left').tickFont = b
-p4.getAxis('bottom').tickFont = b
-p4.getAxis('left').tickFont = b
-p5.getAxis('bottom').tickFont = b
-p5.getAxis('left').tickFont = b
-p6.getAxis('bottom').tickFont = b
-p6.getAxis('left').tickFont = b
-
+LineplotController(DataModel_to_x_and_y_attr=MyData_output,
+                   MyPlotSettings=MyPlotSettings,
+                   x_range=[0, duration],
+                   title="Output test neurons 2",
+                   xlabel="Time (ms)",
+                   ylabel="%s" %i_current_name,
+                   backend='pyqtgraph',
+                   mainfig=win,
+                   subfig=p6,
+                   QtApp=app,
+                   show_immediately=False)
 
 app.exec()

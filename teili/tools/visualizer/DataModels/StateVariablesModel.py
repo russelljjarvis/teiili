@@ -31,9 +31,19 @@ class StateVariablesModel(DataModel):
             state_variables_times (list of list/array): list of time points where state variables were measured
         """
 
+
+
+
+
         if state_variable_names is None and state_variables is None and state_variables_times is None:
             pass
+
         else:
+
+            if state_variables_times is None:
+                state_variables_times = []
+                for state_vars in state_variables:
+                    state_variables_times.append(range(len(state_vars)))
 
             if len(state_variable_names) != len(
                     np.unique(state_variable_names)):

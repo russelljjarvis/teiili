@@ -131,9 +131,14 @@ class LineplotController(DataController):
             for subgroup_nr, subgroup in enumerate(self.data):
                 x_dim = len(subgroup[0].shape) - (subgroup[0].shape).count(1)
                 y_dim = len(subgroup[1].shape) - (subgroup[1].shape).count(1)
+
                 if x_dim != y_dim:
                     assert (x_dim == 1 or y_dim == 1), "Your data dimensions don't match, please adjust them." \
                                                    "(x: {}, y: {})".format(x_dim, y_dim)
+
+                    assert (subgroup[0].shape[0] == subgroup[1].shape[0]), "Your data dimensions don't match, please adjust them." \
+                                                   "(x: {}, y: {})".format(subgroup[0].shape, subgroup[1].shape)
+
 
                 indices_within_x_range = np.where(
                     np.logical_and(
@@ -144,6 +149,7 @@ class LineplotController(DataController):
                         "For subgroup nr {} there are no datapoints left after filtering x_values to be within "
                         "range ({}, {})".format(
                             subgroup_nr, self.x_range[0], self.x_range[1]))
+
                 self.data[subgroup_nr] = (
                     subgroup[0][indices_within_x_range[:x_dim]], subgroup[1][indices_within_x_range[:y_dim]])
 

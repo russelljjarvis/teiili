@@ -26,7 +26,7 @@ class LineplotController(DataController):
             mainfig=None,
             subfig=None,
             QtApp=None,
-            show_immediately=True):
+            show_immediately=False):
         """ Setup Lineplot Controller and create lineplot
         Args:
             DataModel_to_x_and_y_attr (list of tuples): list of tuples like

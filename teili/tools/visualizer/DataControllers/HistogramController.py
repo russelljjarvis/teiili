@@ -24,7 +24,7 @@ class HistogramController(DataController):
             mainfig=None,
             subfig=None,
             QtApp=None,
-            show_immediately=True):
+            show_immediately=False):
         """ Setup Histogram Controller and create histogram plot
         
         Args:

@@ -27,7 +27,7 @@ class RasterplotController(DataController):
             subfig_histogram=None,
             QtApp=None,
             add_histogram=False,
-            show_immediately=True):
+            show_immediately=False):
         """ Setup Rasterplot controller and create rasterplot (incl histogram
                 if add_histogram is True)
         Args:

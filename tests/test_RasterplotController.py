@@ -5,7 +5,7 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtGui
 
-from teili.tools.visualizer.DataControllers import RasterplotController
+from teili.tools.visualizer.DataControllers import Rasterplot
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import EventsModel
 from teili.core.groups import Neurons, Connections
@@ -110,7 +110,7 @@ SHOW_PLOTS_IN_TESTS = False
 QtApp = QtGui.QApplication([])
 
 
-class TestRasterplotController(unittest.TestCase):
+class TestRasterplot(unittest.TestCase):
 
     def test_getalldatafromeventmodels(self):
 
@@ -120,7 +120,7 @@ class TestRasterplotController(unittest.TestCase):
         EM1 = EventsModel.from_brian_spike_monitor(spikemonN1)
         EM2 = EventsModel.from_brian_spike_monitor(spikemonN2)
 
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=[
                 EM1,
@@ -137,7 +137,7 @@ class TestRasterplotController(unittest.TestCase):
             np.asarray(spikemonN2.t)))
 
         # from brian state monitor and spike monitors
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=[
                 spikemonN1,
@@ -165,7 +165,7 @@ class TestRasterplotController(unittest.TestCase):
         EM1 = EventsModel.from_brian_spike_monitor(spikemonN1)
         EM2 = EventsModel.from_brian_spike_monitor(spikemonN2)
 
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=[
                 EM1,
@@ -180,7 +180,7 @@ class TestRasterplotController(unittest.TestCase):
         self.assertLessEqual(max(RC.all_spike_times[0], default=0), time_range[1])
 
         # from brian state monitor and spike monitors
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=[
                 EM1,
@@ -206,7 +206,7 @@ class TestRasterplotController(unittest.TestCase):
         # matplotlib backend, no histogram
         backend = 'matplotlib'
         add_histogram = False
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=MyEventsModels,
             subgroup_labels=subgroup_labels,
@@ -226,7 +226,7 @@ class TestRasterplotController(unittest.TestCase):
         # matplotlib backend, with histogram
         backend = 'matplotlib'
         add_histogram = True
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=MyEventsModels,
             subgroup_labels=subgroup_labels,
@@ -246,7 +246,7 @@ class TestRasterplotController(unittest.TestCase):
         # pyqtgraph backend, no histogram
         backend = 'pyqtgraph'
         add_histogram = False
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=MyEventsModels,
             subgroup_labels=subgroup_labels,
@@ -266,7 +266,7 @@ class TestRasterplotController(unittest.TestCase):
         # pyqtgraph backend, with histogram
         backend = 'pyqtgraph'
         add_histogram = True
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=MyEventsModels,
             subgroup_labels=subgroup_labels,
@@ -288,7 +288,7 @@ class TestRasterplotController(unittest.TestCase):
         # matplotlib backend, when no/empty data provided
         backend = 'matplotlib'
         add_histogram = True
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=MyEventsModels,
             subgroup_labels=subgroup_labels,
@@ -308,7 +308,7 @@ class TestRasterplotController(unittest.TestCase):
         # pyqtgraph backend, when no/empty data provided
         backend = 'pyqtgraph'
         add_histogram = True
-        RC = RasterplotController(
+        RC = Rasterplot(
             MyPlotSettings=get_plotsettings(),
             MyEventsModels=MyEventsModels,
             subgroup_labels=subgroup_labels,

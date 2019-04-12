@@ -8,9 +8,9 @@ from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataViewers import LineplotViewerMatplotlib, LineplotViewerPyqtgraph, PlotSettings
 
 
-class LineplotController(DataController):
+class Lineplot(DataController):
     """ Class to plot lineplots with different backends and from different
-    DataModels"""
+    DataModels - LineplotController """
 
     def __init__(
             self,

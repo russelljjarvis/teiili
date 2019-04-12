@@ -8,8 +8,9 @@ from teili.tools.visualizer.DataControllers import DataController
 from teili.tools.visualizer.DataViewers import RasterPlotViewerMatplotlib, RasterplotViewerPyqtgraph, PlotSettings
 
 
-class RasterplotController(DataController):
-    """ Class to plot rasterplots with different backends and from different DataModels"""
+class Rasterplot(DataController):
+    """ Class to plot rasterplots with different backends and from different DataModels
+    - RasterplotController"""
 
     def __init__(
             self,

@@ -5,7 +5,7 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtGui
 
-from teili.tools.visualizer.DataControllers import HistogramController
+from teili.tools.visualizer.DataControllers import Histogram
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
 from teili.core.groups import Neurons, Connections
@@ -112,7 +112,7 @@ def get_plotsettings():
 SHOW_PLOTS_IN_TESTS = False
 
 
-class TestHistogramController(unittest.TestCase):
+class TestHistogram(unittest.TestCase):
 
     def test_getdata(self):
 
@@ -125,7 +125,7 @@ class TestHistogramController(unittest.TestCase):
             [statemonN1, statemonN2], skip_not_rec_neuron_ids=False)
         DataModel_to_attr = [(EM1, 'neuron_ids'), (EM2, 'neuron_ids'), (SVM, 'Imem')]
 
-        HC = HistogramController(
+        HC = Histogram(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_attr=DataModel_to_attr,
             show_immediately=SHOW_PLOTS_IN_TESTS)
@@ -143,7 +143,7 @@ class TestHistogramController(unittest.TestCase):
             (spikemonN2, 'i'),
             (statemonN1, 'Imem')]
 
-        HC = HistogramController(
+        HC = Histogram(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_attr=DataModel_to_attr,
             show_immediately=SHOW_PLOTS_IN_TESTS)
@@ -168,7 +168,7 @@ class TestHistogramController(unittest.TestCase):
         subgroup_labels = ['EM1', 'EM2', 'SVM']
 
         backend = 'matplotlib'
-        HC = HistogramController(
+        HC = Histogram(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_attr=DataModel_to_attr,
             subgroup_labels=subgroup_labels,
@@ -185,7 +185,7 @@ class TestHistogramController(unittest.TestCase):
         HC.create_plot()
 
         backend = 'pyqtgraph'
-        HC = HistogramController(
+        HC = Histogram(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_attr=DataModel_to_attr,
             subgroup_labels=subgroup_labels,

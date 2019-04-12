@@ -7,8 +7,9 @@ from teili.tools.visualizer.DataControllers import DataController
 from teili.tools.visualizer.DataViewers import HistogramViewerMatplotlib, HistogramViewerPyqtgraph, PlotSettings
 
 
-class HistogramController(DataController):
-    """ Class to plot histograms with different backends and from different DataModels"""
+class Histogram(DataController):
+    """ Class to plot histograms with different backends and from different DataModels
+    - HistogramController """
 
     def __init__(
             self,

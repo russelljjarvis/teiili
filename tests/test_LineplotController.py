@@ -5,7 +5,7 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtGui
 
-from teili.tools.visualizer.DataControllers import LineplotController
+from teili.tools.visualizer.DataControllers import Lineplot
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.core.groups import Neurons, Connections
@@ -107,7 +107,7 @@ def get_plotsettings():
 SHOW_PLOTS_IN_TESTS = False
 
 
-class TestLineplotController(unittest.TestCase):
+class TestLineplot(unittest.TestCase):
 
     def test_getdata(self):
 
@@ -120,7 +120,7 @@ class TestLineplotController(unittest.TestCase):
         DataModel_to_x_and_y_attr = [(SVM, ('t_Imem', 'Imem')),
                                      (SVM, ('t_Iin', 'Iin'))]
 
-        LC = LineplotController(
+        LC = Lineplot(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             title='data from DataModels',
@@ -152,7 +152,7 @@ class TestLineplotController(unittest.TestCase):
         DataModel_to_x_and_y_attr = [(statemonN1, ('t', 'Iin')),
                                      (statemonN2, ('t', 'Imem'))]
 
-        LC = LineplotController(
+        LC = Lineplot(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             title='data from StateMonitors',
@@ -193,7 +193,7 @@ class TestLineplotController(unittest.TestCase):
         # no fitlering should happen
         x_range = None
         y_range = None
-        LC = LineplotController(
+        LC = Lineplot(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             x_range=x_range,
@@ -225,7 +225,7 @@ class TestLineplotController(unittest.TestCase):
         # filter only x
         x_range = (0.05, 0.1)
         y_range = None
-        LC = LineplotController(
+        LC = Lineplot(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             x_range=x_range,
@@ -250,7 +250,7 @@ class TestLineplotController(unittest.TestCase):
         # filter only y
         x_range = None
         y_range = (0, 3e-9)
-        LC = LineplotController(
+        LC = Lineplot(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             x_range=x_range,
@@ -275,7 +275,7 @@ class TestLineplotController(unittest.TestCase):
         # filter x and y
         x_range = (0.02, 0.13)
         y_range = (0, 5e-9)
-        LC = LineplotController(
+        LC = Lineplot(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             x_range=x_range,
@@ -305,7 +305,7 @@ class TestLineplotController(unittest.TestCase):
         # no elements left after filtering
         x_range = (0.2, 0.4)  # simulation only goes from (0.0, 0.15)
         y_range = (0, 3e-9)
-        LineplotController(
+        Lineplot(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             title='empty data',
@@ -327,7 +327,7 @@ class TestLineplotController(unittest.TestCase):
         y_range = (0, 5e-9)
 
         backend = 'matplotlib'
-        LC = LineplotController(
+        LC = Lineplot(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             subgroup_labels=subgroup_labels,
@@ -344,7 +344,7 @@ class TestLineplotController(unittest.TestCase):
         LC.create_plot()
 
         backend = 'pyqtgraph'
-        LC = LineplotController(
+        LC = Lineplot(
             MyPlotSettings=get_plotsettings(),
             DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
             subgroup_labels=subgroup_labels,

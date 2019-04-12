@@ -25,7 +25,7 @@ class HistogramController(DataController):
             subfig=None,
             QtApp=None,
             show_immediately=False):
-        """ Setup Histogram Controller and create histogram plot
+        """ Setup Histogram Controller and create histogram plot. 
         
         Args:
             DataModel_to_attr (list of tuples): [tuple(::class DataModel::
@@ -48,9 +48,9 @@ class HistogramController(DataController):
             subfig (subplot): subplot of mainfig which will hold the histogram
             QtApp (pyqtgraph application): pyqtgraph application to run plots
                 (QtGui.QApplication([]) ), only required if backend is
-                pyqtgraph show_immediately (bool): if True: plot is shown
-                immediately after
-                it has been created
+                pyqtgraph
+            show_immediately (bool): if True: plot is shown
+                immediately after it has been created.
         """
 
         self.subgroup_labels = subgroup_labels

@@ -9,7 +9,7 @@ from teili.tools.visualizer.DataControllers import HistogramController
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
@@ -26,7 +26,7 @@ def run_brian_network():
     N_input, N_N1, N_N2 = 1, 5, 3
     duration_sim = 150
 
-    Net = teiliNetwork()
+    Net = TeiliNetwork()
     # setup spike generator
     spikegen_spike_times = np.sort(
         np.random.choice(

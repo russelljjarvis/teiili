@@ -5,7 +5,7 @@ import numpy as np
 from brian2 import us, ms, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
@@ -26,7 +26,7 @@ def run_teili_network():
     N_N2 = 3
     duration_sim = 150
 
-    Net = teiliNetwork()
+    Net = TeiliNetwork()
     # setup spike generator
     spikegen_spike_times = np.sort(
         np.random.choice(

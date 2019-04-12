@@ -1,4 +1,5 @@
 import warnings
+import sys
 try:
     import pyqtgraph as pg
     from PyQt5 import QtGui
@@ -23,15 +24,24 @@ class DataViewerUtilsPyqtgraph(DataViewerUtils):
 
     def set_up_QtApp(self, QtApp):
         """ Method to set up qt application in viewer class
-            If QtApp is set to None, it will be created internally.
+            If QtApp is set to None, it will check for an existing one or
+            otherwise create one internally
         Args:
             QtApp (pyqtgraph application): pyqtgraph application to run plots
                 (QtGui.QApplication([]))
         """
-        new_QtApp = QtApp
-        if not new_QtApp:
-            new_QtApp = QtGui.QApplication([])
-        return new_QtApp
+
+        if QtApp is None:
+            # check if qtapp already exists otherwise create new one
+            app = QtGui.QApplication.instance()
+            if app is None:
+                app = QtGui.QApplication(sys.argv)
+            else:
+                print('QApplication instance already exists: %s' % str(app))
+            return app
+
+        else:
+            return QtApp
 
     def set_up_mainfig(self, mainfig, subfig):
         """ Method to set up main figure in viewer class

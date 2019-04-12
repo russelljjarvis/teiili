@@ -28,7 +28,8 @@ class HistogramViewerPyqtgraph(HistogramViewer):
             subfig (pyqtgraph subplot): pyqtgraph subplot of mainfig which will
                 hold the histogram
             QtApp (pyqtgraph application): pyqtgraph application to run plots
-                (QtGui.QApplication([]))
+                (QtGui.QApplication([])), if None: it will check for an existing
+                QtApps to use or creates a new one otherwise
         """
 
         self.MyPlotSettings = MyPlotSettings

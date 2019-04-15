@@ -62,19 +62,19 @@ equation_builder.keywords['model']=equation_builder.keywords['model']+'\n dActiv
 testNeurons = Neurons(1, equation_builder=equation_builder, name="testNeuron", verbose = True)
 testNeurons.refP = 1 * ms
 
-duration = 2000 *ms
+duration = 200 *ms
 sg_dt = 10*ms
 n_pink = int(duration/sg_dt)+1
 pink_x = abs(pink(n_pink))* 0.005*uA
 pink_x_array = TimedArray(pink_x, dt = sg_dt)
 testNeurons.namespace.update({'pink_x_array':pink_x_array})
-testNeurons.run_regularly("Ie0 = pink_x_array(t)",dt = defaultclock.dt) #0.005*uA#
+testNeurons.run_regularly("Iin0 = pink_x_array(t)",dt = defaultclock.dt) #0.005*uA#
 
 testNeurons.set_params(parameters)
 
 spikemon = SpikeMonitor(testNeurons, name='spikemon')
 statemonNeuIn = StateMonitor(testNeurons, variables=[
-                              "Ie0", "Vm", "Activity"], record=[0], name='statemonNeu')
+                              "Iin0", "Vm", "Activity"], record=[0], name='statemonNeu')
 
 Net.add(testNeurons, spikemon, statemonNeuIn)
 Net.run(duration)
@@ -106,7 +106,7 @@ for i,data  in enumerate(np.asarray(statemonNeuIn.Vm/mV)):
     p1.plot(x=np.asarray(statemonNeuIn.t / ms), y=np.asarray(data),
             pen=pg.mkPen(colors[0], width=2))
 
-for i,data  in enumerate(np.asarray(statemonNeuIn.Ie0/nA)):
+for i,data  in enumerate(np.asarray(statemonNeuIn.Iin0/nA)):
     p2.plot(x=np.asarray(statemonNeuIn.t / ms), y=np.asarray(data),
             pen=pg.mkPen(colors[1], width=2))
 

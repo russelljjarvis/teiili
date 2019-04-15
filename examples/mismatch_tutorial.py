@@ -228,9 +228,9 @@ Lineplot(DataModel_to_x_and_y_attr=DataModels_Imem,
 
 
 # prepare data (part 1)
-input_syn_baseweights_e = np.asarray(getattr(input_syn, 'baseweight_e'))*10**12
-MyData_baseweight_e = StateVariablesModel(state_variable_names=['baseweight_e'],
-                                          state_variables=[input_syn_baseweights_e])  # to pA
+input_syn_baseweights = np.asarray(getattr(input_syn, 'baseweight'))*10**12
+MyData_baseweight = StateVariablesModel(state_variable_names=['baseweight'],
+                                          state_variables=[input_syn_baseweights])  # to pA
 
 refractory_periods = np.asarray(getattr(output_neurons, 'refP'))*10**3 # to ms
 MyData_refP = StateVariablesModel(state_variable_names=['refP'],
@@ -242,13 +242,13 @@ subfig1 = mainfig.addPlot(row=0, col=0)
 subfig2 = mainfig.addPlot(row=1, col=0)
 
 # add data to plots
-Histogram(DataModel_to_attr=[(MyData_baseweight_e, 'baseweight_e')],
+Histogram(DataModel_to_attr=[(MyData_baseweight, 'baseweight')],
                     MyPlotSettings=MyPlotSettings,
-                    title='baseweight_e', xlabel='(pA)', ylabel='count',
+                    title='baseweight', xlabel='(pA)', ylabel='count',
                     backend='pyqtgraph',
                     mainfig=mainfig, subfig=subfig1, QtApp=QtApp,
                     show_immediately=False)
-y, x = np.histogram(input_syn_baseweights_e, bins="auto")
+y, x = np.histogram(input_syn_baseweights, bins="auto")
 subfig1.plot(x=np.asarray([mean_synapse_param*10**12, mean_synapse_param*10**12]),
              y=np.asarray([0, 300]),
                 pen=pg.mkPen((0, 255, 0), width=2))

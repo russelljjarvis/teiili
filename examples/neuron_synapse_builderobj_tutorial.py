@@ -95,10 +95,10 @@ spikemon_test_neurons2 = SpikeMonitor(
     test_neurons2, name='spikemon_test_neurons2')
 
 statemon_input_synapse = StateMonitor(
-    input_synapse, variables='Ie_syn', record=True, name='statemon_input_synapse')
+    input_synapse, variables='I_syn', record=True, name='statemon_input_synapse')
 
 statemon_test_synapse = StateMonitor(
-    test_synapse, variables='Ie_syn', record=True, name='statemon_test_synapse')
+    test_synapse, variables='I_syn', record=True, name='statemon_test_synapse')
 
 if 'Imem' in builder_object2.keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
@@ -162,7 +162,7 @@ p1.plot(x=np.asarray(spikemon_input.t / ms), y=np.asarray(spikemon_input.i),
         symbolSize=7, symbolBrush=(255, 255, 255))
 
 # Input synapses
-for i, data in enumerate(np.asarray(statemon_input_synapse.Ie_syn)):
+for i, data in enumerate(np.asarray(statemon_input_synapse.I_syn)):
     name = 'Syn_{}'.format(i)
     p2.plot(x=np.asarray(statemon_input_synapse.t / ms), y=data,
             pen=pg.mkPen(colors[3], width=2), name=name)
@@ -178,7 +178,7 @@ if hasattr(statemon_test_neurons1, 'Vm'):
                 pen=pg.mkPen(colors[6], width=2))
 
 # Output synapses
-for i, data in enumerate(np.asarray(statemon_test_synapse.Ie_syn)):
+for i, data in enumerate(np.asarray(statemon_test_synapse.I_syn)):
     name = 'Syn_{}'.format(i)
     p4.plot(x=np.asarray(statemon_test_synapse.t / ms), y=data,
             pen=pg.mkPen(colors[1], width=2), name=name)

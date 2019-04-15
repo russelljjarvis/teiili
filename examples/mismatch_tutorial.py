@@ -9,7 +9,7 @@ dictionaries:
     - mismatch_neuron_param
     - mismatch_synap_param
 Here mismatch is added to the neuron refractory period (refP) and to the synaptic
-weight (baseweight_e).
+weight (baseweight).
 
 Created on Wed Jul 25 18:32:44 2018
 @author: nrisi
@@ -70,15 +70,11 @@ mismatch_synap_param = {
     'kp_syn': 0,
     'Ut_syn': 0,
     'Csyn': 0,
-    'Ie_tau': 0,
-    'Ii_tau': 0,
-    'Ie_th': 0,
-    'Ii_th': 0,
-    'Ie_syn': 0,
-    'Ii_syn': 0,
+    'I_tau': 0,
+    'I_th': 0,
+    'I_syn': 0,
     'w_plast': 0,
-    'baseweight_e': 0.2,
-    'baseweight_i': 0,
+    'baseweight': 0.2
 }
 
 # Input layer
@@ -109,13 +105,13 @@ the first one)
 if not standalone:
     mean_neuron_param = np.copy(getattr(output_neurons, 'refP'))[0]
     unit_old_param_neu = getattr(output_neurons, 'refP').unit
-    mean_synapse_param = np.copy(getattr(input_syn, 'baseweight_e'))[0]
-    unit_old_param_syn = getattr(input_syn, 'baseweight_e').unit
+    mean_synapse_param = np.copy(getattr(input_syn, 'baseweight'))[0]
+    unit_old_param_syn = getattr(input_syn, 'baseweight').unit
 else:
     mean_neuron_param = output_neurons.get_params()['refP'][0]
     unit_old_param_neu = output_neurons.get_params()['refP'].unit
-    mean_synapse_param = input_syn.get_params()['baseweight_e'][0]
-    unit_old_param_syn = input_syn.get_params()['baseweight_e'].unit
+    mean_synapse_param = input_syn.get_params()['baseweight'][0]
+    unit_old_param_syn = input_syn.get_params()['baseweight'].unit
 
 output_neurons.add_mismatch(std_dict=mismatch_neuron_param, seed=10)
 input_syn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
@@ -129,7 +125,7 @@ statemon_output = StateMonitor(output_neurons,
                                record=range(0,output_neurons.N),
                                name='statemonNeuMid')
 statemon_input_syn = StateMonitor(input_syn,
-                                  variables='Ie_syn',
+                                  variables='I_syn',
                                   record=range(0,output_neurons.N),
                                   name='statemon_input_syn')
 
@@ -174,7 +170,7 @@ p2.setLabel('bottom', "Time (ms)", **labelStyle)
 p2.setXRange(0, duration, padding=0)
 
 neuron_ids_to_plot = np.random.randint(1000, size=5)
-for i, data in enumerate(np.asarray(statemon_input_syn.Ie_syn[neuron_ids_to_plot])):
+for i, data in enumerate(np.asarray(statemon_input_syn.I_syn[neuron_ids_to_plot])):
     name = 'Syn_{}'.format(i)
     p3.plot(x=np.asarray(statemon_input_syn.t / ms), y=data,
             pen=pg.mkPen(colors[i], width=2), name=name)
@@ -193,13 +189,13 @@ p4.setXRange(0, duration, padding=0)
 win2 = pg.GraphicsWindow(title='teili Test Simulation')
 win2.resize(1900, 600)
 win2.setWindowTitle('Mismatch distribution')
-p1 = win2.addPlot(title='baseweight_e')
+p1 = win2.addPlot(title='baseweight')
 win2.nextRow()
 p2 = win2.addPlot(title='refP')
 
 
 
-y, x = np.histogram(np.asarray(getattr(input_syn, 'baseweight_e')), bins="auto")
+y, x = np.histogram(np.asarray(getattr(input_syn, 'baseweight')), bins="auto")
 curve = pg.PlotCurveItem(x=x, y=y, stepMode=True, brush=(0, 0, 255, 80))
 p1.addItem(curve)
 p1.plot(x=np.asarray([mean_synapse_param, mean_synapse_param]), y=np.asarray([0, np.max(y)]),

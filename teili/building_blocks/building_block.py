@@ -77,6 +77,8 @@ class BuildingBlock(Nameable):
         self.output = {}
         self.hidden = {}
 
+        Nameable.__init__(self, name)
+
     def __iter__(self):
         """this allows us to iterate over the BrianObjects and directly add the
         Block to a Network
@@ -117,8 +119,9 @@ class BuildingBlock(Nameable):
         """
         # Collects all groups including all sub_blocks
         tmp_groups = {}
-        tmp_groups.update(_groups)
+        tmp_groups.update(self._groups)
         for sub_block in self.sub_blocks:
+             # Needs to be groups and not _groups for recursive collection
              tmp_groups.update(sub_block.groups)
         return tmp_groups
 

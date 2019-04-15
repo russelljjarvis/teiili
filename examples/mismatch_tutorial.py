@@ -27,9 +27,9 @@ from teili.models.neuron_models import DPI as neuron_model
 from teili.models.synapse_models import DPISyn as syn_model
 
 from teili.tools.visualizer.DataModels.StateVariablesModel import StateVariablesModel
-from teili.tools.visualizer.DataControllers.RasterplotController import RasterplotController
-from teili.tools.visualizer.DataControllers.LineplotController import LineplotController
-from teili.tools.visualizer.DataControllers.HistogramController import HistogramController
+from teili.tools.visualizer.DataControllers.Rasterplot import Rasterplot
+from teili.tools.visualizer.DataControllers.Lineplot import Lineplot
+from teili.tools.visualizer.DataControllers.Histogram import Histogram
 from teili.tools.visualizer.DataViewers import PlotSettings
 
 standalone = False
@@ -204,25 +204,25 @@ subfig3 = mainfig.addPlot(row=2, col=0)
 subfig4 = mainfig.addPlot(row=3, col=0)
 
 # add data to plots
-RasterplotController(MyEventsModels=[spikemon_input],
+Rasterplot(MyEventsModels=[spikemon_input],
                       MyPlotSettings=MyPlotSettings,
                       time_range=[0, duration],
                       title="Spike generator", xlabel="Time (ms)", ylabel="Neuron ID",
                       backend='pyqtgraph', mainfig=mainfig, subfig_rasterplot=subfig1, QtApp=QtApp,
                       show_immediately=False)
-RasterplotController(MyEventsModels=[spikemon_output],
+Rasterplot(MyEventsModels=[spikemon_output],
                      MyPlotSettings=MyPlotSettings,
                      time_range=[0, duration],
                      title="Output layer", xlabel="Time (ms)", ylabel="Neuron ID",
                      backend='pyqtgraph', mainfig=mainfig, subfig_rasterplot=subfig2, QtApp=QtApp,
                      show_immediately=False)
-LineplotController(DataModel_to_x_and_y_attr=DataModels_EPSC,
+Lineplot(DataModel_to_x_and_y_attr=DataModels_EPSC,
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="EPSC", xlabel="Time (ms)", ylabel="EPSC (pA)",
                    backend='pyqtgraph', mainfig=mainfig, subfig=subfig3, QtApp=QtApp,
                    show_immediately=False)
-LineplotController(DataModel_to_x_and_y_attr=DataModels_Imem,
+Lineplot(DataModel_to_x_and_y_attr=DataModels_Imem,
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="I_mem", xlabel="Time (ms)", ylabel="Membrane current Imem (nA)",
@@ -245,7 +245,7 @@ subfig1 = mainfig.addPlot(row=0, col=0)
 subfig2 = mainfig.addPlot(row=1, col=0)
 
 # add data to plots
-HistogramController(DataModel_to_attr=[(MyData_baseweight_e, 'baseweight_e')],
+Histogram(DataModel_to_attr=[(MyData_baseweight_e, 'baseweight_e')],
                     MyPlotSettings=MyPlotSettings,
                     title='baseweight_e', xlabel='(pA)', ylabel='count',
                     backend='pyqtgraph',
@@ -256,7 +256,7 @@ subfig1.plot(x=np.asarray([mean_synapse_param*10**12, mean_synapse_param*10**12]
              y=np.asarray([0, 300]),
                 pen=pg.mkPen((0, 255, 0), width=2))
 
-HistogramController(DataModel_to_attr=[(MyData_refP, 'refP')],
+Histogram(DataModel_to_attr=[(MyData_refP, 'refP')],
                     MyPlotSettings=MyPlotSettings,
                     title='refP', xlabel='(ms)', ylabel='count',
                     backend='pyqtgraph',

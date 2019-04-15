@@ -90,8 +90,8 @@ Net.run(duration * second)
 
 # Visualize simulation results
 
-from teili.tools.visualizer.DataControllers.RasterplotController import RasterplotController
-from teili.tools.visualizer.DataControllers.LineplotController import LineplotController
+from teili.tools.visualizer.DataControllers.Rasterplot import Rasterplot
+from teili.tools.visualizer.DataControllers.Lineplot import Lineplot
 from teili.tools.visualizer.DataViewers import PlotSettings
 
 app = QtGui.QApplication.instance()
@@ -119,7 +119,7 @@ p6 = win.addPlot()
 
 
 # Spike generator
-RasterplotController(MyEventsModels=[spikemonInp],
+Rasterplot(MyEventsModels=[spikemonInp],
                      MyPlotSettings=MyPlotSettings,
                      time_range=[0, duration],
                      neuron_id_range=None,
@@ -133,7 +133,7 @@ RasterplotController(MyEventsModels=[spikemonInp],
                      show_immediately=False)
 
 
-LineplotController(DataModel_to_x_and_y_attr=[(statemonInpSyn, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemonInpSyn, ('t', 'Ie_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Input synapses",
@@ -146,7 +146,7 @@ LineplotController(DataModel_to_x_and_y_attr=[(statemonInpSyn, ('t', 'Ie_syn'))]
                    show_immediately=False)
 
 
-LineplotController(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Imem'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Imem'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title='Intermediate neuron',
@@ -158,7 +158,7 @@ LineplotController(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Imem'))],
                    QtApp=app,
                    show_immediately=False)
 
-LineplotController(DataModel_to_x_and_y_attr=[(statemonSynOut, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemonSynOut, ('t', 'Ie_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Output synapses",
@@ -170,7 +170,7 @@ LineplotController(DataModel_to_x_and_y_attr=[(statemonSynOut, ('t', 'Ie_syn'))]
                    QtApp=app,
                    show_immediately=False)
 
-RasterplotController(MyEventsModels=[spikemonOut],
+Rasterplot(MyEventsModels=[spikemonOut],
                      MyPlotSettings=MyPlotSettings,
                      time_range=[0, duration],
                      neuron_id_range=None,
@@ -183,7 +183,7 @@ RasterplotController(MyEventsModels=[spikemonOut],
                      QtApp=app,
                      show_immediately=False)
 
-LineplotController(DataModel_to_x_and_y_attr=[(statemonNeuOut, ('t', 'Imem'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuOut, ('t', 'Imem'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Output membrane current",

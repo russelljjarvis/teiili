@@ -2,6 +2,6 @@
 # Copyright (c) 2018 University of Zurich
 
 from .DataController import DataController
-from .HistogramController import Histogram
-from .LineplotController import Lineplot
-from .RasterplotController import Rasterplot
+from .Histogram import Histogram
+from .Lineplot import Lineplot
+from .Rasterplot import Rasterplot

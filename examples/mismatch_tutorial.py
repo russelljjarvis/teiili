@@ -163,14 +163,14 @@ if distinguish_neurons_in_plot:
     DataModels_EPSC = []
     for neuron_id in neuron_ids_to_plot:
         MyData_EPSC = StateVariablesModel(state_variable_names=['EPSC'],
-                                          state_variables=[statemon_input_syn.Ie_syn[neuron_id]],
+                                          state_variables=[statemon_input_syn.I_syn[neuron_id]],
                                           state_variables_times=[statemon_input_syn.t])
         DataModels_EPSC.append((MyData_EPSC, ('t_EPSC', 'EPSC')))
 else:
     # to get all neurons plotted in the same color
     neuron_ids_to_plot = np.random.randint(1000, size=5)
     MyData_EPSC = StateVariablesModel(state_variable_names=['EPSC'],
-                                 state_variables=[statemon_input_syn.Ie_syn[neuron_ids_to_plot].T],
+                                 state_variables=[statemon_input_syn.I_syn[neuron_ids_to_plot].T],
                                  state_variables_times=[statemon_input_syn.t])
     DataModels_EPSC=[(MyData_EPSC, ('t_EPSC', 'EPSC'))]
 

@@ -78,126 +78,94 @@ from brian2 import pF, nS, mV, ms, pA, nA, volt, second
 none = {'model': ''' ''', 'on_pre': ''' ''', 'on_post': ''' '''}
 
 current = {'model': '''
-            kernel_e : amp * second **-1
-            kernel_i : amp * second **-1
+            dI_syn/dt = (-I_syn) / tausyn + kernel: amp (clock-driven)
 
-            dIe_syn/dt = (-Ie_syn) / tausyne + kernel_e: amp (clock-driven)
-            dIi_syn/dt = (-Ii_syn) / tausyni + kernel_i : amp (clock-driven)
+            kernel : amp * second **-1
 
-            Ie{input_number}_post = Ie_syn : amp (summed)
-            Ii{input_number}_post = -Ii_syn : amp (summed)
+            Iin{input_number}_post = I_syn * (weight>0) + I_syn * (weight<0) : amp (summed)
 
-            tausyne : second (constant) # synapse time constant
-            tausyni : second (constant) # synapse time constant
+            tausyn : second (constant) # synapse time constant
             w_plast : 1
 
-            baseweight_e : amp (constant)     # synaptic gain
-            baseweight_i : amp (constant)     # synaptic gain
+            baseweight : amp (constant)     # synaptic gain
             weight : 1
 
             ''',
 
            'on_pre': '''
-            Ie_syn += baseweight_e * weight *w_plast*(weight>0)
-            Ii_syn += baseweight_i * weight *w_plast*(weight<0)
+            I_syn += baseweight * weight * w_plast
             ''',
 
            'on_post': ''' '''
            }
 
 # standard parameters for current based models
-current_params = {"tausyne": 5 * ms,
-                  "tausyni": 5 * ms,
+current_params = {"tausyn": 5 * ms,
                   "w_plast": 1,
-                  "baseweight_e": 1 * nA,
-                  "baseweight_i": 1 * nA,
-                  "kernel_e": 0 * nA * ms**-1,
-                  "kernel_i": 0 * nA * ms**-1
+                  "baseweight": 1 * nA,
+                  "kernel": 0 * nA * ms**-1
                   }
 
 # Additional equations for conductance based models
 conductance = {'model': '''
-               dgIe/dt = (-gIe) / tausyne + kernel_e : siemens (clock-driven)
-               dgIi/dt = (-gIi) / tausyni + kernel_i : siemens (clock-driven)
+               dgI/dt = (-gI) / tausyn + kernel: siemens (clock-driven)
 
-               Ie_syn = gIe*(EIe - Vm_post) : amp
-               Ii_syn = gIi*(EIi - Vm_post) : amp
+               I_syn = gI*(EI - Vm_post) : amp
 
-               Ie{input_number}_post = Ie_syn : amp (summed)
-               Ii{input_number}_post = -Ii_syn : amp (summed)
+               Iin{input_number}_post = I_syn * (weight>0) + I_syn * (weight<0) : amp (summed)
 
-               EIe : volt (constant)             # excitatory reversal potential
-               EIi : volt (constant)             # inhibitory reversal potential
+               EI =  EIe * (weight<0) + EIe * (weight>0): volt (constant)             # reversal potential
 
-               kernel_e : siemens * second **-1
-               kernel_i : siemens * second **-1
+               kernel : siemens * second **-1
 
-               tausyne : second (constant) # synapse time constant
-               tausyni : second (constant) # synapse time constant
+               tausyn : second (constant) # synapse time constant
                w_plast : 1
 
-               baseweight_e : siemens (constant)     # synaptic gain
-               baseweight_i : siemens (constant)     # synaptic gain
+               baseweight : siemens (constant)     # synaptic gain
                weight : 1
 
                ''',
 
                'on_pre': '''
-               gIe += baseweight_e * weight *w_plast*(weight>0)
-               gIi += baseweight_i * weight *w_plast*(weight<0)
+               gI += baseweight * weight * w_plast
                ''',
 
                'on_post': ''' '''
                }
 
 # standard parameters for conductance based models
-conductance_params = {"gIe": 0 * nS,
-                      "tausyne": 5 * ms,
-                      # We define tausyn again here since it's different from
-                      # current base, is this a problem?
-                      "tausyni": 6 * ms,
-                      "EIe": 60.0 * mV,
+conductance_params = {"gI": 0 * nS,
+                      "tausyn": 5 * ms,
+                      "EIe": 60.0 * mV, # For inhibitory this parameter is negative...will thus
+                      #be a problem?
                       "EIi": -90.0 * mV,
                       "w_plast": 1,
                       # should we find a way to replace baseweight_e/i, since we
                       # already defined it in template?
-                      "baseweight_e": 7 * nS,
-                      "baseweight_i": 3 * nS,
-                      "kernel_e": 0 * nS * ms**-1,
-                      "kernel_i": 0 * nS * ms**-1
+                      "baseweight": 7 * nS,
+                      "kernel": 0 * nS * ms**-1
                       }
 
 # DPI type model
 dpi = {'model': '''
-        dIe_syn/dt = (-Ie_syn - Ie_gain + 2*Io_syn*(Ie_syn<=Io_syn))/(tausyne*((Ie_gain/Ie_syn)+1)) : amp (clock-driven)
-        dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
+        dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(abs(I_syn)<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
 
-        Ie{input_number}_post = Ie_syn : amp (summed)
-        Ii{input_number}_post = -Ii_syn : amp (summed)
+        Iin{input_number}_post = I_syn * (weight>0) + I_syn * (weight<0) : amp (summed)
 
         weight : 1
         w_plast : 1
 
-        Ie_gain = Io_syn*(Ie_syn<=Io_syn) + Ie_th*(Ie_syn>Io_syn) : amp
-        Ii_gain = Io_syn*(Ii_syn<=Io_syn) + Ii_th*(Ii_syn>Io_syn) : amp
+        I_gain = Io_syn*(abs(I_syn)<=Io_syn) + I_th*(abs(I_syn)>Io_syn) : amp
+        Itau_syn = Io_syn*(abs(I_syn)<=Io_syn) + I_tau*(abs(I_syn)>Io_syn) : amp
 
-        Itau_e = Io_syn*(Ie_syn<=Io_syn) + Ie_tau*(Ie_syn>Io_syn) : amp
-        Itau_i = Io_syn*(Ii_syn<=Io_syn) + Ii_tau*(Ii_syn>Io_syn) : amp
-
-        baseweight_e : amp (constant)     # synaptic gain
-        baseweight_i : amp (constant)     # synaptic gain
-        tausyne = Csyn * Ut_syn /(kappa_syn * Itau_e) : second
-        tausyni = Csyn * Ut_syn /(kappa_syn * Itau_i) : second
+        baseweight : amp (constant)     # synaptic gain
+        tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn) : second
         kappa_syn = (kn_syn + kp_syn) / 2 : 1
 
+        Iw = weight * baseweight  : amp
 
-        Iw_e = weight*baseweight_e  : amp
-        Iw_i = -weight*baseweight_i  : amp
-
-        Ie_tau       : amp (constant)
-        Ii_tau       : amp (constant)
-        Ie_th        : amp (constant)
-        Ii_th        : amp (constant)
+        I_tau       : amp (constant)
+        I_th        : amp (constant)
         kn_syn       : 1 (constant)
         kp_syn       : 1 (constant)
         Ut_syn       : volt (constant)
@@ -205,8 +173,7 @@ dpi = {'model': '''
         Csyn         : farad (constant)
         ''',
        'on_pre': '''
-        Ie_syn += Iw_e*w_plast*Ie_gain*(weight>0)/(Itau_e*((Ie_gain/Ie_syn)+1))
-        Ii_syn += Iw_i*w_plast*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
+        I_syn += Iw * w_plast * I_gain / (Itau_syn * ((I_gain/I_syn)+1))
         ''',
        'on_post': ''' ''',
        }
@@ -218,39 +185,35 @@ dpi_params = {
     'kp_syn': constants.KAPPA_P,
     'Ut_syn': 25. * mV,
     'Csyn': 1.5 * pF,
-    'Ie_tau': 10. * pA,
-    'Ii_tau': 10. * pA,
-    'Ie_th': 10 * pA,
-    'Ii_th': 10 * pA,
-    'Ie_syn': constants.I0,
-    'Ii_syn': constants.I0,
+    'I_tau': 10. * pA,
+    'I_th': 10 * pA,
+    'I_syn': constants.I0,
     'w_plast': 1,
-    'baseweight_e': 7. * pA,
-    'baseweight_i': 7. * pA
+    'baseweight': 7. * pA #50. * pA
 }
 
 # DPI shunting inhibition
 dpi_shunt = {'model': """
-            dIi_syn/dt = (-Ii_syn - Ii_gain + 2*Io_syn*(Ii_syn<=Io_syn))/(tausyni*((Ii_gain/Ii_syn)+1)) : amp (clock-driven)
+            dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(abs(I_syn)<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
 
-            Ishunt{input_number}_post = -Ii_syn : amp  (summed)
+            Ishunt{input_number}_post = I_syn * (weight<0) : amp (summed)
 
             weight : 1
             w_plast : 1
 
-            Ii_gain = Io_syn*(Ii_syn<=Io_syn) + Ii_th*(Ii_syn>Io_syn) : amp
+            I_gain = Io_syn*(abs(I_syn)<=Io_syn) + I_th*(abs(I_syn)>Io_syn) : amp
 
-            Itau_i = Io_syn*(Ii_syn<=Io_syn) + Ii_tau*(Ii_syn>Io_syn) : amp
+            Itau_syn = Io_syn*(abs(I_syn)<=Io_syn) + I_tau*(abs(I_syn)>Io_syn) : amp
 
-            baseweight_i : amp (constant)     # synaptic gain
-            tausyni = Csyn * Ut_syn /(kappa_syn * Itau_i) : second
+            baseweight : amp (constant)     # synaptic gain
+            tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn) : second
             kappa_syn = (kn_syn + kp_syn) / 2 : 1
 
 
-            Iw_i = weight*baseweight_i  : amp
+            Iw = weight * baseweight  : amp
 
-            Ii_tau       : amp (constant)
-            Ii_th        : amp (constant)
+            I_tau       : amp (constant)
+            I_th        : amp (constant)
             kn_syn       : 1 (constant)
             kp_syn       : 1 (constant)
             Ut_syn       : volt (constant)
@@ -258,22 +221,21 @@ dpi_shunt = {'model': """
             Csyn         : farad (constant)
             """,
              'on_pre': """
-             Ii_syn += Iw_i*w_plast*Ii_gain*(weight<0)/(Itau_i*((Ii_gain/Ii_syn)+1))
-              """,
+             I_syn += Iw * w_plast * I_gain * (weight<0)/(Itau_syn*((I_gain/I_syn)+1              """,
              'on_post': """ """
              }
 
 dpi_shunt_params = {
     'Csyn': 1.5 * pF,
     'Io_syn': constants.I0,
-    'Ii_tau': 10. * pA,
+    'I_tau': 10. * pA,
     'Ut_syn': 25. * mV,
-    'baseweight_i': 50. * pA,
+    'baseweight': 50. * pA,
     'kn_syn': 0.75,
     'kp_syn': 0.66,
     'wPlast': 1,
-    'Ii_th': 10 * pA,
-    'Ii_syn': constants.I0
+    'I_th': 10 * pA,
+    'I_syn': constants.I0
 }
 
 
@@ -407,101 +369,77 @@ stdp_para_conductance = {"baseweight_e": 7 * nS,  # should we find a way to repl
 You need to declare two set of parameters for every block: one for
 current based models and one for conductance based models.
 
-TODO: THESE KERNELS ARE WRONG!
+TODO: THESE KERNELS ARE RIGHT...except for the gaussian...that one is WRONG!
 """
 # Alpha kernel ##
 
 alpha_kernel = {'model': '''
-             %kernel_e = baseweight_e*(weight>0)*w_plast*weight*exp(1-t_spike/tausyne_rise)/tausyne : {unit} * second **-1
-             %kernel_i = baseweight_i*(weight<0)*w_plast*weight*exp(1-t_spike/tausyni_rise)/tausyni : {unit} * second **-1
-             dt_spike/dt = 1 : second (clock-driven)
-             tausyne_rise : second
-             tausyni_rise : second
+             %kernel = s/tausyn  : {unit} * second **-1
+             ds/dt = -s/tausyn : amp
+             tausyn_rise : second
              ''',
 
                 'on_pre': '''
-             t_spike = 0 * ms
-             %Ie_syn += 0 * amp
-             %Ii_syn += 0 * amp
+             s += baseweight * w_plast * weight 
+             %I_syn += 0 * amp
              ''',
 
                 'on_post': ''' '''}
-             # factor_e : 1
-             # tpeak_e = (tausyne * tausyne_rise) / (tausyne - tausyne_rise) * log(tausyne / tausyne_rise) : second
-             # factor_e = 1 / (-exp(-tpeak/tausyne_rise) + exp(-tpeak/tausyne))
-             # factor_i : 1
-             # tpeak_i = (tausyni * tausyni_rise) / (tausyni - tausyni_rise) * log(tausyni / tausyni_rise) : second
-             # factor_i = 1 / (-exp(-tpeak/tausyni_rise) + exp(-tpeak/tausyni))
 
+alpha_params_current = {"tausyn": 0.5 * ms,
+                        "tausyn_rise": 2 * ms} 
+
+alpha_params_conductance = {"tausyn": 0.5 * ms,
+                            "tausyn_rise": 1 * ms}
+
+
+# Who wrote dexp?
 dexp_kernel = {'model': '''
-             %dkernel_e/dt = -kernel_e/tausyne_rise + baseweight_e*(weight>0)*w_plast*h/(tausyne_rise*tausyne) : {unit} * second **-1 (clock-driven)
-             %dkernel_i/dt = -kernel_i/tausyni_rise + baseweight_i*(weight<0)*w_plast*h/(tausyni_rise*tausyni) : {unit} * second **-1 (clock-driven)
+             %dkernel/dt = -kernel/tausyn_rise + baseweight*w_plast*h/(tausyn_rise*tausyn) : {unit} * second **-1 (clock-driven)
              h : 1
-             tausyne_rise : second
-             tausyni_rise : second
+             tausyn_rise : second
              ''',
 
                 'on_pre': '''
              h += weight
-             %Ie_syn += 0 * amp
-             %Ii_syn += 0 * amp
+             %I_syn += 0 * amp
              ''',
 
                 'on_post': ''' '''}
 
-alpha_params_current = {"tausyne": 2 * ms,
-                        "tausyni": 2 * ms,
-                        "tausyne_rise": 0.5 * ms,
-                        "tausyni_rise": 0.5 * ms,
-                        "t_spike": 5000 * ms}  # Assuming that last spike has occurred long time ago
 
-dexp_params_current = {"tausyne": 2 * ms,
-                        "tausyni": 2 * ms,
-                        "tausyne_rise": 0.5 * ms,
-                        "tausyni_rise": 0.5 * ms}  # Assuming that last spike has occurred long time ago
+dexp_params_current = {"tausyn": 2 * ms,
+                        "tausyn_rise": 0.5 * ms}
 
-alpha_params_conductance = {"tausyne": 2 * ms,
-                            "tausyni": 2 * ms,
-                            "tausyne_rise": 1 * ms,
-                            "tausyni_rise": 1 * ms}
+dexp_params_conductance = {"tausyn": 2 * ms,
+                            "tausyn_rise": 1 * ms}
 
 # Resonant kernel ##
 resonant_kernel = {'model': '''
                 omega: 1/second
                 sigma_gaussian : second
-                %kernel_e  = baseweight_e*(weight>0)*w_plast*(weight*exp(-t_spike/tausyne_rise)*cos(omega*t_spike))/tausyne : {unit} * second **-1
-                %kernel_i  = baseweight_i*(weight<0)*w_plast*(weight*exp(-t_spike/tausyni_rise)*cos(omega*t_spike))/tausyni : {unit} * second **-1
-                dt_spike/dt = 1 : second (clock-driven)
-                tausyne_rise : second
-                tausyni_rise : second
+                %kernel  = s * omega : {unit} * second **-1
+                ds/dt = -s/tausyn - I_syn*omega : amp
+                tausyn_kernel : second
                 ''',
 
                    'on_pre': '''
-
-                t_spike = 0 * ms
+                s += baseweight * w_plast * weight
                 ''',
 
                    'on_post': ''' '''}
 
-resonant_params_current = {"tausyne": 2 * ms,
-                           "tausyni": 2 * ms,
-                           "omega": 7 / ms,
-                           "tausyne_rise": 0.5 * ms,
-                           "tausyni_rise": 0.5 * ms}
+resonant_params_current = {"tausyn": 0.5 * ms,
+                           "omega": 3 / ms,
+                           "tausyn_kernel": 0.5 * ms}
 
-resonant_params_conductance = {"tausyne": 2 * ms,
-                               "tausyni": 2 * ms,
-                               "omega": 1 / ms}
-
-
+resonant_params_conductance = {"tausyn": 0.5 * ms,
+                               "omega": 1 / ms,
+                               "tausyn_kernel": 0.5 * ms}
 #  Gaussian kernel ##
-
-
 gaussian_kernel = {'model': '''
-                  %tausyne = (sigma_gaussian_e**2)/t_spike : second
-                  %tausyni = (sigma_gaussian_i**2)/t_spike : second
-                  sigma_gaussian_e : second
-                  sigma_gaussian_i : second
+                  %tausyn = (sigma_gaussian**2)/t_spike : second
+                  sigma_gaussian : second
 
                   dt_spike/dt = 1 : second (clock-driven)
                   ''',
@@ -511,11 +449,9 @@ gaussian_kernel = {'model': '''
 
                    'on_post': ''' '''}
 
-gaussian_params_current = {"sigma_gaussian_e": 6 * ms,
-                           "sigma_gaussian_i": 6 * ms}
+gaussian_params_current = {"sigma_gaussian_e": 6 * ms}
 
-gaussian_params_conductance = {"sigma_gaussian_e": 6 * ms,
-                               "sigma_gaussian_i": 6 * ms}
+gaussian_params_conductance = {"sigma_gaussian_e": 6 * ms}
 
 
 none_params = {}

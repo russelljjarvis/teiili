@@ -21,7 +21,7 @@ from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs,\
     defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
 
 from teili.core.groups import Neurons, Connections
-from teili import teiliNetwork
+from teili import TeiliNetwork
 from teili.models.neuron_models import DPI as neuron_model
 from teili.models.parameters.dpi_neuron_param import parameters as DPIparam
 from teili.models.synapse_models import Alpha, Resonant, Gaussian
@@ -37,7 +37,7 @@ input_indices = np.zeros(input_timestamps.size)
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
                                 times=input_timestamps, name='gtestInp')
 
-Net = teiliNetwork()
+Net = TeiliNetwork()
 
 testNeurons = Neurons(1, equation_builder=neuron_model(num_inputs=2), name="testNeuron")
 # Example of how to set parameters, saved as a dictionary
@@ -93,6 +93,7 @@ Net.add(input_spikegenerator, testNeurons, testNeurons2, testNeurons3,
 
 duration = 40
 Net.run(duration * ms)
+
 
 #Visualize simulation results
 pg.setConfigOptions(antialias=True)

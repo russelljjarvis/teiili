@@ -3,9 +3,13 @@ from teili.tools.converter import *
 from teili.tools.cpptools import *
 from teili.tools.indexing import *
 from teili.tools.misc import *
-from teili.tools.plotting import *
+try:
+    from teili.tools.plotting import *
+    from teili.tools.plotter2d import *
+except BaseException:
+    warnings.warn("No method using pyqtgraph can be used as pyqtgraph or PyQt5"
+                  "can't be imported.")
 from teili.tools.synaptic_kernel import *
-from teili.tools.plotter2d import *
 from teili.tools.distance import *
 from teili.tools.prob_distributions import *
 from teili.tools.sorting import *

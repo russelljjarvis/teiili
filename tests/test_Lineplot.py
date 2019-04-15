@@ -2,8 +2,7 @@ import unittest
 
 from brian2 import us, ms, prefs, defaultclock, start_scope, SpikeGeneratorGroup, StateMonitor
 import numpy as np
-import pyqtgraph as pg
-from PyQt5 import QtGui
+import warnings
 
 from teili.tools.visualizer.DataControllers import Lineplot
 from teili.tools.visualizer.DataViewers import PlotSettings
@@ -14,9 +13,13 @@ from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
-
-QtApp = QtGui.QApplication([])
-
+try:
+    import pyqtgraph as pg
+    from PyQt5 import QtGui
+    QtApp = QtGui.QApplication([])
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = False
+except BaseException:
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = True
 
 def run_brian_network():
     prefs.codegen.target = "numpy"
@@ -343,22 +346,26 @@ class TestLineplot(unittest.TestCase):
             show_immediately=SHOW_PLOTS_IN_TESTS)
         LC.create_plot()
 
-        backend = 'pyqtgraph'
-        LC = Lineplot(
-            MyPlotSettings=get_plotsettings(),
-            DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
-            subgroup_labels=subgroup_labels,
-            x_range=x_range,
-            y_range=y_range,
-            title='Lineplot pyqt with Imem (r) and Iin (b)',
-            xlabel='my x label',
-            ylabel='my y label',
-            backend=backend,
-            mainfig=None,
-            subfig=None,
-            QtApp=QtApp,
-            show_immediately=SHOW_PLOTS_IN_TESTS)
-        LC.create_plot()
+        if not SKIP_PYQTGRAPH_RELATED_UNITTESTS:
+            backend = 'pyqtgraph'
+            LC = Lineplot(
+                MyPlotSettings=get_plotsettings(),
+                DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
+                subgroup_labels=subgroup_labels,
+                x_range=x_range,
+                y_range=y_range,
+                title='Lineplot pyqt with Imem (r) and Iin (b)',
+                xlabel='my x label',
+                ylabel='my y label',
+                backend=backend,
+                mainfig=None,
+                subfig=None,
+                QtApp=QtApp,
+                show_immediately=SHOW_PLOTS_IN_TESTS)
+            LC.create_plot()
+        else:
+            warnings.warn("Skip part of unittest TestLineplot.test_createlineplot using pyqtgraph"
+                          "as pyqtgraph could not be imported")
 
 
 if __name__ == '__main__':

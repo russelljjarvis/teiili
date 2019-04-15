@@ -2,8 +2,7 @@ import unittest
 
 from brian2 import us, ms, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 import numpy as np
-import pyqtgraph as pg
-from PyQt5 import QtGui
+import warnings
 
 from teili.tools.visualizer.DataControllers import Rasterplot
 from teili.tools.visualizer.DataViewers import PlotSettings
@@ -14,6 +13,14 @@ from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
+try:
+    import pyqtgraph as pg
+    from PyQt5 import QtGui
+    QtApp = QtGui.QApplication([])
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = False
+except BaseException:
+    QtApp = None
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = True
 
 def run_brian_network():
     prefs.codegen.target = "numpy"
@@ -107,7 +114,7 @@ def get_plotsettings():
 
 
 SHOW_PLOTS_IN_TESTS = False
-QtApp = QtGui.QApplication([])
+
 
 
 class TestRasterplot(unittest.TestCase):
@@ -243,45 +250,47 @@ class TestRasterplot(unittest.TestCase):
             add_histogram=add_histogram,
             show_immediately=SHOW_PLOTS_IN_TESTS)
 
-        # pyqtgraph backend, no histogram
-        backend = 'pyqtgraph'
-        add_histogram = False
-        RC = Rasterplot(
-            MyPlotSettings=get_plotsettings(),
-            MyEventsModels=MyEventsModels,
-            subgroup_labels=subgroup_labels,
-            time_range=time_range,
-            neuron_id_range=neuron_id_range,
-            title='raster plot, no hist, pyqtgraph',
-            xlabel='time',
-            ylabel='count',
-            backend=backend,
-            mainfig=None,
-            subfig_rasterplot=None,
-            subfig_histogram=None,
-            QtApp=QtApp,
-            add_histogram=add_histogram,
-            show_immediately=SHOW_PLOTS_IN_TESTS)
+        if not SKIP_PYQTGRAPH_RELATED_UNITTESTS:
+            # pyqtgraph backend, no histogram
+            backend = 'pyqtgraph'
+            add_histogram = False
+            RC = Rasterplot(
+                MyPlotSettings=get_plotsettings(),
+                MyEventsModels=MyEventsModels,
+                subgroup_labels=subgroup_labels,
+                time_range=time_range,
+                neuron_id_range=neuron_id_range,
+                title='raster plot, no hist, pyqtgraph',
+                xlabel='time',
+                ylabel='count',
+                backend=backend,
+                mainfig=None,
+                subfig_rasterplot=None,
+                subfig_histogram=None,
+                QtApp=QtApp,
+                add_histogram=add_histogram,
+                show_immediately=SHOW_PLOTS_IN_TESTS)
 
-        # pyqtgraph backend, with histogram
-        backend = 'pyqtgraph'
-        add_histogram = True
-        RC = Rasterplot(
-            MyPlotSettings=get_plotsettings(),
-            MyEventsModels=MyEventsModels,
-            subgroup_labels=subgroup_labels,
-            time_range=time_range,
-            neuron_id_range=neuron_id_range,
-            title='raster plot, with hist, pyqtgraph',
-            xlabel='time',
-            ylabel='count',
-            backend=backend,
-            mainfig=None,
-            subfig_rasterplot=None,
-            subfig_histogram=None,
-            QtApp=QtApp,
-            add_histogram=add_histogram,
-            show_immediately=SHOW_PLOTS_IN_TESTS)
+        if not SKIP_PYQTGRAPH_RELATED_UNITTESTS:
+            # pyqtgraph backend, with histogram
+            backend = 'pyqtgraph'
+            add_histogram = True
+            RC = Rasterplot(
+                MyPlotSettings=get_plotsettings(),
+                MyEventsModels=MyEventsModels,
+                subgroup_labels=subgroup_labels,
+                time_range=time_range,
+                neuron_id_range=neuron_id_range,
+                title='raster plot, with hist, pyqtgraph',
+                xlabel='time',
+                ylabel='count',
+                backend=backend,
+                mainfig=None,
+                subfig_rasterplot=None,
+                subfig_histogram=None,
+                QtApp=QtApp,
+                add_histogram=add_histogram,
+                show_immediately=SHOW_PLOTS_IN_TESTS)
 
         time_range = (0.4, 0.8)
         neuron_id_range = (0, 8)
@@ -305,26 +314,29 @@ class TestRasterplot(unittest.TestCase):
             add_histogram=add_histogram,
             show_immediately=SHOW_PLOTS_IN_TESTS)
 
-        # pyqtgraph backend, when no/empty data provided
-        backend = 'pyqtgraph'
-        add_histogram = True
-        RC = Rasterplot(
-            MyPlotSettings=get_plotsettings(),
-            MyEventsModels=MyEventsModels,
-            subgroup_labels=subgroup_labels,
-            time_range=time_range,
-            neuron_id_range=neuron_id_range,
-            title='empty raster plot, with hist, pyqtgraph',
-            xlabel='time',
-            ylabel='count',
-            backend=backend,
-            mainfig=None,
-            subfig_rasterplot=None,
-            subfig_histogram=None,
-            QtApp=QtApp,
-            add_histogram=add_histogram,
-            show_immediately=SHOW_PLOTS_IN_TESTS)
-
+        if not SKIP_PYQTGRAPH_RELATED_UNITTESTS:
+            # pyqtgraph backend, when no/empty data provided
+            backend = 'pyqtgraph'
+            add_histogram = True
+            RC = Rasterplot(
+                MyPlotSettings=get_plotsettings(),
+                MyEventsModels=MyEventsModels,
+                subgroup_labels=subgroup_labels,
+                time_range=time_range,
+                neuron_id_range=neuron_id_range,
+                title='empty raster plot, with hist, pyqtgraph',
+                xlabel='time',
+                ylabel='count',
+                backend=backend,
+                mainfig=None,
+                subfig_rasterplot=None,
+                subfig_histogram=None,
+                QtApp=QtApp,
+                add_histogram=add_histogram,
+                show_immediately=SHOW_PLOTS_IN_TESTS)
+        else:
+            warnings.warn("Skip part of unittest TestRasterplot.test_createrasterplot using pyqtgraph"
+                          "as pyqtgraph could not be imported")
 
 if __name__ == '__main__':
     unittest.main()

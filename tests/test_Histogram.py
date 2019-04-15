@@ -2,8 +2,7 @@ import unittest
 
 from brian2 import us, ms, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 import numpy as np
-import pyqtgraph as pg
-from PyQt5 import QtGui
+import warnings
 
 from teili.tools.visualizer.DataControllers import Histogram
 from teili.tools.visualizer.DataViewers import PlotSettings
@@ -14,9 +13,13 @@ from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
-
-QtApp = QtGui.QApplication([])
-
+try:
+    import pyqtgraph as pg
+    from PyQt5 import QtGui
+    QtApp = QtGui.QApplication([])
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = False
+except BaseException:
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = True
 
 def run_brian_network():
     prefs.codegen.target = "numpy"
@@ -184,22 +187,26 @@ class TestHistogram(unittest.TestCase):
             show_immediately=SHOW_PLOTS_IN_TESTS)
         HC.create_plot()
 
-        backend = 'pyqtgraph'
-        HC = Histogram(
-            MyPlotSettings=get_plotsettings(),
-            DataModel_to_attr=DataModel_to_attr,
-            subgroup_labels=subgroup_labels,
-            bins=None,
-            orientation='vertical',
-            title='histogram',
-            xlabel='bins',
-            ylabel='count',
-            backend=backend,
-            mainfig=None,
-            subfig=None,
-            QtApp=QtApp,
-            show_immediately=SHOW_PLOTS_IN_TESTS)
-        HC.create_plot()
+        if not SKIP_PYQTGRAPH_RELATED_UNITTESTS:
+            backend = 'pyqtgraph'
+            HC = Histogram(
+                MyPlotSettings=get_plotsettings(),
+                DataModel_to_attr=DataModel_to_attr,
+                subgroup_labels=subgroup_labels,
+                bins=None,
+                orientation='vertical',
+                title='histogram',
+                xlabel='bins',
+                ylabel='count',
+                backend=backend,
+                mainfig=None,
+                subfig=None,
+                QtApp=QtApp,
+                show_immediately=SHOW_PLOTS_IN_TESTS)
+            HC.create_plot()
+        else:
+            warnings.warn("Skip part of unittest TestHistogram.test_createhistogram using pyqtgraph"
+                                                       "as pyqtgraph could not be imported")
 
 
 if __name__ == '__main__':

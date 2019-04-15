@@ -298,7 +298,7 @@ class Plotter2d(object):
     def get_filtered(self, dt, filtersize):
         """applies a rectangular filter (convolution) of length filtersize over time (dimension 0).
         It returns a 3d matrix with the firing rate.
-        Spiketimes will be binned with a step size of dt.
+        Spiketimes will be binned with a step size of dt that means that the filtersize should always be a int multiple of dt
 
         Args:
             dt (TYPE): the time step with which the spike times are binned
@@ -307,8 +307,8 @@ class Plotter2d(object):
             TYPE: Description
         """
         dense3d = self.get_dense3d(dt)
-        filtered = ndimage.uniform_filter1d(dense3d, size=int(filtersize / dt),
-                                            axis=0, mode='constant') * second / dt
+
+        filtered = ndimage.uniform_filter1d(dense3d, size=round(filtersize / dt),axis=0, mode='constant') * second / dt
         # filtered  = ndimage.zoom(filtered, (1, 2, 2))
         return filtered
 
@@ -734,7 +734,7 @@ class Plotter2d(object):
         ffmpeg_command += '-y '  # overwrite existing output files
         ffmpeg_command += ffmpegoptions + ' '
 
-        ffmpeg_command += os.path.abspath(filename)
+        ffmpeg_command +="'"+os.path.abspath(filename)+"'"
 
         result = subprocess.check_output(ffmpeg_command, shell=True)
         print(result)

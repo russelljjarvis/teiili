@@ -20,11 +20,17 @@ import sys
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
-from brian2 import SpikeGeneratorGroup, SpikeMonitor, StateMonitor, ms, asarray, nA, prefs, set_device
+from brian2 import SpikeGeneratorGroup, SpikeMonitor, StateMonitor, second, ms, asarray, nA, prefs, set_device
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import DPI as neuron_model
 from teili.models.synapse_models import DPISyn as syn_model
+
+from teili.tools.visualizer.DataModels.StateVariablesModel import StateVariablesModel
+from teili.tools.visualizer.DataControllers.Rasterplot import Rasterplot
+from teili.tools.visualizer.DataControllers.Lineplot import Lineplot
+from teili.tools.visualizer.DataControllers.Histogram import Histogram
+from teili.tools.visualizer.DataViewers import PlotSettings
 
 standalone = False
 if standalone:
@@ -138,79 +144,126 @@ Net.add(input_spikegen, output_neurons, input_syn,
         statemon_output, statemon_input_syn)
 
 # Run simulation for 500 ms
-duration = 500
-Net.run(duration * ms)
+duration = .500
+Net.run(duration * second)
 
-# %%
+
+# START PLOTTING
+# define general settings
 pg.setConfigOptions(antialias=True)
-labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-colors = [(255, 255, 255), (255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-          (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
+MyPlotSettings = PlotSettings(fontsize_title=12,
+                              fontsize_legend=12,
+                              fontsize_axis_labels=12,
+                              marker_size=2)
 
-# Rasterplot and statemonitor
-win1 = pg.GraphicsWindow(title='teili Test Simulation')
-win1.resize(1900, 900)
-win1.setWindowTitle('Simple SNN')
-p1 = win1.addPlot(title="Spike generator")
-win1.nextRow()
-p2 = win1.addPlot(title="Output layer")
-win1.nextRow()
-p3 = win1.addPlot(title="EPSC")
-win1.nextRow()
-p4 = win1.addPlot(title="I_mem")
-
-p1.plot(x=np.asarray(spikemon_input.t / ms), y=np.asarray(spikemon_input.i),
-        pen=None, symbol='o', symbolPen=None,
-        symbolSize=2, symbolBrush=colors[0])
-p1.setLabel('left', "Neuron ID", **labelStyle)
-p1.setLabel('bottom', "Time (ms)", **labelStyle)
-p1.setXRange(0, duration, padding=0)
-
-p2.plot(x=np.asarray(spikemon_output.t / ms), y=np.asarray(spikemon_output.i),
-        pen=None, symbol='o', symbolPen=None,
-        symbolSize=2, symbolBrush=colors[1])
-p2.setLabel('left', "Neuron ID", **labelStyle)
-p2.setLabel('bottom', "Time (ms)", **labelStyle)
-p2.setXRange(0, duration, padding=0)
-
+# prepare data (part 1)
 neuron_ids_to_plot = np.random.randint(1000, size=5)
-for i, data in enumerate(np.asarray(statemon_input_syn.Ie_syn[neuron_ids_to_plot])):
-    name = 'Syn_{}'.format(i)
-    p3.plot(x=np.asarray(statemon_input_syn.t / ms), y=data,
-            pen=pg.mkPen(colors[i], width=2), name=name)
-p3.setLabel('left', "EPSC", units="A", **labelStyle)
-p3.setLabel('bottom', "Time (ms)", **labelStyle)
-p3.setXRange(0, duration, padding=0)
+distinguish_neurons_in_plot = True  # show values in different color per neuron otherwise the same color per subgroup
 
-for i, data in enumerate(np.asarray(statemon_output.Imem[neuron_ids_to_plot])):
-    p4.plot(x=np.asarray(statemon_output.t / ms), y=data,
-            pen=pg.mkPen(colors[i], width=3))
-p4.setLabel('left', "Membrane current Imem", units="A", **labelStyle)
-p4.setLabel('bottom', "Time (ms)", **labelStyle)
-p4.setXRange(0, duration, padding=0)
+## plot EPSC (subfig3)
+if distinguish_neurons_in_plot:
+    # to get every neuron plotted with a different color to distinguish them
+    DataModels_EPSC = []
+    for neuron_id in neuron_ids_to_plot:
+        MyData_EPSC = StateVariablesModel(state_variable_names=['EPSC'],
+                                          state_variables=[statemon_input_syn.Ie_syn[neuron_id]],
+                                          state_variables_times=[statemon_input_syn.t])
+        DataModels_EPSC.append((MyData_EPSC, ('t_EPSC', 'EPSC')))
+else:
+    # to get all neurons plotted in the same color
+    neuron_ids_to_plot = np.random.randint(1000, size=5)
+    MyData_EPSC = StateVariablesModel(state_variable_names=['EPSC'],
+                                 state_variables=[statemon_input_syn.Ie_syn[neuron_ids_to_plot].T],
+                                 state_variables_times=[statemon_input_syn.t])
+    DataModels_EPSC=[(MyData_EPSC, ('t_EPSC', 'EPSC'))]
 
-# Mismatch distribution
-win2 = pg.GraphicsWindow(title='teili Test Simulation')
-win2.resize(1900, 600)
-win2.setWindowTitle('Mismatch distribution')
-p1 = win2.addPlot(title='baseweight_e')
-win2.nextRow()
-p2 = win2.addPlot(title='refP')
+## plot Imem (subfig4)
+if distinguish_neurons_in_plot:
+    # to get every neuron plotted with a different color to distinguish them
+    DataModels_Imem = []
+    for neuron_id in neuron_ids_to_plot:
+        MyData_Imem = StateVariablesModel(state_variable_names=['Imem'],
+                                          state_variables=[statemon_output.Imem[neuron_id].T],
+                                          state_variables_times=[statemon_output.t])
+        DataModels_Imem.append((MyData_Imem, ('t_Imem', 'Imem')))
+else:
+    # to get all neurons plotted in the same color
+    neuron_ids_to_plot = np.random.randint(1000, size=5)
+    MyData_Imem = StateVariablesModel(state_variable_names=['Imem'],
+                                      state_variables=[statemon_output.Imem[neuron_ids_to_plot].T],
+                                      state_variables_times=[statemon_output.t])
+    DataModels_Imem=[(MyData_Imem, ('t_Imem', 'Imem'))]
 
 
+# set up main window and subplots (part 1)
+QtApp = QtGui.QApplication([])
+mainfig = pg.GraphicsWindow(title='Simple SNN')
+subfig1 = mainfig.addPlot(row=0, col=0)
+subfig2 = mainfig.addPlot(row=1, col=0)
+subfig3 = mainfig.addPlot(row=2, col=0)
+subfig4 = mainfig.addPlot(row=3, col=0)
 
-y, x = np.histogram(np.asarray(getattr(input_syn, 'baseweight_e')), bins="auto")
-curve = pg.PlotCurveItem(x=x, y=y, stepMode=True, brush=(0, 0, 255, 80))
-p1.addItem(curve)
-p1.plot(x=np.asarray([mean_synapse_param, mean_synapse_param]), y=np.asarray([0, np.max(y)]),
-        pen=pg.mkPen((255, 0, 0), width=2))
-p1.setLabel('bottom', units=str(unit_old_param_syn), **labelStyle)
+# add data to plots
+Rasterplot(MyEventsModels=[spikemon_input],
+                      MyPlotSettings=MyPlotSettings,
+                      time_range=[0, duration],
+                      title="Spike generator", xlabel="Time (ms)", ylabel="Neuron ID",
+                      backend='pyqtgraph', mainfig=mainfig, subfig_rasterplot=subfig1, QtApp=QtApp,
+                      show_immediately=False)
+Rasterplot(MyEventsModels=[spikemon_output],
+                     MyPlotSettings=MyPlotSettings,
+                     time_range=[0, duration],
+                     title="Output layer", xlabel="Time (ms)", ylabel="Neuron ID",
+                     backend='pyqtgraph', mainfig=mainfig, subfig_rasterplot=subfig2, QtApp=QtApp,
+                     show_immediately=False)
+Lineplot(DataModel_to_x_and_y_attr=DataModels_EPSC,
+                   MyPlotSettings=MyPlotSettings,
+                   x_range=[0, duration],
+                   title="EPSC", xlabel="Time (ms)", ylabel="EPSC (pA)",
+                   backend='pyqtgraph', mainfig=mainfig, subfig=subfig3, QtApp=QtApp,
+                   show_immediately=False)
+Lineplot(DataModel_to_x_and_y_attr=DataModels_Imem,
+                   MyPlotSettings=MyPlotSettings,
+                   x_range=[0, duration],
+                   title="I_mem", xlabel="Time (ms)", ylabel="Membrane current Imem (nA)",
+                   backend='pyqtgraph', mainfig=mainfig, subfig=subfig4, QtApp=QtApp,
+                   show_immediately=True)
 
-y, x = np.histogram(np.asarray(getattr(output_neurons, 'refP')), bins="auto")
-curve = pg.PlotCurveItem(x=x, y=y, stepMode=True, brush=(0, 0, 255, 80))
-p2.addItem(curve)
-p2.plot(x=np.asarray([mean_neuron_param, mean_neuron_param]), y=np.asarray([0, np.max(y)]),
-        pen=pg.mkPen((255, 0, 0), width=2))
-p2.setLabel('bottom', units=str(unit_old_param_neu), **labelStyle)
+
+# prepare data (part 1)
+input_syn_baseweights_e = np.asarray(getattr(input_syn, 'baseweight_e'))*10**12
+MyData_baseweight_e = StateVariablesModel(state_variable_names=['baseweight_e'],
+                                          state_variables=[input_syn_baseweights_e])  # to pA
+
+refractory_periods = np.asarray(getattr(output_neurons, 'refP'))*10**3 # to ms
+MyData_refP = StateVariablesModel(state_variable_names=['refP'],
+                                  state_variables=[refractory_periods])
+
+# set up main window and subplots (part 2)
+mainfig = pg.GraphicsWindow(title='Mismatch distribution')
+subfig1 = mainfig.addPlot(row=0, col=0)
+subfig2 = mainfig.addPlot(row=1, col=0)
+
+# add data to plots
+Histogram(DataModel_to_attr=[(MyData_baseweight_e, 'baseweight_e')],
+                    MyPlotSettings=MyPlotSettings,
+                    title='baseweight_e', xlabel='(pA)', ylabel='count',
+                    backend='pyqtgraph',
+                    mainfig=mainfig, subfig=subfig1, QtApp=QtApp,
+                    show_immediately=False)
+y, x = np.histogram(input_syn_baseweights_e, bins="auto")
+subfig1.plot(x=np.asarray([mean_synapse_param*10**12, mean_synapse_param*10**12]),
+             y=np.asarray([0, 300]),
+                pen=pg.mkPen((0, 255, 0), width=2))
+
+Histogram(DataModel_to_attr=[(MyData_refP, 'refP')],
+                    MyPlotSettings=MyPlotSettings,
+                    title='refP', xlabel='(ms)', ylabel='count',
+                    backend='pyqtgraph',
+                    mainfig=mainfig, subfig=subfig2, QtApp=QtApp,
+                    show_immediately=False)
+subfig2.plot(x=np.asarray([mean_neuron_param*10**3, mean_neuron_param*10**3]),
+             y=np.asarray([0, 450]),
+        pen=pg.mkPen((0, 255, 0), width=2))
 
 app.exec()

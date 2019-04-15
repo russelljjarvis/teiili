@@ -12,7 +12,7 @@ Each builder is wrapped by a neuron/synapse model generator class located in `te
 ## Keyword arguments for builder
 In order to generate a neuron/synapse model, its builder needs to be initialized using specific keywords which define the model itself and thus which template equation/parameters are combined.
 ### NeuronEuqationBuilder keywords
-```
+```python
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 num_inputs = 2
 my_neu_model = NeuronEquationBuilder.__init__(base_unit='current', adaptation='calcium_feedback',
@@ -30,7 +30,7 @@ The keywords explained:
 *  refractory: Refractory period of the neuron.
 
 ### SynapseEquationBuilder keywords
-```
+```python
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 my_syn_model = SynapseEquationBuilder.__init__(base_unit='DPI',
                                                plasticity='non_plastic')
@@ -46,7 +46,7 @@ Both equation builders have a dictionary attribute which keys represent the resp
 
 The keywords, given to the EquationBuilder class are used to select template dictionaries which are combined.
 This is done by passing these keywords to `current_equation_sets` and `current_parameters` in case of neurons and to `modes`, `kernels`, `plasticity_models` and `current_parameters`.
-```
+```python
 # In case of neurons
 keywords = combine_neu_dict(eq_templ, param_templ)
 # In case of synapses
@@ -55,7 +55,7 @@ keywords = combine_syn_dict(eq_tmpl, param_templ)
 
 ### Neuron model keywords
 The dictionary `keywords` has the following keys:
-```
+```python
 keywords = {'model': keywords['model'],
             'threshold': keywords['threshold'],
             'reset': keywords['reset'],
@@ -65,7 +65,7 @@ keywords = {'model': keywords['model'],
 ```
 ### Synapse model keywords
 The dictionary `keywords` has the following keys:
-```
+```python
 keywords = {'model': keywords['model'],
             'on_pre': keywords['on_pre'],
             'on_post': keywords['on_post'],
@@ -75,7 +75,7 @@ keywords = {'model': keywords['model'],
 ## Class methods
 ### import_eq
 A function to import pre-defined neuron_model. This function can load a dictionary and its keywords in order to initialize the EquationBuilder.
-```
+```python
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 my_neu_model = NeuronEquationBuilder.import_eq(
     'teili/models/equations/DPI', num_inputs=2)
@@ -83,14 +83,14 @@ my_neu_model = NeuronEquationBuilder.import_eq(
 where num_inputs specifies how many distinct neuron population project to the target population.
 
 For synapses the import works as follows:
-```
+```python
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 my_syn_model = SynapseEquationBuilder.import_eq(
     'teili/models/equations/DPISyn')
 ```
 ### export_eq
 In order to generate models, which can later be changed manually and imported again the EuqationBuilder class features an export method which can be used as:
-```
+```python
 path = os.path.dirname(os.path.realpath(teili.models.__file__))
 DPI = NeuronEquationBuilder.__init__(base_unit='current', adaptation='calcium_feedback',
                                      integration_mode='exponential', leak='leaky',
@@ -109,14 +109,14 @@ dpiSyn.export_eq(os.path.join(path, "DPISyn"))
 
 ## var_replacer
 This function takes two equation sets in form of strings and replaces all lines which start with '%'.
-```
+```python
 '%x = theta' --> 'x = theta'
 '%x' --> ''
 ```
 This feature allows equations that we don't want to compute to be removed from the template by writing '%[variable]' in the other equation blocks.
 
 To replace variables and lines:
-```
+```python
 from teili.models.builder.combine import var_replacer
 var_replacer(first_eq, second_eq, params)
 ```

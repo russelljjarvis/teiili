@@ -11,13 +11,9 @@ import os
 
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
-    user_options = install.user_options + [
-        ('dir=', None, 'Specify the path to extract examples, unit_tests and pre-defined equations.'),
-    ]
 
     def initialize_options(self):
         install.initialize_options(self)
-        self.dir = None
 
     def finalize_options(self):
         install.finalize_options(self)
@@ -26,12 +22,8 @@ class PostInstallCommand(install):
         # PUT YOUR POST-INSTALL SCRIPT HERE or CALL A FUNCTION
         if "readthedocs.org" not in os.getcwd():
             from teili.models import neuron_models, synapse_models
-            if self.dir is None:
-                print("No path specified, falling back to defaul location: {}". format(
-                    os.path.expanduser("~")))
-                path = os.path.expanduser("~")
-            else:
-                path = self.dir
+
+            path = os.path.expanduser("~")
 
             equation_path = os.path.join(path, "teiliApps", "equations")
             teili_equation_path = os.path.join("teili", "models", "equations")
@@ -60,13 +52,9 @@ class PostInstallCommand(install):
 
 class PostDevelopCommand(develop):
     """Post-installation for installation mode."""
-    user_options = develop.user_options + [
-        ('dir=', None, 'Specify the path to extract examples, unit_tests and pre-defined equations.'),
-    ]
 
     def initialize_options(self):
         develop.initialize_options(self)
-        self.dir = None
 
     def finalize_options(self):
         develop.finalize_options(self)
@@ -75,12 +63,8 @@ class PostDevelopCommand(develop):
         # PUT YOUR POST-INSTALL SCRIPT HERE or CALL A FUNCTION
         if "readthedocs.org" not in os.getcwd():
             from teili.models import neuron_models, synapse_models
-            if self.dir is None:
-                print("No path specified, falling back to defaul location: {}". format(
-                    os.path.expanduser("~")))
-                path = os.path.expanduser("~")
-            else:
-                path = self.dir
+
+            path = os.path.expanduser("~")
 
             equation_path = os.path.join(path, "teiliApps", "equations")
             teili_equation_path = os.path.join("teili", "models", "equations")
@@ -149,7 +133,11 @@ setup(
         'teili.models.parameters',
         'teili.building_blocks',
         'teili.stimuli',
-        'teili.tools'
+        'teili.tools',
+        'teili.tools.visualizer',
+        'teili.tools.visualizer.DataControllers',
+        'teili.tools.visualizer.DataModels',
+        'teili.tools.visualizer.DataViewers'
     ],
 
 

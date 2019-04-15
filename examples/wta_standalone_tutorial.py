@@ -25,14 +25,14 @@ from teili.models.synapse_models import DPISyn
 
 prefs.codegen.target = 'numpy'
 
-run_as_standalone = False
+run_as_standalone = True
 
 if run_as_standalone:
     standaloneDir = os.path.expanduser('~/WTA_standalone')
     set_device('cpp_standalone', directory=standaloneDir, build_on_run=False)
     device.reinit()
     device.activate(directory=standaloneDir, build_on_run=False)
-    prefs.devices.cpp_standalone.openmp_threads = 2
+    #prefs.devices.cpp_standalone.openmp_threads = 2
 
 num_neurons = 50
 num_input_neurons = num_neurons
@@ -81,7 +81,9 @@ spikemonitor_noise = SpikeMonitor(
 
 Net.add(test_WTA, testbench.noise_input, noise_syn,
         statemonWTAin, spikemonitor_noise, spikemonitor_input)
-Net.standalone_params.update({'test_WTA_Iconst': 1 * pA})
+Net.standalone_params.update({'gtest_WTA_Iconst': 1 * pA})
+
+# Net.standalone_params = {}
 
 if run_as_standalone:
     Net.build()
@@ -94,7 +96,9 @@ standalone_params = OrderedDict([('duration', 0.7 * second),
                                  ('stestWTA_Inhi_weight', -650),
 
                                  ('test_WTA_refP', 1. * msecond),
-                                 ('gtestWTA_Inh_refP', 1. * msecond)])
+                                 ('gtestWTA_Inh_refP', 1. * msecond),
+                                 ('gtest_WTA_Iconst', 1 * pA)
+                                 ])
 
 duration = standalone_params['duration'] / ms
 Net.run(duration=duration * ms, standalone_params=standalone_params, report='text')

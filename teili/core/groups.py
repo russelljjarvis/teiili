@@ -16,7 +16,7 @@ Todo:
 import numpy as np
 import warnings
 import inspect
-from brian2 import NeuronGroup, Synapses, Group, Subgroup
+from brian2 import NeuronGroup, Synapses, Group, Subgroup, Nameable
 from collections import OrderedDict
 from matplotlib.pyplot import figure, xlabel, \
     ylabel, plot, subplot, xlim, ylim, xticks
@@ -94,7 +94,7 @@ class TeiliGroup(Group):
             dimensions (brian2.units.fundamentalunits.Dimension): dimension of the expression.
             expr (str): the expression.
         """
-        self.variables.add_subexpression(name, dimensions, expr)
+        self.variables.add_subexpression(name=name, dimensions=dimensions, expr=expr)
 
     def set_params(self, params, **kwargs):
         """This function sets parameters on members of a Teiligroup.
@@ -443,7 +443,7 @@ class Neurons(NeuronGroup, TeiliGroup):
         return TeiliSubgroup(self, start, stop)
 
 
-class Connections(Synapses, TeiliGroup):
+class Connections(Synapses, TeiliGroup, Nameable):
     """This class is a subclass of Synapses.
 
     You can use it as a Synapses, and everything will be passed to Synapses.
@@ -498,16 +498,17 @@ class Connections(Synapses, TeiliGroup):
         except:
             pass
 
+        Nameable.__init__(self, name=name)
+
         try:
             if self.verbose:
-                print(name, ': target', target.name, 'has',
+                print(self.name, ': target', target.name, 'has',
                       target.num_synapses, 'synapses')
                 print('trying to add one more...')
-            self.input_number = target.register_synapse(name)
+            self.input_number = target.register_synapse(self.name)
             if self.verbose:
                 print('OK!')
                 print('input number is: ' + str(self.input_number))
-
         except ValueError as e:
             raise e
         except AttributeError as e:
@@ -558,7 +559,7 @@ class Connections(Synapses, TeiliGroup):
         try:
             Synapses.__init__(self, source, target=target,
                               method=method,
-                              name=name, **Kwargs)
+                              name=self.name, **Kwargs)
         except Exception as e:
             import sys
             raise type(e)(str(e) + '\n\nCheck Equation for errors!\n' +

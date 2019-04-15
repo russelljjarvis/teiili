@@ -133,7 +133,8 @@ setup(
         'teili.models.parameters',
         'teili.building_blocks',
         'teili.stimuli',
-        'teili.tools'
+        'teili.tools',
+        'teili.tools.visualizer'
     ],
 
 

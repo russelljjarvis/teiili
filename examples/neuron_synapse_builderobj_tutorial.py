@@ -27,8 +27,8 @@ from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
-from teili.tools.visualizer.DataControllers.RasterplotController import RasterplotController
-from teili.tools.visualizer.DataControllers.LineplotController import LineplotController
+from teili.tools.visualizer.DataControllers.Rasterplot import Rasterplot
+from teili.tools.visualizer.DataControllers.Lineplot import Lineplot
 from teili.tools.visualizer.DataViewers import PlotSettings
 
 # For this example you must first run models/neuron_models.py and synapse_models.py,
@@ -155,7 +155,7 @@ p6 = win.addPlot()
 
 
 # Spike generator
-RasterplotController(MyEventsModels=[spikemon_input],
+Rasterplot(MyEventsModels=[spikemon_input],
                      MyPlotSettings=MyPlotSettings,
                      time_range=[0, duration],
                      neuron_id_range=None,
@@ -168,7 +168,7 @@ RasterplotController(MyEventsModels=[spikemon_input],
                      QtApp=app,
                      show_immediately=False)
 
-LineplotController(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'Ie_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Input synapses",
@@ -187,7 +187,7 @@ if hasattr(statemon_test_neurons1, 'Vm'):
     MyData_intermed_neurons = [(statemon_test_neurons1, ('t', 'Vm'))]
 
 i_current_name = 'Imem' if 'Imem' in builder_object1.keywords['model'] else 'Vm'
-LineplotController(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
+Lineplot(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title='Intermediate test neurons 1',
@@ -200,7 +200,7 @@ LineplotController(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
                    show_immediately=False)
 
 
-LineplotController(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'Ie_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Test synapses",
@@ -213,7 +213,7 @@ LineplotController(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'Ie_
                    show_immediately=False)
 
 
-RasterplotController(MyEventsModels=[spikemon_test_neurons2],
+Rasterplot(MyEventsModels=[spikemon_test_neurons2],
                      MyPlotSettings=MyPlotSettings,
                      time_range=[0, duration],
                      neuron_id_range=None,
@@ -232,7 +232,7 @@ if hasattr(statemon_test_neurons2, 'Imem'):
 if hasattr(statemon_test_neurons2, 'Vm'):
     MyData_output = [(statemon_test_neurons2, ('t','Vm'))]
 
-LineplotController(DataModel_to_x_and_y_attr=MyData_output,
+Lineplot(DataModel_to_x_and_y_attr=MyData_output,
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Output test neurons 2",

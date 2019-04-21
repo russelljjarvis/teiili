@@ -144,13 +144,13 @@ class WTA(BuildingBlock):
         """
         self.num_neurons = num_neurons
         self.dimensions = dimensions
-        BuildingBlock.__init__(self,
-                               name,
-                               neuron_eq_builder,
-                               synapse_eq_builder,
-                               block_params,
-                               debug,
-                               monitor)
+        BB = BuildingBlock.__init__(self,
+                                    name,
+                                    neuron_eq_builder,
+                                    synapse_eq_builder,
+                                    block_params,
+                                    debug,
+                                    monitor)
 
         if dimensions == 1:
             self._groups,\
@@ -188,11 +188,11 @@ class WTA(BuildingBlock):
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 
-        BuildingBlock.input = self._groups['spike_gen']
-        BuildingBlock.output =
-        BuildingBlock.hidden = self._groups['']
-        self.inhGroup = self._groups['n_inh']
-        self._group = self._groups['n_exc']
+        BB.input = self._groups['n_exc']
+        BB.output = self._groups['n_exc']
+        BB.hidden = self._groups['n_inh']
+        # self.inhGroup = self._groups['n_inh']
+        # self._group = self._groups['n_exc']
 
         if monitor:
             self.spikemon_exc = self.monitors['spikemon_exc']

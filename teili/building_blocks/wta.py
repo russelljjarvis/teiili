@@ -50,7 +50,7 @@ import time
 import numpy as np
 import sys
 
-# import brian2
+import brian2
 from brian2 import ms, mV, pA, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
 import teili.tools.synaptic_kernel
@@ -188,11 +188,9 @@ class WTA(BuildingBlock):
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 
-        BB.input = self._groups['n_exc']
-        BB.output = self._groups['n_exc']
-        BB.hidden = self._groups['n_inh']
-        # self.inhGroup = self._groups['n_inh']
-        # self._group = self._groups['n_exc']
+        BB.input_grpups = self._groups['n_exc']
+        BB.output_groups = self._groups['n_exc']
+        BB.hidden_groups = self._groups['n_inh']
 
         if monitor:
             self.spikemon_exc = self.monitors['spikemon_exc']

@@ -39,11 +39,11 @@ class BuildingBlock(Nameable):
         standalone_params (dictionary): Dictionary for all parameters to create
             a standalone network
         sub_blocks (dictionary): Dictionary for all parent building blocks
-        input (dictionary): Dictionary containing all possible groups which are
+        input_groups (dictionary): Dictionary containing all possible groups which are
             potential inputs
-        output (dictionary): Dictionary containing all possible groups which are
+        output_groups (dictionary): Dictionary containing all possible groups which are
             potential outputs
-        hidden (dictionary): Dictionary containing all remaining groups which are
+        hidden_groups (dictionary): Dictionary containing all remaining groups which are
             neither inputs nor outputs
     """
 
@@ -73,9 +73,9 @@ class BuildingBlock(Nameable):
         self.monitor = monitor
         self.standalone_params = OrderedDict()
         self.sub_blocks = {}
-        self.input = {}
-        self.output = {}
-        self.hidden = {}
+        self.input_groups = {}
+        self.output_groups = {}
+        self.hidden_groups = {}
 
         Nameable.__init__(self, name)
 

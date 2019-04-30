@@ -235,7 +235,7 @@ def gen1dWTA(groupname,
 
     Returns:
         _groups (dictionary): Keys to all neuron and synapse groups.
-        Monitors (dictionary): Keys to all spike and state monitors.
+        monitors (dictionary): Keys to all spike and state monitors.
         standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     """
     if spatial_kernel is None:
@@ -401,7 +401,7 @@ def gen2dWTA(groupname,
 
     Returns:
         _groups (dictionary): Keys to all neuron and synapse groups.
-        Monitors (dictionary): Keys to all spike and state monitors.
+        monitors (dictionary): Keys to all spike and state monitors.
         standalone_params (dictionary): Dictionary which holds all parameters to create a standalone network.
     '''
 

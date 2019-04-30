@@ -187,10 +187,10 @@ class WTA(BuildingBlock):
 
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
-
-        self.input_groups.update(self._groups['n_exc'])
-        self.output_groups.update(self._groups['n_exc'])
-        self.hidden_groups.update(self._groups['n_inh'])
+        self.spike_gen = self._groups['spike_gen']
+        self.input_groups.update({'n_exc': self._groups['n_exc']})
+        self.output_groups.update({'n_exc': self._groups['n_exc']})
+        self.hidden_groups.update({'n_inh': self._groups['n_inh']})
 
         if monitor:
             self.spikemon_exc = self.monitors['spikemon_exc']

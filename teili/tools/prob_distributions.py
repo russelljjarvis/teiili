@@ -11,8 +11,52 @@ is used in the network
 #Created on Wed May 30 13:43:45 2018
 #@author: alpha
 
-from brian2 import implementation, check_units, declare_types
+import os
+from brian2 import implementation, check_units, declare_types, set_device, run, ms
 import numpy as np
+from scipy.stats import gamma
+
+
+# For alpha = 1, gamma reduces to the exponential distribution.
+# For large alpha the gamma distribution converges to normal distribution
+# with mean μ = alpha/beta and variance σ2 = alpha/beta**2.
+
+#TODO
+@implementation('cpp', '''
+    float gamm(float x) {
+    float ret = (1.000000000190015 + 76.18009172947146 / (x + 1) +  
+                -86.50532032941677 / (x + 2) + 24.01409824083091 / (x + 3) +  
+                -1.231739572450155 / (x + 4) + 1.208650973866179e-3 / (x + 5) + 
+                -5.395239384953e-6 / (x + 6));
+    return ret * sqrt(2*M_PI)/x * pow(x + 5.5, x+.5) * exp(-x-5.5);}
+    float gamma1d_density(float x_cpp, float alpha_cpp, float beta_cpp, bool normalized_cpp) {
+        float f;
+        if (normalized_cpp)
+            f = pow(beta_cpp, alpha_cpp) / gamm(alpha_cpp);
+        else
+            f = 1.0;
+        float density = exp(-x_cpp * beta_cpp) * pow(x_cpp, alpha_cpp - 1.0) * f;
+        return density;}
+                ''')
+@declare_types(x='float', alpha='float', beta='float', result='float', normalized='boolean')
+@check_units(x=1, alpha=1, beta=1, normalized=1, result=1)
+def gamma1d_density(x, alpha=1, beta=1, normalized=True):
+    """
+    Args:
+
+
+    Returns:
+        float: (probability) density at a specific distance to the mean of a Gaussian distribution.
+    """
+
+#TODO:
+    #if normalized:
+    density = gamma.pdf(x,alpha, scale=beta)
+#    else:
+#        f = 1
+#    density = f * np.exp(-(1/2)*(dist_x / sigma)**2)
+    # print(density)
+    return density
 
 
 @implementation('cpp', '''
@@ -167,3 +211,27 @@ if __name__ == '__main__':
     plt.figure()
     plt.plot(normal1drange,gaussian)
     plt.show()
+
+
+    from teili import Neurons
+    standalone_dir = os.path.expanduser('~/mismatch_standalone')
+    set_device('cpp_standalone', directory=standalone_dir)
+
+    dx = 0.01
+    x = np.arange(0, 10, 0.01)
+    gamma_pdf = gamma1d_density(x, 2, 1)
+
+    n = Neurons(1000, model = 'x : 1')
+    n.namespace.update({'gamma1d_density':gamma1d_density})
+    n.x = "gamma1d_density(i/100.0,2.0,1.0,False)"
+
+    run(1*ms)
+    plt.figure()
+    plt.plot(np.arange(0,10,1/100), n.x)
+    plt.plot(x, gamma_pdf)
+
+    plt.show()
+
+    sum(n.x * 1/100)
+    sum(gamma_pdf * dx)
+

@@ -16,7 +16,7 @@ Todo:
 import numpy as np
 import warnings
 import inspect
-from brian2 import NeuronGroup, Synapses, Group, Subgroup
+from brian2 import NeuronGroup, Synapses, Group, Subgroup, Nameable
 from collections import OrderedDict
 from matplotlib.pyplot import figure, xlabel, \
     ylabel, plot, subplot, xlim, ylim, xticks
@@ -24,6 +24,8 @@ from numpy import ones, zeros
 
 from teili.models import neuron_models
 from teili.models import synapse_models
+from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.tools.random_sampling import Randn_trunc
 from teili import constants
 from scipy import size
@@ -92,7 +94,7 @@ class TeiliGroup(Group):
             dimensions (brian2.units.fundamentalunits.Dimension): dimension of the expression.
             expr (str): the expression.
         """
-        self.variables.add_subexpression(name, dimensions, expr)
+        self.variables.add_subexpression(name=name, dimensions=dimensions, expr=expr)
 
     def set_params(self, params, **kwargs):
         """This function sets parameters on members of a Teiligroup.
@@ -334,7 +336,11 @@ class Neurons(NeuronGroup, TeiliGroup):
         if equation_builder is not None:
             # if inspect.isclass(equation_builder):
             #    self.equation_builder = equation_builder()
-            if isinstance(equation_builder, str):
+            if isinstance(equation_builder, dict):
+                # if it is a dict, then just take it as it is
+                # NeuronEquationBuilder just wraps the dict
+                self.equation_builder = NeuronEquationBuilder(keywords=equation_builder)
+            elif isinstance(equation_builder, str):
                 equation_builder = getattr(
                     neuron_models, equation_builder)
                 self.equation_builder = equation_builder()
@@ -359,10 +365,13 @@ class Neurons(NeuronGroup, TeiliGroup):
             else:
                 self._init_parameters = parameters
         self.initialized = True
+
+
         TeiliGroup.__init__(self)
         NeuronGroup.__init__(self, N, **Kwargs)
 
         set_params(self, self._init_parameters, verbose=verbose)
+
 
     def register_synapse(self, synapsename):
         """Registers a Synapse so we know the input number.
@@ -434,7 +443,7 @@ class Neurons(NeuronGroup, TeiliGroup):
         return TeiliSubgroup(self, start, stop)
 
 
-class Connections(Synapses, TeiliGroup):
+class Connections(Synapses, TeiliGroup, Nameable):
     """This class is a subclass of Synapses.
 
     You can use it as a Synapses, and everything will be passed to Synapses.
@@ -489,16 +498,17 @@ class Connections(Synapses, TeiliGroup):
         except:
             pass
 
+        Nameable.__init__(self, name=name)
+
         try:
             if self.verbose:
-                print(name, ': target', target.name, 'has',
+                print(self.name, ': target', target.name, 'has',
                       target.num_synapses, 'synapses')
                 print('trying to add one more...')
-            self.input_number = target.register_synapse(name)
+            self.input_number = target.register_synapse(self.name)
             if self.verbose:
                 print('OK!')
                 print('input number is: ' + str(self.input_number))
-
         except ValueError as e:
             raise e
         except AttributeError as e:
@@ -507,13 +517,24 @@ class Connections(Synapses, TeiliGroup):
             else:
                 warnings.warn('you seem to be using brian2 NeuronGroups instead of teili Neurons for ' +
                               str(target.name) + ', therefore, please specify an input_number yourself')
-                raise e
+                #raise e
+        except KeyError as e:
+            if input_number is not None:
+                self.input_number = input_number
+            else:
+                warnings.warn('you seem to be using brian2 NeuronGroups instead of teili Neurons for ' +
+                              str(target.name) + ', therefore, please specify an input_number yourself')
+                #raise e
 
         if parameters is not None:
             self._init_parameters = parameters
 
         if equation_builder is not None:
-            if inspect.isclass(equation_builder):
+            if isinstance(equation_builder, dict):
+                # if it is a dict, then just take it as it is
+                # NeuronEquationBuilder just wraps the dict
+                self.equation_builder = SynapseEquationBuilder(keywords=equation_builder)
+            elif inspect.isclass(equation_builder):
                 self.equation_builder = equation_builder()
             elif isinstance(equation_builder, str):
                 equation_builder = getattr(
@@ -538,7 +559,7 @@ class Connections(Synapses, TeiliGroup):
         try:
             Synapses.__init__(self, source, target=target,
                               method=method,
-                              name=name, **Kwargs)
+                              name=self.name, **Kwargs)
         except Exception as e:
             import sys
             raise type(e)(str(e) + '\n\nCheck Equation for errors!\n' +
@@ -713,6 +734,6 @@ class TeiliSubgroup(Subgroup):
         """Property to overcome summed issue present in brian2.
 
         Returns:
-            int: Number of synapse which originate at the same pre-synaptic neuron group.
+            int: Number of synapses that converge to the same post-synaptic neuron group.
         """
         return self.source.num_synapses

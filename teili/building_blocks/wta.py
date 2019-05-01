@@ -50,9 +50,6 @@ import time
 import numpy as np
 import sys
 
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
-
 import brian2
 from brian2 import ms, mV, pA, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
@@ -60,7 +57,7 @@ import teili.tools.synaptic_kernel
 from teili.tools.misc import print_states
 from teili.tools.distance import dist1d2dint
 from teili.tools.indexing import ind2x, ind2y
-from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
+# from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 
 from teili.building_blocks.building_block import BuildingBlock
 from teili.core.groups import Neurons, Connections
@@ -184,22 +181,6 @@ class WTA(BuildingBlock):
         if monitor:
             self.spikemonWTA = self.Monitors['spikemonWTA']
 
-    def plot(self, start_time=0 * ms, end_time=None, plot_states=True):
-        """Simple plot for WTA.
-
-        Args:
-            start_time (int, optional): Start time of plot in ms.
-            end_time (int, optional): End time of plot in ms.
-            plot_states (bool, optional): Description
-
-        Returns:
-            pyqtgraph window: The window containing the plot.
-        """
-        win = plotWTA(wta_monitors=self.Monitors, name=self.name,
-                      start_time=start_time, end_time=end_time, plot_states=plot_states)
-        self.plot_win = win
-        return win
-
 
 def gen1dWTA(groupname,
              neuron_eq_builder=DPI,
@@ -253,7 +234,7 @@ def gen1dWTA(groupname,
         spatial_kernel_name = spatial_kernel
 
     # time measurement
-    start = time.clock()
+    start = time.time()
 
     # create neuron groups
     gWTAGroup = Neurons(num_neurons, equation_builder=neuron_eq_builder(num_inputs=3 + num_inputs),
@@ -354,7 +335,7 @@ def gen1dWTA(groupname,
         gWTAInhGroup.name + '_refP': rpInh,
     }
 
-    end = time.clock()
+    end = time.time()
     if debug:
         print('creating WTA of ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
@@ -419,7 +400,7 @@ def gen2dWTA(groupname,
             teili.tools.synaptic_kernel, spatial_kernel)
         spatial_kernel_name = spatial_kernel
     # time measurement
-    start = time.clock()
+    start = time.time()
 
     # create neuron groups
     num2dNeurons = num_neurons**2
@@ -533,7 +514,7 @@ def gen2dWTA(groupname,
         gWTAInhGroup.name + '_refP': rpInh,
     }
 
-    end = time.clock()
+    end = time.time()
     if debug:
         print('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
@@ -542,74 +523,3 @@ def gen2dWTA(groupname,
             print(key)
 
     return Groups, Monitors, standalone_params
-
-
-def plotWTA(wta_monitors, name, start_time=None, end_time=None, plot_states=True):
-    """Function to easily visualize WTA activity.
-
-    Args:
-        wta_monitors (dict.): Dictionary with keys to access spike and state monitors in WTA.Monitors.
-        name (str, required): Name of the WTA population.
-        start_time (brian2.units.fundamentalunits.Quantity): Start time in ms
-            from when network activity should be plotted.
-        end_time (brian2.units.fundamentalunits.Quantity): End time in ms of plot.
-            Can be smaller than simulation time but not larger.
-        plot_states (bool, optional): Description
-
-    Returns:
-        TYPE: Description
-    """
-    app = QtGui.QApplication.instance()
-    if app is None:
-        app = QtGui.QApplication(sys.argv)
-    else:
-        print('QApplication instance already exists: %s' % str(app))
-
-    pg.setConfigOptions(antialias=True)
-
-    win_raster = pg.GraphicsWindow(
-        title='Winner-Take-All Test Simulation: Raster plots')
-    win_raster.resize(1000, 1800)
-    win_raster.setWindowTitle('Winner-Take-All Test Simulation: Raster plots')
-
-    raster_input = win_raster.addPlot(title="SpikeGenerator input")
-    win_raster.nextRow()
-    raster_wta = win_raster.addPlot(title="SpikeMonitor WTA")
-    win_raster.nextRow()
-    raster_inh = win_raster.addPlot(
-        title="SpikeMonitor inhibitory interneurons")
-
-    plot_spikemon_qt(monitor=wta_monitors['spikemonWTAInp'], start_time=start_time, end_time=end_time,
-                     num_neurons=np.int(
-                         wta_monitors['spikemonWTAInp'].source.N),
-                     window=raster_input)
-    plot_spikemon_qt(monitor=wta_monitors['spikemonWTA'], start_time=start_time, end_time=end_time,
-                     num_neurons=wta_monitors['spikemonWTA'].source.N,
-                     window=raster_wta)
-    plot_spikemon_qt(monitor=wta_monitors['spikemonWTAInh'], start_time=start_time, end_time=end_time,
-                     num_neurons=wta_monitors['spikemonWTAInh'].source.N,
-                     window=raster_inh)
-
-    if plot_states:
-        win_states = pg.GraphicsWindow(
-            title='Winner-Take-All Test Simulation:State plots')
-        win_states.resize(1000, 1800)
-        win_states.setWindowTitle(
-            'Winner-Take-All Test Simulation:State plots')
-
-        state_membrane = win_states.addPlot(
-            title='StateMonitor membrane potential')
-        win_states.nextRow()
-        state_syn_input = win_states.addPlot(
-            title="StateMonitor synaptic input")
-
-        plot_statemon_qt(start_time=start_time, end_time=end_time,
-                         monitor=wta_monitors['statemonWTA'], neuron_id=128,
-                         variable="Imem", unit=pA, window=state_membrane, name=name)
-        plot_statemon_qt(start_time=start_time, end_time=end_time,
-                         monitor=wta_monitors['statemonWTA'], neuron_id=128,
-                         variable="Iin", unit=pA, window=state_syn_input, name=name)
-
-    app.exec()
-
-    return win_raster

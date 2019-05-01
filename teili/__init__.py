@@ -9,6 +9,8 @@ from teili.tools.plotter2d import *
 from teili.tools.distance import *
 from teili.tools.prob_distributions import *
 from teili.tools.sorting import *
+from teili.tools.random_sampling import *
+from teili.tools.visualizer import *
 
 from teili.models.parameters import constants
 

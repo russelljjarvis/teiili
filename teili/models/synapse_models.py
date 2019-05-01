@@ -5,8 +5,9 @@
 # @Date:   2017-12-27 10:46:44
 
 import os
+import sys
+from pathlib import Path
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
-import teili.models
 
 
 class DoubleExponential(SynapseEquationBuilder):
@@ -108,12 +109,13 @@ class StdpSynV(SynapseEquationBuilder):
                                         kernel='exponential', plasticity='stdp')
 
 
-def main():
-    path = os.path.dirname(os.path.realpath(teili.models.__file__))
+def main(path=None):
+    if path is None:
+        path = str(Path.home())
+        path = os.path.join(path, "teiliApps", "equations")
 
-    path = os.path.join(path, "equations")
     if not os.path.isdir(path):
-        os.mkdir(path)
+        Path(path).mkdir(parents=True)
 
     doubleExponential = DoubleExponential()
     doubleExponential.export_eq(os.path.join(path, "DoubleExponential"))

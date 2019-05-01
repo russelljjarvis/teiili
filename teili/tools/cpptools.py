@@ -44,6 +44,8 @@ def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True
     """
     startBuild = time.time()
     prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++14')
+    prefs['codegen.cpp.extra_compile_args_msvc'].append('/std:c++14')
+    prefs['codegen.cpp.headers'].append('<string>')
     # prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++11')
     device.build(compile=False, run=False, directory=standalone_dir, clean=clean, debug=False)
 
@@ -193,7 +195,7 @@ def run_standalone(standalone_params):
     """
     start_sim = time.time()
     # run simulation
-    printDict(standalone_params)
+    print_dict(standalone_params)
     run_args = params2run_args(standalone_params)
     device.run(directory=device.project_dir, with_output=True, run_args=run_args)
     end_sim = time.time()

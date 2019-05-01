@@ -40,15 +40,11 @@ Example:
 import time
 import sys
 import numpy as np
-# import matplotlib.pyplot as plt
-# from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 
 from brian2 import ms, SpikeGeneratorGroup, SpikeMonitor,\
-    StateMonitor, figure, subplot, mV, pA, second
+    StateMonitor, mV, pA, second
 
 import teili.tools.synaptic_kernel
-from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 
 from teili.building_blocks.building_block import BuildingBlock
 from teili.core.groups import Neurons, Connections
@@ -60,14 +56,21 @@ from teili.models.neuron_models import Izhikevich as neuron_model
 from teili.models.synapse_models import DoubleExponential as synapse_model
 from teili.models.parameters.izhikevich_param import parameters as neuron_model_params
 
-reservoir_params = {'weInpR': 1.5, # Excitatory synaptic weight
+reservoir_params = {'weInpR': 1.5,  # Excitatory synaptic weight
                     # between input SpikeGenerator and Reservoir neurons.
-                    'weRInh': 1,   # Excitatory synaptic weight between Reservoir population and inhibitory interneuron.
-                    'wiInhR': -1,  # Inhibitory synaptic weight between inhibitory interneuron and Reservoir population.
-                    'weRR': 0.5,   # Self-excitatory synaptic weight (within Reservoir).
-                    'sigm': 3,     # Standard deviation in number of neurons for Gaussian connectivity kernel.
-                    'rpR': 0 * ms, # Refractory period of Reservoir neurons.
-                    'rpInh': 0 * ms# Refractory period of inhibitory neurons.
+                    # Excitatory synaptic weight between Reservoir population
+                    # and inhibitory interneuron.
+                    'weRInh': 1,
+                    # Inhibitory synaptic weight between inhibitory interneuron
+                    # and Reservoir population.
+                    'wiInhR': -1,
+                    # Self-excitatory synaptic weight (within Reservoir).
+                    'weRR': 0.5,
+                    # Standard deviation in number of neurons for Gaussian
+                    # connectivity kernel.
+                    'sigm': 3,
+                    'rpR': 0 * ms,  # Refractory period of Reservoir neurons.
+                    'rpInh': 0 * ms  # Refractory period of inhibitory neurons.
                     }
 
 
@@ -92,7 +95,7 @@ class Reservoir(BuildingBlock):
                  num_neurons=16,
                  num_input_neurons=0,
                  num_output_neurons=1,
-                 output_weights_init = [0],
+                 output_weights_init=[0],
                  Rconn_prob=None,
                  adjecency_mtr=None,
                  fraction_inh_neurons=0.2,
@@ -139,7 +142,7 @@ class Reservoir(BuildingBlock):
                                                    num_neurons=num_neurons,
                                                    num_input_neurons=num_input_neurons,
                                                    num_output_neurons=num_output_neurons,
-                                                   output_weights_init = output_weights_init,
+                                                   output_weights_init=output_weights_init,
                                                    adjecency_mtr=adjecency_mtr,
                                                    fraction_inh_neurons=fraction_inh_neurons,
                                                    spatial_kernel=spatial_kernel,
@@ -153,22 +156,6 @@ class Reservoir(BuildingBlock):
         if monitor:
             self.spikemonR = self.Monitors['spikemonR']
 
-    def plot(self, start_time=0 * ms, end_time=None):
-        """Simple plot for Reservoir
-
-        Args:
-            start_time (int, optional): Start time of plot in ms
-            end_time (int, optional): End time of plot in ms
-        """
-
-        if end_time is None:
-            if len(self.spikemonR.t) > 0:
-                end_time = max(self.spikemonR.t)
-            else:
-                end_time = end_time * ms
-        plot_reservoir(self.name, start_time, end_time, self.numNeurons **
-                       self.dimensions, self.Monitors)
-
 
 def gen_reservoir(groupname,
                   neuron_eq_builder=neuron_model,
@@ -181,9 +168,9 @@ def gen_reservoir(groupname,
                   adjecency_mtr=None,
                   num_input_neurons=0,
                   num_output_neurons=1,
-                  output_weights_init = [0],
-                  taud = 0,
-                  taur = 0,
+                  output_weights_init=[0],
+                  taud=0,
+                  taur=0,
                   num_inputs=1,
                   fraction_inh_neurons=0.2,
                   spatial_kernel="kernel_mexican_1d",
@@ -237,7 +224,7 @@ def gen_reservoir(groupname,
     # gRGroup.set_params(neuron_model_params)
     gRGroup.Vm = gRGroup.VR
     gRGroup.refP = rpR
-    
+
     # create synapses
     synRR1e = Connections(gRGroup, gRGroup,
                           equation_builder=synapse_eq_builder(),
@@ -247,9 +234,9 @@ def gen_reservoir(groupname,
         synRR1e.connect(p=Rconn_prob)
     # commenct according to the adjecency and weight matrix
     elif adjecency_mtr is not None:
-        rows,cols = np.nonzero(adjecency_mtr[:,:,0])
-        synRR1e.connect(i=rows,j=cols)
-        synRR1e.weight = adjecency_mtr[rows,cols,1]
+        rows, cols = np.nonzero(adjecency_mtr[:, :, 0])
+        synRR1e.connect(i=rows, j=cols)
+        synRR1e.weight = adjecency_mtr[rows, cols, 1]
     else:
         print('Set either Rconn_prob or adjecency_mtr')
     # Initialize the time of last spike to a large number
@@ -264,12 +251,11 @@ def gen_reservoir(groupname,
     Groups = {'gRGroup': gRGroup,
               'synRR1e': synRR1e}
 
-
     if fraction_inh_neurons is not None:
         gRInhGroup = Neurons(round(num_neurons * fraction_inh_neurons),
                              equation_builder=neuron_eq_builder(num_inputs=1),
                              refractory=rpInh, name='g' + groupname + '_Inh')
-        gRInhGroup.set_params(neuron_model_params)        
+        gRInhGroup.set_params(neuron_model_params)
         # create synapses
         synInhR1i = Connections(gRInhGroup, gRGroup,
                                 equation_builder=synapse_eq_builder(),
@@ -323,27 +309,26 @@ def gen_reservoir(groupname,
 
         # create readout synapses
         synOutR1e = Connections(gRGroup, gROutGroup,
-                                model = """dr/dt = -r/taud + h : 1 (clock-driven)
+                                model="""dr/dt = -r/taud + h : 1 (clock-driven)
                                 dh/dt = -h/taur : second **-1 (clock-driven)
                                 rate_post =  weight * r : 1 (summed)
                                 taud = %f * ms : second
                                 taur = %f * ms : second
                                 weight : 1
-                                """%(taud / ms,taur / ms),
-                                on_pre = simple_integrator_on_pre,
+                                """ % (taud / ms, taur / ms),
+                                on_pre=simple_integrator_on_pre,
                                 method="euler",
                                 name='s' + groupname + '_Out',
-                                parameters = '')
+                                parameters='')
         # connect synapses
-        
+
         synOutR1e.connect()
         # set weights
         synOutR1e.weight = output_weights_init.reshape(synOutR1e.weight.shape)
-        
+
         Groups.update({'gROutGroup': gROutGroup,
                        'synOutR1e': synOutR1e})
 
-        
     # spikemons
     if monitor:
         spikemonR = SpikeMonitor(gRGroup, name='spikemon' + groupname + '_R')
@@ -364,15 +349,15 @@ def gen_reservoir(groupname,
                                      name='statemon' + groupname + '_R')
         Monitors['statemonR'] = statemonR
         # Monitors['statemon_neurons_rate'] = StateMonitor(gRateOutGroup, ('rate'), record=True,
-        #                                                  name='statemon' + groupname + '_neurons_rate')
+        # name='statemon' + groupname + '_neurons_rate')
         if num_output_neurons > 0:
             Monitors['statemon_readout_rate'] = StateMonitor(gROutGroup, ('rate'), record=True,
                                                              name='statemon' + groupname + '_readout_rate')
             Monitors['statemon_neuron_rates'] = StateMonitor(synOutR1e,
-                                                    {'r'},
-                                                    record=True,
-                                                    name='statemonRout')
-        
+                                                             {'r'},
+                                                             record=True,
+                                                             name='statemonRout')
+
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: weInpR, weRInh, wiInhR, weRR,rpR, rpInh,sigm
@@ -397,60 +382,3 @@ def gen_reservoir(groupname,
             print(key)
 
     return Groups, Monitors, standalone_params
-
-
-def plot_reservoir(name, start_time, end_time, num_neurons, reservoir_monitors):
-    """Function to easily visualize Reservoir activity.
-
-    Args:
-        name (str, required): Name of the Reservoir population
-        start_time (brian2.units.fundamentalunits.Quantity, required): Start time in ms
-            from when network activity should be plotted.
-        end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
-            Can be smaller than simulation time but not larger.
-        num_neurons (int, required): 1D number of neurons in Reservoir populations.
-        reservoir_monitors (dict.): Dictionary with keys to access spike and state monitors. in Reservoir.Monitors.
-    """
-    app = QtGui.QApplication.instance()
-    if app is None:
-        app = QtGui.QApplication(sys.argv)
-    else:
-        print('QApplication instance already exists: %s' % str(app))
-    pg.setConfigOptions(antialias=True)
-
-    win_raster = pg.GraphicsWindow(
-        title='Winner-Take-All Test Simulation: Raster plots')
-    win_states = pg.GraphicsWindow(
-        title='Winner-Take-All Test Simulation:State plots')
-    win_raster.resize(1000, 1800)
-    win_states.resize(1000, 1800)
-    win_raster.setWindowTitle('Winner-Take-All Test Simulation: Raster plots')
-    win_states.setWindowTitle('Winner-Take-All Test Simulation: State plots')
-
-    raster_input = win_raster.addPlot(title="SpikeGenerator input")
-    win_raster.nextRow()
-    raster_wta = win_raster.addPlot(title="SpikeMonitor Reservoir")
-    win_raster.nextRow()
-    raster_inh = win_raster.addPlot(
-        title="SpikeMonitor inhibitory interneurons")
-
-    state_membrane = win_states.addPlot(
-        title='StateMonitor membrane potential')
-    win_states.nextRow()
-    state_syn_input = win_states.addPlot(title="StateMonitor synaptic input")
-
-    plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=reservoir_monitors['spikemonRInp'], window=raster_input)
-    plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=reservoir_monitors['spikemonR'], window=raster_wta)
-    plot_spikemon_qt(start_time=start_time, end_time=end_time,
-                     num_neurons=16, monitor=reservoir_monitors['spikemonRInh'], window=raster_inh)
-
-    plot_statemon_qt(start_time=start_time, end_time=end_time,
-                     monitor=reservoir_monitors['statemonR'], neuron_id=128,
-                     variable="Imem", unit=pA, window=state_membrane, name=name)
-    plot_statemon_qt(start_time=start_time, end_time=end_time,
-                     monitor=reservoir_monitors['statemonR'], neuron_id=128,
-                     variable="Iin", unit=pA, window=state_syn_input, name=name)
-
-    app.exec_()

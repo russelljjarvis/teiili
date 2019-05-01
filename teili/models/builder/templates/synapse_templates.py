@@ -72,6 +72,7 @@ Attributes:
 # @Date:   2018-06-01 11:57:02
 
 
+from teili import constants
 from brian2 import pF, nS, mV, ms, pA, nA, volt, second
 
 none = {'model': ''' ''', 'on_pre': ''' ''', 'on_post': ''' '''}
@@ -212,20 +213,20 @@ dpi = {'model': '''
 
 # standard parameters for DPI models
 dpi_params = {
-    'Io_syn': 0.5 * pA,
-    'kn_syn': 0.75,
-    'kp_syn': 0.66,
+    'Io_syn': constants.I0,
+    'kn_syn': constants.KAPPA_N,
+    'kp_syn': constants.KAPPA_P,
     'Ut_syn': 25. * mV,
     'Csyn': 1.5 * pF,
     'Ie_tau': 10. * pA,
     'Ii_tau': 10. * pA,
     'Ie_th': 10 * pA,
     'Ii_th': 10 * pA,
-    'Ie_syn': 0.5 * pA,
-    'Ii_syn': 0.5 * pA,
+    'Ie_syn': constants.I0,
+    'Ii_syn': constants.I0,
     'w_plast': 1,
-    'baseweight_e': 50. * pA,
-    'baseweight_i': 50. * pA
+    'baseweight_e': 7. * pA,
+    'baseweight_i': 7. * pA
 }
 
 # DPI shunting inhibition
@@ -264,7 +265,7 @@ dpi_shunt = {'model': """
 
 dpi_shunt_params = {
     'Csyn': 1.5 * pF,
-    'Io_syn': 0.5 * pA,
+    'Io_syn': constants.I0,
     'Ii_tau': 10. * pA,
     'Ut_syn': 25. * mV,
     'baseweight_i': 50. * pA,
@@ -272,7 +273,7 @@ dpi_shunt_params = {
     'kp_syn': 0.66,
     'wPlast': 1,
     'Ii_th': 10 * pA,
-    'Ii_syn': 0.5 * pA
+    'Ii_syn': constants.I0
 }
 
 
@@ -305,8 +306,8 @@ fusi = {'model': '''
 
       dw/dt = (alpha*updrift)-(beta*downdrift) : 1 (event-driven) # internal weight variable
 
-      wplus: 1 
-      wminus: 1 
+      wplus: 1
+      wminus: 1
       theta_upl: volt (constant)
       theta_uph: volt (constant)
       theta_downh: volt (constant)
@@ -368,6 +369,7 @@ fusi_params_conductance = {"wplus": 0.2,
 stdp = {'model': '''
       dApre/dt = -Apre / taupre : 1 (event-driven)
       dApost/dt = -Apost / taupost : 1 (event-driven)
+      dApost = -dApre * (taupre / taupost) * Q_diffAPrePost * w_max : 1
       w_max: 1 (constant)
       taupre : second (constant)
       taupost : second (constant)
@@ -380,7 +382,7 @@ stdp = {'model': '''
       w_plast = clip(w_plast + Apost, 0, w_max) ''',
 
         'on_post': '''
-      Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
+      Apost += dApost
       w_plast = clip(w_plast + Apre, 0, w_max) '''}
 
 stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace since we would define it twice?
@@ -388,7 +390,7 @@ stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace 
                      "taupre": 10 * ms,
                      "taupost": 10 * ms,
                      "w_max": 1.,
-                     "dApre": 0.1,
+                     "dApre": 0.01,
                      "Q_diffAPrePost": 1.05,
                      "w_plast": 0}
 

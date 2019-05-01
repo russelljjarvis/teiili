@@ -23,7 +23,7 @@ from teili.tools.cpptools import build_cpp_and_replace,\
 from teili.building_blocks.building_block import BuildingBlock
 
 
-class teiliNetwork(Network):
+class TeiliNetwork(Network):
     """This is a subclass of brian2.Network.
 
     This subclass does the same thing plus some additional methods for
@@ -44,7 +44,7 @@ class teiliNetwork(Network):
         Returns:
             dict: A dictionary of all spike monitors (e.g. for looping over them)
         """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == SpikeMonitor}
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,SpikeMonitor)}
 
     @property
     def statemonitors(self):
@@ -53,7 +53,7 @@ class teiliNetwork(Network):
         Returns:
             dict: A dictionary of all statemonitors (e.g. for looping over them)
         """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == StateMonitor}
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,StateMonitor)}
 
     @property
     def neurongroups(self):
@@ -62,7 +62,7 @@ class teiliNetwork(Network):
         Returns:
             dict: A dictionary of all neurongroups (e.g. for looping over them)
         """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == NeuronGroup}
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,NeuronGroup)}
 
     @property
     def synapses(self):
@@ -71,7 +71,7 @@ class teiliNetwork(Network):
         Returns:
             dict: A dictionary of all synapses (e.g. for looping over them).
         """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == Synapses}
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,Synapses)}
 
     def __init__(self, *objs, **kwds):
         """Summary
@@ -141,12 +141,12 @@ class teiliNetwork(Network):
             clean (bool, optional): Flag to clean-up standalone directory.
         """
         if get_device() == all_devices['cpp_standalone']:
-            if recompile or not teiliNetwork.has_run:
+            if recompile or not TeiliNetwork.has_run:
 
                 print('building network...')
                 Network.run(self, duration=0 * ms, report=report, report_period=report_period,
                             namespace=namespace, profile=profile, level=level + 1)
-                teiliNetwork.has_run = True
+                TeiliNetwork.has_run = True
 
                 if standalone_params is None:
                     standalone_params = self.standalone_params

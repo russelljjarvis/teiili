@@ -5,8 +5,9 @@
 # @Date:   2018-01-08 14:53:11
 
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-import teili.models
+from pathlib import Path
 import os
+import sys
 
 
 class Izhikevich(NeuronEquationBuilder):
@@ -43,6 +44,38 @@ class ExpAdaptIF(NeuronEquationBuilder):
         self.add_input_currents(num_inputs)
 
 
+class ExpAdaptLIF(NeuronEquationBuilder):
+    """This class provides you with all equations to simulate a voltage-based
+    exponential, adaptive integrate and fire neuron.
+    """
+
+    def __init__(self, num_inputs=1):
+        """This initializes the NeuronEquationBuilder with ExpAdaptIF neuron model.
+
+        Args:
+            num_inputs (int, optional): Description
+        """
+        NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='calcium_feedback',
+                                       integration_mode='exponential', leak='leaky',
+                                       position='spatial', noise='none')
+        self.add_input_currents(num_inputs)
+
+class LinearLIF(NeuronEquationBuilder):
+    """This class provides you with all equations to simulate a voltage-based
+    exponential, adaptive integrate and fire neuron.
+    """
+
+    def __init__(self, num_inputs=1):
+        """This initializes the NeuronEquationBuilder with ExpAdaptIF neuron model.
+
+        Args:
+            num_inputs (int, optional): Description
+        """
+        NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='none',
+                                       integration_mode='linear', leak='leaky',
+                                       position='spatial', noise='none')
+        self.add_input_currents(num_inputs)
+
 class DPI(NeuronEquationBuilder):
     """This class provides you with all equations to simulate a current-based
     exponential, adaptive leaky integrate and fire neuron as implemented on
@@ -62,15 +95,22 @@ class DPI(NeuronEquationBuilder):
         self.add_input_currents(num_inputs)
 
 
-def main():
-    path = os.path.dirname(os.path.realpath(teili.models.__file__))
+def main(path=None):
+    if path is None:
+        path = str(Path.home())
+        path = os.path.join(path, "teiliApps", "equations")
 
-    path = os.path.join(path, "equations")
     if not os.path.isdir(path):
-        os.mkdir(path)
+        Path(path).mkdir(parents=True)
 
     expAdaptIF = ExpAdaptIF()
     expAdaptIF.export_eq(os.path.join(path, "ExpAdaptIF"))
+
+    expAdaptLIF = ExpAdaptLIF()
+    expAdaptLIF.export_eq(os.path.join(path, "ExpAdaptLIF"))
+
+    linearLIF = LinearLIF()
+    linearLIF.export_eq(os.path.join(path, "LinearLIF"))
 
     dpi = DPI()
     dpi.export_eq(os.path.join(path, "DPI"))

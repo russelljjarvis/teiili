@@ -43,7 +43,7 @@ class BuildingBlock(Nameable):
             potential inputs
         output_groups (dictionary): Dictionary containing all possible groups which are
             potential outputs
-        hidden_groups (dictionary): Dictionary containing all remaining groups which are
+        hidden (dictionary): Dictionary containing all remaining groups which are
             neither inputs nor outputs
     """
 

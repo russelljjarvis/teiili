@@ -26,7 +26,7 @@ prefs.codegen.target = "numpy"
 input_timestamps = np.asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
-                                           times=input_timestamps, name='gtestInp')
+                                           times=input_timestamps, name='input_spikegenerator')
 
 
 Net = TeiliNetwork()
@@ -53,6 +53,7 @@ convinience to switch between voltage- or current-based models.
 Normally, you have one or the other in yur simulation, thus
 you will not need the if condition.
 '''
+
 # Example of how to set parameters, saved as a dictionary
 test_neurons1.set_params(neuron_model_param)
 # Example of how to set a single parameter
@@ -97,7 +98,8 @@ elif 'Vm' in neuron_model().keywords['model']:
 Net.add(input_spikegenerator, test_neurons1, test_neurons2,
         input_synapse, test_synapse,
         spikemon_input, spikemon_test_neurons1, spikemon_test_neurons2,
-        statemon_test_neurons1, statemon_test_neurons2, statemon_test_synapse, statemon_input_synapse)
+        statemon_test_neurons1, statemon_test_neurons2,
+        statemon_test_synapse, statemon_input_synapse)
 
 duration = 500
 Net.run(duration * ms)

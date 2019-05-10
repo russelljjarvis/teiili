@@ -11,13 +11,17 @@ from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_
 from teili.tools.visualizer.DataViewers import PlotSettings
 
 
-def get_plotsettings(max255=False):
+def get_plotsettings(alpha=None, max255=False):
 
-    colors = np.asarray([(1,0,0, 0.4),  # 'r',
-                         (0,1,0, 0.4),  # 'g',
-                         (0,0,1, 0.4)])  # 'b'])
-    if max255:
-        colors = colors * 255.
+    if alpha is not None:
+        colors = np.asarray([(1,0,0, alpha),  # 'r',
+                             (0,1,0, alpha),  # 'g',
+                             (0,0,1, alpha)])  # 'b'])
+        if max255:
+            colors = colors * 255.
+
+    else:
+        colors = ['r', 'g', 'b']
 
     MyPlotSettings = PlotSettings(
         fontsize_title=20,

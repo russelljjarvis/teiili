@@ -16,7 +16,7 @@ try:
 except BaseException:
     SKIP_PYQTGRAPH_RELATED_UNITTESTS = True
 
-SHOW_PLOTS_IN_TESTS = True
+SHOW_PLOTS_IN_TESTS = False
 
 class TestHistogram(unittest.TestCase):
 

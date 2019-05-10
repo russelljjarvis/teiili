@@ -30,7 +30,7 @@ class TestHistogram(unittest.TestCase):
         DataModel_to_attr = [(EM1, 'neuron_ids'), (EM2, 'neuron_ids')]
 
         HC = Histogram(
-            MyPlotSettings=get_plotsettings(),
+            MyPlotSettings=get_plotsettings(alpha=0.4),
             DataModel_to_attr=DataModel_to_attr,
             show_immediately=SHOW_PLOTS_IN_TESTS)
         HC._get_data(DataModel_to_attr)
@@ -43,7 +43,7 @@ class TestHistogram(unittest.TestCase):
             (spikemonN2, 'i')]
 
         HC = Histogram(
-            MyPlotSettings=get_plotsettings(),
+            MyPlotSettings=get_plotsettings(alpha=0.4),
             DataModel_to_attr=DataModel_to_attr,
             show_immediately=SHOW_PLOTS_IN_TESTS)
         HC._get_data(DataModel_to_attr)
@@ -66,7 +66,7 @@ class TestHistogram(unittest.TestCase):
 
         backend = 'matplotlib'
         HC = Histogram(
-            MyPlotSettings=get_plotsettings(),
+            MyPlotSettings=get_plotsettings(alpha=0.4),
             DataModel_to_attr=DataModel_to_attr,
             subgroup_labels=subgroup_labels,
             bins=None,
@@ -81,7 +81,7 @@ class TestHistogram(unittest.TestCase):
         if not SKIP_PYQTGRAPH_RELATED_UNITTESTS:
             backend = 'pyqtgraph'
             HC = Histogram(
-                MyPlotSettings=get_plotsettings(max255=True),
+                MyPlotSettings=get_plotsettings(max255=True, alpha=0.4),
                 DataModel_to_attr=DataModel_to_attr,
                 subgroup_labels=subgroup_labels,
                 bins=None,

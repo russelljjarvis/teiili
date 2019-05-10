@@ -96,7 +96,7 @@ def run_brian_network(spikemonitors=True, statemonitors=True):
 
     if statemonitors:
         # state monitor neurons
-        statemonN1 = StateMonitor(testNeurons1, variables=["Iin", "Imem"], record=True, name='statemonNeu')
+        statemonN1 = StateMonitor(testNeurons1, variables=["Iin", "Iahp"], record=True, name='statemonNeu')
         statemonN2 = StateMonitor(testNeurons2, variables=['Imem'], record=True, name='statemonNeuOut')
         Net.add(statemonN1, statemonN2)
         returns.extend([statemonN1, statemonN2])

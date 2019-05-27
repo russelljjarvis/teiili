@@ -82,7 +82,7 @@ current = {'model': '''
 
             kernel : amp * second **-1
 
-            Iin{input_number}_post = I_syn * (weight>0) + I_syn * (weight<0) : amp (summed)
+            Iin{input_number}_post = I_syn *  sign(weight) : amp (summed)
 
             tausyn : second (constant) # synapse time constant
             w_plast : 1
@@ -93,7 +93,7 @@ current = {'model': '''
             ''',
 
            'on_pre': '''
-            I_syn += baseweight * weight * w_plast
+            I_syn += baseweight * abs(weight) * w_plast
             ''',
 
            'on_post': ''' '''
@@ -112,9 +112,9 @@ conductance = {'model': '''
 
                I_syn = gI*(EI - Vm_post) : amp
 
-               Iin{input_number}_post = I_syn * (weight>0) + I_syn * (weight<0) : amp (summed)
+               Iin{input_number}_post = I_syn *  sign(weight)  : amp (summed)
 
-               EI =  EIe * (weight<0) + EIe * (weight>0): volt (constant)             # reversal potential
+               EI =  EIe: volt (constant)             # reversal potential
 
                kernel : siemens * second **-1
 
@@ -127,7 +127,7 @@ conductance = {'model': '''
                ''',
 
                'on_pre': '''
-               gI += baseweight * weight * w_plast
+               gI += baseweight * abs(weight) * w_plast
                ''',
 
                'on_post': ''' '''
@@ -148,21 +148,21 @@ conductance_params = {"gI": 0 * nS,
 
 # DPI type model
 dpi = {'model': '''
-        dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(abs(I_syn)<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
+        dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(I_syn<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
 
-        Iin{input_number}_post = I_syn * (weight>0) + I_syn * (weight<0) : amp (summed)
+        Iin{input_number}_post = I_syn *  sign(weight)  : amp (summed)
 
         weight : 1
         w_plast : 1
 
-        I_gain = Io_syn*(abs(I_syn)<=Io_syn) + I_th*(abs(I_syn)>Io_syn) : amp
-        Itau_syn = Io_syn*(abs(I_syn)<=Io_syn) + I_tau*(abs(I_syn)>Io_syn) : amp
+        I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn) : amp
+        Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn) : amp
 
         baseweight : amp (constant)     # synaptic gain
         tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn) : second
         kappa_syn = (kn_syn + kp_syn) / 2 : 1
 
-        Iw = weight * baseweight  : amp
+        Iw = abs(weight) * baseweight  : amp
 
         I_tau       : amp (constant)
         I_th        : amp (constant)
@@ -194,23 +194,23 @@ dpi_params = {
 
 # DPI shunting inhibition
 dpi_shunt = {'model': """
-            dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(abs(I_syn)<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
+            dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(I_syn<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
 
-            Ishunt{input_number}_post = I_syn * (weight<0) : amp (summed)
+            Ishunt{input_number}_post = I_syn *  sign(weight)  * (weight<0) : amp (summed)
 
             weight : 1
             w_plast : 1
 
-            I_gain = Io_syn*(abs(I_syn)<=Io_syn) + I_th*(abs(I_syn)>Io_syn) : amp
+            I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn) : amp
 
-            Itau_syn = Io_syn*(abs(I_syn)<=Io_syn) + I_tau*(abs(I_syn)>Io_syn) : amp
+            Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn) : amp
 
             baseweight : amp (constant)     # synaptic gain
             tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn) : second
             kappa_syn = (kn_syn + kp_syn) / 2 : 1
 
 
-            Iw = weight * baseweight  : amp
+            Iw = abs(weight) * baseweight  : amp
 
             I_tau       : amp (constant)
             I_th        : amp (constant)
@@ -380,7 +380,7 @@ alpha_kernel = {'model': '''
              ''',
 
                 'on_pre': '''
-             s += baseweight * w_plast * weight 
+             s += baseweight * w_plast * abs(weight)
              %I_syn += 0 * amp
              ''',
 
@@ -401,7 +401,7 @@ dexp_kernel = {'model': '''
              ''',
 
                 'on_pre': '''
-             h += weight
+             h += abs(weight)
              %I_syn += 0 * amp
              ''',
 
@@ -424,7 +424,7 @@ resonant_kernel = {'model': '''
                 ''',
 
                    'on_pre': '''
-                s += baseweight * w_plast * weight
+                s += baseweight * w_plast * abs(weight)
                 ''',
 
                    'on_post': ''' '''}

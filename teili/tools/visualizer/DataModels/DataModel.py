@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2018 University of Zurich
-
-import _pickle as pickle
+import numpy as np
 
 class DataModel(object):
     """ Parent class of all DataModels """
@@ -19,13 +18,14 @@ class DataModel(object):
 
     def save_datamodel(self, outputfilename):
         """ Save DataModel object to outputfilename with pickle"""
-        with open(outputfilename + '.pkl', 'wb') as f:
-            pickle.dump(self, f)
+        arrays_to_save_by_name = {}
+        for attr_name in self.attributes_to_save:
+            arrays_to_save_by_name[attr_name] = getattr(self, attr_name)
+        np.savez(outputfilename, **arrays_to_save_by_name)
 
     def load_datamodel(self, path_to_data):
         """ Load DataModel instance from path_to_data """
-        with open(path_to_data + '.pkl', 'rb') as f:
-            data = pickle.load(f)
-
-        for varible_name, variable_values in vars(data).items():
+        data = np.load(path_to_data, allow_pickle=True)
+        for varible_name, variable_values in data.items():
             setattr(self, varible_name, variable_values)
+        data.close()

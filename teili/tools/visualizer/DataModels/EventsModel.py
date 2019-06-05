@@ -19,6 +19,9 @@ class EventsModel(DataModel):
         self.neuron_ids = neuron_ids
         self.spike_times = spike_times
 
+        self.attributes_to_save = ['neuron_ids', 'spike_times']
+
+
     @classmethod
     def from_brian_spike_monitor(cls, brian_spike_monitor):
         """ Classmethod to init EventsModel from brian spike monitor
@@ -30,4 +33,7 @@ class EventsModel(DataModel):
             neuron_ids=np.asarray(
                 brian_spike_monitor.i), spike_times=np.asarray(
                 brian_spike_monitor.t))
+
+        newEventsModel.attributes_to_save = ['neuron_ids', 'spike_times']
+
         return newEventsModel

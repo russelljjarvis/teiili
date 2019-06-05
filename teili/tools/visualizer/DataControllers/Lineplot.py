@@ -87,6 +87,9 @@ class Lineplot(DataController):
         self._get_data_from_datamodels(DataModel_to_x_and_y_attr)
         self._filter_data()
         self.create_plot()
+        # to allow easier access to main- and subfigure
+        self.mainfig = self.viewer.mainfig
+        self.subfig = self.viewer.subfig
         if show_immediately:
             self.show()
 

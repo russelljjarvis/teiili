@@ -101,6 +101,10 @@ class Rasterplot(DataController):
         self._filter_data()
 
         self.create_plot()
+        # to allow easier access to main- and subfigure
+        self.mainfig = self.viewer.mainfig
+        self.subfig_rasterplot = self.viewer.subfig_rasterplot
+        self.subfig_histogram = self.viewer.subfig_histogram
         if show_immediately:
             self.show()
 

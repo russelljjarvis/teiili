@@ -92,8 +92,8 @@ def _rand_gamma_generate_cpp_code(alpha, beta, name):
 
 
 class Rand_gamma(Function, Nameable):
-    prefs.codegen.cpp.headers += [' <random>']
-    prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++14')
+    prefs.codegen.cpp.headers += ['<random>']
+    # prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++14')
 
     implementations = {
         'cpp': _rand_gamma_generate_cpp_code,

@@ -425,6 +425,7 @@ resonant_kernel = {'model': '''
 
                    'on_pre': '''
                 s += baseweight * w_plast * abs(weight)
+                %I_syn += 0 * amp
                 ''',
 
                    'on_post': ''' '''}

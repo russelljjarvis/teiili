@@ -12,7 +12,7 @@ This toolbox was developed to provide computational neuroscientists, as well as 
    scripts/Getting started.rst
    scripts/Tutorials.rst
    scripts/Other examples.md
-   scripts/Visualizer.md
+   scripts/Visualizer.rst
    scripts/Core.rst
    scripts/Neuron and Synapse models.md
    scripts/Building Blocks.rst
@@ -21,6 +21,7 @@ This toolbox was developed to provide computational neuroscientists, as well as 
    scripts/Tools.md
    scripts/Contributors.md
    modules/modules.rst
+
 
 Indices and tables
 ==================

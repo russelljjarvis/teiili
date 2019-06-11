@@ -13,14 +13,14 @@ class TestDataController(unittest.TestCase):
         spike_times = [11, 14, 14, 16, 17, 25, 36, 40]
         EM_org = EventsModel(neuron_ids=neuron_ids, spike_times=spike_times)
 
-        outputfilename_em = './test_saveloaddatamodel_eventsmodel'
+        outputfilename_em = './test_saveloaddatamodel_eventsmodel.npz'
         EM_org.save_datamodel(outputfilename_em)
 
         EM_restored = EventsModel(neuron_ids=None, spike_times=None)
         EM_restored.load_datamodel(outputfilename_em)
 
-        self.assertTrue((EM_org.neuron_ids == EM_restored.neuron_ids))
-        self.assertTrue((EM_org.spike_times == EM_restored.spike_times))
+        self.assertTrue((np.array_equal(EM_org.neuron_ids, EM_restored.neuron_ids)))
+        self.assertTrue((np.array_equal(EM_org.spike_times, EM_restored.spike_times)))
 
         # StateVariablesModel
         state_variable_names = ['var_name']
@@ -33,7 +33,7 @@ class TestDataController(unittest.TestCase):
             state_variables,
             state_variables_times)
 
-        outputfilename_svm = './test_saveloaddatamodel_statevariablesmodel'
+        outputfilename_svm = './test_saveloaddatamodel_statevariablesmodel.npz'
         SVM_org.save_datamodel(outputfilename_svm)
 
         SVM_restored = StateVariablesModel(
@@ -51,13 +51,12 @@ class TestDataController(unittest.TestCase):
         spike_times = [11, 14, 14, 16, 17, 25, 36, 40]
         EM_org = EventsModel(neuron_ids=neuron_ids, spike_times=spike_times)
 
-        outputfilename_em = './test_saveloaddatamodel_eventsmodel'
+        outputfilename_em = './test_saveloaddatamodel_eventsmodel.npz'
         EM_org.save_datamodel(outputfilename_em)
 
         EM_restored_directly = EventsModel.from_file(outputfilename_em)
-        self.assertTrue((EM_org.neuron_ids == EM_restored_directly.neuron_ids))
-        self.assertTrue(
-            (EM_org.spike_times == EM_restored_directly.spike_times))
+        self.assertTrue((np.array_equal(EM_org.neuron_ids, EM_restored_directly.neuron_ids)))
+        self.assertTrue((np.array_equal(EM_org.spike_times, EM_restored_directly.spike_times)))
 
         # StateVariablesModel
         state_variable_names = ['var_name']
@@ -70,15 +69,13 @@ class TestDataController(unittest.TestCase):
             state_variables,
             state_variables_times)
 
-        outputfilename_svm = './test_saveloaddatamodel_statevariablesmodel'
+        outputfilename_svm = './test_saveloaddatamodel_statevariablesmodel.npz'
         SVM_org.save_datamodel(outputfilename_svm)
 
         SVM_restored_directly = StateVariablesModel.from_file(
             outputfilename_svm)
-        self.assertTrue(
-            (SVM_org.var_name == SVM_restored_directly.var_name).all())
-        self.assertTrue(
-            (SVM_org.t_var_name == SVM_restored_directly.t_var_name).all())
+        self.assertTrue((SVM_org.var_name == SVM_restored_directly.var_name).all())
+        self.assertTrue((SVM_org.t_var_name == SVM_restored_directly.t_var_name).all())
 
 
 if __name__ == '__main__':

@@ -69,7 +69,7 @@ noise_syn = Connections(testbench.noise_input, gtestWTA,
 noise_syn.connect("i==j")
 noise_syn.weight = 500
 statemonWTAin = StateMonitor(gtestWTA.Groups['gWTAGroup'],
-                             ('Ie0', 'Ii0', 'Ie1', 'Ii1', 'Ie2', 'Ii2', 'Ie3', 'Ii3'), record=True,
+                             ('Iin0', 'Iin1', 'Iin2', 'Iin3'), record=True,
                              name='statemonWTAin')
 
 # We have to add shared (scalar) parameters that are influencing the other parameters if we want to change them via the GUI

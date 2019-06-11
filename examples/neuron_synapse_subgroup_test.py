@@ -73,13 +73,13 @@ spikemonInp = SpikeMonitor(gInpGroup, name='spikemonInp')
 spikemon = SpikeMonitor(testNeurons, name='spikemon')
 spikemonOut = SpikeMonitor(testNeurons2, name='spikemonOut')
 statemonInpSyn = StateMonitor(
-    InpSyn1, variables='Ie_syn', record=True, name='statemonInpSyn')
+    InpSyn1, variables='I_syn', record=True, name='statemonInpSyn')
 statemonNeuOut = StateMonitor(testNeurons2, variables=[
                               'Imem'], record=0, name='statemonNeuOut')
 statemonNeuIn = StateMonitor(testNeurons, variables=[
                              "Iin", "Imem", "Iahp"], record=[0, 1], name='statemonNeu')
 statemonSynOut = StateMonitor(
-    Syn, variables='Ie_syn', record=True, name='statemonSynOut')
+    Syn, variables='I_syn', record=True, name='statemonSynOut')
 # statemonSynTest=StateMonitor(testInpSyn,variables=["Isyn_exc"],record=[0],name='statemonSyn')
 
 Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn1, InpSyn2, Syn, spikemonInp, spikemon,
@@ -133,7 +133,7 @@ Rasterplot(MyEventsModels=[spikemonInp],
                      show_immediately=False)
 
 
-Lineplot(DataModel_to_x_and_y_attr=[(statemonInpSyn, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemonInpSyn, ('t', 'I_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Input synapses",
@@ -158,7 +158,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Imem'))],
                    QtApp=app,
                    show_immediately=False)
 
-Lineplot(DataModel_to_x_and_y_attr=[(statemonSynOut, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemonSynOut, ('t', 'I_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Output synapses",
@@ -234,7 +234,7 @@ app.exec()
 #         symbolSize=7, symbolBrush=(255, 255, 255))
 
 # Input synapses
-# for i, data in enumerate(np.asarray(statemonInpSyn.Ie_syn)):
+# for i, data in enumerate(np.asarray(statemonInpSyn.I_syn)):
 #     name = 'Syn_{}'.format(i)
 #     p2.plot(x=np.asarray(statemonInpSyn.t / ms), y=data,
 #             pen=pg.mkPen(colors[3], width=2), name=name)
@@ -245,7 +245,7 @@ app.exec()
 #             pen=pg.mkPen(colors[6], width=2))
 
 # Output synapses
-# for i, data in enumerate(np.asarray(statemonSynOut.Ie_syn)):
+# for i, data in enumerate(np.asarray(statemonSynOut.I_syn)):
 #     name = 'Syn_{}'.format(i)
 #     p4.plot(x=np.asarray(statemonSynOut.t / ms), y=data,
 #             pen=pg.mkPen(colors[1], width=2), name=name)

@@ -1,48 +1,63 @@
 # -*- coding: utf-8 -*-
 # @Author: mmilde
 # @Date:   2017-25-08 13:43:10
+# @Last Modified by:   mmilde
+# @Last Modified time: 2018-04-25 21:24:25
+# -*- coding: utf-8 -*-
+
 """
-This is a tutorial to construct a simple network of neurons
-using the teili framework.
+This is a tutorial example used to learn the basics of the Brian2 INI library.
 The emphasise is on neuron groups and non-plastic synapses.
 """
-
-from pyqtgraph.Qt import QtGui
+import os
+from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 
-from brian2 import ms, pA, nA, prefs,\
-    SpikeMonitor, StateMonitor,\
-    SpikeGeneratorGroup
+from brian2 import ms, nA, SpikeGeneratorGroup,\
+    SpikeMonitor, StateMonitor, prefs, set_device,\
+    asarray, defaultclock
 
-from teili.core.groups import Neurons, Connections
-from teili import TeiliNetwork
-from teili.models.neuron_models import DPI as neuron_model
-from teili.models.synapse_models import DPISyn as syn_model
+import brian2genn
+
+from teili import TeiliNetwork, Neurons, Connections
+from teili import DPI as neuron_model
+from teili import DPISyn as synapse_model
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
+from teili import SynapseEquationBuilder
 
-prefs.codegen.target = "numpy"
+path = os.path.expanduser("~")
+model_path = os.path.join(path, "teiliApps", "equations", "")
+
+synapse_obj = SynapseEquationBuilder.import_eq(
+    model_path + 'DPISyn_single_eq.py')
+
+#prefs.codegen.target = "numpy"
+set_device('genn', use_GPU= False, directory='teili2genn_test', debug=False)
 
 input_timestamps = np.asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
                                            times=input_timestamps, name='input_spikegenerator')
 
-
 Net = TeiliNetwork()
 
-test_neurons1 = Neurons(2, equation_builder=neuron_model(
-    num_inputs=2), name="test_neurons1")
+test_neurons1 = Neurons(2, equation_builder=neuron_model(num_inputs=2),
+                        name="testNeuron")
+# Example of how to set parameters, saved as a dictionary
+test_neurons1.set_params(neuron_model_param)
 
-test_neurons2 = Neurons(2, equation_builder=neuron_model(
-    num_inputs=2), name="test_neurons2")
+test_neurons2 = Neurons(2, equation_builder=neuron_model(num_inputs=2),
+                        name="testNeuron2")
 
 input_synapse = Connections(input_spikegenerator, test_neurons1,
-                            equation_builder=syn_model(), name="input_synapse", verbose=False)
+                            equation_builder=synapse_obj,
+                            name='input_synapse')
 input_synapse.connect(True)
 
 test_synapse = Connections(test_neurons1, test_neurons2,
-                           equation_builder=syn_model(), name="test_synapse")
+                           equation_builder=synapse_obj,
+                           name="testSyn2")
 test_synapse.connect(True)
 
 '''
@@ -69,31 +84,35 @@ elif 'Vm' in neuron_model().keywords['model']:
     test_synapse.weight = 8.0
     test_neurons1.Iconst = 3 * nA
 
-spikemon_input = SpikeMonitor(input_spikegenerator, name='spikemon_input')
+spikemon_input = SpikeMonitor(
+    input_spikegenerator, name='spikemon_input')
 spikemon_test_neurons1 = SpikeMonitor(
     test_neurons1, name='spikemon_test_neurons1')
 spikemon_test_neurons2 = SpikeMonitor(
     test_neurons2, name='spikemon_test_neurons2')
 
 statemon_input_synapse = StateMonitor(
-    input_synapse, variables='I_syn', record=True, name='statemon_input_synapse')
+    input_synapse, variables='Ie_syn',
+    record=[1, 2], name='statemon_input_synapse')
 
 statemon_test_synapse = StateMonitor(
-    test_synapse, variables='I_syn', record=True, name='statemon_test_synapse')
+    test_synapse, variables='Ie_syn',
+    record=[1,2,3,4], name='statemon_test_synapse')
 
 if 'Imem' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
                                           variables=['Imem'],
                                           record=0, name='statemon_test_neurons2')
-    statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
-        "Iin", "Imem", "Iahp"], record=[0, 1], name='statemon_test_neurons1')
+    statemon_test_neurons1 = StateMonitor(test_neurons1,
+                                          variables=["Iin", "Imem", "Iahp"],
+                                          record=[0, 1], name='statemon_test_neurons1')
 elif 'Vm' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
                                           variables=['Vm'],
                                           record=0, name='statemon_test_neurons2')
-    statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
-        "Iin", "Vm", "Iadapt"], record=[0, 1], name='statemon_test_neurons1')
-
+    statemon_test_neurons1 = StateMonitor(test_neurons1,
+                                          variables=["Iin", "Vm", "Iadapt"],
+                                          record=[0, 1], name='statemon_test_neurons1')
 
 Net.add(input_spikegenerator, test_neurons1, test_neurons2,
         input_synapse, test_synapse,
@@ -101,6 +120,7 @@ Net.add(input_spikegenerator, test_neurons1, test_neurons2,
         statemon_test_neurons1, statemon_test_neurons2,
         statemon_test_synapse, statemon_input_synapse)
 
+# Net.add(input_spikegenerator, test_neurons1, test_neurons2, input_synapse, test_synapse)
 duration = 500
 Net.run(duration * ms)
 
@@ -144,7 +164,7 @@ p1.plot(x=np.asarray(spikemon_input.t / ms), y=np.asarray(spikemon_input.i),
         symbolSize=7, symbolBrush=(255, 255, 255))
 
 # Input synapses
-for i, data in enumerate(np.asarray(statemon_input_synapse.I_syn)):
+for i, data in enumerate(np.asarray(statemon_input_synapse.Ie_syn)):
     name = 'Syn_{}'.format(i)
     p2.plot(x=np.asarray(statemon_input_synapse.t / ms), y=data,
             pen=pg.mkPen(colors[3], width=2), name=name)
@@ -160,7 +180,7 @@ if hasattr(statemon_test_neurons1, 'Vm'):
                 pen=pg.mkPen(colors[6], width=2))
 
 # Output synapses
-for i, data in enumerate(np.asarray(statemon_test_synapse.I_syn)):
+for i, data in enumerate(np.asarray(statemon_test_synapse.Ie_syn)):
     name = 'Syn_{}'.format(i)
     p4.plot(x=np.asarray(statemon_test_synapse.t / ms), y=data,
             pen=pg.mkPen(colors[1], width=2), name=name)

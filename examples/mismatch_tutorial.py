@@ -9,7 +9,7 @@ dictionaries:
     - mismatch_neuron_param
     - mismatch_synap_param
 Here mismatch is added to the neuron refractory period (refP) and to the synaptic
-weight (baseweight_e).
+weight (baseweight).
 
 Created on Wed Jul 25 18:32:44 2018
 @author: nrisi
@@ -76,15 +76,11 @@ mismatch_synap_param = {
     'kp_syn': 0,
     'Ut_syn': 0,
     'Csyn': 0,
-    'Ie_tau': 0,
-    'Ii_tau': 0,
-    'Ie_th': 0,
-    'Ii_th': 0,
-    'Ie_syn': 0,
-    'Ii_syn': 0,
+    'I_tau': 0,
+    'I_th': 0,
+    'I_syn': 0,
     'w_plast': 0,
-    'baseweight_e': 0.2,
-    'baseweight_i': 0,
+    'baseweight': 0.2
 }
 
 # Input layer
@@ -115,13 +111,13 @@ the first one)
 if not standalone:
     mean_neuron_param = np.copy(getattr(output_neurons, 'refP'))[0]
     unit_old_param_neu = getattr(output_neurons, 'refP').unit
-    mean_synapse_param = np.copy(getattr(input_syn, 'baseweight_e'))[0]
-    unit_old_param_syn = getattr(input_syn, 'baseweight_e').unit
+    mean_synapse_param = np.copy(getattr(input_syn, 'baseweight'))[0]
+    unit_old_param_syn = getattr(input_syn, 'baseweight').unit
 else:
     mean_neuron_param = output_neurons.get_params()['refP'][0]
     unit_old_param_neu = output_neurons.get_params()['refP'].unit
-    mean_synapse_param = input_syn.get_params()['baseweight_e'][0]
-    unit_old_param_syn = input_syn.get_params()['baseweight_e'].unit
+    mean_synapse_param = input_syn.get_params()['baseweight'][0]
+    unit_old_param_syn = input_syn.get_params()['baseweight'].unit
 
 output_neurons.add_mismatch(std_dict=mismatch_neuron_param, seed=10)
 input_syn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
@@ -135,7 +131,7 @@ statemon_output = StateMonitor(output_neurons,
                                record=range(0,output_neurons.N),
                                name='statemonNeuMid')
 statemon_input_syn = StateMonitor(input_syn,
-                                  variables='Ie_syn',
+                                  variables='I_syn',
                                   record=range(0,output_neurons.N),
                                   name='statemon_input_syn')
 
@@ -158,6 +154,7 @@ MyPlotSettings = PlotSettings(fontsize_title=12,
 
 # prepare data (part 1)
 neuron_ids_to_plot = np.random.randint(1000, size=5)
+
 distinguish_neurons_in_plot = True  # show values in different color per neuron otherwise the same color per subgroup
 
 ## plot EPSC (subfig3)
@@ -166,14 +163,14 @@ if distinguish_neurons_in_plot:
     DataModels_EPSC = []
     for neuron_id in neuron_ids_to_plot:
         MyData_EPSC = StateVariablesModel(state_variable_names=['EPSC'],
-                                          state_variables=[statemon_input_syn.Ie_syn[neuron_id]],
+                                          state_variables=[statemon_input_syn.I_syn[neuron_id]],
                                           state_variables_times=[statemon_input_syn.t])
         DataModels_EPSC.append((MyData_EPSC, ('t_EPSC', 'EPSC')))
 else:
     # to get all neurons plotted in the same color
     neuron_ids_to_plot = np.random.randint(1000, size=5)
     MyData_EPSC = StateVariablesModel(state_variable_names=['EPSC'],
-                                 state_variables=[statemon_input_syn.Ie_syn[neuron_ids_to_plot].T],
+                                 state_variables=[statemon_input_syn.I_syn[neuron_ids_to_plot].T],
                                  state_variables_times=[statemon_input_syn.t])
     DataModels_EPSC=[(MyData_EPSC, ('t_EPSC', 'EPSC'))]
 
@@ -231,9 +228,9 @@ Lineplot(DataModel_to_x_and_y_attr=DataModels_Imem,
 
 
 # prepare data (part 1)
-input_syn_baseweights_e = np.asarray(getattr(input_syn, 'baseweight_e'))*10**12
-MyData_baseweight_e = StateVariablesModel(state_variable_names=['baseweight_e'],
-                                          state_variables=[input_syn_baseweights_e])  # to pA
+input_syn_baseweights = np.asarray(getattr(input_syn, 'baseweight'))*10**12
+MyData_baseweight = StateVariablesModel(state_variable_names=['baseweight'],
+                                          state_variables=[input_syn_baseweights])  # to pA
 
 refractory_periods = np.asarray(getattr(output_neurons, 'refP'))*10**3 # to ms
 MyData_refP = StateVariablesModel(state_variable_names=['refP'],
@@ -245,13 +242,13 @@ subfig1 = mainfig.addPlot(row=0, col=0)
 subfig2 = mainfig.addPlot(row=1, col=0)
 
 # add data to plots
-Histogram(DataModel_to_attr=[(MyData_baseweight_e, 'baseweight_e')],
+Histogram(DataModel_to_attr=[(MyData_baseweight, 'baseweight')],
                     MyPlotSettings=MyPlotSettings,
-                    title='baseweight_e', xlabel='(pA)', ylabel='count',
+                    title='baseweight', xlabel='(pA)', ylabel='count',
                     backend='pyqtgraph',
                     mainfig=mainfig, subfig=subfig1, QtApp=QtApp,
                     show_immediately=False)
-y, x = np.histogram(input_syn_baseweights_e, bins="auto")
+y, x = np.histogram(input_syn_baseweights, bins="auto")
 subfig1.plot(x=np.asarray([mean_synapse_param*10**12, mean_synapse_param*10**12]),
              y=np.asarray([0, 300]),
                 pen=pg.mkPen((0, 255, 0), width=2))

@@ -38,8 +38,7 @@ pre_neurons = Neurons(N, model='''tspike:second''', threshold='t>tspike', refrac
 
 pre_neurons.namespace.update({'tmax': tmax})
 post_neurons = Neurons(N, model='''
-                Ii0 : amp
-                Ie0 : amp
+                Iin0 : amp
                 tspike:second''', threshold='t>tspike', refractory=100 * ms)
 post_neurons.namespace.update({'tmax': tmax})
 

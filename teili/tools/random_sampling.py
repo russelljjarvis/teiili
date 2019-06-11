@@ -37,6 +37,7 @@ def _randn_trunc_generate_cpp_code(lower, upper, name):
         do {retVal = _randn(_vectorisation_idx);
         } while ((retVal > %UPPER%) || (retVal < %LOWER%));
         return retVal;
+    grid_._gr['s_inp_exc]
     }
     '''
     cpp_code = replace(cpp_code, {'%NAME%': name, '%UPPER%': str(upper), '%LOWER%': str(lower)})
@@ -92,8 +93,7 @@ def _rand_gamma_generate_cpp_code(alpha, beta, name):
 
 
 class Rand_gamma(Function, Nameable):
-    prefs.codegen.cpp.headers += [' <random>']
-    prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++14')
+    prefs.codegen.cpp.headers += ['<random>']
 
     implementations = {
         'cpp': _rand_gamma_generate_cpp_code,

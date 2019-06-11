@@ -193,8 +193,7 @@ class NeuronEquationBuilder():
                 need different inputs)''')
 
         # remove previously added inputcurrent lines
-        inputcurrent_e_pattern = re.compile("Ie\d+ : amp")
-        inputcurrent_i_pattern = re.compile("Ii\d+ : amp")
+        inputcurrent_pattern = re.compile("Iin\d+ : amp")
         model = self.keywords['model'].split('\n')
         for line in self.keywords['model'].split('\n'):
             if "Iin =" in line or "Iin=" in line:
@@ -203,29 +202,20 @@ class NeuronEquationBuilder():
                     print(
                         'previously added input currents were removed, following lines deleted:')
                     print(line)
-            elif inputcurrent_e_pattern.search(line) is not None:
+            elif inputcurrent_pattern.search(line) is not None:
                 if self.verbose:
                     print(line)
                 model.remove(line)
-            elif inputcurrent_i_pattern.search(line) is not None:
-                model.remove(line)
-                if self.verbose:
-                    print(line)
 
         self.keywords['model'] = '\n'.join(model)
 
-        Ies = ["Ie0"] + ["+ Ie" +
+        Iins = ["Iin0"] + ["+ Iin" +
                          str(i + 1) + " " for i in range(num_inputs - 1)]
-        Iis = ["+Ii0"] + ["+ Ii" +
-                          str(i + 1) + " " for i in range(num_inputs - 1)]
 
         self.keywords['model'] = self.keywords['model'] + "\nIin = " + \
-                                 "".join(Ies) + "".join(Iis) + " : amp # input currents\n"
-        Iesline = ["        Ie" + str(i) + " : amp" for i in range(num_inputs)]
-        Iisline = ["        Ii" + str(i) + " : amp" for i in range(num_inputs)]
-        self.add_state_vars(Iesline)
-        self.keywords['model'] += "\n"
-        self.add_state_vars(Iisline)
+            "".join(Iins) + " : amp # input currents\n"
+        Iinsline = ["        Iin" + str(i) + " : amp" for i in range(num_inputs)]
+        self.add_state_vars(Iinsline)
         self.keywords['model'] += "\n"
 
     def add_state_vars(self, stateVars):

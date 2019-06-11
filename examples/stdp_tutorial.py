@@ -62,7 +62,7 @@ post_synapse.weight = 4000.
 
 stdp_synapse.connect("i==j")
 stdp_synapse.weight = 300.
-stdp_synapse.Ie_tau = 10 * pA
+stdp_synapse.I_tau = 10 * pA
 stdp_synapse.dApre = 0.01
 stdp_synapse.taupre = 3 * ms
 stdp_synapse.taupost = 3 * ms
@@ -79,10 +79,10 @@ statemon_post_neurons = StateMonitor(
 
 
 statemon_pre_synapse = StateMonitor(
-    pre_synapse, variables=['Ie_syn'], record=0, name='statemon_pre_synapse')
+    pre_synapse, variables=['I_syn'], record=0, name='statemon_pre_synapse')
 
 statemon_post_synapse = StateMonitor(stdp_synapse, variables=[
-    'Ie_syn', 'w_plast', 'weight'],
+    'I_syn', 'w_plast', 'weight'],
     record=True, name='statemon_post_synapse')
 
 Net.add(pre_spikegenerator, post_spikegenerator,
@@ -159,7 +159,7 @@ for i, data in enumerate(np.asarray(statemon_post_synapse.w_plast)):
         p2.plot(x=np.asarray(statemon_post_synapse.t / ms), y=data,
                 pen=pg.mkPen(colors[i], width=3))
 
-p3.plot(x=np.asarray(statemon_post_synapse.t / ms), y=np.asarray(statemon_post_synapse.Ie_syn[1]),
+p3.plot(x=np.asarray(statemon_post_synapse.t / ms), y=np.asarray(statemon_post_synapse.I_syn[1]),
         pen=pg.mkPen(colors[3], width=2))
 
 
@@ -167,7 +167,7 @@ p1.setLabel('left', "Neuron ID", **labelStyle)
 p1.setLabel('bottom', "Time (ms)", **labelStyle)
 p2.setLabel('bottom', "Time (ms)", **labelStyle)
 p2.setLabel('left', "Synpatic weight w_plast", **labelStyle)
-p3.setLabel('left', "Synapic current Ie", units='A', **labelStyle)
+p3.setLabel('left', "Synapic current I", units='A', **labelStyle)
 p3.setLabel('bottom', "Time (ms)", **labelStyle)
 
 b = QtGui.QFont("Sans Serif", 10)

@@ -69,8 +69,7 @@ noise_syn.connect("i==j")
 noise_syn.weight = 3000
 
 statemonWTAin = StateMonitor(test_WTA.Groups['gWTAGroup'],
-                             ('Ie0', 'Ii0', 'Ie1', 'Ii1',
-                              'Ie2', 'Ii2', 'Ie3', 'Ii3'),
+                             ('Iin0', 'Iin1', 'Iin2','Iin3'),
                              record=True,
                              name='statemonWTAin')
 

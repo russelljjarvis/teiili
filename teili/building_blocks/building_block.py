@@ -142,7 +142,10 @@ class BuildingBlock(Nameable):
               }
             target_group (str): Name of group to set tags
         """
-        self.group[target_group]._tags = tags
+        if type(target_group) == str:
+            self._groups[target_group]._tags = tags
+        else:
+            target_group._tags = tags
 
 
     def print_tags(self, target_group):
@@ -164,7 +167,10 @@ class BuildingBlock(Nameable):
            (dict): Dictionary containing all assigned _tags of provided
                group
         """
-        return self.groups[target_group]._tags
+        if type(target_group) == str:
+            return self.groups[target_group]._tags
+        else:
+            return target_group._tags
 
 
     def get_groups(self, tags):
@@ -179,9 +185,12 @@ class BuildingBlock(Nameable):
         """
         target_groups = []
         for group in self.groups:
-            if group._tag == tags:
-                target_groups.append(group)
-            else:
-                continue
+            try:
+                if self._groups[group]._tags == tags:
+                    target_groups.append(self._groups[group])
+                else:
+                    continue
+            except AttributeError as e:
+                pass
 
         return target_groups

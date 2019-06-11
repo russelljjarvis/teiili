@@ -65,10 +65,10 @@ class LineplotViewerMatplotlib(LineplotViewer):
 
         # set parameters on plot dimensions along x and y axis
         if x_range_axis is None:
-            all_x_data = np.concatenate(list(map(lambda x: x[0].flatten(), data)))
+            all_x_data = np.concatenate(list(map(lambda x: np.asarray(x[0]).flatten(), data)))
             x_range_axis = (min(all_x_data, default=0), max(all_x_data, default=1))
         if y_range_axis is None:
-            all_y_data = np.concatenate(list(map(lambda x: x[1].flatten(), data)))
+            all_y_data = np.concatenate(list(map(lambda x: np.asarray(x[1]).flatten(), data)))
             y_range_axis = (min(all_y_data, default=0), max(all_y_data, default=1))
 
         label = None

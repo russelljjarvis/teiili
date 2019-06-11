@@ -16,7 +16,7 @@ import numpy as np
 
 from brian2 import ms, nA, SpikeGeneratorGroup,\
     SpikeMonitor, StateMonitor, prefs, set_device,\
-    asarray
+    asarray, defaultclock
 
 import brian2genn
 
@@ -33,7 +33,7 @@ synapse_obj = SynapseEquationBuilder.import_eq(
     model_path + 'DPISyn_single_eq.py')
 
 #prefs.codegen.target = "numpy"
-set_device('genn', use_GPU= False, directory='teili2genn_test', debug=True)
+set_device('genn', use_GPU= False, directory='teili2genn_test', debug=False)
 
 input_timestamps = np.asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0])
@@ -103,14 +103,16 @@ if 'Imem' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
                                           variables=['Imem'],
                                           record=0, name='statemon_test_neurons2')
-    statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
-        "Iin", "Imem", "Iahp"], record=[0, 1], name='statemon_test_neurons1')
+    statemon_test_neurons1 = StateMonitor(test_neurons1,
+                                          variables=["Iin", "Imem", "Iahp"],
+                                          record=[0, 1], name='statemon_test_neurons1')
 elif 'Vm' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
                                           variables=['Vm'],
                                           record=0, name='statemon_test_neurons2')
-    statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
-        "Iin", "Vm", "Iadapt"], record=[0, 1], name='statemon_test_neurons1')
+    statemon_test_neurons1 = StateMonitor(test_neurons1,
+                                          variables=["Iin", "Vm", "Iadapt"],
+                                          record=[0, 1], name='statemon_test_neurons1')
 
 Net.add(input_spikegenerator, test_neurons1, test_neurons2,
         input_synapse, test_synapse,

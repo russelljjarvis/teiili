@@ -48,6 +48,7 @@ class TeiliGroup(Group):
         self.standalone_vars = []
         self.standalone_params = OrderedDict()
         self.str_params = {}
+        self._tags = {}
 
     def add_state_variable(self, name, unit=1, shared=False, constant=False, changeInStandalone=True):
         """This method allows you to add a state variable.

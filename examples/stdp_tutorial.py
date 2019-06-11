@@ -8,14 +8,10 @@ on neurmorphic chips in the context of synaptic plasticity based on precise timi
 We use a standard STDP protocal with a exponentioally decaying window.
 
 """
-from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
-import pyqtgraph.exporters
 import numpy as np
-import os
 
-
-from brian2 import ms, us, pA, prefs,\
+from brian2 import ms, us, second, pA, prefs,\
     SpikeMonitor, StateMonitor, defaultclock
 
 from teili.core.groups import Neurons, Connections
@@ -24,6 +20,9 @@ from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn, DPIstdp
 from teili.stimuli.testbench import STDP_Testbench
 
+from teili.tools.visualizer.DataViewers import PlotSettings
+from teili.tools.visualizer.DataModels import StateVariablesModel
+from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 50 * us
@@ -92,41 +91,20 @@ Net.add(pre_spikegenerator, post_spikegenerator,
         statemon_pre_neurons, statemon_post_neurons,
         statemon_pre_synapse, statemon_post_synapse)
 
-duration = 2000
-Net.run(duration * ms)
+duration = 2.
+Net.run(duration * second)
+
 
 # Visualize
-# Visualize simulation results
-app = QtGui.QApplication.instance()
-if app is None:
-    app = QtGui.QApplication(sys.argv)
-else:
-    print('QApplication instance already exists: %s' % str(app))
-
-pg.setConfigOptions(antialias=True)
-
 win_stdp = pg.GraphicsWindow(title="STDP Unit Test")
 win_stdp.resize(2500, 1500)
-win_stdp.setWindowTitle("Spike Time Dependet Plasticity")
-colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-          (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-labelStyle = {'color': '#FFF', 'font-size': '12pt'}
+win_stdp.setWindowTitle("Spike Time Dependent Plasticity")
 
-p1 = win_stdp.addPlot(title="STDP protocol")
+p1 = win_stdp.addPlot()
 win_stdp.nextRow()
-p2 = win_stdp.addPlot(title="Plastic synaptic weight")
+p2 = win_stdp.addPlot()
 win_stdp.nextRow()
-p3 = win_stdp.addPlot(title="Post synaptic current")
-
-p1.setXRange(0, duration, padding=0)
-p1.setYRange(-0.1, 1.1, padding=0)
-p2.setXRange(0, duration, padding=0)
-p3.setXRange(0, duration, padding=0)
-
-p1.plot(x=np.asarray(spikemon_pre_neurons.t / ms), y=np.asarray(spikemon_pre_neurons.i),
-        pen=None, symbol='o', symbolPen=None,
-        symbolSize=7, symbolBrush=(255, 255, 255),
-        name='Pre synaptic neuron')
+p3 = win_stdp.addPlot()
 
 text1 = pg.TextItem(text='Homoeostasis', anchor=(-0.3, 0.5))
 text2 = pg.TextItem(text='Weak Pot.', anchor=(-0.3, 0.5))
@@ -140,42 +118,44 @@ p1.addItem(text3)
 p1.addItem(text4)
 p1.addItem(text5)
 p1.addItem(text6)
-
 text1.setPos(0, 0.5)
-text2.setPos(250, 0.5)
-text3.setPos(550, 0.5)
-text4.setPos(850, 0.5)
-text5.setPos(1150, 0.5)
-text6.setPos(1450, 0.5)
+text2.setPos(0.300, 0.5)
+text3.setPos(0.600, 0.5)
+text4.setPos(0.900, 0.5)
+text5.setPos(1.200, 0.5)
+text6.setPos(1.500, 0.5)
 
+Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
+            MyPlotSettings=PlotSettings(colors=['w', 'r']),
+            time_range=(0, duration),
+            neuron_id_range=(-1, 2),
+            title="STDP protocol",
+            xlabel="Time (s)",
+            ylabel="Neuron ID",
+            backend='pyqtgraph',
+            mainfig=win_stdp,
+            subfig_rasterplot=p1)
 
-p1.plot(x=np.asarray(spikemon_post_neurons.t / ms), y=np.asarray(spikemon_post_neurons.i),
-        pen=None, symbol='s', symbolPen=None,
-        symbolSize=7, symbolBrush=(255, 0, 0),
-        name='Post synaptic neuron')
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'w_plast'))],
+            MyPlotSettings=PlotSettings(colors=['g']),
+            x_range=(0, duration),
+            title="Plastic synaptic weight",
+            xlabel="Time (s)",
+            ylabel="Synpatic weight w_plast",
+            backend='pyqtgraph',
+            mainfig=win_stdp,
+            subfig=p2)
 
-for i, data in enumerate(np.asarray(statemon_post_synapse.w_plast)):
-    if i == 1:
-        p2.plot(x=np.asarray(statemon_post_synapse.t / ms), y=data,
-                pen=pg.mkPen(colors[i], width=3))
-
-p3.plot(x=np.asarray(statemon_post_synapse.t / ms), y=np.asarray(statemon_post_synapse.Ie_syn[1]),
-        pen=pg.mkPen(colors[3], width=2))
-
-
-p1.setLabel('left', "Neuron ID", **labelStyle)
-p1.setLabel('bottom', "Time (ms)", **labelStyle)
-p2.setLabel('bottom', "Time (ms)", **labelStyle)
-p2.setLabel('left', "Synpatic weight w_plast", **labelStyle)
-p3.setLabel('left', "Synapic current Ie", units='A', **labelStyle)
-p3.setLabel('bottom', "Time (ms)", **labelStyle)
-
-b = QtGui.QFont("Sans Serif", 10)
-p1.getAxis('bottom').tickFont = b
-p1.getAxis('left').tickFont = b
-p2.getAxis('bottom').tickFont = b
-p2.getAxis('left').tickFont = b
-p3.getAxis('bottom').tickFont = b
-p3.getAxis('left').tickFont = b
-
-app.exec()
+datamodel = StateVariablesModel(state_variable_names=['Ie_syn'],
+                                state_variables=[np.asarray(statemon_post_synapse.Ie_syn[1])],
+                                state_variables_times=[np.asarray(statemon_post_synapse.t)])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Ie_syn', 'Ie_syn'))],
+            MyPlotSettings=PlotSettings(colors=['m']),
+            x_range=(0, duration),
+            title="Post synaptic current",
+            xlabel="Time (s)",
+            ylabel="Synapic current Ie (pA)",
+            backend='pyqtgraph',
+            mainfig=win_stdp,
+            subfig=p3,
+            show_immediately=True)

@@ -1,5 +1,5 @@
 
-.. code:: ipython3
+.. code:: python
 
     # SPDX-License-Identifier: MIT
     # Copyright (c) 2018 University of Zurich
@@ -7,7 +7,7 @@
 Visualizer
 =================================
 
-**Model**: 
+**Model**:
 
 The model represents the data, and does nothing else. The model does NOT depend on the controller or the view.
    -  EventsModel
@@ -40,16 +40,17 @@ How to use it - in short
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 **1) get data**
-
-spikemonN1, spikemonN2, statemonN1, statemonN2 =
-run_your_own_brian_network()
+.. code-block:: python
+	spikemonN1, spikemonN2, statemonN1, statemonN2 =
+	run_your_own_brian_network()
 
 **2) define PLOTSETTING**
+.. code-block:: python
 
-from teili.tools.visualizer.DataViewers import PlotSettings
-MyPlotSettings = PlotSettings(fontsize_title=20, fontsize_legend=14,
-fontsize_axis_labels=14, marker_size = 30,colors = [‘r’, ‘b’, ‘g’, ‘c’,
-‘k’, ‘m’, ‘y’])
+	from teili.tools.visualizer.DataViewers import PlotSettings
+	MyPlotSettings = PlotSettings(fontsize_title=20, fontsize_legend=14,
+	fontsize_axis_labels=14, marker_size = 30,colors = [‘r’, ‘b’, ‘g’, ‘c’,
+	‘k’, ‘m’, ‘y’])
 
 **3) call CONTROLLER of desired type of plot, e.g. Histogram,
 Rasterplot, Lineplot, …**
@@ -71,7 +72,7 @@ subplot under **my_controller.subfig**
 
 How to use it - the slightly longer version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. code:: ipython3
+.. code-block:: python
 
     %pylab inline
     import numpy as np
@@ -94,12 +95,7 @@ How to use it - the slightly longer version
     QtApp = QtGui.QApplication([])
 
 
-.. parsed-literal::
-
-    Populating the interactive namespace from numpy and matplotlib
-
-
-.. code:: ipython3
+.. code-block:: python
 
     def run_brian_network():
         prefs.codegen.target = "numpy"
@@ -148,7 +144,7 @@ How to use it - the slightly longer version
 
 **Option A: run brian network to get SpikeMonitors and StateMonitors**
 
-.. code:: ipython3
+.. code-block:: python
 
     spikemonN1, spikemonN2, statemonN1, statemonN2 = run_brian_network()
 
@@ -161,7 +157,7 @@ Available DataModels:
 
     **EventsModel:** stores neuron_ids and spike_times
     
-    .. code:: ipython3
+    .. code-block:: python
     
         # create from array/list
         from teili.tools.visualizer.DataModels import EventsModel
@@ -176,9 +172,8 @@ Available DataModels:
         for var in vars(EM):
             print(var,': \n', getattr(EM, var))
     
-    
     .. parsed-literal::
-    
+
         Then the created EventsModel EM has the following attributes:
         neuron_ids : 
          [3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4
@@ -215,7 +210,7 @@ Available DataModels:
     
     **StateVariablesModel:**  stores any number of variables with their name and the list of timepoints when the variable was sampled
     
-    .. code:: ipython3
+    .. code-block:: python
     
         from teili.tools.visualizer.DataModels import StateVariablesModel
         
@@ -297,7 +292,7 @@ Available DataModels:
 -  The colors can be defined as RGBA to additionally define the
    transparency
 
-.. code:: ipython3
+.. code-block:: python
 
     from teili.tools.visualizer.DataViewers import PlotSettings
     MyPlotSettings = PlotSettings(fontsize_title=20, fontsize_legend=14, fontsize_axis_labels=14,
@@ -329,7 +324,7 @@ So far in teili: \* Histogram \* Rasterplot \* Lineplot
    * backend='matplotlib'
    * show_immediately=False
 
-.. code:: ipython3
+.. code-block:: python
 
     ''' Simple example to plot a histogram of two NeuronGroups '''
     from teili.tools.visualizer.DataControllers import Histogram
@@ -354,7 +349,7 @@ So far in teili: \* Histogram \* Rasterplot \* Lineplot
 .. image:: fig/example_histogram.png
 
 
-.. code:: ipython3
+.. code-block:: python
 
     # PYQTGRAPH backend
     HC = Histogram(DataModel_to_attr=DataModel_to_attr, 
@@ -382,7 +377,7 @@ So far in teili: \* Histogram \* Rasterplot \* Lineplot
    * add_histogram=False           --> show histogram of spikes per neuron id next to rasterplot
    * show_immediately=False
 
-.. code:: ipython3
+.. code-block:: python
 
     from teili.tools.visualizer.DataControllers import Rasterplot
     ''' Simple example to plot a rasterplot of two NeuronGroups '''
@@ -411,7 +406,7 @@ So far in teili: \* Histogram \* Rasterplot \* Lineplot
 .. image:: fig/example_rasterplot_with_histogram.png
 
 
-.. code:: ipython3
+.. code-block:: python
 
     # PYQTGRAPH backend - WITHOUT HISTOGRAM
     RC = Rasterplot(MyEventsModels=MyEventsModels, MyPlotSettings=MyPlotSettings, subgroup_labels=subgroup_labels, backend='pyqtgraph', QtApp=QtApp)
@@ -441,7 +436,7 @@ So far in teili: \* Histogram \* Rasterplot \* Lineplot
    * backend='matplotlib'
    * show_immediately=False
 
-.. code:: ipython3
+.. code-block:: python
 
     from teili.tools.visualizer.DataControllers import Lineplot
     ''' Simple example to plot a lineplot of two NeuronGroups '''
@@ -466,7 +461,7 @@ So far in teili: \* Histogram \* Rasterplot \* Lineplot
 .. image:: fig/example_lineplot.png
 
 
-.. code:: ipython3
+.. code-block:: python
 
     # PYQTGRAPH backend
     LC = Lineplot(DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
@@ -482,7 +477,7 @@ A1) Combine different plots
 
 **… with matplotlib**
 
-.. code:: ipython3
+.. code-block:: python
 
     # define plot structure BEFOREHAND
     mainfig = plt.figure()
@@ -516,7 +511,7 @@ A1) Combine different plots
 
 **… with pyqtgraph**
 
-.. code:: ipython3
+.. code-block:: python
 
     # define plot structure BEFOREHAND
     mainfig = pg.GraphicsWindow()
@@ -550,7 +545,7 @@ A1) Combine different plots
 
 A2) Add second plot with a detailed view of a given plot
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. code:: ipython3
+.. code-block:: python
 
     ''' Create original plot of which you would like to have a detailed version as well TWICE (sorry, about that...)'''
     MyEventsModels = [spikemonN1, spikemonN2]

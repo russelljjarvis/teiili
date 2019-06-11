@@ -40,34 +40,36 @@ How to use it - in short
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 **1) get data**
+
 .. code-block:: python
-	spikemonN1, spikemonN2, statemonN1, statemonN2 =
-	run_your_own_brian_network()
+
+    spikemonN1, spikemonN2, statemonN1, statemonN2 = run_your_own_brian_network()
 
 **2) define PLOTSETTING**
+
 .. code-block:: python
 
-	from teili.tools.visualizer.DataViewers import PlotSettings
-	MyPlotSettings = PlotSettings(fontsize_title=20, fontsize_legend=14,
-	fontsize_axis_labels=14, marker_size = 30,colors = [‘r’, ‘b’, ‘g’, ‘c’,
+    from teili.tools.visualizer.DataViewers import PlotSettings
+    MyPlotSettings = PlotSettings(fontsize_title=20, fontsize_legend=14,
+	Fontsize_axis_labels=14, marker_size = 30,colors = [‘r’, ‘b’, ‘g’, ‘c’,
 	‘k’, ‘m’, ‘y’])
 
 **3) call CONTROLLER of desired type of plot, e.g. Histogram,
 Rasterplot, Lineplot, …**
 
-from teili.tools.visualizer.DataControllers import Histogram
 
-DataModel_to_attr = [(spikemonN1, ‘i’), (spikemonN2, ‘i’)]
+.. code-block:: python
 
-subgroup_labels = [‘N1’, ‘N2’]
-
-HC = Histogram(MyPlotSettings=MyPlotSettings, DataModel_to_attr=DataModel_to_attr, subgroup_labels=subgroup_labels, backend=‘matplotlib’)
+    from teili.tools.visualizer.DataControllers import Histogram
+    DataModel_to_attr = [(spikemonN1, ‘i’), (spikemonN2, ‘i’)]
+    subgroup_labels = [‘N1’, ‘N2’]
+    HC = Histogram(MyPlotSettings=MyPlotSettings, DataModel_to_attr=DataModel_to_attr, subgroup_labels=subgroup_labels, backend=‘matplotlib’)
 
 **If you want to change anything else on the main figure/window or one of the subplots …**
 
 … you can directly access the mainfigure (matplotlib: figure, pyqtgraph:
-qt-window) as \* **my_controller.mainfig** \* or the corresponding
-subplot under **my_controller.subfig**
+qt-window) as *my_controller.mainfig* or the corresponding
+subplot under *my_controller.subfig*
 
 
 How to use it - the slightly longer version
@@ -77,8 +79,6 @@ How to use it - the slightly longer version
     %pylab inline
     import numpy as np
     import os
-    import sys
-    sys.path.append(os.getenv("HOME")+'/Dropbox/src/teili/')
     
     from brian2 import us, ms, second, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
     import matplotlib.pylab as plt

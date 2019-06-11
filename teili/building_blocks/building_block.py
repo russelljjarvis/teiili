@@ -161,7 +161,8 @@ class BuildingBlock(Nameable):
         """ Get the currently set tags for a given group.
 
         Args:
-            target_group (str): Name of group to get tags from
+            target_group (str): Name of group to get tags from or
+               direct `TeiliGroup`
 
         Returns:
            (dict): Dictionary containing all assigned _tags of provided

@@ -53,6 +53,29 @@ To assure this every ``BuildingBlock`` initialises the ``BuildingBlock`` class:
 Furthermore, as described above as soon the parent class is initialised each
 building block has a set of dictionaries which handle to I/O and different ``Neuron`` and ``Connection`` groups.
 
+The ``BuildingBlock`` class comes with a set of ``__setter__`` and ``__getter__`` functions for collecting all ``groups`` involved or identifying a subset of groups which share the same `_tags`_ 
+
+To retrieve all ``Neuron``, ``Connection``, ``SpikeGeneratorGroup`` etc. simply call the ``groups`` property
+
+.. code-block:: python
+
+     test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, debug=False)
+     bb_groups = test1DWTA.groups
+
+Each ``TeiliGroup`` has an attribute called ``_tags``. The idea behind the ``_tags`` are that the user can easily define a dictionary and use this dictionary to gather all ``TeiliGroups`` which share the same ``_tags``.
+
+.. code-block:: python
+
+      test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, debug=False)
+      target_group = test1DWTA._groups['n_exc']
+      tags = {'level': '1',
+              'type': 'wta',
+              'sign': 'exc',
+              'conn_type': None}
+      test1DWTA._set_tags(tags, target_group)
+      # And use the tags to get all ``groups`` sharing the same tags
+      test1DWTA.get_groups(tags)
+
 
 Winner-takes-all (WTA)
 ======================

@@ -12,14 +12,18 @@ This script contains a simple event based way to simulate complex STDP kernels
 from brian2 import ms, prefs, SpikeMonitor, run
 from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
-import matplotlib.pyplot as plt
 import numpy as np
 
 from teili.core.groups import Neurons, Connections
 from teili.models.synapse_models import DPIstdp
 
+from teili.tools.visualizer.DataViewers import PlotSettings
+from teili.tools.visualizer.DataModels import StateVariablesModel
+from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
+
 prefs.codegen.target = "numpy"
-visualization_backend = 'pyqt'  # Or set it to 'pyplot' to use matplotlib.pyplot to plot
+visualization_backend = 'pyqtgraph'  # Or set it to 'matplotlib' to use matplotlib.pyplot to plot
+
 
 font = {'family': 'serif',
         'color': 'darkred',
@@ -65,38 +69,31 @@ spikemon_post_neurons = SpikeMonitor(post_neurons, record=True)
 run(tmax + 1 * ms)
 
 
-if visualization_backend == 'pyqt':
+if visualization_backend == 'pyqtgraph':
     app = QtGui.QApplication.instance()
     if app is None:
         app = QtGui.QApplication(sys.argv)
     else:
         print('QApplication instance already exists: %s' % str(app))
+else:
+    app=None
 
-    labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-    pg.GraphicsView(useOpenGL=True)
-    win = pg.GraphicsWindow(title="STDP Kernel")
-    win.resize(1024, 768)
-    toPlot = win.addPlot(title="Spike-time dependent plasticity")
+datamodel = StateVariablesModel(state_variable_names=['w_plast'],
+                                state_variables=[stdp_synapse.w_plast],
+                                state_variables_times=[np.asarray((post_neurons.tspike - pre_neurons.tspike) / ms)])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
+        title="Spike-time dependent plasticity",
+        xlabel='\u0394 t',  # delta t
+        ylabel='w',
+        backend=visualization_backend,
+        QtApp=app,
+        show_immediately=False)
 
-    toPlot.plot(x=np.asarray((post_neurons.tspike - pre_neurons.tspike) / ms), y=np.asarray(stdp_synapse.w_plast),
-                pen=pg.mkPen((255, 128, 0), width=2))
-
-    toPlot.setLabel('left', '<font>w</font>', **labelStyle)
-    toPlot.setLabel('bottom', '<font>&Delta; t</font>', **labelStyle)
-    b = QtGui.QFont("Sans Serif", 10)
-    toPlot.getAxis('bottom').tickFont = b
-    toPlot.getAxis('left').tickFont = b
-    app.exec_()
-
-elif visualization_backend == 'pyplot':
-    plt.plot((post_neurons.tspike - pre_neurons.tspike) / ms, stdp_synapse.w_plast, color="black", linewidth=2.5, linestyle="-")
-    plt.title("STDP", fontdict=font)
-    plt.xlabel(r'$\Delta t$ (ms)')
-    plt.ylabel(r'$w$')
-
-    fig = plt.figure()
-    plt.plot(spikemon_pre_neurons.t / ms, spikemon_pre_neurons.i, '.k')
-    plt.plot(spikemon_post_neurons.t / ms, spikemon_post_neurons.i, '.k')
-    plt.xlabel('Time [ms]')
-    plt.ylabel('Neuron ID')
-    plt.show()
+Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
+            MyPlotSettings=PlotSettings(colors=['r']*2),
+            title='',
+            xlabel='Time (s)',
+            ylabel='Neuron ID',
+            backend=visualization_backend,
+            QtApp=app,
+            show_immediately=True)

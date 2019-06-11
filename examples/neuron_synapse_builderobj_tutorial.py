@@ -99,10 +99,10 @@ spikemon_test_neurons2 = SpikeMonitor(
     test_neurons2, name='spikemon_test_neurons2')
 
 statemon_input_synapse = StateMonitor(
-    input_synapse, variables='Ie_syn', record=True, name='statemon_input_synapse')
+    input_synapse, variables='I_syn', record=True, name='statemon_input_synapse')
 
 statemon_test_synapse = StateMonitor(
-    test_synapse, variables='Ie_syn', record=True, name='statemon_test_synapse')
+    test_synapse, variables='I_syn', record=True, name='statemon_test_synapse')
 
 if 'Imem' in builder_object2.keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
@@ -168,7 +168,7 @@ Rasterplot(MyEventsModels=[spikemon_input],
                      QtApp=app,
                      show_immediately=False)
 
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'I_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Input synapses",
@@ -200,7 +200,7 @@ Lineplot(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
                    show_immediately=False)
 
 
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'I_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Test synapses",

@@ -23,6 +23,43 @@ class DoubleExponential(SynapseEquationBuilder):
                                         kernel='alpha', plasticity='non_plastic')
 
 
+class Alpha(SynapseEquationBuilder):
+    """This class provides you with all equations to simulate synapses with double
+    exponential dynamics.
+    """
+
+    def __init__(self):
+        """This class provides you with all equations to simulate synapses with double
+        exponential dynamics.
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='alpha', plasticity='non_plastic')
+
+class Resonant(SynapseEquationBuilder):
+    """This class provides you with all equations to simulate synapses with double
+    exponential dynamics.
+    """
+
+    def __init__(self):
+        """This class provides you with all equations to simulate synapses with double
+        exponential dynamics.
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='resonant', plasticity='non_plastic')
+
+class Gaussian(SynapseEquationBuilder):
+    """This class provides you with all equations to simulate synapses with double
+    exponential dynamics.
+    """
+
+    def __init__(self):
+        """This class provides you with all equations to simulate synapses with double
+        exponential dynamics.
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='gaussian', plasticity='non_plastic')
+
+
 class ReversalSynV(SynapseEquationBuilder):
     """This class provides you with all the equations to simulate synapses with reversal
     potential.
@@ -119,6 +156,15 @@ def main(path=None):
 
     doubleExponential = DoubleExponential()
     doubleExponential.export_eq(os.path.join(path, "DoubleExponential"))
+
+    alpha = Alpha()
+    alpha.export_eq(os.path.join(path, "Alpha"))
+
+    resonant = Resonant()
+    resonant.export_eq(os.path.join(path, "Resonant"))
+
+    gaussian = Gaussian()
+    gaussian.export_eq(os.path.join(path, "Gaussian"))
 
     reversalSynV = ReversalSynV()
     reversalSynV.export_eq(os.path.join(path, "ReversalSynV"))

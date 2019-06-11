@@ -43,7 +43,7 @@ class TestHistogramViewerPyqtgraph(unittest.TestCase):
 
     @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS, "Skip unittest TestHistogramViewerPyqtgraph.test_create_histogram"
                                                        "using pyqtgraph as pyqtgraph could not be imported")
-    def test_create_histogram(self):
+    def test_createhistogram(self):
         MyPlotSettings = PlotSettings()
 
         lst1 = [1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5]

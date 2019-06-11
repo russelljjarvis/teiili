@@ -75,7 +75,7 @@ class TestRasterplotViewerPyqtgraph(unittest.TestCase):
     @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS,
                      "Skip unittest TestRasterplotViewerPyqtgraph.test_create_rasterplot using pyqtgraph"
                      "as pyqtgraph could not be imported")
-    def test_create_rasterplot(self):
+    def test_createrasterplot(self):
         MyPlotSettings = PlotSettings()
 
         # basics

@@ -37,7 +37,7 @@ class TestLineplotViewerMatplotlib(unittest.TestCase):
             LV.show()
         plt.close('all')
 
-    def test_create_lineplot(self):
+    def test_createlineplot(self):
         MyPlotSettings = PlotSettings()
 
         # basics

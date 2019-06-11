@@ -14,7 +14,7 @@ class TestEventsModel(unittest.TestCase):
         self.assertTrue(len(EM.neuron_ids) == len(neuron_ids))
         self.assertTrue(len(EM.spike_times) == len(spike_times))
 
-    def test_EventsModel_from_brian_spike_monitor(self):
+    def test_EventsModelfrombrianspikemonitor(self):
         spikemonN1, _, statemonN1, _ = run_brian_network()
         EM = EventsModel.from_brian_spike_monitor(spikemonN1)
 

@@ -50,7 +50,7 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
     @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS,
                      "Skip unittest TestLineplotViewerPyqtgraph.test_create_lineplot using pyqtgraph"
                      "as pyqtgraph could not be imported")
-    def test_create_lineplot(self):
+    def test_createlineplot(self):
         MyPlotSettings = PlotSettings()
 
         # basics

@@ -66,7 +66,7 @@ class TestRasterplotViewerMatplotlib(unittest.TestCase):
             plt.show()
         plt.close('all')
 
-    def test_create_rasterplot(self):
+    def test_createrasterplot(self):
         MyPlotSettings = PlotSettings()
 
         # basics

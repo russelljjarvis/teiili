@@ -23,6 +23,10 @@ from teili.stimuli.testbench import WTA_Testbench
 from teili import TeiliNetwork
 from teili.models.synapse_models import DPISyn
 
+from teili.tools.visualizer.DataViewers import PlotSettings
+from teili.tools.visualizer.DataModels import StateVariablesModel
+from teili.tools.visualizer.DataControllers import Rasterplot
+
 prefs.codegen.target = 'numpy'
 
 run_as_standalone = True
@@ -41,6 +45,7 @@ x = np.arange(0, num_neurons - 1, 1)
 
 Net = TeiliNetwork()
 duration = 500  # 10000
+duration_s = duration * 1e-3
 testbench = WTA_Testbench()
 
 wtaParams = {'weInpWTA': 900,
@@ -104,61 +109,43 @@ duration = standalone_params['duration'] / ms
 Net.run(duration=duration * ms, standalone_params=standalone_params, report='text')
 
 # Visualization
-app = QtGui.QApplication.instance()
-if app is None:
-    app = QtGui.QApplication(sys.argv)
-else:
-    print('QApplication instance already exists: %s' % str(app))
-
-pg.setConfigOptions(antialias=True)
-
 win_wta = pg.GraphicsWindow(title="STDP Unit Test")
 win_wta.resize(2500, 1500)
 win_wta.setWindowTitle("Spike Time Dependet Plasticity")
-colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-          (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-
-p1 = win_wta.addPlot(title="Noise input")
+p1 = win_wta.addPlot()
 win_wta.nextRow()
-p2 = win_wta.addPlot(title="WTA activity")
+p2 = win_wta.addPlot()
 win_wta.nextRow()
-p3 = win_wta.addPlot(title="Actual signal")
-
-p1.setXRange(0, duration, padding=0)
-p2.setXRange(0, duration, padding=0)
-p3.setXRange(0, duration, padding=0)
-
+p3 = win_wta.addPlot()
 
 spikemonWTA = test_WTA.Groups['spikemonWTA']
 spiketimes = spikemonWTA.t
 
-p1.plot(x=np.asarray(spikemonitor_noise.t / ms), y=np.asarray(spikemonitor_noise.i),
-        pen=None, symbol='s', symbolPen=None,
-        symbolSize=7, symbolBrush=(255, 0, 0),
-        name='Noise input')
+Rasterplot(MyEventsModels = [spikemonitor_noise],
+            time_range=(0, duration_s),
+            title="Noise input",
+            xlabel='Time (s)',
+            ylabel=None,
+            backend='pyqtgraph',
+            mainfig=win_wta,
+            subfig_rasterplot=p1)
 
-p2.plot(x=np.asarray(spikemonWTA.t / ms), y=np.asarray(spikemonWTA.i),
-        pen=None, symbol='s', symbolPen=None,
-        symbolSize=7, symbolBrush=(255, 0, 0),
-        name='WTA Rasterplot')
+Rasterplot(MyEventsModels=[spikemonWTA],
+            time_range=(0, duration_s),
+            title="WTA activity",
+            xlabel='Time (s)',
+            ylabel=None,
+            backend='pyqtgraph',
+            mainfig=win_wta,
+            subfig_rasterplot=p2)
 
-p3.plot(x=np.asarray(spikemonitor_input.t / ms), y=np.asarray(spikemonitor_input.i),
-        pen=None, symbol='s', symbolPen=None,
-        symbolSize=7, symbolBrush=(255, 0, 0),
-        name='Desired signal')
+Rasterplot(MyEventsModels=[spikemonitor_input],
+            time_range=(0, duration_s),
+            title="Actual signal",
+            xlabel='Time (s)',
+            ylabel=None,
+            backend='pyqtgraph',
+            mainfig=win_wta,
+            subfig_rasterplot=p3,
+            show_immediately=True)
 
-app.exec()
-
-# dt = defaultclock.dt
-# spikeinds = spiketimes / dt
-
-# data_sparse = scipy.sparse.coo_matrix(
-#     (np.ones(len(spikeinds)), (spikeinds, [i for i in spikemonWTA.i])))
-# data_dense = data_sparse.todense()
-
-# # data_dense.shape
-# filtersize = 500 * ms
-# data_filtered = ndimage.uniform_filter1d(data_dense, size=int(filtersize / dt), axis=0,
-#                                          mode='constant') * second / dt
-# plt.plot(data_filtered[-10])

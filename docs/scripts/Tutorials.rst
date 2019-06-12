@@ -378,6 +378,212 @@ In both cases of model definition the resulting figure should look like this:
 
     Simple neuron and networks dynamics.
 
+Synaptic kernels tutorial
+=========================
+
+| In Teili we provide synaptic models that modify the shape of the synaptic current, we call them  kernels. Here we provide an example in how to use them and how they look when applied together with a neuron model.
+| The first steps are the same as in the previous example.
+| The example is located in ``~\teiliApps/examples/neuron_synapse_tutorial.py``.
+We first import all required libraries
+
+.. code-block:: python
+
+    from pyqtgraph.Qt import QtGui
+    import pyqtgraph as pg
+    import numpy as np
+
+    from brian2 import ms, pA, nA, prefs,\
+            SpikeMonitor, StateMonitor,\
+            SpikeGeneratorGroup
+
+    from teili.core.groups import Neurons, Connections
+    from teili import TeiliNetwork
+    from teili.models.neuron_models import DPI as neuron_model
+    from teili.models.synapse_models import Alpha, Resonant
+    from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+    from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+    from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
+
+We define the target for the code generation. As in the previous example we use the ``numpy`` backend.
+
+.. code-block:: python
+
+    prefs.codegen.target = "numpy"
+
+We define a simple input pattern using brian2's ``SpikeGeneratorGroup``. This will consist of two neurons, one will send excitatory and the other inhibitory spikes.
+
+.. code-block:: python
+
+    input_timestamps = np.asarray([1, 1.5, 1.8, 2.0, 2.0, 2.3, 2.5, 3]) * ms
+    input_indices = np.asarray([0, 1, 0, 1, 0, 1, 0, 1])
+    input_spikegenerator = SpikeGeneratorGroup(2, indices=input_indices,
+                                    times=input_timestamps, name='gtestInp')
+
+We now build a ``TeiliNetwork``.
+
+.. code-block:: python
+
+    Net = TeiliNetwork()
+
+| In this example we will show two kernels, therefore we have created two different neurons. One will receive synpases with an Alpha kernel shape while the other will receive synapses with a Resonant kernel shape. Note that a single neuron can receive synapses with different kernels at the same time. Here we split them for better visualization.
+
+.. code-block:: python
+
+    testNeurons = Neurons(1, equation_builder=neuron_model(num_inputs=2), name="testNeuron")
+    testNeurons.set_params(neuron_model_param)
+    testNeurons.refP = 1 * ms
+
+    testNeurons2 = Neurons(1, equation_builder=neuron_model(num_inputs=2), name="testNeuron2")
+    testNeurons2.set_params(neuron_model_param)
+    testNeurons2.refP = 1 * ms
+
+.. attention:: We are using the DPI neuron model for this example but the synaptic model is independent from the neuron's model and therefore other neuron models can be used.
+
+| We already set the parameters for our neuron model. As explained above, we can set the standard parameters from a dictionary but also change single parameters as it was done in this example with the refractory period. 
+| Now we specify the connections. The synaptic models are Alpha and Resonant kernels.
+
+.. code-block:: python
+
+    InpSynAlpha = Connections(input_spikegenerator, testNeurons,
+                         equation_builder=Alpha(), name="testSynAlpha", verbose=False)
+    InpSynAlpha.connect(True)
+    
+    InpSynResonant = Connections(input_spikegenerator, testNeurons2,
+                         equation_builder=Resonant(), name="testSynResonant", verbose=False)
+    InpSynResonant.connect(True)
+    
+| We set the parameters for the synases. In this case, we specify that the first neuron in the spike generator will have a postivie effect (weight>0) and the second one will have a negative effect (weight<0) on the post-synpatic neuron.
+
+.. code-block:: python
+
+    InpSynAlpha.weight = np.asarray([10,-10])
+    InpSynResonant.weight = np.asarray([10,-10])
+
+.. attention:: The ``weight`` multiplies the baseweight, which is currently initialised to 7 pA by default. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3500.
+
+Now our simple spiking neural network is defined. In order to visualize what is happening during the simulation
+we need to monitor the spiking behavior of our neurons and other state variables of neurons and synapses.
+
+.. code-block:: python
+
+    spikemonInp = SpikeMonitor(input_spikegenerator, name='spikemonInp')
+    statemonInpSynAlpha = StateMonitor(
+        InpSynAlpha, variables='I_syn', record=True, name='statemonInpSynAlpha')
+    statemonInpSynResonant = StateMonitor(
+        InpSynResonant, variables='I_syn', record=True, name='statemonInpSynResonant')
+    statemonNeuOut = StateMonitor(testNeurons, variables=[
+                                  'Iin'], record=0, name='statemonNeuOut')
+    statemonNeuOut2 = StateMonitor(testNeurons2, variables=[
+                                  'Iin'], record=0, name='statemonNeuOut2')
+
+
+We can now finally add all defined ``Neurons`` and ``Connections``, as well as the monitors to our ``TeiliNetwork`` and run the simulation.
+
+.. code-block:: python
+
+    Net.add(input_spikegenerator, testNeurons, testNeurons2,
+            InpSynAlpha, InpSynResonant, spikemonInp,
+            statemonInpSynAlpha, statemonInpSynResonant,
+            statemonNeuOut, statemonNeuOut2)
+
+    duration = 10
+    Net.run(duration * ms)
+
+In order to visualize the behavior the example script also plots a couple of spike and state monitors.
+
+.. code-block:: python
+
+    app = QtGui.QApplication.instance()
+    if app is None:
+            app = QtGui.QApplication(sys.argv)
+    else:
+            print('QApplication instance already exists: %s' % str(app))
+
+    pg.setConfigOptions(antialias=True)
+
+    labelStyle = {'color': '#FFF', 'font-size': '12pt'}
+    win = pg.GraphicsWindow(title='Kernels Simulation')
+    win.resize(900, 600)
+    win.setWindowTitle('Simple SNN')
+
+    p1 = win.addPlot(title="Alpha Kernel Synapse")
+    p2 = win.addPlot(title="Neuron response")
+    win.nextRow()
+    p3 = win.addPlot(title='Resonant Kernel Synapse')
+    p4 = win.addPlot(title="Neuron response")
+
+    colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
+              (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
+
+    p1.setXRange(0, duration, padding=0)
+    p2.setXRange(0, duration, padding=0)
+    p3.setXRange(0, duration, padding=0)
+    p4.setXRange(0, duration, padding=0)
+
+    # Kernel synapses
+    for i, data in enumerate(np.asarray(statemonInpSynAlpha.I_syn)):
+        if i == 1:
+            data = data * -1
+        name = 'Syn_{}'.format(i)
+        p1.plot(x=np.asarray(statemonInpSynAlpha.t / ms), y=data,
+                pen=pg.mkPen(colors[3], width=2), name=name)
+
+    for i, data in enumerate(np.asarray(spikemonInp.t / ms)): 
+       vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255), style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
+       p1.addItem(vLine, ignoreBounds=True)
+
+    for i, data in enumerate(np.asarray(statemonInpSynResonant.I_syn)):
+        if i == 1:
+            data = data * -1
+        name = 'Syn_{}'.format(i)
+        p3.plot(x=np.asarray(statemonInpSynResonant.t / ms), y=data,
+                pen=pg.mkPen(colors[3], width=2), name=name)
+
+    for i, data in enumerate(np.asarray(spikemonInp.t / ms)):
+       vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255), style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
+       p3.addItem(vLine, ignoreBounds=True)
+
+    for data in np.asarray(statemonNeuOut.Iin):
+        p2.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
+                pen=pg.mkPen(colors[5], width=3))
+
+    for data in np.asarray(statemonNeuOut2.Iin):
+        p4.plot(x=np.asarray(statemonNeuOut2.t / ms), y=data,
+                pen=pg.mkPen(colors[5], width=3))
+
+
+    #Set labels
+    p1.setLabel('left', "Synaptic current I", units='A', **labelStyle)
+    p1.setLabel('bottom', "Time (ms)", **labelStyle)
+    p2.setLabel('left', "Membrane current I_mem", units='A', **labelStyle)
+    p2.setLabel('bottom', "Time (ms)", **labelStyle)
+    p3.setLabel('left', "Synaptic current I", units="A", **labelStyle)
+    p3.setLabel('bottom', "Time (ms)", **labelStyle)
+    p4.setLabel('left', "Membrane current I_mem", units="A", **labelStyle)
+    p4.setLabel('bottom', "Time (ms)", **labelStyle)
+
+    b = QtGui.QFont("Sans Serif", 10)
+    p1.getAxis('bottom').tickFont = b
+    p1.getAxis('left').tickFont = b
+    p2.getAxis('bottom').tickFont = b
+    p2.getAxis('left').tickFont = b
+    p3.getAxis('bottom').tickFont = b
+    p3.getAxis('left').tickFont = b
+    p4.getAxis('bottom').tickFont = b
+    p4.getAxis('left').tickFont = b
+
+    app.exec()
+
+The synaptic current is always positive, the negative effect is oberved in the Iin of the neuron. To better visualize the synapse dynamics, we have multiplied by -1 the I_syn of the inhibitory synapse.
+The resulting figure should look like this:
+
+.. figure:: fig/synaptic_kernels_tutorial_dark.png
+    :width: 800px
+    :align: center
+    :height: 400px
+    :alt: alternate text
+    :figclass: align-center
+
 
 Winner-takes-all tutorial
 =========================

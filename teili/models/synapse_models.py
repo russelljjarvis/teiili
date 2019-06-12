@@ -71,28 +71,6 @@ class ResonantStdp(SynapseEquationBuilder):
                                         kernel='resonant', plasticity='stdp')
 
 
-class Gaussian(SynapseEquationBuilder):
-    """This class provides you with all equations to simulate synapses with gaussian dynamics.
-    """
-
-    def __init__(self):
-        """This class provides you with all equations to simulate synapses with double
-        exponential dynamics.
-        """
-        SynapseEquationBuilder.__init__(self, base_unit='current',
-                                        kernel='gaussian', plasticity='non_plastic')
-
-class GaussianStdp(SynapseEquationBuilder):
-    """This class provides you with all equations to simulate synapses with gaussian dynamics
-    with stdp learning.
-    """
-
-    def __init__(self):
-        """This class provides you with all equations to simulate synapses with double
-        exponential dynamics.
-        """
-        SynapseEquationBuilder.__init__(self, base_unit='current',
-                                        kernel='gaussian', plasticity='stdp')
 
 class Alpha(SynapseEquationBuilder):
     """This class provides you with all equations to simulate synapses with double
@@ -118,17 +96,6 @@ class Resonant(SynapseEquationBuilder):
         SynapseEquationBuilder.__init__(self, base_unit='current',
                                         kernel='resonant', plasticity='non_plastic')
 
-class Gaussian(SynapseEquationBuilder):
-    """This class provides you with all equations to simulate synapses with double
-    exponential dynamics.
-    """
-
-    def __init__(self):
-        """This class provides you with all equations to simulate synapses with double
-        exponential dynamics.
-        """
-        SynapseEquationBuilder.__init__(self, base_unit='current',
-                                        kernel='gaussian', plasticity='non_plastic')
 
 
 class ReversalSynV(SynapseEquationBuilder):
@@ -245,9 +212,6 @@ def main(path=None):
 
     resonant = Resonant()
     resonant.export_eq(os.path.join(path, "Resonant"))
-
-    gaussian = Gaussian()
-    gaussian.export_eq(os.path.join(path, "Gaussian"))
 
     reversalSynV = ReversalSynV()
     reversalSynV.export_eq(os.path.join(path, "ReversalSynV"))

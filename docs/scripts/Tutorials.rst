@@ -447,32 +447,36 @@ Feel free to change the parameters to see what effect it has on the stability an
 
 .. code-block:: python
 
-    wtaParams = {'weInpWTA': 900,
-                 'weWTAInh': 500,
-                 'wiInhWTA': -550,
-                 'weWTAWTA': 650,
+    wtaParams = {'we_inp_exc': 900,
+                 'we_exc_inh': 500,
+                 'wi_inh_exc': -550,
+                 'we_exc_exc': 650,
                  'sigm': 2,
-                 'rpWTA': 3 * ms,
-                 'rpInh': 1 * ms,
-                 'EI_connection_probability': 0.7,
+                 'rp_exc': 3 * ms,
+                 'rp_inh': 1 * ms,
+                 'ei_connection_probability': 0.7,
                  }
 
 We can define our network structure and connect the different inputs to the WTA network.
 
 .. code-block:: python
 
-    test_WTA = WTA(name='test_WTA', dimensions=1, num_neurons=num_neurons, num_inh_neurons=40,
-                                 num_input_neurons=num_input_neurons, num_inputs=2, block_params=wtaParams,
-                                 spatial_kernel="kernel_gauss_1d")
+    test_WTA = WTA(name='test_WTA', dimensions=1,
+                  num_neurons=num_neurons, num_inh_neurons=40,
+                  num_input_neurons=num_input_neurons,
+                  num_inputs=2, block_params=wtaParams,
+                  spatial_kernel="kernel_gauss_1d")
 
     testbench.stimuli(num_neurons=num_neurons, dimensions=1,
-                                        start_time=100, end_time=duration)
+                      start_time=100, end_time=duration)
+
     testbench.background_noise(num_neurons=num_neurons, rate=10)
 
-    test_WTA.inputGroup.set_spikes(
+    test_WTA.spike_gen.set_spikes(
             indices=testbench.indices, times=testbench.times * ms)
-    noise_syn = Connections(testbench.noise_input, test_WTA,
-                                                    equation_builder=DPISyn(), name="noise_syn", )
+
+    noise_syn = Connections(testbench.noise_input, test_WTA,_groups['n_exc'],
+                            equation_builder=DPISyn(), name="noise_syn")
     noise_syn.connect("i==j")
 
 Before we can run the simulation we need to set bias parameter.
@@ -486,14 +490,13 @@ Setting up monitors to track network activity and visualize it later.
 
 .. code-block:: python
 
-    statemonWTAin = StateMonitor(test_WTA.Groups['gWTAGroup'],
-                                 ('Ie0', 'Ii0', 'Ie1', 'Ii1',
-                                  'Ie2', 'Ii2', 'Ie3', 'Ii3'),
+    statemonWTAin = StateMonitor(test_WTA._groups['n_exc'],
+                                 ('Iin0', 'Iin1', 'Iin2', 'Iin3'),
                                  record=True,
                                  name='statemonWTAin')
 
     spikemonitor_input = SpikeMonitor(
-            test_WTA.inputGroup, name="spikemonitor_input")
+            test_WTA.spike_gen, name="spikemonitor_input")
     spikemonitor_noise = SpikeMonitor(
             testbench.noise_input, name="spikemonitor_noise")
 
@@ -502,7 +505,7 @@ Add all objects to the network object and define standalone parameters, if you a
 .. code-block:: python
 
     Net.add(test_WTA, testbench.noise_input, noise_syn,
-                    statemonWTAin, spikemonitor_noise, spikemonitor_input)
+            statemonWTAin, spikemonitor_noise, spikemonitor_input)
     Net.standalone_params.update({'test_WTA_Iconst': 1 * pA})
 
     if run_as_standalone:
@@ -551,7 +554,7 @@ Now we visualize the activity of our WTA.
     p3.setXRange(0, duration, padding=0)
 
 
-    spikemonWTA = test_WTA.Groups['spikemonWTA']
+    spikemonWTA = test_WTA.monitors['spikemon_exc']
     spiketimes = spikemonWTA.t
 
     p1.plot(x=np.asarray(spikemonitor_noise.t / ms), y=np.asarray(spikemonitor_noise.i),

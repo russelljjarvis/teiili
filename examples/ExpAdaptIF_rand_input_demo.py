@@ -8,19 +8,20 @@ This is just showing the behavior of the ExpAdaptIF model for some random input
 
 @author: alpha
 """
-from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 
-from brian2 import ms, mV, pA, nS, nA, uA, pF, us, volt, second, Network, prefs,\
-    SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
-    seed, xlim, ylim, subplot, network_operation, TimedArray, start_scope,\
-    defaultclock, SpikeGeneratorGroup, asarray, pamp, set_device, device
+from brian2 import ms, uA, us, second, prefs, SpikeMonitor, StateMonitor, TimedArray, start_scope, defaultclock
 
-from teili.core.groups import Neurons, Connections
+from teili.core.groups import Neurons
 from teili import TeiliNetwork
-from teili import NeuronEquationBuilder, SynapseEquationBuilder
+from teili import NeuronEquationBuilder
 from teili.tools.random_walk import pink
+
+
+from teili.tools.visualizer.DataViewers import PlotSettings
+from teili.tools.visualizer.DataModels import StateVariablesModel
+from teili.tools.visualizer.DataControllers import Lineplot
 
 ExpAdaptIF = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
 
@@ -62,7 +63,7 @@ equation_builder.keywords['model']=equation_builder.keywords['model']+'\n dActiv
 testNeurons = Neurons(1, equation_builder=equation_builder, name="testNeuron", verbose = True)
 testNeurons.refP = 1 * ms
 
-duration = 2000 *ms
+duration = 0.2 *second
 sg_dt = 10*ms
 n_pink = int(duration/sg_dt)+1
 pink_x = abs(pink(n_pink))* 0.005*uA
@@ -80,57 +81,54 @@ Net.add(testNeurons, spikemon, statemonNeuIn)
 Net.run(duration)
 
 # Visualize simulation results
-pg.setConfigOptions(antialias=True)
-
-labelStyle = {'color': '#FFF', 'font-size': '12pt'}
 win = pg.GraphicsWindow(title='teili Test Simulation')
 win.resize(1900, 600)
 win.setWindowTitle('random input to ExpAdaptIF')
-
-p1 = win.addPlot(title='adaptive exponential integrate and fire neuron')
+p1 = win.addPlot()
 win.nextRow()
-p2 = win.addPlot(title="I_In")
+p2 = win.addPlot()
 win.nextRow()
-p3 = win.addPlot(title="Activity")
+p3 = win.addPlot()
 win.nextRow()
-p4 = win.addPlot(title="1/IFR")
+p4 = win.addPlot()
 
-colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-          (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-p1.setXRange(0, duration/ms, padding=0)
-p2.setXRange(0, duration/ms, padding=0)
-p3.setXRange(0, duration/ms, padding=0)
-p4.setXRange(0, duration/ms, padding=0)
+Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Vm'))],
+            MyPlotSettings=PlotSettings(colors=['r']),
+            x_range=(0, float(duration)),
+            title='adaptive exponential integrate and fire neuron',
+            ylabel='voltage (V)',
+            backend='pyqtgraph',
+            mainfig=win,
+            subfig=p1)
 
-for i,data  in enumerate(np.asarray(statemonNeuIn.Vm/mV)):
-    p1.plot(x=np.asarray(statemonNeuIn.t / ms), y=np.asarray(data),
-            pen=pg.mkPen(colors[0], width=2))
+Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Ie0'))],
+            MyPlotSettings=PlotSettings(colors=['g']),
+            x_range=(0, float(duration)),
+            title="I_In",
+            ylabel='input current (A)',
+            backend='pyqtgraph',
+            mainfig=win,
+            subfig=p2)
 
-for i,data  in enumerate(np.asarray(statemonNeuIn.Ie0/nA)):
-    p2.plot(x=np.asarray(statemonNeuIn.t / ms), y=np.asarray(data),
-            pen=pg.mkPen(colors[1], width=2))
+Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Activity'))],
+            MyPlotSettings=PlotSettings(colors=['b']),
+            x_range=(0, float(duration)),
+            title='Activity',
+            ylabel='activity',
+            backend='pyqtgraph',
+            mainfig=win,
+            subfig=p3)
 
-for i,data  in enumerate(np.asarray(statemonNeuIn.Activity)):
-    p3.plot(x=np.asarray(statemonNeuIn.t / ms), y=np.asarray(data),
-            pen=pg.mkPen(colors[2], width=2))
-
-for i,data  in enumerate(np.asarray(spikemon.t)):
-    p4.plot(x=np.asarray(spikemon.t[:-1]/ms), y=np.asarray(1/np.diff(spikemon.t)),
-            pen=pg.mkPen(colors[3], width=2))
-
-p1.setLabel('left', "voltage", units="mV", **labelStyle)
-p2.setLabel('left', "input current", units="nA", **labelStyle)
-p3.setLabel('left', "activity", units="", **labelStyle)
-p4.setLabel('left', "instantaneous frequency", units="Hz", **labelStyle)
-
-p4.setLabel('bottom', "Time (ms)", **labelStyle)
-
-b = QtGui.QFont("Sans Serif", 10)
-p1.getAxis('bottom').tickFont = b
-p1.getAxis('left').tickFont = b
-p2.getAxis('left').tickFont = b
-p3.getAxis('left').tickFont = b
-p4.getAxis('left').tickFont = b
-
-
-QtGui.QApplication.instance().exec_()
+datamodel = StateVariablesModel(state_variable_names=['i'],
+                                state_variables=[np.asarray(1./np.diff(spikemon.t))],
+                                state_variables_times=[np.asarray(spikemon.t[:-1])])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_i', 'i'))],
+            MyPlotSettings=PlotSettings(colors=['m']),
+            x_range=(0, float(duration)),
+            title='1/IFR',
+            xlabel='Time (ms)',
+            ylabel='instantaneous frequency (Hz)',
+            backend='pyqtgraph',
+            mainfig=win,
+            subfig=p4,
+            show_immediately=True)

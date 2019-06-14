@@ -48,7 +48,7 @@ class AlphaStdp(SynapseEquationBuilder):
 
 class Resonant(SynapseEquationBuilder):
     """This class provides you with all equations to simulate synapses with resonant
-    funtion dynamics.
+    function dynamics.
     """
 
     def __init__(self):
@@ -60,7 +60,7 @@ class Resonant(SynapseEquationBuilder):
 
 class ResonantStdp(SynapseEquationBuilder):
     """This class provides you with all equations to simulate synapses with resonant
-    funtion dynamics with stdp learning.
+    function dynamics with STDP learning.
     """
 
     def __init__(self):

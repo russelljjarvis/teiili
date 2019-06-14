@@ -268,8 +268,8 @@ fusi = {'model': '''
 
       dw/dt = (alpha*updrift)-(beta*downdrift) : 1 (event-driven) # internal weight variable
 
-      wplus: 1 
-      wminus: 1 
+      wplus: 1
+      wminus: 1
       theta_upl: volt (constant)
       theta_uph: volt (constant)
       theta_downh: volt (constant)
@@ -404,7 +404,6 @@ dexp_kernel = {'model': '''
              ''',
 
                 'on_post': ''' '''}
-
 
 
 dexp_params_current = {"tausyn": 2 * ms,

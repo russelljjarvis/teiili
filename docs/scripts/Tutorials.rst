@@ -381,7 +381,7 @@ In both cases of model definition the resulting figure should look like this:
 Synaptic kernels tutorial
 =========================
 
-| In Teili we provide synaptic models that modify the shape of the synaptic current, we call them  kernels. Here we provide an example in how to use them and how they look when applied together with a neuron model.
+| In Teili we provide synaptic models that modify the shape of the synaptic current; we call them kernels. Here we provide an example of how to use them and how they look when applied together with a neuron model.
 | The first steps are the same as in the previous example.
 | The example is located in ``~\teiliApps/examples/neuron_synapse_tutorial.py``.
 We first import all required libraries
@@ -425,7 +425,7 @@ We now build a ``TeiliNetwork``.
 
     Net = TeiliNetwork()
 
-| In this example we will show two kernels, therefore we have created two different neurons. One will receive synpases with an Alpha kernel shape while the other will receive synapses with a Resonant kernel shape. Note that a single neuron can receive synapses with different kernels at the same time. Here we split them for better visualization.
+| In this example we will show two kernels, therefore we have created two different neurons. One will receive synapses with an Alpha kernel shape while the other will receive synapses with a Resonant kernel shape. Note that a single neuron can receive synapses with different kernels at the same time. Here we split them for better visualization.
 
 .. code-block:: python
 
@@ -437,9 +437,9 @@ We now build a ``TeiliNetwork``.
     testNeurons2.set_params(neuron_model_param)
     testNeurons2.refP = 1 * ms
 
-.. attention:: We are using the DPI neuron model for this example but the synaptic model is independent from the neuron's model and therefore other neuron models can be used.
+.. attention:: We are using the DPI neuron model for this example but the synaptic model is independent of the neuron's model and therefore other neuron models can be used.
 
-| We already set the parameters for our neuron model. As explained above, we can set the standard parameters from a dictionary but also change single parameters as it was done in this example with the refractory period. 
+| We already set the parameters for our neuron model. As explained above, we can set the standard parameters from a dictionary but also change single parameters as in this example with the refractory period.
 | Now we specify the connections. The synaptic models are Alpha and Resonant kernels.
 
 .. code-block:: python
@@ -459,10 +459,10 @@ We now build a ``TeiliNetwork``.
     InpSynAlpha.weight = np.asarray([10,-10])
     InpSynResonant.weight = np.asarray([10,-10])
 
-.. attention:: The ``weight`` multiplies the baseweight, which is currently initialised to 7 pA by default. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3500.
+.. attention:: The ``weight`` multiplies the baseweight, which is currently initialised to 7 pA by default. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike, the weight must be greater than 3500.
 
 Now our simple spiking neural network is defined. In order to visualize what is happening during the simulation
-we need to monitor the spiking behavior of our neurons and other state variables of neurons and synapses.
+we need to monitor the spiking behavior of our neurons and other state variables of the neurons and synapses.
 
 .. code-block:: python
 
@@ -477,7 +477,7 @@ we need to monitor the spiking behavior of our neurons and other state variables
                                   'Iin'], record=0, name='statemonNeuOut2')
 
 
-We can now finally add all defined ``Neurons`` and ``Connections``, as well as the monitors to our ``TeiliNetwork`` and run the simulation.
+We can now finally add all defined ``Neurons`` and ``Connections`` and also the monitors to our ``TeiliNetwork`` and run the simulation.
 
 .. code-block:: python
 
@@ -489,7 +489,7 @@ We can now finally add all defined ``Neurons`` and ``Connections``, as well as t
     duration = 10
     Net.run(duration * ms)
 
-In order to visualize the behavior the example script also plots a couple of spike and state monitors.
+In order to visualize the behavior, the example script also plots a couple of spike and state monitors.
 
 .. code-block:: python
 
@@ -574,7 +574,7 @@ In order to visualize the behavior the example script also plots a couple of spi
 
     app.exec()
 
-The synaptic current is always positive, the negative effect is oberved in the Iin of the neuron. To better visualize the synapse dynamics, we have multiplied by -1 the I_syn of the inhibitory synapse.
+The synaptic current is always positive, the negative effect is oberved in the Iin of the neuron. To better visualize the synapse dynamics, we have multiplied the I_syn of the inhibitory synapse by -1.
 The resulting figure should look like this:
 
 .. figure:: fig/synaptic_kernels_tutorial_dark.png

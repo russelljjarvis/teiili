@@ -331,7 +331,6 @@ fusi_params_conductance = {"wplus": 0.2,
 stdp = {'model': '''
       dApre/dt = -Apre / taupre : 1 (event-driven)
       dApost/dt = -Apost / taupost : 1 (event-driven)
-      dApost = -dApre * (taupre / taupost) * Q_diffAPrePost * w_max : 1
       w_max: 1 (constant)
       taupre : second (constant)
       taupost : second (constant)
@@ -344,7 +343,7 @@ stdp = {'model': '''
       w_plast = clip(w_plast + Apost, 0, w_max) ''',
 
         'on_post': '''
-      Apost += dApost
+      Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
       w_plast = clip(w_plast + Apre, 0, w_max) '''}
 
 stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace since we would define it twice?
@@ -352,7 +351,7 @@ stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace 
                      "taupre": 10 * ms,
                      "taupost": 10 * ms,
                      "w_max": 1.,
-                     "dApre": 0.01,
+                     "dApre": 0.1,
                      "Q_diffAPrePost": 1.05,
                      "w_plast": 0}
 
@@ -369,7 +368,6 @@ stdp_para_conductance = {"baseweight_e": 7 * nS,  # should we find a way to repl
 You need to declare two set of parameters for every block: one for
 current based models and one for conductance based models.
 
-TODO: THESE KERNELS ARE RIGHT...except for the gaussian...that one is WRONG!
 """
 # Alpha kernel ##
 
@@ -417,7 +415,6 @@ dexp_params_conductance = {"tausyn": 2 * ms,
 # Resonant kernel ##
 resonant_kernel = {'model': '''
                 omega: 1/second
-                sigma_gaussian : second
                 %kernel  = s * omega : {unit} * second **-1
                 ds/dt = -s/tausyn - I_syn*omega : amp
                 tausyn_kernel : second
@@ -437,22 +434,6 @@ resonant_params_current = {"tausyn": 0.5 * ms,
 resonant_params_conductance = {"tausyn": 0.5 * ms,
                                "omega": 1 / ms,
                                "tausyn_kernel": 0.5 * ms}
-#  Gaussian kernel ##
-gaussian_kernel = {'model': '''
-                  %tausyn = (sigma_gaussian**2)/t_spike : second
-                  sigma_gaussian : second
-
-                  dt_spike/dt = 1 : second (clock-driven)
-                  ''',
-                   # this time we need to add this pre eq to the template pe eq
-
-                   'on_pre': '''t_spike = 0 * ms''',
-
-                   'on_post': ''' '''}
-
-gaussian_params_current = {"sigma_gaussian_e": 6 * ms}
-
-gaussian_params_conductance = {"sigma_gaussian_e": 6 * ms}
 
 
 none_params = {}
@@ -465,22 +446,22 @@ Every new block dictionaries must be added to these definitions
 modes = {'current': current, 'conductance': conductance,
          'DPI': dpi, 'DPIShunting': dpi_shunt}
 
-kernels = {'exponential': none, 'alpha': alpha_kernel, 'dexp': dexp_kernel,
-           'resonant': resonant_kernel, 'gaussian': gaussian_kernel}
+kernels = {'exponential': none, 'alpha': alpha_kernel,
+           'resonant': resonant_kernel}
 
 plasticity_models = {'non_plastic': none, 'fusi': fusi, 'stdp': stdp}
 
 
 # parameters dictionaries
 current_parameters = {'current': current_params, 'non_plastic': none_params, 'fusi': fusi_params_current,
-                      'stdp': stdp_para_current, 'exponential': none_params, 'alpha': alpha_params_current, 'dexp': dexp_params_current,
-                      'resonant': resonant_params_current, 'gaussian': gaussian_params_current}
+                      'stdp': stdp_para_current, 'exponential': none_params, 'alpha': alpha_params_current,
+                      'resonant': resonant_params_current}
 
 conductance_parameters = {'conductance': conductance_params, 'non_plastic': none_params, 'fusi': fusi_params_conductance,
                           'stdp': stdp_para_conductance, 'exponential': none_params, 'alpha': alpha_params_conductance,
-                          'resonant': resonant_params_conductance, 'gaussian': gaussian_params_conductance}
+                          'resonant': resonant_params_conductance}
 
-DPI_parameters = {'DPI': dpi_params, 'exponential': none_params, 'non_plastic': none_params,
+DPI_parameters = {'DPI': dpi_params, 'exponential': none_params, 'alpha': alpha_params_current, 'non_plastic': none_params,
                   'fusi': fusi_params_current, 'stdp': stdp_para_current}
 
 DPI_shunt_parameters = {'DPIShunting': dpi_shunt_params, 'exponential': none_params, 'non_plastic': none_params,

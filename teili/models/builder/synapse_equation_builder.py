@@ -87,7 +87,7 @@ class SynapseEquationBuilder():
                     See this paper for reference #(add DPI paper here) TODO
 
                     The second entry is the kernel of the synapse.
-                    This can be one of 'exponential', 'alpha', 'resonant' or 'gaussian'.
+                    This can be one of 'exponential', 'alpha' or 'resonant'.
 
                     The third entry is the plasticity of the synapse.
                     This can be 'non_plastic', 'stdp' or 'fusi'.

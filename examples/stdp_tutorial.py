@@ -61,7 +61,7 @@ post_synapse.weight = 4000.
 
 stdp_synapse.connect("i==j")
 stdp_synapse.weight = 300.
-stdp_synapse.Ie_tau = 10 * pA
+stdp_synapse.I_tau = 10 * pA
 stdp_synapse.dApre = 0.01
 stdp_synapse.taupre = 3 * ms
 stdp_synapse.taupost = 3 * ms
@@ -78,10 +78,10 @@ statemon_post_neurons = StateMonitor(
 
 
 statemon_pre_synapse = StateMonitor(
-    pre_synapse, variables=['Ie_syn'], record=0, name='statemon_pre_synapse')
+    pre_synapse, variables=['I_syn'], record=0, name='statemon_pre_synapse')
 
 statemon_post_synapse = StateMonitor(stdp_synapse, variables=[
-    'Ie_syn', 'w_plast', 'weight'],
+    'I_syn', 'w_plast', 'weight'],
     record=True, name='statemon_post_synapse')
 
 Net.add(pre_spikegenerator, post_spikegenerator,
@@ -146,15 +146,15 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'w_plast'))],
             mainfig=win_stdp,
             subfig=p2)
 
-datamodel = StateVariablesModel(state_variable_names=['Ie_syn'],
+datamodel = StateVariablesModel(state_variable_names=['I_syn'],
                                 state_variables=[np.asarray(statemon_post_synapse.Ie_syn[1])],
                                 state_variables_times=[np.asarray(statemon_post_synapse.t)])
-Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Ie_syn', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
             MyPlotSettings=PlotSettings(colors=['m']),
             x_range=(0, duration),
             title="Post synaptic current",
             xlabel="Time (s)",
-            ylabel="Synapic current Ie (pA)",
+            ylabel="Synapic current I (pA)",
             backend='pyqtgraph',
             mainfig=win_stdp,
             subfig=p3,

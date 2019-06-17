@@ -69,13 +69,13 @@ n_pink = int(duration/sg_dt)+1
 pink_x = abs(pink(n_pink))* 0.005*uA
 pink_x_array = TimedArray(pink_x, dt = sg_dt)
 testNeurons.namespace.update({'pink_x_array':pink_x_array})
-testNeurons.run_regularly("Ie0 = pink_x_array(t)",dt = defaultclock.dt) #0.005*uA#
+testNeurons.run_regularly("Iin0 = pink_x_array(t)",dt = defaultclock.dt) #0.005*uA#
 
 testNeurons.set_params(parameters)
 
 spikemon = SpikeMonitor(testNeurons, name='spikemon')
 statemonNeuIn = StateMonitor(testNeurons, variables=[
-                              "Ie0", "Vm", "Activity"], record=[0], name='statemonNeu')
+                              "Iin0", "Vm", "Activity"], record=[0], name='statemonNeu')
 
 Net.add(testNeurons, spikemon, statemonNeuIn)
 Net.run(duration)
@@ -101,7 +101,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Vm'))],
             mainfig=win,
             subfig=p1)
 
-Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Ie0'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Iin0'))],
             MyPlotSettings=PlotSettings(colors=['g']),
             x_range=(0, float(duration)),
             title="I_In",

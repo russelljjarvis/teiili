@@ -30,7 +30,7 @@ prefs.codegen.target = "numpy"
 input_timestamps = np.asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
-                                           times=input_timestamps, name='gtestInp')
+                                           times=input_timestamps, name='input_spikegenerator')
 
 
 Net = TeiliNetwork()
@@ -57,6 +57,7 @@ convinience to switch between voltage- or current-based models.
 Normally, you have one or the other in yur simulation, thus
 you will not need the if condition.
 '''
+
 # Example of how to set parameters, saved as a dictionary
 test_neurons1.set_params(neuron_model_param)
 # Example of how to set a single parameter
@@ -79,10 +80,10 @@ spikemon_test_neurons2 = SpikeMonitor(
     test_neurons2, name='spikemon_test_neurons2')
 
 statemon_input_synapse = StateMonitor(
-    input_synapse, variables='Ie_syn', record=True, name='statemon_input_synapse')
+    input_synapse, variables='I_syn', record=True, name='statemon_input_synapse')
 
 statemon_test_synapse = StateMonitor(
-    test_synapse, variables='Ie_syn', record=True, name='statemon_test_synapse')
+    test_synapse, variables='I_syn', record=True, name='statemon_test_synapse')
 
 if 'Imem' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
@@ -101,7 +102,8 @@ elif 'Vm' in neuron_model().keywords['model']:
 Net.add(input_spikegenerator, test_neurons1, test_neurons2,
         input_synapse, test_synapse,
         spikemon_input, spikemon_test_neurons1, spikemon_test_neurons2,
-        statemon_test_neurons1, statemon_test_neurons2, statemon_test_synapse, statemon_input_synapse)
+        statemon_test_neurons1, statemon_test_neurons2,
+        statemon_test_synapse, statemon_input_synapse)
 
 duration = 0.5
 Net.run(duration * second)
@@ -149,6 +151,7 @@ Rasterplot(MyEventsModels=[spikemon_input],
                      show_immediately=False)
 
 # Input synapses
+<<<<<<< HEAD
 Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'Ie_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
@@ -160,6 +163,12 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'Ie_syn'))],
                    subfig=p2,
                    QtApp=app,
                    show_immediately=False)
+=======
+for i, data in enumerate(np.asarray(statemon_input_synapse.I_syn)):
+    name = 'Syn_{}'.format(i)
+    p2.plot(x=np.asarray(statemon_input_synapse.t / ms), y=data,
+            pen=pg.mkPen(colors[3], width=2), name=name)
+>>>>>>> dev
 
 # Intermediate neurons
 if hasattr(statemon_test_neurons1, 'Imem'):
@@ -181,6 +190,7 @@ Lineplot(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
                    show_immediately=False)
 
 # Output synapses
+<<<<<<< HEAD
 Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'Ie_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
@@ -207,6 +217,12 @@ Rasterplot(MyEventsModels=[spikemon_test_neurons2],
                      QtApp=app,
                      show_immediately=False)
 
+=======
+for i, data in enumerate(np.asarray(statemon_test_synapse.I_syn)):
+    name = 'Syn_{}'.format(i)
+    p4.plot(x=np.asarray(statemon_test_synapse.t / ms), y=data,
+            pen=pg.mkPen(colors[1], width=2), name=name)
+>>>>>>> dev
 
 if hasattr(statemon_test_neurons2, 'Imem'):
     MyData_output = [(statemon_test_neurons2, ('t','Imem'))]

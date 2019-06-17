@@ -64,13 +64,13 @@ spikemonInp = SpikeMonitor(gInpGroup, name='spikemonInp')
 spikemon = SpikeMonitor(testNeurons, name='spikemon')
 spikemonOut = SpikeMonitor(testNeurons2, name='spikemonOut')
 statemonInpSyn = StateMonitor(
-    InpSyn1, variables='Ie_syn', record=True, name='statemonInpSyn')
+    InpSyn1, variables='I_syn', record=True, name='statemonInpSyn')
 statemonNeuOut = StateMonitor(testNeurons2, variables=[
                               'Imem'], record=0, name='statemonNeuOut')
 statemonNeuIn = StateMonitor(testNeurons, variables=[
                              "Iin", "Imem", "Iahp"], record=[0, 1], name='statemonNeu')
 statemonSynOut = StateMonitor(
-    Syn, variables='Ie_syn', record=True, name='statemonSynOut')
+    Syn, variables='I_syn', record=True, name='statemonSynOut')
 
 Net.add(gInpGroup, testNeurons, testNeurons2, InpSyn1, InpSyn2, Syn, spikemonInp, spikemon,
         spikemonOut, statemonNeuIn, statemonNeuOut, statemonSynOut, statemonInpSyn)
@@ -79,7 +79,6 @@ duration = 0.500
 Net.run(duration * second)
 
 # Visualize simulation results
-
 from teili.tools.visualizer.DataControllers.Rasterplot import Rasterplot
 from teili.tools.visualizer.DataControllers.Lineplot import Lineplot
 from teili.tools.visualizer.DataViewers import PlotSettings
@@ -119,7 +118,7 @@ Rasterplot(MyEventsModels=[spikemonInp],
                      QtApp=app,
                      show_immediately=False)
 
-Lineplot(DataModel_to_x_and_y_attr=[(statemonInpSyn, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemonInpSyn, ('t', 'I_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Input synapses",
@@ -143,7 +142,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuIn, ('t', 'Imem'))],
                    QtApp=app,
                    show_immediately=False)
 
-Lineplot(DataModel_to_x_and_y_attr=[(statemonSynOut, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemonSynOut, ('t', 'I_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Output synapses",

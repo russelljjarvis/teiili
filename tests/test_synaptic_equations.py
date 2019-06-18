@@ -7,7 +7,6 @@ This file contains unit tests the synapse equations.
 import unittest
 import numpy as np
 from math import e
-from sklearn.metrics import mean_squared_error
 from brian2 import  ms, pA, nA, amp, prefs, StateMonitor,SpikeGeneratorGroup
 from teili.core.groups import Neurons, Connections
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
@@ -117,7 +116,7 @@ class TestSynapticCurrent(unittest.TestCase):
         I_alpha_brian = (statemon_input_synapse_alpha.I_syn[0]/amp)[I_syn_change-1:]
 
         # Calculate mean squared error
-        mse = mean_squared_error(I_alpha_brian[:-1]*1e12, I_alpha_expected*1e12)
+        mse = np.average(((I_alpha_brian[:-1]*1e12)-(I_alpha_expected*1e12))** 2, axis=0)
         # Define an error
         error = 0.001
         # Check if mean squared error is acceptable
@@ -178,8 +177,7 @@ class TestSynapticCurrent(unittest.TestCase):
         I_resonant_brian = (statemon_input_synapse_resonant.I_syn[0]/amp)[I_syn_change-1:]
 
         # Calculate mean squared error
-        mse = mean_squared_error(I_resonant_brian[:-1]*1e12, I_resonant_expected*1e12)
-
+        mse = np.average(((I_resonant_brian[:-1]*1e12)-(I_resonant_expected*1e12))** 2, axis=0)
         # Define an error
         error = 0.001
 

@@ -36,8 +36,6 @@ class DataViewerUtilsPyqtgraph(DataViewerUtils):
             app = QtGui.QApplication.instance()
             if app is None:
                 app = QtGui.QApplication(sys.argv)
-            else:
-                print('QApplication instance already exists: %s' % str(app))
             return app
 
         else:

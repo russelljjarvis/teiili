@@ -1,18 +1,23 @@
 import unittest
 
 import numpy as np
-from PyQt5 import QtGui
-import pyqtgraph as pg
 
 from teili.tools.visualizer.DataViewers import PlotSettings, RasterplotViewerPyqtgraph
 
-
 SHOW_PLOTS_IN_TESTS = False
-QtApp = QtGui.QApplication([])
 
+try:
+    import pyqtgraph as pg
+    from PyQt5 import QtGui
+    QtApp = QtGui.QApplication([])
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = False
+except BaseException:
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = True
 
-class TestHistogramViewerMatplotlib(unittest.TestCase):
-
+class TestRasterplotViewerPyqtgraph(unittest.TestCase):
+    @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS,
+                     "Skip unittest TestRasterplotViewerPyqtgraph.test___init__ using pyqtgraph"
+                     "as pyqtgraph could not be imported")
     def test___init__(self):
         MyPlotSettings = PlotSettings()
 
@@ -67,7 +72,10 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
         if SHOW_PLOTS_IN_TESTS:
             RV.show()
 
-    def test_create_rasterplot(self):
+    @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS,
+                     "Skip unittest TestRasterplotViewerPyqtgraph.test_create_rasterplot using pyqtgraph"
+                     "as pyqtgraph could not be imported")
+    def test_createrasterplot(self):
         MyPlotSettings = PlotSettings()
 
         # basics

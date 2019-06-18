@@ -73,6 +73,9 @@ class Histogram(DataController):
 
         self._get_data(DataModel_to_attr)
         self.create_plot()
+        # to allow easier access to main- and subfigure
+        self.mainfig = self.viewer.mainfig
+        self.subfig = self.viewer.subfig
         if show_immediately:
             self.show()
 

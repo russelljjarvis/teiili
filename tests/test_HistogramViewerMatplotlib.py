@@ -35,7 +35,7 @@ class TestHistogramViewerMatplotlib(unittest.TestCase):
             HV.show()
         plt.close('all')
 
-    def test_create_histogram(self):
+    def test_createhistogram(self):
         MyPlotSettings = PlotSettings()
 
         lst1 = [1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5]

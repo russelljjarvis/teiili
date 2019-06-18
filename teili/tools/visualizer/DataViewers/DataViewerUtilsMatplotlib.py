@@ -1,4 +1,7 @@
-import matplotlib.pylab as plt
+import matplotlib
+plt = matplotlib.pylab
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 from teili.tools.visualizer.DataViewers.DataViewerUtils import DataViewerUtils
 

@@ -53,7 +53,7 @@ class TestEquations(unittest.TestCase):
         testNeurons.run_regularly("Iconst = I_bias", dt=1 * ms)
 
         statemon_izh = StateMonitor(testNeurons,
-                                    ('Iin0', 'Iconst', 'Vm', 'Iadapt'),
+                                    ('Iin', 'Iconst', 'Vm', 'Iadapt'),
                                     record=True,
                                     name='statemon_izh')
         Net.add(testNeurons, statemon_izh)

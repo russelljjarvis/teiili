@@ -32,9 +32,6 @@ class StateVariablesModel(DataModel):
         """
 
 
-
-
-
         if state_variable_names is None and state_variables is None and state_variables_times is None:
             pass
 
@@ -56,6 +53,8 @@ class StateVariablesModel(DataModel):
                     state_variable_name=state_var_name,
                     state_variable=state_var,
                     state_variable_times=state_var_times)
+
+        self.set_attributes_to_save(state_variable_names)
 
     @classmethod
     def from_brian_state_monitors(
@@ -119,8 +118,15 @@ class StateVariablesModel(DataModel):
             state_variable_names=state_variable_names,
             state_variables=state_variables,
             state_variables_times=state_variables_times)
+        newStateVariableModel.set_attributes_to_save(state_variable_names)
 
         return newStateVariableModel
+
+    def set_attributes_to_save(self, state_variable_names):
+        self.attributes_to_save = []
+        if state_variable_names:
+            for state_var_name in state_variable_names:
+                self.attributes_to_save.extend([state_var_name, 't_' + state_var_name])
 
     def add_one_state_variable(
             self,

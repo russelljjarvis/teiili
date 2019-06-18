@@ -131,7 +131,7 @@ class TestDataModel(unittest.TestCase):
                 state_variables_times)
 
 
-    def test_StateVariablesModel_from_brian_statemonitors(self):
+    def test_StateVariablesModelfrombrianstatemonitors(self):
 
         Net, spikemonN1, statemonN1, statemonN2, statemonN2_2 = run_teili_network()
 

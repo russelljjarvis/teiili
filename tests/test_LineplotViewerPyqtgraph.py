@@ -1,17 +1,23 @@
 import unittest
 
 import numpy as np
-from PyQt5 import QtGui
-import pyqtgraph as pg
 
 from teili.tools.visualizer.DataViewers import PlotSettings, LineplotViewerPyqtgraph
 
-
 SHOW_PLOTS_IN_TESTS = False
-QtApp = QtGui.QApplication([])
 
+try:
+    from PyQt5 import QtGui
+    import pyqtgraph as pg
+    QtApp = QtGui.QApplication([])
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = False
+except BaseException:
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = True
 
 class TestLineplotViewerPyqtgraph(unittest.TestCase):
+    @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS,
+                     "Skip unittest TestLineplotViewerPyqtgraph.test___init__ using pyqtgraph"
+                     "as pyqtgraph could not be imported")
     def test___init__(self):
         MyPlotSettings = PlotSettings()
 
@@ -41,7 +47,10 @@ class TestLineplotViewerPyqtgraph(unittest.TestCase):
         if SHOW_PLOTS_IN_TESTS:
             LV.show()
 
-    def test_create_lineplot(self):
+    @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS,
+                     "Skip unittest TestLineplotViewerPyqtgraph.test_create_lineplot using pyqtgraph"
+                     "as pyqtgraph could not be imported")
+    def test_createlineplot(self):
         MyPlotSettings = PlotSettings()
 
         # basics

@@ -22,6 +22,55 @@ class DoubleExponential(SynapseEquationBuilder):
         SynapseEquationBuilder.__init__(self, base_unit='current',
                                         kernel='alpha', plasticity='non_plastic')
 
+class Alpha(SynapseEquationBuilder):
+    """This class provides you with all equations to simulate synapses with double
+    exponential dynamics.
+    """
+
+    def __init__(self):
+        """This class provides you with all equations to simulate synapses with alpha function
+         dynamics.
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='alpha', plasticity='non_plastic')
+
+class AlphaStdp(SynapseEquationBuilder):
+    """This class provides you with all equations to simulate synapses with double
+    exponential dynamics.
+    """
+
+    def __init__(self):
+        """This class provides you with all equations to simulate synapses with alpha function
+         dynamics.
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='alpha', plasticity='stdp')
+
+class Resonant(SynapseEquationBuilder):
+    """This class provides you with all equations to simulate synapses with resonant
+    function dynamics.
+    """
+
+    def __init__(self):
+        """This class provides you with all equations to simulate synapses with double
+        exponential dynamics.
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='resonant', plasticity='non_plastic')
+
+class ResonantStdp(SynapseEquationBuilder):
+    """This class provides you with all equations to simulate synapses with resonant
+    function dynamics with STDP learning.
+    """
+
+    def __init__(self):
+        """This class provides you with all equations to simulate synapses with double
+        exponential dynamics.
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='resonant', plasticity='stdp')
+
+
 
 class Alpha(SynapseEquationBuilder):
     """This class provides you with all equations to simulate synapses with double
@@ -47,17 +96,6 @@ class Resonant(SynapseEquationBuilder):
         SynapseEquationBuilder.__init__(self, base_unit='current',
                                         kernel='resonant', plasticity='non_plastic')
 
-class Gaussian(SynapseEquationBuilder):
-    """This class provides you with all equations to simulate synapses with double
-    exponential dynamics.
-    """
-
-    def __init__(self):
-        """This class provides you with all equations to simulate synapses with double
-        exponential dynamics.
-        """
-        SynapseEquationBuilder.__init__(self, base_unit='current',
-                                        kernel='gaussian', plasticity='non_plastic')
 
 
 class ReversalSynV(SynapseEquationBuilder):
@@ -98,6 +136,17 @@ class DPISyn(SynapseEquationBuilder):
         SynapseEquationBuilder.__init__(self, base_unit='DPI',
                                         plasticity='non_plastic')
 
+class DPISyn_alpha(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate a Differential Pair
+    Integrator (DPI) synapse as published in Chicca et al. 2014.
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate a Differential Pair
+        Integrator (DPI) synapse as published in Chicca et al. 2014.
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='DPI', kernel='alpha',
+                                        plasticity='non_plastic')
 
 class DPIShunt(SynapseEquationBuilder):
     """This class provides you with all the equations to simulate a Differential Pair
@@ -154,6 +203,7 @@ def main(path=None):
     if not os.path.isdir(path):
         Path(path).mkdir(parents=True)
 
+    #Kernel synapses
     doubleExponential = DoubleExponential()
     doubleExponential.export_eq(os.path.join(path, "DoubleExponential"))
 
@@ -162,9 +212,6 @@ def main(path=None):
 
     resonant = Resonant()
     resonant.export_eq(os.path.join(path, "Resonant"))
-
-    gaussian = Gaussian()
-    gaussian.export_eq(os.path.join(path, "Gaussian"))
 
     reversalSynV = ReversalSynV()
     reversalSynV.export_eq(os.path.join(path, "ReversalSynV"))

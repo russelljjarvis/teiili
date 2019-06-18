@@ -1,17 +1,21 @@
 import unittest
 
-import pyqtgraph as pg
-from PyQt5 import QtGui
-
 from teili.tools.visualizer.DataViewers import PlotSettings, HistogramViewerPyqtgraph
 
-
 SHOW_PLOTS_IN_TESTS = False
-QtApp = QtGui.QApplication([])
 
+try:
+    import pyqtgraph as pg
+    from PyQt5 import QtGui
+    QtApp = QtGui.QApplication([])
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = False
+except BaseException:
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = True
 
 class TestHistogramViewerPyqtgraph(unittest.TestCase):
 
+    @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS, "Skip unittest TestHistogramViewerPyqtgraph.test___init__ using pyqtgraph"
+                                                       "as pyqtgraph could not be imported")
     def test___init__(self):
         MyPlotSettings = PlotSettings()
 
@@ -37,7 +41,9 @@ class TestHistogramViewerPyqtgraph(unittest.TestCase):
         if SHOW_PLOTS_IN_TESTS:
             HV.show()
 
-    def test_create_histogram(self):
+    @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS, "Skip unittest TestHistogramViewerPyqtgraph.test_create_histogram"
+                                                       "using pyqtgraph as pyqtgraph could not be imported")
+    def test_createhistogram(self):
         MyPlotSettings = PlotSettings()
 
         lst1 = [1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5]

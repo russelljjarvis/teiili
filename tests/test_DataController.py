@@ -10,7 +10,7 @@ DatCtr = DataController()
 
 class TestDataController(unittest.TestCase):
 
-    def test__filter_events_for_interval(self):
+    def test_filtereventsforinterval(self):
         all_spiketimes = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45]
         all_neuron_ids = [5, 4, 3, 2, 2, 6, 1, 0]
 
@@ -72,7 +72,7 @@ class TestDataController(unittest.TestCase):
                 expected_spike_times_4,
                 returned_spike_times_4))
 
-    def test__filter_events_for_neuron_ids(self):
+    def test_filtereventsforneuronids(self):
         all_spiketimes = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45]
         all_neuron_ids = [5, 4, 3, 2, 2, 6, 1, 0]
 
@@ -123,7 +123,7 @@ class TestDataController(unittest.TestCase):
                 expected_spike_times_3,
                 returned_spike_times_3))
 
-    def test_filter_events(self):
+    def test_filterevents(self):
         all_spiketimes = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45]
         all_neuron_ids = [5, 4, 3, 2, 2, 6, 1, 0]
 

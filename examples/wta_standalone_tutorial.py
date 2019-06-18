@@ -48,25 +48,26 @@ duration = 500  # 10000
 duration_s = duration * 1e-3
 testbench = WTA_Testbench()
 
-wtaParams = {'weInpWTA': 900,
-             'weWTAInh': 500,
-             'wiInhWTA': -550,
-             'weWTAWTA': 650,
+
+wta_params = {'we_inp_exc': 900,
+             'we_exc_inh': 500,
+             'wi_inh_exc': -550,  # -250,
+             'we_exc_exc': 650,  # 75,
              'sigm': 2,
-             'rpWTA': 3 * ms,
-             'rpInh': 1 * ms,
-             'EI_connection_probability': 0.7,
+             'rp_exc': 3 * ms,
+             'rp_inh': 1 * ms,
+             'ei_connection_probability': 0.7,
              }
 
 test_WTA = WTA(name='test_WTA', dimensions=1, num_neurons=num_neurons, num_inh_neurons=40,
-               num_input_neurons=num_input_neurons, num_inputs=2, block_params=wtaParams,
+               num_input_neurons=num_input_neurons, num_inputs=2, block_params=wta_params,
                spatial_kernel="kernel_gauss_1d")
 
 testbench.stimuli(num_neurons=num_neurons, dimensions=1,
                   start_time=100, end_time=duration)
 testbench.background_noise(num_neurons=num_neurons, rate=10)
 
-test_WTA.inputGroup.set_spikes(
+test_WTA.spike_gen.set_spikes(
     indices=testbench.indices, times=testbench.times * ms)
 noise_syn = Connections(testbench.noise_input, test_WTA,
                         equation_builder=DPISyn(), name="noise_syn", )

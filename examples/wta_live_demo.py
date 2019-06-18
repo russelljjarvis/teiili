@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-# @Author: mmilde
+# @Author: alpren
 # @Date:   2018-01-11 14:48:17
-# @Last Modified by:   mmilde
-# @Last Modified time: 2018-01-25 16:29:42
 import os
 import numpy as np
 import sys
@@ -41,7 +39,7 @@ Net = TeiliNetwork()
 duration = 1500  # 10000
 testbench = WTA_Testbench()
 
-wtaParams = {'we_inp_exc': 500,
+wta_params = {'we_inp_exc': 500,
              'we_exc_inh': 175,
              'wi_inh_exc': -100,  # -250,
              'we_exc_exc': 200,  # 75,
@@ -53,7 +51,7 @@ wtaParams = {'we_inp_exc': 500,
 
 gtestWTA = WTA(name='testWTA', neuron_eq_builder=DPI(num_inputs=1), synapse_eq_builder=DPISyn,
                dimensions=1, num_neurons=num_neurons, num_inh_neurons=40,
-               num_input_neurons=num_input_neurons, num_inputs=2, block_params=wtaParams,
+               num_input_neurons=num_input_neurons, num_inputs=2, block_params=wta_params,
                spatial_kernel="kernel_gauss_1d")
 
 syn_in_ex = gtestWTA._groups['s_inp_exc']

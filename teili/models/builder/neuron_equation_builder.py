@@ -59,26 +59,25 @@ class NeuronEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder.
     """
 
-    def __init__(self, keywords=None, base_unit='current', adaptation='calciumFeedback',
-                 integration_mode='exponential', leak='leaky', position='spatial',
-                 noise='gaussian_noise', refractory='refractory', num_inputs=1, verbose=False):
+    def __init__(self, keywords=None, base_unit='current', num_inputs=1, verbose=False, **kwargs):
         """Initializes NeuronEquationBuilder with defined keyword arguments.
 
         Args:
             keywords (dict, optional): Brian2 like model.
             base_unit (str, optional): Indicates if neuron is current-based or conductance-based.
-            adaptation (str, optional): What type of adaptive feedback should be used.
-               So far only calciumFeedback is implemented.
-            integration_mode (str, optional): Sets if integration up to spike-generation is
-               linear or exponential.
-            leak (str, optional): Enables leaky integration.
-            position (str, optional): To enable spatial-like position indices on neuron.
-            noise (str, optional): NOT YET IMPLMENTED! This will in the future allow independent
-            mismatch-like noise to be added on each neuron.
-            refractory (str, optional): Refractory period of the neuron.
             num_inputs (int, optional): Number specifying how many distinct neuron population
                 project to the target neuron population.
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
+            **kwargs (str, optional): dictionary of equations such as:
+                 adaptation (str, optional): What type of adaptive feedback should be used.
+                     So far only calciumFeedback is implemented.
+                integration_mode (str, optional): Sets if integration up to spike-generation is
+                   linear or exponential.
+                leak (str, optional): Enables leaky integration.
+                position (str, optional): To enable spatial-like position indices on neuron.
+                noise (str, optional): NOT YET IMPLMENTED! This will in the future allow independent
+                mismatch-like noise to be added on each neuron.
+                refractory (str, optional): Refractory period of the neuron.
         """
         self.verbose = verbose
         if keywords is not None:
@@ -105,45 +104,41 @@ class NeuronEquationBuilder():
 
             try:
                 modes[base_unit]
-                current_equation_sets[adaptation]
-                current_equation_sets[integration_mode]
-                current_equation_sets[leak]
-                current_equation_sets[position]
-                current_equation_sets[noise]
+                for key, value in kwargs.items():
+                    current_equation_sets[value]
 
             except KeyError as e:
                 print(ERRValue)
 
             if base_unit == 'current':
-                eq_templ = [modes[base_unit],
-                            current_equation_sets[adaptation],
-                            current_equation_sets[integration_mode],
-                            current_equation_sets[leak],
-                            current_equation_sets[position],
-                            current_equation_sets[noise]]
-                param_templ = [current_parameters[base_unit],
-                               current_parameters[adaptation],
-                               current_parameters[integration_mode],
-                               current_parameters[leak],
-                               current_parameters[position],
-                               current_parameters[noise]]
+                
+                 eq_templ_dummy = []
+                 for key, value in kwargs.items():
+                     eq_templ_dummy = eq_templ_dummy + [current_equation_sets[value]]
+                 eq_templ =[modes[base_unit]]+ eq_templ_dummy
+                 
+                 param_templ_dummy = []
+                 for key, value in kwargs.items():
+                     param_templ_dummy = param_templ_dummy + [current_parameters[value]]
+                 param_templ =[current_parameters[base_unit]]+ param_templ_dummy
+                 
+                 keywords = combine_neu_dict(eq_templ, param_templ)
+                 
+                 print(keywords)
 
-                keywords = combine_neu_dict(eq_templ, param_templ)
 
             if base_unit == 'voltage':
-                eq_templ = [modes[base_unit],
-                            voltage_equation_sets[adaptation],
-                            voltage_equation_sets[integration_mode],
-                            voltage_equation_sets[leak],
-                            voltage_equation_sets[position],
-                            voltage_equation_sets[noise]]
-                param_templ = [voltage_parameters[base_unit],
-                               voltage_parameters[adaptation],
-                               voltage_parameters[integration_mode],
-                               voltage_parameters[leak],
-                               voltage_parameters[position],
-                               voltage_parameters[noise]]
-                keywords = combine_neu_dict(eq_templ, param_templ)
+                 eq_templ_dummy = []
+                 for key, value in kwargs.items():
+                     eq_templ_dummy = eq_templ_dummy + [voltage_equation_sets[value]]
+                 eq_templ =[modes[base_unit]]+ eq_templ_dummy
+                 param_templ_dummy = []
+                 for key, value in kwargs.items():
+                     param_templ_dummy = param_templ_dummy + [voltage_parameters[value]]
+                 param_templ =[current_parameters[base_unit]]+ param_templ_dummy
+                 
+                 keywords = combine_neu_dict(eq_templ, param_templ)
+               
 
             self.keywords = {'model': keywords['model'],
                              'threshold': keywords['threshold'],

@@ -209,43 +209,42 @@ none = {
 # Author: Moritz Milde
 # Code partially adapted from Daniele Conti and Llewyn Salt
 # Email: mmilde@ini.uzh.ch
-i_model_template = {
-    'model': """
-         dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt_clip - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt_clip + Iahp_clip - Ia_clip) / Itau_clip)) * Imem)) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
+i_model_template = {'model': '''
+            dImem/dt = (((Ith_clip / Itau_clip) * (Iin_clip  + Ia_clip - Ishunt_clip - Iahp_clip)) - Ith_clip - ((1 + ((Ishunt_clip + Iahp_clip - Ia_clip) / Itau_clip)) * Imem)) / (tau * ((Ith_clip/(Imem + Io)) + 1)) : amp (unless refractory)
 
-         tau = (Cmem * Ut) / (kappa * Itau_clip) : second
-         kappa = (kn + kp) / 2                   : 1
+            Iahp      : amp
+            Ia        : amp
+            Iahp_clip : amp
 
-         Itau_clip = Itau*(Imem>Io) + Io*(Imem<=Io)     : amp
-         Ith_clip = Ith*(Imem>Io) + Io*(Imem<=Io)       : amp
-         Iin_clip = clip(Iin + Iconst, Io, 1*amp)       : amp
-         Ia_clip = Ia*(Imem>Io) + 2*Io*(Imem<=Io)       : amp
-         Ithahp_clip = Ithahp*(Iahp>Io) + Io*(Iahp<=Io) : amp
-         Ishunt_clip = clip(Ishunt, Io, Imem)           : amp
+            Itau_clip = Itau*(Imem>Io) + Io*(Imem<=Io)  : amp
+            Ith_clip = Ith*(Imem>Io) + Io*(Imem<=Io)    : amp
+            Iin_clip = clip(Iin+Iconst,Io, 1*amp) : amp
+            Ia_clip = Ia*(Imem>Io) + 2*Io*(Imem<=Io)    : amp
+            Ithahp_clip = Ithahp*(Iahp>Io) + Io*(Iahp<=Io) : amp
+            Ishunt_clip = clip(Ishunt, Io, Imem) : amp
 
-         Iahp_clip : amp               # Adaption current [Io:Iahp]
-         Iahp      : amp               # Adaptation current [0*pA:Iahp]
-         Ia        : amp               # Positive feedback current
-         Inoise    : amp               # Additional noise current
-         kn        : 1 (constant)      # subthreshold slope factor for nFETs
-         kp        : 1 (constant)      # subthreshold slope factor for pFETs
-         Ut        : volt (constant)   # Thermal voltage
-         Io        : amp (constant)    # Dark current
-         Cmem      : farad (constant)  # Membrane capacitance
-         Ispkthr   : amp (constant)    # Spiking threshold
-         Ireset    : amp (constant)    # Reset current
-         refP      : second (constant) # refractory period
-         Ith       : amp (constant)    # DPI threshold
-         Itau      : amp (constant)    # Leakage current
-         Iconst    : amp (constant)    # Optional constant current
-         Ishunt    : amp (constant)    # Shunting inhibitory current
-         Ica       : amp (constant)
-         """,
-    'threshold': "Imem > Ispkthr",
-    'reset': """
-         Imem = Ireset;
-         """
-    }
+            tau = (Cmem * Ut) / (kappa * Itau_clip) : second        # Membrane time constant
+            kappa = (kn + kp) / 2 : 1
+
+            Inoise  : amp                                    # Noise due to mismatch
+
+            kn      : 1 (constant)                   # subthreshold slope factor for nFETs
+            kp      : 1 (constant)                   # subthreshold slope factor for pFETs
+            Ut      : volt (constant)                # Thermal voltage
+            Io      : amp (constant)                 # Dark current
+            Cmem    : farad (constant)               # Membrane capacitance
+            Ispkthr : amp (constant)                         # Spiking threshold
+            Ireset  : amp (constant)                 # Reset current
+            refP    : second    (constant)           # refractory period (It is still possible to set it to False)
+            Ith     : amp (constant)                         # DPI threshold (low pass filter).
+            Itau    : amp (constant)                         # Leakage current
+            Iconst  : amp (constant)                         # Additional input current similar to constant current injection
+            Ishunt  : amp (constant)                         # Shunting inhibitory current (directly affects soma)
+            Ica     : amp (constant)
+
+         ''',
+                    'threshold': "Imem > Ispkthr",
+                    'reset': "Imem = Ireset;"}
 
 i_model_template_params = {
     "Inoise": constants.I0,
@@ -255,10 +254,14 @@ i_model_template_params = {
     "Ut": constants.UT,
     "Io": constants.I0,
     "Cmem": 1.5 * pF,
-    "Ia": constants.I0,
-    "Iath": 0.5 * nA,
-    "Iagain": 50. * pA,
-    "Ianorm": 10. * pA,
+    #---------------------------------------------------------
+    # Positive feedback parameters
+    #---------------------------------------------------------
+    "Ia": constants.I0,                                # Feedback current
+    #rest set in exponenctial integratin
+    #---------------------------------------------------------
+    # Adaptative and Calcium parameters
+    #---------------------------------------------------------
     "Ica": constants.I0,
     "Itauahp": constants.I0,
     "Ithahp": constants.I0,

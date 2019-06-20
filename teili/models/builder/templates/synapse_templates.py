@@ -422,6 +422,19 @@ plasticity_models = {
     'stdp': stdp
     }
 
+<<<<<<< HEAD
+=======
+learning_models = {}
+
+# parameters dictionaries
+current_parameters = {'current': current_params, 'non_plastic': none_params, 'fusi': fusi_params_current,
+                      'stdp': stdp_para_current, 'exponential': none_params, 'alpha': alpha_params_current,
+                      'resonant': resonant_params_current}
+
+conductance_parameters = {'conductance': conductance_params, 'non_plastic': none_params, 'fusi': fusi_params_conductance,
+                          'stdp': stdp_para_conductance, 'exponential': none_params, 'alpha': alpha_params_conductance,
+                          'resonant': resonant_params_conductance}
+>>>>>>> a49ea9c... **kwargs in init of neuronon equation builder
 
 # parameters dictionaries
 current_parameters = {

@@ -272,8 +272,15 @@ i_model_template_params = {
     "Ireset": 0.6 * pA,
     "Ith": 0.9 * pA,
     "Itau": 8 * pA,
-    "refP": 1 * ms
-    }
+    "refP": 1 * ms,
+    #---------------------------------------------------------
+    #  Adaptive threshold parameter for OCTA neurons.
+    # Maybe should be in another dictiionary but here to start.
+    #---------------------------------------------------------
+    'adaptive_threshold': 0.0*pamp,
+}
+
+
 
 
 # noise
@@ -317,23 +324,40 @@ i_a_params = {
     }
 
 # adaptation
-i_ahp = {
-    'model': """
-         %dIahp/dt = (- Ithahp_clip - Iahp + 2*Io*(Iahp<=Io)) / (tauahp * (Ithahp_clip / Iahp + 1)) : amp
-         %Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
-
-         tauahp = (Cahp * Ut) / (kappa * Itauahp) : second
-         Iahpmax = (Ica / Itauahp) * Ithahp_clip  : amp # Current ratio at differential pair circuit
-
-         Ithahp  : amp (constant)
-         Itauahp : amp (constant)
-         Cahp    : farad (constant)
+i_ahp = {'model': """
+          %dIahp/dt = (- Ithahp_clip - Iahp + 2*Io*(Iahp<=Io)) / (tauahp * (Ithahp_clip / Iahp + 1)) : amp # adaptation current
+          %Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
+          tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
+          Iahpmax = (Ica / Itauahp) * Ithahp_clip : amp     # Ratio of currents through diffpair and adaptation block
+          Ithahp : amp (constant)
+          Itauahp : amp (constant)
+          Cahp : farad (constant)
          """,
-    'threshold': "",
-    'reset': """
-         Iahp += Iahpmax;
-         """
-    }
+         'threshold': '',
+         'reset': '''
+                  Iahp += Iahpmax;
+                  '''}
+# gain modulation
+i_gm = {'model': """
+          %dIpred/dt = (1 - Ipred)/tau_pred : 1
+          tau_pred = second(constant)
+          """,
+      'threshold': '',
+       'reset': ''}
+
+i_gm_params = {'Ipred': 1.0 ,
+              'tau_pred': 1.5 *msecond
+               }
+
+# Keep track of the Imem variance. Usefull with run regular functions.
+i_var = {'model': """
+          normalized_activity_proxy : 1
+          activity_proxy : 1
+          """,
+      'threshold': '',
+      'reset': """
+        %Itau +=adaptive_threshold
+       """}
 
 i_ahp_params = {
     "Itauahp": 1 * pA,
@@ -356,56 +380,25 @@ i_non_leaky_params = {
 
 none_params = {}
 
-modes = {
-    "current": i_model_template,
-    "voltage": v_model_template
-    }
+modes = {'current': i_model_template, 'voltage': v_model_template}
 
-current_equation_sets = {
-    'linear': none,
-    'exponential': i_a,
-    'quadratic': none,
-    'leaky': none,
-    'non_leaky': none,
-    'calcium_feedback': i_ahp,
-    'spatial': spatial,
-    'gaussian_noise': i_noise,
-    'none': none
-    }
+current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
+                         'leaky': none, 'non_leaky': none, 'quadratic': none,
+                         'spatial': spatial, 'gaussian_noise': i_noise, 'none': none, 'linear': none
+                         'gm' : i_gm, 'var' : i_var}
 
-voltage_equation_sets = {
-    'linear': none,
-    'exponential': v_exp_current,
-    'quadratic': v_quad_current,
-    'leaky': v_leak,
-    'non_leaky': none,
-    'calcium_feedback': v_adapt,
-    'spatial': spatial,
-    'gaussian_noise': v_noise,
-    'none': none}
+voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_exp_current,
+                         'quadratic': v_quad_current,
+                         'leaky': v_leak, 'non_leaky': none,
+                         'spatial': spatial, 'gaussian_noise': v_noise, 'none': none, 'linear': none}
 
-current_parameters = {
-    'current': i_model_template_params,
-    'linear': none_params,
-    'exponential': i_exponential_params,
-    'quadratic': none_params,
-    'leaky': none_params,
-    'non_leaky': i_non_leaky_params,
-    'calcium_feedback': i_ahp_params,
-    'spatial': none_params,
-    'gaussian_noise': i_noise_params,
-    'none': none_params,
-    }
+current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
+                      'quadratic': none_params,
+                      'exponential': i_exponential_params, 'leaky': none_params, 'non_leaky': i_non_leaky_params,
+                      'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 'linear': none_params
+                      'gm' : i_gm_params, 'var' : none_params}
 
-voltage_parameters = {
-    'voltage': v_model_template_params,
-    'linear': none_params,
-    'exponential': v_exp_current_params,
-    'quadratic': v_quad_params,
-    'leaky': v_leak_params,
-    'non_leaky': none_params,
-    'calcium_feedback': v_adapt_params,
-    'spatial': none_params,
-    'gaussian_noise': none_params,
-    'none': none_params,
-    }
+voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': v_adapt_params,
+                      'exponential': v_exp_current_params, 'quadratic': v_quad_params,
+                      'leaky': v_leak_params, 'non_leaky': none_params,
+                      'spatial': none_params, 'gaussian_noise': none_params, 'none': none_params, 'linear': none_params}

@@ -59,7 +59,9 @@ class NeuronEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder.
     """
 
+<<<<<<< Updated upstream
     def __init__(self, keywords=None, base_unit='current', num_inputs=1, verbose=False, **kwargs):
+
         """Initializes NeuronEquationBuilder with defined keyword arguments.
 
         Args:
@@ -123,10 +125,7 @@ class NeuronEquationBuilder():
                  param_templ =[current_parameters[base_unit]]+ param_templ_dummy
                  
                  keywords = combine_neu_dict(eq_templ, param_templ)
-                 
-                 print(keywords)
-
-
+                
             if base_unit == 'voltage':
                  eq_templ_dummy = []
                  for key, value in kwargs.items():

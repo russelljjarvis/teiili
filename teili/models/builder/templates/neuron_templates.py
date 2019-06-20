@@ -252,13 +252,13 @@ i_model_template_params = {
     # ---------------------------------------------------------
     # Positive feedback parameters
     # ---------------------------------------------------------
-    "Ia": constants.I0,                                # Feedback current
-    # rest set in exponenctial integratin
-    # ---------------------------------------------------------
+    "Ia": constants.I0, # Feedback current
+    # rest is set in exponential integration
+    #---------------------------------------------------------
     # Adaptative and Calcium parameters
     # ---------------------------------------------------------
     "Ica": constants.I0,
-    "Iahp": constants.I0,                                # Adaptation current
+    "Iahp": constants.I0, # Adaptation current
     # ---------------------------------------------------------
     # Shunting inhibition
     # ---------------------------------------------------------

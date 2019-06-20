@@ -509,6 +509,8 @@ synaptic_equations = {
 synaptic_equations.update(kernels)
 synaptic_equations.update(plasticity_models)
 
+learning_models = {}
+
 # parameters dictionaries
 current_parameters = {
     'current': current_params,

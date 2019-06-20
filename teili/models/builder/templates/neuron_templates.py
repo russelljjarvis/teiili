@@ -263,21 +263,16 @@ i_model_template_params = {
     # Adaptative and Calcium parameters
     #---------------------------------------------------------
     "Ica": constants.I0,
-    "Itauahp": constants.I0,
-    "Ithahp": constants.I0,
-    "Cahp": 0.5 * pF,
-    "Iahp": constants.I0,
+    "Iahp": constants.I0,                                # Adaptation current
+    #---------------------------------------------------------
+    # Shunting inhibition
+    #---------------------------------------------------------
     "Ishunt": constants.I0,
     "Ispkthr": 1. * nA,
     "Ireset": 0.6 * pA,
     "Ith": 0.9 * pA,
     "Itau": 8 * pA,
     "refP": 1 * ms,
-    #---------------------------------------------------------
-    #  Adaptive threshold parameter for OCTA neurons.
-    # Maybe should be in another dictiionary but here to start.
-    #---------------------------------------------------------
-    'adaptive_threshold': 0.0*pamp,
 }
 
 
@@ -335,29 +330,38 @@ i_ahp = {'model': """
          """,
          'threshold': '',
          'reset': '''
-                  Iahp += Iahpmax;
+             Iahp += Iahpmax;
                   '''}
 # gain modulation
 i_gm = {'model': """
-          %dIpred/dt = (1 - Ipred)/tau_pred : 1
-          tau_pred = second(constant)
+          dIpred/dt = (1 - Ipred)/tau_pred  : 1
+          tau_pred : second (constant)
           """,
       'threshold': '',
-       'reset': ''}
+       'reset': ''
+       }
+
 
 i_gm_params = {'Ipred': 1.0 ,
-              'tau_pred': 1.5 *msecond
-               }
+              'tau_pred': 1.5 *ms
+}
 
 # Keep track of the Imem variance. Usefull with run regular functions.
 i_var = {'model': """
           normalized_activity_proxy : 1
           activity_proxy : 1
+          adaptive_threshold : amp
+
+
           """,
       'threshold': '',
       'reset': """
-        %Itau +=adaptive_threshold
-       """}
+        Itau +=adaptive_threshold
+       """
+}
+
+i_var_params = {  'adaptive_threshold': 0.0*pA
+        }
 
 i_ahp_params = {
     "Itauahp": 1 * pA,
@@ -384,8 +388,8 @@ modes = {'current': i_model_template, 'voltage': v_model_template}
 
 current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
                          'leaky': none, 'non_leaky': none, 'quadratic': none,
-                         'spatial': spatial, 'gaussian_noise': i_noise, 'none': none, 'linear': none
-                         'gm' : i_gm, 'var' : i_var}
+                         'spatial': spatial, 'gaussian_noise': i_noise, 'none': none, 
+                         'linear': none, 'gm' : i_gm, 'var' : i_var}
 
 voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_exp_current,
                          'quadratic': v_quad_current,
@@ -395,8 +399,8 @@ voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_exp_curre
 current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
                       'quadratic': none_params,
                       'exponential': i_exponential_params, 'leaky': none_params, 'non_leaky': i_non_leaky_params,
-                      'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 'linear': none_params
-                      'gm' : i_gm_params, 'var' : none_params}
+                      'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 
+                      'linear': none_params, 'gm' : i_gm_params, 'var' : i_var_params}
 
 voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': v_adapt_params,
                       'exponential': v_exp_current_params, 'quadratic': v_quad_params,

@@ -105,7 +105,6 @@ class SynapseEquationBuilder():
                 print(ERRValue)
 
             if base_unit == 'current':
-
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
                     eq_templ_dummy = eq_templ_dummy + \
@@ -152,7 +151,6 @@ class SynapseEquationBuilder():
                     input_number="{input_number}", unit='siemens')
 
             if base_unit == 'DPI':
-
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
                     eq_templ_dummy = eq_templ_dummy + \

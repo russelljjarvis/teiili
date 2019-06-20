@@ -59,7 +59,6 @@ class NeuronEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder.
     """
 
-<<<<<<< Updated upstream
     def __init__(self, keywords=None, base_unit='current', num_inputs=1, verbose=False, **kwargs):
 
         """Initializes NeuronEquationBuilder with defined keyword arguments.

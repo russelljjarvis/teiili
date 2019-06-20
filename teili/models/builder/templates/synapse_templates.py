@@ -79,7 +79,6 @@ conductance = {
     'on_post': ''' '''
 }
 """ Standard parameters for conductance based models
-
 TODO: For inhibitory synapse EIe is negative. Could this thus be a problem?
 """
 conductance_params = {
@@ -509,7 +508,10 @@ synaptic_equations = {
 synaptic_equations.update(kernels)
 synaptic_equations.update(plasticity_models)
 
-learning_models = {}
+
+synaptic_equations = {'variance_modulation' : variance_modulation, 'SynSTDGM' : SynSTDGM}
+synaptic_equations.update(kernels)
+synaptic_equations.update(plasticity_models)
 
 # parameters dictionaries
 current_parameters = {

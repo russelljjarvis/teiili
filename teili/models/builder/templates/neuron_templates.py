@@ -311,54 +311,59 @@ i_a_params = {
 }
 
 # adaptation
-i_ahp = {'model': """
-          %dIahp/dt = (- Ithahp_clip - Iahp + 2*Io*(Iahp<=Io)) / (tauahp * (Ithahp_clip / Iahp + 1)) : amp # adaptation current
-          %Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
-          tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
-          Iahpmax = (Ica / Itauahp) * Ithahp_clip : amp     # Ratio of currents through diffpair and adaptation block
-          Ithahp : amp (constant)
-          Itauahp : amp (constant)
-          Cahp : farad (constant)
-         """,
-         'threshold': '',
-         'reset': '''
-             Iahp += Iahpmax;
-                  '''}
-# gain modulation
-i_gm = {'model': """
-<<<<<<< HEAD
-          dIpred/dt = (1 - Ipred)/tau_pred  : 1
-          tau_pred : second (constant)
-          """,
-        'threshold': '',
-        'reset': ''
-        }
-=======
-          %dIpred/dt = (1 - Ipred)/tau_pred : 1
-          
-          tau_pred = second(constant)
-          """,
-      'threshold': '',
-       'reset': ''}
+i_ahp = {
+    'model': """
+        %dIahp/dt = (- Ithahp_clip - Iahp + 2*Io*(Iahp<=Io)) / (tauahp * (Ithahp_clip / Iahp + 1)) : amp # adaptation current
+        %Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
+        tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
+        Iahpmax = (Ica / Itauahp) * Ithahp_clip : amp     # Ratio of currents through diffpair and adaptation block
+        Ithahp : amp (constant)
+        Itauahp : amp (constant)
+        Cahp : farad (constant)
+        """,
+    'threshold': '',
+    'reset': '''
+        Iahp += Iahpmax;
+        '''
+    }
 
-}
-i_gm_params = {'Ipred': 1.0 ,
-              'tau_pred': 1.5 *msecond
-  
-}
+# gain modulation
+i_gm = {
+    'model': """
+        dIpred/dt = (1 - Ipred)/tau_pred  : 1
+        tau_pred : second (constant)
+        """,
+    'threshold': '',
+    'reset': ''
+    }
+
+i_gm_params = {
+    'Ipred': 1.0 ,
+    'tau_pred': 1.5 *ms
+    }
 
 # Keep track of the Imem variance. Usefull with run regular functions.
 i_var = {'model': """
           normalized_activity_proxy : 1
           activity_proxy : 1
+          adaptive_threshold : amp
+
+
           """,
       'threshold': '',
       'reset': """
-        %Itau +=adaptive_threshold
-       """}
+        Itau +=adaptive_threshold
+       """
 }
 
->>>>>>> b40c283... sync laptop and PC - new neuron templates
+i_var_params = {  'adaptive_threshold': 0.0*pA
+        }
+
+i_ahp_params = {"Itauahp": 1 * pA,
+                "Ithahp": 1 * pA,
+                "Ica": 2 * pA,
+                "Cahp": 1 * pF}
+>>>>>>> e92f50d... synapse_eq_builder_refactoring
 
 
 i_gm_params = {'Ipred': 1.0,
@@ -390,34 +395,9 @@ i_exponential_params = {
     "Itau": 8 * pA
 }
 
-<<<<<<< HEAD
 i_non_leaky_params = {
     "Itau": constants.I0
 }
-=======
-current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
-                         'leaky': none, 'non_leaky': none, 'quadratic': none,
-                         'spatial': spatial, 'gaussian_noise': i_noise, 'none': none, 'linear': none
-                         'gm' : i_gm, 'var' : i_var}
->>>>>>> b40c283... sync laptop and PC - new neuron templates
-
-none_model = {
-    'model': """
-         """,
-    'threshold': "",
-    'reset': """
-         """
-    }
-
-<<<<<<< HEAD
-none_params = {}
-=======
-current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
-                      'quadratic': none_params,
-                      'exponential': i_exponential_params, 'leaky': none_params, 'non_leaky': i_non_leaky_params,
-                      'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 'linear': none_params
-                      'gm' : i_gm_params, 'var' : none_params}
->>>>>>> b40c283... sync laptop and PC - new neuron templates
 
 modes = {
     'current': i_model_template,

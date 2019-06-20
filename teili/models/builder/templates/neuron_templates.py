@@ -326,12 +326,39 @@ i_ahp = {'model': """
                   '''}
 # gain modulation
 i_gm = {'model': """
+<<<<<<< HEAD
           dIpred/dt = (1 - Ipred)/tau_pred  : 1
           tau_pred : second (constant)
           """,
         'threshold': '',
         'reset': ''
         }
+=======
+          %dIpred/dt = (1 - Ipred)/tau_pred : 1
+          
+          tau_pred = second(constant)
+          """,
+      'threshold': '',
+       'reset': ''}
+
+}
+i_gm_params = {'Ipred': 1.0 ,
+              'tau_pred': 1.5 *msecond
+  
+}
+
+# Keep track of the Imem variance. Usefull with run regular functions.
+i_var = {'model': """
+          normalized_activity_proxy : 1
+          activity_proxy : 1
+          """,
+      'threshold': '',
+      'reset': """
+        %Itau +=adaptive_threshold
+       """}
+}
+
+>>>>>>> b40c283... sync laptop and PC - new neuron templates
 
 
 i_gm_params = {'Ipred': 1.0,
@@ -363,9 +390,16 @@ i_exponential_params = {
     "Itau": 8 * pA
 }
 
+<<<<<<< HEAD
 i_non_leaky_params = {
     "Itau": constants.I0
 }
+=======
+current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
+                         'leaky': none, 'non_leaky': none, 'quadratic': none,
+                         'spatial': spatial, 'gaussian_noise': i_noise, 'none': none, 'linear': none
+                         'gm' : i_gm, 'var' : i_var}
+>>>>>>> b40c283... sync laptop and PC - new neuron templates
 
 none_model = {
     'model': """
@@ -375,7 +409,15 @@ none_model = {
          """
     }
 
+<<<<<<< HEAD
 none_params = {}
+=======
+current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
+                      'quadratic': none_params,
+                      'exponential': i_exponential_params, 'leaky': none_params, 'non_leaky': i_non_leaky_params,
+                      'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 'linear': none_params
+                      'gm' : i_gm_params, 'var' : none_params}
+>>>>>>> b40c283... sync laptop and PC - new neuron templates
 
 modes = {
     'current': i_model_template,

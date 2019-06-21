@@ -8,10 +8,12 @@ Created on Thu Jun  7 17:18:17 2018
 
 import time
 from brian2 import ms, prefs, set_device, defaultclock
+import sys
 
+from pyqtgraph import QtGui, QtCore
 from teili.building_blocks.threeway import Threeway
 from teili.tools.three_way_kernels import A_plus_B_equals_C
-from teili import teiliNetwork
+from teili import TeiliNetwork
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 0.1 * ms
@@ -19,12 +21,12 @@ defaultclock.dt = 0.1 * ms
 
 #==========Threeway building block test=========================================
 
-duration = 10000 * ms
+duration = 500 * ms
 
 #===============================================================================
 # create the network
 
-exampleNet = teiliNetwork()
+exampleNet = TeiliNetwork()
 
 TW = Threeway('TestTW', hidden_layer_gen_func = A_plus_B_equals_C, cutoff = 2, monitor=True)
 
@@ -46,7 +48,7 @@ exampleNet.add(TW)
 #                is large enough (at least 10000 ms)
 
 #test_mode = 'standard'
-test_mode = 'live'
+test_mode = 'standard'
 
 #===============================================================================
 # reset the spike generators
@@ -78,9 +80,16 @@ elif test_mode == 'live':
     
     # run network as a thread
     exampleNet.run_as_thread(duration=duration)
+    TW.start_time = time.clock()
     
     # create and show parameter and live plottin gui
     param_gui = TW.show_parameter_gui()
     plot_gui = TW.plot_live_inputs()
     
+
+    
     plot_raster = TW.plot()
+    
+    
+    
+            

@@ -105,6 +105,9 @@ ENV/
 .pydevproject
 .settings/
 
+/octa/
+
+
 *.png
 *.jpg
 *.gif

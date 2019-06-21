@@ -6,15 +6,17 @@ e
 @author: matteo
 """
 from teili.core.groups import Neurons, Connections
-from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder ,\
+print_neuron_model
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder ,\
+print_synaptic_model
 from teili.models import synapse_models
 
-octa_neuron = NeuronEquationBuilder(base_unit='current',feedback = 'calcium_feedback', 
-                                     integration = 'exponential', location = 'spatial',
+octa_neuron = NeuronEquationBuilder(base_unit='current', feedback = 'calcium_feedback', 
+                                     integration = 'linear', position = 'spatial',
                                     gm = 'gm', var = 'var' )
 
-SynSTDGM = SynapseEquationBuilder(base_unit='None', 
+SynSTDGM = SynapseEquationBuilder(base_unit='DPI', 
                                       SynSTDGM = 'SynSTDGM')
 
 DPI_var = SynapseEquationBuilder(base_unit='DPI', 

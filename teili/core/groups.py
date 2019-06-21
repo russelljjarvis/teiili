@@ -580,8 +580,11 @@ class Connections(Synapses, TeiliGroup, Nameable):
         except Exception as e:
             import sys
             raise type(e)(str(e) + '\n\nCheck Equation for errors!\n' +
-                          'e.g. are all units specified correctly at the end \
-                          of every line?').with_traceback(sys.exc_info()[2])
+                          'e.g. are all units specified correctly at the end ' +
+                          'of every line?\n' +
+                          'e.g. is the value of num_inputs correct?\n' +
+                          'e.g. are you connecting the correct populations?'\
+                          ).with_traceback(sys.exc_info()[2])
 
     def connect(self, condition=None, i=None, j=None, p=1., n=1,
                 skip_if_invalid=False,

@@ -77,6 +77,7 @@ wta_params = {'we_inp_exc': 1.5,
               }
 
 
+
 class WTA(BuildingBlock):
     '''A 1 or 2D square Winner-Takes_all (WTA) Building block.
 

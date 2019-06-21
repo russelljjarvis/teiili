@@ -69,42 +69,8 @@ current_params = {
     }
 
 # Additional equations for conductance based models
-<<<<<<< HEAD
-conductance = {
-    'model': """
-         dgI/dt = (-gI) / tausyn + kernel: siemens (clock-driven)
-         I_syn = gI*(EI - Vm_post) : amp
-         Iin{input_number}_post = I_syn *  sign(weight)  : amp (summed)
 
-         EI =  EIe  : volt (constant)    # reversal potential
-         tausyn     : second (constant)  # synapse time constant
-         baseweight : siemens (constant) # synaptic gain
-         weight     : 1
-         w_plast    : 1
-         kernel     : siemens * second **-1
-         """,
-    'on_pre': """
-         gI += baseweight * abs(weight) * w_plast
-         """,
-    'on_post': """
-         """
-    }
-""" Standard parameters for conductance based models
-
-TODO: For inhibitory synapse EIe is negative. Could this thus be a problem?
-"""
-conductance_params = {
-    "gI": 0 * nS,
-    "tausyn": 5 * ms,
-    "EIe": 60.0 * mV,
-    "EIi": -90.0 * mV,
-    "w_plast": 1,
-    "baseweight": 7 * nS,
-    "kernel": 0 * nS * ms**-1
-    }
-=======
 conductance = {'model': '''
-              
                dgI/dt = (-gI) / tausyn + kernel     : siemens (clock-driven)
                I_syn = gI*(EI - Vm_post)            : amp
                Iin{input_number}_post = I_syn *  sign(weight)  : amp (summed)
@@ -126,18 +92,19 @@ conductance = {'model': '''
 
                'on_post': ''' '''
                }
+""" Standard parameters for conductance based models
 
-# standard parameters for conductance based models
-conductance_params = {"gI": 0 * nS,
-                      "tausyn": 5 * ms,
-                      "EIe": 60.0 * mV, # For inhibitory this parameter is negative...will thus
-                      #be a problem?
-                      "EIi": -90.0 * mV,
-                      "w_plast": 1,
-                      "baseweight": 7 * nS,
-                      "kernel": 0 * nS * ms**-1
-                      }
->>>>>>> e92f50d... synapse_eq_builder_refactoring
+TODO: For inhibitory synapse EIe is negative. Could this thus be a problem?
+"""
+conductance_params = {
+    "gI": 0 * nS,
+    "tausyn": 5 * ms,
+    "EIe": 60.0 * mV,
+    "EIi": -90.0 * mV,
+    "w_plast": 1,
+    "baseweight": 7 * nS,
+    "kernel": 0 * nS * ms**-1
+    }
 
 # DPI type model
 dpi = {
@@ -183,7 +150,6 @@ dpi_params = {
     }
 
 # DPI shunting inhibition
-<<<<<<< HEAD
 dpi_shunt = {
     'model': """
          dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(I_syn<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
@@ -211,40 +177,6 @@ dpi_shunt = {
     'on_post': """
          """,
     }
-=======
-dpi_shunt = {'model': """
-            dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(I_syn<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
-
-            Iin{input_number}_post = I_syn *  sign(weight)  * (weight<0) : amp (summed)
-
-            weight : 1
-            w_plast : 1
-
-            I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn) : amp
-
-            Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn) : amp
-
-            baseweight : amp (constant)     # synaptic gain
-            tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn) : second
-            kappa_syn = (kn_syn + kp_syn) / 2 : 1
-
-
-            Iw = abs(weight) * baseweight  : amp
-
-            I_tau       : amp (constant)
-            I_th        : amp (constant)
-            kn_syn       : 1 (constant)
-            kp_syn       : 1 (constant)
-            Ut_syn       : volt (constant)
-            Io_syn       : amp (constant)
-            Csyn         : farad (constant)
-            """,
-             'on_pre': """
-             I_syn += Iw * w_plast * I_gain * (weight<0)/(Itau_syn*((I_gain/I_syn)+1
-              """,
-             'on_post': """ """
-             }
->>>>>>> e92f50d... synapse_eq_builder_refactoring
 
 dpi_shunt_params = {
     'Csyn': 1.5 * pF,
@@ -339,7 +271,6 @@ fusi_params_conductance = {
     }
 
 # STDP learning rule ##
-<<<<<<< HEAD
 stdp = {
     'model': """
          dApre/dt = -Apre / taupre    : 1 (event-driven)
@@ -362,67 +293,66 @@ stdp = {
     }
 
 stdp_params_current = {
-    "baseweight": 7 * pA,
-    "taupre": 10 * ms,
-    "taupost": 10 * ms,
-    "w_max": 1.,
-    "dApre": 0.1,
-    "Q_diffAPrePost": 1.05,
-    "w_plast": 0
+        "baseweight": 7 * pA,
+        "taupre": 10 * ms,
+        "taupost": 10 * ms,
+        "w_max": 1.,
+        "dApre": 0.1,
+        "Q_diffAPrePost": 1.05,
+        "w_plast": 0
     }
 
 stdp_params_conductance = {
-    "baseweight": 7 * nS,
-    "taupre": 20 * ms,
-    "taupost": 20 * ms,
-    "w_max": 0.01,
-    "diffApre": 0.01,
-    "Q_diffAPrePost": 1.05,
-    "w_plast": 0
+        "baseweight": 7 * nS,
+        "taupre": 20 * ms,
+        "taupost": 20 * ms,
+        "w_max": 0.01,
+        "diffApre": 0.01,
+        "Q_diffAPrePost": 1.05,
+        "w_plast": 0
     }
-=======
-variance_modulation = {'model' : '''
+
+variance_modulation = {
+    'model' : '''
         inh_learning_rate: 1 (constant, shared)
         variance_th: 1 (constant)
         delta_w : 1
-''', 
-        'on_pre': '''
-        
+        ''',
+    'on_pre': '''
         delta_w = inh_learning_rate * (normalized_activity_proxy_post - variance_th)
         w_plast = clip(w_plast + delta_w, 0, 1.0)
-''',
-        'on_post': '''
-'''
+        ''',
+    'on_post': '''
+        '''
         }
 
-SynSTDGM = {'model':
-            '''
-    dApre/dt = -Apre / taupre : 1 (event-driven)
-    dApost/dt = -Apost / taupost : 1 (event-driven)
-    gain_max: 1 (shared, constant)
-    taupre : second (shared, constant)
-    taupost : second (shared, constant)
-    dApre : 1 (shared, constant)
-    dApost : 1 (shared, constant)
-    Ipred_plast : 1
-    Q_diffAPrePost : 1 (shared, constant)
-    scaling_factor : 1 (shared, constant)
-    ''',
+SynSTDGM = {
+    'model':'''
+        dApre/dt = -Apre / taupre : 1 (event-driven)
+        dApost/dt = -Apost / taupost : 1 (event-driven)
+        gain_max: 1 (shared, constant)
+        taupre : second (shared, constant)
+        taupost : second (shared, constant)
+        dApre : 1 (shared, constant)
+        dApost : 1 (shared, constant)
+        Ipred_plast : 1
+        Q_diffAPrePost : 1 (shared, constant)
+        scaling_factor : 1 (shared, constant)
+        ''',
     'on_pre':
-    '''
-    Apre += dApre*gain_max
-    Ipred_plast = clip(Ipred_plast + Apost, 0, gain_max)
-    Ipred_post = (Ipred_post - (scaling_factor * Ipred_plast)) * (Ipred_post>0)
-    ''',
+        '''
+        Apre += dApre*gain_max
+        Ipred_plast = clip(Ipred_plast + Apost, 0, gain_max)
+        Ipred_post = (Ipred_post - (scaling_factor * Ipred_plast)) * (Ipred_post>0)
+        ''',
     'on_post':
-    '''
-    Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * gain_max
-    Ipred_plast = clip(Ipred_plast + Apre, 0, gain_max)
-    '''
+        '''
+        Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * gain_max
+        Ipred_plast = clip(Ipred_plast + Apre, 0, gain_max)
+        '''
         }
 
 SynSTDGM_params = {
-    
         'dApre': '0.01',
         'Ipred_plast': '0.0',
         'gain_max': '1.0',
@@ -430,53 +360,62 @@ SynSTDGM_params = {
         'taupost': '5 * msecond',
         'Q_diffAPrePost': '1.05',
         'scaling_factor': '0.1'
-
-        
         }
-    
-variance_modulation_params = {
+
+activity = {
+    'model' : '''
+        inh_learning_rate: 1 (constant, shared)
+        variance_th: 1 (constant)
+        delta_w : 1
+        ''',
+    'on_pre': '''
+        delta_w = inh_learning_rate * (normalized_activity_proxy_post - variance_th)
+        w_plast = clip(w_plast + delta_w, 0, 1.0)
+        ''',
+    'on_post': '''
+        '''
+        }
+
+activity_params = {
         'inh_learning_rate': '0.01',
         'variance_th': '0.67',
         }
+# STDP learning rule ##
 
-stdp = {'model': '''
-      dApre/dt = -Apre / taupre : 1 (event-driven)
-      dApost/dt = -Apost / taupost : 1 (event-driven)
-      w_max: 1 (constant)
-      taupre : second (constant)
-      taupost : second (constant)
-      dApre : 1 (constant)
-      Q_diffAPrePost : 1 (constant)
-      ''',
-
-        'on_pre': '''
-      Apre += dApre*w_max
-      w_plast = clip(w_plast + Apost, 0, w_max) ''',
-
-        'on_post': '''
-      Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
-      w_plast = clip(w_plast + Apre, 0, w_max) '''}
+stdp = {
+    'model': '''
+        dApre/dt = -Apre / taupre : 1 (event-driven)
+        dApost/dt = -Apost / taupost : 1 (event-driven)
+        w_max: 1 (constant)
+        taupre : second (constant)
+        taupost : second (constant)
+        dApre : 1 (constant)
+        Q_diffAPrePost : 1 (constant)
+        ''',
+    'on_pre': '''
+        Apre += dApre*w_max
+        w_plast = clip(w_plast + Apost, 0, w_max) ''',
+    'on_post': '''
+        Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
+        w_plast = clip(w_plast + Apre, 0, w_max)
+        '''
+        }
 
 stdp_para_current = {
-                     "taupre": 10 * ms,
-                     "taupost": 10 * ms,
-                     "w_max": 1.,
-                     "dApre": 0.1,
-                     "Q_diffAPrePost": 1.05,
-                     "w_plast": 0}
+        "taupre": 10 * ms,
+        "taupost": 10 * ms,
+        "w_max": 1.,
+        "dApre": 0.1,
+        "Q_diffAPrePost": 1.05,
+        "w_plast": 0}
 
 stdp_para_conductance = {
-                         "taupre": 20 * ms,
-                         "taupost": 20 * ms,
-                         "w_max": 0.01,
-                         "diffApre": 0.01,
-                         "Q_diffAPrePost": 1.05,
-                         "w_plast": 0}
-"""Kernels Blocks:
-
-You need to declare two set of parameters for every block: one for
-current based models and one for conductance based models.
->>>>>>> e92f50d... synapse_eq_builder_refactoring
+        "taupre": 20 * ms,
+        "taupost": 20 * ms,
+        "w_max": 0.01,
+        "diffApre": 0.01,
+        "Q_diffAPrePost": 1.05,
+        "w_plast": 0}
 
 """Kernels Blocks:
 You need to declare two set of parameters for every block:
@@ -484,7 +423,6 @@ You need to declare two set of parameters for every block:
 *   conductance based models
 """
 
-<<<<<<< HEAD
 alpha_kernel = {
     'model': """
          %kernel = s/tausyn  : {unit} * second **-1
@@ -510,34 +448,6 @@ alpha_params_conductance = {
     "tausyn_rise": 1 * ms
     }
 
-# Who wrote dexp?
-dexp_kernel = {
-    'model': """
-         %dkernel/dt = -kernel/tausyn_rise + baseweight*w_plast*h/(tausyn_rise*tausyn) : {unit} * second **-1 (clock-driven)
-
-         h           : 1
-         tausyn_rise : second
-         """,
-    'on_pre': """
-         %I_syn += 0 * amp
-         h += abs(weight)
-         """,
-    'on_post': """
-         """,
-    }
-
-dexp_params_current = {
-    "tausyn": 2 * ms,
-    "tausyn_rise": 0.5 * ms
-    }
-
-dexp_params_conductance = {
-    "tausyn": 2 * ms,
-    "tausyn_rise": 1 * ms
-    }
-
-=======
->>>>>>> e92f50d... synapse_eq_builder_refactoring
 # Resonant kernel ##
 resonant_kernel = {
     'model': """
@@ -564,125 +474,70 @@ resonant_params_current = {
 resonant_params_conductance = {
     "tausyn": 0.5 * ms,
     "omega": 1 / ms,
-    "tausyn_kernel": 0.5 * ms
     }
 
 none_params = {}
 
 none_model = {'model': '''    ''',
-       'on_pre': '''     ''',
-       'on_post': ''' ''',
-       }
+              'on_pre': '''     ''',
+              'on_post': ''' ''',
+             }
 
 """Dictionary of keywords:
 
 These dictionaries contains keyword and models and parameters names useful for the __init__ subroutine
-Every new block dictionaries must be added to these definitions
+Every new block dictionaries must be added to these definitions. 
+synaptic_equations is a dictionary that gathers all models and parameters.
 """
-<<<<<<< HEAD
 
-modes = {
-    'current': current,
-    'conductance': conductance,
-    'DPI': dpi,
-    'DPIShunting': dpi_shunt
-    }
-
-kernels = {
-    'exponential': none,
-    'alpha': alpha_kernel,
-    'resonant': resonant_kernel
-    }
-
-plasticity_models = {
-    'non_plastic': none,
-    'fusi': fusi,
-    'stdp': stdp
-    }
-
-<<<<<<< HEAD
-=======
-learning_models = {}
-=======
-modes = {'current': current, 'conductance': conductance,
-         'DPI': dpi, 'DPIShunting': dpi_shunt, 'None' : none_model }
+modes = {'current': current,
+         'conductance': conductance,
+         'DPI': dpi,
+         'DPIShunting': dpi_shunt,
+         'None': none_model}
 
 
-kernels = {'exponential': none, 'alpha': alpha_kernel,
+kernels = {'exponential': none,
+           'alpha': alpha_kernel,
            'resonant': resonant_kernel}
 
-plasticity_models = {'non_plastic': none, 'fusi': fusi, 'stdp': stdp}
+plasticity_models = {'non_plastic': none,
+                     'fusi': fusi,
+                     'stdp': stdp}
 
+synaptic_equations = {'activity' : activity,
+                      'stdgm': stdgm}
 
-
-synaptic_equations = {'variance_modulation' : variance_modulation, 'SynSTDGM' : SynSTDGM}
 synaptic_equations.update(kernels)
 synaptic_equations.update(plasticity_models)
->>>>>>> e92f50d... synapse_eq_builder_refactoring
 
 # parameters dictionaries
-current_parameters = {'current': current_params, 'non_plastic': none_params, 'fusi': fusi_params_current,
-                      'stdp': stdp_para_current, 'exponential': none_params, 'alpha': alpha_params_current,
-                      'resonant': resonant_params_current, 'variance_modulation' : none_params,
-                      'SynSTDGM': none_params}
+current_parameters = {'current': current_params, 'non_plastic': none_params,
+                      'fusi': fusi_params_current, 'stdp': stdp_para_current,
+                      'exponential': none_params, 'alpha': alpha_params_current,
+                      'resonant': resonant_params_current, 'activity' : none_params,
+                      'stdgm': none_params}
 
-conductance_parameters = {'conductance': conductance_params, 'non_plastic': none_params, 'fusi': fusi_params_conductance,
-                          'stdp': stdp_para_conductance, 'exponential': none_params, 'alpha': alpha_params_conductance,
-<<<<<<< HEAD
-                          'resonant': resonant_params_conductance}
->>>>>>> a49ea9c... **kwargs in init of neuronon equation builder
+conductance_parameters = {'conductance': conductance_params, 'non_plastic': none_params,
+                          'fusi': fusi_params_conductance, 'stdp': stdp_para_conductance,
+                          'exponential': none_params, 'alpha': alpha_params_conductance,
+                          'resonant': resonant_params_conductance, 'activity': none_params,
+                          'stdgm': none_params}
 
-# parameters dictionaries
-current_parameters = {
-    'current': current_params,
-    'exponential': none_params,
-    'alpha': alpha_params_current,
-    'resonant': resonant_params_current,
-    'non_plastic': none_params,
-    'fusi': fusi_params_current,
-    'stdp': stdp_params_current,
-    }
+DPI_parameters = {'DPI': dpi_params, 'exponential': none_params,
+                  'alpha': alpha_params_current, 'non_plastic': none_params,
+                  'fusi': fusi_params_current, 'stdp': stdp_para_current,
+                  'resonant': none_params, 'activity' : activity_params,
+                  'stdgm': none_params}
 
-conductance_parameters = {
-    'conductance': conductance_params,
-    'exponential': none_params,
-    'alpha': alpha_params_conductance,
-    'resonant': resonant_params_conductance,
-    'non_plastic': none_params,
-    'fusi': fusi_params_conductance,
-    'stdp': stdp_params_conductance,
+DPI_shunt_parameters = {'DPIShunting': dpi_shunt_params, 'exponential': none_params,
+                        'non_plastic': none_params, 'fusi': fusi_params_current,
+                        'stdp': stdp_para_current, 'resonant': none_params,
+                        'alpha' : none_params, 'activity' :none_params,
+                        'stdgm': none_params}
 
-    }
-
-DPI_parameters = {
-    'DPI': dpi_params,
-    'exponential': none_params,
-    'alpha': alpha_params_current,
-    'non_plastic': none_params,
-    'fusi': fusi_params_current,
-    'stdp': stdp_params_current,
-    }
-
-DPI_shunt_parameters = {
-    'DPIShunting': dpi_shunt_params,
-    'exponential': none_params,
-    'non_plastic': none_params,
-    'fusi': fusi_params_current,
-    'stdp': stdp_params_current,
-    }
-=======
-                          'resonant': resonant_params_conductance, 'variance_modulation' :none_params, 
-                          'SynSTDGM': none_params}
-
-DPI_parameters = {'DPI': dpi_params, 'exponential': none_params, 'alpha': alpha_params_current, 'non_plastic': none_params,
-                  'fusi': fusi_params_current, 'stdp': stdp_para_current, 'resonant': none_params,
-                  'variance_modulation' : variance_modulation_params, 'SynSTDGM': none_params}
-
-DPI_shunt_parameters = {'DPIShunting': dpi_shunt_params, 'exponential': none_params, 'non_plastic': none_params,
-                        'fusi': fusi_params_current, 'stdp': stdp_para_current, 'resonant': none_params, 'alpha' : none_params,
-                        'variance_modulation' :none_params,  'SynSTDGM': none_params}
-
-None_parameters = {'None': none_params, 'exponential': none_params, 'non_plastic': none_params,
-                        'fusi': none_params, 'stdp': none_params, 'resonant': none_params, 'alpha' : none_params,
-                        'variance_modulation' :none_params,   'SynSTDGM': SynSTDGM_params}
->>>>>>> e92f50d... synapse_eq_builder_refactoring
+None_parameters = {'None': none_params, 'exponential': none_params,
+                   'non_plastic': none_params, 'fusi': none_params,
+                   'stdp': none_params, 'resonant': none_params,
+                   'alpha' : none_params, 'activity' :none_params,
+                   'stdgm': stdgm_params}

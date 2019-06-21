@@ -123,7 +123,7 @@ class NeuronEquationBuilder():
                      param_templ_dummy = param_templ_dummy + [current_parameters[value]]
                  param_templ =[current_parameters[base_unit]]+ param_templ_dummy
                  
-                 if verbose:
+                 if self.verbose:
                      print("Equations",eq_templ)
                      print("Parameters",eq_templ)
 
@@ -139,7 +139,7 @@ class NeuronEquationBuilder():
                      param_templ_dummy = param_templ_dummy + [voltage_parameters[value]]
                  param_templ =[voltage_parameters[base_unit]]+ param_templ_dummy
                  
-                 if verbose:
+                 if self.verbose:
                      print("Equations",eq_templ)
                      print("Parameters",eq_templ)
                  
@@ -338,3 +338,14 @@ def print_param_dictionaries(Dict):
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
+
+
+def print_neuron_model(Neuron_group):
+        """Function to print keywords of a Neuron model
+            Usefull to check the entire equation and parameter list
+
+    Args:
+       Neuron group( Neurons ) : Synaptic group
+    """
+        print("Neuron group: {}" .format(Neuron_group.equation_builder.keywords))
+        return None

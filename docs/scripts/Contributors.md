@@ -10,3 +10,4 @@
 *  **Adrian Maurice Whatley** - Code management, review, integration -
 *  **Vanessa Rodrigues Coelho Leite** - Integration, review -
 *  **Germain Haessig** - Testing, documentation -
+*  **Dmitrii Zendrikov** - Threeway building block -

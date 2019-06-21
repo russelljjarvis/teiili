@@ -28,18 +28,20 @@ from teili.models.synapse_models import DPISyn
 
 from teili.tools.three_way_kernels import A_plus_B_equals_C
 
+import time
+
 prefs.codegen.target = "numpy"
 # set_device('cpp_standalone')
 
 # TODO: Add threeway block parameters
 threewayParams = {}
 
-wtaParams = {'weInpWTA': 200.8,
-             'weWTAInh': 30,
-             'wiInhWTA': -30,
-             'weWTAWTA': 30,
-             'rpWTA': 2.5 * ms,
-             'rpInh': 1 * ms,
+wtaParams = {'we_inp_exc': 200.8,
+             'we_exc_inh': 30,
+             'wi_inh_exc': -30,
+             'we_exc_exc': 30,
+             'rp_exc': 2.5 * ms,
+             'rp_inh': 1 * ms,
              'sigm': 2.2
              }
 
@@ -119,8 +121,7 @@ class Threeway(BuildingBlock):
                                debug,
                                monitor)
 
-        self.Groups, self.Monitors, \
-            self.standalone_params = gen_threeway(name,
+        groups, monitors, stadalone_params = gen_threeway(name,
                                                   neuron_eq_builder,
                                                   synapse_eq_builder,
                                                   num_input_neurons=num_input_neurons,
@@ -132,20 +133,24 @@ class Threeway(BuildingBlock):
                                                   monitor=monitor,
                                                   debug=debug,
                                                   block_params=block_params)
+        
+        self._groups, self.monitors, self.standalone_params = groups, monitors, stadalone_params
 
         # Creating handles for neuron groups and inputs
-        self.A = self.Groups['wta_A']
-        self.B = self.Groups['wta_B']
-        self.C = self.Groups['wta_C']
-        self.H = self.Groups['wta_H']
+        self.A = self.groups['wta_A']
+        self.B = self.groups['wta_B']
+        self.C = self.groups['wta_C']
+        self.H = self.groups['wta_H']
 
-        self.Inp_A = self.Groups['inputGroup_A']
-        self.Inp_B = self.Groups['inputGroup_B']
-        self.Inp_C = self.Groups['inputGroup_C']
+        self.Inp_A = self.groups['inputGroup_A']
+        self.Inp_B = self.groups['inputGroup_B']
+        self.Inp_C = self.groups['inputGroup_C']
 
         self.value_a = np.NAN
         self.value_b = np.NAN
         self.value_c = np.NAN
+        
+        self.start_time = 0*ms
 
     def plot(self, start_time=0 * ms, end_time=None):
         """Plot three rasters for input/output populations A, B and C
@@ -161,7 +166,7 @@ class Threeway(BuildingBlock):
 #            else:
 #                end_time = end_time * ms
         tw_raster = plot_threeway_raster(
-            self.Monitors, self.name, start_time, end_time)
+            self.monitors, self.name, start_time, end_time)
         return tw_raster
 
     def show_parameter_gui(self):
@@ -237,7 +242,7 @@ class Threeway(BuildingBlock):
 
         self.plot_gui = plot_gui
 
-        app.exec_()
+#        app.exec_()
 
         return plot_gui
 
@@ -255,8 +260,8 @@ class Threeway(BuildingBlock):
 
         a, b, c = self.get_values()
 
-        print("A = %g, B = %g, C = %g, t = %g ms" %
-              (a, b, c, self.Monitors['spikemon_A'].clock.t / ms))
+        print("A = %g, B = %g, C = %g, t = %g ms, real_time = %g s" %
+              (a, b, c, self.Monitors['spikemon_A'].clock.t / ms, time.clock() - self.start_time))
 
     def set_A(self, value):
         """
@@ -333,20 +338,20 @@ class Threeway(BuildingBlock):
 
     def get_values(self, measurement_period=100 * ms):
         """
-        Extracts encoded values of A, B and C from the spiking rates of
-        the corresponding populations
-
-        Args:
-            measurement_period (ms, optional): Sets the interval back from
-            current moment in time for the spikes to be included into rate calculation
+            Extracts encoded values of A, B and C from the spiking rates of
+            the corresponding populations
+    
+            Args:
+                measurement_period (ms, optional): Sets the interval back from
+                current moment in time for the spikes to be included into rate calculation
         """
 
         if self.A.monitor is True and self.B.monitor is True and self.C.monitor is True:
-            a = pop_code2double(get_rates(self.A.spikemonWTA,
+            a = pop_code2double(get_rates(self.monitors['spikemon_A'],
                                           measurement_period=measurement_period))
-            b = pop_code2double(get_rates(self.B.spikemonWTA,
+            b = pop_code2double(get_rates(self.monitors['spikemon_B'],
                                           measurement_period=measurement_period))
-            c = pop_code2double(get_rates(self.C.spikemonWTA,
+            c = pop_code2double(get_rates(self.monitors['spikemon_C'],
                                           measurement_period=measurement_period))
             return a, b, c
         else:
@@ -367,30 +372,30 @@ def gen_threeway(name,
                  monitor,
                  debug):
     """
-    Generator function for a Threeway building block
+        Generator function for a Threeway building block
     """
 
     # TODO: Replace PoissonGroups as inputs with stimulus generators
     # TODO: Check to have a name
 
-    wtaParams = {'weInpWTA': block_params['weInpWTA'],
-                 'weWTAInh': block_params['weWTAInh'],
-                 'wiInhWTA': block_params['wiInhWTA'],
-                 'weWTAWTA': block_params['weWTAWTA'],
-                 'rpWTA': block_params['rpWTA'],
-                 'rpInh': block_params['rpInh'],
-                 'sigm': block_params['sigm']
-                 }
+#    wtaParams = {'we_inp_exc': block_params['we_inp_exc'],
+#                 'weWTAInh': block_params['weWTAInh'],
+#                 'wiInhWTA': block_params['wiInhWTA'],
+#                 'weWTAWTA': block_params['weWTAWTA'],
+#                 'rpWTA': block_params['rpWTA'],
+#                 'rpInh': block_params['rpInh'],
+#                 'sigm': block_params['sigm']
+#                 }
     if debug:
         print("Creating WTA's!")
 
-    wta_A = WTA('wta_A', dimensions=1, block_params=wtaParams, num_inputs=2, num_neurons=num_input_neurons,
+    wta_A = WTA(name + '_wta_A', dimensions=1, num_inputs=3, block_params = block_params, num_neurons=num_input_neurons,
                 num_inh_neurons=int(0.2 * num_input_neurons), cutoff=cutoff, monitor=True, debug=debug)
-    wta_B = WTA('wta_B', dimensions=1, block_params=wtaParams, num_inputs=2, num_neurons=num_input_neurons,
+    wta_B = WTA(name + '_wta_B', dimensions=1,  num_inputs=3, block_params = block_params, num_neurons=num_input_neurons,
                 num_inh_neurons=int(0.2 * num_input_neurons), cutoff=cutoff, monitor=True, debug=debug)
-    wta_C = WTA('wta_C', dimensions=1, block_params=wtaParams, num_inputs=2, num_neurons=num_input_neurons,
+    wta_C = WTA(name + '_wta_C', dimensions=1,  num_inputs=3, block_params = block_params, num_neurons=num_input_neurons,
                 num_inh_neurons=int(0.2 * num_input_neurons), cutoff=cutoff, monitor=True, debug=debug)
-    wta_H = WTA('wta_H', dimensions=2, block_params=wtaParams, num_inputs=3, num_neurons=num_input_neurons,
+    wta_H = WTA(name + '_wta_H', dimensions=2,  num_inputs=3, block_params = block_params, num_neurons=num_input_neurons,
                 num_inh_neurons=int(0.2 * num_hidden_neurons), cutoff=cutoff, monitor=monitor, debug=debug)
 
     Groups = {
@@ -399,12 +404,12 @@ def gen_threeway(name,
         'wta_C': wta_C,
         'wta_H': wta_H}
 
-    inputGroup_A = PoissonGroup(
-        num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
-    inputGroup_B = PoissonGroup(
-        num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
-    inputGroup_C = PoissonGroup(
-        num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
+    inputGroup_A = PoissonGroup(name=name + '_inputGroup_A',
+        N=num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
+    inputGroup_B = PoissonGroup(name=name + '_inputGroup_B',
+        N=num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
+    inputGroup_C = PoissonGroup(name=name + '_inputGroup_C',
+        N=num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
 
     input_groups = {
         'inputGroup_A': inputGroup_A,
@@ -412,25 +417,25 @@ def gen_threeway(name,
         'inputGroup_C': inputGroup_C}
 
     # Creating interpopulation synapse groups
-    synAH1e = Connections(wta_A.group, wta_H.group, equation_builder=synapse_eq_builder(),
+    synAH1e = Connections(wta_A.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
                           method="euler", name='s' + name + '_A_to_H')
-    synHA1e = Connections(wta_H.group, wta_A.group, equation_builder=synapse_eq_builder(),
+    synHA1e = Connections(wta_H.groups['n_exc'], wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
                           method="euler", name='s' + name + '_H_to_A')
-    synBH1e = Connections(wta_B.group, wta_H.group, equation_builder=synapse_eq_builder(),
+    synBH1e = Connections(wta_B.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
                           method="euler", name='s' + name + '_B_to_H')
-    synHB1e = Connections(wta_H.group, wta_B.group, equation_builder=synapse_eq_builder(),
+    synHB1e = Connections(wta_H.groups['n_exc'], wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
                           method="euler", name='s' + name + '_H_to_B')
-    synCH1e = Connections(wta_C.group, wta_H.group, equation_builder=synapse_eq_builder(),
+    synCH1e = Connections(wta_C.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
                           method="euler", name='s' + name + '_C_to_H')
-    synHC1e = Connections(wta_H.group, wta_C.group, equation_builder=synapse_eq_builder(),
+    synHC1e = Connections(wta_H.groups['n_exc'], wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
                           method="euler", name='s' + name + '_H_to_C')
 
     # Creating input synapse groups
-    synInpA1e = Connections(inputGroup_A, wta_A.group, equation_builder=synapse_eq_builder(),
+    synInpA1e = Connections(inputGroup_A, wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name='s' + name + '_Inp_to_A')
-    synInpB1e = Connections(inputGroup_B, wta_B.group, equation_builder=synapse_eq_builder(),
+    synInpB1e = Connections(inputGroup_B, wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name='s' + name + '_Inp_to_B')
-    synInpC1e = Connections(inputGroup_C, wta_C.group, equation_builder=synapse_eq_builder(),
+    synInpC1e = Connections(inputGroup_C, wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name='s' + name + '_Inp_to_C')
 
     interPopSynGroups = {
@@ -448,7 +453,7 @@ def gen_threeway(name,
 
     for tmp_syn_group in synGroups:
         synGroups[tmp_syn_group].connect('i == j')
-        synGroups[tmp_syn_group].weight = wtaParams['weInpWTA']
+        synGroups[tmp_syn_group].weight = wta_A.params['we_inp_exc']
 
     synGroups.update(interPopSynGroups)
 
@@ -460,7 +465,7 @@ def gen_threeway(name,
         arr_i, arr_j = index_gen_function(
             tmp_syn_group[3], tmp_syn_group[4], num_input_neurons)
         interPopSynGroups[tmp_syn_group].connect(i=arr_i, j=arr_j)
-        interPopSynGroups[tmp_syn_group].weight = wtaParams['weInpWTA']
+        interPopSynGroups[tmp_syn_group].weight = wta_A.params['we_inp_exc']
 
     Groups.update(input_groups)
     Groups.update(synGroups)
@@ -477,9 +482,9 @@ def gen_threeway(name,
         'spikemon_InpA': spikemon_InpA,
         'spikemon_InpB': spikemon_InpB,
         'spikemon_InpC': spikemon_InpC,
-        'spikemon_A': wta_A.Monitors['spikemonWTA'],
-        'spikemon_B': wta_B.Monitors['spikemonWTA'],
-        'spikemon_C': wta_C.Monitors['spikemonWTA']}
+        'spikemon_A': wta_A.monitors['spikemon_exc'],
+        'spikemon_B': wta_B.monitors['spikemon_exc'],
+        'spikemon_C': wta_C.monitors['spikemon_exc']}
 
     # Monitors.update(wta_A.Monitors, wta_B.Monitors, wta_C.Monitors, wta_H.Monitors)
 
@@ -534,40 +539,17 @@ def plot_threeway_raster(tw_monitors, name, start_time, end_time):
     return win_raster
 
 
-def gaussian(x, gaussianPeak=100, gaussianSigma=0.1):
-    return gaussianPeak * (np.exp(-0.5 * (x / gaussianSigma)**2))
+def gaussian(mu, sigma, amplitude, inputSize):
+    i = np.arange(inputSize)
+    shift = mu % 1
+    coarse = int(mu - shift)
+    dist = amplitude*np.exp(-np.power(i - shift - int(inputSize/2), 2.) / (2 * np.power(sigma, 2.)))
+    return dist[(int(inputSize/2) - coarse + i)%inputSize]
 
 
-def double2pop_code(value, inputSize):
-    """Get firing rates given the position of the gaussian activation bump
-
-    @author: Peter Diehl
-    """
-    activationFunction = gaussian
-    centerID = int(value * inputSize)
-    topoCoords = {}
-    for i in range(inputSize):
-        pos = 1. * float(i) / inputSize
-        topoCoords[i] = (0.5, pos)
-    center_coords = topoCoords[centerID]
-    dists = np.zeros(inputSize)
-
-    for i in range(inputSize):
-        coords = topoCoords[i]
-        deltaX = abs(coords[0] - center_coords[0])
-        deltaY = abs(coords[1] - center_coords[1])
-        if deltaX > 0.5:
-            deltaX = 1.0 - deltaX
-        if deltaY > 0.5:
-            deltaY = 1.0 - deltaY
-        squared_dist = deltaX ** 2 + deltaY ** 2
-        dists[i] = squared_dist
-    distsAndIds = zip(dists, range(inputSize))
-    distsAndIds = sorted(distsAndIds)
-    unused_sorted_dists, dist_sorted_ids = zip(*distsAndIds)
-    activity = np.zeros(inputSize)
-    for i, idx in enumerate(dist_sorted_ids):
-        activity[idx] = activationFunction(float(i) / inputSize)
+def double2pop_code(value, inputSize, sigma=1, amplitude=100):
+    mu = value*inputSize % inputSize
+    activity = gaussian(mu, sigma, amplitude, inputSize)
     return activity * Hz
 
 
@@ -581,7 +563,7 @@ def pop_code2double(popArray):
         [np.exp(1j * (2 * np.pi / size) * cur_pos) for cur_pos in range(size)])
     cur_pos = (np.angle(np.sum(popArray * complex_unit_roots)) %
                (2 * np.pi)) / (2 * np.pi)
-    return cur_pos
+    return cur_pos%1
 
 
 def get_rates(spikeMon, measurement_period=100 * ms):

@@ -355,3 +355,14 @@ def print_param_dictionaries(Dict):
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
+
+
+def print_neuron_model(Neuron_group):
+        """Function to print keywords of a Neuron model
+            Usefull to check the entire equation and parameter list
+
+    Args:
+       Neuron group( Neurons ) : Synaptic group
+    """
+        print("Neuron group: {}" .format(Neuron_group.equation_builder.keywords))
+        return None

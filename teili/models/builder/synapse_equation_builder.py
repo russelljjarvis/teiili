@@ -363,7 +363,6 @@ class SynapseEquationBuilder():
 
         return cls(keywords=synapse_eq)
 
-
 def print_param_dictionaries(Dict):
     """Function to print dictionaries of parameters in an ordered way.
 
@@ -372,3 +371,14 @@ def print_param_dictionaries(Dict):
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
+
+def print_synaptic_model(synapse_group):
+        """Function to print keywords of a synaptic model
+            Usefull to check the entire equation and parameter list
+
+    Args:
+       Synaptic group( Connections ) : Synaptic group
+    """
+        print("Synaptic group: {}" .format(synapse_group.equation_builder.keywords))
+        return None
+    

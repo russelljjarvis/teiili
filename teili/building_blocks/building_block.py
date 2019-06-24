@@ -125,7 +125,8 @@ class BuildingBlock(Nameable):
             # Needs to be groups and not _groups for recursive collection
             for group in self.sub_blocks[sub_block].groups:
                 tmp_groups.update(
-                    {self.sub_blocks[sub_block].groups[group].name: self.sub_blocks[sub_block].groups[group]})
+                    {self.sub_blocks[sub_block].groups[group].name:
+                     self.sub_blocks[sub_block].groups[group]})
         return tmp_groups
 
     def __getitem__(self, key):

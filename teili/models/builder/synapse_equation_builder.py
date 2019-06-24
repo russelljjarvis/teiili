@@ -364,6 +364,9 @@ def print_synaptic_model(synapse_group):
 
     Args:
        Synaptic group( Connections ) : Synaptic group
+       
+   Note: Even if mismatch is added, the values that are shown and not subject
+        to mismatch   
     """
         print("Synaptic group: {}" .format(synapse_group.equation_builder.keywords))
         return None

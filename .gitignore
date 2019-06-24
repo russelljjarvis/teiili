@@ -105,7 +105,8 @@ ENV/
 .pydevproject
 .settings/
 
-/octa/**/**
+#Custom for Matteo --> dont merge!
+/octa/*
 
 
 *.png

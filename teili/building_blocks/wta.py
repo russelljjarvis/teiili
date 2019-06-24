@@ -202,7 +202,7 @@ def gen1dWTA(groupname,
              synapse_eq_builder=DPISyn,
              we_inp_exc=1.5, we_exc_inh=1, wi_inh_exc=-1, we_exc_exc=0.5, sigm=3,
              rp_exc=3 * ms, rp_inh=1 * ms,
-             num_neurons=64, num_inh_neurons=5, num_input_neurons=None, cutoff=10, num_inputs=1,
+             num_neurons=64, num_inh_neurons=5, num_input_neurons=None, num_inh_inputs=2, cutoff=10, num_inputs=1,
              spatial_kernel="kernel_gauss_1d",
              ei_connection_probability=1, ie_connection_probability=1, ii_connection_probability=0,
              monitor=True, additional_statevars=[], debug=False):
@@ -222,6 +222,7 @@ def gen1dWTA(groupname,
         num_neurons (int, optional): Size of WTA neuron population.
         num_inh_neurons (int, optional): Size of inhibitory interneuron population.
         num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
+        num_inh_inputs (int, optional): Number of input currents to the inhibitory group.
         cutoff (int, optional): Radius of self-excitation.
         num_inputs (int, optional): Number of input currents to WTA.
         spatial_kernel (str, optional): Description
@@ -254,7 +255,7 @@ def gen1dWTA(groupname,
     # create neuron groups
     n_exc = Neurons(num_neurons, equation_builder=neuron_eq_builder(num_inputs=3 + num_inputs),
                     refractory=rp_exc, name=groupname + '__' + 'n_exc')
-    n_inh = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(num_inputs=2),
+    n_inh = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(num_inputs=num_inh_inputs),
                     refractory=rp_inh, name=groupname + '__' + 'n_inh')
 
     if num_input_neurons is None:
@@ -336,7 +337,8 @@ def gen1dWTA(groupname,
             'spikemon_inh': spikemon_inh,
             'spikemon_inp': spikemon_inp,
             'statemon_exc': statemon_exc}
-
+    else : 
+        monitor = {}
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: we_inp_exc, we_exc_inh, wi_inh_exc, we_exc_exc,rp_exc, rp_inh,sigm
@@ -369,7 +371,7 @@ def gen2dWTA(groupname,
              wiInhInh=0, ei_connection_probability=1., ie_connection_probability=1.,
              ii_connection_probability=0.1,
              spatial_kernel="kernel_gauss_2d",
-             num_neurons=20, num_inh_neurons=3, num_input_neurons=None, cutoff=9, num_inputs=1,
+             num_neurons=20, num_inh_neurons=3, num_input_neurons=None, num_inh_inputs = 2, cutoff=9, num_inputs=1,
              monitor=True, additional_statevars=[], debug=False):
     '''Creates a 2D square WTA population of neurons, including the inhibitory interneuron population
 
@@ -392,6 +394,7 @@ def gen2dWTA(groupname,
         num_neurons (int, optional): Size of WTA neuron population.
         num_inh_neurons (int, optional): Size of inhibitory interneuron population.
         num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
+        num_inh_inputs (int, optional): Number of input currents to the inhibitory group.
         cutoff (int, optional): Radius of self-excitation.
         num_inputs (int, optional): Number of input currents to WTA.
         monitor (bool, optional): Flag to auto-generate spike and statemonitors.
@@ -497,23 +500,26 @@ def gen2dWTA(groupname,
         's_inh_exc': s_inh_exc,
         's_inh_inh': s_inh_inh}
 
-    # spikemons
-    spikemon_exc = SpikeMonitor(n_exc, name=groupname + 'spikemon_exc')
-    spikemon_inh = SpikeMonitor(
-        n_inh, name=groupname + 'spikemon_inh')
-    spikemon_inp = SpikeMonitor(
-        spike_gen, name=groupname + 'spikemon_inp')
-    try:
-        statemon_exc = StateMonitor(n_exc, ('Vm', 'Iin'), record=True,
-                                   name=groupname + 'statemon_exc')
-    except KeyError:
-        statemon_exc = StateMonitor(n_exc, ('Imem', 'Iin'), record=True,
-                                   name=groupname + 'statemon_exc')
-    monitors = {
-        'spikemon_exc': spikemon_exc,
-        'spikemon_inh': spikemon_inh,
-        'spikemon_inp': spikemon_inp,
-        'statemon_exc': statemon_exc}
+    if monitor:
+        spikemon_exc = SpikeMonitor(
+            n_exc, name=groupname + 'spikemon_exc')
+        spikemon_inh = SpikeMonitor(
+            n_inh, name=groupname + 'spikemon_inh')
+        spikemon_inp = SpikeMonitor(
+            spike_gen, name=groupname + 'spikemon_inp')
+        try:
+            statemon_exc = StateMonitor(n_exc, ('Vm', 'Iin'), record=True,
+                                    name=groupname + 'statemon_exc')
+        except KeyError:
+            statemon_exc = StateMonitor(n_exc, ('Imem', 'Iin'), record=True,
+                                    name=groupname + 'statemon_exc')
+        monitors = {
+            'spikemon_exc': spikemon_exc,
+            'spikemon_inh': spikemon_inh,
+            'spikemon_inp': spikemon_inp,
+            'statemon_exc': statemon_exc}
+    else:
+        monitors = {}
 
     # replacevars should be the real names of the parameters,
     # that can be changed by the arguments of this function:

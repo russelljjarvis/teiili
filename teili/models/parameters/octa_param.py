@@ -87,3 +87,48 @@ DPIstdp_gm = SynapseEquationBuilder(base_unit='DPI',plasticity='stdp')
 
 DPISyn =  SynapseEquationBuilder( base_unit='DPI', plasticity='non_plastic')
 
+
+mismatch_neuron_param = {
+    'Inoise': 0,
+    'Iconst': 0,
+    'kn': 0,
+    'kp': 0,
+    'Ut': 0,
+    'Io': 0,
+    'Cmem': 0.2,
+    'Iath': 0.2,
+    'Iagain': 0.2,
+    'Ianorm': 0.2,
+    'Ica': 0.2,
+    'Itauahp': 0.2,
+    'Ithahp': 0.2,
+    'Cahp': 0.2,
+    'Ishunt': 0.2,
+    'Ispkthr': 0.2,
+    'Ireset': 0.2,
+    'Ith': 0.2,
+    'Itau': 0.2,
+    'refP': 0.2,
+}
+
+mismatch_synap_param = {
+    'I_syn': 0,
+    'kn_syn': 0,
+    'kp_syn': 0,
+    'Ut_syn': 0,
+    'Csyn': 0.2,
+    'I_tau': 0.2,
+    'I_th': 0.2,
+    'Io_syn': 0.2,
+    'w_plast': 0,
+    'baseweight': 0.2,
+}
+
+def add_device_mismatch(equation, seed=1337, group_type='neuron'):
+    if group_type == 'neuron':
+        equation.modelgroup.add_mismatch(std_dict=mismatch_neuron_param, seed=seed)
+    elif group_type == 'synapse':
+        equation.add_mismatch(std_dict=mismatch_synap_param, seed=seed)
+        
+        
+        

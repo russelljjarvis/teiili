@@ -57,7 +57,7 @@ class Threeway(BuildingBlock):
         Groups (dict): Complete list of keys of neuron groups, synapse groups and
                        WTA substructures of the Threeway building block to be
                        included into Network object for simulation
-        Monitors (dict): Complete list of Brian2 monitors for all entities of
+        monitors (dict): Complete list of Brian2 monitors for all entities of
                        the Threeway building block to be included into Network
                        object for simulation
         num_input_neurons (int): Sizes of input/output populations A, B and C
@@ -121,36 +121,46 @@ class Threeway(BuildingBlock):
                                debug,
                                monitor)
 
-        groups, monitors, stadalone_params = gen_threeway(name,
-                                                  neuron_eq_builder,
-                                                  synapse_eq_builder,
-                                                  num_input_neurons=num_input_neurons,
-                                                  num_hidden_neurons=num_hidden_neurons,
-                                                  hidden_layer_gen_func=hidden_layer_gen_func,
-                                                  additional_statevars=additional_statevars,
-                                                  cutoff=cutoff,
-                                                  spatial_kernel=spatial_kernel,
-                                                  monitor=monitor,
-                                                  debug=debug,
-                                                  block_params=block_params)
+        self._groups, self.monitors, self.standalone_params = gen_threeway(name,
+                                                                          neuron_eq_builder,
+                                                                          synapse_eq_builder,
+                                                                          num_input_neurons=num_input_neurons,
+                                                                          num_hidden_neurons=num_hidden_neurons,
+                                                                          hidden_layer_gen_func=hidden_layer_gen_func,
+                                                                          additional_statevars=additional_statevars,
+                                                                          cutoff=cutoff,
+                                                                          spatial_kernel=spatial_kernel,
+                                                                          monitor=monitor,
+                                                                          debug=debug,
+                                                                          block_params=block_params)
         
-        self._groups, self.monitors, self.standalone_params = groups, monitors, stadalone_params
-
         # Creating handles for neuron groups and inputs
-        self.A = self.groups['wta_A']
-        self.B = self.groups['wta_B']
-        self.C = self.groups['wta_C']
-        self.H = self.groups['wta_H']
-
-        self.Inp_A = self.groups['inputGroup_A']
-        self.Inp_B = self.groups['inputGroup_B']
-        self.Inp_C = self.groups['inputGroup_C']
+        self.A = self._groups['wta_A']
+        self.B = self._groups['wta_B']
+        self.C = self._groups['wta_C']
+        self.H = self._groups['wta_H']
+        
+        self.Inp_A = self._groups['inputGroup_A']
+        self.Inp_B = self._groups['inputGroup_B']
+        self.Inp_C = self._groups['inputGroup_C']
 
         self.value_a = np.NAN
         self.value_b = np.NAN
         self.value_c = np.NAN
         
         self.start_time = 0*ms
+        
+        self.sub_blocks.update({'wta_A' : self._groups['wta_A'],
+                                'wta_B' : self._groups['wta_B'],
+                                'wta_C' : self._groups['wta_C']})
+        
+        self.input_groups.update({'A': self._groups['wta_A']._groups['n_exc'],
+                                  'B': self._groups['wta_B']._groups['n_exc'],
+                                  'C': self._groups['wta_C']._groups['n_exc']})
+        self.output_groups.update({'A': self._groups['wta_A']._groups['n_exc'],
+                                  'B': self._groups['wta_B']._groups['n_exc'],
+                                  'C': self._groups['wta_C']._groups['n_exc']})
+        self.hidden_groups.update({'H': self._groups['wta_H']._groups['n_exc']})
 
     def plot(self, start_time=0 * ms, end_time=None):
         """Plot three rasters for input/output populations A, B and C
@@ -217,16 +227,16 @@ class Threeway(BuildingBlock):
             print('QApplication instance already exists: %s' % str(app))
 
         if end_time is None:
-            if len(self.Monitors['spikemon_A'].t):
-                end_time = max(self.Monitors['spikemon_A'].t)
+            if len(self.monitors['spikemon_A'].t):
+                end_time = max(self.monitors['spikemon_A'].t)
             else:
                 end_time = 0 * ms
 
         self.measurement_period = end_time - start_time
 
-        self.rates_A = get_rates(self.Monitors['spikemon_A'])
-        self.rates_B = get_rates(self.Monitors['spikemon_B'])
-        self.rates_C = get_rates(self.Monitors['spikemon_C'])
+        self.rates_A = get_rates(self.monitors['spikemon_A'])
+        self.rates_B = get_rates(self.monitors['spikemon_B'])
+        self.rates_C = get_rates(self.monitors['spikemon_C'])
 
         plot_gui = PlotGUI(data=self.rates_A / Hz)
 
@@ -251,9 +261,9 @@ class Threeway(BuildingBlock):
         Updates curves of the PlotGUI while live plotting the population codes of the populations A, B and C
         """
 
-        self.rates_A = get_rates(self.Monitors['spikemon_A'])
-        self.rates_B = get_rates(self.Monitors['spikemon_B'])
-        self.rates_C = get_rates(self.Monitors['spikemon_C'])
+        self.rates_A = get_rates(self.monitors['spikemon_A'])
+        self.rates_B = get_rates(self.monitors['spikemon_B'])
+        self.rates_C = get_rates(self.monitors['spikemon_C'])
         rates_ABC = [self.rates_A, self.rates_B, self.rates_C]
         for curve, rates in zip(self.plot_gui.curveData, rates_ABC):
             self.plot_gui.curveData[curve] = rates / Hz
@@ -261,7 +271,7 @@ class Threeway(BuildingBlock):
         a, b, c = self.get_values()
 
         print("A = %g, B = %g, C = %g, t = %g ms, real_time = %g s" %
-              (a, b, c, self.Monitors['spikemon_A'].clock.t / ms, time.clock() - self.start_time))
+              (a, b, c, self.monitors['spikemon_A'].clock.t / ms, time.clock() - self.start_time))
 
     def set_A(self, value):
         """
@@ -478,19 +488,22 @@ def gen_threeway(name,
         spikemon_InpC = SpikeMonitor(
             inputGroup_C, name='spikemon' + name + '_InpC')
 
-    Monitors = {
+    monitors = {
         'spikemon_InpA': spikemon_InpA,
         'spikemon_InpB': spikemon_InpB,
         'spikemon_InpC': spikemon_InpC,
         'spikemon_A': wta_A.monitors['spikemon_exc'],
         'spikemon_B': wta_B.monitors['spikemon_exc'],
-        'spikemon_C': wta_C.monitors['spikemon_exc']}
+        'spikemon_C': wta_C.monitors['spikemon_exc'],
+        'statemon_A': wta_A.monitors['statemon_exc'],
+        'statemon_B': wta_B.monitors['statemon_exc'],
+        'statemon_C': wta_C.monitors['statemon_exc']}
 
-    # Monitors.update(wta_A.Monitors, wta_B.Monitors, wta_C.Monitors, wta_H.Monitors)
+    # monitors.update(wta_A.monitors, wta_B.monitors, wta_C.monitors, wta_H.monitors)
 
     standalone_params = {}
 
-    return Groups, Monitors, standalone_params
+    return Groups, monitors, standalone_params
 
 
 def plot_threeway_raster(tw_monitors, name, start_time, end_time):
@@ -502,7 +515,7 @@ def plot_threeway_raster(tw_monitors, name, start_time, end_time):
             from when network activity should be plotted.
         end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
             Can be smaller than simulation time but not larger
-        wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.Monitors
+        wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.monitors
     """
     app = QtGui.QApplication.instance()
     if app is None:

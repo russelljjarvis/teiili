@@ -34,18 +34,29 @@ prefs.codegen.target = "numpy"
 # set_device('cpp_standalone')
 
 # TODO: Add threeway block parameters
-threewayParams = {}
+threeway_params = {}
 
-wtaParams = {'we_inp_exc': 200.8,
-             'we_exc_inh': 30,
-             'wi_inh_exc': -30,
-             'we_exc_exc': 30,
-             'rp_exc': 2.5 * ms,
-             'rp_inh': 1 * ms,
-             'sigm': 2.2
+#wta_params = {'we_inp_exc': 200,
+#             'we_exc_inh': 30,
+#             'wi_inh_exc': -30,
+#             'we_exc_exc': 30,
+#             'rp_exc': 2.5 * ms,
+#             'rp_inh': 1 * ms,
+#             'sigm': 2.2
+#             }
+
+wta_params = {'we_inp_exc': 2000,
+             'we_exc_inh': 300,
+             'wi_inh_exc': -300,
+             'we_exc_exc': 300,
+             'sigm': 2.2,
+             'rp_exc': 3 * ms,
+             'rp_inh': 2 * ms,
+             'ei_connection_probability': 1
              }
 
-threewayParams.update(wtaParams)
+
+threeway_params.update(wta_params)
 
 
 class Threeway(BuildingBlock):
@@ -86,7 +97,7 @@ class Threeway(BuildingBlock):
     def __init__(self, name,
                  neuron_eq_builder=DPI,
                  synapse_eq_builder=DPISyn,
-                 block_params=threewayParams,
+                 block_params=threeway_params,
                  num_input_neurons=16,
                  num_hidden_neurons=256,
                  hidden_layer_gen_func=A_plus_B_equals_C,
@@ -121,7 +132,7 @@ class Threeway(BuildingBlock):
                                debug,
                                monitor)
 
-        self._groups, self.monitors, self.standalone_params = gen_threeway(name,
+        self.sub_blocks, self._groups, self.monitors, self.standalone_params = gen_threeway(name,
                                                                           neuron_eq_builder,
                                                                           synapse_eq_builder,
                                                                           num_input_neurons=num_input_neurons,
@@ -135,14 +146,14 @@ class Threeway(BuildingBlock):
                                                                           block_params=block_params)
         
         # Creating handles for neuron groups and inputs
-        self.A = self._groups['wta_A']
-        self.B = self._groups['wta_B']
-        self.C = self._groups['wta_C']
-        self.H = self._groups['wta_H']
+        self.A = self.sub_blocks['wta_A']
+        self.B = self.sub_blocks['wta_B']
+        self.C = self.sub_blocks['wta_C']
+        self.H = self.sub_blocks['wta_H']
         
-        self.Inp_A = self._groups['inputGroup_A']
-        self.Inp_B = self._groups['inputGroup_B']
-        self.Inp_C = self._groups['inputGroup_C']
+        self.Inp_A = self._groups['input_group_A']
+        self.Inp_B = self._groups['input_group_B']
+        self.Inp_C = self._groups['input_group_C']
 
         self.value_a = np.NAN
         self.value_b = np.NAN
@@ -150,17 +161,13 @@ class Threeway(BuildingBlock):
         
         self.start_time = 0*ms
         
-        self.sub_blocks.update({'wta_A' : self._groups['wta_A'],
-                                'wta_B' : self._groups['wta_B'],
-                                'wta_C' : self._groups['wta_C']})
-        
-        self.input_groups.update({'A': self._groups['wta_A']._groups['n_exc'],
-                                  'B': self._groups['wta_B']._groups['n_exc'],
-                                  'C': self._groups['wta_C']._groups['n_exc']})
-        self.output_groups.update({'A': self._groups['wta_A']._groups['n_exc'],
-                                  'B': self._groups['wta_B']._groups['n_exc'],
-                                  'C': self._groups['wta_C']._groups['n_exc']})
-        self.hidden_groups.update({'H': self._groups['wta_H']._groups['n_exc']})
+        self.input_groups.update({'A': self.A._groups['n_exc'],
+                                  'B': self.B._groups['n_exc'],
+                                  'C': self.C._groups['n_exc']})
+        self.output_groups.update({'A': self.A._groups['n_exc'],
+                                  'B': self.B._groups['n_exc'],
+                                  'C': self.C._groups['n_exc']})
+        self.hidden_groups.update({'H': self.H._groups['n_exc']})
 
     def plot(self, start_time=0 * ms, end_time=None):
         """Plot three rasters for input/output populations A, B and C
@@ -388,7 +395,7 @@ def gen_threeway(name,
     # TODO: Replace PoissonGroups as inputs with stimulus generators
     # TODO: Check to have a name
 
-#    wtaParams = {'we_inp_exc': block_params['we_inp_exc'],
+#    wta_params = {'we_inp_exc': block_params['we_inp_exc'],
 #                 'weWTAInh': block_params['weWTAInh'],
 #                 'wiInhWTA': block_params['wiInhWTA'],
 #                 'weWTAWTA': block_params['weWTAWTA'],
@@ -407,24 +414,24 @@ def gen_threeway(name,
                 num_inh_neurons=int(0.2 * num_input_neurons), cutoff=cutoff, monitor=True, debug=debug)
     wta_H = WTA(name + '_wta_H', dimensions=2,  num_inputs=3, block_params = block_params, num_neurons=num_input_neurons,
                 num_inh_neurons=int(0.2 * num_hidden_neurons), cutoff=cutoff, monitor=monitor, debug=debug)
-
-    Groups = {
+    
+    sub_blocks = {
         'wta_A': wta_A,
         'wta_B': wta_B,
         'wta_C': wta_C,
         'wta_H': wta_H}
 
-    inputGroup_A = PoissonGroup(name=name + '_inputGroup_A',
+    input_group_A = PoissonGroup(name=name + '_input_group_A',
         N=num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
-    inputGroup_B = PoissonGroup(name=name + '_inputGroup_B',
+    input_group_B = PoissonGroup(name=name + '_input_group_B',
         N=num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
-    inputGroup_C = PoissonGroup(name=name + '_inputGroup_C',
+    input_group_C = PoissonGroup(name=name + '_input_group_C',
         N=num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
 
     input_groups = {
-        'inputGroup_A': inputGroup_A,
-        'inputGroup_B': inputGroup_B,
-        'inputGroup_C': inputGroup_C}
+        'input_group_A': input_group_A,
+        'input_group_B': input_group_B,
+        'input_group_C': input_group_C}
 
     # Creating interpopulation synapse groups
     synAH1e = Connections(wta_A.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
@@ -441,11 +448,11 @@ def gen_threeway(name,
                           method="euler", name='s' + name + '_H_to_C')
 
     # Creating input synapse groups
-    synInpA1e = Connections(inputGroup_A, wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    synInpA1e = Connections(input_group_A, wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name='s' + name + '_Inp_to_A')
-    synInpB1e = Connections(inputGroup_B, wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    synInpB1e = Connections(input_group_B, wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name='s' + name + '_Inp_to_B')
-    synInpC1e = Connections(inputGroup_C, wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    synInpC1e = Connections(input_group_C, wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name='s' + name + '_Inp_to_C')
 
     interPopSynGroups = {
@@ -477,16 +484,17 @@ def gen_threeway(name,
         interPopSynGroups[tmp_syn_group].connect(i=arr_i, j=arr_j)
         interPopSynGroups[tmp_syn_group].weight = wta_A.params['we_inp_exc']
 
-    Groups.update(input_groups)
-    Groups.update(synGroups)
+    groups = {}
+    groups.update(input_groups)
+    groups.update(synGroups)
 
     if monitor:
         spikemon_InpA = SpikeMonitor(
-            inputGroup_A, name='spikemon' + name + '_InpA')
+            input_group_A, name='spikemon' + name + '_InpA')
         spikemon_InpB = SpikeMonitor(
-            inputGroup_B, name='spikemon' + name + '_InpB')
+            input_group_B, name='spikemon' + name + '_InpB')
         spikemon_InpC = SpikeMonitor(
-            inputGroup_C, name='spikemon' + name + '_InpC')
+            input_group_C, name='spikemon' + name + '_InpC')
 
     monitors = {
         'spikemon_InpA': spikemon_InpA,
@@ -503,7 +511,7 @@ def gen_threeway(name,
 
     standalone_params = {}
 
-    return Groups, monitors, standalone_params
+    return sub_blocks, groups, monitors, standalone_params
 
 
 def plot_threeway_raster(tw_monitors, name, start_time, end_time):

@@ -21,7 +21,7 @@ defaultclock.dt = 0.1 * ms
 
 #==========Threeway building block test=========================================
 
-duration = 500 * ms
+duration = 100 * ms
 
 #===============================================================================
 # create the network

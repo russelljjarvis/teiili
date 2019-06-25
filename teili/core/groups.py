@@ -488,16 +488,26 @@ class Connections(Synapses, TeiliGroup, Nameable):
         self.verbose = verbose
         self.input_number = 0
 
-        # check if it is a building block, if yes, set bb.group as
+        # check if it is a building block, if yes, set bb.input_groups or output_groups as
         # source/target
         try:
-            target = target.group
-        except:
+            if len(target.input_groups) > 1:
+                print('the building block you are connecting has more than one input group, an arbitrary one is selected')
+            target = list(target.input_groups.values())[0]
+        except AttributeError:
             pass
+        except IndexError as e:
+            print('the building block you are trying to connect does not have a valid input group, please select one manually')
+            raise(e)
         try:
-            source = source.group
-        except:
+            if len(target.output_groups) > 1:
+                print('the building block you are connecting has more than one output group, an arbitrary one is selected')
+            source = list(source.output_groups.values())[0]
+        except AttributeError:
             pass
+        except IndexError as e:
+            print('the building block you are trying to connect does not have a valid output group, please select one manually')
+            raise(e)
 
         Nameable.__init__(self, name=name)
 

@@ -45,6 +45,9 @@ from pyqtgraph.Point import Point
 
 from teili.models.parameters import octa_param 
 from teili.models.parameters.octa_param import * 
+#from teili.models.parameters.octa_tools import add_bb_mismatch, add_weight_decay
+
+import tags_parameters
 
 import numpy as np
 import time, os, sys
@@ -56,130 +59,21 @@ from brian2 import StateMonitor, SpikeMonitor, SpikeGeneratorGroup
 from brian2 import prefs, defaultclock, check_units, implementation, set_device, device
 
 from teili.models.synapse_models import DPIstdp, DPISyn
-#%%
+
+from octa_tools import add_bb_mismatch, add_decay_weight, add_weight_re_init, add_weight_re_init_ipred,\
+add_proxy_activity, add_regulatization_weight, add_weight_pred_decay
+
+prefs.codegen.target = 'numpy'
 
 
-def add_octa_mismatch():
- #Todo:  Transofo    
-   # compressionWTA._groups['spike_gen'].add_mismatch(octa_param.mismatch_neuron_param,seed=42)
-    
-    compressionWTA._groups['spike_gen'].add_mismatch(octa_param.mismatch_neuron_param,seed=42)
-    compressionWTA._groups['n_exc'].add_mismatch(octa_param.mismatch_neuron_param,seed=43)
-    compressionWTA._groups['n_inh'].add_mismatch(octa_param.mismatch_neuron_param,seed=44)
-    
-    compressionWTA._groups['s_inp_exc'].add_mismatch(octa_param.mismatch_synap_param,seed=45)
-    compressionWTA._groups['s_exc_exc'].add_mismatch(octa_param.mismatch_synap_param,seed=46)
-    compressionWTA._groups['s_exc_inh'].add_mismatch(octa_param.mismatch_synap_param,seed=47)
-    compressionWTA._groups['s_inh_exc'].add_mismatch(octa_param.mismatch_synap_param,seed=48)
-    
-    predictionWTA._groups['n_exc'].add_mismatch(octa_param.mismatch_neuron_param,seed=49)
-    predictionWTA._groups['n_inh'].add_mismatch(octa_param.mismatch_neuron_param,seed=50)
-    
-    predictionWTA._groups['s_inp_exc'].add_mismatch(octa_param.mismatch_synap_param,seed=51)
-    predictionWTA._groups['s_exc_exc'].add_mismatch(octa_param.mismatch_synap_param,seed=52)
-    predictionWTA._groups['s_exc_inh'].add_mismatch(octa_param.mismatch_synap_param,seed=53)
-    predictionWTA._groups['s_inh_exc'].add_mismatch(octa_param.mismatch_synap_param,seed=1337)
-
-    error_connection.add_mismatch(octa_param.mismatch_synap_param,seed=54)
-
-    return None
-
-    # RUN REGULARLY FUNCTIONS ###############
-# WEIGHT DECAY
-def add_weight_decay(params):
-
-    if params  == 'global':
-        add_weight_decay(compressionWTA._groups['s_inp_exc'],
-                         decay='global',
-                         learning_rate=params['learning_rate'])
-    
-        add_weight_decay(compressionWTA._groups['s_exc_exc'],
-                         decay='global',
-                         learning_rate=params['learning_rate'])
-        
-        add_weight_decay(predictionWTA._groups['s_inp_exc'],
-                         decay='global',
-                         learning_rate=params['learning_rate'])
-    
-        add_weight_decay(predictionWTA._groups['s_exc_exc'],
-                         decay='global',
-                         learning_rate=params['learning_rate'])
-        
-    
-        add_weight_decay(error_connection,
-                         decay='global',
-                         learning_rate=params['learning_rate'])
-        
-        add_pred_weight_decay(prediction_connection,
-                         decay='global',
-                         learning_rate=params['learning_rate'])
-        
-        
-        return None
-
-def add_weight_re_init():
-
-    add_re_init_weights(compressionWTA._groups['s_inp_exc'], 
-                        re_init_threshold=octa_param.octaParams['re_init_threshold'],
-                        dist_param_re_init=octa_param.octaParams['dist_param_re_init'], 
-                        scale_re_init=octa_param.octaParams['scale_re_init'],
-                        distribution=octa_param.octaParams['distribution'])
-
-
-    add_re_init_weights(compressionWTA._groups['s_exc_exc'], 
-                        re_init_threshold=octa_param.octaParams['re_init_threshold'],
-                        dist_param_re_init=octa_param.octaParams['dist_param_re_init'], 
-                        scale_re_init=octa_param.octaParams['scale_re_init'],
-                        distribution=octa_param.octaParams['distribution'])
-
-
-    add_re_init_weights(predictionWTA._groups['s_inp_exc'], 
-                        re_init_threshold=octa_param.octaParams['re_init_threshold'],
-                        dist_param_re_init=octa_param.octaParams['dist_param_re_init'], 
-                        scale_re_init=octa_param.octaParams['scale_re_init'],
-                        distribution=octa_param.octaParams['distribution'])
-
-
-
-    add_re_init_weights(predictionWTA._groups['s_exc_exc'], 
-                        re_init_threshold=octa_param.octaParams['re_init_threshold'],
-                        dist_param_re_init=octa_param.octaParams['dist_param_re_init'], 
-                        scale_re_init=octa_param.octaParams['scale_re_init'],
-                        distribution=octa_param.octaParams['distribution'])
-
-    add_re_init_weights(error_connection, 
-                        re_init_threshold=octa_param.octaParams['re_init_threshold'],
-                        dist_param_re_init=octa_param.octaParams['dist_param_re_init'], 
-                        scale_re_init=octa_param.octaParams['scale_re_init'],
-                        distribution=octa_param.octaParams['distribution'])
-
-
-    add_re_init_ipred(prediction_connection, 
-                      re_init_threshold=octa_param.octaParams['re_init_threshold'])
-    
-    return None
-
-
-#%%
-
-
-
-re_init_weights = True
-inh_threshold = 'random'
-adapt_threshold = False
-expected_EI_syn = 350
 mismatch = True
 weight_regularization = True
 
-save = True
-debug = 2
 save_directory = '/home/matteo/Documents/Repositories/OCTA/results/'
 
 prefs.codegen.target = 'numpy'
 
 defaultclock.dt = 500 * us
-
-
 
 testbench_c = WTA_Testbench()
 testbench_p = WTA_Testbench()
@@ -196,17 +90,15 @@ buffer_size = octa_param.octaParams['buffer_size']
 
 ##########################
 
-# NeuronGroups
+
+    # RUN REGULARLY FUNCTIONS ###############
+
+
+
+
 inputGroup = SpikeGeneratorGroup(N=num_input_neurons**2, indices=[], times=[]*ms)
-
-# if (expected_EI_syn * 4) / num_neurons**4 <= 1.0:
-#     wtaParams['EI_connection_probability'] = round((expected_EI_syn * 4) / num_neurons**4, 2)
-# else:
-#     wtaParams['EI_connection_probability'] = 1.0
-
 num_inh_neurons_c = int(num_neurons**2/4) 
 num_inh_neurons_p = int(num_input_neurons**2/4)
-
 
 compressionWTA = WTA(name='compressionWTA', dimensions=2, 
                      neuron_eq_builder=octa_param.octa_neuron,
@@ -222,13 +114,26 @@ predictionWTA = WTA(name='predictionWTA', dimensions=2,
                     block_params=octa_param.wtaParams, 
                     monitor=False)
 
-compressionWTA._groups['n_exc'] = Neurons(num_input_neurons**2, equation_builder=octa_param.octa_neuron(num_inputs=6),
-                                                refractory=octa_param.wtaParams['rp_exc'],
-                                                name=compressionWTA._groups['n_exc'].name)
+
 
 compressionWTA._groups['spike_gen'] = Neurons(num_input_neurons**2, equation_builder=octa_param.octa_neuron(num_inputs=3),
                                                 refractory=octa_param.wtaParams['rp_exc'],
                                                 name=compressionWTA._groups['spike_gen'].name)
+
+
+
+
+compressionWTA._set_tags(tags_parameters.basic_tags_n_sg, compressionWTA._groups['spike_gen'])
+ 
+
+inputSynapse = Connections(inputGroup, compressionWTA._groups['spike_gen'],
+                           equation_builder=DPISyn(),
+                           method='euler',
+                           name='inputSynapse')
+
+
+inputSynapse.connect('i==j')
+inputSynapse.weight = 3250.
 
 
 compressionWTA._groups['s_inp_exc'] = Connections(compressionWTA._groups['spike_gen'], 
@@ -237,19 +142,7 @@ compressionWTA._groups['s_inp_exc'] = Connections(compressionWTA._groups['spike_
                                                    method='euler', 
                                                    name=compressionWTA._groups['s_inp_exc'].name)
 
-
-
-
-
-
-inputSynapse = Connections(inputGroup, compressionWTA._groups['spike_gen'],
-                           equation_builder=DPISyn(),
-                           method='euler',
-                           name='inputSynapse')
-
-inputSynapse.connect('i==j')
-inputSynapse.weight = 3250.
-
+compressionWTA._set_tags(tags_parameters.basic_tags_s_inp_exc, compressionWTA._groups['s_inp_exc'])
 
 
 compressionWTA._groups['s_inp_exc'].connect('True')
@@ -270,6 +163,7 @@ compressionWTA._groups['s_exc_exc'] = Connections(compressionWTA._groups['n_exc'
                                                    method='euler', 
                                                    name=compressionWTA._groups['s_exc_exc'].name)
 
+compressionWTA._set_tags(tags_parameters.basic_tags_s_exc_exc, compressionWTA._groups['s_exc_exc'])
 
 compressionWTA._groups['s_exc_exc'].connect('True')
 compressionWTA._groups['s_exc_exc'].weight = octa_param.wtaParams['we_exc_exc']
@@ -286,18 +180,16 @@ compressionWTA._groups['s_inh_exc'] = Connections(compressionWTA._groups['n_inh'
                                                    method='euler',
                                                    name=compressionWTA._groups['s_inh_exc'].name)
 
+compressionWTA._set_tags(tags_parameters.basic_tags_s_inh_exc, compressionWTA._groups['s_inh_exc'])
+
 
 compressionWTA._groups['s_inh_exc'].connect('True')
 compressionWTA._groups['s_inh_exc'].weight = octa_param.wtaParams['wi_inh_exc']
 
+
 compressionWTA._groups['s_inh_exc'].variance_th = np.random.uniform(low=octa_param.octaParams['variance_th_c']-0.1,
                                                                      high=octa_param.octaParams['variance_th_c']+0.1,
                                                                      size=len(compressionWTA._groups['s_inh_exc']))
-
-if inh_threshold=='fixed':
-    compressionWTA._groups['s_inh_exc'].variance_th = np.clip(compressionWTA._groups['s_inh_exc'].variance_th, 
-                                                               octa_param.octaParams['variance_th_c'], 
-                                                               octa_param.octaParams['variance_th_c'])
 
 compressionWTA._groups['s_inh_exc'].w_plast = weight_init(compressionWTA._groups['s_inh_exc'], 
                                                            dist_param=octa_param.octaParams['dist_param_init'], 
@@ -311,16 +203,15 @@ predictionWTA._groups['s_inh_exc'] = Connections(predictionWTA._groups['n_inh'],
                                                   method='euler',
                                                   name=predictionWTA._groups['s_inh_exc'].name)
 
+compressionWTA._set_tags(tags_parameters.basic_tags_s_inh_exc, predictionWTA._groups['s_inh_exc'])
+
+
 predictionWTA._groups['s_inh_exc'].connect('True')
 predictionWTA._groups['s_inh_exc'].weight = octa_param.wtaParams['wi_inh_exc']
 
 predictionWTA._groups['s_inh_exc'].variance_th =np.random.uniform(low=octa_param.octaParams['variance_th_p']-0.1,
                                                                    high=octa_param.octaParams['variance_th_p']+0.1,
                                                                    size=len(predictionWTA._groups['s_inh_exc']))
-if inh_threshold=='fixed':
-    predictionWTA._groups['s_inh_exc'].variance_th = np.clip(predictionWTA._groups['s_inh_exc'].variance_th, 
-                                                              octa_param.octaParams['variance_th_p'], 
-                                                              octa_param.octaParams['variance_th_p'])
 
 predictionWTA._groups['s_inh_exc'].w_plast = weight_init(predictionWTA._groups['s_inh_exc'], 
                                                           dist_param=octa_param.octaParams['dist_param_init'], 
@@ -332,6 +223,12 @@ predictionWTA._groups['s_inp_exc'] = Connections(compressionWTA._groups['n_exc']
                                                   equation_builder=DPIstdp,
                                                   method='euler', 
                                                   name=predictionWTA._groups['s_inp_exc'].name)
+predictionWTA._set_tags(tags_parameters.basic_tags_s_inp_exc, predictionWTA._groups['s_inp_exc'])
+predictionWTA._groups['s_inp_exc']._tags['sign'] = 'exc'
+predictionWTA._groups['s_inp_exc']._tags['bb_type'] = 'octa'
+predictionWTA._groups['s_inp_exc']._tags['connection_type'] = 'ff'
+
+
 
 predictionWTA._groups['s_inp_exc'].connect('True')
 predictionWTA._groups['s_inp_exc'].weight = octa_param.wtaParams['we_inp_exc']
@@ -350,6 +247,8 @@ predictionWTA._groups['s_exc_exc'] = Connections(predictionWTA._groups['n_exc'],
                                                   method='euler',
                                                   name=predictionWTA._groups['s_exc_exc'].name)
 
+compressionWTA._set_tags(tags_parameters.basic_tags_s_exc_exc, predictionWTA._groups['s_exc_exc'])
+
 predictionWTA._groups['s_exc_exc'].connect('True')
 predictionWTA._groups['s_exc_exc'].weight = octa_param.wtaParams['we_exc_exc']
 
@@ -363,6 +262,8 @@ error_connection = Connections(compressionWTA._groups['spike_gen'],
                                equation_builder=octa_param.DPIstdp_gm,
                                method='euler', 
                                name='error_connection')
+
+#error_connection._set_tags(tags_parameters.basic_tags_empty, error_connection)
 
 error_connection.connect('True')
 error_connection.weight = octa_param.wtaParams['we_inp_exc']
@@ -403,29 +304,51 @@ prediction_connection.dApre = octa_param.octaParams['learning_rate']
 compressionWTA._groups['s_inh_exc'].inh_learning_rate = octa_param.octaParams['inh_learning_rate']
 predictionWTA._groups['s_inh_exc'].inh_learning_rate = octa_param.octaParams['inh_learning_rate']
 
-#%%
-#add_octa_mismatch()
-#
-#add_weight_decay( octa_param.octaParams )    
-#add_weight_re_init()
-#
-#
-#add_weight_regularization(compressionWTA._groups['s_inp_exc'],
-#                          buffer_size=octa_param.octaParams['buffer_size'])
-#add_weight_regularization(error_connection,
-#                          buffer_size=octa_param.octaParams['buffer_size'])
-#
-#
-#add_activity_proxy(compressionWTA._groups['n_exc'],
-#                   buffer_size=octa_param.octaParams['buffer_size_plast'],
-#                   decay=octa_param.octaParams['decay'])
-#
-#add_activity_proxy(predictionWTA._groups['n_exc'],
-#                   buffer_size=octa_param.octaParams['buffer_size_plast'],
-#                   decay=octa_param.octaParams['decay'])
+
+add_bb_mismatch(compressionWTA)
+add_bb_mismatch(predictionWTA)
+error_connection.add_mismatch(octa_param.mismatch_synap_param, seed= 42)
+
+weight_decay_group =  [compressionWTA._groups['s_inp_exc']] + \
+     [compressionWTA._groups['s_exc_exc']] +\
+    [predictionWTA._groups['s_inp_exc']] + \
+    [predictionWTA._groups['s_exc_exc']] + \
+    [error_connection]
+add_decay_weight( weight_decay_group, octa_param.octaParams['weight_decay'], 
+                 octa_param.octaParams['learning_rate'] )    
+
+
+pred_weight_decay_group = [prediction_connection]
+add_weight_pred_decay( pred_weight_decay_group, octa_param.octaParams['weight_decay'],  octa_param.octaParams['learning_rate'] )    
+
+
+weight_re_init_group= [compressionWTA._groups['s_inp_exc']] + \
+    [compressionWTA._groups['s_exc_exc']] + \
+    [predictionWTA._groups['s_inp_exc']] + \
+    [predictionWTA._groups['s_exc_exc']] + \
+    [error_connection]
+
+add_weight_re_init(weight_re_init_group,re_init_threshold=octa_param.octaParams['re_init_threshold'],
+                        dist_param_re_init=octa_param.octaParams['dist_param_re_init'], 
+                        scale_re_init=octa_param.octaParams['scale_re_init'],
+                        distribution=octa_param.octaParams['distribution'])
+
+
+weight_re_init_ipred_group = [prediction_connection]
+add_weight_re_init_ipred(weight_re_init_ipred_group, re_init_threshold=octa_param.octaParams['re_init_threshold'] )
+
+
+weight_regularization_group = [compressionWTA._groups['s_inp_exc']] + \
+                                [error_connection]
+add_regulatization_weight(weight_regularization_group, buffer_size=octa_param.octaParams['buffer_size'] )
+
+
+activity_proxy_group= [compressionWTA._groups['n_exc']] + [predictionWTA._groups['n_exc']]
+add_proxy_activity(activity_proxy_group,  buffer_size=octa_param.octaParams['buffer_size_plast'],
+                   decay=octa_param.octaParams['decay'])
+
 
 #%%
-
 # LOADING INPUT AND ADDING NOISE 
 testbench_stim.rotating_bar(length=10, nrows=10, 
                             direction='cw', 
@@ -434,40 +357,28 @@ testbench_stim.rotating_bar(length=10, nrows=10,
 
 inputGroup.set_spikes(indices=testbench_stim.indices, times=testbench_stim.times * ms)
 
-#%%
-#testbench_c.background_noise(num_neurons=num_neurons, rate=10)
-#testbench_p.background_noise(num_neurons=num_input_neurons, rate=10)
 
-#noise_syn_c_exc = Connections(testbench_c.noise_input, 
-#                        compressionWTA._groups['n_exc'],
-#                        equation_builder=DPISyn(), 
-#                        name="noise_syn_c_exc")
-#noise_syn_c_sg = Connections(testbench_c.noise_input, 
-#                        compressionWTA._groups['spike_gen'],
-#                        equation_builder=DPISyn(), 
-#                        name="noise_syn_c_sg")
-#noise_syn_c_inh = Connections(testbench_c.noise_input, 
-#                        compressionWTA._groups['n_inh'],
-#                        equation_builder=DPISyn(), 
-#                        name="noise_syn_c_inh")
+testbench_c.background_noise(num_neurons=num_neurons, rate=10)
+testbench_p.background_noise(num_neurons=num_input_neurons, rate=10)
+
+noise_syn_c_exc = Connections(testbench_c.noise_input, 
+                        compressionWTA._groups['n_exc'],
+                        equation_builder=DPISyn(), 
+                        name="noise_syn_c_exc")
 #
-#noise_syn_c.connect("i==j")
-#noise_syn_c.weight = octa_param.octaParams['noise_weight']
-#
-#noise_syn_p_exc = Connections(testbench_c.noise_input, 
-#                        predictionWTA._groups['n_exc'],
-#                        equation_builder=DPISyn(), 
-#                        name="noise_syn_p_exc")
-#
-#noise_syn_p_inh = Connections(testbench_c.noise_input, 
-#                        predictionWTA._groups['n_inh'],
-#                        equation_builder=DPISyn(), 
-#                        name="noise_syn_p_inh")
-#
-#
-#noise_syn_p.connect("i==j")
-#noise_syn_p.weight = octa_param.octaParams['noise_weight']
-#%%
+noise_syn_c_exc.connect("i==j")
+noise_syn_c_exc.weight = octa_param.octaParams['noise_weight']
+
+noise_syn_p_exc = Connections(testbench_c.noise_input, 
+                        predictionWTA._groups['n_exc'],
+                        equation_builder=DPISyn(), 
+                        name="noise_syn_p_exc")
+
+
+
+noise_syn_p_exc.connect("i==j")
+noise_syn_p_exc.weight = octa_param.octaParams['noise_weight']
+
 compressionWTA.monitors['statemon_exc']= StateMonitor(compressionWTA._groups['n_exc'], ('Imem', 'Iin'), record=True,
                                    name= 'statemon_exc')
 compressionWTA.monitors['spikemon_inh']=  SpikeMonitor(compressionWTA._groups['n_inh'], 
@@ -487,32 +398,49 @@ predictionWTA.monitors['spikemon_exc'] = SpikeMonitor(predictionWTA._groups['n_e
 
 
 
+_groups = {
+        'comp_n_exc' : compressionWTA._groups['n_exc'],
+        'comp_n_inh' : compressionWTA._groups['n_inh'] ,
+        'comp_n_spike_gen' :  compressionWTA._groups['spike_gen'],
+        'comp_s_inp_exc':  compressionWTA._groups['s_inp_exc'],
+        'comp_s_exc_exc': compressionWTA._groups['s_exc_exc'],
+        'comp_s_exc_inh': compressionWTA._groups['s_exc_inh'],
+        'comp_s_inh_exc': compressionWTA._groups['s_inh_exc'],
+        'pred_n_exc' : predictionWTA._groups['n_exc'],
+        'pred_n_inh' :  predictionWTA._groups['n_inh'],
+        'pred_s_inp_exc': predictionWTA._groups['s_inp_exc'],
+        'pred_s_exc_exc': predictionWTA._groups['s_exc_exc'],
+        'pred_s_exc_inh': predictionWTA._groups['s_exc_inh'],
+        'pred_s_inh_exc':  predictionWTA._groups['s_inh_exc'],
+        'error_connection': error_connection,
+        'prediction_connection' : prediction_connection,
+        'inputGroup' : inputGroup,
+        'inputSynapse': inputSynapse,
+        
+        
+        }
 
-#%%
-#compressionWTA.monitors['spikemon_inp'] = SpikeMonitor(
-#        compressionWTA._groups['spike_gen'], name='compressionWTA' + 'spikemon_inp')
+
+
+monitors = {
+         'comp_spikemon_exc' : compressionWTA.monitors['spikemon_exc'], 
+         'comp_spikemon_inh' :compressionWTA.monitors['spikemon_inh'],
+         'comp_spikemon_inp' :compressionWTA.monitors['spikemon_inp'],                 
+         'comp_statemon_exc' :compressionWTA.monitors['statemon_exc'],
+         'pred_spikemon_exc' : predictionWTA.monitors['spikemon_exc'], 
+         'pred_spikemon_inh' :predictionWTA.monitors['spikemon_inh'],
+         'pred_statemon_exc' :predictionWTA.monitors['statemon_exc'], 
+         
+         }
 
 Net = teiliNetwork()
 
 
 Net.add(
-#        inputGroup, inputSynapse,
-#         error_connection, prediction_connection,
-#
-#        compressionWTA,
-#        predictionWTA,
-        compressionWTA._groups['spike_gen'], 
-        compressionWTA._groups['n_exc'], 
-        compressionWTA._groups['n_inh'], 
-        compressionWTA._groups['s_inp_exc'], 
-        compressionWTA._groups['s_exc_exc'], 
-        compressionWTA._groups['s_exc_inh'],              
-        compressionWTA._groups['s_inh_exc'],    
-         compressionWTA.monitors['spikemon_exc'], 
-         compressionWTA.monitors['spikemon_inh'],
-         compressionWTA.monitors['spikemon_inp'],                   
-         compressionWTA.monitors['statemon_exc'],          
-         
+        inputGroup, inputSynapse,
+         error_connection, prediction_connection,
+         noise_syn_p_exc, noise_syn_c_exc,
+         testbench_c.noise_input, testbench_p.noise_input,
         predictionWTA._groups['spike_gen'], 
         predictionWTA._groups['n_exc'], 
         predictionWTA._groups['n_inh'], 
@@ -524,9 +452,33 @@ Net.add(
          predictionWTA.monitors['spikemon_inh'],
          predictionWTA.monitors['spikemon_exc'],
 
+        compressionWTA._groups['spike_gen'], 
+        compressionWTA._groups['n_exc'], 
+        compressionWTA._groups['n_inh'], 
+        compressionWTA._groups['s_inp_exc'], 
+        compressionWTA._groups['s_exc_exc'], 
+       compressionWTA._groups['s_exc_inh'],              
+        compressionWTA._groups['s_inh_exc'],    
+         compressionWTA.monitors['spikemon_exc'], 
+         compressionWTA.monitors['spikemon_inh'],
+         compressionWTA.monitors['spikemon_inp'],                 
+         compressionWTA.monitors['statemon_exc'],          
+
+
          )
 
 
-#octa_param.octaParams['duration'] = np.max(testbench_stim.times)
+octa_param.octaParams['duration'] = np.max(testbench_stim.times)
 Net.run(octa_param.octaParams['duration'] * ms, report='text')
+
 #%%
+compressionWTA._groups['s_exc_exc'].w_plast.shape
+save_weights(compressionWTA._groups['s_exc_exc'].w_plast, filename='rec_c_weights_last', 
+                path='/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa')
+save_monitor(compressionWTA.monitors['spikemon_exc'], filename='spikemon_compressionWTA', path = '/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa/')
+s = SortMatrix(nrows=49, ncols=49, filename='/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa25_06_2019/25_06_20_40_rec_c_weights_last.npy', axis=1)
+mon = load_monitor(filename='teili/octa/25_06_2019/25_06_20_40_spikemon_compressionWTA.npy')
+
+mon.i = np.asarray([np.where(np.asarray(s.permutation) == int(i))[0][0] for i in mon.i])
+plt.plot(mon.i, '.k')
+

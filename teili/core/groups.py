@@ -238,6 +238,11 @@ class TeiliGroup(Group):
             10% of the current bias values:
             >>> testNeurons.add_mismatch({'Itau': 0.1})
         """
+        if std_dict is  None:
+            std_dict = {}
+            parameters = list(self.equation_builder.keywords['parameters'].keys())
+            for i in parameters:
+                std_dict[i] = 0.2
 
         if std_dict is None:
             std_dict = {}

@@ -188,6 +188,8 @@ class WTA(BuildingBlock):
 
             set_wta_tags(self, self._groups)
 
+            set_WTA_tags(self, self._groups)
+
         else:
             raise NotImplementedError(
                 "only 1 and 2 d WTA available, sorry")

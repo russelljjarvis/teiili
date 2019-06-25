@@ -126,6 +126,7 @@ class BuildingBlock(Nameable):
             for group in self.sub_blocks[sub_block].groups:
                 tmp_groups.update({self.sub_blocks[sub_block].groups[group].name
                                   : self.sub_blocks[sub_block].groups[group]})
+
         return tmp_groups
 
     def __getitem__(self, key):
@@ -201,6 +202,7 @@ class BuildingBlock(Nameable):
             target_dict (dict): List of all group objects which
                 share the same tags as specified.
         """
+
         target_dict = {}
         for group in self.groups:
 

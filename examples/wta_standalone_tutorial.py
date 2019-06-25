@@ -2,6 +2,10 @@
 # @Author: alpren
 # @Date:   2018-01-11 14:48:17
 
+# On a fresh Ubuntu install, you need to install the compilers via:
+# sudo apt-get install build-essential
+
+
 import os
 import sys
 import numpy as np
@@ -15,7 +19,7 @@ from scipy import ndimage
 
 from brian2 import prefs, ms, pA, StateMonitor, SpikeMonitor,\
     device, set_device,\
-    second, msecond, defaultclock
+    second, msecond, pamp, defaultclock
 
 from teili.building_blocks.wta import WTA
 from teili.core.groups import Neurons, Connections
@@ -37,6 +41,8 @@ if run_as_standalone:
     device.reinit()
     device.activate(directory=standaloneDir, build_on_run=False)
     #prefs.devices.cpp_standalone.openmp_threads = 2
+    # on systems with limited memory, make sure to limit the number of compiler threads:
+    prefs.devices.cpp_standalone.extra_make_args_unix = ["-j$(nproc)"]
 
 num_neurons = 50
 num_input_neurons = num_neurons
@@ -70,55 +76,54 @@ testbench.background_noise(num_neurons=num_neurons, rate=10)
 test_WTA.spike_gen.set_spikes(
     indices=testbench.indices, times=testbench.times * ms)
 noise_syn = Connections(testbench.noise_input, test_WTA,
-                        equation_builder=DPISyn(), name="noise_syn", )
+                        equation_builder=DPISyn(), name="noise_syn")
 noise_syn.connect("i==j")
 noise_syn.weight = 3000
 
-statemonWTAin = StateMonitor(test_WTA.Groups['gWTAGroup'],
+statemonWTAin = StateMonitor(test_WTA.output_groups['n_exc'],
                              ('Iin0', 'Iin1', 'Iin2','Iin3'),
                              record=True,
                              name='statemonWTAin')
 
 spikemonitor_input = SpikeMonitor(
-    test_WTA.inputGroup, name="spikemonitor_input")
+    test_WTA._groups['spike_gen'], name="spikemonitor_input")
 spikemonitor_noise = SpikeMonitor(
     testbench.noise_input, name="spikemonitor_noise")
 
 Net.add(test_WTA, testbench.noise_input, noise_syn,
         statemonWTAin, spikemonitor_noise, spikemonitor_input)
-Net.standalone_params.update({'gtest_WTA_Iconst': 1 * pA})
 
-# Net.standalone_params = {}
+Net.standalone_params.update({test_WTA.input_groups['n_exc'].name+'_Iconst': 1 * pA})
+
+#Net.standalone_params = {}
 
 if run_as_standalone:
     Net.build()
 
-standalone_params = OrderedDict([('duration', 0.7 * second),
-                                 ('stestWTA_e_latWeight', 650),
-                                 ('stestWTA_e_latSigma', 2),
-                                 ('stestWTA_Inpe_weight', 900),
-                                 ('stestWTA_Inhe_weight', 500),
-                                 ('stestWTA_Inhi_weight', -650),
-
-                                 ('test_WTA_refP', 1. * msecond),
-                                 ('gtestWTA_Inh_refP', 1. * msecond),
-                                 ('gtest_WTA_Iconst', 1 * pA)
-                                 ])
+standalone_params = OrderedDict([('duration', 1. * second),
+             ('test_WTA__s_exc_exc_lateral_weight', 650),
+             ('test_WTA__s_exc_exc_lateral_sigma', 2),
+             ('test_WTA__s_inp_exc_weight', 900),
+             ('test_WTA__s_inh_exc_weight', -550),
+             ('test_WTA__n_inh_refP', 1. * msecond),
+             ('test_WTA__s_exc_inh_weight', 500),
+             ('test_WTA__n_exc_refP', 3. * msecond),
+             ('test_WTA__n_exc_Iconst', 1. * pamp)])
 
 duration = standalone_params['duration'] / ms
 Net.run(duration=duration * ms, standalone_params=standalone_params, report='text')
 
 # Visualization
-win_wta = pg.GraphicsWindow(title="STDP Unit Test")
+win_wta = pg.GraphicsWindow(title="WTA")
 win_wta.resize(2500, 1500)
-win_wta.setWindowTitle("Spike Time Dependet Plasticity")
+win_wta.setWindowTitle("WTA")
 p1 = win_wta.addPlot()
 win_wta.nextRow()
 p2 = win_wta.addPlot()
 win_wta.nextRow()
 p3 = win_wta.addPlot()
 
-spikemonWTA = test_WTA.Groups['spikemonWTA']
+spikemonWTA = test_WTA.monitors['spikemon_exc']
 spiketimes = spikemonWTA.t
 
 Rasterplot(MyEventsModels = [spikemonitor_noise],

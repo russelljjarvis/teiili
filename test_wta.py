@@ -11,6 +11,7 @@ from teili.models.neuron_models import DPI
 from brian2 import us, ms, pA, nA, prefs,\
         SpikeMonitor, StateMonitor,\
         SpikeGeneratorGroup
+from teili.core.groups import Neurons, Connections
 
 from teili import TeiliNetwork
 
@@ -33,12 +34,14 @@ prefs.codegen.target = 'numpy'
 num_neurons = 7
 
 num_input_neurons = 10
-my_wta = WTA(name='my_wta', dimensions=1,
+my_wta = WTA(name='my_wta', dimensions=2,
              neuron_eq_builder=DPI,
              num_neurons=num_neurons, num_inh_neurons=int(num_neurons**2/4),
              num_input_neurons=num_input_neurons, num_inputs=4,
              block_params=wta_params,
-             monitor=True)
+             monitor= False)
+
+
 
 Net.add(
         my_wta._groups['spike_gen'], 
@@ -46,11 +49,10 @@ Net.add(
         my_wta._groups['n_inh'], 
         my_wta._groups['s_inp_exc'], 
         my_wta._groups['s_exc_exc'], 
-        my_wta._groups['s_exc_inh'],              
-        my_wta._groups['s_inh_exc'],    
-         my_wta.monitors['spikemon_exc'], 
-         my_wta.monitors['spikemon_inh'],
-         my_wta.monitors['spikemon_inp'])
+        my_wta._groups['s_exc_inh'],
+        my_wta._groups['s_inh_exc'] ,             
 
-Net.run(10*ms)         
+         )
+
+
          

@@ -350,5 +350,5 @@ def print_neuron_model(Neuron_group):
     Note: Even if mismatch is added, the values that are shown and not subject
         to mismatch   
     """
-        print("Neuron group: {}" .format(Neuron_group.equation_builder.keywords))
+        print("Neuron group: {} \n" .format(Neuron_group.equation_builder.keywords))
         return None

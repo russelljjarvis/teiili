@@ -121,7 +121,9 @@ class BuildingBlock(Nameable):
         tmp_groups.update(self._groups)
         for sub_block in self.sub_blocks:
             # Needs to be groups and not _groups for recursive collection
-            tmp_groups.update(sub_block.groups)
+            for group in self.sub_blocks[sub_block].groups:
+                tmp_groups.update({self.sub_blocks[sub_block].groups[group].name
+                                : self.sub_blocks[sub_block].groups[group]})
         return tmp_groups
 
     def __getitem__(self, key):
@@ -179,17 +181,20 @@ class BuildingBlock(Nameable):
             tags (dict): A dictionary of tags
 
         Returns:
-            target_group (list): List of all group objects which
+            target_dict (dict): List of all group objects which
                 share the same tags as specified.
-        """
-        target_groups = []
+        """    
+
+        target_dict = {}
         for group in self.groups:
+
             try:
-                if self._groups[group]._tags == tags:
-                    target_groups.append(self._groups[group])
+                if  tags.items() <= self._groups[group]._tags.items():
+                    target_dict[group] = self._groups[group]
                 else:
                     continue
             except AttributeError as e:
                 pass
+        return target_dict
 
-        return target_groups
+

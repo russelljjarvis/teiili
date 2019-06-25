@@ -349,7 +349,7 @@ i_gm_params = {'Ipred': 1.0 ,
 # Keep track of the Imem variance. Usefull with run regular functions.
 i_var = {'model': """
           normalized_activity_proxy : 1
-          activity_proxy : 1
+          activity_proxy : amp
           adaptive_threshold : amp
 
 

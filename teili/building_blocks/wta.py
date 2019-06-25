@@ -64,6 +64,8 @@ from teili.core.groups import Neurons, Connections
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 
+import tags_parameters
+
 wta_params = {'we_inp_exc': 1.5,
               'we_exc_inh': 1,
               'wi_inh_exc': -1,
@@ -185,6 +187,8 @@ class WTA(BuildingBlock):
                                               debug=debug,
                                               spatial_kernel=spatial_kernel,
                                               **block_params)
+
+            set_WTA_tags(self, self._groups)
 
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
@@ -542,5 +546,48 @@ def gen2dWTA(groupname,
         print('The keys of the output dict are:')
         for key in _groups:
             print(key)
+            
 
     return _groups, monitors, standalone_params
+
+def set_WTA_tags(self,_groups):
+    '''
+    Sets default tags to a WTA network
+
+    Args:
+        _groups (dictionary): Keys to all neuron and synapse groups. 
+
+    Returns:
+        _groups (dictionary): Keys to all neuron and synapse groups with tags appended.
+
+
+      Tags will be added to all _groups passed. They follow this structure:
+     
+      tags =       { 'mismatch' : (bool, 0/1)
+                    'level': int       
+                     'sign': str (exc/inh/None)  
+                     'target sign': str (exc/inh/None)
+                      'num_inputs' : int (0 if not Neuron group),
+                      'bb_type' : str (WTA/3-WAY),
+                      'group_type' : str (Neuron/Synapse/ SpikeGen)
+                      'connection_type' : str (rec/lateral/fb/ff/None) 
+
+         }
+'''
+
+    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['n_exc'])
+    self._set_tags(tags_parameters.basic_tags_n_inh, _groups['n_inh'])   
+    self._set_tags(tags_parameters.basic_tags_n_sg, _groups['spike_gen'])   
+    self._set_tags(tags_parameters.basic_tags_s_exc_exc, _groups['s_exc_exc']) 
+    self._set_tags(tags_parameters.basic_tags_s_exc_inh, _groups['s_exc_inh'])
+    self._set_tags(tags_parameters.basic_tags_s_inh_exc, _groups['s_inh_exc'])
+    self._set_tags(tags_parameters.basic_tags_s_inh_inh, _groups['s_inh_inh'])    
+    self._set_tags(tags_parameters.basic_tags_s_inp_exc, _groups['s_inp_exc'])    
+
+
+
+
+
+
+
+

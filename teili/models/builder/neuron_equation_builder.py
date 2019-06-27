@@ -341,14 +341,20 @@ def print_param_dictionaries(Dict):
 
 
 def print_neuron_model(Neuron_group):
-        """Function to print keywords of a Neuron model
-            Usefull to check the entire equation and parameter list
+    """Function to print keywords of a Neuron model.
+    
+        Usefull to check the entire equation and parameter list in equations
+        that have been combined,
 
     Args:
-       Neuron group( Neurons ) : Synaptic group
+       Neuron group( Neurons ) : Neuron group
        
-    Note: Even if mismatch is added, the values that are shown and not subject
-        to mismatch   
+    Note: The equation printed is the imported equation into the equation builder.
+    Even if mismatch is added, the values that are shown and not subject
+        to mismatch.    
+        
+        e.g 
+        >> print_neuron_model(my_wta.groups['n_exc'])
     """
-        print("Neuron group: {} \n" .format(Neuron_group.equation_builder.keywords))
-        return None
+    print("Neuron group: {} \n" .format(Neuron_group.equation_builder.keywords))
+    return None

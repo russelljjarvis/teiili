@@ -359,15 +359,21 @@ def print_param_dictionaries(Dict):
         print('      ' + keys + ' = ' + repr(values))
 
 def print_synaptic_model(synapse_group):
-        """Function to print keywords of a synaptic model
-            Usefull to check the entire equation and parameter list
+    """Function to print keywords of a Synaptic model.
+    
+        Usefull to check the entire equation and parameter list in equations
+        that have been combined,
 
     Args:
-       Synaptic group( Connections ) : Synaptic group
+       Synaptic group ( Connection ) : Synaptic group
        
-   Note: Even if mismatch is added, the values that are shown and not subject
-        to mismatch   
+    Note: The equation printed is the imported equation into the equation builder.
+    Even if mismatch is added, the values that are shown and not subject
+        to mismatch.    
+        
+        e.g 
+        >> print_neuron_model(my_wta.groups['s_exc_exc'])
     """
-        print("Synaptic group: {}" .format(synapse_group.equation_builder.keywords))
-        return None
+    print("Synaptic group: {}" .format(synapse_group.equation_builder.keywords))
+    return None
     

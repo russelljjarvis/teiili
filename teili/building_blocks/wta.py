@@ -64,7 +64,7 @@ from teili.core.groups import Neurons, Connections
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 
-import tags_parameters
+import teili.tools.tags_parameters as tags_parameters
 
 wta_params = {'we_inp_exc': 1.5,
               'we_exc_inh': 1,
@@ -171,6 +171,8 @@ class WTA(BuildingBlock):
                                               debug=debug,
                                               spatial_kernel=spatial_kernel,
                                               **block_params)
+            set_WTA_tags(self, self._groups)
+
         elif dimensions == 2:
             self._groups,\
             self.monitors,\
@@ -320,10 +322,13 @@ def gen1dWTA(groupname,
         's_inp_exc': s_inp_exc,
         's_exc_exc': s_exc_exc,
         's_exc_inh': s_exc_inh,
-        's_inh_exc': s_inh_exc}
+        's_inh_exc': s_inh_exc,
+        's_inh_inh': s_inh_inh,}
 
     # spikemons
     if monitor:
+        monitors = {}
+
         spikemon_exc = SpikeMonitor(
             n_exc, name=groupname + 'spikemon_exc')
         spikemon_inh = SpikeMonitor(
@@ -342,7 +347,7 @@ def gen1dWTA(groupname,
             'spikemon_inp': spikemon_inp,
             'statemon_exc': statemon_exc}
     else : 
-        monitor = {}
+        monitors = {}
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
     # in this case: we_inp_exc, we_exc_inh, wi_inh_exc, we_exc_exc,rp_exc, rp_inh,sigm

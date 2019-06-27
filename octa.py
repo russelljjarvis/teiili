@@ -1,70 +1,50 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Created on Thu Jun 20 09:27:37 2019
+Created on Wed Jun 26 12:58:50 2019
 
 @author: matteo
 
+
 This module provides a hierarchical building block called OCTA.
             -Online Clustering of Temporal Activity-
-
 
 Attributes:
     wta_params (dict): Dictionary of default parameters for wta.
     octa_params (dict): Dictionary of default parameters for wta.
 
 """
+from brian2 import ms, us
+from brian2 import StateMonitor, SpikeMonitor, SpikeGeneratorGroup
+from brian2 import prefs, defaultclock
 
+import matplotlib.pyplot as plt
+import numpy as np
+import time, os, sys
+
+from teili.building_blocks.building_block import BuildingBlock
 from teili.building_blocks.wta import WTA
 from teili.core.groups import Neurons, Connections
 from teili.stimuli.testbench import WTA_Testbench, OCTA_Testbench
 from teili import TeiliNetwork as teiliNetwork
 from teili.models.synapse_models import DPISyn, DPIstdp
-from teili.models.neuron_models import DPI
-from teili.tools.indexing import ind2xy, ind2events
-from teili.tools.plotting import plot_spikemon_qt, plot_statemon_qt
 from teili.tools.sorting import SortMatrix
-
-from teili.core.groups import TeiliGroup as group
-
-# Load modified neuron and synapse models
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder ,\
 print_neuron_model
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder ,\
 print_synaptic_model
 
-from teili.octa.interfaces.lock_and_load import *
+from teili.tools.octa_tools import octa_param
+from teili.tools.octa_tools.octa_param import *
 
-from teili.octa.tools.add_run_reg import *
-from teili.octa.tools.add_mismatch import *
-from teili.octa.tools.weight_init import weight_init
+from teili.tools.octa_tools.weight_init import weight_init 
 
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph as pg
-from pyqtgraph.Point import Point
-
-from teili.models.parameters import octa_param 
-from teili.models.parameters.octa_param import * 
-#from teili.models.parameters.octa_tools import add_bb_mismatch, add_weight_decay
-
-import tags_parameters
-
-import numpy as np
-import time, os, sys
-from tkinter import filedialog
-
-from brian2 import ms, us, second, amp, pA, mA, nA
-from brian2.units.allunits import radian
-from brian2 import StateMonitor, SpikeMonitor, SpikeGeneratorGroup
-from brian2 import prefs, defaultclock, check_units, implementation, set_device, device
-
-from teili.models.synapse_models import DPIstdp, DPISyn
-
-from octa_tools import add_bb_mismatch, add_decay_weight, add_weight_re_init, add_weight_re_init_ipred,\
-add_proxy_activity, add_regulatization_weight, add_weight_pred_decay
-
+import teili.tools.tags_parameters as tags_parameters
+from teili.tools.octa_tools.octa_tools import add_decay_weight, add_weight_re_init, add_weight_re_init_ipred,\
+add_proxy_activity, add_regulatization_weight, add_weight_pred_decay, add_bb_mismatch
+from teili.tools.octa_tools.lock_and_load import  save_monitor, load_monitor,\
+save_weights, load_weights
 prefs.codegen.target = 'numpy'
-
 
 mismatch = True
 weight_regularization = True
@@ -72,6 +52,7 @@ weight_regularization = True
 save_directory = '/home/matteo/Documents/Repositories/OCTA/results/'
 
 prefs.codegen.target = 'numpy'
+
 
 defaultclock.dt = 500 * us
 
@@ -91,7 +72,6 @@ buffer_size = octa_param.octaParams['buffer_size']
 ##########################
 
 
-    # RUN REGULARLY FUNCTIONS ###############
 
 
 
@@ -181,6 +161,17 @@ compressionWTA._groups['s_inh_exc'] = Connections(compressionWTA._groups['n_inh'
                                                    name=compressionWTA._groups['s_inh_exc'].name)
 
 compressionWTA._set_tags(tags_parameters.basic_tags_s_inh_exc, compressionWTA._groups['s_inh_exc'])
+
+
+w_init_list= [compressionWTA._groups['s_exc_exc']] +\
+            [compressionWTA._groups['s_inp_exc']] +\ 
+            [compressionWTA._groups['s_inh_exc']] + \
+            [predictionWTA._groups['s_inh_exc']] +\
+            [predictionWTA._groups['s_inp_exc']] +\
+            [error_connection]
+            
+
+
 
 
 compressionWTA._groups['s_inh_exc'].connect('True')
@@ -416,6 +407,8 @@ _groups = {
         'prediction_connection' : prediction_connection,
         'inputGroup' : inputGroup,
         'inputSynapse': inputSynapse,
+        'pred_noise_syn_exc' : noise_syn_p_exc,
+        'comp_noise_syn_exc': noise_syn_c_exc
         
         
         }
@@ -427,6 +420,7 @@ monitors = {
          'comp_spikemon_inh' :compressionWTA.monitors['spikemon_inh'],
          'comp_spikemon_inp' :compressionWTA.monitors['spikemon_inp'],                 
          'comp_statemon_exc' :compressionWTA.monitors['statemon_exc'],
+         
          'pred_spikemon_exc' : predictionWTA.monitors['spikemon_exc'], 
          'pred_spikemon_inh' :predictionWTA.monitors['spikemon_inh'],
          'pred_statemon_exc' :predictionWTA.monitors['statemon_exc'], 
@@ -451,7 +445,6 @@ Net.add(
          predictionWTA.monitors['statemon_exc'],
          predictionWTA.monitors['spikemon_inh'],
          predictionWTA.monitors['spikemon_exc'],
-
         compressionWTA._groups['spike_gen'], 
         compressionWTA._groups['n_exc'], 
         compressionWTA._groups['n_inh'], 
@@ -473,11 +466,11 @@ Net.run(octa_param.octaParams['duration'] * ms, report='text')
 
 #%%
 compressionWTA._groups['s_exc_exc'].w_plast.shape
-save_weights(compressionWTA._groups['s_exc_exc'].w_plast, filename='rec_c_weights_last', 
+octa_tools.save_weights(compressionWTA._groups['s_exc_exc'].w_plast, filename='rec_c_weights_last', 
                 path='/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa')
-save_monitor(compressionWTA.monitors['spikemon_exc'], filename='spikemon_compressionWTA', path = '/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa/')
-s = SortMatrix(nrows=49, ncols=49, filename='/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa25_06_2019/25_06_20_40_rec_c_weights_last.npy', axis=1)
-mon = load_monitor(filename='teili/octa/25_06_2019/25_06_20_40_spikemon_compressionWTA.npy')
+octa_tools.save_monitor(compressionWTA.monitors['spikemon_exc'], filename='spikemon_compressionWTA', path = '/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa/')
+s = SortMatrix(nrows=49, ncols=49, filename='/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa26_06_2019/26_06_12_54_rec_c_weights_last.npy', axis=1)
+mon = load_monitor(filename='teili/octa/26_06_2019/26_06_12_54_spikemon_compressionWTA.npy')
 
 mon.i = np.asarray([np.where(np.asarray(s.permutation) == int(i))[0][0] for i in mon.i])
 plt.plot(mon.i, '.k')

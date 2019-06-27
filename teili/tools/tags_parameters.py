@@ -98,6 +98,31 @@ basic_tags_s_inp_exc =   { 'mismatch' : 0,
               'connection_type' : 'rec',
     }    
 
+basic_tags_compression_con_octa = {
+         'mismatch' : 0,
+             'level': 2 ,     
+              'sign': 'exc',
+              'target sign': 'exc',
+              'num_inputs' : 0,
+              'bb_type' : 'OCTA',
+              'group_type' : 'Connection',
+              'connection_type' : 'fb',
+    }    
+
+
+    
+basic_tags_prediction_con_octa = {
+         'mismatch' : 0,
+             'level': 2 ,     
+              'sign': 'exc',
+              'target sign': 'exc',
+              'num_inputs' : 0,
+              'bb_type' : 'OCTA',
+              'group_type' : 'Connection',
+              'connection_type' : 'fb',
+    }    
+
+
 basic_tags_empty =   { 'mismatch' : 0,
              'level': 0 ,     
               'sign': 'None',

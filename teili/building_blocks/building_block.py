@@ -184,13 +184,12 @@ class BuildingBlock(Nameable):
             target_dict (dict): List of all group objects which
                 share the same tags as specified.
         """    
-
         target_dict = {}
         for group in self.groups:
 
             try:
-                if  tags.items() <= self._groups[group]._tags.items():
-                    target_dict[group] = self._groups[group]
+                if  tags.items() <= self.groups[group]._tags.items():
+                    target_dict[group] = self.groups[group]
                 else:
                     continue
             except AttributeError as e:

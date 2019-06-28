@@ -328,19 +328,18 @@ def gen1dWTA(groupname,
     # spikemons
     if monitor:
         monitors = {}
-
         spikemon_exc = SpikeMonitor(
-            n_exc, name=groupname + 'spikemon_exc')
+            n_exc, name=groupname + '_spikemon_exc')
         spikemon_inh = SpikeMonitor(
-            n_inh, name=groupname + 'spikemon_inh')
+            n_inh, name=groupname + '_spikemon_inh')
         spikemon_inp = SpikeMonitor(
-            spike_gen, name=groupname + 'spikemon_inp')
+            spike_gen, name=groupname + '_spikemon_inp')
         try:
             statemon_exc = StateMonitor(n_exc, ('Vm', 'Iin'), record=True,
-                                       name=groupname + 'statemon_exc')
+                                       name=groupname + '_statemon_exc')
         except KeyError:
             statemon_exc = StateMonitor(n_exc, ('Imem', 'Iin'), record=True,
-                                       name=groupname + 'statemon_exc')
+                                       name=groupname + '_statemon_exc')
         monitors = {
             'spikemon_exc': spikemon_exc,
             'spikemon_inh': spikemon_inh,
@@ -433,9 +432,9 @@ def gen2dWTA(groupname,
     num2dNeurons = num_neurons**2
     num_inh_inputs = 2
     n_exc = Neurons(num2dNeurons, equation_builder=neuron_eq_builder(num_inputs=3 + num_inputs),
-                        refractory=rp_exc, name='g' + groupname)
+                        refractory=rp_exc, name= groupname + '_n_exc')
     n_inh = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(num_inputs=num_inh_inputs),
-                           refractory=rp_inh, name='g' + groupname + '_Inh')
+                           refractory=rp_inh, name= groupname + '_n_inh')
 
     n_exc.namespace['num_neurons'] = num_neurons
     n_exc.namespace['ind2x'] = ind2x
@@ -451,24 +450,24 @@ def gen2dWTA(groupname,
     tsWTA = np.asarray([]) * ms
     indWTA = np.asarray([])
     spike_gen = SpikeGeneratorGroup(
-        num_input2d_neurons, indices=indWTA, times=tsWTA, name='g' + groupname + '_Inp')
+        num_input2d_neurons, indices=indWTA, times=tsWTA, name= groupname + '_spike_gen')
 
     # create synapses
     s_inp_exc = Connections(spike_gen, n_exc,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_Inpe')
+                              method="euler", name=groupname + '_s_inp_exc')
     s_exc_exc = Connections(n_exc, n_exc,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_e')
+                              method="euler", name=groupname + '_s_exc_exc')
     s_inh_exc = Connections(n_inh, n_exc,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_Inhi')
+                              method="euler", name= groupname + '_s_inh_exc')
     s_exc_inh = Connections(n_exc, n_inh,
                               equation_builder=synapse_eq_builder(),
-                              method="euler", name='s' + groupname + '_Inhe')
+                              method="euler", name=  groupname + '_s_exc_inh')
     s_inh_inh = Connections(n_inh, n_inh,
                               equation_builder=synapse_eq_builder(),
-                              method='euler', name='s' + groupname + '_i')
+                              method='euler', name= groupname + '_s_inh_inh')
 
     # connect synapses
     s_inp_exc.connect('i==j')
@@ -511,17 +510,17 @@ def gen2dWTA(groupname,
 
     if monitor:
         spikemon_exc = SpikeMonitor(
-            n_exc, name=groupname + 'spikemon_exc')
+            n_exc, name=groupname + '_spikemon_exc')
         spikemon_inh = SpikeMonitor(
-            n_inh, name=groupname + 'spikemon_inh')
+            n_inh, name=groupname + '_spikemon_inh')
         spikemon_inp = SpikeMonitor(
-            spike_gen, name=groupname + 'spikemon_inp')
+            spike_gen, name=groupname + '_spikemon_inp')
         try:
             statemon_exc = StateMonitor(n_exc, ('Vm', 'Iin'), record=True,
-                                    name=groupname + 'statemon_exc')
+                                    name=groupname + '_statemon_exc')
         except KeyError:
             statemon_exc = StateMonitor(n_exc, ('Imem', 'Iin'), record=True,
-                                    name=groupname + 'statemon_exc')
+                                    name=groupname + '_statemon_exc')
         monitors = {
             'spikemon_exc': spikemon_exc,
             'spikemon_inh': spikemon_inh,

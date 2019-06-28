@@ -102,7 +102,7 @@ class Octa(BuildingBlock):
   #      self._groups['prediction_connection']._set_tags(tags_parameters.basic_tags_prediction_con_octa, 
    #                 self._groups['prediction_connection'])
 
-def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron_eq_builder,
+def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, neuron_eq_builder,
              stacked_inp= True, noise = True, monitor= True, debug = True):
     """
         Generator function for the OCTA building block
@@ -160,7 +160,8 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
    
     #Change the equation builder of the recurrent connections in compression WTA
     replace_connection(compressionWTA, 'n_exc', compressionWTA, 'n_exc',\
-                       's_exc_exc', equation_builder= DPIstdp)
+                       's_exc_exc', equation_builder= DPIstdp, name = 'compressionWTA'+
+                       '_n_exc_exc')
    
     compressionWTA._set_tags(tags_parameters.basic_tags_s_exc_exc, compressionWTA._groups['s_exc_exc'])
     compressionWTA._groups['s_exc_exc'].weight = wtaParams['we_exc_exc']
@@ -274,7 +275,7 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
         inputSynapse = Connections(inputGroup, compressionWTA._groups['spike_gen'],
                                    equation_builder=DPISyn(),
                                    method='euler',
-                                   name='inputSynapse')
+                                   name=groupname + '_inputSynapse')
     
         inputSynapse.connect('i==j')
         inputSynapse.weight = 3250.
@@ -300,7 +301,7 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
         noise_syn_c_exc = Connections(testbench_c.noise_input, 
                                 compressionWTA._groups['n_exc'],
                                 equation_builder=DPISyn(), 
-                                name="noise_syn_c_exc")
+                                name= groupname + '_noise_comp_exc')
         #
         noise_syn_c_exc.connect("i==j")
         noise_syn_c_exc.weight = octaParams['noise_weight']
@@ -308,22 +309,14 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
         noise_syn_p_exc = Connections(testbench_c.noise_input, 
                                 predictionWTA._groups['n_exc'],
                                 equation_builder=DPISyn(), 
-                                name="noise_syn_p_exc")
+                                name=groupname + '_noise_pred_exc')
     
     
     
         noise_syn_p_exc.connect("i==j")
         noise_syn_p_exc.weight = octaParams['noise_weight']
     synGroups =   {     
-#            'comp_s_inp_exc':  compressionWTA._groups['s_inp_exc'],
-#            'comp_s_exc_exc': compressionWTA._groups['s_exc_exc'],
-#            'comp_s_exc_inh': compressionWTA._groups['s_exc_inh'],
-#            'comp_s_inh_exc': compressionWTA._groups['s_inh_exc'],
-#        
-#            'pred_s_inp_exc': predictionWTA._groups['s_inp_exc'],
-#            'pred_s_exc_exc': predictionWTA._groups['s_exc_exc'],
-#            'pred_s_exc_inh': predictionWTA._groups['s_exc_inh'],
-#            'pred_s_inh_exc':  predictionWTA._groups['s_inh_exc'],
+           
             'error_connection': error_connection,
             'prediction_connection' : prediction_connection      
         }
@@ -333,13 +326,8 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
         synGroups.update(input_dict)   
     
     
-    neurGroups ={
-#        'comp_n_exc' : compressionWTA._groups['n_exc'],
-#        'comp_n_inh' : compressionWTA._groups['n_inh'] ,
-#        'comp_n_spike_gen' :  compressionWTA._groups['spike_gen'],
-#        'pred_n_exc' : predictionWTA._groups['n_exc'],
-#        'pred_n_inh' :  predictionWTA._groups['n_inh'],
-        }
+    neurGroups ={     }
+    
     if stacked_inp:
         input_sync= {'inputGroup': inputGroup}   
 
@@ -457,17 +445,10 @@ if __name__ == '__main__':
                 noise= True,
                  monitor=True,
                  debug=True)
-
-    test_OCTA_2 =  Octa(name='test_OCTA_2', 
-                wtaParams = wtaParameters,
-                 octaParams = octaParameters,     
-                 neuron_eq_builder=octa_neuron,
-                 stacked_inp = True,
-                noise= True,
-                 monitor=True,
-                 debug=True)
+=
     Net = teiliNetwork()
-    Net.add(test_OCTA, test_OCTA_2)
+    Net.add(test_OCTA)
+    
    # Net.run(octaParameters['duration'] * ms, report='text')
     
     

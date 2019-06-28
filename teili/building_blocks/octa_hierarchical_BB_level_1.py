@@ -15,7 +15,7 @@ Attributes:
 
 """
 from brian2 import ms
-from brian2 import  SpikeGeneratorGroup
+from brian2 import  SpikeGeneratorGroup, SpikeMonitor
 from brian2 import prefs
 
 import matplotlib.pyplot as plt
@@ -42,6 +42,10 @@ from teili.tools.octa_tools.octa_tools import add_decay_weight, add_weight_re_in
 add_proxy_activity, add_regulatization_weight, add_weight_pred_decay, add_bb_mismatch, add_weight_init
 from teili.tools.octa_tools.lock_and_load import  save_monitor, load_monitor,\
 save_weights, load_weights
+
+from teili.tools.visualizer.DataControllers import Rasterplot
+from teili.tools.visualizer.DataViewers import PlotSettings
+
 
 prefs.codegen.target = "numpy"
 #Initialization parameters are located in octa_param
@@ -103,7 +107,7 @@ class Octa(BuildingBlock):
    #                 self._groups['prediction_connection'])
 
 def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, neuron_eq_builder,
-             stacked_inp= True, noise = True, monitor= True, debug = True):
+             stacked_inp= True, noise = True, monitor= True, debug = False):
     """
         Generator function for the OCTA building block
     """
@@ -220,6 +224,7 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
     
     w_init_group= [compressionWTA._groups['s_exc_exc']]+\
                 [compressionWTA._groups['s_inp_exc']]+\
+                [compressionWTA._groups['s_inh_exc']]+\
                 [predictionWTA._groups['s_inh_exc']]+\
                 [predictionWTA._groups['s_inp_exc']]+\
                 [error_connection]
@@ -341,17 +346,9 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
         neurGroups.update(noise_syn)  
     
     monitors = {}
-    if monitors:
+    if monitor:
         monitors = {
-
-         'comp_spikemon_exc' : compressionWTA.monitors['spikemon_exc'], 
-         'comp_spikemon_inh' :compressionWTA.monitors['spikemon_inh'],
-         'comp_spikemon_inp' :compressionWTA.monitors['spikemon_inp'],                 
-         'comp_statemon_exc' :compressionWTA.monitors['statemon_exc'],
-         
-         'pred_spikemon_exc' : predictionWTA.monitors['spikemon_exc'], 
-         'pred_spikemon_inh' :predictionWTA.monitors['spikemon_inh'],
-         'pred_statemon_exc' :predictionWTA.monitors['statemon_exc'], 
+                'input' : SpikeMonitor( inputGroup, name=groupname + '_inputGroup')
          
          }
     #We are not creating a monitor on the stimulus because should be in spikemon_inp
@@ -384,13 +381,16 @@ def replace_neurons(bb, population, num_inputs, equation_builder, refractory):
 
 
 def replace_connection(bb_source, population_source, bb_target, population_target , \
-                       connection_name, equation_builder, method = 'euler'):   
+                       connection_name, equation_builder, method = 'euler', name  = None):   
     
+    if name == None:
+        name = bb_target._groups[connection_name].name
+        
     bb_target._groups[connection_name] = Connections(bb_source._groups[population_source],\
                                              bb_target._groups[population_target],
                                              equation_builder=equation_builder,
                                               method=method,
-                                            name=bb_target._groups[connection_name].name)
+                                            name=name)
     bb_target._groups[connection_name].connect(True) 
 
     return None    
@@ -433,10 +433,8 @@ def error_prediction_connections(compressionWTA, predictionWTA,wtaParams, octaPa
     
     return error_connection, prediction_connection
     
-
-
-
 if __name__ == '__main__':
+
     test_OCTA =  Octa(name='test_OCTA', 
                 wtaParams = wtaParameters,
                  octaParams = octaParameters,     
@@ -444,11 +442,22 @@ if __name__ == '__main__':
                  stacked_inp = True,
                 noise= True,
                  monitor=True,
-                 debug=True)
-=
+                 debug=False)
+
     Net = teiliNetwork()
     Net.add(test_OCTA)
     
-   # Net.run(octaParameters['duration'] * ms, report='text')
+    Net.run(1000* ms, report='text')
+    
+    #visualize the spike rasterplot of the compressing layer.
+    weights = test_OCTA.sub_blocks['compressionWTA'].groups['s_exc_exc'].w_plast
+    s = SortMatrix(nrows=49, ncols=49, matrix=weights, axis=1)
+    monitor = test_OCTA.sub_blocks['compressionWTA'].monitors['spikemon_exc']
+    mon= np.asarray([np.where(np.asarray(s.permutation) == int(i))[0][0] for i in monitor.i])
+    
+    #plt.plot( monitor.i )
+    Rasterplot(MyEventsModels=mon, MyPlotSettings= PlotSettings(),
+                     backend='matplotlib')
+
     
     

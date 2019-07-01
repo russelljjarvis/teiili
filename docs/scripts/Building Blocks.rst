@@ -77,7 +77,7 @@ Tags are defined as:
 * **sign**: (str : exc/inh/None) Sign on neuronal population. Follows Dale law.
 * **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
 * **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
-* **bb_type**: (str : WTA/ OCTA/ 3-WAY..) Building block type.
+* **bb_type**: (str : WTA/ OCTA/ 3-WAY) Building block type.
 * **group_type**: (str : Neuron/Connection/ SpikeGen) Group type
 * **connection_type**: (str : rec/lateral/fb/ff/None) Connection type
 
@@ -110,13 +110,13 @@ and updated:
 
 Getting Tags
 --------------------
-Specific groups can filtered through specific tags:
+Specific groups can filtered using tags:
 
 .. code-block:: python
 
   test1DWTA.get_groups({'group_type': 'SpikeGenerator'})
 
-All tags of a group can be obtained:
+All tags of a group can be obtained by:
 
 .. code-block:: python
 

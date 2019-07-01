@@ -8,10 +8,15 @@ Created on Wed Jun 26 12:58:50 2019
 
 This module provides a hierarchical building block called OCTA.
             -Online Clustering of Temporal Activity-
+            
+This is a level 1 hierarchical building block, it uses basic building blocks such
+as the WTA.
 
-Attributes:
-    wta_params (dict): Dictionary of default parameters for wta.
-    octa_params (dict): Dictionary of default parameters for wta.
+If you want to change the default parameters of your building block
+    you need to define a dictionary, which you pass to the building_block:
+
+
+
 
 """
 from brian2 import ms
@@ -46,9 +51,9 @@ save_weights, load_weights
 from teili.tools.visualizer.DataControllers import Rasterplot
 from teili.tools.visualizer.DataViewers import PlotSettings
 
+from teili.tools.octa_tools.weight_init import weight_init 
 
 prefs.codegen.target = "numpy"
-#Initialization parameters are located in octa_param
 
 
 class Octa(BuildingBlock):
@@ -114,6 +119,10 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
 
     if debug:
         print("Creating WTA's!")
+        print("Stacked Input: ", stacked_inp)
+        print("noise",noise)
+        print("monitor " ,monitor)
+        
 
     #Timing    
     start = time.time()
@@ -136,17 +145,16 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
                         block_params=wtaParams, 
                         monitor=monitor)
 
-
-
-    sub_blocks = {
-            'compressionWTA' : compressionWTA,
-            'predictionWTA' : predictionWTA,
-            }
     
     
     #Replace spike_gen block with neurons obj instead of a spikegen
     replace_neurons(compressionWTA, 'spike_gen' ,num_input_neurons**2 ,\
                          equation_builder = neuron_eq_builder, refractory = wtaParams['rp_exc'])
+#    
+#    compressionWTA._groups['spike_gen'] = Neurons(num_input_neurons**2 , equation_builder=neuron_eq_builder(num_inputs=4),
+#                                                    refractory = wtaParams['rp_exc'],
+#                                                    name=compressionWTA._groups['spike_gen'].name)
+#    
 
     compressionWTA._set_tags(tags_parameters.basic_tags_n_sg, compressionWTA._groups['spike_gen'])
     compressionWTA._set_tags({'group_type' : 'Neuron'}, compressionWTA._groups['spike_gen'])
@@ -156,12 +164,13 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
     replace_connection(compressionWTA, 'spike_gen', compressionWTA, 'n_exc',\
                        's_inp_exc', equation_builder= DPIstdp_gm)
     
+    
     compressionWTA._set_tags(tags_parameters.basic_tags_s_inp_exc, compressionWTA._groups['s_inp_exc'])
     compressionWTA._groups['s_inp_exc'].weight =wtaParams['we_inp_exc']
     compressionWTA._groups['s_inp_exc'].taupre = octaParams['tau_stdp']
     compressionWTA._groups['s_inp_exc'].taupost = octaParams['tau_stdp']
     
-   
+  
     #Change the equation builder of the recurrent connections in compression WTA
     replace_connection(compressionWTA, 'n_exc', compressionWTA, 'n_exc',\
                        's_exc_exc', equation_builder= DPIstdp, name = 'compressionWTA'+
@@ -169,6 +178,9 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
    
     compressionWTA._set_tags(tags_parameters.basic_tags_s_exc_exc, compressionWTA._groups['s_exc_exc'])
     compressionWTA._groups['s_exc_exc'].weight = wtaParams['we_exc_exc']
+
+   
+
 
     #Changing the eqaution builder equation to include adaptation on the n_exc populatin
   
@@ -180,6 +192,7 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
                                                                  high=octaParams['variance_th_c']+0.1,
                                                                  size=len(compressionWTA._groups['s_inh_exc']))
 
+
     #Changing the eqaution builder equation to include adaptation on the n_exc population
     replace_connection(predictionWTA, 'n_inh', predictionWTA, 'n_exc',\
                        's_inh_exc', equation_builder= DPIadp)
@@ -188,6 +201,7 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
     predictionWTA._groups['s_inh_exc'].variance_th = np.random.uniform(low=octaParams['variance_th_c']-0.1,
                                                                  high=octaParams['variance_th_c']+0.1,
                                                                  size=len(predictionWTA._groups['s_inh_exc']))
+  
 
     #Modify the input of the prediction WTA. Bypassing the spike_gen block
     replace_connection(compressionWTA, 'n_exc', predictionWTA, 'n_exc',\
@@ -200,12 +214,17 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
     predictionWTA._groups['s_inp_exc'].weight = wtaParams['we_inp_exc']
     predictionWTA._groups['s_inp_exc'].taupre = octaParams['tau_stdp']
     predictionWTA._groups['s_inp_exc'].taupost = octaParams['tau_stdp']
+    
+
 
     #Include stdp in recurrent connections in prediction WTA
     replace_connection(predictionWTA, 'n_exc', predictionWTA, 'n_exc',\
                        's_exc_exc', equation_builder= DPIstdp)
     compressionWTA._set_tags(tags_parameters.basic_tags_s_exc_exc, predictionWTA._groups['s_exc_exc'])
     predictionWTA._groups['s_exc_exc'].weight = wtaParams['we_exc_exc']
+    
+
+
 
     #Set error and prediction connections
     error_connection, prediction_connection = error_prediction_connections(compressionWTA,
@@ -217,6 +236,9 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
     compressionWTA._groups['s_inh_exc'].inh_learning_rate = octaParams['inh_learning_rate']
     predictionWTA._groups['s_inh_exc'].inh_learning_rate = octaParams['inh_learning_rate']
 
+
+
+
     #Define all lists for initialiazations and initialiaze function
 #     todo:           [compressionWTA._groups['s_inh_exc']]+\ 
     
@@ -227,6 +249,7 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
                 [compressionWTA._groups['s_inh_exc']]+\
                 [predictionWTA._groups['s_inh_exc']]+\
                 [predictionWTA._groups['s_inp_exc']]+\
+                [predictionWTA._groups['s_exc_exc']] +\
                 [error_connection]
                 
     add_weight_init(w_init_group, dist_param=octaParams['dist_param_init'], 
@@ -293,7 +316,7 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
         
         inputGroup.set_spikes(indices=testbench_stim.indices, times=testbench_stim.times * ms)
     
-
+        print("Indices: ", testbench_stim.indices)
 
     if noise:
         testbench_c = WTA_Testbench()
@@ -334,6 +357,7 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
     neurGroups ={     }
     
     if stacked_inp:
+        print("stacked_inp", stacked_inp)
         input_sync= {'inputGroup': inputGroup}   
 
         neurGroups.update(input_sync)   
@@ -347,7 +371,13 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
     
     monitors = {}
     if monitor:
+        compressionWTA.monitors['spikemon_inp'] = SpikeMonitor(compressionWTA._groups['spike_gen'], 
+                      name='spikemon_inp')
+        
         monitors = {
+                'comp_spikemon_inp' :compressionWTA.monitors['spikemon_inp'],                 
+
+                
                 'input' : SpikeMonitor( inputGroup, name=groupname + '_inputGroup')
          
          }
@@ -360,19 +390,24 @@ def gen_octa(groupname, num_input_neurons, num_neurons, wtaParams, octaParams, n
     
     if debug:
             print('Creating octa ' +  ' took ' + str(end - start) + ' sec!')
-            print('The keys of the output dict are:')
+            print('The keys of the ' + groupname + ' output dict are:')
             for key in group:
                 print(key)
                 
     standalone_params = {}
     
     
+    sub_blocks = {
+            'compressionWTA' : compressionWTA,
+            'predictionWTA' : predictionWTA,
+            }
+    
     return sub_blocks, group, monitors, standalone_params
 
 
 def replace_neurons(bb, population, num_inputs, equation_builder, refractory):  
     
-    bb._groups[population] = Neurons(num_inputs, equation_builder=equation_builder(num_inputs=3),
+    bb._groups[population] = Neurons(num_inputs, equation_builder=equation_builder(num_inputs=4),
                                                     refractory=refractory,
                                                     name=bb._groups[population].name)
     
@@ -395,7 +430,6 @@ def replace_connection(bb_source, population_source, bb_target, population_targe
 
     return None    
     
-
 
 
 def error_prediction_connections(compressionWTA, predictionWTA,wtaParams, octaParams):
@@ -432,31 +466,62 @@ def error_prediction_connections(compressionWTA, predictionWTA,wtaParams, octaPa
     prediction_connection.dApre = octaParams['learning_rate']
     
     return error_connection, prediction_connection
-    
-if __name__ == '__main__':
 
+
+def set_OCTA_tags(self,_groups):
+    '''
+    Sets default tags to a OCTA network
+
+    Args:
+        _groups (dictionary): Keys to all neuron and synapse groups. 
+
+    Returns:
+        _groups (dictionary): Keys to all neuron and synapse groups with tags appended.
+
+         }
+'''    
+    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['error_connection'])
+    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['prediction_connection'])
+    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['inputSynapse'])
+    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['inputGroup'])
+    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['pred_noise_syn_exc'])
+    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['comp_noise_syn_exc'])
+    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['pred_noise_gen'])
+    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['comp_noise_gen'])
+
+
+
+
+if __name__ == '__main__':
+    Net = teiliNetwork()
+
+    
     test_OCTA =  Octa(name='test_OCTA', 
                 wtaParams = wtaParameters,
                  octaParams = octaParameters,     
                  neuron_eq_builder=octa_neuron,
                  stacked_inp = True,
-                noise= True,
+                 noise= True,
                  monitor=True,
-                 debug=False)
+                 debug=True)
 
-    Net = teiliNetwork()
-    Net.add(test_OCTA)
+    Net.add(      
+            test_OCTA,
+            test_OCTA.sub_blocks['predictionWTA'],
+            test_OCTA.sub_blocks['compressionWTA']
+          )
     
-    Net.run(1000* ms, report='text')
+    Net.run(100*ms, report='text')
+    
+    print("Spikes: ",   test_OCTA.monitors['comp_spikemon_inp'].i)
     
     #visualize the spike rasterplot of the compressing layer.
     weights = test_OCTA.sub_blocks['compressionWTA'].groups['s_exc_exc'].w_plast
     s = SortMatrix(nrows=49, ncols=49, matrix=weights, axis=1)
     monitor = test_OCTA.sub_blocks['compressionWTA'].monitors['spikemon_exc']
     mon= np.asarray([np.where(np.asarray(s.permutation) == int(i))[0][0] for i in monitor.i])
-    
-    #plt.plot( monitor.i )
-    Rasterplot(MyEventsModels=mon, MyPlotSettings= PlotSettings(),
+    plt.plot( mon, '.k' )
+    Rasterplot(MyEventsModels=[mon], MyPlotSettings= PlotSettings(),
                      backend='matplotlib')
 
     

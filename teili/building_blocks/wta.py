@@ -547,7 +547,7 @@ def gen2dWTA(groupname,
     if debug:
         print('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
-        print('The keys of the output dict are:')
+        print('The keys of the ' +groupname+' output dict are:')
         for key in _groups:
             print(key)
             
@@ -579,14 +579,14 @@ def set_WTA_tags(self,_groups):
          }
 '''
 
-    self._set_tags(tags_parameters.basic_tags_n_exc, _groups['n_exc'])
-    self._set_tags(tags_parameters.basic_tags_n_inh, _groups['n_inh'])   
-    self._set_tags(tags_parameters.basic_tags_n_sg, _groups['spike_gen'])   
-    self._set_tags(tags_parameters.basic_tags_s_exc_exc, _groups['s_exc_exc']) 
-    self._set_tags(tags_parameters.basic_tags_s_exc_inh, _groups['s_exc_inh'])
-    self._set_tags(tags_parameters.basic_tags_s_inh_exc, _groups['s_inh_exc'])
-    self._set_tags(tags_parameters.basic_tags_s_inh_inh, _groups['s_inh_inh'])    
-    self._set_tags(tags_parameters.basic_tags_s_inp_exc, _groups['s_inp_exc'])    
+    self._set_tags(tags_parameters.basic_wta_n_exc, _groups['n_exc'])
+    self._set_tags(tags_parameters.basic_wta_n_inh, _groups['n_inh'])   
+    self._set_tags(tags_parameters.basic_wta_n_sg, _groups['spike_gen'])   
+    self._set_tags(tags_parameters.basic_wta_s_exc_exc, _groups['s_exc_exc']) 
+    self._set_tags(tags_parameters.basic_wta_s_exc_inh, _groups['s_exc_inh'])
+    self._set_tags(tags_parameters.basic_wta_s_inh_exc, _groups['s_inh_exc'])
+    self._set_tags(tags_parameters.basic_wta_s_inh_inh, _groups['s_inh_inh'])    
+    self._set_tags(tags_parameters.basic_wta_s_inp_exc, _groups['s_inp_exc'])    
 
 
 

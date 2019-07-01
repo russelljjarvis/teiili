@@ -338,7 +338,6 @@ activity_proxy_group= [compressionWTA._groups['n_exc']] + [predictionWTA._groups
 add_proxy_activity(activity_proxy_group,  buffer_size=octa_param.octaParams['buffer_size_plast'],
                    decay=octa_param.octaParams['decay'])
 
-
 #%%
 # LOADING INPUT AND ADDING NOISE 
 testbench_stim.rotating_bar(length=10, nrows=10, 
@@ -465,13 +464,3 @@ octa_param.octaParams['duration'] = np.max(testbench_stim.times)
 Net.run(octa_param.octaParams['duration'] * ms, report='text')
 
 #%%
-compressionWTA._groups['s_exc_exc'].w_plast.shape
-octa_tools.save_weights(compressionWTA._groups['s_exc_exc'].w_plast, filename='rec_c_weights_last', 
-                path='/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa')
-octa_tools.save_monitor(compressionWTA.monitors['spikemon_exc'], filename='spikemon_compressionWTA', path = '/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa/')
-s = SortMatrix(nrows=49, ncols=49, filename='/home/matteo/Documents/Repositories/teili_devBB/teili/teili/octa26_06_2019/26_06_12_54_rec_c_weights_last.npy', axis=1)
-mon = load_monitor(filename='teili/octa/26_06_2019/26_06_12_54_spikemon_compressionWTA.npy')
-
-mon.i = np.asarray([np.where(np.asarray(s.permutation) == int(i))[0][0] for i in mon.i])
-plt.plot(mon.i, '.k')
-

@@ -11,7 +11,7 @@ Tags for the WTA
 
 '''
 
-basic_tags_n_exc =  {'mismatch' : 0,
+basic_wta_n_exc =  {'mismatch' : 0,
               'level': 1 ,     
               'sign': 'exc',
               'target sign': 'None',
@@ -22,7 +22,7 @@ basic_tags_n_exc =  {'mismatch' : 0,
               }
  
   
-basic_tags_n_inh =   { 'mismatch' : 0,
+basic_wta_n_inh =   { 'mismatch' : 0,
              'level': 1 ,     
               'sign': 'inh',
               'target sign': 'None',
@@ -32,7 +32,7 @@ basic_tags_n_inh =   { 'mismatch' : 0,
               'connection_type' : 'None',
     }
  
-basic_tags_n_sg =   { 'mismatch' : 0,
+basic_wta_n_sg =   { 'mismatch' : 0,
              'level': 1 ,     
               'sign': 'None',
               'target sign': 'None',
@@ -43,7 +43,7 @@ basic_tags_n_sg =   { 'mismatch' : 0,
     }
 
  
-basic_tags_s_exc_exc =   { 'mismatch' : 0,
+basic_wta_s_exc_exc =   { 'mismatch' : 0,
              'level': 1 ,     
               'sign': 'exc',
               'target sign': 'exc',
@@ -54,7 +54,7 @@ basic_tags_s_exc_exc =   { 'mismatch' : 0,
     }    
 
 
-basic_tags_s_exc_inh =   { 'mismatch' : 0,
+basic_wta_s_exc_inh =   { 'mismatch' : 0,
              'level': 1 ,     
               'sign': 'exc',
               'target sign': 'inh',
@@ -66,7 +66,7 @@ basic_tags_s_exc_inh =   { 'mismatch' : 0,
 
 
 
-basic_tags_s_inh_exc =   { 'mismatch' : 0,
+basic_wta_s_inh_exc =   { 'mismatch' : 0,
              'level': 1 ,     
               'sign': 'inh',
               'target sign': 'exc',
@@ -77,7 +77,7 @@ basic_tags_s_inh_exc =   { 'mismatch' : 0,
     }    
 
 
-basic_tags_s_inh_inh =   { 'mismatch' : 0,
+basic_wta_s_inh_inh =   { 'mismatch' : 0,
              'level': 1 ,     
               'sign': 'inh',
               'target sign': 'inh',
@@ -88,7 +88,7 @@ basic_tags_s_inh_inh =   { 'mismatch' : 0,
     }    
 
 
-basic_tags_s_inp_exc =   { 'mismatch' : 0,
+basic_wta_s_inp_exc =   { 'mismatch' : 0,
              'level': 1 ,     
               'sign': 'None',
               'target sign': 'exc',

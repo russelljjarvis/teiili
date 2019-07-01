@@ -144,7 +144,7 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
     replace_neurons(compressionWTA, 'spike_gen' ,num_input_neurons**2 ,\
                          equation_builder = neuron_eq_builder, refractory = wtaParams['rp_exc'])
 
-    compressionWTA._set_tags(tags_parameters.basic_tags_n_sg, compressionWTA._groups['spike_gen'])
+    compressionWTA._set_tags(tags_parameters.basic_wta_n_sg, compressionWTA._groups['spike_gen'])
     compressionWTA._set_tags({'group_type' : 'Neuron'}, compressionWTA._groups['spike_gen'])
     
     #Since the spikegen block has been changedd, the connections leading in/out of the group 
@@ -152,7 +152,7 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
     replace_connection(compressionWTA, 'spike_gen', compressionWTA, 'n_exc',\
                        's_inp_exc', equation_builder= DPIstdp_gm)
     
-    compressionWTA._set_tags(tags_parameters.basic_tags_s_inp_exc, compressionWTA._groups['s_inp_exc'])
+    compressionWTA._set_tags(tags_parameters.basic_wta_s_inp_exc, compressionWTA._groups['s_inp_exc'])
     compressionWTA._groups['s_inp_exc'].weight =wtaParams['we_inp_exc']
     compressionWTA._groups['s_inp_exc'].taupre = octaParams['tau_stdp']
     compressionWTA._groups['s_inp_exc'].taupost = octaParams['tau_stdp']
@@ -162,14 +162,14 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
     replace_connection(compressionWTA, 'n_exc', compressionWTA, 'n_exc',\
                        's_exc_exc', equation_builder= DPIstdp)
    
-    compressionWTA._set_tags(tags_parameters.basic_tags_s_exc_exc, compressionWTA._groups['s_exc_exc'])
+    compressionWTA._set_tags(tags_parameters.basic_wta_s_exc_exc, compressionWTA._groups['s_exc_exc'])
     compressionWTA._groups['s_exc_exc'].weight = wtaParams['we_exc_exc']
 
     #Changing the eqaution builder equation to include adaptation on the n_exc populatin
   
     replace_connection(compressionWTA, 'n_inh', compressionWTA, 'n_exc',\
                        's_inh_exc', equation_builder= DPIadp)
-    compressionWTA._set_tags(tags_parameters.basic_tags_s_inh_exc, compressionWTA._groups['s_inh_exc'])
+    compressionWTA._set_tags(tags_parameters.basic_wta_s_inh_exc, compressionWTA._groups['s_inh_exc'])
     compressionWTA._groups['s_inh_exc'].weight = wtaParams['wi_inh_exc']
     compressionWTA._groups['s_inh_exc'].variance_th = np.random.uniform(low=octaParams['variance_th_c']-0.1,
                                                                  high=octaParams['variance_th_c']+0.1,
@@ -178,7 +178,7 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
     #Changing the eqaution builder equation to include adaptation on the n_exc population
     replace_connection(predictionWTA, 'n_inh', predictionWTA, 'n_exc',\
                        's_inh_exc', equation_builder= DPIadp)
-    predictionWTA._set_tags(tags_parameters.basic_tags_s_inh_exc, predictionWTA._groups['s_inh_exc'])
+    predictionWTA._set_tags(tags_parameters.basic_wta_s_inh_exc, predictionWTA._groups['s_inh_exc'])
     predictionWTA._groups['s_inh_exc'].weight = wtaParams['wi_inh_exc']
     predictionWTA._groups['s_inh_exc'].variance_th = np.random.uniform(low=octaParams['variance_th_c']-0.1,
                                                                  high=octaParams['variance_th_c']+0.1,
@@ -188,7 +188,7 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
     replace_connection(compressionWTA, 'n_exc', predictionWTA, 'n_exc',\
                        's_inp_exc', equation_builder= DPIstdp)
 
-    predictionWTA._set_tags(tags_parameters.basic_tags_s_inp_exc, predictionWTA._groups['s_inp_exc'])
+    predictionWTA._set_tags(tags_parameters.basic_wta_s_inp_exc, predictionWTA._groups['s_inp_exc'])
     predictionWTA._groups['s_inp_exc']._tags['sign'] = 'exc'
     predictionWTA._groups['s_inp_exc']._tags['bb_type'] = 'octa'
     predictionWTA._groups['s_inp_exc']._tags['connection_type'] = 'ff'
@@ -199,7 +199,7 @@ def gen_octa(name, num_input_neurons, num_neurons, wtaParams, octaParams, neuron
     #Include stdp in recurrent connections in prediction WTA
     replace_connection(predictionWTA, 'n_exc', predictionWTA, 'n_exc',\
                        's_exc_exc', equation_builder= DPIstdp)
-    compressionWTA._set_tags(tags_parameters.basic_tags_s_exc_exc, predictionWTA._groups['s_exc_exc'])
+    compressionWTA._set_tags(tags_parameters.basic_wta_s_exc_exc, predictionWTA._groups['s_exc_exc'])
     predictionWTA._groups['s_exc_exc'].weight = wtaParams['we_exc_exc']
 
     #Set error and prediction connections

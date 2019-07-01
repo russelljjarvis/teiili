@@ -53,7 +53,7 @@ To assure this every ``BuildingBlock`` initialises the ``BuildingBlock`` class:
 Furthermore, as described above as soon the parent class is initialised each
 building block has a set of dictionaries which handle to I/O and different ``Neuron`` and ``Connection`` groups.
 
-The ``BuildingBlock`` class comes with a set of ``__setter__`` and ``__getter__`` functions for collecting all ``groups`` involved or identifying a subset of groups which share the same `_tags`_ 
+The ``BuildingBlock`` class comes with a set of ``__setter__`` and ``__getter__`` functions for collecting all ``groups`` involved or identifying a subset of groups which share the same `_tags`_
 
 To retrieve all ``Neuron``, ``Connection``, ``SpikeGeneratorGroup`` etc. simply call the ``groups`` property
 
@@ -62,19 +62,65 @@ To retrieve all ``Neuron``, ``Connection``, ``SpikeGeneratorGroup`` etc. simply 
      test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, debug=False)
      bb_groups = test1DWTA.groups
 
+Tags
+======================
+
 Each ``TeiliGroup`` has an attribute called ``_tags``. The idea behind the ``_tags`` are that the user can easily define a dictionary and use this dictionary to gather all ``TeiliGroups`` which share the same ``_tags``.
+
+Tags should be set as the network expands and the functionality changes.
+
+Tags are defined as:
+
+* **mismatch**: (bool) Mismatch present of group
+* **noise**: (bool) Noise input, noise connection or noise presence
+* **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1. OCTA groups are level 2.
+* **sign**: (str : exc/inh/None) Sign on neuronal population. Follows Dale law.
+* **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
+* **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
+* **bb_type**: (str : WTA/ OCTA/ 3-WAY..) Building block type.
+* **group_type**: (str : Neuron/Connection/ SpikeGen) Group type
+* **connection_type**: (str : rec/lateral/fb/ff/None) Connection type
+
+Setting Tags
+--------------
+Tags can be set:
 
 .. code-block:: python
 
-      test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, debug=False)
-      target_group = test1DWTA._groups['n_exc']
-      tags = {'level': '1',
-              'type': 'wta',
-              'sign': 'exc',
-              'conn_type': None}
-      test1DWTA._set_tags(tags, target_group)
-      # And use the tags to get all ``groups`` sharing the same tags
-      test1DWTA.get_groups(tags)
+  test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, debug=False)
+  target_group = test1DWTA._groups['n_exc']
+  basic_tags_empty =   { 'mismatch' : 0,
+                'noise' : 0,
+                 'level': 0 ,
+                  'sign': 'None',
+                  'target sign': 'None',
+                  'num_inputs' : 0,
+                  'bb_type' : 'None',
+                  'group_type' : 'None',
+                  'connection_type' : 'None',
+        }
+
+  test1DWTA._set_tags(basic_tags_empty, target_group)
+
+and updated:
+
+.. code-block:: python
+
+  test1DWTA._tags['mismatch'] = 1
+
+Getting Tags
+--------------------
+Specific groups can filtered through specific tags:
+
+.. code-block:: python
+
+  test1DWTA.get_groups({'group_type': 'SpikeGenerator'})
+
+All tags of a group can be obtained:
+
+.. code-block:: python
+
+  test1DWTA.print_tags('n_exc')
 
 
 Winner-takes-all (WTA)
@@ -195,9 +241,85 @@ Threeway network
 
 Online Clustering of Temporal Activity (OCTA)
 =============================================
-For details of this building block have a look at OCTA_
+
+Online Clustering of Temporal Activity (OCTA) is a second generation building block:
+it uses multiple WTA networks recurrently connected to create a cortex
+inspired microcircuit that, leveraging the spike timing
+information, enables investigations of emergent network dynamics [1]_.
+
+.. image:: fig/OCTA_module.png
+
+The basic OCTA module consists of a clustering (Layer2/3) and a prediction (L6) sub-module.
+Given that all connections are subject to learning, the objective of one OCTA module is
+to continuously adjust its parameters, e.g. synaptic weights and time constants, based
+on local information to best capture the spatio-temporal statistics of its input.
+
+Parameters for the network are stored in two dictionaries located in tools/octa_tools/octa_params.py
+
+The WTA keys are explained above, the OCTA keys are defined as:
+
+* **duration**: Duration of the simulation
+* **revolutions**: Number of times input is presented
+* **num_neurons**: Number of neurons in the compressionWTA. Keep in mind it is a 2D WTA.
+* **num_input_neurons**: Number of neurons in the prediction WTA and in the starting data.
+* **distribution**: (0 or 1) Distribution from which to initialize the weights. Gamma(1) or Normal(0).
+* **dist_param_init**: Shape for Gamma distribution/ mean of normal distribution
+* **scale_init**: Scale for Gamma distribution / std of normal distribution
+* **dist_param_re_init**: Shape/mean for weight reinitialiazation in run_regular function
+* **scale_re_init**: Scale/std for weight reinitialiazation in run_regular function
+* **re_init_threshold**: (0 - 0.5) If the mean weight of a synapse is below or above (1- re_init_threshold) the weight is reinitialized
+* **buffer_size**: Size of the buffer for the weight dependent regularization
+* **buffer_size_plast**: Size of the buffer of the activity dependent regularization
+* **noise_weight**: Synaptic wight the noise is connected with
+* **variance_th_c**: Variance threshold for the compression group. Parameter included in the ``activity`` synapse template.
+* **variance_th_p**: Variance threshold for the prediction group.
+* **learning_rate**: Learning rate
+* **inh_learning_rate**: Inhibitory learning rate
+* **decay**:  Decay parameter of the decay in the activity dependent run_regular
+* **weight_decay**: Type of weight decay (temporal/ event-based)
+* **tau_stdp**: STDP parameter tau parameter
+
+
+Initialization of the building block goes as follows
+
+.. code-block:: python
+
+    from brian2 import ms
+    from teili import TeiliNetwork
+    from teili.building_blocks.octa import Octa
+    from teili.tools.octa_tools.octa_param import wtaParameters, octaParameters,\
+     octa_neuron
+
+
+     OCTA =  Octa(name='OCTA',
+                 wtaParams = wtaParameters,
+                  octaParams = octaParameters,
+                  neuron_eq_builder=octa_neuron,
+                  num_input_neurons= octaParameters['num_input_neurons'],
+                  num_neurons = octaParameters['num_neurons'],
+                  stacked_inp = True,
+                  noise= True,
+                  monitor=True,
+                  debug=False)
+
+
+    Net = TeiliNetwork()
+    Net.add(
+                OCTA_net,
+                OCTA_net.sub_blocks['predictionWTA'],
+                OCTA_net.sub_blocks['compressionWTA']
+              )
+    Net.run(octaParameters['duration']*ms, report='text')
+
+* **stacked_inp**: Include an input to the network
+* **noise**: Include 10 Hz Poisson noise generator on ``n_exc`` of compressionWTA and predictionWTA
+* **monitor**: Return monitors of the network
+* **debug**: Verbose debug
+
+
 
 .. note:: To be extended by Moritz Milde
 
 .. _OCTA: https://code.ini.uzh.ch/mmilde/OCTA/blob/dev/README.md
 
+..[1] Moritz Milde PhD thesis

@@ -23,13 +23,14 @@ def add_bb_mismatch(bb):
     Returns:
         None
     '''
-    for i in bb._groups:
-        if bb._groups[i]._tags['group_type'] == 'Neuron':
-            bb._groups[i].add_mismatch(octa_param.mismatch_neuron_param, seed=42)
-            bb._groups[i]._tags['mismatch'] = 1
-        elif bb._groups[i]._tags['group_type'] == 'Connection':
-            bb._groups[i].add_mismatch(octa_param.mismatch_synap_param, seed= 42)
-            bb._groups[i]._tags['mismatch'] = 1
+                 
+    for i in bb.groups:
+        if bb.groups[i]._tags['group_type'] == 'Neuron':
+            bb.groups[i].add_mismatch(octa_param.mismatch_neuron_param, seed=42)
+            bb.groups[i]._tags['mismatch'] = 1
+        elif bb.groups[i]._tags['group_type'] == 'Connection':
+            bb.groups[i].add_mismatch(octa_param.mismatch_synap_param, seed= 42)
+            bb.groups[i]._tags['mismatch'] = 1
         else:
             pass
     return None

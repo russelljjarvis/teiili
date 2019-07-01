@@ -326,19 +326,19 @@ variance_modulation = {
         '''
         }
 
-SynSTDGM = {
-    'model':'''
-        dApre/dt = -Apre / taupre : 1 (event-driven)
-        dApost/dt = -Apost / taupost : 1 (event-driven)
-        gain_max: 1 (shared, constant)
-        taupre : second (shared, constant)
-        taupost : second (shared, constant)
-        dApre : 1 (shared, constant)
-        dApost : 1 (shared, constant)
-        Ipred_plast : 1
-        Q_diffAPrePost : 1 (shared, constant)
-        scaling_factor : 1 (shared, constant)
-        ''',
+SynSTDGM = {'model':
+            '''
+    dApre/dt = -Apre / taupre : 1 (event-driven)
+    dApost/dt = -Apost / taupost : 1 (event-driven)
+    gain_max: 1 (shared, constant)
+    taupre : second (shared, constant)
+    taupost : second (shared, constant)
+    dApre : 1 (shared, constant)
+    dApost : 1 (shared, constant)
+    Ipred_plast : 1
+    Q_diffAPrePost : 1 (shared, constant)
+    scaling_factor : 1 (shared, constant)
+    ''',
     'on_pre':
         '''
         Apre += dApre*gain_max
@@ -362,8 +362,13 @@ SynSTDGM_params = {
         'scaling_factor': '0.1'
         }
 
-activity = {
-    'model' : '''
+'''
+activity incorporates synaptic equations to be used with the DPI mode, the
+"var" neuronal template and add_activity_proxy in the run_regular function
+ that is stored in the corresponding /tools/ folder.
+'''
+
+activity = {'model' : '''
         inh_learning_rate: 1 (constant, shared)
         variance_th: 1 (constant)
         delta_w : 1

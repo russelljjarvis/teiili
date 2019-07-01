@@ -178,6 +178,9 @@ class TeiliGroup(Group):
         to a dictionary of parameters specified in the input dictionary (std_dict).
         Mismatch is drawn from a Gaussian distribution with mean equal to
         the parameter's current value.
+        
+        If no dictionary is given, 20% mismatch is added to all the parameters of
+        the model.
 
         Note:
             if you want to specify also lower and upper bound of the mismatch distribution

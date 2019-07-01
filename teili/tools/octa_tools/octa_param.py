@@ -8,15 +8,19 @@ Created on Fri Jun 21 10:11:05 2019
 This file contains default parameter for OCTA hierarchical BB. 
 For more information look into Moritz Milde PhD dissertation 2019
 
-
-Attributes:
-    octa_paramters (dict): Network parameters
-    wta_parameters (dict): WTA parameters 
 """
 
 from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+
+'''
+
+    octaParameters (dict): Network parameters for the 
+    wtaParameters (dict): WTA parameters 
+
+'''
+
 
 wtaParameters = {'we_inp_exc': 100,
              'we_exc_inh': 300, # 55/50
@@ -30,22 +34,7 @@ wtaParameters = {'we_inp_exc': 100,
              'ie_connection_probability': 0.66,
              'ii_connection_probability': 0.1
              }
-'''
 
-
-wtaParams = {'weInpWTA': 100,
-             'weWTAInh': 300, # 55/50
-             'wiInhWTA': -200, # -300
-             'weWTAWTA': 10.0,  # 45
-             'sigm': 2,
-             'rpWTA': 1 * ms,
-             'rpInh': 1 * ms,
-             'wiInhInh': -100,
-             'EI_connection_probability': 0.5,
-             'IE_connection_probability': 0.66,
-             'II_connection_probability': 0.1
-             }
-'''
 
 octaParameters = {'duration': 10000,
               'revolutions': 200,
@@ -69,58 +58,12 @@ octaParameters = {'duration': 10000,
               'tau_stdp': 10 * ms
              }
 
-
-wtaParams = {'we_inp_exc': 100,
-             'we_exc_inh': 300, # 55/50
-             'wi_inh_exc': -200, # -300
-             'we_exc_exc': 10.0,  # 45
-             'sigm': 2,
-             'rp_exc': 1 * ms,
-             'rp_inh': 1 * ms,
-             'wiInhInh': -100,
-             'ei_connection_probability': 0.5,
-             'ie_connection_probability': 0.66,
-             'ii_connection_probability': 0.1
-             }
 '''
+Custom equations for the OCTA network.
 
-
-wtaParams = {'weInpWTA': 100,
-             'weWTAInh': 300, # 55/50
-             'wiInhWTA': -200, # -300
-             'weWTAWTA': 10.0,  # 45
-             'sigm': 2,
-             'rpWTA': 1 * ms,
-             'rpInh': 1 * ms,
-             'wiInhInh': -100,
-             'EI_connection_probability': 0.5,
-             'IE_connection_probability': 0.66,
-             'II_connection_probability': 0.1
-             }
+octa_neuron : neuron_equation that comprises of all the components needed for octa.
+    in some synaptic connections not all features are used
 '''
-
-octaParams = {'duration': 10000,
-              'revolutions': 800,
-              'num_neurons': 7,
-              'num_input_neurons': 10,
-              'distribution': 'gamma',
-              'dist_param_init': 0.5, # shape for gamma < 0.5
-              'scale_init': 1.0,  # sigma for gamma 1.0
-              'dist_param_re_init': 0.4,
-              'scale_re_init': 0.9,
-              're_init_threshold': 0.2,
-              'buffer_size': 5,
-              'buffer_size_plast': 200,
-              'noise_weight': 30.0,
-              'variance_th_c': 0.5,
-              'variance_th_p': 0.4,
-              'learning_rate': 0.007,
-              'inh_learning_rate': 0.01,
-              'decay': 150,
-              'weight_decay': 'global',
-              'tau_stdp': 10 * ms
-             }
-
 octa_neuron = NeuronEquationBuilder(base_unit='current',num_inputs= 2, feedback = 'calcium_feedback', 
                                      integration = 'exponential', location = 'spatial',
                                     gm = 'gm', var = 'var' )
@@ -128,13 +71,13 @@ octa_neuron = NeuronEquationBuilder(base_unit='current',num_inputs= 2, feedback 
 SynSTDGM = SynapseEquationBuilder(base_unit='None', 
                                       SynSTDGM = 'SynSTDGM')
 
-
 DPIadp = SynapseEquationBuilder(base_unit='DPI', modulation = 'activity')
 
-DPIstdp_gm = SynapseEquationBuilder(base_unit='DPI',plasticity='stdp')
 
-DPISyn =  SynapseEquationBuilder( base_unit='DPI', plasticity='non_plastic')
+'''
+Dictionaries for mismatch
 
+'''
 
 mismatch_neuron_param = {
     'Inoise': 0,

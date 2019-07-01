@@ -57,6 +57,7 @@ Thus, if you are simulating neuron and synapse models of neuromorphic chips, e.g
 To this end, the class method ``add_mismatch()`` allows you to add a Gaussian distributed mismatch with mean equal to the current parameter value and standard deviation set as a fraction of the current parameter value.
 
 As an example, once ``Neurons`` and ``Connections`` are created, device mismatch can be added to some selected parameters (e.g. Itau and refP for the DPI neuron) by specifying a dictionary with parameter names as keys and standard deviation as values, as shown in the example below.
+If no dictionary is passed to ``add_mismatch()`` 20% mismatch will be added to all variables.
 
 .. code-block:: python
 

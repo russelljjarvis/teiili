@@ -4,14 +4,15 @@
 Created on Tue Jun 25 19:13:06 2019
 
 @author: matteo
+
+Collection of dictionaries to initialize tags in a group specific manner.
+
+Naming convention as follows: basic_[buildingblock]_[group_name]
+
 """
 
-'''
-Tags for the WTA
-
-'''
-
 basic_wta_n_exc =  {'mismatch' : 0,
+                    'noise' : 0,
               'level': 1 ,     
               'sign': 'exc',
               'target sign': 'None',
@@ -23,6 +24,7 @@ basic_wta_n_exc =  {'mismatch' : 0,
  
   
 basic_wta_n_inh =   { 'mismatch' : 0,
+                     'noise' : 0,
              'level': 1 ,     
               'sign': 'inh',
               'target sign': 'None',
@@ -33,17 +35,19 @@ basic_wta_n_inh =   { 'mismatch' : 0,
     }
  
 basic_wta_n_sg =   { 'mismatch' : 0,
+                    'noise' : 0,
              'level': 1 ,     
               'sign': 'None',
               'target sign': 'None',
               'num_inputs' : 0,
               'bb_type' : 'WTA',
-              'group_type' : 'SPikeGenerator',
+              'group_type' : 'SpikeGenerator',
               'connection_type' : 'None',
     }
 
  
 basic_wta_s_exc_exc =   { 'mismatch' : 0,
+                         'noise' : 0,
              'level': 1 ,     
               'sign': 'exc',
               'target sign': 'exc',
@@ -55,6 +59,7 @@ basic_wta_s_exc_exc =   { 'mismatch' : 0,
 
 
 basic_wta_s_exc_inh =   { 'mismatch' : 0,
+                         'noise' : 0,
              'level': 1 ,     
               'sign': 'exc',
               'target sign': 'inh',
@@ -67,6 +72,7 @@ basic_wta_s_exc_inh =   { 'mismatch' : 0,
 
 
 basic_wta_s_inh_exc =   { 'mismatch' : 0,
+                         'noise' : 0,
              'level': 1 ,     
               'sign': 'inh',
               'target sign': 'exc',
@@ -78,6 +84,7 @@ basic_wta_s_inh_exc =   { 'mismatch' : 0,
 
 
 basic_wta_s_inh_inh =   { 'mismatch' : 0,
+                         'noise' : 0,
              'level': 1 ,     
               'sign': 'inh',
               'target sign': 'inh',
@@ -89,6 +96,7 @@ basic_wta_s_inh_inh =   { 'mismatch' : 0,
 
 
 basic_wta_s_inp_exc =   { 'mismatch' : 0,
+                         'noise' : 0,
              'level': 1 ,     
               'sign': 'None',
               'target sign': 'exc',
@@ -98,8 +106,20 @@ basic_wta_s_inp_exc =   { 'mismatch' : 0,
               'connection_type' : 'rec',
     }    
 
-basic_tags_compression_con_octa = {
-         'mismatch' : 0,
+basic_octa_error_connection=   { 'mismatch' : 1,
+                                'noise' : 0,
+             'level': 2 ,     
+              'sign': 'exc',
+              'target sign': 'exc',
+              'num_inputs' : 0,
+              'bb_type' : 'OCTA',
+              'group_type' : 'Connection',
+              'connection_type' : 'ff',
+    }    
+
+
+basic_octa_prediction_connection=   { 'mismatch' : 0,
+                                     'noise' : 0,
              'level': 2 ,     
               'sign': 'exc',
               'target sign': 'exc',
@@ -109,21 +129,74 @@ basic_tags_compression_con_octa = {
               'connection_type' : 'fb',
     }    
 
-
-    
-basic_tags_prediction_con_octa = {
-         'mismatch' : 0,
+basic_octa_inputSyn=   { 'mismatch' : 0,
+                        'noise' : 0,
              'level': 2 ,     
               'sign': 'exc',
               'target sign': 'exc',
               'num_inputs' : 0,
               'bb_type' : 'OCTA',
               'group_type' : 'Connection',
-              'connection_type' : 'fb',
+              'connection_type' : 'ff',
     }    
 
+basic_octa_inpGroup=   { 'mismatch' : 0,
+                        'noise' : 0,
+             'level': 2 ,     
+              'sign': 'exc',
+              'target sign': 'None',
+              'num_inputs' : 0,
+              'bb_type' : 'OCTA',
+              'group_type' : 'SpikeGenerator',
+              'connection_type' : 'None',
+    }    
+
+basic_octa_pred_noise_syn_exc=   { 'mismatch' : 0,
+                                  'noise' : 1,
+             'level': 2 ,     
+              'sign': 'exc',
+              'target sign': 'exc',
+              'num_inputs' : 0,
+              'bb_type' : 'OCTA',
+              'group_type' : 'Connection',
+              'connection_type' : 'rec',
+    }    
+
+basic_octa_comp_noise_syn_exc=   { 'mismatch' : 0,
+                                  'noise' : 1,
+             'level': 2 ,     
+              'sign': 'exc',
+              'target sign': 'exc',
+              'num_inputs' : 0,
+              'bb_type' : 'OCTA',
+              'group_type' : 'Connection',
+              'connection_type' : 'rec',
+    }    
+basic_octa_pred_noise_gen=   { 'mismatch' : 0,
+                              'noise' : 1,
+             'level': 2 ,     
+              'sign': 'exc',
+              'target sign': 'None',
+              'num_inputs' : 0,
+              'bb_type' : 'OCTA',
+              'group_type' : 'SpikeGenerator',
+              'connection_type' : 'None',
+    }    
+
+
+basic_octa_comp_noise_gen=   { 'mismatch' : 0,
+                              'noise' : 1,
+             'level': 2 ,     
+              'sign': 'exc',
+              'target sign': 'None',
+              'num_inputs' : 0,
+              'bb_type' : 'OCTA',
+              'group_type' : 'SpikeGenerator',
+              'connection_type' : 'None',
+    }    
 
 basic_tags_empty =   { 'mismatch' : 0,
+                      'noise' : 0,
              'level': 0 ,     
               'sign': 'None',
               'target sign': 'None',

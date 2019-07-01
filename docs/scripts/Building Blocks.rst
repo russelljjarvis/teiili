@@ -51,8 +51,8 @@ To retrieve all ``Neuron``, ``Connection``, ``SpikeGeneratorGroup`` etc. simply 
 
 .. code-block:: python
 
-     test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, debug=False)
-     bb_groups = test1DWTA.groups
+     test_wta= WTA(name='test_wta', dimensions=1, num_neurons=16, debug=False)
+     bb_groups = test_wta.groups
 
 Tags
 ======================
@@ -65,8 +65,8 @@ Tags are defined as:
 
 * **mismatch**: (bool) Flag to indicate if mismatch is present in the ``Group``
 * **noise**: (bool) Noise input, noise connection or noise presence
-* **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1, OCTA groups are level 2 etc
-* **sign**: (str : exc/inh/None) Sign of neuronal population.
+* **level**: (int) Level of BuildingBlock in the hierarchy. A WTA BuildingBlock which is connected directly to a sensor array is level 1. An OCTA BuildinBlock, however, is level 2 as it consists of level 1 WTAs
+* **sign**: (str : exc/inh/None) Sign on neuronal population. Following Dale law.
 * **target_sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
 * **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
 * **bb_type**: (str : WTA/ OCTA/ 3-WAY) Building block type.
@@ -79,8 +79,8 @@ Tags can be set:
 
 .. code-block:: python
 
-  test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, debug=False)
-  target_group = test1DWTA._groups['n_exc']
+  test_wta = WTA(name='test_wta', dimensions=1, num_neurons=16, debug=False)
+  target_group = test_wta._groups['n_exc']
   basic_tags_empty = {'mismatch' : 0,
                       'noise' : 0,
                       'level': 0 ,
@@ -92,13 +92,13 @@ Tags can be set:
                       'connection_type' : 'None',
                       }
 
-  test1DWTA._set_tags(basic_tags_empty, target_group)
+  test_wta._set_tags(basic_tags_empty, target_group)
 
 and updated:
 
 .. code-block:: python
 
-  test1DWTA._tags['mismatch'] = 1
+  test_wta._tags['mismatch'] = True
 
 Getting Tags
 --------------------
@@ -106,13 +106,13 @@ Specific groups can filtered using tags:
 
 .. code-block:: python
 
-  test1DWTA.get_groups({'group_type': 'SpikeGenerator'})
+  test_wta.get_groups({'group_type': 'SpikeGenerator'})
 
 All tags of a group can be obtained by:
 
 .. code-block:: python
 
-  test1DWTA.print_tags('n_exc')
+  test_wta.print_tags('n_exc')
 
 
 Winner-takes-all (WTA)
@@ -300,7 +300,7 @@ Online Clustering of Temporal Activity (OCTA)
 Online Clustering of Temporal Activity (OCTA) is a second generation ``BuildingBlock``:
 it uses multiple WTA networks recurrently connected to create a cortex
 inspired microcircuit that, leveraging the spike timing
-information, enables investigations of emergent network dynamics `[1]`_.
+information, enables investigations of emergent network dynamics `[1]`_ (Download_).
 
 .. figure:: fig/OCTA_module.png
     :width: 200px
@@ -320,15 +320,22 @@ Parameters for the network are stored in two dictionaries located in ``teili/mod
 
 The WTA keys are explained above, the OCTA keys are defined as:
 
+* **duration**: Duriation of the simulation
+* **revolutions**: Number of times input is presented
+* **num_neurons**: Number of neurons in the compressionWTA. Keep in mind it is a 2D WTA.
+* **num_input_neurons**: Number of neurons in the prediction WTA and in the starting data.
 * **distribution**: (0 or 1) Distribution from which to initialize the weights. Gamma(1) or Normal(0).
 * **dist_param_init**: Shape for Gamma distribution/ mean of normal distribution
 * **scale_init**: Scale for Gamma distribution / std of normal distribution
 * **dist_param_re_init**: Shape/mean for weight reinitialiazation in run_regular function
 * **scale_re_init**: Scale/std for weight reinitialiazation in run_regular function
-* **re_init_threshold**: (0 - 0.5) If the mean weight of a synapse is below or above (1- re_init_threshold) the weight is reinitialized
+* **re_init_threshold**: (0 - 0.5) If the mean weight of a synapse is below or above
+                      (1- re_init_threshold) the weight is reinitialized
+* **buffer_size**: Size of the buffer for the weight dependent regularization
 * **buffer_size_plast**: Size of the buffer of the activity dependent regularization
 * **noise_weight**: Synaptic weight of the noise generator
-* **variance_th_c**: Variance threshold for the compression group. Parameter included in the ``activity`` synapse template.
+* **variance_th_c**: Variance threshold for the compression group. Parameter included in the
+                    ``activity`` synapse template.
 * **variance_th_p**: Variance threshold for the prediction group.
 * **learning_rate**: Learning rate
 * **inh_learning_rate**: Inhibitory learning rate
@@ -337,7 +344,7 @@ The WTA keys are explained above, the OCTA keys are defined as:
 * **tau_stdp**: Time constant for stdp plasticity
 
 
-Initialization of the building block goes as follows:
+Initialisation of the building block goes as follows:
 
 .. code-block:: python
 
@@ -388,9 +395,9 @@ Initialization of the building block goes as follows:
 * **monitor**: Flag to return monitors of the network
 * **debug**: Flag for verbose debug
 
-
 .. note:: To be extended by Moritz Milde
 
 .. _OCTA: https://code.ini.uzh.ch/mmilde/OCTA/blob/dev/README.md
 .. __tags: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#tags
-.. _[1]: Moritz Milde PhD thesis
+.. _[1]: https://www.zora.uzh.ch/id/eprint/177970/
+.. _Download: https://www.dropbox.com/s/0ynid1730z7txfh/spike_based_computation.pdf?dl=1

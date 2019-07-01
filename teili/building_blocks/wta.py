@@ -568,12 +568,13 @@ def set_WTA_tags(self,_groups):
       Tags will be added to all _groups passed. They follow this structure:
      
       tags =       { 'mismatch' : (bool, 0/1)
-                    'level': int       
+                      'noise : (bool, 0/1)              
+                      'level': int       
                      'sign': str (exc/inh/None)  
                      'target sign': str (exc/inh/None)
                       'num_inputs' : int (0 if not Neuron group),
                       'bb_type' : str (WTA/3-WAY),
-                      'group_type' : str (Neuron/Synapse/ SpikeGen)
+                      'group_type' : str (Neuron/Connection/ SpikeGen)
                       'connection_type' : str (rec/lateral/fb/ff/None) 
 
          }

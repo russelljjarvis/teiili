@@ -73,8 +73,8 @@ Tags are defined as:
 
 * **mismatch**: (bool) Mismatch present of group
 * **noise**: (bool) Noise input, noise connection or noise presence
-* **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1. OCTA groups are level 2.
-* **sign**: (str : exc/inh/None) Sign on neuronal population. Follows Dale law.
+* **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1, OCTA groups are level 2 etc
+* **sign**: (str : exc/inh/None) Sign of neuronal population. 
 * **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
 * **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
 * **bb_type**: (str : WTA/ OCTA/ 3-WAY) Building block type.
@@ -270,17 +270,17 @@ The WTA keys are explained above, the OCTA keys are defined as:
 * **re_init_threshold**: (0 - 0.5) If the mean weight of a synapse is below or above (1- re_init_threshold) the weight is reinitialized
 * **buffer_size**: Size of the buffer for the weight dependent regularization
 * **buffer_size_plast**: Size of the buffer of the activity dependent regularization
-* **noise_weight**: Synaptic wight the noise is connected with
+* **noise_weight**: Synaptic weight of the noise generator
 * **variance_th_c**: Variance threshold for the compression group. Parameter included in the ``activity`` synapse template.
 * **variance_th_p**: Variance threshold for the prediction group.
 * **learning_rate**: Learning rate
 * **inh_learning_rate**: Inhibitory learning rate
 * **decay**:  Decay parameter of the decay in the activity dependent run_regular
-* **weight_decay**: Type of weight decay (temporal/ event-based)
-* **tau_stdp**: STDP parameter tau parameter
+* **weight_decay**: Type of weight decay (temporal/event-based)
+* **tau_stdp**: Time constant for stdp plasticity 
 
 
-Initialization of the building block goes as follows
+Initialization of the building block goes as follows:
 
 .. code-block:: python
 
@@ -311,11 +311,10 @@ Initialization of the building block goes as follows
               )
     Net.run(octaParameters['duration']*ms, report='text')
 
-* **stacked_inp**: Include an input to the network
-* **noise**: Include 10 Hz Poisson noise generator on ``n_exc`` of compressionWTA and predictionWTA
-* **monitor**: Return monitors of the network
-* **debug**: Verbose debug
-
+* **stacked_inp**: Flag to include an input to the network
+* **noise**: Flag to include 10 Hz Poisson noise generator on ``n_exc`` of compressionWTA and predictionWTA
+* **monitor**: Flag to return monitors of the network
+* **debug**: Flag for verbose debug
 
 
 .. note:: To be extended by Moritz Milde

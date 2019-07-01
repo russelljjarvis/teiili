@@ -103,6 +103,23 @@ and updated:
 
 or added:
 
+Tags should be set as the network expands and the functionality changes.
+
+Tags are defined as:
+
+* **mismatch**: (bool) Mismatch present of group
+* **noise**: (bool) Noise input, noise connection or noise presence
+* **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1. OCTA groups are level 2.
+* **sign**: (str : exc/inh/None) Sign on neuronal population. Follows Dale law.
+* **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
+* **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
+* **bb_type**: (str : WTA/ OCTA/ 3-WAY..) Building block type.
+* **group_type**: (str : Neuron/Connection/ SpikeGen) Group type
+* **connection_type**: (str : rec/lateral/fb/ff/None) Connection type
+
+Setting Tags
+--------------
+Tags can be set:
 .. code-block:: python
 
   test_wta._set_tags({'custom_tag' : custom_tag }}, target_group)
@@ -121,6 +138,7 @@ All tags of a group can be obtained by:
 .. code-block:: python
 
   test_wta.print_tags('n_exc')
+
 
 
 Winner-takes-all (WTA)

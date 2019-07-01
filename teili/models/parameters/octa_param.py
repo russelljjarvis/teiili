@@ -11,10 +11,6 @@ Created on Fri Jun 21 10:11:05 2019
 This file contains default parameter for OCTA hierarchical BB. 
 For more information look into Moritz Milde PhD dissertation 2019
 
-
-Attributes:
-    octa_paramters (dict): Network parameters
-    wta_parameters (dict): WTA parameters 
 """
 
 from brian2 import pF, nS, mV, ms, pA, nA
@@ -33,22 +29,8 @@ wtaParams = {'we_inp_exc': 100,
              'ie_connection_probability': 0.66,
              'ii_connection_probability': 0.1
              }
-'''
 
 
-wtaParams = {'weInpWTA': 100,
-             'weWTAInh': 300, # 55/50
-             'wiInhWTA': -200, # -300
-             'weWTAWTA': 10.0,  # 45
-             'sigm': 2,
-             'rpWTA': 1 * ms,
-             'rpInh': 1 * ms,
-             'wiInhInh': -100,
-             'EI_connection_probability': 0.5,
-             'IE_connection_probability': 0.66,
-             'II_connection_probability': 0.1
-             }
-'''
 
 octaParams = {'duration': 10000,
               'revolutions': 200,
@@ -72,7 +54,6 @@ octaParams = {'duration': 10000,
               'tau_stdp': 10 * ms
              }
 
-
 octa_neuron = NeuronEquationBuilder(base_unit='current',num_inputs= 2, feedback = 'calcium_feedback', 
                                      integration = 'exponential', location = 'spatial',
                                     gm = 'gm', var = 'var' )
@@ -80,13 +61,13 @@ octa_neuron = NeuronEquationBuilder(base_unit='current',num_inputs= 2, feedback 
 SynSTDGM = SynapseEquationBuilder(base_unit='None', 
                                       SynSTDGM = 'SynSTDGM')
 
-
 DPIadp = SynapseEquationBuilder(base_unit='DPI', modulation = 'activity')
 
-DPIstdp_gm = SynapseEquationBuilder(base_unit='DPI',plasticity='stdp')
 
-DPISyn =  SynapseEquationBuilder( base_unit='DPI', plasticity='non_plastic')
+'''
+Dictionaries for mismatch
 
+'''
 
 mismatch_neuron_param = {
     'Inoise': 0,

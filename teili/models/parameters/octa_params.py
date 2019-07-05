@@ -11,18 +11,15 @@ For more information look into Moritz Milde PhD dissertation 2019
 """
 
 from brian2 import pF, nS, mV, ms, pA, nA
-from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
 '''
-
-    octaParameters (dict): Network parameters for the 
-    wtaParameters (dict): WTA parameters 
+    octa_params (dict): Network parameters for the 
+    wta_params (dict): WTA parameters 
 
 '''
 
 
-wtaParameters = {'we_inp_exc': 100,
+wta_params = {'we_inp_exc': 100,
              'we_exc_inh': 300, # 55/50
              'wi_inh_exc': -200, # -300
              'we_exc_exc': 10.0,  # 45
@@ -36,7 +33,7 @@ wtaParameters = {'we_inp_exc': 100,
              }
 
 
-octaParameters = {'duration': 10000,
+octa_params = {'duration': 10000,
               'revolutions': 200,
               'num_neurons': 7,
               'num_input_neurons': 10,
@@ -58,26 +55,8 @@ octaParameters = {'duration': 10000,
               'tau_stdp': 10 * ms
              }
 
-'''
-Custom equations for the OCTA network.
 
-octa_neuron : neuron_equation that comprises of all the components needed for octa.
-    in some synaptic connections not all features are used
-'''
-octa_neuron = NeuronEquationBuilder(base_unit='current',num_inputs= 2, feedback = 'calcium_feedback', 
-                                     integration = 'exponential', location = 'spatial',
-                                    gm = 'gm', var = 'var' )
-
-SynSTDGM = SynapseEquationBuilder(base_unit='None', 
-                                      SynSTDGM = 'SynSTDGM')
-
-DPIadp = SynapseEquationBuilder(base_unit='DPI', modulation = 'activity')
-
-
-'''
-Dictionaries for mismatch
-
-'''
+# Dictionaries for mismatch
 
 mismatch_neuron_param = {
     'Inoise': 0,
@@ -114,7 +93,3 @@ mismatch_synap_param = {
     'w_plast': 0,
     'baseweight': 0.2,
 }
-
-
-        
-        

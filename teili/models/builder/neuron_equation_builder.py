@@ -112,23 +112,22 @@ class NeuronEquationBuilder():
                 print(ERRValue)
 
             if base_unit == 'current':
-                
                  eq_templ_dummy = []
                  for key, value in kwargs.items():
                      eq_templ_dummy = eq_templ_dummy + [current_equation_sets[value]]
                  eq_templ =[modes[base_unit]]+ eq_templ_dummy
-                 
+
                  param_templ_dummy = []
                  for key, value in kwargs.items():
                      param_templ_dummy = param_templ_dummy + [current_parameters[value]]
                  param_templ =[current_parameters[base_unit]]+ param_templ_dummy
-                 
+
                  if self.verbose:
                      print("Equations",eq_templ)
                      print("Parameters",eq_templ)
 
                  keywords = combine_neu_dict(eq_templ, param_templ)
-                
+
             if base_unit == 'voltage':
                  eq_templ_dummy = []
                  for key, value in kwargs.items():
@@ -138,13 +137,13 @@ class NeuronEquationBuilder():
                  for key, value in kwargs.items():
                      param_templ_dummy = param_templ_dummy + [voltage_parameters[value]]
                  param_templ =[voltage_parameters[base_unit]]+ param_templ_dummy
-                 
+
                  if self.verbose:
                      print("Equations",eq_templ)
                      print("Parameters",eq_templ)
-                 
+
                  keywords = combine_neu_dict(eq_templ, param_templ)
-               
+
 
             self.keywords = {'model': keywords['model'],
                              'threshold': keywords['threshold'],
@@ -159,13 +158,13 @@ class NeuronEquationBuilder():
             self.print_all()
 
     def __call__(self, num_inputs):
-        """This allows the user to call the object with the num_inputs argument, like it is done with the class.
-
+        """This allows the user to call the object with the num_inputs argument,
+        like it is done with the class.
         Maybe this use is a bit confusing, but it may be convenient.
 
         Args:
-            num_inputs (int, required): Number specifying how many distinct neuron populations project
-            to the target neuron population.
+            num_inputs (int, required): Number specifying how many distinct
+                neuron populations project to the target neuron population.
 
         Returns:
             NeuronEquationBuilder obj.: A deep copy of the NeuronEquationBuilder object.
@@ -339,22 +338,3 @@ def print_param_dictionaries(Dict):
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
 
-
-def print_neuron_model(Neuron_group):
-    """Function to print keywords of a Neuron model.
-    
-        Usefull to check the entire equation and parameter list in equations
-        that have been combined,
-
-    Args:
-       Neuron group( Neurons ) : Neuron group
-       
-    Note: The equation printed is the imported equation into the equation builder.
-    Even if mismatch is added, the values that are shown and not subject
-        to mismatch.    
-        
-        e.g 
-        >> print_neuron_model(my_wta.groups['n_exc'])
-    """
-    print("Neuron group: {} \n" .format(Neuron_group.equation_builder.keywords))
-    return None

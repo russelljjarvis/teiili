@@ -226,6 +226,17 @@ class StdpSynV(SynapseEquationBuilder):
                                         kernel='exponential', plasticity='stdp')
 
 
+class DPIadp(SynapseEquationBuilder):
+    def __init__(self):
+        SynapseEquationBuilder.__init__(self, base_unit='DPI',
+                                        modulation='activity')
+
+class DPIstdgm(SynapseEquationBuilder):
+    def __init__(self):
+        SynapseEquationBuilder.__init__(self, base_unit='None', 
+                                        SynSTDGM='SynSTDGM')
+
+
 def main(path=None):
     if path is None:
         path = str(Path.home())
@@ -275,6 +286,11 @@ def main(path=None):
                                         kernel='exponential', plasticity='fusi')
     reversalSynVfusi.export_eq(os.path.join(path, "ReversalSynVfusi"))
 
+    dpiadp = DPIadp()
+    dpiadp.export_eq(os.path.join(path, "DPIadp"))
+
+    DPIstdgm = DPIstdgm() 
+    DPIstdgm.export_eq(os.path.join(path, "DPIstdgm"))
 
 if __name__ == '__main__':
     main()

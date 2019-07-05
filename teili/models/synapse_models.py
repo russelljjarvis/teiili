@@ -289,8 +289,8 @@ def main(path=None):
     dpiadp = DPIadp()
     dpiadp.export_eq(os.path.join(path, "DPIadp"))
 
-    DPIstdgm = DPIstdgm() 
-    DPIstdgm.export_eq(os.path.join(path, "DPIstdgm"))
+    dpistdgm = DPIstdgm()
+    dpistdgm.export_eq(os.path.join(path, "DPIstdgm"))
 
 if __name__ == '__main__':
     main()

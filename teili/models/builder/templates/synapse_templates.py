@@ -450,11 +450,7 @@ synaptic_equations = {
     'stdgm': stdgm
     }
 
-synaptic_equations.update(kernels)
-synaptic_equations.update(plasticity_models)
 
-
-synaptic_equations = {'activity' : activity, 'SynSTDGM' : SynSTDGM}
 synaptic_equations.update(kernels)
 synaptic_equations.update(plasticity_models)
 

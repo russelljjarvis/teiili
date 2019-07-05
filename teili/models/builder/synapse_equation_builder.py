@@ -106,17 +106,17 @@ class SynapseEquationBuilder():
                 print(ERRValue)
 
             if base_unit == 'current':
-                
+
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
                      eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
                 eq_templ =[modes[base_unit]]+ eq_templ_dummy
-                 
+
                 param_templ_dummy = []
                 for key, value in kwargs.items():
                      param_templ_dummy = param_templ_dummy + [current_parameters[value]]
                 param_templ =[current_parameters[base_unit]]+ param_templ_dummy
-                 
+
                 keywords = combine_syn_dict(eq_templ, param_templ)
 
                 keywords['model'] = keywords['model'].format(
@@ -131,12 +131,12 @@ class SynapseEquationBuilder():
                 for key, value in kwargs.items():
                      eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
                 eq_templ =[modes[base_unit]]+ eq_templ_dummy
-                 
+
                 param_templ_dummy = []
                 for key, value in kwargs.items():
                      param_templ_dummy = param_templ_dummy + [conductance_parameters[value]]
                 param_templ = [conductance_parameters[base_unit]]+ param_templ_dummy
-                 
+
                 keywords = combine_syn_dict(eq_templ, param_templ)
 
                 keywords['model'] = keywords['model'].format(
@@ -147,19 +147,19 @@ class SynapseEquationBuilder():
                     input_number="{input_number}", unit='siemens')
 
             if base_unit == 'DPI':
-                
+
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
                      eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
                 eq_templ =[modes[base_unit]]+ eq_templ_dummy
-                 
+
                 param_templ_dummy = []
                 for key, value in kwargs.items():
                      param_templ_dummy = param_templ_dummy + [DPI_parameters[value]]
                 param_templ = [DPI_parameters[base_unit]]+ param_templ_dummy
-                
+
                 keywords = combine_syn_dict(eq_templ, param_templ)
-            
+
 
                 keywords['model'] = keywords['model'].format(
                     input_number="{input_number}", unit='amp')
@@ -173,12 +173,12 @@ class SynapseEquationBuilder():
                 for key, value in kwargs.items():
                      eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
                 eq_templ =[modes[base_unit]]+ eq_templ_dummy
-                 
+
                 param_templ_dummy = []
                 for key, value in kwargs.items():
                      param_templ_dummy = param_templ_dummy + [DPI_shunt_parameters[value]]
                 param_templ = [DPI_shunt_parameters[base_unit]]+ param_templ_dummy
-                 
+
                 keywords = combine_syn_dict(eq_templ, param_templ)
 
                 keywords['model'] = keywords['model'].format(
@@ -187,18 +187,18 @@ class SynapseEquationBuilder():
                     input_number="{input_number}", unit='amp')
                 keywords['on_post'] = keywords['on_post'].format(
                     input_number="{input_number}", unit='amp')
-                
+
             if base_unit == 'None':
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
                      eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
                 eq_templ =[modes[base_unit]]+ eq_templ_dummy
-                 
+
                 param_templ_dummy = []
                 for key, value in kwargs.items():
                      param_templ_dummy = param_templ_dummy + [None_parameters[value]]
                 param_templ = [None_parameters[base_unit]]+ param_templ_dummy
-                 
+
                 keywords = combine_syn_dict(eq_templ, param_templ)
 
                 keywords['model'] = keywords['model'].format(
@@ -358,22 +358,3 @@ def print_param_dictionaries(Dict):
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
 
-def print_synaptic_model(synapse_group):
-    """Function to print keywords of a Synaptic model.
-    
-        Usefull to check the entire equation and parameter list in equations
-        that have been combined,
-
-    Args:
-       Synaptic group ( Connection ) : Synaptic group
-       
-    Note: The equation printed is the imported equation into the equation builder.
-    Even if mismatch is added, the values that are shown and not subject
-        to mismatch.    
-        
-        e.g 
-        >> print_neuron_model(my_wta.groups['s_exc_exc'])
-    """
-    print("Synaptic group: {}" .format(synapse_group.equation_builder.keywords))
-    return None
-    

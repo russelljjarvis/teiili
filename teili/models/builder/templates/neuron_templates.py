@@ -344,24 +344,18 @@ i_gm = {'model': """
 
 i_gm_params = {'Ipred': 1.0 ,
               'tau_pred': 1.5 *ms
-}
+               }
 
-# Keep track of the Imem variance. Usefull with run regular functions.
-i_var = {'model': """
+# Keep track of the Imem activity. Usefull with run regular functions.
+i_act = {'model': """
           normalized_activity_proxy : 1
           activity_proxy : amp
           adaptive_threshold : amp
-
-
           """,
       'threshold': '',
       'reset': """
-        Itau +=adaptive_threshold
        """
-}
-
-i_var_params = {  'adaptive_threshold': 0.0*pA
-        }
+         }
 
 i_ahp_params = {
     "Itauahp": 1 * pA,
@@ -388,21 +382,24 @@ modes = {'current': i_model_template, 'voltage': v_model_template}
 
 current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
                          'leaky': none, 'non_leaky': none, 'quadratic': none,
-                         'spatial': spatial, 'gaussian_noise': i_noise, 'none': none, 
-                         'linear': none, 'gm' : i_gm, 'var' : i_var}
+                         'spatial': spatial, 'gaussian_noise': i_noise, 'none': none,
+                         'linear': none, 'gain_modulation' : i_gm, 'activity' : i_act}
 
 voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_exp_current,
                          'quadratic': v_quad_current,
                          'leaky': v_leak, 'non_leaky': none,
-                         'spatial': spatial, 'gaussian_noise': v_noise, 'none': none, 'linear': none}
+                         'spatial': spatial, 'gaussian_noise': v_noise,
+                         'none': none, 'linear': none}
 
 current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
-                      'quadratic': none_params,
-                      'exponential': i_exponential_params, 'leaky': none_params, 'non_leaky': i_non_leaky_params,
-                      'spatial': none_params, 'gaussian_noise': i_noise_params, 'none': none_params, 
-                      'linear': none_params, 'gm' : i_gm_params, 'var' : i_var_params}
+                      'quadratic': none_params, 'exponential': i_exponential_params,
+                      'leaky': none_params, 'non_leaky': i_non_leaky_params,
+                      'spatial': none_params, 'gaussian_noise': i_noise_params,
+                      'none': none_params, 'linear': none_params,
+                      'gain_modulation' : none_params, 'var' : i_var_params}
 
 voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': v_adapt_params,
                       'exponential': v_exp_current_params, 'quadratic': v_quad_params,
                       'leaky': v_leak_params, 'non_leaky': none_params,
-                      'spatial': none_params, 'gaussian_noise': none_params, 'none': none_params, 'linear': none_params}
+                      'spatial': none_params, 'gaussian_noise': none_params,
+                      'none': none_params, 'linear': none_params}

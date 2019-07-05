@@ -148,12 +148,12 @@ class WTA(BuildingBlock):
         self.num_neurons = num_neurons
         self.dimensions = dimensions
         BuildingBlock.__init__(self,
-                                    name,
-                                    neuron_eq_builder,
-                                    synapse_eq_builder,
-                                    block_params,
-                                    debug,
-                                    monitor)
+                               name,
+                               neuron_eq_builder,
+                               synapse_eq_builder,
+                               block_params,
+                               debug,
+                               monitor)
 
         if dimensions == 1:
             self._groups,\
@@ -206,12 +206,15 @@ class WTA(BuildingBlock):
 def gen1dWTA(groupname,
              neuron_eq_builder=DPI,
              synapse_eq_builder=DPISyn,
-             we_inp_exc=1.5, we_exc_inh=1, wi_inh_exc=-1, we_exc_exc=0.5, sigm=3,
-             rp_exc=3 * ms, rp_inh=1 * ms,
-             num_neurons=64, num_inh_neurons=5, num_input_neurons=None, num_inh_inputs=2, cutoff=10, num_inputs=1,
-             spatial_kernel="kernel_gauss_1d",
-             ei_connection_probability=1, ie_connection_probability=1, ii_connection_probability=0,
-             monitor=True, additional_statevars=[], debug=False):
+             we_inp_exc=1.5, we_exc_inh=1,
+             wi_inh_exc=-1, we_exc_exc=0.5,
+             sigm=3, rp_exc=3 * ms, rp_inh=1 * ms,
+             num_neurons=64, num_inh_neurons=5,
+             num_input_neurons=None, num_inputs=1, num_inh_inputs=2,
+             cutoff=10, spatial_kernel="kernel_gauss_1d",
+             ei_connection_probability=1, ie_connection_probability=1,
+             ii_connection_probability=0,
+             additional_statevars=[], monitor=True, debug=False):
     """Creates a 1D WTA population of neurons, including the inhibitory interneuron population
 
     Args:
@@ -374,13 +377,15 @@ def gen1dWTA(groupname,
 def gen2dWTA(groupname,
              neuron_eq_builder=DPI,
              synapse_eq_builder=DPISyn,
-             we_inp_exc=1.5, we_exc_inh=1, wi_inh_exc=-1, we_exc_exc=2, sigm=2.5,
-             rp_exc=2.5 * ms, rp_inh=1 * ms,
-             wiInhInh=0, ei_connection_probability=1., ie_connection_probability=1.,
+             we_inp_exc=1.5, we_exc_inh=1, wi_inh_exc=-1, we_exc_exc=2.0,
+             sigm=2.5, rp_exc=3 * ms, rp_inh=1 * ms,
+             num_neurons=64, num_inh_neurons=5,
+             num_input_neurons=None, num_inputs=1, num_inh_inputs=2,
+             cutoff=10, spatial_kernel="kernel_gauss_2d",
+             ei_connection_probability=1.0, ie_connection_probability=1,
              ii_connection_probability=0.1,
-             spatial_kernel="kernel_gauss_2d",
-             num_neurons=20, num_inh_neurons=3, num_input_neurons=None, num_inh_inputs = 2, cutoff=9, num_inputs=1,
-             monitor=True, additional_statevars=[], debug=False):
+             additional_statevars=[], monitor=True, debug=False):
+
     '''Creates a 2D square WTA population of neurons, including the inhibitory interneuron population
 
     Args:

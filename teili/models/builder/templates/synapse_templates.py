@@ -70,27 +70,25 @@ current_params = {
 
 # Additional equations for conductance based models
 
-conductance = {'model': '''
-               dgI/dt = (-gI) / tausyn + kernel     : siemens (clock-driven)
-               I_syn = gI*(EI - Vm_post)            : amp
-               Iin{input_number}_post = I_syn *  sign(weight)  : amp (summed)
-               EI =  EIe                            : volt        # reversal potential
+conductance = {
+    'model': '''
+        dgI/dt = (-gI) / tausyn + kernel     : siemens (clock-driven)
+        I_syn = gI*(EI - Vm_post)            : amp
+        Iin{input_number}_post = I_syn *  sign(weight)  : amp (summed)
+        EI =  EIe                            : volt        # reversal potential
 
-               kernel                               : siemens * second **-1
-               tausyn                               : second   (constant) # synapse time constant
-               w_plast                              : 1
-               baseweight                           : siemens (constant)     # synaptic gain
-               weight                               : 1
-               EIe                                  : volt
-               EIi                                  : volt
-
-               ''',
-
-               'on_pre': '''
-               gI += baseweight * abs(weight) * w_plast
-               ''',
-
-               'on_post': ''' '''
+        kernel                               : siemens * second **-1
+        tausyn                               : second   (constant) # synapse time constant
+        w_plast                              : 1
+        baseweight                           : siemens (constant)     # synaptic gain
+        weight                               : 1
+        EIe                                  : volt
+        EIi                                  : volt
+        ''',
+    'on_pre': '''
+        gI += baseweight * abs(weight) * w_plast
+        ''',
+    'on_post': ''' '''
                }
 """ Standard parameters for conductance based models
 
@@ -491,16 +489,14 @@ none_model = {'model': '''    ''',
 """Dictionary of keywords:
 
 These dictionaries contains keyword and models and parameters names useful for the __init__ subroutine
-Every new block dictionaries must be added to these definitions. 
+Every new block dictionaries must be added to these definitions.
 synaptic_equations is a dictionary that gathers all models and parameters.
 """
-
 modes = {'current': current,
          'conductance': conductance,
          'DPI': dpi,
          'DPIShunting': dpi_shunt,
          'None': none_model}
-
 
 kernels = {'exponential': none,
            'alpha': alpha_kernel,

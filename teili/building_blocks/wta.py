@@ -64,7 +64,7 @@ from teili.core.groups import Neurons, Connections
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 
-import teili.tools.tags_parameters as tags_parameters
+import teili.core.tags as tags_parameters
 
 wta_params = {'we_inp_exc': 1.5,
               'we_exc_inh': 1,
@@ -401,8 +401,7 @@ def gen2dWTA(groupname,
         rp_inh (float, optional): Refractory period of inhibitory neurons.
         wiInhInh (int, optional): Self-inhibitory weight of the interneuron population.
         ei_connection_probability (float, optional): WTA to interneuron connectivity probability.
-        ie_connection_probability (float, optional): Interneuron to WTA connectivity probability
-        ii_connection_probability (float, optional): Interneuron to Interneuron connectivity probability.
+ 
         spatial_kernel (str, optional): Description
         num_neurons (int, optional): Size of WTA neuron population.
         num_inh_neurons (int, optional): Size of inhibitory interneuron population.

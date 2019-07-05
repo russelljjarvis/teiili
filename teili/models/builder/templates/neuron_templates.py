@@ -327,6 +327,13 @@ i_ahp = {
         '''
     }
 
+i_ahp_params = {
+    "Itauahp": 1 * pA,
+    "Ithahp": 1 * pA,
+    "Ica": 2 * pA,
+    "Cahp": 1 * pF
+    }
+
 # gain modulation
 i_gm = {
     'model': """
@@ -342,34 +349,6 @@ i_gm_params = {
     'tau_pred': 1.5 *ms
     }
 
-# Keep track of the Imem variance. Usefull with run regular functions.
-i_var = {'model': """
-          normalized_activity_proxy : 1
-          activity_proxy : amp
-          adaptive_threshold : amp
-
-
-          """,
-      'threshold': '',
-      'reset': """
-        Itau +=adaptive_threshold
-       """
-}
-
-i_var_params = {  'adaptive_threshold': 0.0*pA
-        }
-
-i_ahp_params = {"Itauahp": 1 * pA,
-                "Ithahp": 1 * pA,
-                "Ica": 2 * pA,
-                "Cahp": 1 * pF}
->>>>>>> e92f50d... synapse_eq_builder_refactoring
-
-
-i_gm_params = {'Ipred': 1.0,
-               'tau_pred': 1.5 * ms
-               }
-
 # Keep track of the Imem activity. Usefull with run regular functions.
 i_act = {'model': """
           normalized_activity_proxy : 1
@@ -379,13 +358,6 @@ i_act = {'model': """
          'reset': """
        """
          }
-
-i_ahp_params = {
-    "Itauahp": 1 * pA,
-    "Ithahp": 1 * pA,
-    "Ica": 2 * pA,
-    "Cahp": 1 * pF
-}
 
 i_exponential_params = {
     "Ith": 0.9 * pA,

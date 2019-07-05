@@ -350,7 +350,6 @@ i_gm_params = {'Ipred': 1.0 ,
 i_act = {'model': """
           normalized_activity_proxy : 1
           activity_proxy : amp
-          adaptive_threshold : amp
           """,
       'threshold': '',
       'reset': """
@@ -396,7 +395,7 @@ current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_
                       'leaky': none_params, 'non_leaky': i_non_leaky_params,
                       'spatial': none_params, 'gaussian_noise': i_noise_params,
                       'none': none_params, 'linear': none_params,
-                      'gain_modulation' : none_params, 'var' : i_var_params}
+                      'gain_modulation' : none_params, 'activity' : none_params}
 
 voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': v_adapt_params,
                       'exponential': v_exp_current_params, 'quadratic': v_quad_params,

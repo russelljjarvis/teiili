@@ -6,8 +6,11 @@ and function calls.
 """
 # @Author: mmilde
 # @Date:   2018-07-30 14:19:44
-from teili.tools.run_regularly.run_reg_functions import re_init_weights, re_init_ipred, get_activity_proxy,\
-    max_value_update, normalize_activity_proxy, correlation_coefficient_tracking, weight_regularization
+
+from teili.tools.run_regularly.run_reg_functions import re_init_weights,\
+    re_init_ipred, get_activity_proxy, max_value_update, normalize_activity_proxy,\
+    correlation_coefficient_tracking
+
 from brian2 import ms, pA, amp, second
 import numpy as np
 

@@ -33,6 +33,7 @@ Example:
                       'we_exc_inh': 1,
                       'wi_inh_exc': -1,
                       'we_exc_exc': 0.5,
+                      'wi_inh_inh': -1,
                       'sigm': 3,
                       'rp_exc': 3 * ms,
                       'rp_inh': 1 * ms,
@@ -70,6 +71,7 @@ wta_params = {'we_inp_exc': 1.5,
               'we_exc_inh': 1,
               'wi_inh_exc': -1,
               'we_exc_exc': 0.5,
+              'wi_inh_inh': -1,
               'sigm': 3,
               'rp_exc': 3 * ms,
               'rp_inh': 1 * ms,
@@ -206,7 +208,7 @@ class WTA(BuildingBlock):
 def gen1dWTA(groupname,
              neuron_eq_builder=DPI,
              synapse_eq_builder=DPISyn,
-             we_inp_exc=1.5, we_exc_inh=1,
+             we_inp_exc=1.5, we_exc_inh=1, wi_inh_inh=-1,
              wi_inh_exc=-1, we_exc_exc=0.5,
              sigm=3, rp_exc=3 * ms, rp_inh=1 * ms,
              num_neurons=64, num_inh_neurons=5,
@@ -309,6 +311,7 @@ def gen1dWTA(groupname,
     s_inp_exc.weight = we_inp_exc
     s_exc_inh.weight = we_exc_inh
     s_inh_exc.weight = wi_inh_exc
+    s_inh_inh.weight = wi_inh_inh
     # lateral excitation kernel
     # we add an additional attribute to that synapse, which allows us to change
     # and retrieve that value more easily
@@ -377,7 +380,8 @@ def gen1dWTA(groupname,
 def gen2dWTA(groupname,
              neuron_eq_builder=DPI,
              synapse_eq_builder=DPISyn,
-             we_inp_exc=1.5, we_exc_inh=1, wi_inh_exc=-1, we_exc_exc=2.0,
+             we_inp_exc=1.5, we_exc_inh=1, wi_inh_inh=-1,
+             wi_inh_exc=-1, we_exc_exc=2.0,
              sigm=2.5, rp_exc=3 * ms, rp_inh=1 * ms,
              num_neurons=64, num_inh_neurons=5,
              num_input_neurons=None, num_inputs=1, num_inh_inputs=2,
@@ -399,7 +403,7 @@ def gen2dWTA(groupname,
         sigm (int, optional): Standard deviation in number of neurons for Gaussian connectivity kernel.
         rp_exc (float, optional): Refractory period of WTA neurons.
         rp_inh (float, optional): Refractory period of inhibitory neurons.
-        wiInhInh (int, optional): Self-inhibitory weight of the interneuron population.
+        wi_inh_inh (int, optional): Self-inhibitory weight of the interneuron population.
         ei_connection_probability (float, optional): WTA to interneuron connectivity probability.
  
         spatial_kernel (str, optional): Description
@@ -490,7 +494,7 @@ def gen2dWTA(groupname,
     s_inp_exc.weight = we_inp_exc
     s_exc_inh.weight = we_exc_inh
     s_inh_exc.weight = wi_inh_exc
-    s_inh_inh.weight = wiInhInh
+    s_inh_inh.weight = wi_inh_inh
 
     # lateral excitation kernel
     # we add an additional attribute to that synapse, which allows us to change
@@ -540,7 +544,7 @@ def gen2dWTA(groupname,
         s_inp_exc.name + '_weight': we_inp_exc,
         s_exc_inh.name + '_weight': we_exc_inh,
         s_inh_exc.name + '_weight': wi_inh_exc,
-        s_inh_inh.name + '_weight': wiInhInh,
+        s_inh_inh.name + '_weight': wi_inh_inh,
         s_exc_exc.name + '_lateral_weight': we_exc_exc,
         s_exc_exc.name + '_lateral_sigma': sigm,
         n_exc.name + '_refP': rp_exc,

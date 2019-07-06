@@ -8,7 +8,7 @@ Created on Wed Jun 26 12:58:50 2019
 
 This module provides a hierarchical building block called OCTA.
             -Online Clustering of Temporal Activity-
-            
+
 This is a level 2 hierarchical building block, it uses basic building blocks such
 as the WTA.
 
@@ -30,7 +30,7 @@ from teili.core.groups import Neurons, Connections
 import teili.core.tags as tags
 
 from teili.models.synapse_models import DPISyn, DPIstdp, DPIadp, DPIstdgm
-
+from teili.models.neuron_models import OCTA_Neuron as octa_neuron
 from teili.building_blocks.building_block import BuildingBlock
 from teili.building_blocks.wta import WTA
 from teili.stimuli.testbench import WTA_Testbench, OCTA_Testbench
@@ -87,8 +87,8 @@ class Octa(BuildingBlock):
             debug (bool, optional): Flag to gain additional information.
         """
 
-        # self.num_input_neurons = num_input_neurons
-        # self.num_neurons = num_neurons
+        self.num_input_neurons = num_input_neurons
+        self.num_neurons = num_neurons
         block_params = {}
         block_params.update(wta_params)
         block_params.update(octa_params)
@@ -105,14 +105,15 @@ class Octa(BuildingBlock):
         self._groups,\
         self.monitors,\
         self.standalone_params = gen_octa(name,
-                                          neuron_eq_builder,
-                                          num_neurons=num_neurons,
-                                          num_input_neurons=num_input_neurons,
+                                          neuron_eq_builder= neuron_eq_builder,
                                           external_input=external_input,
+                                          num_input_neurons=self.num_input_neurons,
+                                          num_neurons=self.num_neurons,
+                                          wta_params=wta_params,
+                                          octa_params=octa_params,
                                           noise=noise,
                                           monitor=monitor,
-                                          debug=debug,
-                                          **block_params)
+                                          debug=debug)
 
         # Creating handles for neuron groups and inputs
         self.comp_wta = self.sub_blocks['compressionWTA']
@@ -131,11 +132,15 @@ class Octa(BuildingBlock):
         set_OCTA_tags(self,  self._groups)
 
 def gen_octa(groupname,
-             neuron_eq_builder
+             neuron_eq_builder,
              num_input_neurons,
-             num_neurons, wta_params, octa_params, ,
-             external_input=True, noise=True,
-             monitor=True, debug=False):
+             num_neurons,
+             wta_params,
+             octa_params,
+             external_input=True,
+             noise=True,
+             monitor=True,
+             debug=False):
     """
     Generator function for the OCTA building block
         Args:
@@ -287,25 +292,25 @@ def gen_octa(groupname,
                     scale=octa_params['scale_init'],
                     distribution=octa_params['distribution'])
 
-    weight_decay_group = [compressionWTA._groups['s_inp_exc']] + \
+    weight_decay_group = [compressionWTA._groups['s_inp_exc']] +\
                          [compressionWTA._groups['s_exc_exc']] +\
-                         [predictionWTA._groups['s_inp_exc']] + \
-                         [predictionWTA._groups['s_exc_exc']] + \
+                         [predictionWTA._groups['s_inp_exc']] +\
+                         [predictionWTA._groups['s_exc_exc']] +\
                          [error_connection]
 
     add_decay_weight(weight_decay_group,
                      decay_strategy=octa_params['weight_decay'],
                      learning_rate=octa_params['learning_rate'])
 
-    weight_re_init_group = [compressionWTA._groups['s_inp_exc']] + \
-                           [compressionWTA._groups['s_exc_exc']] + \
-                           [predictionWTA._groups['s_inp_exc']] + \
-                           [predictionWTA._groups['s_exc_exc']] + \
+    weight_re_init_group = [compressionWTA._groups['s_inp_exc']] +\
+                           [compressionWTA._groups['s_exc_exc']] +\
+                           [predictionWTA._groups['s_inp_exc']] +\
+                           [predictionWTA._groups['s_exc_exc']] +\
                            [error_connection]
 
     add_weight_re_init(weight_re_init_group,
                        re_init_threshold=octa_params['re_init_threshold'],
-                       dist_param_re_init=octa_params['dist_param_re_init'], 
+                       dist_param_re_init=octa_params['dist_param_re_init'],
                        scale_re_init=octa_params['scale_re_init'],
                        distribution=octa_params['distribution'])
 
@@ -347,91 +352,81 @@ def gen_octa(groupname,
                                    equation_builder=DPISyn(),
                                    method='euler',
                                    name=groupname + '_inputSynapse')
-    
+
         inputSynapse.connect('i==j')
         inputSynapse.weight = 3250.
         testbench_stim = OCTA_Testbench()
-    
-        testbench_stim.rotating_bar(length=10, nrows=10, 
-                                direction='cw', 
-                                ts_offset=3, angle_step=10, 
-                                noise_probability=0.2, repetitions=octa_params['revolutions'], debug=False)
-        
+
+        testbench_stim.rotating_bar(length=10, nrows=10,
+                                    direction='cw',
+                                    ts_offset=3, angle_step=10,
+                                    noise_probability=0.2,
+                                    repetitions=octa_params['revolutions'],
+                                    debug=False)
+
         inputGroup.set_spikes(indices=testbench_stim.indices, times=testbench_stim.times * ms)
-    
+
     if noise:
         testbench_c = WTA_Testbench()
         testbench_p = WTA_Testbench()
-    
-    
+
         testbench_c.background_noise(num_neurons=num_neurons, rate=10)
         testbench_p.background_noise(num_neurons=num_input_neurons, rate=10)
-    
-        noise_syn_c_exc = Connections(testbench_c.noise_input, 
-                                compressionWTA._groups['n_exc'],
-                                equation_builder=DPISyn(), 
-                                name= groupname + '_noise_comp_exc')
-        #
+
+        noise_syn_c_exc = Connections(testbench_c.noise_input,
+                                      compressionWTA._groups['n_exc'],
+                                      equation_builder=DPISyn(),
+                                      name=groupname + '_noise_comp_exc')
+
         noise_syn_c_exc.connect("i==j")
         noise_syn_c_exc.weight = octa_params['noise_weight']
-    
-        noise_syn_p_exc = Connections(testbench_c.noise_input, 
-                                predictionWTA._groups['n_exc'],
-                                equation_builder=DPISyn(), 
-                                name=groupname + '_noise_pred_exc')
-    
-    
-    
+
+        noise_syn_p_exc = Connections(testbench_c.noise_input,
+                                      predictionWTA._groups['n_exc'],
+                                      equation_builder=DPISyn(),
+                                      name=groupname + '_noise_pred_exc')
+
         noise_syn_p_exc.connect("i==j")
         noise_syn_p_exc.weight = octa_params['noise_weight']
         compressionWTA._groups['n_exc']._tags['noise'] = 1
         predictionWTA._groups['n_exc']._tags['noise'] = 1
 
-    synGroups =   {     
-           
-            'error_connection': error_connection,
-            'prediction_connection' : prediction_connection      
-        }
+    synGroups = {'error_connection': error_connection,
+                 'prediction_connection' : prediction_connection}
 
-    if stacked_inp:
-        input_dict = { 'inputSynapse': inputSynapse }   
-        synGroups.update(input_dict)   
-    
-    
-    neurGroups ={     }
-    
-    if stacked_inp:
-        input_sync= {'inputGroup': inputGroup}   
+    if external_input is True:
+        input_dict = {'inputSynapse': inputSynapse }
+        synGroups.update(input_dict)
 
-        neurGroups.update(input_sync)   
+    neurGroups ={}
+
+    if external_input is True:
+        input_sync= {'inputGroup': inputGroup}
+        neurGroups.update(input_sync)
+
     if noise:
         noise_syn= {'pred_noise_syn_exc' : noise_syn_p_exc,
                     'comp_noise_syn_exc' : noise_syn_c_exc,
                     'pred_noise_gen' : testbench_p.noise_input,
                     'comp_noise_gen' : testbench_c.noise_input
                 }
-        neurGroups.update(noise_syn)  
-    
+        neurGroups.update(noise_syn)
+
     monitors = {}
     if monitor:
         compressionWTA.monitors['spikemon_inp'] = SpikeMonitor(compressionWTA._groups['spike_gen'], 
-                      name='spikemon_inp')
-        
-        monitors = {
-                'comp_spikemon_inp' : compressionWTA.monitors['spikemon_inp'],                 
-         
-         }
-        if stacked_inp:
-            stacked_inp_monitors = {
-                    'input' : SpikeMonitor( inputGroup, name=groupname + '_inputGroup')
-             
+                                                               name='spikemon_inp')
+
+        monitors = {'comp_spikemon_inp' : compressionWTA.monitors['spikemon_inp']}
+        if external_input:
+            external_input_monitors = {
+                    'input' : SpikeMonitor(inputGroup, name=groupname + '_inputGroup')
              }
-            monitors.update(stacked_inp_monitors)
-            
+            monitors.update(external_input_monitors)
+
     group= {}
     group.update(synGroups)
     group.update(neurGroups)
-
 
     if debug:
             print('The keys of the ' + groupname + ' output dict are:')
@@ -480,17 +475,15 @@ def replace_connection(bb_source, population_source, bb_target, population_targe
 
     return None
 
-
-
 def error_prediction_connections(compressionWTA, predictionWTA,wta_params, octa_params):
     '''
     Set connection between the spike_gen of compression layer and n_exc of prediction layer
     '''
     error_connection = Connections(compressionWTA._groups['spike_gen'],
-                               predictionWTA._groups['n_exc'],
-                               equation_builder=DPIstdp,
-                               method='euler',
-                               name='error_connection')
+                                   predictionWTA._groups['n_exc'],
+                                   equation_builder=DPIstdp,
+                                   method='euler',
+                                   name='error_connection')
 
     error_connection.connect('True')
     error_connection.weight = wta_params['we_inp_exc']
@@ -500,10 +493,11 @@ def error_prediction_connections(compressionWTA, predictionWTA,wta_params, octa_
     #prediction connection between prediction population and  input neuron population
 
     prediction_connection = Connections(predictionWTA._groups['n_exc'],
-                                    compressionWTA._groups['spike_gen'],
-                                    equation_builder=DPIstdgm,
-                                    method='euler',
-                                    name='prediction_connection')
+                                        compressionWTA._groups['spike_gen'],
+                                        equation_builder=DPIstdgm,
+                                        method='euler',
+                                        name='prediction_connection')
+
     prediction_connection.connect(True)
     prediction_connection.Ipred_plast = np.zeros((len(prediction_connection)))
 
@@ -518,7 +512,6 @@ def error_prediction_connections(compressionWTA, predictionWTA,wta_params, octa_
 
     return error_connection, prediction_connection
 
-
 def set_OCTA_tags(self, _groups):
     '''
     Sets default tags to a OCTA network
@@ -526,12 +519,12 @@ def set_OCTA_tags(self, _groups):
 '''
     self._set_tags(tags.basic_octa_error_connection, _groups['error_connection'])
     self._set_tags(tags.basic_octa_prediction_connection, _groups['prediction_connection'])
-    self._set_tags(tags.basic_octa_inputSyn, _groups['inputSynapse'])
-    self._set_tags(tags.basic_octa_inpGroup, _groups['inputGroup'])
+    self._set_tags(tags.basic_octa_input_syn, _groups['inputSynapse'])
+    self._set_tags(tags.basic_octa_n_sg, _groups['inputGroup'])
     self._set_tags(tags.basic_octa_pred_noise_syn_exc, _groups['pred_noise_syn_exc'])
     self._set_tags(tags.basic_octa_comp_noise_syn_exc, _groups['comp_noise_syn_exc'])
-    self._set_tags(tags.basic_octa_pred_noise_gen, _groups['pred_noise_gen'])
-    self._set_tags(tags.basic_octa_comp_noise_gen, _groups['comp_noise_gen'])
+    self._set_tags(tags.basic_octa_pred_noise_sg, _groups['pred_noise_gen'])
+    self._set_tags(tags.basic_octa_comp_noise_sg, _groups['comp_noise_gen'])
 
 
 

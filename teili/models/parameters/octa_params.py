@@ -26,7 +26,7 @@ wta_params = {'we_inp_exc': 100,
              'sigm': 2,
              'rp_exc': 1 * ms,
              'rp_inh': 1 * ms,
-             'wiInhInh': -100,
+             'wi_inh_inh': -100,
              'ei_connection_probability': 0.5,
              'ie_connection_probability': 0.66,
              'ii_connection_probability': 0.1

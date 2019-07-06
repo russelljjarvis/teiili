@@ -8,8 +8,8 @@ This is not to be confused with the synaptic kernels that are for conectivity ma
 the suffix "_cpp" avoids variables being string-replaced by brian2 if the same name
 is used in the network
 """
-#Created on Wed May 30 13:43:45 2018
-#@author: alpha
+# Created on Wed May 30 13:43:45 2018
+# @author: alpha
 
 import os
 from brian2 import implementation, check_units, declare_types, set_device, run, ms
@@ -21,7 +21,7 @@ from scipy.stats import gamma
 # For large alpha the gamma distribution converges to normal distribution
 # with mean μ = alpha/beta and variance σ2 = alpha/beta**2.
 
-#TODO
+# TODO
 @implementation('cpp', '''
     float gamm(float x) {
     float ret = (1.000000000190015 + 76.18009172947146 / (x + 1) +  
@@ -42,19 +42,45 @@ from scipy.stats import gamma
 @check_units(x=1, alpha=1, beta=1, normalized=1, result=1)
 def gamma1d_density(x, alpha=1, beta=1, normalized=True):
     """
-    Args:
+    This function is supposed to be used in brian2 strings e.g. to initialize weights.
+    In python, this just wraps scipy.stats.gamma, in c++  it manually
+     calculates an approximation of the gamma density.
 
+    :param x: distance to the mean
+    :param alpha:
+    :param beta:
+    :param normalized: boolean
+    :return: float: (probability) density at a specific distance to the mean of a Gaussian distribution.
 
-    Returns:
-        float: (probability) density at a specific distance to the mean of a Gaussian distribution.
+    >>> import matplotlib.pyplot as plt
+    >>> from teili import Neurons
+    >>>
+    >>> standalone_dir = os.path.expanduser('~/mismatch_standalone')
+    >>> set_device('cpp_standalone', directory=standalone_dir)
+    >>>
+    >>> dx = 0.01
+    >>> x = np.arange(0, 10, 0.01)
+    >>> gamma_pdf = gamma1d_density(x, 2, 1)
+    >>>
+    >>> n = Neurons(1000, model='x : 1')
+    >>> n.namespace.update({'gamma1d_density': gamma1d_density})
+    >>> n.x = "gamma1d_density(i/100.0,2.0,1.0,False)"
+    >>>
+    >>> run(1 * ms)
+    >>> plt.figure()
+    >>> plt.plot(np.arange(0, 10, 1 / 100), n.x)
+    >>> plt.plot(x, gamma_pdf)
+    >>> plt.show()
+    >>> sum(n.x * 1 / 100)
+    >>> sum(gamma_pdf * dx)
     """
 
-#TODO:
-    #if normalized:
-    density = gamma.pdf(x,alpha, scale=beta)
-#    else:
-#        f = 1
-#    density = f * np.exp(-(1/2)*(dist_x / sigma)**2)
+    # TODO:
+    # if normalized:
+    density = gamma.pdf(x, alpha, scale=beta)
+    #    else:
+    #        f = 1
+    #    density = f * np.exp(-(1/2)*(dist_x / sigma)**2)
     # print(density)
     return density
 
@@ -75,6 +101,7 @@ def gamma1d_density(x, alpha=1, beta=1, normalized=True):
 @check_units(x=1, mu=1, sigma=1, normalized=1, result=1)
 def normal1d_density(x, mu=0, sigma=1, normalized=True):
     """
+    Calculates gaussian density in 1d
     Args:
         x, (float): x values at which density is calculated.
         mu (float): Mean of Gaussian.
@@ -83,13 +110,24 @@ def normal1d_density(x, mu=0, sigma=1, normalized=True):
 
     Returns:
         float: (probability) density at a specific distance to the mean of a Gaussian distribution.
+
+    >>> import matplotlib.pyplot as plt
+    >>> dx = 0.1
+    >>> normal1drange = np.arange(-10, 10, dx)
+    >>> # thanks to the brian2 decorators, keyword arguments don't work, but you can add all args as positional arguments
+    >>> gaussian = [normal1d_density(x, 0, 1, True) for x in normal1drange]
+    >>> print(np.sum(gaussian) * dx)
+    >>>
+    >>> plt.figure()
+    >>> plt.plot(normal1drange, gaussian)
+    >>> plt.show()
     """
     dist_x = x - mu
     if normalized:
-        f = 1 / np.sqrt(2 * np.pi * sigma**2)
+        f = 1 / np.sqrt(2 * np.pi * sigma ** 2)
     else:
         f = 1
-    density = f * np.exp(-(1/2)*(dist_x / sigma)**2)
+    density = f * np.exp(-(1 / 2) * (dist_x / sigma) ** 2)
     # print(density)
     return density
 
@@ -117,6 +155,8 @@ def normal1d_density(x, mu=0, sigma=1, normalized=True):
 @check_units(x=1, y=1, mu_x=1, mu_y=1, sigma_x=1, sigma_y=1, rho=1, normalized=1, result=1)
 def normal2d_density(x, y, mu_x=0, mu_y=0, sigma_x=1, sigma_y=1, rho=0, normalized=True):
     """
+        Calculates gaussian density in 2d
+
     Args:
         x, y (float): x and y values at which density is calculated.
         mu_x, mu_y (float): Means of Gaussian in x and y dimension.
@@ -130,14 +170,14 @@ def normal2d_density(x, y, mu_x=0, mu_y=0, sigma_x=1, sigma_y=1, rho=0, normaliz
     dist_x = x - mu_x
     dist_y = y - mu_y
     if normalized:
-        f1 = (1 / (2 * np.pi * sigma_x * sigma_y * np.sqrt(1 - rho**2)))
+        f1 = (1 / (2 * np.pi * sigma_x * sigma_y * np.sqrt(1 - rho ** 2)))
     else:
         f1 = 1
-    f2 = -(1 / (2 * (1 - rho**2)))
+    f2 = -(1 / (2 * (1 - rho ** 2)))
     fx = dist_x / sigma_x
     fy = dist_y / sigma_y
     fxy = 2 * fx * fy * rho
-    density = f1 * np.exp(f2 * (fx**2 + fy**2 - fxy))
+    density = f1 * np.exp(f2 * (fx ** 2 + fy ** 2 - fxy))
     # print(density)
     return density
 
@@ -165,6 +205,18 @@ def normal2d_density_array(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None,
     Returns:
         ndarray: Description
 
+
+    >>> import matplotlib.pyplot as plt
+    >>>
+    >>> img = normal2d_density_array(100, 100, 20, 10, 0.5)
+    >>> # img = normal2d_density_array(100, 100, 20, 20, 0.5, 50,50,0)
+    >>> plt.figure()
+    >>> plt.imshow(img)
+    >>> plt.colorbar()
+    >>> # the sum is almost one, if the sigmas are much smaller than the range
+    >>> print(np.sum(img))
+
+
     Note:
         as the function is vectorized, this is the same as:
 
@@ -179,7 +231,7 @@ def normal2d_density_array(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None,
     """
     x = np.arange(0, nrows)
     y = np.reshape(np.arange(0, ncols), (ncols, 1))
-    #y = x[:, np.newaxis]
+    # y = x[:, np.newaxis]
 
     if mu_x is None:
         mu_x = nrows // 2
@@ -190,48 +242,4 @@ def normal2d_density_array(nrows, ncols, sigma_x=1, sigma_y=1, rho=0, mu_x=None,
         x, y, mu_x, mu_y, sigma_x, sigma_y, rho, normalized)
 
     return density
-
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    img = normal2d_density_array(100, 100, 20, 10, 0.5)
-    #img = normal2d_density_array(100, 100, 20, 20, 0.5, 50,50,0)
-    plt.figure()
-    plt.imshow(img)
-    plt.colorbar()
-    # the sum is almost one, if the sigmas are much smaller than the range
-    print(np.sum(img))
-
-    dx = 0.1
-    normal1drange = np.arange(-10,10,dx)
-    # thanks to the brian2 decorators, keyword arguments don't work, but you can add all args as positional arguments
-    gaussian = [normal1d_density(x, 0, 1, True) for x in normal1drange]
-    print(np.sum(gaussian)*dx)
-
-    plt.figure()
-    plt.plot(normal1drange,gaussian)
-    plt.show()
-
-
-    from teili import Neurons
-    standalone_dir = os.path.expanduser('~/mismatch_standalone')
-    set_device('cpp_standalone', directory=standalone_dir)
-
-    dx = 0.01
-    x = np.arange(0, 10, 0.01)
-    gamma_pdf = gamma1d_density(x, 2, 1)
-
-    n = Neurons(1000, model = 'x : 1')
-    n.namespace.update({'gamma1d_density':gamma1d_density})
-    n.x = "gamma1d_density(i/100.0,2.0,1.0,False)"
-
-    run(1*ms)
-    plt.figure()
-    plt.plot(np.arange(0,10,1/100), n.x)
-    plt.plot(x, gamma_pdf)
-
-    plt.show()
-
-    sum(n.x * 1/100)
-    sum(gamma_pdf * dx)
 

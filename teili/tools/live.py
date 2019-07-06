@@ -36,12 +36,14 @@ else:
 
 
 class ParameterGUI(QtGui.QWidget):
-
-    """Summary
+    """
+    Creates a GUI to change parameters while the brian2 simulation is running.
+    You initialize passing the brian2 network, then, parameters are added by the add_params method.
+    When all parameters are added, show_gui has to be called.
 
     Attributes:
         blockparams (list): Description
-        net (TYPE): Description
+        net (TYPE): brian2 network
         params (list): Description
         paramtree (TYPE): Description
         state (TYPE): Description
@@ -158,7 +160,7 @@ class ParameterGUI(QtGui.QWidget):
         self.params += [{'name': block.name, 'type': 'group', 'children': self.make_children(block)}
                         for block in net.blocks]
 
-    def showGUI(self):
+    def show_gui(self):
         """Summary
         """
         if self.net is None:
@@ -247,10 +249,12 @@ class ParameterGUI(QtGui.QWidget):
 
 class PlotGUI(pg.GraphicsWindow):
 
-    """Summary
+    """
+    This creates a GUI to plot variables while the brian2 simulation is running.
+    This is for 1d variables.
 
     Attributes:
-        curveData (dict): Description
+        data (dict): Description
         timer (TYPE): Description
     """
 
@@ -296,7 +300,9 @@ class PlotGUI(pg.GraphicsWindow):
 
 class ImageGUI(pg.GraphicsLayoutWidget):
 
-    """Summary
+    """
+    This creates a GUI to plot variables while the brian2 simulation is running.
+    This is for 2d (image) variables.
 
     Attributes:
         data (TYPE): Description

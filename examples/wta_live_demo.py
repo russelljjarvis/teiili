@@ -91,7 +91,7 @@ plot_gui = PlotGUI(data=gtestWTA._groups['n_exc'].Imem)
 param_gui = ParameterGUI(net=Net)
 #param_gui.params
 param_gui.add_params(parameters=[syn_in_ex.guiweight, noise_syn.guiweight])
-param_gui.showGUI()
+param_gui.show_gui()
 
 # %%
 Net.run_as_thread(duration=duration)

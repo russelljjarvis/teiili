@@ -151,8 +151,7 @@ Rasterplot(MyEventsModels=[spikemon_input],
                      show_immediately=False)
 
 # Input synapses
-<<<<<<< HEAD
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'I_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Input synapses",
@@ -163,12 +162,6 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'Ie_syn'))],
                    subfig=p2,
                    QtApp=app,
                    show_immediately=False)
-=======
-for i, data in enumerate(np.asarray(statemon_input_synapse.I_syn)):
-    name = 'Syn_{}'.format(i)
-    p2.plot(x=np.asarray(statemon_input_synapse.t / ms), y=data,
-            pen=pg.mkPen(colors[3], width=2), name=name)
->>>>>>> dev
 
 # Intermediate neurons
 if hasattr(statemon_test_neurons1, 'Imem'):
@@ -190,8 +183,7 @@ Lineplot(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
                    show_immediately=False)
 
 # Output synapses
-<<<<<<< HEAD
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'Ie_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'I_syn'))],
                    MyPlotSettings=MyPlotSettings,
                    x_range=[0, duration],
                    title="Test synapses",
@@ -216,13 +208,6 @@ Rasterplot(MyEventsModels=[spikemon_test_neurons2],
                      subfig_rasterplot=p5,
                      QtApp=app,
                      show_immediately=False)
-
-=======
-for i, data in enumerate(np.asarray(statemon_test_synapse.I_syn)):
-    name = 'Syn_{}'.format(i)
-    p4.plot(x=np.asarray(statemon_test_synapse.t / ms), y=data,
-            pen=pg.mkPen(colors[1], width=2), name=name)
->>>>>>> dev
 
 if hasattr(statemon_test_neurons2, 'Imem'):
     MyData_output = [(statemon_test_neurons2, ('t','Imem'))]

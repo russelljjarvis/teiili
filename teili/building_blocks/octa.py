@@ -37,15 +37,14 @@ from teili.stimuli.testbench import WTA_Testbench, OCTA_Testbench
 
 from teili.models.parameters.octa_params import *
 
-from teili.tools.octa_tools.octa_tools import add_decay_weight,\
+from teili.tools.octa_tools import add_decay_weight,\
     add_weight_re_init, add_weight_re_init_ipred,\
     add_proxy_activity,\
     add_weight_pred_decay, add_bb_mismatch, add_weight_init
 
-from teili.tools.octa_tools.lock_and_load import  save_monitor, load_monitor,\
-    save_weights, load_weights
+from teili.tools.octa_tools import  save_monitor, load_monitor,\
+    save_weights, load_weights, weight_init
 
-from teili.tools.octa_tools.weight_init import weight_init
 
 # from teili.tools.visualizer.DataControllers import Rasterplot
 # from teili.tools.visualizer.DataViewers import PlotSettings
@@ -205,7 +204,7 @@ def gen_octa(groupname,
     compression._groups['s_inp_exc'] = Connections(projection, compression._groups['n_exc'],
                                                    equation_builder=DPIstdp,
                                                    method='euler',
-                                                   name=groupname +'_s_proj_comp')
+                                                   name='s_proj_comp')
 
     compression._groups['s_inp_exc'].connect(True)
     compression._set_tags(tags.basic_wta_s_inp_exc, compression._groups['s_inp_exc'])

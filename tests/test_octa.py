@@ -20,13 +20,12 @@ class TestOcta(unittest.TestCase):
     def test_attributes(self):
         test_octa = Octa(name='test_octa')
 
-        self.assertGreater(test_octa.num_input_neurons, test_octa.num_neurons)
-        self.assertEqual(test_octa.sub_blocks['compressionWTA'].groups['spike_gen'].N,
-                         test_octa.sub_blocks['predictionWTA'].groups['n_exc'].N )
+        self.assertEqual(test_octa.sub_blocks['compression'].groups['spike_gen'].N,
+                         test_octa.sub_blocks['prediction'].groups['n_exc'].N)
 
     def test_sub_blocks(self):
         test_octa = Octa(name='test_octa')
-        self.assertEqual(len(test_octa.groups), 24)
+        self.assertEqual(len(test_octa.groups), 26)
         self.assertEqual(len(test_octa.sub_blocks), 2)
 
 

@@ -81,7 +81,6 @@ wta_params = {'we_inp_exc': 1.5,
               }
 
 
-
 class WTA(BuildingBlock):
     '''A 1 or 2D square Winner-Takes_all (WTA) Building block.
 
@@ -159,38 +158,38 @@ class WTA(BuildingBlock):
 
         if dimensions == 1:
             self._groups,\
-            self.monitors,\
-            self.standalone_params = gen1dWTA(name,
-                                              neuron_eq_builder,
-                                              synapse_eq_builder,
-                                              num_neurons=num_neurons,
-                                              num_inh_neurons=num_inh_neurons,
-                                              additional_statevars=additional_statevars,
-                                              cutoff=cutoff,
-                                              num_input_neurons=num_input_neurons,
-                                              num_inputs=num_inputs,
-                                              monitor=monitor,
-                                              debug=debug,
-                                              spatial_kernel=spatial_kernel,
-                                              **block_params)
+                self.monitors,\
+                self.standalone_params = gen1dWTA(name,
+                                                  neuron_eq_builder,
+                                                  synapse_eq_builder,
+                                                  num_neurons=num_neurons,
+                                                  num_inh_neurons=num_inh_neurons,
+                                                  additional_statevars=additional_statevars,
+                                                  cutoff=cutoff,
+                                                  num_input_neurons=num_input_neurons,
+                                                  num_inputs=num_inputs,
+                                                  monitor=monitor,
+                                                  debug=debug,
+                                                  spatial_kernel=spatial_kernel,
+                                                  **block_params)
             set_WTA_tags(self, self._groups)
 
         elif dimensions == 2:
             self._groups,\
-            self.monitors,\
-            self.standalone_params = gen2dWTA(name,
-                                              neuron_eq_builder,
-                                              synapse_eq_builder,
-                                              num_neurons=num_neurons,
-                                              num_inh_neurons=num_inh_neurons,
-                                              additional_statevars=additional_statevars,
-                                              cutoff=cutoff,
-                                              num_input_neurons=num_input_neurons,
-                                              num_inputs=num_inputs,
-                                              monitor=monitor,
-                                              debug=debug,
-                                              spatial_kernel=spatial_kernel,
-                                              **block_params)
+                self.monitors,\
+                self.standalone_params = gen2dWTA(name,
+                                                  neuron_eq_builder,
+                                                  synapse_eq_builder,
+                                                  num_neurons=num_neurons,
+                                                  num_inh_neurons=num_inh_neurons,
+                                                  additional_statevars=additional_statevars,
+                                                  cutoff=cutoff,
+                                                  num_input_neurons=num_input_neurons,
+                                                  num_inputs=num_inputs,
+                                                  monitor=monitor,
+                                                  debug=debug,
+                                                  spatial_kernel=spatial_kernel,
+                                                  **block_params)
 
             set_WTA_tags(self, self._groups)
 
@@ -273,26 +272,26 @@ def gen1dWTA(groupname,
         num_input_neurons = num_neurons
     # empty input for WTA group
     ts = np.asarray([]) * ms
-    ind= np.asarray([])
+    ind = np.asarray([])
     spike_gen = SpikeGeneratorGroup(
-        num_input_neurons, indices=ind, times=ts, name=groupname + '__' + 'spike_gen')
+        num_input_neurons, indices=ind, times=ts, name=groupname + '_' + 'spike_gen')
 
     # create synapses
     s_inp_exc = Connections(spike_gen, n_exc,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name=groupname + '__' + 's_inp_exc')
+                            equation_builder=synapse_eq_builder(),
+                            method="euler", name=groupname + '_' + 's_inp_exc')
     s_exc_exc = Connections(n_exc, n_exc,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name=groupname + '__' + 's_exc_exc')
+                            equation_builder=synapse_eq_builder(),
+                            method="euler", name=groupname + '_' + 's_exc_exc')
     s_inh_exc = Connections(n_inh, n_exc,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name=groupname + '__' + 's_inh_exc')
+                            equation_builder=synapse_eq_builder(),
+                            method="euler", name=groupname + '_' + 's_inh_exc')
     s_exc_inh = Connections(n_exc, n_inh,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name=groupname + '__' + 's_exc_inh')
+                            equation_builder=synapse_eq_builder(),
+                            method="euler", name=groupname + '_' + 's_exc_inh')
     s_inh_inh = Connections(n_inh, n_inh,
-                              equation_builder=synapse_eq_builder(),
-                              method='euler', name=groupname + '__' + 's_inh_inh')
+                            equation_builder=synapse_eq_builder(),
+                            method='euler', name=groupname + '_' + 's_inh_inh')
 
     # connect synapses
     s_inp_exc.connect('i==j')
@@ -305,7 +304,8 @@ def gen1dWTA(groupname,
 
     s_exc_exc.add_state_variable(
         name='lateral_weight', shared=True, constant=True)
-    s_exc_exc.add_state_variable(name='lateral_sigma', shared=True, constant=True)
+    s_exc_exc.add_state_variable(
+        name='lateral_sigma', shared=True, constant=True)
 
     # set weights
     s_inp_exc.weight = we_inp_exc
@@ -329,7 +329,7 @@ def gen1dWTA(groupname,
         's_exc_exc': s_exc_exc,
         's_exc_inh': s_exc_inh,
         's_inh_exc': s_inh_exc,
-        's_inh_inh': s_inh_inh,}
+        's_inh_inh': s_inh_inh, }
 
     # spikemons
     if monitor:
@@ -342,16 +342,16 @@ def gen1dWTA(groupname,
             spike_gen, name=groupname + '_spikemon_inp')
         try:
             statemon_exc = StateMonitor(n_exc, ('Vm', 'Iin'), record=True,
-                                       name=groupname + '_statemon_exc')
+                                        name=groupname + '_statemon_exc')
         except KeyError:
             statemon_exc = StateMonitor(n_exc, ('Imem', 'Iin'), record=True,
-                                       name=groupname + '_statemon_exc')
+                                        name=groupname + '_statemon_exc')
         monitors = {
             'spikemon_exc': spikemon_exc,
             'spikemon_inh': spikemon_inh,
             'spikemon_inp': spikemon_inp,
             'statemon_exc': statemon_exc}
-    else : 
+    else:
         monitors = {}
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
@@ -389,7 +389,6 @@ def gen2dWTA(groupname,
              ei_connection_probability=1.0, ie_connection_probability=1,
              ii_connection_probability=0.1,
              additional_statevars=[], monitor=True, debug=False):
-
     '''Creates a 2D square WTA population of neurons, including the inhibitory interneuron population
 
     Args:
@@ -405,7 +404,7 @@ def gen2dWTA(groupname,
         rp_inh (float, optional): Refractory period of inhibitory neurons.
         wi_inh_inh (int, optional): Self-inhibitory weight of the interneuron population.
         ei_connection_probability (float, optional): WTA to interneuron connectivity probability.
- 
+
         spatial_kernel (str, optional): Description
         num_neurons (int, optional): Size of WTA neuron population.
         num_inh_neurons (int, optional): Size of inhibitory interneuron population.
@@ -440,9 +439,9 @@ def gen2dWTA(groupname,
     num2dNeurons = num_neurons**2
     num_inh_inputs = 2
     n_exc = Neurons(num2dNeurons, equation_builder=neuron_eq_builder(num_inputs=3 + num_inputs),
-                        refractory=rp_exc, name= groupname + '_n_exc')
+                    refractory=rp_exc, name=groupname + '_n_exc')
     n_inh = Neurons(num_inh_neurons, equation_builder=neuron_eq_builder(num_inputs=num_inh_inputs),
-                           refractory=rp_inh, name= groupname + '_n_inh')
+                    refractory=rp_inh, name=groupname + '_n_inh')
 
     n_exc.namespace['num_neurons'] = num_neurons
     n_exc.namespace['ind2x'] = ind2x
@@ -458,24 +457,24 @@ def gen2dWTA(groupname,
     tsWTA = np.asarray([]) * ms
     indWTA = np.asarray([])
     spike_gen = SpikeGeneratorGroup(
-        num_input2d_neurons, indices=indWTA, times=tsWTA, name= groupname + '_spike_gen')
+        num_input2d_neurons, indices=indWTA, times=tsWTA, name=groupname + '_spike_gen')
 
     # create synapses
     s_inp_exc = Connections(spike_gen, n_exc,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name=groupname + '_s_inp_exc')
+                            equation_builder=synapse_eq_builder(),
+                            method="euler", name=groupname + '_s_inp_exc')
     s_exc_exc = Connections(n_exc, n_exc,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name=groupname + '_s_exc_exc')
+                            equation_builder=synapse_eq_builder(),
+                            method="euler", name=groupname + '_s_exc_exc')
     s_inh_exc = Connections(n_inh, n_exc,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name= groupname + '_s_inh_exc')
+                            equation_builder=synapse_eq_builder(),
+                            method="euler", name=groupname + '_s_inh_exc')
     s_exc_inh = Connections(n_exc, n_inh,
-                              equation_builder=synapse_eq_builder(),
-                              method="euler", name=  groupname + '_s_exc_inh')
+                            equation_builder=synapse_eq_builder(),
+                            method="euler", name=groupname + '_s_exc_inh')
     s_inh_inh = Connections(n_inh, n_inh,
-                              equation_builder=synapse_eq_builder(),
-                              method='euler', name= groupname + '_s_inh_inh')
+                            equation_builder=synapse_eq_builder(),
+                            method='euler', name=groupname + '_s_inh_inh')
 
     # connect synapses
     s_inp_exc.connect('i==j')
@@ -488,7 +487,8 @@ def gen2dWTA(groupname,
 
     s_exc_exc.add_state_variable(
         name='lateral_weight', shared=True, constant=True)
-    s_exc_exc.add_state_variable(name='lateral_sigma', shared=True, constant=True)
+    s_exc_exc.add_state_variable(
+        name='lateral_sigma', shared=True, constant=True)
 
     # set weights
     s_inp_exc.weight = we_inp_exc
@@ -525,10 +525,10 @@ def gen2dWTA(groupname,
             spike_gen, name=groupname + '_spikemon_inp')
         try:
             statemon_exc = StateMonitor(n_exc, ('Vm', 'Iin'), record=True,
-                                    name=groupname + '_statemon_exc')
+                                        name=groupname + '_statemon_exc')
         except KeyError:
             statemon_exc = StateMonitor(n_exc, ('Imem', 'Iin'), record=True,
-                                    name=groupname + '_statemon_exc')
+                                        name=groupname + '_statemon_exc')
         monitors = {
             'spikemon_exc': spikemon_exc,
             'spikemon_inh': spikemon_inh,
@@ -555,52 +555,44 @@ def gen2dWTA(groupname,
     if debug:
         print('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
-        print('The keys of the ' +groupname+' output dict are:')
+        print('The keys of the ' + groupname+' output dict are:')
         for key in _groups:
             print(key)
-            
 
     return _groups, monitors, standalone_params
 
-def set_WTA_tags(self,_groups):
+
+def set_WTA_tags(self, _groups):
     '''
     Sets default tags to a WTA network
 
     Args:
-        _groups (dictionary): Keys to all neuron and synapse groups. 
+        _groups (dictionary): Keys to all neuron and synapse groups.
 
     Returns:
         _groups (dictionary): Keys to all neuron and synapse groups with tags appended.
 
 
       Tags will be added to all _groups passed. They follow this structure:
-     
+
       tags =       { 'mismatch' : (bool, 0/1)
-                      'noise : (bool, 0/1)              
-                      'level': int       
-                     'sign': str (exc/inh/None)  
+                      'noise : (bool, 0/1)
+                      'level': int
+                     'sign': str (exc/inh/None)
                      'target sign': str (exc/inh/None)
                       'num_inputs' : int (0 if not Neuron group),
                       'bb_type' : str (WTA/3-WAY),
                       'group_type' : str (Neuron/Connection/ SpikeGen)
-                      'connection_type' : str (rec/lateral/fb/ff/None) 
+                      'connection_type' : str (rec/lateral/fb/ff/None)
 
          }
 '''
 
     self._set_tags(tags_parameters.basic_wta_n_exc, _groups['n_exc'])
-    self._set_tags(tags_parameters.basic_wta_n_inh, _groups['n_inh'])   
-    self._set_tags(tags_parameters.basic_wta_n_sg, _groups['spike_gen'])   
-    self._set_tags(tags_parameters.basic_wta_s_exc_exc, _groups['s_exc_exc']) 
+    self._set_tags(tags_parameters.basic_wta_n_inh, _groups['n_inh'])
+    self._set_tags(tags_parameters.basic_wta_n_sg, _groups['spike_gen'])
+    self._set_tags(tags_parameters.basic_wta_s_exc_exc, _groups['s_exc_exc'])
     self._set_tags(tags_parameters.basic_wta_s_exc_inh, _groups['s_exc_inh'])
     self._set_tags(tags_parameters.basic_wta_s_inh_exc, _groups['s_inh_exc'])
-    self._set_tags(tags_parameters.basic_wta_s_inh_inh, _groups['s_inh_inh'])    
-    self._set_tags(tags_parameters.basic_wta_s_inp_exc, _groups['s_inp_exc'])    
-
-
-
-
-
-
-
-
+    self._set_tags(tags_parameters.basic_wta_s_inh_inh, _groups['s_inh_inh'])
+    self._set_tags(tags_parameters.basic_wta_s_inp_exc, _groups['s_inp_exc'])

@@ -6,12 +6,24 @@ Created on Thu Jun 27 14:45:02 2019
 @author: Matteo1
 """
 import numpy as np
+import matplotlib.pyplot as plt 
+
 from brian2 import ms
 from teili import TeiliNetwork
 from teili.building_blocks.octa import Octa
 from teili.models.parameters.octa_params import *
 from teili.models.neuron_models import OCTA_Neuron as octa_neuron
 from teili.stimuli.testbench import OCTA_Testbench
+from teili.tools.sorting import SortMatrix
+
+'''
+Minimal working example for the OCTA network.
+
+All documentation can be found on the teili website.
+
+The network parameters are found in teili.models.parameters.octa_params
+
+'''
 
 def plot_sorted_compression(OCTA):
     '''
@@ -29,6 +41,7 @@ def plot_sorted_compression(OCTA):
     plt.ylabel("Sorted spikes")
     plt.title("Rasterplot compression block")
 
+
 if __name__ == '__main__':
     Net = TeiliNetwork()
 
@@ -40,15 +53,19 @@ if __name__ == '__main__':
                                 direction='cw',
                                 ts_offset=3, angle_step=10,
                                 noise_probability=0.2,
-                                repetitions=90,
+                                repetitions=100,
                                 debug=False)
 
     OCTA_net.groups['spike_gen'].set_spikes(indices=testbench_stim.indices,
                                             times=testbench_stim.times * ms)
 
-    Net.add(OCTA_net)
+    Net.add(OCTA_net, OCTA_net.sub_blocks['compression'],
+            OCTA_net.sub_blocks['prediction'])
 
     Net.run(np.max(testbench_stim.times) * ms,
             report='text')
 
-    plot_sorted_compression(OCTA=test_OCTA)
+
+    plot_sorted_compression(OCTA=OCTA_net)
+
+

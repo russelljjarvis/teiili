@@ -56,7 +56,6 @@ basic_wta_s_exc_exc = {'mismatch' : 0,
 		               'connection_type' : 'rec',
     		           }
 
-
 basic_wta_s_exc_inh = {'mismatch' : 0,
                        'noise' : 0,
 		               'level': 1 ,
@@ -67,8 +66,6 @@ basic_wta_s_exc_inh = {'mismatch' : 0,
 		               'group_type' : 'Connection',
 		               'connection_type' : 'rec',
     		           }
-
-
 
 basic_wta_s_inh_exc = {'mismatch' : 0,
                        'noise' : 0,
@@ -81,7 +78,6 @@ basic_wta_s_inh_exc = {'mismatch' : 0,
 		               'connection_type' : 'rec',
                        }
 
-
 basic_wta_s_inh_inh = {'mismatch' : 0,
                        'noise' : 0,
 		               'level': 1 ,
@@ -93,7 +89,6 @@ basic_wta_s_inh_inh = {'mismatch' : 0,
 		               'connection_type' : 'rec',
                        }
 
-
 basic_wta_s_inp_exc = {'mismatch' : 0,
                        'noise' : 0,
 		               'level': 1 ,
@@ -102,7 +97,7 @@ basic_wta_s_inp_exc = {'mismatch' : 0,
 		               'num_inputs' : 0,
 		               'bb_type' : 'WTA',
 		               'group_type' : 'Connection',
-		               'connection_type' : 'rec',
+		               'connection_type' : 'ff',
                        }
 
 basic_octa_s_proj_pred = {'mismatch' : 1,
@@ -116,7 +111,6 @@ basic_octa_s_proj_pred = {'mismatch' : 1,
 			              'connection_type' : 'ff',
     			          }
 
-
 basic_octa_s_pred_proj = {'mismatch' : 0,
                           'noise' : 0,
 				          'level': 2 ,
@@ -127,17 +121,6 @@ basic_octa_s_pred_proj = {'mismatch' : 0,
 				          'group_type' : 'Connection',
 				          'connection_type' : 'fb',
 			              }
-
-basic_octa_s_proj_comp = {'mismatch' : 0,
-                          'noise' : 0,
-             		      'level': 2 ,
-		                  'sign': 'exc',
-		                  'target sign': 'exc',
-		                  'num_inputs' : 0,
-		                  'bb_type' : 'OCTA',
-		                  'group_type' : 'Connection',
-		                  'connection_type' : 'ff',
-    			          }
 
 basic_octa_n_sg = {'mismatch' : 0,
                    'noise' : 0,
@@ -150,7 +133,7 @@ basic_octa_n_sg = {'mismatch' : 0,
 		           'connection_type' : 'None',
 		            }
 
-basic_octa_n_exc = {'mismatch' : 0,
+basic_octa_n_proj = {'mismatch' : 1,
                    'noise' : 0,
 		           'level': 2 ,
 		           'sign': 'exc',
@@ -216,7 +199,3 @@ basic_tags_empty = {'mismatch' : 0,
 		            'group_type' : 'None',
 		            'connection_type' : 'None',
 	    	        }
-
-
-
-

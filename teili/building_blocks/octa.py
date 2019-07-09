@@ -17,7 +17,6 @@ If you want to change the default parameters of your building block
 
 
 
-
 """
 from brian2 import ms
 from brian2 import SpikeGeneratorGroup, SpikeMonitor
@@ -36,7 +35,6 @@ from teili.building_blocks.wta import WTA
 from teili.stimuli.testbench import WTA_Testbench, OCTA_Testbench
 
 
-from teili.tools.sorting import SortMatrix
 from teili.models.parameters.octa_params import *
 
 from teili.tools.octa_tools.octa_tools import add_decay_weight,\
@@ -112,7 +110,7 @@ class Octa(BuildingBlock):
                                           **block_params)
 
 
-        # Defining input - output groups
+        # Defining input - output - hidden groups
         self.input_groups.update({'projection': self._groups['n_proj']})
 
         self.output_groups.update({
@@ -168,7 +166,7 @@ def gen_octa(groupname,
         manner (figure of connectivity can be found in the docs).
         Every building block in the teili implementation has a cortical counterpart for which
         the connectivity and function is preserved:
-            compression['spike_gen'] : Layer 4
+            compression['n_proj'] : Layer 4
             compression['n_exc'] : Layer 2/3
             prediction['n_exc'] : Layer 5/6
 
@@ -198,41 +196,27 @@ def gen_octa(groupname,
                      block_params=wta_params,
                      monitor=monitor)
 
+# Define a projection layer which recieves external input and relays it to the compression WTA with the s_inp_exc
     projection = Neurons(N=num_input_neurons**2,
                          equation_builder=neuron_eq_builder(num_inputs=4),
                          refractory=wta_params['rp_exc'],
-                         name='projection')
+                         name=groupname+'_projection')
 
-    compression._set_tags(tags.basic_octa_n_exc, projection)
-
-    #Replace spike_gen block with neurons obj instead of a spikegen
-    # replace_neurons(compression, 'spike_gen', num_input_neurons**2,
-    #                 equation_builder=neuron_eq_builder,
-    #                 refractory=wta_params['rp_exc'])
-
-    # compression._set_tags(tags.basic_wta_n_sg, compression._groups['spike_gen'])
-    # compression._set_tags({'group_type' : 'Neuron'}, compression._groups['spike_gen'])
-
-    #Since the spikegen block has been changed, the connections leading in/out of the group
-    #need to be updated
     compression._groups['s_inp_exc'] = Connections(projection, compression._groups['n_exc'],
                                                    equation_builder=DPIstdp,
                                                    method='euler',
-                                                   name='s_proj_comp')
+                                                   name=groupname +'_s_proj_comp')
 
     compression._groups['s_inp_exc'].connect(True)
-    # compression._set_tags(tags.basic_octa_s_proj_comp, s_proj_comp)
-
-    # replace_connection(compression, 'spike_gen', compression, 'n_exc',\
-    #                    's_inp_exc', equation_builder= DPIstdp)
-
-
     compression._set_tags(tags.basic_wta_s_inp_exc, compression._groups['s_inp_exc'])
+    compression._groups['s_inp_exc']._tags['level'] = 2
+    compression._groups['s_inp_exc']._tags['sign'] = 'exc'
+    compression._groups['s_inp_exc']._tags['bb_type'] = 'OCTA'
     compression._groups['s_inp_exc'].weight = wta_params['we_inp_exc']
     compression._groups['s_inp_exc'].taupre = tau_stdp
     compression._groups['s_inp_exc'].taupost = tau_stdp
 
-    #Change the equation builder of the recurrent connections in compression WTA
+    #Change the equation model of the recurrent connections in compression WTA
     replace_connection(compression, 'n_exc',
                        compression, 'n_exc',
                        's_exc_exc',
@@ -242,7 +226,7 @@ def gen_octa(groupname,
     compression._set_tags(tags.basic_wta_s_exc_exc, compression._groups['s_exc_exc'])
     compression._groups['s_exc_exc'].weight = wta_params['we_exc_exc']
 
-    #Changing the eqaution builder equation to include adaptation on the n_exc populatiOn
+    #Change the eqaution model to include adaptation on the reccurrent connection of the compression WTA.
 
     replace_connection(compression, 'n_inh',
                        compression, 'n_exc',
@@ -258,7 +242,7 @@ def gen_octa(groupname,
                                                                      size=len(compression._groups['s_inh_exc']))
 
 
-    #Changing the eqaution builder equation to include adaptation on the n_exc population
+    #Change the eqaution model to include adaptation on the reccurrent connection of the prediction WTA.
     replace_connection(prediction, 'n_inh',
                        prediction, 'n_exc',
                        's_inh_exc',
@@ -271,7 +255,7 @@ def gen_octa(groupname,
                                                                     size=len(prediction._groups['s_inh_exc']))
 
 
-    #Modify the input of the prediction WTA. Bypassing the spike_gen block
+    #Connect the compression WTA and the prediction WTA
     replace_connection(compression, 'n_exc',
                        prediction, 'n_exc',
                        's_inp_exc',
@@ -279,8 +263,8 @@ def gen_octa(groupname,
 
     prediction._set_tags(tags.basic_wta_s_inp_exc, prediction._groups['s_inp_exc'])
     prediction._groups['s_inp_exc']._tags['sign'] = 'exc'
-    prediction._groups['s_inp_exc']._tags['bb_type'] = 'octa'
-    prediction._groups['s_inp_exc']._tags['connection_type'] = 'ff'
+    prediction._groups['s_inp_exc']._tags['bb_type'] = 'OCTA'
+    prediction._groups['s_inp_exc']._tags['level'] = 2
     prediction._groups['s_inp_exc'].weight = wta_params['we_inp_exc']
     prediction._groups['s_inp_exc'].taupre = tau_stdp
     prediction._groups['s_inp_exc'].taupost = tau_stdp
@@ -294,30 +278,24 @@ def gen_octa(groupname,
     compression._set_tags(tags.basic_wta_s_exc_exc, prediction._groups['s_exc_exc'])
     prediction._groups['s_exc_exc'].weight = wta_params['we_exc_exc']
 
-    #Set error and prediction connections
-    # s_proj_pred, s_pred_proj = error_s_pred_projs(compression,
-    #                                                                        prediction,
-    #                                                                        wta_params,
-    #                                                                        octa_params)
-
+    # Connect the projection layer to the prediction WTA - can be seen as an error connection
     s_proj_pred = Connections(projection,
                               prediction._groups['n_exc'],
                               equation_builder=DPIstdp,
                               method='euler',
-                              name='s_proj_pred')
+                              name=groupname +'_s_proj_pred')
 
     s_proj_pred.connect('True')
     s_proj_pred.weight = wta_params['we_inp_exc']
     s_proj_pred.taupre = tau_stdp
     s_proj_pred.taupost = tau_stdp
 
-    #prediction connection between prediction population and  input neuron population
-
+    # Connect the prediction WTA to the projection layer - can be seen as a predictive connection
     s_pred_proj = Connections(prediction._groups['n_exc'],
                               projection,
                               equation_builder=DPIstdgm,
                               method='euler',
-                              name='s_pred_proj')
+                              name=groupname + '_s_pred_proj')
 
     s_pred_proj.connect(True)
     s_pred_proj.Ipred_plast = np.zeros((len(s_pred_proj)))
@@ -334,7 +312,6 @@ def gen_octa(groupname,
 
     compression._groups['s_inh_exc'].inh_learning_rate = inh_learning_rate
     prediction._groups['s_inh_exc'].inh_learning_rate = inh_learning_rate
-
 
     # List of groups which need the same run regularly function to be added
     w_init_group = [compression._groups['s_exc_exc']]+\
@@ -378,7 +355,6 @@ def gen_octa(groupname,
                           decay_strategy=weight_decay,
                           learning_rate=learning_rate)
 
-
     activity_proxy_group = [compression._groups['n_exc']] + \
                            [prediction._groups['n_exc']]
 
@@ -391,12 +367,11 @@ def gen_octa(groupname,
     add_weight_re_init_ipred(weight_re_init_ipred_group,
                              re_init_threshold=re_init_threshold)
 
-
     #initialiaze mismatch
     add_bb_mismatch(compression)
     add_bb_mismatch(prediction)
     s_proj_pred.add_mismatch(mismatch_synap_param, seed=42)
-
+    projection.add_mismatch(mismatch_neuron_param, seed=42)
 
     if external_input is True:
         spike_gen = SpikeGeneratorGroup(N=num_input_neurons**2,
@@ -459,15 +434,8 @@ def gen_octa(groupname,
     if monitor:
         spikemon_proj = SpikeMonitor(projection,
                                      name='spikemon_proj')
-        spikemon_comp = SpikeMonitor(compression._groups['n_exc'],
-                                     name='spikemon_comp')
-        spikemon_pred = SpikeMonitor(prediction._groups['n_exc'],
-                                     name='spikemon_pred')
 
-
-        monitors = {'spikemon_proj': spikemon_proj,
-                    'spikemon_comp': spikemon_comp,
-                    'spikemon_pred': spikemon_pred}
+        monitors = {'spikemon_proj': spikemon_proj}
 
         if external_input:
             spikemon_inp = SpikeMonitor(spike_gen,
@@ -494,8 +462,7 @@ def replace_connection(bb_source, population_source,
                        equation_builder,
                        method='euler', name=None):
     '''
-    This function replaces the connection between two populations with a different
-    equation rule
+    This function replaces/ adds the connection between two groups
     '''
 
     if name == None:
@@ -515,10 +482,9 @@ def set_OCTA_tags(self, _groups):
     '''Sets default tags to a OCTA network'''
     self._set_tags(tags.basic_octa_s_proj_pred, _groups['s_proj_pred'])
     self._set_tags(tags.basic_octa_s_pred_proj, _groups['s_pred_proj'])
-    self._set_tags(tags.basic_octa_s_proj_comp, _groups['s_inp_exc'])
     self._set_tags(tags.basic_octa_n_sg, _groups['spike_gen'])
     self._set_tags(tags.basic_octa_s_pred_noise, _groups['pred_noise_syn_exc'])
     self._set_tags(tags.basic_octa_s_comp_noise, _groups['comp_noise_syn_exc'])
     self._set_tags(tags.basic_octa_pred_noise_sg, _groups['pred_noise_gen'])
     self._set_tags(tags.basic_octa_comp_noise_sg, _groups['comp_noise_gen'])
-
+    self._set_tags(tags.basic_octa_n_proj, _groups['n_proj'])

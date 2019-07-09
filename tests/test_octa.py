@@ -20,7 +20,7 @@ class TestOcta(unittest.TestCase):
     def test_attributes(self):
         test_octa = Octa(name='test_octa')
 
-        self.assertEqual(test_octa.sub_blocks['compression'].groups['spike_gen'].N,
+        self.assertEqual(test_octa._groups['n_proj'].N,
                          test_octa.sub_blocks['prediction'].groups['n_exc'].N)
 
     def test_sub_blocks(self):

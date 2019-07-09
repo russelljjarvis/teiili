@@ -33,26 +33,21 @@ wta_params = {'we_inp_exc': 100,
              }
 
 
-octa_params = {'duration': 10000,
-              'revolutions': 200,
-              'num_neurons': 7,
-              'num_input_neurons': 10,
-              'distribution': 'gamma',
-              'dist_param_init': 0.5, # shape for gamma < 0.5
-              'scale_init': 1.0,  # sigma for gamma 1.0
-              'dist_param_re_init': 0.4,
-              'scale_re_init': 0.9,
-              're_init_threshold': 0.2,
-              'buffer_size': 5,
-              'buffer_size_plast': 200,
-              'noise_weight': 30.0,
-              'variance_th_c': 0.5,
-              'variance_th_p': 0.4,
-              'learning_rate': 0.007,
-              'inh_learning_rate': 0.01,
-              'decay': 150,
-              'weight_decay': 'global',
-              'tau_stdp': 10 * ms
+octa_params = {'distribution': 'gamma',
+               'dist_param_init': 0.5, # shape for gamma < 0.5
+               'scale_init': 1.0,  # sigma for gamma 1.0
+               'dist_param_re_init': 0.4,
+               'scale_re_init': 0.9,
+               're_init_threshold': 0.2,
+               'buffer_size_plast': 200,
+               'noise_weight': 30.0,
+               'variance_th_c': 0.5,
+               'variance_th_p': 0.4,
+               'learning_rate': 0.007,
+               'inh_learning_rate': 0.01,
+               'decay': 150,
+               'weight_decay': 'global',
+               'tau_stdp': 10 * ms
              }
 
 

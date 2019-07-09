@@ -45,13 +45,6 @@ from teili.tools.octa_tools import add_decay_weight,\
 from teili.tools.octa_tools import  save_monitor, load_monitor,\
     save_weights, load_weights, weight_init
 
-
-# from teili.tools.visualizer.DataControllers import Rasterplot
-# from teili.tools.visualizer.DataViewers import PlotSettings
-# from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-# from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
-
-
 prefs.codegen.target = "numpy"
 
 class Octa(BuildingBlock):
@@ -108,8 +101,7 @@ class Octa(BuildingBlock):
                                           debug=debug,
                                           **block_params)
 
-
-        # Defining input - output - hidden groups
+# Defining input - output - hidden groups
         self.input_groups.update({'projection': self._groups['n_proj']})
 
         self.output_groups.update({
@@ -226,7 +218,6 @@ def gen_octa(groupname,
     compression._groups['s_exc_exc'].weight = wta_params['we_exc_exc']
 
     #Change the eqaution model to include adaptation on the reccurrent connection of the compression WTA.
-
     replace_connection(compression, 'n_inh',
                        compression, 'n_exc',
                        's_inh_exc',
@@ -240,7 +231,6 @@ def gen_octa(groupname,
                                                                      high=variance_th_c + 0.1,
                                                                      size=len(compression._groups['s_inh_exc']))
 
-
     #Change the eqaution model to include adaptation on the reccurrent connection of the prediction WTA.
     replace_connection(prediction, 'n_inh',
                        prediction, 'n_exc',
@@ -252,7 +242,6 @@ def gen_octa(groupname,
     prediction._groups['s_inh_exc'].variance_th = np.random.uniform(low=variance_th_p - 0.1,
                                                                     high=variance_th_p + 0.1,
                                                                     size=len(prediction._groups['s_inh_exc']))
-
 
     #Connect the compression WTA and the prediction WTA
     replace_connection(compression, 'n_exc',
@@ -307,7 +296,6 @@ def gen_octa(groupname,
 
     s_proj_pred.dApre = learning_rate
     s_pred_proj.dApre = learning_rate
-
 
     compression._groups['s_inh_exc'].inh_learning_rate = inh_learning_rate
     prediction._groups['s_inh_exc'].inh_learning_rate = inh_learning_rate
@@ -406,9 +394,12 @@ def gen_octa(groupname,
                                       name=groupname + '_noise_pred_exc')
 
         noise_syn_p_exc.connect("i==j")
+
         noise_syn_p_exc.weight = noise_weight
         compression._groups['n_exc']._tags['noise'] = 1
         prediction._groups['n_exc']._tags['noise'] = 1
+        compression._groups['n_exc']._tags['num_inputs'] = 4
+        prediction._groups['n_exc']._tags['num_inputs'] = 4
 
     _groups = {'s_proj_pred': s_proj_pred,
                's_pred_proj': s_pred_proj,
@@ -475,7 +466,6 @@ def replace_connection(bb_source, population_source,
     bb_target._groups[connection_name].connect(True)
 
     return None
-
 
 def set_OCTA_tags(self, _groups):
     '''Sets default tags to a OCTA network'''

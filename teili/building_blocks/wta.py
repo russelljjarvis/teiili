@@ -601,7 +601,6 @@ def gen2dWTA(groupname,
             'spikemon_inh': spikemon_inh,
             'spikemon_inp': spikemon_inp,
             'statemon_exc': statemon_exc}
-
     else:
         monitors = {}
 

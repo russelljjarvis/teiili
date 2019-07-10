@@ -123,8 +123,8 @@ class BuildingBlock(Nameable):
         for sub_block in self.sub_blocks:
             # Needs to be groups and not _groups for recursive collection
             for group in self.sub_blocks[sub_block].groups:
-                tmp_groups.update({self.sub_blocks[sub_block].groups[group].name
-                                : self.sub_blocks[sub_block].groups[group]})
+                tmp_groups.update(
+                    {self.sub_blocks[sub_block].groups[group].name: self.sub_blocks[sub_block].groups[group]})
         return tmp_groups
 
     def __getitem__(self, key):
@@ -148,22 +148,18 @@ class BuildingBlock(Nameable):
         """
         tags = copy.deepcopy(tags)
         if type(target_group) == str:
-            if hasattr(self._groups[target_group],"_tags"):
+            if hasattr(self._groups[target_group], "_tags"):
                 self._groups[target_group]._tags.update(tags)
             else:
                 self._groups[target_group]._tags = {}
                 self._groups[target_group]._tags.update(tags)
 
         else:
-            if hasattr(target_group,"_tags"):
+            if hasattr(target_group, "_tags"):
                 target_group._tags.update(tags)
             else:
                 target_group._tags = {}
                 target_group._tags.update(tags)
-
-
-
-
 
     def print_tags(self, target_group):
         """ Get the currently set tags for a given group.
@@ -203,7 +199,7 @@ class BuildingBlock(Nameable):
         for group in self.groups:
 
             try:
-                if  tags.items() <= self.groups[group]._tags.items():
+                if tags.items() <= self.groups[group]._tags.items():
                     target_dict[group] = self.groups[group]
                 else:
                     continue

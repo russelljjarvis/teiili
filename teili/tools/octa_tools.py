@@ -24,7 +24,6 @@ This file contains:
 All these functions are linked the the OCTA building block
 '''
 
-
 def add_bb_mismatch(bb, seed= 42):
     '''
     This allows to add mismatch to all the neuron and connection groups present in a building block

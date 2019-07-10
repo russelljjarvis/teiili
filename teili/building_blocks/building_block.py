@@ -19,6 +19,7 @@ Todo:
 import numpy as np
 from brian2.core.names import Nameable
 from collections import OrderedDict
+import copy
 
 
 class BuildingBlock(Nameable):
@@ -145,6 +146,7 @@ class BuildingBlock(Nameable):
               }
             target_group (str): Name of group to set tags
         """
+        tags = copy.deepcopy(tags)
         if type(target_group) == str:
             self._groups[target_group]._tags = tags
         else:
@@ -195,5 +197,3 @@ class BuildingBlock(Nameable):
             except AttributeError as e:
                 pass
         return target_dict
-
-

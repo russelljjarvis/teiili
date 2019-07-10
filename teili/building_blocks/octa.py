@@ -398,8 +398,14 @@ def gen_octa(groupname,
         noise_syn_p_exc.weight = noise_weight
         compression._groups['n_exc']._tags['noise'] = 1
         prediction._groups['n_exc']._tags['noise'] = 1
+
         compression._groups['n_exc']._tags['num_inputs'] = 4
-        prediction._groups['n_exc']._tags['num_inputs'] = 4
+        print(compression._groups['n_exc']._tags['num_inputs'] )
+        print(prediction._groups['n_exc']._tags['num_inputs'])
+        prediction._groups['n_exc']._tags['num_inputs'] = 6
+        print(prediction._groups['n_exc']._tags['num_inputs'])
+        print(compression._groups['n_exc']._tags['num_inputs'] )
+
 
     _groups = {'s_proj_pred': s_proj_pred,
                's_pred_proj': s_pred_proj,

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Collection of tools necessary for cpp standalone mode
+"""Collection of tools to add some features to cpp standalone mode
 """
 # @Author: alpren
 # @Date:   2017-07-28 19:02:05
@@ -33,7 +33,8 @@ def deactivate_standalone():
 
 
 def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True, do_compile=True):
-    """Builds cpp standalone network and replaces variables/parameters with standalone parameters
+    """Builds cpp standalone network and replaces variables/parameters with standalone_params
+    This does string replacement in the generated c++ code.
 
     Args:
         standalone_params (dict, required): Dictionary containing all parameters which can be changed
@@ -50,31 +51,31 @@ def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True
     device.build(compile=False, run=False, directory=standalone_dir, clean=clean, debug=False)
 
     end = time.time()
-    print ('build took ' + str(end - startBuild) + ' sec')
+    print('build took ' + str(end - startBuild) + ' sec')
 
-    #===============================================================================
+    # ===============================================================================
     # Code that needs to be added to the main.cpp file
 
     maincppPath = os.path.join(os.getcwd(), standalone_dir, 'main.cpp')  # this should always be the correct path
     replace_vars = [key for key in standalone_params]
     replace_variables_in_cpp_code(replace_vars, replace_file_location=maincppPath)
-    #===============================================================================
+    # ===============================================================================
     # compile
     if do_compile:
         startMake = time.time()
-        #out = check_output(["make","-C","~/Code/SOM_standalone"])
+        # out = check_output(["make","-C","~/Code/SOM_standalone"])
         compiler, args = codegen.cpp_prefs.get_compiler_and_args()
         device.compile_source(directory=standalone_dir, compiler=compiler, clean=clean, debug=False)
         # print(out)
         end = time.time()
-        print ('make took ' + str(end - startMake) + ' sec')
+        print('make took ' + str(end - startMake) + ' sec')
         print('\n\nstandalone was built and compiled, ready to run!')
     else:
         print('\n\nstandalone was built, ready to compile!')
 
 
 def replace_variables_in_cpp_code(replace_vars, replace_file_location):
-    '''replaces a list of variables in CPP code for standalone code generation with changeable parameters
+    '''Replaces a list of variables in CPP code for standalone code generation with changeable parameters
     and it adds duration as a changeable parameter (it is always the first argument)
 
 
@@ -87,7 +88,8 @@ def replace_variables_in_cpp_code(replace_vars, replace_file_location):
     cppArgCode = ""
     for ivar, rvar in enumerate(replace_vars):
         cppArgCode += """\n float {replvar}_p = std::stof(argv[{num}],NULL);
-    std::cout << "variable {replvar} is argument {num} with value " << {replvar}_p << std::endl;\n""".format(num=(ivar + 1), replvar=rvar)
+    std::cout << "variable {replvar} is argument {num} with value " << {replvar}_p << std::endl;\n""".format(
+            num=(ivar + 1), replvar=rvar)
         print("variable {replvar} is main() argument {num}".format(num=(ivar + 1), replvar=rvar))
 
     print('\n*********************************\n')
@@ -104,7 +106,8 @@ def replace_variables_in_cpp_code(replace_vars, replace_file_location):
     contents.insert(insertLine, cppArgCode)
 
     # replace var code
-    replaceTODOlist = list(replace_vars)  # copy replace_vars in order to create a todolist where we can delete elements that are done
+    replaceTODOlist = list(
+        replace_vars)  # copy replace_vars in order to create a todolist where we can delete elements that are done
     f = open(replace_file_location, "w")
     for i_line, line in enumerate(contents):
         replaced = False
@@ -132,7 +135,8 @@ def replace_variables_in_cpp_code(replace_vars, replace_file_location):
             f.write(line)
     f.close()
     if len(replaceTODOlist) > 0:
-        warnings.warn("could not find matching variables in cpp code for " + str(replaceTODOlist), Warning)  # warning, items left in todolist
+        warnings.warn("could not find matching variables in cpp code for " + str(replaceTODOlist),
+                      Warning)  # warning, items left in todolist
         print('\n* * * * * * * * * * * * * * * * *\n NOT all variables successfully replaced in cpp code! \n')
         print("could not find matching variables in cpp code for " + str(replaceTODOlist))
 
@@ -199,5 +203,5 @@ def run_standalone(standalone_params):
     run_args = params2run_args(standalone_params)
     device.run(directory=device.project_dir, with_output=True, run_args=run_args)
     end_sim = time.time()
-    print ('simulation in c++ took ' + str(end_sim - start_sim) + ' sec')
+    print('simulation in c++ took ' + str(end_sim - start_sim) + ' sec')
     print('simulation done!')

@@ -12,8 +12,16 @@ import numpy as np
 import struct
 import itertools
 
+
 def delete_doublets(spiketimes, indices):
-    len_before= len(spiketimes)
+    """
+    Removes spikes that happen at the same time and at the same index.
+    This happens when you donwnsample, but Brian2 cannot cope with more that 1 spike per ts.
+    :param spiketimes: numpy array of spike times
+    :param indices:  numpy array of indices
+    :return: same as input but with removed doublets
+    """
+    len_before = len(spiketimes)
     buff_data = np.vstack((spiketimes, indices)).T
     buff_data[:, 0] = buff_data[:, 0].astype(int)
     _, idx = np.unique(buff_data, axis=0, return_index=True)
@@ -22,9 +30,10 @@ def delete_doublets(spiketimes, indices):
     spiketimes = buff_data[:, 0]
     indices = np.asarray(buff_data[:, 1], dtype=int)
 
-    print(len_before-len(spiketimes), 'spikes removed')
-    print(len(spiketimes)/len_before*100, '% spikes removed')
+    print(len_before - len(spiketimes), 'spikes removed')
+    print(len(spiketimes) / len_before * 100, '% spikes removed')
     return spiketimes, indices
+
 
 def skip_header(file_read):
     '''skip header.
@@ -52,10 +61,10 @@ def read_events(file_read, x_dim, y_dim):
         TYPE: Description
     """
 
-    #raise Exception
+    # raise Exception
     data = file_read.read(28)
 
-    if(len(data) == 0):
+    if (len(data) == 0):
         return [-1], [-1], [-1], [-1], [-1], [-1]
 
     # read header
@@ -78,8 +87,8 @@ def read_events(file_read, x_dim, y_dim):
     spec_type_tot = []
     spec_ts_tot = []
 
-    if(eventtype == 1):  # something is wrong as we set in the cAER to send only polarity events
-        while(data[counter:counter + eventsize]):  # loop over all event packets
+    if (eventtype == 1):  # something is wrong as we set in the cAER to send only polarity events
+        while (data[counter:counter + eventsize]):  # loop over all event packets
             aer_data = struct.unpack('I', data[counter:counter + 4])[0]
             timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
             x_addr = (aer_data >> 17) & 0x00007FFF
@@ -91,20 +100,21 @@ def read_events(file_read, x_dim, y_dim):
             ts_tot.append(timestamp)
             # print (timestamp, x_addr, y_addr, pol)
             counter = counter + eventsize
-    elif(eventtype == 0):
+    elif (eventtype == 0):
         spec_type_tot = []
         spec_ts_tot = []
-        while(data[counter:counter + eventsize]):  # loop over all event packets
+        while (data[counter:counter + eventsize]):  # loop over all event packets
             special_data = struct.unpack('I', data[counter:counter + 4])[0]
             timestamp = struct.unpack('I', data[counter + 4:counter + 8])[0]
             spec_type = (special_data >> 1) & 0x0000007F
             spec_type_tot.append(spec_type)
             spec_ts_tot.append(timestamp)
-            if(spec_type == 6 or spec_type == 7 or spec_type == 9 or spec_type == 10):
+            if (spec_type == 6 or spec_type == 7 or spec_type == 9 or spec_type == 10):
                 print(timestamp, spec_type)
             counter = counter + eventsize
 
-    return (np.array(x_addr_tot), np.array(y_addr_tot), np.array(pol_tot), np.array(ts_tot), np.array(spec_type_tot), np.array(spec_ts_tot))
+    return (np.array(x_addr_tot), np.array(y_addr_tot), np.array(pol_tot), np.array(ts_tot), np.array(spec_type_tot),
+            np.array(spec_ts_tot))
 
 
 def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit='ms'):
@@ -164,10 +174,10 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
         x_events_tmp = []
         y_events_tmp = []
         p_events_tmp = []
-        while(1):
+        while (1):
             x, y, p, ts_tot, spec_type, spec_type_ts = read_events(
                 aerdatafh, X_DIM, Y_DIM)
-            if(len(ts_tot) > 0 and ts_tot[0] == -1):
+            if (len(ts_tot) > 0 and ts_tot[0] == -1):
                 break
             x_events_tmp.append(x)
             # Set the coordinate (0,0) at the bottom left corner:
@@ -209,14 +219,14 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
         aeLen = 8  # 1 AE event takes 8 bytes
         readMode = '>II'  # struct.unpack(), 2x ulong, 4B+4B
         td = 0.000001  # timestep is 1us
-        if(camera == 'DVS128'):
+        if (camera == 'DVS128'):
             xmask = 0x00fe
             xshift = 1
             ymask = 0x7f00
             yshift = 8
             pmask = 0x1
             pshift = 0
-        elif(camera == 'DAVIS240'):  # values take from scripts/matlab/getDVS*.m
+        elif (camera == 'DAVIS240'):  # values take from scripts/matlab/getDVS*.m
             xmask = 0x003ff000
             xshift = 12
             ymask = 0x7fc00000
@@ -259,12 +269,12 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
         while p < length:
             addr, ts = struct.unpack(readMode, s)
             # parse event type
-            if(camera == 'DAVIS240'):
+            if (camera == 'DAVIS240'):
                 eventtype = (addr >> eventtypeshift)
             else:  # DVS128
                 eventtype = EVT_DVS
             # parse event's data
-            if(eventtype == EVT_DVS):  # this is a DVS event
+            if (eventtype == EVT_DVS):  # this is a DVS event
                 x_addr = (addr & xmask) >> xshift
                 y_addr = (addr & ymask) >> yshift
                 a_pol = (addr & pmask) >> pshift
@@ -276,9 +286,9 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
                 # Set the coordinate (0,0) at the bottom left corner:
                 # NOTE: jAER orgin is at the bottom right corner.
                 if (camera == 'DVS128'):
-                    xaddr.append(128 - x_addr -1)
+                    xaddr.append(128 - x_addr - 1)
                 elif (camera == 'DAVIS240'):
-                    xaddr.append(240 - x_addr -1)
+                    xaddr.append(240 - x_addr - 1)
                 yaddr.append(y_addr)
                 # Set the timestamps according to the specified units
                 if unit == 'us':
@@ -339,7 +349,7 @@ def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True
     if event_directory is not None:
         assert type(event_directory) == str, 'event_directory must be a string'
         assert event_directory[
-            -4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
+               -4:] == '.npy', 'Please specify a numpy array (.npy) which contains the DVS events.\n Aedat files can be converted using function aedat2numpy.py'
         events = np.load(event_directory)
     if events is not None:
         assert event_directory is None, 'Either you specify a path to load events using event_directory. Or you pass the event numpy array directly. NOT both.'
@@ -371,8 +381,8 @@ def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True
     if scale:
         # The DVS timestamps are in microseconds. We need to convert them to
         # milliseconds for brian
-        spiketimes_on = np.ceil(events[2, cInd_on] * 10**(-3))
-        spiketimes_off = np.ceil(events[2, cInd_off] * 10**(-3))
+        spiketimes_on = np.ceil(events[2, cInd_on] * 10 ** (-3))
+        spiketimes_off = np.ceil(events[2, cInd_off] * 10 ** (-3))
 
     else:
         # The flag scale is used to prevent rescaling of timestamps if we use
@@ -481,11 +491,11 @@ def dvs_csv2numpy(datafile='tmp/aerout.csv', debug=False):
     timestamp = time_list[0]
 
     # Get new coordinates with more useful representation
-    #df['x'] = df['y_raw']
-    #df['y'] = 128 - df['x_raw']
+    # df['x'] = df['y_raw']
+    # df['y'] = 128 - df['x_raw']
     # discard every third event
-    #new_ind = 0
-    #Events = np.zeros([4, len(df['timestamp'])/3])
+    # new_ind = 0
+    # Events = np.zeros([4, len(df['timestamp'])/3])
     events_x = []
     events_y = []
     events_time = []
@@ -494,12 +504,12 @@ def dvs_csv2numpy(datafile='tmp/aerout.csv', debug=False):
     for j in range(len(df['timestamp'])):
         if counter % 3 == 0:
             if (timestamp == time_list[j]):
-                #Events[0, new_ind] = x_list[j]
+                # Events[0, new_ind] = x_list[j]
                 events_x.append(x_list[j])
                 events_y.append(y_list[j])
                 events_time.append(time_list[j])
                 events_pol.append(pol_list[j])
-                #new_ind += 1
+                # new_ind += 1
                 timestamp = time_list[j]
             else:
                 counter += 1

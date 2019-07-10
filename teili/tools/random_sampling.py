@@ -8,7 +8,7 @@ Please note: brian2 uses a specific random generator in the 'randomkit', so any 
 apply here, depending on which rng is used. (The truncated randn uses brian2's rand, so it's fine, gamma however uses another one)
 If you need a seed, it may be easy to implement though. (TODO!)
 
-Please also not that, currently, there is a bug in brian2 (issue #988) that does not allow you to use the several functions
+Please also note that, currently, there is a bug in brian2 (issue #988) that does not allow you to use the several functions
 with the same dependencies for the same variable (but this probably happens only rarely).
 
 I used brian2/input/binomial.py as a template
@@ -47,6 +47,13 @@ def _randn_trunc_generate_cpp_code(lower, upper, name):
 
 
 class Randn_trunc(Function, Nameable):
+    """
+    Sample from a truncated Gaussian
+    We are using this in core/groups to add mismatch.
+    In python it wraps truncnorm.rvs(lower, upper, size=N)
+
+    refer to the example below
+    """
     implementations = {
         'cpp': _randn_trunc_generate_cpp_code,
     }
@@ -93,6 +100,10 @@ def _rand_gamma_generate_cpp_code(alpha, beta, name):
 
 
 class Rand_gamma(Function, Nameable):
+    """
+    Sample from a gamma distribution.
+    Refer to the example below.
+    """
     prefs.codegen.cpp.headers += ['<random>']
 
     implementations = {

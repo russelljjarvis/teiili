@@ -35,7 +35,7 @@ Net = TeiliNetwork()
 duration = 500
 testbench = WTA_Testbench()
 
-wtaParams = {'we_inp_exc': 900,
+wta_params = {'we_inp_exc': 900,
              'we_exc_inh': 500,
              'wi_inh_exc': -550,
              'we_exc_exc': 650,
@@ -48,7 +48,7 @@ wtaParams = {'we_inp_exc': 900,
 test_WTA = WTA(name='test_WTA', dimensions=1,
                num_neurons=num_neurons, num_inh_neurons=40,
                num_input_neurons=num_input_neurons,
-               num_inputs=2, block_params=wtaParams,
+               num_inputs=2, block_params=wta_params,
                spatial_kernel="kernel_gauss_1d")
 
 testbench.stimuli(num_neurons=num_neurons, dimensions=1,

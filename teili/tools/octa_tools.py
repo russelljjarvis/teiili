@@ -61,6 +61,12 @@ def add_decay_weight(group, decay_strategy, learning_rate):
 
         for grp in group:
             add_weight_decay(grp, decay_strategy, learning_rate)
+            dict_append= {'weight decay' : decay_strategy}
+            if hasattr(grp,"_tags"):
+                grp._tags.update(dict_append)
+            else:
+                self._groups[target_group]._tags = {}
+                self._groups[target_group]._tags.update(dict_append)
 
         return None
 
@@ -68,6 +74,12 @@ def add_weight_pred_decay(group, decay_strategy, learning_rate):
 
         for grp in group:
             add_pred_weight_decay(grp, decay_strategy, learning_rate)
+            dict_append= {'weight decay (pred)' : decay_strategy}
+            if hasattr(grp,"_tags"):
+                grp._tags.update(dict_append)
+            else:
+                self._groups[target_group]._tags = {}
+                self._groups[target_group]._tags.update(dict_append)
         return None
 
 def add_weight_re_init(group, re_init_threshold, dist_param_re_init, scale_re_init,
@@ -80,22 +92,49 @@ def add_weight_re_init(group, re_init_threshold, dist_param_re_init, scale_re_in
                             scale_re_init=scale_re_init,
                             distribution=distribution)
 
+        dict_append= {'re initializes weights' : distribution}
+        if hasattr(grp,"_tags"):
+            grp._tags.update(dict_append)
+        else:
+
+            self._groups[target_group]._tags = {}
+            self._groups[target_group]._tags.update(dict_append)
+
     return None
 
 def add_weight_re_init_ipred(group, re_init_threshold):
     for grp in group:
         add_re_init_ipred(grp,  re_init_threshold=re_init_threshold)
+        dict_append= {'re initializes weights (ipred)' : 1}
+        if hasattr(grp,"_tags"):
+            grp._tags.update(dict_append)
+        else:
+            self._groups[target_group]._tags = {}
+            self._groups[target_group]._tags.update(dict_append)
     return None
 
 def add_regulatization_weight(group, buffer_size):
     for grp in group:
         add_weight_regularization(grp,buffer_size=buffer_size)
+        dict_append= {'weight regulatization' : 1}
+        if hasattr(grp,"_tags"):
+            grp._tags.update(dict_append)
+        else:
+            self._groups[target_group]._tags = {}
+            self._groups[target_group]._tags.update(dict_append)
+
 
 def add_proxy_activity(group, buffer_size, decay):
     for grp in group:
         add_activity_proxy(grp,
                    buffer_size=buffer_size,
                    decay=decay)
+        dict_append= {'activity proxy' : 1}
+        if hasattr(grp,"_tags"):
+            grp._tags.update(dict_append)
+        else:
+            self._groups[target_group]._tags = {}
+            self._groups[target_group]._tags.update(dict_append)
 
 def add_weight_init (group , dist_param, scale, distribution):
     for grp in group:
@@ -103,6 +142,12 @@ def add_weight_init (group , dist_param, scale, distribution):
                                    dist_param=dist_param,
                                    scale=scale,
                                    distribution=distribution)
+        dict_append= {'weight initialization' : distribution}
+        if hasattr(grp,"_tags"):
+            grp._tags.update(dict_append)
+        else:
+            self._groups[target_group]._tags = {}
+            self._groups[target_group]._tags.update(dict_append)
 
 class monitor_init():
 

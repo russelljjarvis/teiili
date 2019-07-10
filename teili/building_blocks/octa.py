@@ -469,6 +469,7 @@ def replace_connection(bb_source, population_source,
                                                      name=name)
     bb_target._groups[connection_name].connect(True)
 
+
     return None
 
 def set_OCTA_tags(self, _groups):

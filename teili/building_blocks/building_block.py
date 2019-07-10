@@ -148,9 +148,22 @@ class BuildingBlock(Nameable):
         """
         tags = copy.deepcopy(tags)
         if type(target_group) == str:
-            self._groups[target_group]._tags = tags
+            if hasattr(self._groups[target_group],"_tags"):
+                self._groups[target_group]._tags.update(tags)
+            else:
+                self._groups[target_group]._tags = {}
+                self._groups[target_group]._tags.update(tags)
+
         else:
-            target_group._tags = tags
+            if hasattr(target_group,"_tags"):
+                target_group._tags.update(tags)
+            else:
+                target_group._tags = {}
+                target_group._tags.update(tags)
+
+
+
+
 
     def print_tags(self, target_group):
         """ Get the currently set tags for a given group.

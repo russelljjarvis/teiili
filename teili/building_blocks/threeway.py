@@ -7,7 +7,6 @@ Created on Wed Apr 25 16:09:49 2018
 """
 
 import numpy as np
-# import matplotlib.pyplot as plt
 from pyqtgraph import QtGui, QtCore
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph as pg
@@ -31,20 +30,7 @@ from teili.tools.three_way_kernels import A_plus_B_equals_C
 
 import time
 
-prefs.codegen.target = "numpy"
-# set_device('cpp_standalone')
-
-# TODO: Add threeway block parameters
 threeway_params = {}
-
-#wta_params = {'we_inp_exc': 200,
-#             'we_exc_inh': 30,
-#             'wi_inh_exc': -30,
-#             'we_exc_exc': 30,
-#             'rp_exc': 2.5 * ms,
-#             'rp_inh': 1 * ms,
-#             'sigm': 2.2
-#             }
 
 wta_params = {'we_inp_exc': 2000,
              'we_exc_inh': 300,
@@ -66,9 +52,9 @@ class Threeway(BuildingBlock):
     A, B and C (e.g. A + B = C) via a hidden population H.
 
     Attributes:
-        Groups (dict): Complete list of keys of neuron groups, synapse groups and
-                       WTA substructures of the Threeway building block to be
-                       included into Network object for simulation
+        Groups (dict): Complete list of keys of neuron groups, synapse groups
+                       and WTA substructures of the Threeway building block to
+                       be included into Network object for simulation
         monitors (dict): Complete list of Brian2 monitors for all entities of
                        the Threeway building block to be included into Network
                        object for simulation
@@ -107,20 +93,23 @@ class Threeway(BuildingBlock):
                  spatial_kernel=None,
                  monitor=True,
                  debug=False):
-        """Summary (TBD)
-
+        """
         Args:
             name (str, required): Name of the TW block
             neuron_eq_builder (class, optional): neuron class as imported
                                                  from models/neuron_models
             synapse_eq_builder (class, optional): synapse class as imported
                                                   from models/synapse_models
-        block_params (dict, optional): Parameters for neuron populations
+            block_params (dict, optional): Parameters for neuron populations
             num_neurons (int, optional): Size of a single neuron population
-            fraction_inh_neurons (float, optional): Set to None to skip Dale's priciple
-            additional_statevars (list, optional): List of additonal statevariables which are not standard
+            fraction_inh_neurons (float, optional): Set to None to skip Dale's
+                                                    priciple
+            additional_statevars (list, optional): List of additonal
+                                                   statevariables which are
+                                                   not standard
             num_inputs (int, optional): Number of input currents to R
-            monitor (bool, optional): Flag to auto-generate spike and statemonitors
+            monitor (bool, optional): Flag to auto-generate spike and
+                                      statemonitors
             debug (bool, optional): Flag to gain additional information
         """
         self.num_input_neurons = num_input_neurons
@@ -223,8 +212,6 @@ class Threeway(BuildingBlock):
         return TwTree
 
     def plot_live_inputs(self, start_time=0 * ms, end_time=None):
-        # TODO: replace the update function with usage of
-        # neuron group state variables
         """
         Creates a plotGUI instance and a new timer to run
         the update function (will be replaced with )
@@ -396,16 +383,7 @@ def gen_threeway(name,
     """
 
     # TODO: Replace PoissonGroups as inputs with stimulus generators
-    # TODO: Check to have a name
 
-#    wta_params = {'we_inp_exc': block_params['we_inp_exc'],
-#                 'weWTAInh': block_params['weWTAInh'],
-#                 'wiInhWTA': block_params['wiInhWTA'],
-#                 'weWTAWTA': block_params['weWTAWTA'],
-#                 'rpWTA': block_params['rpWTA'],
-#                 'rpInh': block_params['rpInh'],
-#                 'sigm': block_params['sigm']
-#                 }
     if debug:
         print("Creating WTA's!")
 
@@ -527,12 +505,18 @@ def set_TW_tags(TW_block, _groups):
         _groups (dictionary): All neuron and synapse groups with tags appended.
     '''
 
-    TW_block._set_tags(tags_parameters.basic_threeway_1WTA_to_2WTA, _groups['s_A_to_H'])
-    TW_block._set_tags(tags_parameters.basic_threeway_1WTA_to_2WTA, _groups['s_B_to_H'])
-    TW_block._set_tags(tags_parameters.basic_threeway_1WTA_to_2WTA, _groups['s_C_to_H'])
-    TW_block._set_tags(tags_parameters.basic_threeway_2WTA_to_1WTA, _groups['s_H_to_A'])
-    TW_block._set_tags(tags_parameters.basic_threeway_2WTA_to_1WTA, _groups['s_H_to_B'])
-    TW_block._set_tags(tags_parameters.basic_threeway_2WTA_to_1WTA, _groups['s_H_to_C'])
+    TW_block._set_tags(tags_parameters.basic_threeway_1WTA_to_2WTA,
+                       _groups['s_A_to_H'])
+    TW_block._set_tags(tags_parameters.basic_threeway_1WTA_to_2WTA,
+                       _groups['s_B_to_H'])
+    TW_block._set_tags(tags_parameters.basic_threeway_1WTA_to_2WTA,
+                       _groups['s_C_to_H'])
+    TW_block._set_tags(tags_parameters.basic_threeway_2WTA_to_1WTA,
+                       _groups['s_H_to_A'])
+    TW_block._set_tags(tags_parameters.basic_threeway_2WTA_to_1WTA,
+                       _groups['s_H_to_B'])
+    TW_block._set_tags(tags_parameters.basic_threeway_2WTA_to_1WTA,
+                       _groups['s_H_to_C'])
 
 
 def plot_threeway_raster(tw_monitors, name, start_time, end_time):
@@ -540,10 +524,10 @@ def plot_threeway_raster(tw_monitors, name, start_time, end_time):
 
     Args:
         name (str, required): Name of the WTA population
-        start_time (brian2.units.fundamentalunits.Quantity, required): Start time in ms
-            from when network activity should be plotted.
-        end_time (brian2.units.fundamentalunits.Quantity, required): End time in ms of plot.
-            Can be smaller than simulation time but not larger
+        start_time (brian2.units.fundamentalunits.Quantity, required): Start time
+            in ms from when network activity should be plotted.
+        end_time (brian2.units.fundamentalunits.Quantity, required): End time
+            in ms of plot. Can be smaller than simulation time but not larger
         wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.monitors
     """
     app = QtGui.QApplication.instance()
@@ -566,13 +550,16 @@ def plot_threeway_raster(tw_monitors, name, start_time, end_time):
     win_raster.nextRow()
     raster_C = win_raster.addPlot(title="Population C")
 
-    plot_spikemon_qt(monitor=tw_monitors['spikemon_A'], start_time=start_time, end_time=end_time,
+    plot_spikemon_qt(monitor=tw_monitors['spikemon_A'], start_time=start_time,
+                     end_time=end_time,
                      num_neurons=tw_monitors['spikemon_A'].source.N,
                      window=raster_A)
-    plot_spikemon_qt(monitor=tw_monitors['spikemon_B'], start_time=start_time, end_time=end_time,
+    plot_spikemon_qt(monitor=tw_monitors['spikemon_B'], start_time=start_time,
+                     end_time=end_time,
                      num_neurons=tw_monitors['spikemon_B'].source.N,
                      window=raster_B)
-    plot_spikemon_qt(monitor=tw_monitors['spikemon_C'], start_time=start_time, end_time=end_time,
+    plot_spikemon_qt(monitor=tw_monitors['spikemon_C'], start_time=start_time,
+                     end_time=end_time,
                      num_neurons=tw_monitors['spikemon_C'].source.N,
                      window=raster_C)
 
@@ -581,62 +568,58 @@ def plot_threeway_raster(tw_monitors, name, start_time, end_time):
     return win_raster
 
 
-#def gaussian(mu, sigma, amplitude, inputSize):
-#    i = np.arange(inputSize)
-#    shift = mu % 1
-#    coarse = int(mu - shift)
-#    dist = amplitude*np.exp(-np.power(i - shift - int(inputSize/2), 2.) / (2 * np.power(sigma, 2.)))
-#    return dist[(int(inputSize/2) - coarse + i)%inputSize]
-
-def gaussian(mu, sigma, amplitude, inputSize):
+def gaussian(mu, sigma, amplitude, input_size):
     """
         Generate rates based on the gaussian profile
     """
-    i = np.arange(inputSize)
+    i = np.arange(input_size)
     shift = mu % 1
     coarse = int(mu - shift)
-#    dist = amplitude*np.exp(-np.power((i - shift - int(inputSize/2))/inputSize, 2.) / (2 * np.power(sigma, 2.)))
-    dist = amplitude*np.max([np.exp(-np.power((i - shift - int(inputSize/2))/inputSize, 2.) /
+#    dist = amplitude*np.exp(-np.power((i - shift - int(input_size/2))/input_size, 2.) / (2 * np.power(sigma, 2.)))
+    dist = amplitude*np.max([np.exp(-np.power((i - shift -
+                                    int(input_size/2))/input_size, 2.) /
                                     (2 * np.power(sigma, 2.))),
-                np.exp(-np.power((i - shift - int(inputSize/2))/inputSize+1, 2.) /
+            np.exp(-np.power((i - shift - int(input_size/2))/input_size+1, 2.) /
                        (2 * np.power(sigma, 2.)))], axis = 0)
-    return dist[(int(inputSize/2) - coarse + i)%inputSize]
+    return dist[(int(input_size/2) - coarse + i)%input_size]
 
-def double2pop_code(value, inputSize, sigma=None, amplitude=100):
+def double2pop_code(value, input_size, sigma=None, amplitude=100):
     """
         Generate rates based on the gaussian profile
     """
     if sigma is None:
-        sigma = 1/inputSize
+        sigma = 1/input_size
     
-    mu = value*inputSize % inputSize
-    activity = gaussian(mu, sigma, amplitude, inputSize)
+    mu = value*input_size % input_size
+    activity = gaussian(mu, sigma, amplitude, input_size)
     return activity * Hz
 
 
-def pop_code2double(popArray):
+def pop_code2double(pop_array):
     """Calculate circular mean of an array
 
     @author: Peter Diehl
     """
-    size = len(popArray)
+    size = len(pop_array)
     complex_unit_roots = np.array(
         [np.exp(1j * (2 * np.pi / size) * cur_pos) for cur_pos in range(size)])
-    cur_pos = (np.angle(np.sum(popArray * complex_unit_roots)) %
+    cur_pos = (np.angle(np.sum(pop_array * complex_unit_roots)) %
                (2 * np.pi)) / (2 * np.pi)
     return cur_pos%1
 
 
-def get_rates(spikeMon, measurement_period=100 * ms):
+def get_rates(spikemon, measurement_period=100 * ms):
     """
-    Get firing rates of neurons based on most recent activity within the measurement period
+        Get firing rates of neurons based on most recent activity within
+        the measurement period
     """
-    rates = np.zeros(len(spikeMon.event_trains()))
-    rates = [len(spikeMon.event_trains()[i][spikeMon.event_trains()[i] > spikeMon.clock.t - measurement_period]) / measurement_period
-             for i in range(len(spikeMon.event_trains()))]
+    rates = np.zeros(len(spikemon.event_trains()))
+    rates = [len(spikemon.event_trains()[i][spikemon.event_trains()[i] >
+                 spikemon.clock.t - measurement_period]) / measurement_period
+             for i in range(len(spikemon.event_trains()))]
 
-    #  if debug and len(spikeMon.t):
-    #      print('Simulation time', spikeMon.t / ms, 'ms')
+    #  if debug and len(spikemon.t):
+    #      print('Simulation time', spikemon.t / ms, 'ms')
     return rates
 
 if __name__ == '__main__':

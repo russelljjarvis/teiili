@@ -21,6 +21,7 @@ from teili.tools.plotting import plot_spikemon_qt
 from teili.building_blocks.building_block import BuildingBlock
 from teili.building_blocks.wta import WTA
 from teili.core.groups import Neurons, Connections
+import teili.core.tags as tags_parameters 
 from teili.tools.live import PlotGUI
 
 from teili.models.neuron_models import DPI
@@ -144,6 +145,8 @@ class Threeway(BuildingBlock):
                                                                           monitor=monitor,
                                                                           debug=debug,
                                                                           block_params=block_params)
+        
+        set_TW_tags(self, self._groups)
         
         # Creating handles for neuron groups and inputs
         self.A = self.sub_blocks['wta_A']
@@ -434,39 +437,39 @@ def gen_threeway(name,
         'input_group_C': input_group_C}
 
     # Creating interpopulation synapse groups
-    synAH1e = Connections(wta_A.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
-                          method="euler", name='s' + name + '_A_to_H')
-    synHA1e = Connections(wta_H.groups['n_exc'], wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
-                          method="euler", name='s' + name + '_H_to_A')
-    synBH1e = Connections(wta_B.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
-                          method="euler", name='s' + name + '_B_to_H')
-    synHB1e = Connections(wta_H.groups['n_exc'], wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
-                          method="euler", name='s' + name + '_H_to_B')
-    synCH1e = Connections(wta_C.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
-                          method="euler", name='s' + name + '_C_to_H')
-    synHC1e = Connections(wta_H.groups['n_exc'], wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
-                          method="euler", name='s' + name + '_H_to_C')
+    syn_A_H = Connections(wta_A.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
+                          method="euler", name=name + '_s_A_to_H')
+    syn_H_A = Connections(wta_H.groups['n_exc'], wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
+                          method="euler", name=name + '_s_H_to_A')
+    syn_B_H = Connections(wta_B.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
+                          method="euler", name=name + '_s_B_to_H')
+    syn_H_B = Connections(wta_H.groups['n_exc'], wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
+                          method="euler", name=name + '_s_H_to_B')
+    syn_C_H = Connections(wta_C.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
+                          method="euler", name=name + '_s_C_to_H')
+    syn_H_C = Connections(wta_H.groups['n_exc'], wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
+                          method="euler", name= name + '_s_H_to_C')
 
     # Creating input synapse groups
-    synInpA1e = Connections(input_group_A, wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
-                            method="euler", name='s' + name + '_Inp_to_A')
-    synInpB1e = Connections(input_group_B, wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
-                            method="euler", name='s' + name + '_Inp_to_B')
-    synInpC1e = Connections(input_group_C, wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
-                            method="euler", name='s' + name + '_Inp_to_C')
+    syn_inp_A = Connections(input_group_A, wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
+                            method="euler", name=name + '_s_inp_A')
+    syn_inp_B = Connections(input_group_B, wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
+                            method="euler", name=name + '_s_inp_B')
+    syn_inp_C = Connections(input_group_C, wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
+                            method="euler", name=name + '_s_inp_C')
 
     interPopSynGroups = {
-        'synAH1e': synAH1e,
-        'synHA1e': synHA1e,
-        'synBH1e': synBH1e,
-        'synHB1e': synHB1e,
-        'synCH1e': synCH1e,
-        'synHC1e': synHC1e}
+        's_A_to_H' : syn_A_H,
+        's_H_to_A' : syn_H_A,
+        's_B_to_H' : syn_B_H,
+        's_H_to_B' : syn_H_B,
+        's_C_to_H' : syn_C_H,
+        's_H_to_C' : syn_H_C}
 
     synGroups = {
-        'synInpA1e': synInpA1e,
-        'synInpB1e': synInpB1e,
-        'synInpC1e': synInpC1e}
+        's_inp_A' : syn_inp_A,
+        's_inp_B' : syn_inp_B,
+        's_inp_C' : syn_inp_C}
 
     for tmp_syn_group in synGroups:
         synGroups[tmp_syn_group].connect('i == j')
@@ -475,14 +478,14 @@ def gen_threeway(name,
     synGroups.update(interPopSynGroups)
 
     # Connecting the populations with a given index generation function
-    # TODO: add more index functions
+    # TODO: add more index generating functions
     index_gen_function = hidden_layer_gen_func
 
-    for tmp_syn_group in interPopSynGroups:
+    for tmp_syn_group_name in interPopSynGroups:
         arr_i, arr_j = index_gen_function(
-            tmp_syn_group[3], tmp_syn_group[4], num_input_neurons)
-        interPopSynGroups[tmp_syn_group].connect(i=arr_i, j=arr_j)
-        interPopSynGroups[tmp_syn_group].weight = wta_A.params['we_inp_exc']
+            tmp_syn_group_name[-6], tmp_syn_group_name[-1], num_input_neurons)
+        interPopSynGroups[tmp_syn_group_name].connect(i=arr_i, j=arr_j)
+        interPopSynGroups[tmp_syn_group_name].weight = wta_A.params['we_inp_exc']
 
     groups = {}
     groups.update(input_groups)
@@ -512,6 +515,24 @@ def gen_threeway(name,
     standalone_params = {}
 
     return sub_blocks, groups, monitors, standalone_params
+
+def set_TW_tags(TW_block, _groups):
+    '''
+    Sets default tags to members of the _groups of the Threeway block
+
+    Args:
+        _groups (dictionary): All neuron and synapse groups.
+
+    Returns:
+        _groups (dictionary): All neuron and synapse groups with tags appended.
+    '''
+
+    TW_block._set_tags(tags_parameters.basic_threeway_1WTA_to_2WTA, _groups['s_A_to_H'])
+    TW_block._set_tags(tags_parameters.basic_threeway_1WTA_to_2WTA, _groups['s_B_to_H'])
+    TW_block._set_tags(tags_parameters.basic_threeway_1WTA_to_2WTA, _groups['s_C_to_H'])
+    TW_block._set_tags(tags_parameters.basic_threeway_2WTA_to_1WTA, _groups['s_H_to_A'])
+    TW_block._set_tags(tags_parameters.basic_threeway_2WTA_to_1WTA, _groups['s_H_to_B'])
+    TW_block._set_tags(tags_parameters.basic_threeway_2WTA_to_1WTA, _groups['s_H_to_C'])
 
 
 def plot_threeway_raster(tw_monitors, name, start_time, end_time):
@@ -560,15 +581,34 @@ def plot_threeway_raster(tw_monitors, name, start_time, end_time):
     return win_raster
 
 
+#def gaussian(mu, sigma, amplitude, inputSize):
+#    i = np.arange(inputSize)
+#    shift = mu % 1
+#    coarse = int(mu - shift)
+#    dist = amplitude*np.exp(-np.power(i - shift - int(inputSize/2), 2.) / (2 * np.power(sigma, 2.)))
+#    return dist[(int(inputSize/2) - coarse + i)%inputSize]
+
 def gaussian(mu, sigma, amplitude, inputSize):
+    """
+        Generate rates based on the gaussian profile
+    """
     i = np.arange(inputSize)
     shift = mu % 1
     coarse = int(mu - shift)
-    dist = amplitude*np.exp(-np.power(i - shift - int(inputSize/2), 2.) / (2 * np.power(sigma, 2.)))
+#    dist = amplitude*np.exp(-np.power((i - shift - int(inputSize/2))/inputSize, 2.) / (2 * np.power(sigma, 2.)))
+    dist = amplitude*np.max([np.exp(-np.power((i - shift - int(inputSize/2))/inputSize, 2.) /
+                                    (2 * np.power(sigma, 2.))),
+                np.exp(-np.power((i - shift - int(inputSize/2))/inputSize+1, 2.) /
+                       (2 * np.power(sigma, 2.)))], axis = 0)
     return dist[(int(inputSize/2) - coarse + i)%inputSize]
 
-
-def double2pop_code(value, inputSize, sigma=1, amplitude=100):
+def double2pop_code(value, inputSize, sigma=None, amplitude=100):
+    """
+        Generate rates based on the gaussian profile
+    """
+    if sigma is None:
+        sigma = 1/inputSize
+    
     mu = value*inputSize % inputSize
     activity = gaussian(mu, sigma, amplitude, inputSize)
     return activity * Hz
@@ -588,8 +628,8 @@ def pop_code2double(popArray):
 
 
 def get_rates(spikeMon, measurement_period=100 * ms):
-    """Get firing rates of neurons based on most recent activity within the measurement period
-
+    """
+    Get firing rates of neurons based on most recent activity within the measurement period
     """
     rates = np.zeros(len(spikeMon.event_trains()))
     rates = [len(spikeMon.event_trains()[i][spikeMon.event_trains()[i] > spikeMon.clock.t - measurement_period]) / measurement_period
@@ -598,3 +638,7 @@ def get_rates(spikeMon, measurement_period=100 * ms):
     #  if debug and len(spikeMon.t):
     #      print('Simulation time', spikeMon.t / ms, 'ms')
     return rates
+
+if __name__ == '__main__':
+    
+    TW = Threeway('TestTW', debug = True)

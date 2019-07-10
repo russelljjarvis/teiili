@@ -687,6 +687,8 @@ We can define our network structure and connect the different inputs to the WTA 
 
 Before we can run the simulation we need to set bias parameter.
 
+.. attention:: Please note in order to elicit one spike in the DPI neuron per spike in a SpikeGenerator you need to set the synaptic weight to 3250 or crank up the baseweight parameter of the DPI synapse
+
 .. code-block:: python
 
     noise_syn.weight = 3000

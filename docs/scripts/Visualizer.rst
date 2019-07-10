@@ -1,4 +1,4 @@
-
+  
 .. code:: python
 
     # SPDX-License-Identifier: MIT
@@ -139,7 +139,7 @@ How to use it - the slightly longer version
         print ('Simulation run for {} ms'.format(duration_sim))
         return spikemonN1, spikemonN2, statemonN1, statemonN2
 
-1. Get the data to plot
+Get the data to plot
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 **Option A: run brian network to get SpikeMonitors and StateMonitors**
@@ -280,10 +280,10 @@ Available DataModels:
          [0.000e+00 1.000e-05 2.000e-05 ... 9.997e-02 9.998e-02 9.999e-02]
     
 
-2. Plot the collected data
+Plot the collected data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-2.1 Define PlotSettings
+Define PlotSettings
 -----------------------
 
 -  The PlotSettings are defined only once for all the plots that will be
@@ -300,12 +300,12 @@ Available DataModels:
                                    colors = ['r', 'b'],          # default ['r', 'b', 'g', 'c', 'k', 'm', 'y']
     )
 
-2.2 Call the DataController of the desired type of plot
+Call the DataController of the desired type of plot
 -------------------------------------------------------
 
 So far in teili: \* Histogram \* Rasterplot \* Lineplot
 
-2.2a) Histogram
+Histogram
 ---------------
 
 **Histogram - Inputs**
@@ -358,8 +358,8 @@ So far in teili: \* Histogram \* Rasterplot \* Lineplot
                     backend='pyqtgraph',
                     QtApp=QtApp, show_immediately=True)
 
-2.2b) Rasterplot
-----------------
+Rasterplot
+----------
 
 **Rasterplot - Inputs**
 
@@ -414,7 +414,7 @@ So far in teili: \* Histogram \* Rasterplot \* Lineplot
     RC = Rasterplot(MyEventsModels=MyEventsModels, MyPlotSettings=MyPlotSettings, subgroup_labels=subgroup_labels,
                         add_histogram=True, backend='pyqtgraph', QtApp=QtApp, show_immediately=True)
 
-2.2c) LinePlot
+LinePlot
 --------------
 
 **Lineplot - Inputs**
@@ -470,10 +470,10 @@ So far in teili: \* Histogram \* Rasterplot \* Lineplot
                       backend='pyqtgraph', QtApp=QtApp, show_immediately=True)
 
 Additional functionalities
-==========================
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A1) Combine different plots
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Combine different plots
+----------------------------
 
 **… with matplotlib**
 
@@ -543,8 +543,8 @@ A1) Combine different plots
                              backend='pyqtgraph', mainfig=mainfig, subfig=subfig4, QtApp=QtApp,
                              show_immediately=True)
 
-A2) Add second plot with a detailed view of a given plot
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Add second plot with a detailed view of a given plot
+--------------------------------------------------------
 .. code-block:: python
 
     ''' Create original plot of which you would like to have a detailed version as well TWICE (sorry, about that...)'''

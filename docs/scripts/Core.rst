@@ -8,6 +8,27 @@ Network
 Groups
 ======
 
+Tags
+----
+
+Each ``TeiliGroup`` has an attribute called ``_tags``. The idea behind the ``_tags`` are that the user can easily define a dictionary and use this dictionary to gather all ``TeiliGroups`` which share the same ``_tags``.
+
+Tags should be set as the network expands and the functionality changes.
+
+Tags are defined as:
+
+* **mismatch**: (bool) Mismatch present of group
+* **noise**: (bool) Noise input, noise connection or noise presence
+* **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1, OCTA groups are level 2 etc
+* **sign**: (str : exc/inh/None) Sign of neuronal population. 
+* **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
+* **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
+* **bb_type**: (str : WTA/ OCTA/ 3-WAY) Building block type.
+* **group_type**: (str : Neuron/Connection/ SpikeGen) Group type
+* **connection_type**: (str : rec/lateral/fb/ff/None) Connection type
+
+see here_ for more detailed explanation of how to set and get tags from ``Groups``.
+
 Device Mismatch
 ---------------
 
@@ -69,3 +90,5 @@ Notice that this option allows you to add mismatch only to one parameter at a ti
 .. [2] Hung, Hector, and Vladislav Adzic. "Monte Carlo simulation of device variations and mismatch in analog integrated circuits." Proc. NCUR 2006 (2006): 1-8.
 
 .. [3] ...
+
+.. _here: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#tags

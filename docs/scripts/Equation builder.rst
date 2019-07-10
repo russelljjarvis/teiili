@@ -131,9 +131,9 @@ In order to generate models, which can later be changed manually and imported ag
 .. code-block:: python
 
     path = os.path.dirname(os.path.realpath(teili.models.__file__))
-    DPI = NeuronEquationBuilder.__init__(base_unit='current', adaptation='calcium_feedback',
-                                         integration_mode='exponential', leak='leaky',
-                                         position='spatial', noise='none')
+    DPI = NeuronEquationBuilder(base_unit='current', adaptation='calcium_feedback',
+                                integration_mode='exponential', leak='leaky',
+                                position='spatial', noise='none')
     DPI.add_input_currents(num_inputs)
     DPI.export_eq(os.path.join(path, "DPI"))
 
@@ -142,8 +142,8 @@ For synapse models:
 .. code-block:: python
 
     path = os.path.dirname(os.path.realpath(teili.models.__file__))
-    dpiSyn = SynapseEquationBuilder.__init__(base_unit='DPI',
-                                             plasticity='non_plastic')
+    dpiSyn = SynapseEquationBuilder(base_unit='DPI',
+                                   plasticity='non_plastic')
 
     dpiSyn.export_eq(os.path.join(path, "DPISyn"))
 

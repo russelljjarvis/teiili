@@ -89,16 +89,16 @@ Tags can be set:
 
   test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, debug=False)
   target_group = test1DWTA._groups['n_exc']
-  basic_tags_empty =   { 'mismatch' : 0,
-                'noise' : 0,
-                 'level': 0 ,
-                  'sign': 'None',
-                  'target sign': 'None',
-                  'num_inputs' : 0,
-                  'bb_type' : 'None',
-                  'group_type' : 'None',
-                  'connection_type' : 'None',
-        }
+  basic_tags_empty = {'mismatch' : 0,
+                      'noise' : 0,
+                      'level': 0 ,
+                      'sign': 'None',
+                      'target sign': 'None',
+                      'num_inputs' : 0,
+                      'bb_type' : 'None',
+                      'group_type' : 'None',
+                      'connection_type' : 'None',
+                      }
 
   test1DWTA._set_tags(basic_tags_empty, target_group)
 
@@ -258,17 +258,12 @@ Parameters for the network are stored in two dictionaries located in tools/octa_
 
 The WTA keys are explained above, the OCTA keys are defined as:
 
-* **duration**: Duration of the simulation
-* **revolutions**: Number of times input is presented
-* **num_neurons**: Number of neurons in the compressionWTA. Keep in mind it is a 2D WTA.
-* **num_input_neurons**: Number of neurons in the prediction WTA and in the starting data.
 * **distribution**: (0 or 1) Distribution from which to initialize the weights. Gamma(1) or Normal(0).
 * **dist_param_init**: Shape for Gamma distribution/ mean of normal distribution
 * **scale_init**: Scale for Gamma distribution / std of normal distribution
 * **dist_param_re_init**: Shape/mean for weight reinitialiazation in run_regular function
 * **scale_re_init**: Scale/std for weight reinitialiazation in run_regular function
 * **re_init_threshold**: (0 - 0.5) If the mean weight of a synapse is below or above (1- re_init_threshold) the weight is reinitialized
-* **buffer_size**: Size of the buffer for the weight dependent regularization
 * **buffer_size_plast**: Size of the buffer of the activity dependent regularization
 * **noise_weight**: Synaptic weight of the noise generator
 * **variance_th_c**: Variance threshold for the compression group. Parameter included in the ``activity`` synapse template.
@@ -287,31 +282,43 @@ Initialization of the building block goes as follows:
     from brian2 import ms
     from teili import TeiliNetwork
     from teili.building_blocks.octa import Octa
-    from teili.tools.octa_tools.octa_param import wtaParameters, octaParameters,\
-     octa_neuron
+    from teili.models.parameters.octa_params import wta_params, octa_params
+    from teili.models.neuron_models import OCTA_Neuron as octa_neuron
+    from teili.stimuli.testbench import OCTA_Testbench
 
+     Net = TeiliNetwork()
 
      OCTA =  Octa(name='OCTA',
-                 wtaParams = wtaParameters,
-                  octaParams = octaParameters,
+                  wta_params=wta_params,
+                  octa_params=octa_params,
                   neuron_eq_builder=octa_neuron,
-                  num_input_neurons= octaParameters['num_input_neurons'],
-                  num_neurons = octaParameters['num_neurons'],
-                  stacked_inp = True,
-                  noise= True,
+                  num_input_neurons=10,
+                  num_neurons=7,
+                  external_input=True,
+                  noise=True,
                   monitor=True,
                   debug=False)
 
+    testbench_stim = OCTA_Testbench()
 
-    Net = TeiliNetwork()
-    Net.add(
-                OCTA_net,
-                OCTA_net.sub_blocks['predictionWTA'],
-                OCTA_net.sub_blocks['compressionWTA']
-              )
-    Net.run(octaParameters['duration']*ms, report='text')
+    testbench_stim.rotating_bar(length=10, nrows=10,
+                                direction='cw',
+                                ts_offset=3, angle_step=10,
+                                noise_probability=0.2,
+                                repetitions=90,
+                                debug=False)
 
-* **stacked_inp**: Flag to include an input to the network
+    OCTA_net.groups['spike_gen'].set_spikes(indices=testbench_stim.indices,
+                                            times=testbench_stim.times * ms)
+
+
+    Net.add(OCTA_net,
+            OCTA_net.sub_blocks['prediction'],
+            OCTA_net.sub_blocks['compression'])
+            
+    Net.run(10000*ms, report='text')
+
+* **external_input**: Flag to include an input to the network
 * **noise**: Flag to include 10 Hz Poisson noise generator on ``n_exc`` of compressionWTA and predictionWTA
 * **monitor**: Flag to return monitors of the network
 * **debug**: Flag for verbose debug

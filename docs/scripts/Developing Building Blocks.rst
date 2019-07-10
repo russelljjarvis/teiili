@@ -16,16 +16,15 @@ Recommended practices for creating custom building blocks go as follow:
 - Remember to _set_tags as you expand the network
 
 Important Notes:
-- When running the network, add the newly generated BB as well as all the sub_blocks the network depends on
 
+- When running the network, add the newly generated BB as well as all the sub_blocks the network depends on
 .. code-block:: python
   Net.add(
-          test_OCTA,
-          test_OCTA.sub_blocks['predictionWTA'],
-          test_OCTA.sub_blocks['compressionWTA']
+          test_net,
+          test_net.sub_blocks['sub_block_1'],
+          test_net.sub_blocks['sub_block_2']
         )
 
-- There is a fundamental difference between the attributes ``groups`` and ``_groups``.``_groups`` is a dictionary containing the objects specific to that ``BuildingBlock``. ``groups`` is a property of the ``BuildingBlock`` class
-which returns all ``_groups`` included in the ``BuildingBlock`` and its ``sub_blocks``.
+- There is a fundamental difference between the attributes ``groups`` and ``_groups``. ``_groups``  is a dictionary containing the objects specific to that ``BuildingBlock``. ``groups`` is a property of the ``BuildingBlock`` class which returns all ``_groups`` included in the ``BuildingBlock`` and its ``sub_blocks``.
 
 - When overwriting an existing population in one of the ``sub_blocks._groups``, remember to re-initialize all the connections and monitors regarding that population.

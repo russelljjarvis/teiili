@@ -74,7 +74,7 @@ Tags are defined as:
 * **mismatch**: (bool) Mismatch present of group
 * **noise**: (bool) Noise input, noise connection or noise presence
 * **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1, OCTA groups are level 2 etc
-* **sign**: (str : exc/inh/None) Sign of neuronal population. 
+* **sign**: (str : exc/inh/None) Sign of neuronal population.
 * **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
 * **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
 * **bb_type**: (str : WTA/ OCTA/ 3-WAY) Building block type.
@@ -272,7 +272,7 @@ The WTA keys are explained above, the OCTA keys are defined as:
 * **inh_learning_rate**: Inhibitory learning rate
 * **decay**:  Decay parameter of the decay in the activity dependent run_regular
 * **weight_decay**: Type of weight decay (temporal/event-based)
-* **tau_stdp**: Time constant for stdp plasticity 
+* **tau_stdp**: Time constant for stdp plasticity
 
 
 Initialization of the building block goes as follows:
@@ -315,7 +315,7 @@ Initialization of the building block goes as follows:
     Net.add(OCTA_net,
             OCTA_net.sub_blocks['prediction'],
             OCTA_net.sub_blocks['compression'])
-            
+
     Net.run(10000*ms, report='text')
 
 * **external_input**: Flag to include an input to the network

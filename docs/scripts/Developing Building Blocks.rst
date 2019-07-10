@@ -17,9 +17,10 @@ Recommended practices for creating custom building blocks go as follow:
 
 Important Notes:
 
-- When running the network, add the newly generated BB as well as all the sub_blocks the network depends on
+- When running the network, add the newly generated BB as well as all the sub_blocks the network depends on.
+
 .. code-block:: python
-  Net.add(
+   Net.add(
           test_net,
           test_net.sub_blocks['sub_block_1'],
           test_net.sub_blocks['sub_block_2']

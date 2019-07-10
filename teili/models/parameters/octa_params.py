@@ -20,21 +20,21 @@ from brian2 import pF, nS, mV, ms, pA, nA
 
 
 wta_params = {'we_inp_exc': 100,
-             'we_exc_inh': 300, # 55/50
-             'wi_inh_exc': -200, # -300
-             'we_exc_exc': 10.0,  # 45
-             'sigm': 2,
-             'rp_exc': 1 * ms,
-             'rp_inh': 1 * ms,
-             'wi_inh_inh': -100,
-             'ei_connection_probability': 0.5,
-             'ie_connection_probability': 0.66,
-             'ii_connection_probability': 0.1
-             }
+              'we_exc_inh': 300,  # 55/50
+              'wi_inh_exc': -200,  # -300
+              'we_exc_exc': 10.0,  # 45
+              'sigm': 2,
+              'rp_exc': 1 * ms,
+              'rp_inh': 1 * ms,
+              'wi_inh_inh': -100,
+              'ei_connection_probability': 0.5,
+              'ie_connection_probability': 0.66,
+              'ii_connection_probability': 0.1
+              }
 
 
 octa_params = {'distribution': 'gamma',
-               'dist_param_init': 0.5, # shape for gamma < 0.5
+               'dist_param_init': 0.5,  # shape for gamma < 0.5
                'scale_init': 1.0,  # sigma for gamma 1.0
                'dist_param_re_init': 0.4,
                'scale_re_init': 0.9,
@@ -46,10 +46,10 @@ octa_params = {'distribution': 'gamma',
                'learning_rate': 0.007,
                'inh_learning_rate': 0.01,
                'decay': 150,
-               'weight_decay': 'global',
+               'decay_strategy': 'global',
                'tau_stdp': 10 * ms,
                'seed' : 42,
-             }
+               }
 
 
 # Dictionaries for mismatch

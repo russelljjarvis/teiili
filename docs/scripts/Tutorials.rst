@@ -193,11 +193,11 @@ Now our simple spiking neural network is defined. In order to visualize what is 
             test_neurons2, name='spikemon_test_neurons2')
 
     statemon_input_synapse = StateMonitor(
-            input_synapse, variables='Ie_syn',
+            input_synapse, variables='I_syn',
             record=True, name='statemon_input_synapse')
 
     statemon_test_synapse = StateMonitor(
-            test_synapse, variables='Ie_syn',
+            test_synapse, variables='I_syn',
             record=True, name='statemon_test_synapse')
 
     if 'Imem' in neuron_model().keywords['model']:
@@ -688,7 +688,7 @@ In order to visualize the behavior, the example script also plots a couple of sp
              show_immediately=True)
 
 
-The synaptic current is always positive, the negative effect is oberved in the Iin of the neuron. To better visualize the synapse dynamics, we have multiplied the I_syn of the inhibitory synapse by -1.
+The synaptic current is always positive, the negative effect is oberved in the `Iin` of the neuron. To better visualize the synapse dynamics, we have multiplied the I_syn of the inhibitory synapse by -1.
 The resulting figure should look like this:
 
 .. figure:: fig/synaptic_kernels_tutorial.png
@@ -1020,13 +1020,14 @@ Now we define monitors, which are later use to visualize the STDP protocol and t
             record=0, name='statemon_post_neurons')
 
     statemon_pre_synapse = StateMonitor(
-            pre_synapse, variables=['Ie_syn'],
+            pre_synapse, variables=['I_syn'],
             record=0, name='statemon_pre_synapse')
 
-    statemon_post_synapse = StateMonitor(stdp_synapse,
-                                         variables=['I_syn', 'w_plast', 'weight'],
-                                         record=True,
-                                         name='statemon_post_synapse')
+    statemon_post_synapse = StateMonitor(
+            stdp_synapse,
+            variables=['I_syn', 'w_plast', 'weight'],
+            record=True,
+            name='statemon_post_synapse')
 
 We can now add all objects to our network and run the simulation.
 
@@ -1097,7 +1098,7 @@ After the simulation is finished we can visualize the effect of the STDP synapse
                 subfig=p2)
 
     datamodel = StateVariablesModel(state_variable_names=['I_syn'],
-                                    state_variables=[np.asarray(statemon_post_synapse.Ie_syn[1])],
+                                    state_variables=[np.asarray(statemon_post_synapse.I_syn[1])],
                                     state_variables_times=[np.asarray(statemon_post_synapse.t)])
     Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
                 MyPlotSettings=PlotSettings(colors=['m']),
@@ -1175,8 +1176,7 @@ Now we can define our neuronal populations and connect them via an STDP synapse.
 
     pre_neurons.namespace.update({'tmax': tmax})
     post_neurons = Neurons(N, model='''
-                                    Ii0 : amp
-                                    Ie0 : amp
+                                    Iin : amp
                                     tspike:second''',
                            threshold='t>tspike', refractory=100 * ms)
 
@@ -1319,7 +1319,7 @@ The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.
         'I_syn': 0,
         'w_plast': 0,
         'baseweight': 0.2
-    }
+        }
 
 | This choice will add variability to the neuron refractory period (``refP``) and to the synaptic weight (``baseweight``), with a standard deviation of 20% of the current value for both parameters.
 | Let's first create the input SpikeGeneratorGroup, the output layer and the synapses.
@@ -1381,9 +1381,9 @@ and the parameter distribution across neurons.
                                      record=True,
                                      name='statemonNeuMid')
     statemon_input_syn = StateMonitor(input_syn,
-                                         variables='I_syn',
-                                         record=True,
-                                         name='statemon_input_syn')
+                                      variables='I_syn',
+                                      record=True,
+                                      name='statemon_input_syn')
 
     Net.add(input_spikegen, output_neurons, input_syn,
                     spikemon_input, spikemon_output,
@@ -1480,6 +1480,7 @@ and the parameter distribution across neurons.
                        title="I_mem", xlabel="Time (ms)", ylabel="Membrane current Imem (nA)",
                        backend='pyqtgraph', mainfig=mainfig, subfig=subfig4, QtApp=QtApp,
                        show_immediately=True)
+
 
 .. figure:: fig/Mismatch_NN.png
     :width: 800px

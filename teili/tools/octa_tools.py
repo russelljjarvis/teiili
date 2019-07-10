@@ -122,7 +122,6 @@ def add_regulatization_weight(group, buffer_size):
             self._groups[target_group]._tags = {}
             self._groups[target_group]._tags.update(dict_append)
 
-
 def add_proxy_activity(group, buffer_size, decay):
     for grp in group:
         add_activity_proxy(grp,

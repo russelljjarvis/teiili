@@ -62,7 +62,7 @@ if __name__ == '__main__':
     Net.add(OCTA_net, OCTA_net.sub_blocks['compression'],
             OCTA_net.sub_blocks['prediction'])
 
-    Net.run(100* ms,
+    Net.run(np.max(testbench_stim.times)* ms,
             report='text')
 
     plot_sorted_compression(OCTA=OCTA_net)

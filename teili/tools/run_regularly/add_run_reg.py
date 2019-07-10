@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" This set of functions allows the user to easily add the property of certain run_regularly functions,
+"""This set of functions allows the user to easily add the property of certain run_regularly functions,
 specified in run_reg_functions.py to neuron/synapse groups.
 These function should take a certain neuron/synapse group and add all necessary state_variables
 and function calls.
@@ -17,6 +17,22 @@ import numpy as np
 
 def add_re_init_weights(group, re_init_threshold, dist_param_re_init, scale_re_init, distribution):
     """Adds a re-initialization run_regularly to a synapse group
+
+    Args:
+        group (TYPE): Synapse group
+        re_init_threshold (TYPE): Description
+        dist_param_re_init (float, optional): Mean of distribution in case of 'gaussian'
+            or shape parameter k for 'gamma' distribution
+        scale_re_init (float, optional): Standard deviation in case of 'gaussian'
+            or scale parameter sigma for 'gamma' distribution
+        distribution (str, optional): Parameter to determine the random distribution
+            to be used to initialise the weights. Possible 'gaussian' or 'gamma'
+
+    Deleted Parameters:
+        dist_param_init (float, optional): Mean of distribution in case of 'gaussian'
+            or shape parameter k for 'gamma' distribution
+        scale_init (float, optional): Standard deviation in case of 'gaussian'
+            or scale parameter sigma for 'gamma' distribution
     """
     group.namespace.update({'re_init_weights': re_init_weights})
     group.namespace['re_init_threshold'] = re_init_threshold
@@ -35,6 +51,10 @@ def add_re_init_weights(group, re_init_threshold, dist_param_re_init, scale_re_i
 
 def add_re_init_ipred(group, re_init_threshold):
     """Adds a re-initialization run_regularly to a synapse group
+
+    Args:
+        group (Synapse group): Synapse group
+        re_init_threshold (float): Value below which ipred is re-initialise
     """
     group.namespace.update({'re_init_ipred': re_init_ipred})
     group.namespace['re_init_threshold'] = re_init_threshold
@@ -48,6 +68,14 @@ def add_re_init_ipred(group, re_init_threshold):
 def add_activity_proxy(group, buffer_size, decay):
     """Adds all needed functionality to track normalised Imem variance for
     Variance Dependent Plasticity.
+
+    Args:
+        group (Synapse group): Synapse group
+        buffer_size (int, optional): Parameter to set the size of the buffer for
+            adctivity dependent plasticity rule. Meaning how many samples are considered to
+            calculate the activity proxy of post synaptic neurons
+         decay (int, optional): Time constant for decay of exponentioally weighted activity proxy
+        decay (TYPE): Description
     """
     group.namespace.update({'get_activity_proxy': get_activity_proxy})
     group.namespace.update({'max_value_update': max_value_update})
@@ -79,56 +107,58 @@ def add_activity_proxy(group, buffer_size, decay):
         '''normalized_activity_proxy = normalize_activity_proxy(activity_proxy, old_max)''', dt=5 * ms)
 
 
-def add_weight_decay(group, decay, learning_rate=None):
-    group.add_state_variable('decay')
-    if learning_rate is None:
-        group.decay = decay
-    else:
-        group.decay = 1 - (learning_rate / 7)
-    group.run_regularly('''w_plast *= decay''', dt=100 * ms)
+def add_weight_decay(group, decay_strategy, decay_rate=None):
+    """Summary
 
+    Args:
+        group (Synapse group): Synapse group
+        decay_strategy (str, optional): Weight decay strategy. Either 'global' which decays weight
+            based o fixed time interval, or 'local' which performs event-driven weight decay
+        decay_rate (float, optional): Value smaller 1 which is multiplied with w_plast every 50 ms
 
-def add_pred_weight_decay(group, decay, learning_rate=None):
-    group.add_state_variable('decay')
-    if learning_rate is None:
-        group.decay = decay
-    else:
-        group.decay = 1 - (learning_rate / 7)
-    group.run_regularly('''Ipred_plast *= decay''', dt=100 * ms)
-
-
-def add_adaptive_threshold(group, update_step, decay_time):
-    group.add_state_variable('update_step', unit=amp)
-    group.add_state_variable('decay_time', unit=second)
-
-    group.update_step = update_step
-    group.decay_time = decay_time
-
-    group.run_regularly(
-        '''Itau = (Itau * ((t-lastspike)<decay_time)) + ((Itau - update_step) * ((t-lastspike)>=decay_time) * (Itau>2*pA)) + 2*pA * (Itau<=2*pA)''', dt=10 * ms)
-
-
-def add_weight_regularization(group, buffer_size):
-    """This functions adds weight regularization to a synapse group.
-    However, it depends on the correlation_coefficient_tracking ru_regularly function,
-    which is added here automatically.
+    Raises:
+        UserWarning: TBI
     """
+    if decay_strategy == 'global':
+        group.add_state_variable('decay')
 
-    group.namespace.update(
-        {'correlation_coefficient_tracking': correlation_coefficient_tracking})
-    group.add_state_variable('buffer_size', shared=True, constant=True)
-    group.add_state_variable('buffer_pointer_norm', shared=True, constant=True)
+        if decay_rate is not None:
+            group.decay = decay_rate
+        else:
+            group.decay = 1 - (0.001 / 7)
 
-    group.buffer_size = buffer_size
-    group.buffer_pointer_norm = -1
-    group.variables.add_array('mean_variance_time', size=buffer_size)
-    group.run_regularly('''buffer_pointer_norm = (buffer_pointer_norm + 1) % buffer_size;\
-    mean_variance_time = correlation_coefficient_tracking(w_plast,\
-                                                          N_pre,\
-                                                          N_post,\
-                                                          buffer_pointer_norm,\
-                                                          mean_variance_time)''',
-                        dt=100 * ms)
-    group.namespace.update({'weight_regularization': weight_regularization})
-    group.run_regularly(''' w_plast = weight_regularization(w_plast, N_pre, N_post, mean_variance_time)''',
-                        dt=200 * ms)
+        group.run_regularly('''w_plast *= decay''', dt=100 * ms)
+
+    elif decay_strategy == 'local':
+        raise UserWarning('To be implemented')
+        """The general idea is to to reduce w_plast on_post proportional to w_plas
+        meaning that the on_post statement should look like
+        w_plast = w_plast - (eta * k * w_plast)
+        where eta is the learning rate aka dApre and k is a scaling factor
+        """
+
+
+def add_pred_weight_decay(group, decay_strategy, decay_rate=None):
+    """Summary
+
+    Args:
+        group (Synapse group): Synapse group
+        decay_strategy (str, optional): Weight decay strategy. Either 'global' which decays weight
+            based o fixed time interval, or 'local' which performs event-driven weight decay
+        decay_rate (float, optional): Value smaller 1 which is multiplied with w_plast every 100 ms
+    """
+    group.add_state_variable('decay')
+    if decay_strategy == 'global':
+        if decay_rate is not None:
+            group.decay = decay_rate
+        else:
+            group.decay = 1 - (0.001 / 7)
+        group.run_regularly('''Ipred_plast *= decay''', dt=100 * ms)
+
+    elif decay_strategy == 'local':
+        raise UserWarning('To be implemented')
+        """The general idea is to to reduce w_plast on_post proportional to w_plas
+        meaning that the on_post statement should look like
+        w_plast = w_plast - (eta * k * w_plast)
+        where eta is the learning rate aka dApre and k is a scaling factor
+        """

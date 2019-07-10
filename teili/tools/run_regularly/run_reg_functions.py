@@ -197,18 +197,11 @@ def get_activity_proxy(Imem, buffer_pointer, membrane_buffer, kernel):
         membrane_buffer[:, :-1] = membrane_buffer[:, 1:]
         membrane_buffer[:, -1] = Imem
 
-    # membrane_variance = np.sum(
-    #     np.diff(membrane_buffer, axis=1)**2, axis=1)
-    # membrane_variance = np.var(np.diff(membrane_buffer, axis=1)**2, axis=1)
-    # membrane_variance = np.var(membrane_buffer, axis=1)
-
     '''Exponential weighing the membrane buffer to reflect more recent
     fluctuations in Imem. The exponential kernel is choosen to weight
     the most recent activity with a weight of 1, so we can normalize using
     the Ispkthr variable.
     '''
-    # exp_weighted_membrane_buffer = np.zeros(np.shape(membrane_buffer)) * np.nan
-    # exp_weighted_membrane_buffer = np.diff(np.array(membrane_buffer, copy=True), axis=1)**2
     exp_weighted_membrane_buffer = np.array(membrane_buffer, copy=True)
     exp_weighted_membrane_buffer *= kernel[:, :np.shape(exp_weighted_membrane_buffer)[1]]
 

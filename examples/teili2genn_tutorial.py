@@ -30,7 +30,7 @@ path = os.path.expanduser("~")
 model_path = os.path.join(path, "teiliApps", "equations", "")
 
 synapse_obj = SynapseEquationBuilder.import_eq(
-    model_path + 'DPISyn_single_eq.py')
+    model_path + 'DPISyn.py')
 
 #prefs.codegen.target = "numpy"
 set_device('genn', use_GPU= False, directory='teili2genn_test', debug=False)
@@ -56,7 +56,7 @@ input_synapse = Connections(input_spikegenerator, test_neurons1,
 input_synapse.connect(True)
 
 test_synapse = Connections(test_neurons1, test_neurons2,
-                           equation_builder=synapse_obj,
+                           equation_builder=synapse_model,
                            name="testSyn2")
 test_synapse.connect(True)
 
@@ -92,11 +92,11 @@ spikemon_test_neurons2 = SpikeMonitor(
     test_neurons2, name='spikemon_test_neurons2')
 
 statemon_input_synapse = StateMonitor(
-    input_synapse, variables='Ie_syn',
+    input_synapse, variables='I_syn',
     record=[1, 2], name='statemon_input_synapse')
 
 statemon_test_synapse = StateMonitor(
-    test_synapse, variables='Ie_syn',
+    test_synapse, variables='I_syn',
     record=[1,2,3,4], name='statemon_test_synapse')
 
 if 'Imem' in neuron_model().keywords['model']:

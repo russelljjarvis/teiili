@@ -124,7 +124,8 @@ def gen_octa(groupname,
              buffer_size_plast=200, noise_weight=30.0,
              variance_th_c=0.5, variance_th_p=0.4,
              learning_rate=0.007, inh_learning_rate=0.01,
-             decay=150, weight_decay='global', tau_stdp=10*ms,
+             decay=150, weight_decay='global',
+             tau_stdp=10*ms, seed = 42,
              external_input=True,
              noise=True,
              monitor=True,
@@ -355,10 +356,10 @@ def gen_octa(groupname,
                              re_init_threshold=re_init_threshold)
 
     #initialiaze mismatch
-    add_bb_mismatch(compression)
-    add_bb_mismatch(prediction)
-    s_proj_pred.add_mismatch(mismatch_synap_param, seed=42)
-    projection.add_mismatch(mismatch_neuron_param, seed=42)
+    add_bb_mismatch(compression, seed)
+    add_bb_mismatch(prediction, seed)
+    s_proj_pred.add_mismatch(mismatch_synap_param, seed=seed)
+    projection.add_mismatch(mismatch_neuron_param, seed=seed)
 
     if external_input is True:
         spike_gen = SpikeGeneratorGroup(N=num_input_neurons**2,

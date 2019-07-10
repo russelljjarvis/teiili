@@ -25,22 +25,23 @@ All these functions are linked the the OCTA building block
 '''
 
 
-def add_bb_mismatch(bb):
+def add_bb_mismatch(bb, seed= 42):
     '''
     This allows to add mismatch to all the neuron and connection groups present in a building block
 
     Args:
         bb (Building Block Object, required)
+        seed (int, optional)
 
     Returns:
         None
     '''
     for i in bb.groups:
         if bb.groups[i]._tags['group_type'] == 'Neuron':
-            bb.groups[i].add_mismatch(mismatch_neuron_param, seed=42)
+            bb.groups[i].add_mismatch(mismatch_neuron_param, seed=seed)
             bb.groups[i]._tags['mismatch'] = 1
         elif bb.groups[i]._tags['group_type'] == 'Connection':
-            bb.groups[i].add_mismatch(mismatch_synap_param, seed= 42)
+            bb.groups[i].add_mismatch(mismatch_synap_param, seed= seed)
             bb.groups[i]._tags['mismatch'] = 1
         else:
             pass

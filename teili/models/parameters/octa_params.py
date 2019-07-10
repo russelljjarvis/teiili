@@ -5,7 +5,7 @@ Created on Fri Jun 21 10:11:05 2019
 
 @author: matteo
 
-This file contains default parameter for OCTA hierarchical BB. 
+This file contains default parameter for OCTA hierarchical BB.
 For more information look into Moritz Milde PhD dissertation 2019
 
 """
@@ -13,8 +13,8 @@ For more information look into Moritz Milde PhD dissertation 2019
 from brian2 import pF, nS, mV, ms, pA, nA
 
 '''
-    octa_params (dict): Network parameters for the 
-    wta_params (dict): WTA parameters 
+    octa_params (dict): Network parameters for the
+    wta_params (dict): WTA parameters
 
 '''
 
@@ -47,7 +47,8 @@ octa_params = {'distribution': 'gamma',
                'inh_learning_rate': 0.01,
                'decay': 150,
                'weight_decay': 'global',
-               'tau_stdp': 10 * ms
+               'tau_stdp': 10 * ms,
+               'seed' : 42,
              }
 
 

@@ -47,11 +47,10 @@ Example:
 # @Date:   2017-12-27 10:46:44
 
 
+import sys
 import time
 import numpy as np
-import sys
 
-import brian2
 from brian2 import ms, mV, pA, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
 
 import teili.tools.synaptic_kernel
@@ -87,17 +86,11 @@ class WTA(BuildingBlock):
     Attributes:
         dimensions (int, optional): Specifies if 1 or 2 dimensional WTA is
             created.
-        group (dict): List of keys of neuron population.
-        inhGroup (TYPE): Description
-        inputGroup (brian2.SpikeGenerator obj.): SpikeGenerator object to
-             stimulate WTA.
         num_neurons (int, optional): Size of WTA neuron population.
+        spike_gen (TYPE): SpikeGenerator group of the BB
         spikemon_exc (brian2.SpikeMonitor obj.): A spike monitor which monitors
             the activity of the WTA population.
-
-    Deleted Attributes:
-        standalone_params (dict): Keys for all standalone parameters necessary
-            for cpp code generation.
+        standalone_params (TYPE): Description
     '''
 
     def __init__(self, name='wta*',
@@ -142,9 +135,6 @@ class WTA(BuildingBlock):
 
         Raises:
             NotImplementedError: If dimensions is not 1 or 2.
-
-        Deleted Parameters:
-            groupname (str, required): Name of the WTA population.
         """
         self.num_neurons = num_neurons
         self.dimensions = dimensions
@@ -172,7 +162,7 @@ class WTA(BuildingBlock):
                                                   debug=debug,
                                                   spatial_kernel=spatial_kernel,
                                                   **block_params)
-            set_WTA_tags(self, self._groups)
+            set_wta_tags(self, self._groups)
 
         elif dimensions == 2:
             self._groups,\
@@ -191,7 +181,7 @@ class WTA(BuildingBlock):
                                                   spatial_kernel=spatial_kernel,
                                                   **block_params)
 
-            set_WTA_tags(self, self._groups)
+            set_wta_tags(self, self._groups)
 
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
@@ -224,6 +214,7 @@ def gen1dWTA(groupname,
         synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models.
         we_inp_exc (float, optional): Excitatory synaptic weight between input SpikeGenerator and WTA neurons.
         we_exc_inh (int, optional): Excitatory synaptic weight between WTA population and inhibitory interneuron.
+        wi_inh_inh (TYPE, optional): Description
         wi_inh_exc (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and WTA population.
         we_exc_exc (float, optional): Self-excitatory synaptic weight (WTA).
         sigm (int, optional): Standard deviation in number of neurons for Gaussian connectivity kernel.
@@ -232,15 +223,15 @@ def gen1dWTA(groupname,
         num_neurons (int, optional): Size of WTA neuron population.
         num_inh_neurons (int, optional): Size of inhibitory interneuron population.
         num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
+        num_inputs (int, optional): Number of input currents to WTA.
         num_inh_inputs (int, optional): Number of input currents to the inhibitory group.
         cutoff (int, optional): Radius of self-excitation.
-        num_inputs (int, optional): Number of input currents to WTA.
         spatial_kernel (str, optional): Description
         ei_connection_probability (float, optional): WTA to interneuron connectivity probability.
         ie_connection_probability (float, optional): Interneuron to WTA connectivity probability
         ii_connection_probability (float, optional): Interneuron to Interneuron connectivity probability.
-        monitor (bool, optional): Flag to auto-generate spike and state monitors.
         additional_statevars (list, optional): List of additional state variables which are not standard.
+        monitor (bool, optional): Flag to auto-generate spike and state monitors.
         debug (bool, optional): Flag to gain additional information.
 
     Returns:
@@ -297,7 +288,8 @@ def gen1dWTA(groupname,
     s_inp_exc.connect('i==j')
     # connect the nearest neighbors including itself
     s_exc_exc.connect('abs(i-j)<=cutoff')
-    # Generates all to all connectivity with specified probability of connection
+    # Generates all to all connectivity with specified probability of
+    # connection
     s_exc_inh.connect('True', p=ei_connection_probability)
     s_inh_exc.connect('True', p=ie_connection_probability)
     s_inh_inh.connect('True', p=ii_connection_probability)
@@ -355,7 +347,8 @@ def gen1dWTA(groupname,
         monitors = {}
     # replacevars should be the 'real' names of the parameters, that can be
     # changed by the arguments of this function:
-    # in this case: we_inp_exc, we_exc_inh, wi_inh_exc, we_exc_exc,rp_exc, rp_inh,sigm
+    # in this case: we_inp_exc, we_exc_inh, wi_inh_exc, we_exc_exc,rp_exc,
+    # rp_inh,sigm
     standalone_params = {
         s_inp_exc.name + '_weight': we_inp_exc,
         s_exc_inh.name + '_weight': we_exc_inh,
@@ -386,7 +379,7 @@ def gen2dWTA(groupname,
              num_neurons=64, num_inh_neurons=5,
              num_input_neurons=None, num_inputs=1, num_inh_inputs=2,
              cutoff=10, spatial_kernel="kernel_gauss_2d",
-             ei_connection_probability=1.0, ie_connection_probability=1,
+             ei_connection_probability=1.0, ie_connection_probability=1.0,
              ii_connection_probability=0.1,
              additional_statevars=[], monitor=True, debug=False):
     '''Creates a 2D square WTA population of neurons, including the inhibitory interneuron population
@@ -397,23 +390,25 @@ def gen2dWTA(groupname,
         synapse_eq_builder (class, optional): synapse class as imported from models/synapse_models.
         we_inp_exc (float, optional): Excitatory synaptic weight between input SpikeGenerator and WTA neurons.
         we_exc_inh (int, optional): Excitatory synaptic weight between WTA population and inhibitory interneuron.
+        wi_inh_inh (int, optional): Self-inhibitory weight of the interneuron population.
         wi_inh_exc (TYPE, optional): Inhibitory synaptic weight between inhibitory interneuron and WTA population.
         we_exc_exc (float, optional): Self-excitatory synaptic weight (WTA).
         sigm (int, optional): Standard deviation in number of neurons for Gaussian connectivity kernel.
         rp_exc (float, optional): Refractory period of WTA neurons.
         rp_inh (float, optional): Refractory period of inhibitory neurons.
-        wi_inh_inh (int, optional): Self-inhibitory weight of the interneuron population.
-        ei_connection_probability (float, optional): WTA to interneuron connectivity probability.
-
-        spatial_kernel (str, optional): Description
         num_neurons (int, optional): Size of WTA neuron population.
         num_inh_neurons (int, optional): Size of inhibitory interneuron population.
         num_input_neurons (int, optional): Size of input population. If None, equal to size of WTA population.
+        num_inputs (int, optional): Number of input currents to WTA.
         num_inh_inputs (int, optional): Number of input currents to the inhibitory group.
         cutoff (int, optional): Radius of self-excitation.
-        num_inputs (int, optional): Number of input currents to WTA.
-        monitor (bool, optional): Flag to auto-generate spike and statemonitors.
+        spatial_kernel (str, optional): Description
+        ei_connection_probability (float, optional): WTA to interneuron connectivity probability.
+
+        ie_connection_probability (float, optional): Interneuron to excitory neuron connectivity probability.
+        ii_connection_probability (float, optional): Interneuron to interneuron neuron connectivity probability.
         additional_statevars (list, optional): List of additional state variables which are not standard.
+        monitor (bool, optional): Flag to auto-generate spike and statemonitors.
         debug (bool, optional): Flag to gain additional information.
 
     Returns:
@@ -539,7 +534,8 @@ def gen2dWTA(groupname,
 
     # replacevars should be the real names of the parameters,
     # that can be changed by the arguments of this function:
-    # in this case: we_inp_exc, we_exc_inh, wi_inh_exc, we_exc_exc,rp_exc, rp_inh,sigm
+    # in this case: we_inp_exc, we_exc_inh, wi_inh_exc, we_exc_exc,rp_exc,
+    # rp_inh,sigm
     standalone_params = {
         s_inp_exc.name + '_weight': we_inp_exc,
         s_exc_inh.name + '_weight': we_exc_inh,
@@ -553,40 +549,37 @@ def gen2dWTA(groupname,
 
     end = time.time()
     if debug:
-        print('creating WTA of ' + str(num_neurons) + ' x ' + str(num_neurons) + ' neurons with name ' +
+        print('creating WTA of ' + str(num_neurons) + ' x ' +
+              str(num_neurons) + ' neurons with name ' +
               groupname + ' took ' + str(end - start) + ' sec')
-        print('The keys of the ' + groupname+' output dict are:')
+        print('The keys of the ' + groupname + ' output dict are:')
         for key in _groups:
             print(key)
 
     return _groups, monitors, standalone_params
 
 
-def set_WTA_tags(self, _groups):
+def set_wta_tags(self, _groups):
     '''
     Sets default tags to a WTA network
 
     Args:
         _groups (dictionary): Keys to all neuron and synapse groups.
 
-    Returns:
-        _groups (dictionary): Keys to all neuron and synapse groups with tags appended.
+    No Longer Returned:
+        Tags will be added to all _groups passed. They follow this structure:
 
-
-      Tags will be added to all _groups passed. They follow this structure:
-
-      tags =       { 'mismatch' : (bool, 0/1)
-                      'noise : (bool, 0/1)
-                      'level': int
-                     'sign': str (exc/inh/None)
-                     'target sign': str (exc/inh/None)
-                      'num_inputs' : int (0 if not Neuron group),
-                      'bb_type' : str (WTA/3-WAY),
-                      'group_type' : str (Neuron/Connection/ SpikeGen)
-                      'connection_type' : str (rec/lateral/fb/ff/None)
-
-         }
-'''
+        tags = {'mismatch' : (bool, 0/1)
+                'noise : (bool, 0/1)
+                'level': int
+                'sign': str (exc/inh/None)
+                'target sign': str (exc/inh/None)
+                'num_inputs' : int (0 if not Neuron group),
+                'bb_type' : str (WTA/3-WAY),
+                'group_type' : str (Neuron/Connection/ SpikeGen)
+                'connection_type' : str (rec/lateral/fb/ff/None)
+           }
+    '''
 
     self._set_tags(tags_parameters.basic_wta_n_exc, _groups['n_exc'])
     self._set_tags(tags_parameters.basic_wta_n_inh, _groups['n_inh'])

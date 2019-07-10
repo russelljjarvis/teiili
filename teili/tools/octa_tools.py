@@ -3,18 +3,17 @@
 """
 Created on Tue Jun 25 14:19:57 2019
 
-@author: matteo
+@author: matteo, mmilde
 """
 import time
 import numpy as np
-from tkinter import filedialog
 import os
 from brian2 import ms
 from teili.models.parameters.octa_params import *
 
 from teili.tools.run_regularly.add_run_reg import add_weight_decay,\
-add_pred_weight_decay, add_re_init_weights, add_weight_regularization,\
-add_re_init_ipred, add_activity_proxy
+    add_pred_weight_decay, add_re_init_weights,\
+    add_re_init_ipred, add_activity_proxy
 '''
 This file contains:
     -wrapper functions for the run regular functions
@@ -24,13 +23,14 @@ This file contains:
 All these functions are linked the the OCTA building block
 '''
 
-def add_bb_mismatch(bb, seed= 42):
+
+def add_bb_mismatch(bb, seed=42):
     '''
     This allows to add mismatch to all the neuron and connection groups present in a building block
 
     Args:
-        bb (Building Block Object, required)
-        seed (int, optional)
+        bb (TYPE): Building block object to which mismatch should be added
+        seed (int, optional): Random seed to sample the mismatch from
 
     Returns:
         None
@@ -40,50 +40,75 @@ def add_bb_mismatch(bb, seed= 42):
             bb.groups[i].add_mismatch(mismatch_neuron_param, seed=seed)
             bb.groups[i]._tags['mismatch'] = 1
         elif bb.groups[i]._tags['group_type'] == 'Connection':
-            bb.groups[i].add_mismatch(mismatch_synap_param, seed= seed)
+            bb.groups[i].add_mismatch(mismatch_synap_param, seed=seed)
             bb.groups[i]._tags['mismatch'] = 1
         else:
             pass
     return None
 
-def add_decay_weight(group, decay_strategy, learning_rate):
-        '''
+
+def add_decay_weight(group, decay_strategy, decay_rate):
+    '''
     This allows to add a weight decay run regular function following a pre defined
     decay strategay
 
     Args:
-        groups (list, required) : list of groups that implemet
+        group (list): List of Synapse group which should be subject to weight decay
+        decay_strategy (str): Weight decay strategy. Either 'global' which decays weight
+                based o fixed time interval, or 'local' which performs event-driven weight decay
+        learning_rate (float): Amount of weight decay per time step
 
     Returns:
         None
-        '''
+    '''
+    for grp in group:
+        add_weight_decay(grp, decay_strategy, decay_rate)
+        dict_append = {'weight decay': decay_strategy}
+        if hasattr(grp, "_tags"):
+            grp._tags.update(dict_append)
+        else:
+            self._groups[target_group]._tags = {}
+            self._groups[target_group]._tags.update(dict_append)
 
-        for grp in group:
-            add_weight_decay(grp, decay_strategy, learning_rate)
-            dict_append= {'weight decay' : decay_strategy}
-            if hasattr(grp,"_tags"):
-                grp._tags.update(dict_append)
-            else:
-                self._groups[target_group]._tags = {}
-                self._groups[target_group]._tags.update(dict_append)
+    return None
 
-        return None
 
-def add_weight_pred_decay(group, decay_strategy, learning_rate):
+def add_weight_pred_decay(group, decay_strategy, decay_rate):
+    """Summary
 
-        for grp in group:
-            add_pred_weight_decay(grp, decay_strategy, learning_rate)
-            dict_append= {'weight decay (pred)' : decay_strategy}
-            if hasattr(grp,"_tags"):
-                grp._tags.update(dict_append)
-            else:
-                self._groups[target_group]._tags = {}
-                self._groups[target_group]._tags.update(dict_append)
-        return None
+    Args:
+        group (TYPE): Description
+        decay_strategy (TYPE): Description
+        decay_rate (TYPE): Description
 
-def add_weight_re_init(group, re_init_threshold, dist_param_re_init, scale_re_init,
-                       distribution):
+    Returns:
+        TYPE: Description
+    """
+    for grp in group:
+        add_pred_weight_decay(grp, decay_strategy, decay_rate)
+        dict_append = {'weight decay (pred)': decay_strategy}
+        if hasattr(grp, "_tags"):
+            grp._tags.update(dict_append)
+        else:
+            self._groups[target_group]._tags = {}
+            self._groups[target_group]._tags.update(dict_append)
+    return None
 
+
+def add_weight_re_init(group, re_init_threshold, dist_param_re_init,
+                       scale_re_init, distribution):
+    """Summary
+
+    Args:
+        group (TYPE): Description
+        re_init_threshold (TYPE): Description
+        dist_param_re_init (TYPE): Description
+        scale_re_init (TYPE): Description
+        distribution (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     for grp in group:
         add_re_init_weights(grp,
                             re_init_threshold=re_init_threshold,
@@ -91,8 +116,8 @@ def add_weight_re_init(group, re_init_threshold, dist_param_re_init, scale_re_in
                             scale_re_init=scale_re_init,
                             distribution=distribution)
 
-        dict_append= {'re initializes weights' : distribution}
-        if hasattr(grp,"_tags"):
+        dict_append = {'re initializes weights' : distribution}
+        if hasattr(grp, "_tags"):
             grp._tags.update(dict_append)
         else:
 
@@ -100,54 +125,96 @@ def add_weight_re_init(group, re_init_threshold, dist_param_re_init, scale_re_in
             self._groups[target_group]._tags.update(dict_append)
 
     return None
+
 
 def add_weight_re_init_ipred(group, re_init_threshold):
+    """Summary
+
+    Args:
+        group (TYPE): Description
+        re_init_threshold (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     for grp in group:
-        add_re_init_ipred(grp,  re_init_threshold=re_init_threshold)
-        dict_append= {'re initializes weights (ipred)' : 1}
-        if hasattr(grp,"_tags"):
+        add_re_init_ipred(grp, re_init_threshold=re_init_threshold)
+        dict_append = {'re initializes weights (ipred)' : 1}
+        if hasattr(grp, "_tags"):
             grp._tags.update(dict_append)
         else:
             self._groups[target_group]._tags = {}
             self._groups[target_group]._tags.update(dict_append)
     return None
 
+
 def add_regulatization_weight(group, buffer_size):
+    """Summary
+
+    Args:
+        group (TYPE): Description
+        buffer_size (TYPE): Description
+    """
     for grp in group:
-        add_weight_regularization(grp,buffer_size=buffer_size)
-        dict_append= {'weight regulatization' : 1}
-        if hasattr(grp,"_tags"):
+        add_weight_regularization(grp, buffer_size=buffer_size)
+        dict_append = {'weight regulatization' : 1}
+        if hasattr(grp, "_tags"):
             grp._tags.update(dict_append)
         else:
             self._groups[target_group]._tags = {}
             self._groups[target_group]._tags.update(dict_append)
+
 
 def add_proxy_activity(group, buffer_size, decay):
+    """Summary
+
+    Args:
+        group (TYPE): Description
+        buffer_size (TYPE): Description
+        decay (TYPE): Description
+    """
     for grp in group:
         add_activity_proxy(grp,
-                   buffer_size=buffer_size,
-                   decay=decay)
-        dict_append= {'activity proxy' : 1}
-        if hasattr(grp,"_tags"):
+                           buffer_size=buffer_size,
+                           decay=decay)
+        dict_append = {'activity proxy' : 1}
+        if hasattr(grp, "_tags"):
             grp._tags.update(dict_append)
         else:
             self._groups[target_group]._tags = {}
             self._groups[target_group]._tags.update(dict_append)
 
-def add_weight_init (group , dist_param, scale, distribution):
+
+def add_weight_init(group , dist_param, scale, distribution):
+    """Summary
+
+    Args:
+        group (TYPE): Description
+        dist_param (TYPE): Description
+        scale (TYPE): Description
+        distribution (TYPE): Description
+    """
     for grp in group:
         grp.w_plast = weight_init(grp,
-                                   dist_param=dist_param,
-                                   scale=scale,
-                                   distribution=distribution)
-        dict_append= {'weight initialization' : distribution}
-        if hasattr(grp,"_tags"):
+                                  dist_param=dist_param,
+                                  scale=scale,
+                                  distribution=distribution)
+        dict_append = {'weight initialization' : distribution}
+        if hasattr(grp, "_tags"):
             grp._tags.update(dict_append)
         else:
             self._groups[target_group]._tags = {}
             self._groups[target_group]._tags.update(dict_append)
 
+
 class monitor_init():
+
+    """Summary
+
+    Attributes:
+        i (TYPE): Description
+        t (TYPE): Description
+    """
 
     def __init__(self):
         """Creates an object monitor
@@ -167,6 +234,7 @@ def save_monitor(monitor, filename, path, variable=None):
         monitor (brian2 monitor): Spikemonitor of brian2
         filename (str, required): String specifying the name
         path (str, required): Path/where/monitor/should/be/stored/
+        variable (None, optional): Description
     """
     date = time.strftime("%d_%m_%Y")
     if not os.path.exists(path + date):
@@ -256,8 +324,7 @@ def load_weights(filename=None, nrows=None, ncols=None):
     if filename is not None:
         weight_matrix = np.load(filename)
     else:
-        filename = filedialog.askopenfilename()
-        weight_matrix = np.load(filename)
+        raise UserWarning('Please specify a filename')
 
     if nrows is None and ncols is None:
         raise UserWarning(
@@ -282,6 +349,11 @@ def weight_init(synapse_group, dist_param, scale, variable='w_plast', distributi
             dist_param encodes the mean.
         scale (float, required): Hyperparameter specifying scale of gamma
             distribution. Also know as sigma.
+        variable (str, optional): Description
+        distribution (str, optional): Description
+
+    Returns:
+        TYPE: Description
     """
 
     synapse_group.namespace.update({'dist_param': dist_param})

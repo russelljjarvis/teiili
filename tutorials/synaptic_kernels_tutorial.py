@@ -12,11 +12,9 @@ how to set them in your network
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-import matplotlib.pyplot as plt
 import numpy as np
-import os
 
-from brian2 import ms, pA, nA, prefs,\
+from brian2 import second, ms, prefs,\
         SpikeMonitor, StateMonitor,\
         SpikeGeneratorGroup
 
@@ -27,6 +25,10 @@ from teili.models.synapse_models import Alpha, Resonant
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
+
+from teili.tools.visualizer.DataViewers import PlotSettings
+from teili.tools.visualizer.DataModels import  StateVariablesModel
+from teili.tools.visualizer.DataControllers import Lineplot
 
 
 prefs.codegen.target = "numpy"
@@ -75,86 +77,101 @@ Net.add(input_spikegenerator, testNeurons, testNeurons2,
         statemonInpSynAlpha, statemonInpSynResonant,
         statemonNeuOut, statemonNeuOut2)
 
-duration = 10
-Net.run(duration * ms)
+duration = 0.010
+Net.run(duration * second)
 
 
 #Visualize simulation results
-pg.setConfigOptions(antialias=True)
+app = QtGui.QApplication.instance()
+if app is None:
+    app = QtGui.QApplication(sys.argv)
+else:
+    print('QApplication instance already exists: %s' % str(app))
 
-labelStyle = {'color': '#FFF', 'font-size': '12pt'}
+pg.setConfigOptions(antialias=True)
+labelStyle = {'color': '#FFF', 'font-size': 12}
+MyPlotSettings = PlotSettings(fontsize_title=labelStyle['font-size'],
+                              fontsize_legend=labelStyle['font-size'],
+                              fontsize_axis_labels=10,
+                              marker_size=7)
+
 win = pg.GraphicsWindow(title='Kernels Simulation')
 win.resize(900, 600)
 win.setWindowTitle('Simple SNN')
 
-p1 = win.addPlot(title="Alpha Kernel Synapse")
-p2 = win.addPlot(title="Neuron response")
+p1 = win.addPlot()
+p2 = win.addPlot()
 win.nextRow()
-p3 = win.addPlot(title='Resonant Kernel Synapse')
-p4 = win.addPlot(title="Neuron response")
+p3 = win.addPlot()
+p4 = win.addPlot()
 
-colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-          (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
+# Alpha kernel synapse
+data = statemonInpSynAlpha.I_syn.T
+data[:, 1] *= -1.
+datamodel_SynAlpha = StateVariablesModel(state_variable_names=['I_syn'],
+                                state_variables=[data],
+                                state_variables_times=[statemonInpSynAlpha.t])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel_SynAlpha, ('t_I_syn', 'I_syn'))],
+         MyPlotSettings=MyPlotSettings,
+         x_range=(0, duration),
+         y_range=None,
+         title='Alpha Kernel Synapse',
+         xlabel='Time (s)',
+         ylabel='Synaptic current I (A)',
+         backend='pyqtgraph',
+         mainfig=win,
+         subfig=p1,
+         QtApp=app)
+for i, data in enumerate(np.asarray(spikemonInp.t)):
+    vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255),
+                style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
+    p1.addItem(vLine, ignoreBounds=True)
 
-p1.setXRange(0, duration, padding=0)
-p2.setXRange(0, duration, padding=0)
-p3.setXRange(0, duration, padding=0)
-p4.setXRange(0, duration, padding=0)
+# Neuron response
+Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuOut, ('t', 'Iin'))],
+         MyPlotSettings=MyPlotSettings,
+         x_range=(0, duration),
+         y_range=None,
+         title='Neuron response',
+         xlabel='Time (s)',
+         ylabel='Membrane current I_mem (A)',
+         backend='pyqtgraph',
+         mainfig=win,
+         subfig=p2,
+         QtApp=app)
 
+# Resonant kernel synapse
+data = statemonInpSynResonant.I_syn.T
+data[:, 1] *= -1.
+datamodel_SynResonant = StateVariablesModel(state_variable_names=['I_syn'],
+                                state_variables=[data],
+                                state_variables_times=[statemonInpSynResonant.t])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel_SynResonant, ('t_I_syn','I_syn'))],
+         MyPlotSettings=MyPlotSettings,
+         x_range=(0, duration),
+         y_range=None,
+         title='Resonant Kernel Synapse',
+         xlabel='Time (s)',
+         ylabel='Synaptic current I (A)',
+         backend='pyqtgraph',
+         mainfig=win,
+         subfig=p3,
+         QtApp=app)
+for i, data in enumerate(np.asarray(spikemonInp.t)):
+    vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255),
+                style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
+    p3.addItem(vLine, ignoreBounds=True)
 
-# Kernel synapses
-for i, data in enumerate(np.asarray(statemonInpSynAlpha.I_syn)):
-    if i == 1:
-        data = data * -1
-    name = 'Syn_{}'.format(i)
-    p1.plot(x=np.asarray(statemonInpSynAlpha.t / ms), y=data,
-            pen=pg.mkPen(colors[3], width=2), name=name)
-
-for i, data in enumerate(np.asarray(spikemonInp.t / ms)): 
-   vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255), style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
-   p1.addItem(vLine, ignoreBounds=True)
-
-for i, data in enumerate(np.asarray(statemonInpSynResonant.I_syn)):
-    if i == 1:
-        data = data * -1
-    name = 'Syn_{}'.format(i)
-    p3.plot(x=np.asarray(statemonInpSynResonant.t / ms), y=data,
-            pen=pg.mkPen(colors[3], width=2), name=name)
-
-for i, data in enumerate(np.asarray(spikemonInp.t / ms)):
-   vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255), style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
-   p3.addItem(vLine, ignoreBounds=True)
-
-
-for data in np.asarray(statemonNeuOut.Iin):
-    p2.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
-            pen=pg.mkPen(colors[5], width=3))
-
-for data in np.asarray(statemonNeuOut2.Iin):
-    p4.plot(x=np.asarray(statemonNeuOut2.t / ms), y=data,
-            pen=pg.mkPen(colors[5], width=3))
-
-
-#Set labels
-p1.setLabel('left', "Synaptic current I", units='A', **labelStyle)
-p1.setLabel('bottom', "Time (ms)", **labelStyle)
-p2.setLabel('left', "Membrane current I_mem", units='A', **labelStyle)
-p2.setLabel('bottom', "Time (ms)", **labelStyle)
-p3.setLabel('left', "Synaptic current I", units="A", **labelStyle)
-p3.setLabel('bottom', "Time (ms)", **labelStyle)
-p4.setLabel('left', "Membrane current I_mem", units="A", **labelStyle)
-p4.setLabel('bottom', "Time (ms)", **labelStyle)
-
-b = QtGui.QFont("Sans Serif", 10)
-p1.getAxis('bottom').tickFont = b
-p1.getAxis('left').tickFont = b
-p2.getAxis('bottom').tickFont = b
-p2.getAxis('left').tickFont = b
-p3.getAxis('bottom').tickFont = b
-p3.getAxis('left').tickFont = b
-p4.getAxis('bottom').tickFont = b
-p4.getAxis('left').tickFont = b
-
-
-QtGui.QApplication.instance().exec_()
-
+# Neuron response
+Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuOut2, ('t', 'Iin'))],
+         MyPlotSettings=MyPlotSettings,
+         x_range=(0, duration),
+         y_range=None,
+         title='Neuron response',
+         xlabel='Time (s)',
+         ylabel='Membrane current I_mem (A)',
+         backend='pyqtgraph',
+         mainfig=win,
+         subfig=p4,
+         QtApp=app,
+         show_immediately=True)

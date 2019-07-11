@@ -107,6 +107,8 @@ First we import all required libraries
     from teili.models.synapse_models import DPISyn as syn_model
     from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
+    from teili.tools.visualizer.DataViewers import PlotSettings
+    from teili.tools.visualizer.DataControllers import Rasterplot, Lineplot
 
 We now can define the target for the code generation. Typically we use the ``numpy`` backend.
 For more details on how to run your code more efficient and faster have a look at brian's `standalone mode`_
@@ -284,13 +286,17 @@ In order to visualize the behavior the example script also plots a couple of spi
 
     app = QtGui.QApplication.instance()
     if app is None:
-            app = QtGui.QApplication(sys.argv)
+        app = QtGui.QApplication(sys.argv)
     else:
-            print('QApplication instance already exists: %s' % str(app))
+        print('QApplication instance already exists: %s' % str(app))
 
     pg.setConfigOptions(antialias=True)
+    labelStyle = {'color': '#FFF', 'font-size': 12}
+    MyPlotSettings = PlotSettings(fontsize_title=labelStyle['font-size'],
+                                  fontsize_legend=labelStyle['font-size'],
+                                  fontsize_axis_labels=10,
+                                  marker_size=7)
 
-    labelStyle = {'color': '#FFF', 'font-size': '12pt'}
     win = pg.GraphicsWindow()
     win.resize(2100, 1200)
     win.setWindowTitle('Simple Spiking Neural Network')
@@ -304,87 +310,96 @@ In order to visualize the behavior the example script also plots a couple of spi
     p5 = win.addPlot(title="Rasterplot of output test neurons 2")
     p6 = win.addPlot(title="Output test neurons 2")
 
-    colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-                        (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-
-
-    p1.setXRange(0, duration, padding=0)
-    p2.setXRange(0, duration, padding=0)
-    p3.setXRange(0, duration, padding=0)
-    p4.setXRange(0, duration, padding=0)
-    p5.setXRange(0, duration, padding=0)
-    p6.setXRange(0, duration, padding=0)
 
     # Spike generator
-    p1.plot(x=np.asarray(spikemon_input.t / ms), y=np.asarray(spikemon_input.i),
-                    pen=None, symbol='o', symbolPen=None,
-                    symbolSize=7, symbolBrush=(255, 255, 255))
+    Rasterplot(MyEventsModels=[spikemon_input],
+                         MyPlotSettings=MyPlotSettings,
+                         time_range=[0, duration],
+                         neuron_id_range=None,
+                         title="Input spike generator",
+                         xlabel='Time (ms)',
+                         ylabel="Neuron ID",
+                         backend='pyqtgraph',
+                         mainfig=win,
+                         subfig_rasterplot=p1,
+                         QtApp=app,
+                         show_immediately=False)
 
     # Input synapses
-    for i, data in enumerate(np.asarray(statemon_input_synapse.Ie_syn)):
-            name = 'Syn_{}'.format(i)
-            p2.plot(x=np.asarray(statemon_input_synapse.t / ms), y=data,
-                            pen=pg.mkPen(colors[3], width=2), name=name)
+    Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'I_syn'))],
+                       MyPlotSettings=MyPlotSettings,
+                       x_range=[0, duration],
+                       title="Input synapses",
+                       xlabel="Time (ms)",
+                       ylabel="EPSC (A)",
+                       backend='pyqtgraph',
+                       mainfig=win,
+                       subfig=p2,
+                       QtApp=app,
+                       show_immediately=False)
 
     # Intermediate neurons
     if hasattr(statemon_test_neurons1, 'Imem'):
-            for i, data in enumerate(np.asarray(statemon_test_neurons1.Imem)):
-                    p3.plot(x=np.asarray(statemon_test_neurons1.t / ms), y=data,
-                                    pen=pg.mkPen(colors[6], width=2))
+        MyData_intermed_neurons = [(statemon_test_neurons1, ('t', 'Imem'))]
     if hasattr(statemon_test_neurons1, 'Vm'):
-            for i, data in enumerate(np.asarray(statemon_test_neurons1.Vm)):
-                    p3.plot(x=np.asarray(statemon_test_neurons1.t / ms), y=data,
-                                    pen=pg.mkPen(colors[6], width=2))
+        MyData_intermed_neurons = [(statemon_test_neurons1, ('t', 'Vm'))]
+
+    i_current_name = 'Imem' if 'Imem' in neuron_model().keywords['model'] else 'Vm'
+    Lineplot(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
+                       MyPlotSettings=MyPlotSettings,
+                       x_range=[0, duration],
+                       title='Intermediate test neurons 1',
+                       xlabel="Time (ms)",
+                       ylabel=i_current_name,
+                       backend='pyqtgraph',
+                       mainfig=win,
+                       subfig=p3,
+                       QtApp=app,
+                       show_immediately=False)
 
     # Output synapses
-    for i, data in enumerate(np.asarray(statemon_test_synapse.Ie_syn)):
-            name = 'Syn_{}'.format(i)
-            p4.plot(x=np.asarray(statemon_test_synapse.t / ms), y=data,
-                            pen=pg.mkPen(colors[1], width=2), name=name)
+    Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'I_syn'))],
+                       MyPlotSettings=MyPlotSettings,
+                       x_range=[0, duration],
+                       title="Test synapses",
+                       xlabel="Time (ms)",
+                       ylabel="EPSC (A)",
+                       backend='pyqtgraph',
+                       mainfig=win,
+                       subfig=p4,
+                       QtApp=app,
+                       show_immediately=False)
+
+
+    Rasterplot(MyEventsModels=[spikemon_test_neurons2],
+                         MyPlotSettings=MyPlotSettings,
+                         time_range=[0, duration],
+                         neuron_id_range=None,
+                         title="Rasterplot of output test neurons 2",
+                         xlabel='Time (ms)',
+                         ylabel="Neuron ID",
+                         backend='pyqtgraph',
+                         mainfig=win,
+                         subfig_rasterplot=p5,
+                         QtApp=app,
+                         show_immediately=False)
 
     if hasattr(statemon_test_neurons2, 'Imem'):
-            for data in np.asarray(statemon_test_neurons2.Imem):
-                    p6.plot(x=np.asarray(statemon_test_neurons2.t / ms), y=data,
-                                    pen=pg.mkPen(colors[5], width=3))
+        MyData_output = [(statemon_test_neurons2, ('t','Imem'))]
     if hasattr(statemon_test_neurons2, 'Vm'):
-            for data in np.asarray(statemon_test_neurons2.Vm):
-                    p6.plot(x=np.asarray(statemon_test_neurons2.t / ms), y=data,
-                                    pen=pg.mkPen(colors[5], width=3))
+        MyData_output = [(statemon_test_neurons2, ('t','Vm'))]
 
-    p5.plot(x=np.asarray(spikemon_test_neurons2.t / ms), y=np.asarray(spikemon_test_neurons2.i),
-                    pen=None, symbol='o', symbolPen=None,
-                    symbolSize=7, symbolBrush=(255, 0, 0))
-
-    p1.setLabel('left', "Neuron ID", **labelStyle)
-    p1.setLabel('bottom', "Time (ms)", **labelStyle)
-    p2.setLabel('left', "EPSC", units='A', **labelStyle)
-    p2.setLabel('bottom', "Time (ms)", **labelStyle)
-    i_current_name = 'Imem' if 'Imem' in neuron_model().keywords['model'] else 'Vm'
-    p3.setLabel('left', "%s" %
-                            i_current_name, units="A", **labelStyle)
-    p3.setLabel('bottom', "Time (ms)", **labelStyle)
-    p4.setLabel('left', "EPSC", units="A", **labelStyle)
-    p4.setLabel('bottom', "Time (ms)", **labelStyle)
-    p6.setLabel('left', "%s" %
-                            i_current_name, units="A", **labelStyle)
-    p6.setLabel('bottom', "Time (ms)", **labelStyle)
-    p5.setLabel('left', "Neuron ID", **labelStyle)
-    p5.setLabel('bottom', "Time (ms)", **labelStyle)
-
-    b = QtGui.QFont("Sans Serif", 10)
-    p1.getAxis('bottom').tickFont = b
-    p1.getAxis('left').tickFont = b
-    p2.getAxis('bottom').tickFont = b
-    p2.getAxis('left').tickFont = b
-    p3.getAxis('bottom').tickFont = b
-    p3.getAxis('left').tickFont = b
-    p4.getAxis('bottom').tickFont = b
-    p4.getAxis('left').tickFont = b
-    p5.getAxis('bottom').tickFont = b
-    p5.getAxis('left').tickFont = b
-    p6.getAxis('bottom').tickFont = b
-    p6.getAxis('left').tickFont = b
-
+    Lineplot(DataModel_to_x_and_y_attr=MyData_output,
+                       MyPlotSettings=MyPlotSettings,
+                       x_range=[0, duration],
+                       title="Output test neurons 2",
+                       xlabel="Time (ms)",
+                       ylabel="%s" %i_current_name,
+                       backend='pyqtgraph',
+                       mainfig=win,
+                       subfig=p6,
+                       QtApp=app,
+                       show_immediately=False)
 
     app.exec()
 
@@ -414,7 +429,11 @@ We first import all required libraries
     import pyqtgraph as pg
     import numpy as np
 
+<<<<<<< HEAD
     from Brian2 import ms, pA, nA, prefs,\
+=======
+    from brian2 import ms, second, pA, nA, prefs,\
+>>>>>>> bf32e5d5f1f0c11e7336173e9b1be5e85085dba8
             SpikeMonitor, StateMonitor,\
             SpikeGeneratorGroup
 
@@ -426,7 +445,15 @@ We first import all required libraries
     from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
     from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
+<<<<<<< HEAD
 We define the target for the code generation. As in the previous tutorial we use the ``numpy`` backend.
+=======
+    from teili.tools.visualizer.DataViewers import PlotSettings
+    from teili.tools.visualizer.DataModels import  StateVariablesModel
+    from teili.tools.visualizer.DataControllers import Lineplot
+
+We define the target for the code generation. As in the previous example we use the ``numpy`` backend.
+>>>>>>> bf32e5d5f1f0c11e7336173e9b1be5e85085dba8
 
 .. code-block:: python
 
@@ -534,84 +561,97 @@ In order to visualize the behavior, the example script also plots a couple of sp
 
     app = QtGui.QApplication.instance()
     if app is None:
-            app = QtGui.QApplication(sys.argv)
+        app = QtGui.QApplication(sys.argv)
     else:
-            print('QApplication instance already exists: %s' % str(app))
+        print('QApplication instance already exists: %s' % str(app))
 
     pg.setConfigOptions(antialias=True)
+    labelStyle = {'color': '#FFF', 'font-size': 12}
+    MyPlotSettings = PlotSettings(fontsize_title=labelStyle['font-size'],
+                                  fontsize_legend=labelStyle['font-size'],
+                                  fontsize_axis_labels=10,
+                                  marker_size=7)
 
-    labelStyle = {'color': '#FFF', 'font-size': '12pt'}
     win = pg.GraphicsWindow(title='Kernels Simulation')
     win.resize(900, 600)
     win.setWindowTitle('Simple SNN')
 
-    p1 = win.addPlot(title="Alpha Kernel Synapse")
-    p2 = win.addPlot(title="Neuron response")
+    p1 = win.addPlot()
+    p2 = win.addPlot()
     win.nextRow()
-    p3 = win.addPlot(title='Resonant Kernel Synapse')
-    p4 = win.addPlot(title="Neuron response")
+    p3 = win.addPlot()
+    p4 = win.addPlot()
 
-    colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-              (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
+    # Alpha kernel synapse
+    data = statemonInpSynAlpha.I_syn.T
+    data[:, 1] *= -1.
+    datamodel_SynAlpha = StateVariablesModel(state_variable_names=['I_syn'],
+                                    state_variables=[data],
+                                    state_variables_times=[statemonInpSynAlpha.t])
+    Lineplot(DataModel_to_x_and_y_attr=[(datamodel_SynAlpha, ('t_I_syn', 'I_syn'))],
+             MyPlotSettings=MyPlotSettings,
+             x_range=(0, duration),
+             y_range=None,
+             title='Alpha Kernel Synapse',
+             xlabel='Time (s)',
+             ylabel='Synaptic current I (A)',
+             backend='pyqtgraph',
+             mainfig=win,
+             subfig=p1,
+             QtApp=app)
+    for i, data in enumerate(np.asarray(spikemonInp.t)):
+        vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255),
+                    style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
+        p1.addItem(vLine, ignoreBounds=True)
 
-    p1.setXRange(0, duration, padding=0)
-    p2.setXRange(0, duration, padding=0)
-    p3.setXRange(0, duration, padding=0)
-    p4.setXRange(0, duration, padding=0)
+    # Neuron response
+    Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuOut, ('t', 'Iin'))],
+             MyPlotSettings=MyPlotSettings,
+             x_range=(0, duration),
+             y_range=None,
+             title='Neuron response',
+             xlabel='Time (s)',
+             ylabel='Membrane current I_mem (A)',
+             backend='pyqtgraph',
+             mainfig=win,
+             subfig=p2,
+             QtApp=app)
 
-    # Kernel synapses
-    for i, data in enumerate(np.asarray(statemonInpSynAlpha.I_syn)):
-        if i == 1:
-            data = data * -1
-        name = 'Syn_{}'.format(i)
-        p1.plot(x=np.asarray(statemonInpSynAlpha.t / ms), y=data,
-                pen=pg.mkPen(colors[3], width=2), name=name)
+    # Resonant kernel synapse
+    data = statemonInpSynResonant.I_syn.T
+    data[:, 1] *= -1.
+    datamodel_SynResonant = StateVariablesModel(state_variable_names=['I_syn'],
+                                    state_variables=[data],
+                                    state_variables_times=[statemonInpSynResonant.t])
+    Lineplot(DataModel_to_x_and_y_attr=[(datamodel_SynResonant, ('t_I_syn','I_syn'))],
+             MyPlotSettings=MyPlotSettings,
+             x_range=(0, duration),
+             y_range=None,
+             title='Resonant Kernel Synapse',
+             xlabel='Time (s)',
+             ylabel='Synaptic current I (A)',
+             backend='pyqtgraph',
+             mainfig=win,
+             subfig=p3,
+             QtApp=app)
+    for i, data in enumerate(np.asarray(spikemonInp.t)):
+        vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255),
+                    style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
+        p3.addItem(vLine, ignoreBounds=True)
 
-    for i, data in enumerate(np.asarray(spikemonInp.t / ms)): 
-       vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255), style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
-       p1.addItem(vLine, ignoreBounds=True)
-
-    for i, data in enumerate(np.asarray(statemonInpSynResonant.I_syn)):
-        if i == 1:
-            data = data * -1
-        name = 'Syn_{}'.format(i)
-        p3.plot(x=np.asarray(statemonInpSynResonant.t / ms), y=data,
-                pen=pg.mkPen(colors[3], width=2), name=name)
-
-    for i, data in enumerate(np.asarray(spikemonInp.t / ms)):
-       vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255), style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
-       p3.addItem(vLine, ignoreBounds=True)
-
-    for data in np.asarray(statemonNeuOut.Iin):
-        p2.plot(x=np.asarray(statemonNeuOut.t / ms), y=data,
-                pen=pg.mkPen(colors[5], width=3))
-
-    for data in np.asarray(statemonNeuOut2.Iin):
-        p4.plot(x=np.asarray(statemonNeuOut2.t / ms), y=data,
-                pen=pg.mkPen(colors[5], width=3))
-
-
-    #Set labels
-    p1.setLabel('left', "Synaptic current I", units='A', **labelStyle)
-    p1.setLabel('bottom', "Time (ms)", **labelStyle)
-    p2.setLabel('left', "Membrane current I_mem", units='A', **labelStyle)
-    p2.setLabel('bottom', "Time (ms)", **labelStyle)
-    p3.setLabel('left', "Synaptic current I", units="A", **labelStyle)
-    p3.setLabel('bottom', "Time (ms)", **labelStyle)
-    p4.setLabel('left', "Membrane current I_mem", units="A", **labelStyle)
-    p4.setLabel('bottom', "Time (ms)", **labelStyle)
-
-    b = QtGui.QFont("Sans Serif", 10)
-    p1.getAxis('bottom').tickFont = b
-    p1.getAxis('left').tickFont = b
-    p2.getAxis('bottom').tickFont = b
-    p2.getAxis('left').tickFont = b
-    p3.getAxis('bottom').tickFont = b
-    p3.getAxis('left').tickFont = b
-    p4.getAxis('bottom').tickFont = b
-    p4.getAxis('left').tickFont = b
-
-    app.exec()
+    # Neuron response
+    Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuOut2, ('t', 'Iin'))],
+             MyPlotSettings=MyPlotSettings,
+             x_range=(0, duration),
+             y_range=None,
+             title='Neuron response',
+             xlabel='Time (s)',
+             ylabel='Membrane current I_mem (A)',
+             backend='pyqtgraph',
+             mainfig=win,
+             subfig=p4,
+             QtApp=app,
+             show_immediately=True)
 
 The synaptic current is always positive, the negative effect is oberved in the Iin of the neuron. To better visualize the synapse dynamics, we have multiplied the I_syn of the inhibitory synapse by -1.
 The resulting figure should look like this:
@@ -656,6 +696,8 @@ The original file can be found in ``teiliApps/tutorials/wta_tutorial.py``
     from teili.stimuli.testbench import WTA_Testbench
     from teili import TeiliNetwork
     from teili.models.synapse_models import DPISyn
+
+    from teili.tools.visualizer.DataControllers import Rasterplot
 
 
 Now we can define the code generation backend.
@@ -777,51 +819,46 @@ Now we visualize the activity of our WTA.
 
 .. code-block:: python
 
-    app = QtGui.QApplication.instance()
-    if app is None:
-            app = QtGui.QApplication(sys.argv)
-    else:
-            print('QApplication instance already exists: %s' % str(app))
-
-    pg.setConfigOptions(antialias=True)
-
-    win_wta = pg.GraphicsWindow(title="STDP Unit Test")
+    win_wta = pg.GraphicsWindow(title="WTA")
     win_wta.resize(2500, 1500)
-    win_wta.setWindowTitle("Spike Time Dependet Plasticity")
-    colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-                        (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-    labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-
-    p1 = win_wta.addPlot(title="Noise input")
+    win_wta.setWindowTitle("WTA")
+    p1 = win_wta.addPlot()
     win_wta.nextRow()
-    p2 = win_wta.addPlot(title="WTA activity")
+    p2 = win_wta.addPlot()
     win_wta.nextRow()
-    p3 = win_wta.addPlot(title="Actual signal")
-
-    p1.setXRange(0, duration, padding=0)
-    p2.setXRange(0, duration, padding=0)
-    p3.setXRange(0, duration, padding=0)
-
+    p3 = win_wta.addPlot()
 
     spikemonWTA = test_WTA.monitors['spikemon_exc']
     spiketimes = spikemonWTA.t
 
-    p1.plot(x=np.asarray(spikemonitor_noise.t / ms), y=np.asarray(spikemonitor_noise.i),
-                    pen=None, symbol='s', symbolPen=None,
-                    symbolSize=7, symbolBrush=(255, 0, 0),
-                    name='Noise input')
+    Rasterplot(MyEventsModels = [spikemonitor_noise],
+                time_range=(0, duration_s),
+                title="Noise input",
+                xlabel='Time (s)',
+                ylabel=None,
+                backend='pyqtgraph',
+                mainfig=win_wta,
+                subfig_rasterplot=p1)
 
-    p2.plot(x=np.asarray(spikemonWTA.t / ms), y=np.asarray(spikemonWTA.i),
-                    pen=None, symbol='s', symbolPen=None,
-                    symbolSize=7, symbolBrush=(255, 0, 0),
-                    name='WTA Rasterplot')
+    Rasterplot(MyEventsModels=[spikemonWTA],
+                time_range=(0, duration_s),
+                title="WTA activity",
+                xlabel='Time (s)',
+                ylabel=None,
+                backend='pyqtgraph',
+                mainfig=win_wta,
+                subfig_rasterplot=p2)
 
-    p3.plot(x=np.asarray(spikemonitor_input.t / ms), y=np.asarray(spikemonitor_input.i),
-                    pen=None, symbol='s', symbolPen=None,
-                    symbolSize=7, symbolBrush=(255, 0, 0),
-                    name='Desired signal')
+    Rasterplot(MyEventsModels=[spikemonitor_input],
+                time_range=(0, duration_s),
+                title="Actual signal",
+                xlabel='Time (s)',
+                ylabel=None,
+                backend='pyqtgraph',
+                mainfig=win_wta,
+                subfig_rasterplot=p3,
+                show_immediately=True)
 
-    app.exec()
 
 The resulting figure should look like this:
 
@@ -860,6 +897,10 @@ STDP is one mechanism which has been identified experimentally how neurons adjus
     from teili.models.neuron_models import DPI
     from teili.models.synapse_models import DPISyn, DPIstdp
     from teili.stimuli.testbench import STDP_Testbench
+
+    from teili.tools.visualizer.DataViewers import PlotSettings
+    from teili.tools.visualizer.DataModels import StateVariablesModel
+    from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
 
 As before we can define the backend, as well as our `TeiliNetwork`:
 
@@ -964,36 +1005,15 @@ After the simulation is finished we can visualize the effect of the STDP synapse
 
 .. code-block:: python
 
-    app = QtGui.QApplication.instance()
-    if app is None:
-            app = QtGui.QApplication(sys.argv)
-    else:
-            print('QApplication instance already exists: %s' % str(app))
-
-    pg.setConfigOptions(antialias=True)
-
     win_stdp = pg.GraphicsWindow(title="STDP Unit Test")
     win_stdp.resize(2500, 1500)
-    win_stdp.setWindowTitle("Spike Time Dependet Plasticity")
-    colors = [(255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-                        (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
-    labelStyle = {'color': '#FFF', 'font-size': '12pt'}
+    win_stdp.setWindowTitle("Spike Time Dependent Plasticity")
 
-    p1 = win_stdp.addPlot(title="STDP protocol")
+    p1 = win_stdp.addPlot()
     win_stdp.nextRow()
-    p2 = win_stdp.addPlot(title="Plastic synaptic weight")
+    p2 = win_stdp.addPlot()
     win_stdp.nextRow()
-    p3 = win_stdp.addPlot(title="Post synaptic current")
-
-    p1.setXRange(0, duration, padding=0)
-    p1.setYRange(-0.1, 1.1, padding=0)
-    p2.setXRange(0, duration, padding=0)
-    p3.setXRange(0, duration, padding=0)
-
-    p1.plot(x=np.asarray(spikemon_pre_neurons.t / ms), y=np.asarray(spikemon_pre_neurons.i),
-                    pen=None, symbol='o', symbolPen=None,
-                    symbolSize=7, symbolBrush=(255, 255, 255),
-                    name='Pre synaptic neuron')
+    p3 = win_stdp.addPlot()
 
     text1 = pg.TextItem(text='Homoeostasis', anchor=(-0.3, 0.5))
     text2 = pg.TextItem(text='Weak Pot.', anchor=(-0.3, 0.5))
@@ -1007,45 +1027,48 @@ After the simulation is finished we can visualize the effect of the STDP synapse
     p1.addItem(text4)
     p1.addItem(text5)
     p1.addItem(text6)
-
     text1.setPos(0, 0.5)
-    text2.setPos(250, 0.5)
-    text3.setPos(550, 0.5)
-    text4.setPos(850, 0.5)
-    text5.setPos(1150, 0.5)
-    text6.setPos(1450, 0.5)
+    text2.setPos(0.300, 0.5)
+    text3.setPos(0.600, 0.5)
+    text4.setPos(0.900, 0.5)
+    text5.setPos(1.200, 0.5)
+    text6.setPos(1.500, 0.5)
 
+    Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
+                MyPlotSettings=PlotSettings(colors=['w', 'r']),
+                time_range=(0, duration),
+                neuron_id_range=(-1, 2),
+                title="STDP protocol",
+                xlabel="Time (s)",
+                ylabel="Neuron ID",
+                backend='pyqtgraph',
+                mainfig=win_stdp,
+                subfig_rasterplot=p1)
 
-    p1.plot(x=np.asarray(spikemon_post_neurons.t / ms), y=np.asarray(spikemon_post_neurons.i),
-                    pen=None, symbol='s', symbolPen=None,
-                    symbolSize=7, symbolBrush=(255, 0, 0),
-                    name='Post synaptic neuron')
+    Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'w_plast'))],
+                MyPlotSettings=PlotSettings(colors=['g']),
+                x_range=(0, duration),
+                title="Plastic synaptic weight",
+                xlabel="Time (s)",
+                ylabel="Synpatic weight w_plast",
+                backend='pyqtgraph',
+                mainfig=win_stdp,
+                subfig=p2)
 
-    for i, data in enumerate(np.asarray(statemon_post_synapse.w_plast)):
-            if i == 1:
-                    p2.plot(x=np.asarray(statemon_post_synapse.t / ms), y=data,
-                                    pen=pg.mkPen(colors[i], width=3))
+    datamodel = StateVariablesModel(state_variable_names=['I_syn'],
+                                    state_variables=[np.asarray(statemon_post_synapse.Ie_syn[1])],
+                                    state_variables_times=[np.asarray(statemon_post_synapse.t)])
+    Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
+                MyPlotSettings=PlotSettings(colors=['m']),
+                x_range=(0, duration),
+                title="Post synaptic current",
+                xlabel="Time (s)",
+                ylabel="Synapic current I (pA)",
+                backend='pyqtgraph',
+                mainfig=win_stdp,
+                subfig=p3,
+                show_immediately=True)
 
-    p3.plot(x=np.asarray(statemon_post_synapse.t / ms), y=np.asarray(statemon_post_synapse.Ie_syn[1]),
-                    pen=pg.mkPen(colors[3], width=2))
-
-
-    p1.setLabel('left', "Neuron ID", **labelStyle)
-    p1.setLabel('bottom', "Time (ms)", **labelStyle)
-    p2.setLabel('bottom', "Time (ms)", **labelStyle)
-    p2.setLabel('left', "Synpatic weight w_plast", **labelStyle)
-    p3.setLabel('left', "Synapic current Ie", units='A', **labelStyle)
-    p3.setLabel('bottom', "Time (ms)", **labelStyle)
-
-    b = QtGui.QFont("Sans Serif", 10)
-    p1.getAxis('bottom').tickFont = b
-    p1.getAxis('left').tickFont = b
-    p2.getAxis('bottom').tickFont = b
-    p2.getAxis('left').tickFont = b
-    p3.getAxis('bottom').tickFont = b
-    p3.getAxis('left').tickFont = b
-
-    app.exec()
 
 The resulting figure should look like this:
 
@@ -1074,6 +1097,10 @@ Visualizing plasticity kernel
 
     from teili.core.groups import Neurons, Connections
     from teili.models.synapse_models import DPIstdp
+
+    from teili.tools.visualizer.DataViewers import PlotSettings
+    from teili.tools.visualizer.DataModels import StateVariablesModel
+    from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
 
 We define the simulation and visualization backend. And specify explicitly the font used by the visualization.
 
@@ -1144,41 +1171,34 @@ And visualizing the kernel, using either matplotlib or pyqtgraph as backend depe
 
 .. code-block:: python
 
-    if visualization_backend == 'pyqt':
-            app = QtGui.QApplication.instance()
-            if app is None:
-                    app = QtGui.QApplication(sys.argv)
-            else:
-                    print('QApplication instance already exists: %s' % str(app))
+    if visualization_backend == 'pyqtgraph':
+        app = QtGui.QApplication.instance()
+        if app is None:
+            app = QtGui.QApplication(sys.argv)
+        else:
+            print('QApplication instance already exists: %s' % str(app))
+    else:
+        app=None
 
-            labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-            pg.GraphicsView(useOpenGL=True)
-            win = pg.GraphicsWindow(title="STDP Kernel")
-            win.resize(1024, 768)
-            toPlot = win.addPlot(title="Spike-time dependent plasticity")
+    datamodel = StateVariablesModel(state_variable_names=['w_plast'],
+                                    state_variables=[stdp_synapse.w_plast],
+                                    state_variables_times=[np.asarray((post_neurons.tspike - pre_neurons.tspike) / ms)])
+    Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
+            title="Spike-time dependent plasticity",
+            xlabel='\u0394 t',  # delta t
+            ylabel='w',
+            backend=visualization_backend,
+            QtApp=app,
+            show_immediately=False)
 
-            toPlot.plot(x=np.asarray((post_neurons.tspike - pre_neurons.tspike) / ms), y=np.asarray(stdp_synapse.w_plast),
-                                    pen=pg.mkPen((255, 128, 0), width=2))
-
-            toPlot.setLabel('left', '<font>w</font>', **labelStyle)
-            toPlot.setLabel('bottom', '<font>&Delta; t</font>', **labelStyle)
-            b = QtGui.QFont("Sans Serif", 10)
-            toPlot.getAxis('bottom').tickFont = b
-            toPlot.getAxis('left').tickFont = b
-            app.exec_()
-
-    elif visualization_backend == 'pyplot':
-            plt.plot((post_neurons.tspike - pre_neurons.tspike) / ms, stdp_synapse.w_plast, color="black", linewidth=2.5, linestyle="-")
-            plt.title("STDP", fontdict=font)
-            plt.xlabel(r'$\Delta t$ (ms)')
-            plt.ylabel(r'$w$')
-
-            fig = plt.figure()
-            plt.plot(spikemon_pre_neurons.t / ms, spikemon_pre_neurons.i, '.k')
-            plt.plot(spikemon_post_neurons.t / ms, spikemon_post_neurons.i, '.k')
-            plt.xlabel('Time [ms]')
-            plt.ylabel('Neuron ID')
-            plt.show()
+    Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
+                MyPlotSettings=PlotSettings(colors=['r']*2),
+                title='',
+                xlabel='Time (s)',
+                ylabel='Neuron ID',
+                backend=visualization_backend,
+                QtApp=app,
+                show_immediately=True)
 
 The resulting figure should look like this:
 
@@ -1207,6 +1227,12 @@ The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.
     from teili import TeiliNetwork
     from teili.models.neuron_models import DPI as neuron_model
     from teili.models.synapse_models import DPISyn as syn_model
+
+    from teili.tools.visualizer.DataModels.StateVariablesModel import StateVariablesModel
+    from teili.tools.visualizer.DataControllers.Rasterplot import Rasterplot
+    from teili.tools.visualizer.DataControllers.Lineplot import Lineplot
+    from teili.tools.visualizer.DataControllers.Histogram import Histogram
+    from teili.tools.visualizer.DataViewers import PlotSettings
 
     prefs.codegen.target = "numpy"
 
@@ -1326,52 +1352,91 @@ Once we run the simulation, we can visualize the effect of device mismatch on th
 
 .. code-block:: python
 
-    pg.setConfigOptions(antialias=True)
-    labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-    colors = [(255, 255, 255), (255, 0, 0), (89, 198, 118), (0, 0, 255), (247, 0, 255),
-                        (0, 0, 0), (255, 128, 0), (120, 120, 120), (0, 171, 255)]
+    # define general settings
+    app = QtGui.QApplication.instance()
+    if app is None:
+        app = QtGui.QApplication(sys.argv)
+    else:
+        print('QApplication instance already exists: %s' % str(app))
+        pg.setConfigOptions(antialias=True)
+    MyPlotSettings = PlotSettings(fontsize_title=12,
+                                  fontsize_legend=12,
+                                  fontsize_axis_labels=12,
+                                  marker_size=2)
 
-    # Rasterplot and statemonitor
-    win1 = pg.GraphicsWindow(title='teili Test Simulation')
-    win1.resize(1900, 900)
-    win1.setWindowTitle('Simple SNN')
-    p1 = win1.addPlot(title="Spike generator")
-    win1.nextRow()
-    p2 = win1.addPlot(title="Output layer")
-    win1.nextRow()
-    p3 = win1.addPlot(title="EPSC")
-    win1.nextRow()
-    p4 = win1.addPlot(title="I_mem")
-
-    p1.plot(x=np.asarray(spikemon_input.t / ms), y=np.asarray(spikemon_input.i),
-                    pen=None, symbol='o', symbolPen=None,
-                    symbolSize=2, symbolBrush=colors[0])
-    p1.setLabel('left', "Neuron ID", **labelStyle)
-    p1.setLabel('bottom', "Time (ms)", **labelStyle)
-    p1.setXRange(0, duration, padding=0)
-
-    p2.plot(x=np.asarray(spikemon_output.t / ms), y=np.asarray(spikemon_output.i),
-                    pen=None, symbol='o', symbolPen=None,
-                    symbolSize=2, symbolBrush=colors[1])
-    p2.setLabel('left', "Neuron ID", **labelStyle)
-    p2.setLabel('bottom', "Time (ms)", **labelStyle)
-    p2.setXRange(0, duration, padding=0)
-
+    # prepare data (part 1)
     neuron_ids_to_plot = np.random.randint(1000, size=5)
-    for i, data in enumerate(np.asarray(statemon_input_syn.Ie_syn[neuron_ids_to_plot])):
-            name = 'Syn_{}'.format(i)
-            p3.plot(x=np.asarray(statemon_input_syn.t / ms), y=data,
-                            pen=pg.mkPen(colors[i], width=2), name=name)
-    p3.setLabel('left', "EPSC", units="A", **labelStyle)
-    p3.setLabel('bottom', "Time (ms)", **labelStyle)
-    p3.setXRange(0, duration, padding=0)
 
-    for i, data in enumerate(np.asarray(statemon_output.Imem[neuron_ids_to_plot])):
-            p4.plot(x=np.asarray(statemon_output.t / ms), y=data,
-                            pen=pg.mkPen(colors[i], width=3))
-    p4.setLabel('left', "Membrane current Imem", units="A", **labelStyle)
-    p4.setLabel('bottom', "Time (ms)", **labelStyle)
-    p4.setXRange(0, duration, padding=0)
+    distinguish_neurons_in_plot = True  # show values in different color per neuron otherwise the same color per subgroup
+
+    ## plot EPSC (subfig3)
+    if distinguish_neurons_in_plot:
+        # to get every neuron plotted with a different color to distinguish them
+        DataModels_EPSC = []
+        for neuron_id in neuron_ids_to_plot:
+            MyData_EPSC = StateVariablesModel(state_variable_names=['EPSC'],
+                                              state_variables=[statemon_input_syn.I_syn[neuron_id]],
+                                              state_variables_times=[statemon_input_syn.t])
+            DataModels_EPSC.append((MyData_EPSC, ('t_EPSC', 'EPSC')))
+    else:
+        # to get all neurons plotted in the same color
+        neuron_ids_to_plot = np.random.randint(1000, size=5)
+        MyData_EPSC = StateVariablesModel(state_variable_names=['EPSC'],
+                                     state_variables=[statemon_input_syn.I_syn[neuron_ids_to_plot].T],
+                                     state_variables_times=[statemon_input_syn.t])
+        DataModels_EPSC=[(MyData_EPSC, ('t_EPSC', 'EPSC'))]
+
+    ## plot Imem (subfig4)
+    if distinguish_neurons_in_plot:
+        # to get every neuron plotted with a different color to distinguish them
+        DataModels_Imem = []
+        for neuron_id in neuron_ids_to_plot:
+            MyData_Imem = StateVariablesModel(state_variable_names=['Imem'],
+                                              state_variables=[statemon_output.Imem[neuron_id].T],
+                                              state_variables_times=[statemon_output.t])
+            DataModels_Imem.append((MyData_Imem, ('t_Imem', 'Imem')))
+    else:
+        # to get all neurons plotted in the same color
+        neuron_ids_to_plot = np.random.randint(1000, size=5)
+        MyData_Imem = StateVariablesModel(state_variable_names=['Imem'],
+                                          state_variables=[statemon_output.Imem[neuron_ids_to_plot].T],
+                                          state_variables_times=[statemon_output.t])
+        DataModels_Imem=[(MyData_Imem, ('t_Imem', 'Imem'))]
+
+
+    # set up main window and subplots (part 1)
+    QtApp = QtGui.QApplication([])
+    mainfig = pg.GraphicsWindow(title='Simple SNN')
+    subfig1 = mainfig.addPlot(row=0, col=0)
+    subfig2 = mainfig.addPlot(row=1, col=0)
+    subfig3 = mainfig.addPlot(row=2, col=0)
+    subfig4 = mainfig.addPlot(row=3, col=0)
+
+    # add data to plots
+    Rasterplot(MyEventsModels=[spikemon_input],
+                          MyPlotSettings=MyPlotSettings,
+                          time_range=[0, duration],
+                          title="Spike generator", xlabel="Time (ms)", ylabel="Neuron ID",
+                          backend='pyqtgraph', mainfig=mainfig, subfig_rasterplot=subfig1, QtApp=QtApp,
+                          show_immediately=False)
+    Rasterplot(MyEventsModels=[spikemon_output],
+                         MyPlotSettings=MyPlotSettings,
+                         time_range=[0, duration],
+                         title="Output layer", xlabel="Time (ms)", ylabel="Neuron ID",
+                         backend='pyqtgraph', mainfig=mainfig, subfig_rasterplot=subfig2, QtApp=QtApp,
+                         show_immediately=False)
+    Lineplot(DataModel_to_x_and_y_attr=DataModels_EPSC,
+                       MyPlotSettings=MyPlotSettings,
+                       x_range=[0, duration],
+                       title="EPSC", xlabel="Time (ms)", ylabel="EPSC (pA)",
+                       backend='pyqtgraph', mainfig=mainfig, subfig=subfig3, QtApp=QtApp,
+                       show_immediately=False)
+    Lineplot(DataModel_to_x_and_y_attr=DataModels_Imem,
+                       MyPlotSettings=MyPlotSettings,
+                       x_range=[0, duration],
+                       title="I_mem", xlabel="Time (ms)", ylabel="Membrane current Imem (nA)",
+                       backend='pyqtgraph', mainfig=mainfig, subfig=subfig4, QtApp=QtApp,
+                       show_immediately=True)
 
 .. figure:: fig/Mismatch_NN.png
     :width: 800px
@@ -1387,27 +1452,43 @@ Once we run the simulation, we can visualize the effect of device mismatch on th
 .. code-block:: python
 
     # Mismatch distribution
-    win2 = pg.GraphicsWindow(title='teili Test Simulation')
-    win2.resize(1900, 600)
-    win2.setWindowTitle('Mismatch distribution')
-    p1 = win2.addPlot(title='baseweight_e')
-    win2.nextRow()
-    p2 = win2.addPlot(title='refP')
+    # prepare data (part 1)
+    input_syn_baseweights = np.asarray(getattr(input_syn, 'baseweight'))*10**12
+    MyData_baseweight = StateVariablesModel(state_variable_names=['baseweight'],
+                                              state_variables=[input_syn_baseweights])  # to pA
 
-    y,x = np.histogram(np.asarray(getattr(input_syn, 'baseweight_e')), bins="auto")
-    curve = pg.PlotCurveItem(x=x, y=y, stepMode=True, brush=(0, 0, 255, 80))
-    p1.addItem(curve)
-    p1.plot(x=np.asarray([mean_synapse_param, mean_synapse_param]), y=np.asarray([0, np.max(y)]),
-                    pen=pg.mkPen((255, 0, 0), width=2))
-    p1.setLabel('bottom', units=str(unit_old_param_syn), **labelStyle)
+    refractory_periods = np.asarray(getattr(output_neurons, 'refP'))*10**3 # to ms
+    MyData_refP = StateVariablesModel(state_variable_names=['refP'],
+                                      state_variables=[refractory_periods])
 
-    y,x = np.histogram(np.asarray(getattr(output_neurons, 'refP')), bins="auto")
-    curve = pg.PlotCurveItem(x=x, y=y, stepMode=True, brush=(0, 0, 255, 80))
-    p2.addItem(curve)
-    p2.plot(x=np.asarray([mean_neuron_param, mean_neuron_param]), y=np.asarray([0, np.max(y)]),
-                    pen=pg.mkPen((255, 0, 0), width=2))
-    p2.setLabel('bottom', units=str(unit_old_param_neu), **labelStyle)
+    # set up main window and subplots (part 2)
+    mainfig = pg.GraphicsWindow(title='Mismatch distribution')
+    subfig1 = mainfig.addPlot(row=0, col=0)
+    subfig2 = mainfig.addPlot(row=1, col=0)
 
+    # add data to plots
+    Histogram(DataModel_to_attr=[(MyData_baseweight, 'baseweight')],
+                        MyPlotSettings=MyPlotSettings,
+                        title='baseweight', xlabel='(pA)', ylabel='count',
+                        backend='pyqtgraph',
+                        mainfig=mainfig, subfig=subfig1, QtApp=QtApp,
+                        show_immediately=False)
+    y, x = np.histogram(input_syn_baseweights, bins="auto")
+    subfig1.plot(x=np.asarray([mean_synapse_param*10**12, mean_synapse_param*10**12]),
+                 y=np.asarray([0, 300]),
+                    pen=pg.mkPen((0, 255, 0), width=2))
+
+    Histogram(DataModel_to_attr=[(MyData_refP, 'refP')],
+                        MyPlotSettings=MyPlotSettings,
+                        title='refP', xlabel='(ms)', ylabel='count',
+                        backend='pyqtgraph',
+                        mainfig=mainfig, subfig=subfig2, QtApp=QtApp,
+                        show_immediately=False)
+    subfig2.plot(x=np.asarray([mean_neuron_param*10**3, mean_neuron_param*10**3]),
+                 y=np.asarray([0, 450]),
+            pen=pg.mkPen((0, 255, 0), width=2))
+
+    app.exec()
 
 .. figure:: fig/Mismatch_distribution.png
     :width: 800px

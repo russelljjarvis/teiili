@@ -39,9 +39,9 @@ input_spikegenerator = SpikeGeneratorGroup(2, indices=input_indices,
 
 Net = TeiliNetwork()
 
-test_neurons = Neurons(1, equation_builder=neuron_model(num_inputs=2), name="test_neurons")
-test_neurons.set_params(neuron_model_param)
-test_neurons.refP = 1 * ms
+test_neurons1 = Neurons(1, equation_builder=neuron_model(num_inputs=2), name="test_neurons1")
+test_neurons1.set_params(neuron_model_param)
+test_neurons1.refP = 1 * ms
 
 test_neurons2 = Neurons(1, equation_builder=neuron_model(num_inputs=2), name="test_neurons2")
 test_neurons2.set_params(neuron_model_param)
@@ -52,41 +52,41 @@ test_neurons3.set_params(neuron_model_param)
 test_neurons3.refP = 1 * ms
 
 #Set synapses using different kernels
-inp_syn_alpha = Connections(input_spikegenerator, test_neurons,
+syn_alpha = Connections(input_spikegenerator, test_neurons1,
                      equation_builder=Alpha(), name="test_syn_alpha", verbose=False)
-inp_syn_alpha.connect(True)
-inp_syn_alpha.weight = np.asarray([10,-10])
+syn_alpha.connect(True)
+syn_alpha.weight = np.asarray([10,-10])
 
-inp_syn_resonant = Connections(input_spikegenerator, test_neurons2,
+syn_resonant = Connections(input_spikegenerator, test_neurons2,
                      equation_builder=Resonant(), name="test_syn_resonant", verbose=False)
-inp_syn_resonant.connect(True)
-inp_syn_resonant.weight = np.asarray([10,-10])
+syn_resonant.connect(True)
+syn_resonant.weight = np.asarray([10,-10])
 
-inp_syn_dpi = Connections(input_spikegenerator, test_neurons3,
+syn_dpi = Connections(input_spikegenerator, test_neurons3,
                      equation_builder=DPISyn(), name="test_syn_dpi", verbose=False)
-inp_syn_dpi.connect(True)
-inp_syn_dpi.weight = np.asarray([1000,-1000])
+syn_dpi.connect(True)
+syn_dpi.weight = np.asarray([10,-10])
 
 #Set monitors
 spikemon_inp = SpikeMonitor(input_spikegenerator, name='spikemon_inp')
-statemon_inp_syn_alpha = StateMonitor(
-    inp_syn_alpha, variables='I_syn', record=True, name='statemon_inp_syn_alpha')
-statemon_inp_syn_resonant = StateMonitor(
-    inp_syn_resonant, variables='I_syn', record=True, name='statemon_inp_syn_resonant')
-statemon_inp_syn_dpi = StateMonitor(
-    inp_syn_dpi, variables='I_syn', record=True, name='statemon_inp_syn_dpi')
+statemon_syn_alpha = StateMonitor(
+    syn_alpha, variables='I_syn', record=True, name='statemon_syn_alpha')
+statemon_syn_resonant = StateMonitor(
+    syn_resonant, variables='I_syn', record=True, name='statemon_syn_resonant')
+statemon_syn_dpi = StateMonitor(
+    syn_dpi, variables='I_syn', record=True, name='statemon_syn_dpi')
 
-statemon_neu_out = StateMonitor(test_neurons, variables=[
-                              'Iin'], record=0, name='statemon_neu_out')
-statemon_neu_out2 = StateMonitor(test_neurons2, variables=[
-                              'Iin'], record=0, name='statemon_neu_out2')
-statemon_neu_out3 = StateMonitor(test_neurons3, variables=[
-                              'Iin'], record=0, name='statemon_neu_out3')
+statemon_test_neuron1 = StateMonitor(test_neurons1, variables=[
+                              'Iin'], record=0, name='statemon_test_neuron1')
+statemon_test_neuron2 = StateMonitor(test_neurons2, variables=[
+                              'Iin'], record=0, name='statemon_test_neuron2')
+statemon_test_neuron3 = StateMonitor(test_neurons3, variables=[
+                              'Iin'], record=0, name='statemon_test_neuron3')
 
-Net.add(input_spikegenerator, test_neurons, test_neurons2,test_neurons3,
-        inp_syn_alpha, inp_syn_resonant, inp_syn_dpi, spikemon_inp,
-        statemon_inp_syn_alpha, statemon_inp_syn_resonant,statemon_inp_syn_dpi,
-        statemon_neu_out, statemon_neu_out2, statemon_neu_out3)
+Net.add(input_spikegenerator, test_neurons1, test_neurons2,test_neurons3,
+        syn_alpha, syn_resonant, syn_dpi, spikemon_inp,
+        statemon_syn_alpha, statemon_syn_resonant,statemon_syn_dpi,
+        statemon_test_neuron1, statemon_test_neuron2, statemon_test_neuron3)
 
 duration = 0.010
 Net.run(duration * second)
@@ -120,11 +120,11 @@ p5 = win.addPlot()
 p6 = win.addPlot()
 
 # Alpha kernel synapse
-data = statemon_inp_syn_alpha.I_syn.T
+data = statemon_syn_alpha.I_syn.T
 data[:, 1] *= -1.
 datamodel_syn_alpha = StateVariablesModel(state_variable_names=['I_syn'],
                                 state_variables=[data],
-                                state_variables_times=[statemon_inp_syn_alpha.t])
+                                state_variables_times=[statemon_syn_alpha.t])
 Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_alpha, ('t_I_syn', 'I_syn'))],
          MyPlotSettings=MyPlotSettings,
          x_range=(0, duration),
@@ -142,7 +142,7 @@ for i, data in enumerate(np.asarray(spikemon_inp.t)):
     p1.addItem(vLine, ignoreBounds=True)
 
 # Neuron response
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_neu_out, ('t', 'Iin'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron1, ('t', 'Iin'))],
          MyPlotSettings=MyPlotSettings,
          x_range=(0, duration),
          y_range=None,
@@ -154,12 +154,12 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_neu_out, ('t', 'Iin'))],
          subfig=p2,
          QtApp=app)
 
-# Resonant kernel synapse again
-data = statemon_inp_syn_resonant.I_syn.T
+# Resonant kernel synapse
+data = statemon_syn_resonant.I_syn.T
 data[:, 1] *= -1.
 datamodel_syn_resonant = StateVariablesModel(state_variable_names=['I_syn'],
                                 state_variables=[data],
-                                state_variables_times=[statemon_inp_syn_resonant.t])
+                                state_variables_times=[statemon_syn_resonant.t])
 
 Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_resonant, ('t_I_syn','I_syn'))],
          MyPlotSettings=MyPlotSettings,
@@ -178,7 +178,7 @@ for i, data in enumerate(np.asarray(spikemon_inp.t)):
     p3.addItem(vLine, ignoreBounds=True)
 
 # Neuron response
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_neu_out2, ('t', 'Iin'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron2, ('t', 'Iin'))],
          MyPlotSettings=MyPlotSettings,
          x_range=(0, duration),
          y_range=None,
@@ -191,12 +191,12 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_neu_out2, ('t', 'Iin'))],
          QtApp=app)
 
 
-# Resonant kernel synapse
-data = statemon_inp_syn_dpi.I_syn.T
+# DPI synapse
+data = statemon_syn_dpi.I_syn.T
 data[:, 1] *= -1.
 datamodel_syn_dpi = StateVariablesModel(state_variable_names=['I_syn'],
                                 state_variables=[data],
-                                state_variables_times=[statemon_inp_syn_dpi.t])
+                                state_variables_times=[statemon_syn_dpi.t])
 
 Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_dpi, ('t_I_syn','I_syn'))],
          MyPlotSettings=MyPlotSettings,
@@ -215,7 +215,7 @@ for i, data in enumerate(np.asarray(spikemon_inp.t)):
     p5.addItem(vLine, ignoreBounds=True)
 
 # Neuron response
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_neu_out3, ('t', 'Iin'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron3, ('t', 'Iin'))],
          MyPlotSettings=MyPlotSettings,
          x_range=(0, duration),
          y_range=None,

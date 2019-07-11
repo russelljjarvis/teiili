@@ -425,20 +425,18 @@ We first import all required libraries
 
 .. code-block:: python
 
-    from pyqtgraph.Qt import QtGui
+    from pyqtgraph.Qt import QtGui, QtCore
     import pyqtgraph as pg
     import numpy as np
 
-    from brian2 import ms, second, pA, nA, prefs,\
+    from brian2 import second, ms, prefs,\
             SpikeMonitor, StateMonitor,\
             SpikeGeneratorGroup
 
     from teili.core.groups import Neurons, Connections
     from teili import TeiliNetwork
     from teili.models.neuron_models import DPI as neuron_model
-    from teili.models.synapse_models import Alpha, Resonant
-    from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-    from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+    from teili.models.synapse_models import Alpha, Resonant, DPISyn
     from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
     from teili.tools.visualizer.DataViewers import PlotSettings
@@ -466,40 +464,46 @@ We now build a ``TeiliNetwork``.
 
     Net = TeiliNetwork()
 
-In this tutorial we will show two kernels, therefore we have created two different neurons. One will receive synapses with an Alpha kernel shape while the other will receive synapses with a Resonant kernel shape. Note that a single neuron can receive synapses with different kernels at the same time. Here we split them for better visualization.
+In this tutorial we will show three kernels, therefore we have created three different neurons. The first one will receive synapses with an Alpha kernel shape, the second will receive synapses with a Resonant kernel shape and the third one will receive a synapse of the DPY synapse model, which has an exponential decay shape. Note that a single neuron can receive synapses with different kernels at the same time. Here we split them for better visualization.
 
 .. code-block:: python
 
-    test_neuron1 = Neurons(N=1,
-                            equation_builder=neuron_model(num_inputs=2),
-                            name="test_neuron1")
+    test_neurons1 = Neurons(1, 
+    equation_builder=neuron_model(num_inputs=2), name="test_neurons")
 
-    test_neuron1.set_params(neuron_model_param)
-    test_neuron1.refP = 1 * ms
+    test_neurons1.set_params(neuron_model_param)
+    test_neurons1.refP = 1 * ms
 
-    test_neuron2 = Neurons(1,
-                           equation_builder=neuron_model(num_inputs=2),
-                           name="test_neuron2")
+    test_neurons2 = Neurons(1, 
+    equation_builder=neuron_model(num_inputs=2), name="test_neurons2")
 
-    test_neuron2.set_params(neuron_model_param)
-    test_neuron2.refP = 1 * ms
+    test_neurons2.set_params(neuron_model_param)
+    test_neurons2.refP = 1 * ms
+
+    test_neurons3 = Neurons(1, 
+    equation_builder=neuron_model(num_inputs=2), name="test_neurons3")
+
+    test_neurons3.set_params(neuron_model_param)
+    test_neurons3.refP = 1 * ms
 
 .. attention:: We are using the DPI neuron model for this tutorial but the synaptic model is independent of the neuron's model and therefore other neuron models can be used.
 
 We already set the parameters for our neuron model. As explained above, we can set the standard parameters from a dictionary but also change single parameters as in this example with the refractory period.
-Now we specify the connections. The synaptic models are Alpha and Resonant kernels.
+Now we specify the connections. The synaptic models are Alpha, Resonant and DPI.
 
 .. code-block:: python
 
-    syn_alpha = Connections(input_spikegenerator, testNeurons,
-                            equation_builder=Alpha(),
-                            name="syn_alpha", verbose=False)
+    syn_alpha = Connections(input_spikegenerator, test_neurons1,
+                         equation_builder=Alpha(), name="test_syn_alpha", verbose=False)
     syn_alpha.connect(True)
     
-    syn_resonant = Connections(input_spikegenerator, testNeurons2,
-                               equation_builder=Resonant(),
-                               name="syn_resonant", verbose=False)
+    syn_resonant = Connections(input_spikegenerator, test_neurons2,
+                     equation_builder=Resonant(), name="test_syn_resonant", verbose=False)
     syn_resonant.connect(True)
+
+    syn_dpi = Connections(input_spikegenerator, test_neurons3,
+                     equation_builder=DPISyn(), name="test_syn_dpi", verbose=False)
+    syn_dpi.connect(True)
     
 We set the parameters for the synases. In this case, we specify that the first neuron in the spike generator will have a postivie effect (weight>0) and the second one will have a negative effect (weight<0) on the post-synpatic neuron.
 
@@ -507,6 +511,7 @@ We set the parameters for the synases. In this case, we specify that the first n
 
     syn_alpha.weight = np.asarray([10,-10])
     syn_resonant.weight = np.asarray([10,-10])
+    syn_dpi.weight = np.asarray([10,-10])
 
 .. attention:: The ``weight`` multiplies the baseweight, which is currently initialised to 7 pA by default. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike, the weight must be greater than 3250.
 
@@ -515,37 +520,34 @@ we need to monitor the spiking behavior of our neurons and other state variables
 
 .. code-block:: python
 
-    spikemon_inp = SpikeMonitor(
-        input_spikegenerator, name='spikemon_inp')
-    statemon_syn_alpha = StateMonitor(
-        syn_alpha, variables='I_syn',
-        record=True, name='statemon_syn_alpha')
-    statemon_syn_resonant = StateMonitor(
-        syn_resonant, variables='I_syn',
-        record=True, name='statemon_syn_resonant')
-    statemon_test_neuron1 = StateMonitor(test_neuron1,
-                                  variables=['Iin'],
-                                  record=0,
-                                  name='statemon_test_neuron1')
-    statemon_test_neuron2 = StateMonitor(test_neuron2,
-                                   variables=['Iin'],
-                                   record=0,
-                                   name='statemon_test_neuron2')
-
+    spikemon_inp = SpikeMonitor(input_spikegenerator, name='spikemon_inp')
+    statemon_syn_alpha = StateMonitor(syn_alpha, variables='I_syn', 
+                                      record=True, name='statemon_syn_alpha')
+    statemon_syn_resonant = StateMonitor(syn_resonant,variables='I_syn', 
+                                         record=True, name='statemon_syn_resonant')
+    statemon_syn_dpi = StateMonitor(syn_dpi, variables='I_syn', 
+                                    record=True, name='statemon_syn_dpi')
+    statemon_test_neuron1 = StateMonitor(test_neurons1, variables=['Iin'], 
+                                         record=0, name='statemon_test_neuron1')
+    statemon_test_neuron2 = StateMonitor(test_neurons2, variables=['Iin'], 
+                                         record=0, name='statemon_test_neuron2')
+    statemon_test_neuron3 = StateMonitor(test_neurons3, variables=['Iin'], 
+                                         record=0, name='statemon_test_neuron3')
 
 We can now finally add all defined ``Neurons`` and ``Connections`` and also the monitors to our ``TeiliNetwork`` and run the simulation.
 
 .. code-block:: python
 
-    Net.add(input_spikegenerator,
-            test_neuron1, test_neuron2,
-            syn_alpha, syn_resonant,
-            spikemon_inp,
-            statemon_syn_alpha, statemon_syn_resonant,
-            statemon_test_neuron1, statemon_test_neuron2)
+    Net.add(input_spikegenerator, test_neurons1, 
+            test_neurons2,test_neurons3,
+            syn_alpha, syn_resonant, syn_dpi, 
+            spikemon_inp, statemon_syn_alpha, 
+            statemon_syn_resonant,statemon_syn_dpi,
+            statemon_test_neuron1, statemon_test_neuron2, 
+            statemon_test_neuron3)
 
-    duration = 10
-    Net.run(duration * ms)
+    duration = 0.010
+    Net.run(duration * second)
 
 In order to visualize the behavior, the example script also plots a couple of spike and state monitors.
 
@@ -573,6 +575,9 @@ In order to visualize the behavior, the example script also plots a couple of sp
     win.nextRow()
     p3 = win.addPlot()
     p4 = win.addPlot()
+    win.nextRow()
+    p5 = win.addPlot()
+    p6 = win.addPlot()
 
     # Alpha kernel synapse
     data = statemon_syn_alpha.I_syn.T
@@ -597,7 +602,7 @@ In order to visualize the behavior, the example script also plots a couple of sp
         p1.addItem(vLine, ignoreBounds=True)
 
     # Neuron response
-    Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron2, ('t', 'Iin'))],
+    Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron1, ('t', 'Iin'))],
              MyPlotSettings=MyPlotSettings,
              x_range=(0, duration),
              y_range=None,
@@ -615,6 +620,7 @@ In order to visualize the behavior, the example script also plots a couple of sp
     datamodel_syn_resonant = StateVariablesModel(state_variable_names=['I_syn'],
                                     state_variables=[data],
                                     state_variables_times=[statemon_syn_resonant.t])
+
     Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_resonant, ('t_I_syn','I_syn'))],
              MyPlotSettings=MyPlotSettings,
              x_range=(0, duration),
@@ -642,13 +648,50 @@ In order to visualize the behavior, the example script also plots a couple of sp
              backend='pyqtgraph',
              mainfig=win,
              subfig=p4,
+             QtApp=app)
+
+    # DPI synapse
+    data = statemon_syn_dpi.I_syn.T
+    data[:, 1] *= -1.
+    datamodel_syn_dpi = StateVariablesModel(state_variable_names=['I_syn'],
+                                    state_variables=[data],
+                                    state_variables_times=[statemon_syn_dpi.t])
+
+    Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_dpi, ('t_I_syn','I_syn'))],
+             MyPlotSettings=MyPlotSettings,
+             x_range=(0, duration),
+             y_range=None,
+             title='DPI Synapse',
+             xlabel='Time (s)',
+             ylabel='Synaptic current I (A)',
+             backend='pyqtgraph',
+             mainfig=win,
+             subfig=p5,
+             QtApp=app)
+    for i, data in enumerate(np.asarray(spikemon_inp.t)):
+        vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255),
+                    style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
+        p5.addItem(vLine, ignoreBounds=True)
+
+    # Neuron response
+    Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron3, ('t', 'Iin'))],
+             MyPlotSettings=MyPlotSettings,
+             x_range=(0, duration),
+             y_range=None,
+             title='Neuron response',
+             xlabel='Time (s)',
+             ylabel='Membrane current I_mem (A)',
+             backend='pyqtgraph',
+             mainfig=win,
+             subfig=p6,
              QtApp=app,
              show_immediately=True)
+
 
 The synaptic current is always positive, the negative effect is oberved in the Iin of the neuron. To better visualize the synapse dynamics, we have multiplied the I_syn of the inhibitory synapse by -1.
 The resulting figure should look like this:
 
-.. figure:: fig/synaptic_kernels_tutorial_dark.png
+.. figure:: fig/synaptic_kernels_tutorial.png
     :width: 800px
     :align: center
     :height: 400px

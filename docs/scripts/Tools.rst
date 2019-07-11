@@ -203,7 +203,7 @@ Use it as follows (also teili groups and network can be used):
 synaptic_kernel
 ---------------
 This module provides functions that can be used for synaptic connectivity kernels (generate weight matrices).
-E.g. Gaussian, mexican hat, Gabor with different dimensionality, also using different distance metrics.
+E.g. Gaussian, Mexican hat, Gabor with different dimensionality, also using different distance metrics.
 In order to also use them with C++ code generation, all functions have a cpp implementation given by the @implementation decorator.
 
 

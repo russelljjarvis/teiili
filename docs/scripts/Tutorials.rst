@@ -19,11 +19,11 @@ To generate all pre-defined neuron and synapse models, which are stored by defau
     python -m neuron_models
 
 
-Working with pre-compiled models
+Working with pre-assembled models
 --------------------------------
 Once the pre-defined neuron and synapse models are exported to files you can choose between generating neuron/synapse models 'on the fly' or importing them from the generated files, which you can maually adapt to your needs without fiddling with the ``templates`` provided by `teili`.
 
-See an example for how to work with pre-compiled neuron and/or synapse models below.
+See an example for how to work with pre-assembled neuron and/or synapse models below.
 
 .. code-block:: python
 

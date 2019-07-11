@@ -429,11 +429,7 @@ We first import all required libraries
     import pyqtgraph as pg
     import numpy as np
 
-<<<<<<< HEAD
-    from Brian2 import ms, pA, nA, prefs,\
-=======
     from brian2 import ms, second, pA, nA, prefs,\
->>>>>>> bf32e5d5f1f0c11e7336173e9b1be5e85085dba8
             SpikeMonitor, StateMonitor,\
             SpikeGeneratorGroup
 
@@ -445,15 +441,11 @@ We first import all required libraries
     from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
     from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
-<<<<<<< HEAD
-We define the target for the code generation. As in the previous tutorial we use the ``numpy`` backend.
-=======
     from teili.tools.visualizer.DataViewers import PlotSettings
     from teili.tools.visualizer.DataModels import  StateVariablesModel
     from teili.tools.visualizer.DataControllers import Lineplot
 
 We define the target for the code generation. As in the previous example we use the ``numpy`` backend.
->>>>>>> bf32e5d5f1f0c11e7336173e9b1be5e85085dba8
 
 .. code-block:: python
 
@@ -583,12 +575,12 @@ In order to visualize the behavior, the example script also plots a couple of sp
     p4 = win.addPlot()
 
     # Alpha kernel synapse
-    data = statemonInpSynAlpha.I_syn.T
+    data = statemon_syn_alpha.I_syn.T
     data[:, 1] *= -1.
-    datamodel_SynAlpha = StateVariablesModel(state_variable_names=['I_syn'],
+    datamodel_syn_alpha = StateVariablesModel(state_variable_names=['I_syn'],
                                     state_variables=[data],
-                                    state_variables_times=[statemonInpSynAlpha.t])
-    Lineplot(DataModel_to_x_and_y_attr=[(datamodel_SynAlpha, ('t_I_syn', 'I_syn'))],
+                                    state_variables_times=[statemon_syn_alpha.t])
+    Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_alpha, ('t_I_syn', 'I_syn'))],
              MyPlotSettings=MyPlotSettings,
              x_range=(0, duration),
              y_range=None,
@@ -599,13 +591,13 @@ In order to visualize the behavior, the example script also plots a couple of sp
              mainfig=win,
              subfig=p1,
              QtApp=app)
-    for i, data in enumerate(np.asarray(spikemonInp.t)):
+    for i, data in enumerate(np.asarray(spikemon_inp.t)):
         vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255),
                     style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
         p1.addItem(vLine, ignoreBounds=True)
 
     # Neuron response
-    Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuOut, ('t', 'Iin'))],
+    Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron2, ('t', 'Iin'))],
              MyPlotSettings=MyPlotSettings,
              x_range=(0, duration),
              y_range=None,
@@ -618,12 +610,12 @@ In order to visualize the behavior, the example script also plots a couple of sp
              QtApp=app)
 
     # Resonant kernel synapse
-    data = statemonInpSynResonant.I_syn.T
+    data = statemon_syn_resonant.I_syn.T
     data[:, 1] *= -1.
-    datamodel_SynResonant = StateVariablesModel(state_variable_names=['I_syn'],
+    datamodel_syn_resonant = StateVariablesModel(state_variable_names=['I_syn'],
                                     state_variables=[data],
-                                    state_variables_times=[statemonInpSynResonant.t])
-    Lineplot(DataModel_to_x_and_y_attr=[(datamodel_SynResonant, ('t_I_syn','I_syn'))],
+                                    state_variables_times=[statemon_syn_resonant.t])
+    Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_resonant, ('t_I_syn','I_syn'))],
              MyPlotSettings=MyPlotSettings,
              x_range=(0, duration),
              y_range=None,
@@ -634,13 +626,13 @@ In order to visualize the behavior, the example script also plots a couple of sp
              mainfig=win,
              subfig=p3,
              QtApp=app)
-    for i, data in enumerate(np.asarray(spikemonInp.t)):
+    for i, data in enumerate(np.asarray(spikemon_inp.t)):
         vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255),
                     style=QtCore.Qt.DotLine),pos=data, angle=90, movable=False,)
         p3.addItem(vLine, ignoreBounds=True)
 
     # Neuron response
-    Lineplot(DataModel_to_x_and_y_attr=[(statemonNeuOut2, ('t', 'Iin'))],
+    Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron2, ('t', 'Iin'))],
              MyPlotSettings=MyPlotSettings,
              x_range=(0, duration),
              y_range=None,
@@ -672,7 +664,7 @@ One example ``BuildingBlock`` is the winner-takes-all (WTA).
 To show the basic interface of how to use a WTA we start with the imports.
 The original file can be found in ``teiliApps/tutorials/wta_tutorial.py``
 
-.. note:: For instructions how design a novel `BuildingBlock` please refer to `Building block development`_
+.. note:: For instructions on how to design a novel `BuildingBlock` please refer to `Building block development`_
 
 .. code-block:: python
 
@@ -736,15 +728,15 @@ Feel free to change the parameters to see what effect it has on the stability an
 
 .. code-block:: python
 
-    wtaParams = {'we_inp_exc': 900,
-                 'we_exc_inh': 500,
-                 'wi_inh_exc': -550,
-                 'we_exc_exc': 650,
-                 'sigm': 2,
-                 'rp_exc': 3 * ms,
-                 'rp_inh': 1 * ms,
-                 'ei_connection_probability': 0.7,
-                 }
+    wta_params = {'we_inp_exc': 900,
+                  'we_exc_inh': 500,
+                  'wi_inh_exc': -550,
+                  'we_exc_exc': 650,
+                  'sigm': 2,
+                  'rp_exc': 3 * ms,
+                  'rp_inh': 1 * ms,
+                  'ei_connection_probability': 0.7,
+                  }
 
 We can define our network structure and connect the different inputs to the WTA network.
 
@@ -753,7 +745,7 @@ We can define our network structure and connect the different inputs to the WTA 
     test_WTA = WTA(name='test_WTA', dimensions=1,
                   num_neurons=num_neurons, num_inh_neurons=40,
                   num_input_neurons=num_input_neurons,
-                  num_inputs=2, block_params=wtaParams,
+                  num_inputs=2, block_params=wta_params,
                   spatial_kernel="kernel_gauss_1d")
 
     testbench.stimuli(num_neurons=num_neurons, dimensions=1,
@@ -770,7 +762,7 @@ We can define our network structure and connect the different inputs to the WTA 
 
 Before we can run the simulation we need to set bias parameter.
 
-.. attention:: Please note in order to elicit one spike in the DPI neuron per spike in a SpikeGenerator you need to set the synaptic weight to 3250 or crank up the baseweight parameter of the DPI synapse
+.. attention:: Please note in order to elicit one spike in the DPI neuron per spike in a ``SpikeGenerator`` you need to set the synaptic weight to 3250 or crank up the ``baseweight`` parameter of the DPI synapse
 
 .. code-block:: python
 
@@ -875,11 +867,11 @@ The resulting figure should look like this:
 STDP tutorial
 =============
 
-| One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity (STDP) mechanism.
+One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity (STDP) mechanism.
 STDP is one mechanism which has been identified experimentally how neurons adjust their synaptic weight according to some correlated firing pattern.
-| Feel free to read more about STDP_.
-| The following tutorial can be found at ``~/teiliApps/examples/stdp_tutorial.py``
-| If we want to add an activity dependent plasticity mechanism to our network we again start by importing the required packages.
+Feel free to read more about STDP_.
+The following tutorial can be found at ``teiliApps/tutorials/stdp_tutorial.py``
+If we want to add an activity dependent plasticity mechanism to our network we again start by importing the required packages.
 
 .. code-block:: python
 
@@ -902,7 +894,7 @@ STDP is one mechanism which has been identified experimentally how neurons adjus
     from teili.tools.visualizer.DataModels import StateVariablesModel
     from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
 
-As before we can define the backend, as well as our `TeiliNetwork`:
+As before we can define the backend, as well as our ``TeiliNetwork``:
 
 .. code-block:: python
 
@@ -910,9 +902,9 @@ As before we can define the backend, as well as our `TeiliNetwork`:
     defaultclock.dt = 50 * us
     Net = TeiliNetwork()
 
-| Note that we changed the ``defaultclock``.
-| This is usually helpful to prevent numerical integration error and to be sure that the network performs the desired computation. But keep in mind by decreasing the `defaultclock.dt` the simulation takes longer!
-| In the next step we will load a simple STDP-protocol from ``teili/stimuli/testbench.py``, which provides us with pre-defined pre-post spikegenerators with specific delays between pre and post spiking activity.
+Note that we changed the ``defaultclock``.
+This is usually helpful to prevent numerical integration error and to be sure that the network performs the desired computation. But keep in mind by decreasing the ``defaultclock.dt`` the simulation takes longer!
+In the next step we will load a simple STDP-protocol from ``teili/stimuli/testbench.py``, which provides us with pre-defined pre-post spikegenerators with specific delays between pre and post spiking activity.
 
 .. code-block:: python
 
@@ -920,32 +912,36 @@ As before we can define the backend, as well as our `TeiliNetwork`:
     pre_spikegenerator, post_spikegenerator = stdp.stimuli(isi=30)
 
 
-Now we generate our test_neurons and connect via non-platic synapses to our `SpikeGeneratorGroups` and via plastic synapses between them.
+Now we generate our test_neurons and connect via non-plastic synapses to our ``SpikeGeneratorGroups`` and via plastic synapses between them.
 
 .. code-block:: python
 
-    pre_neurons = Neurons(2, equation_builder=DPI(num_inputs=1),
-                                                name='pre_neurons')
+    pre_neurons = Neurons(N=2,
+                          equation_builder=DPI(num_inputs=1),
+                          name='pre_neurons')
 
-    post_neurons = Neurons(2, equation_builder=DPI(num_inputs=2),
-                                                 name='post_neurons')
+    post_neurons = Neurons(N=2,
+                           equation_builder=DPI(num_inputs=2),
+                           name='post_neurons')
 
 
     pre_synapse = Connections(pre_spikegenerator, pre_neurons,
-                                                        equation_builder=DPISyn(), name='pre_synapse')
+                              equation_builder=DPISyn(),
+                              name='pre_synapse')
 
     post_synapse = Connections(post_spikegenerator, post_neurons,
-                                                         equation_builder=DPISyn(), name='post_synapse')
+                               equation_builder=DPISyn(),
+                               name='post_synapse')
 
     stdp_synapse = Connections(pre_neurons, post_neurons,
-                                                         equation_builder=DPIstdp(), name='stdp_synapse')
+                               equation_builder=DPIstdp(),
+                               name='stdp_synapse')
 
     pre_synapse.connect(True)
     post_synapse.connect(True)
 
-| We can now set the biases.
-| Note that we define the temporal window of the STDP kernel using ``taupost`` and ``taupost`` bias.
-The learning rate, i.e. the amount of maximal weight change, is set by ``dApre``.
+We can now set the biases.
+.. note:: Note that we define the temporal window of the STDP kernel using ``taupost`` and ``taupost`` bias. The learning rate, i.e. the amount of maximal weight change, is set by ``dApre``.
 
 .. code-block:: python
 
@@ -960,7 +956,7 @@ The learning rate, i.e. the amount of maximal weight change, is set by ``dApre``
 
     stdp_synapse.connect("i==j")
     stdp_synapse.weight = 300.
-    stdp_synapse.Ie_tau = 10 * pA
+    stdp_synapse.I_tau = 10 * pA
     stdp_synapse.dApre = 0.01
     stdp_synapse.taupre = 3 * ms
     stdp_synapse.taupost = 3 * ms
@@ -972,31 +968,33 @@ Now we define monitors, which are later use to visualize the STDP protocol and t
 
     spikemon_pre_neurons = SpikeMonitor(pre_neurons, name='spikemon_pre_neurons')
     statemon_pre_neurons = StateMonitor(pre_neurons, variables='Imem',
-                                                                            record=0, name='statemon_pre_neurons')
+                                        record=0, name='statemon_pre_neurons')
 
     spikemon_post_neurons = SpikeMonitor(
             post_neurons, name='spikemon_post_neurons')
     statemon_post_neurons = StateMonitor(
-            post_neurons, variables='Imem', record=0, name='statemon_post_neurons')
-
+            post_neurons, variables='Imem',
+            record=0, name='statemon_post_neurons')
 
     statemon_pre_synapse = StateMonitor(
-            pre_synapse, variables=['Ie_syn'], record=0, name='statemon_pre_synapse')
+            pre_synapse, variables=['Ie_syn'],
+            record=0, name='statemon_pre_synapse')
 
-    statemon_post_synapse = StateMonitor(stdp_synapse, variables=[
-            'Ie_syn', 'w_plast', 'weight'],
-            record=True, name='statemon_post_synapse')
+    statemon_post_synapse = StateMonitor(stdp_synapse,
+                                         variables=['I_syn', 'w_plast', 'weight'],
+                                         record=True,
+                                         name='statemon_post_synapse')
 
 We can now add all objects to our network and run the simulation.
 
 .. code-block:: python
 
     Net.add(pre_spikegenerator, post_spikegenerator,
-                    pre_neurons, post_neurons,
-                    pre_synapse, post_synapse, stdp_synapse,
-                    spikemon_pre_neurons, spikemon_post_neurons,
-                    statemon_pre_neurons, statemon_post_neurons,
-                    statemon_pre_synapse, statemon_post_synapse)
+            pre_neurons, post_neurons,
+            pre_synapse, post_synapse, stdp_synapse,
+            spikemon_pre_neurons, spikemon_post_neurons,
+            statemon_pre_neurons, statemon_post_neurons,
+            statemon_pre_synapse, statemon_post_synapse)
 
     duration = 2000
     Net.run(duration * ms)
@@ -1069,6 +1067,7 @@ After the simulation is finished we can visualize the effect of the STDP synapse
                 subfig=p3,
                 show_immediately=True)
 
+.. attention:: Please keep in mind that the spike times for the plasticity protocol are sampled randomly. The random sampling might lead to asymmetric weight updates.
 
 The resulting figure should look like this:
 
@@ -1084,8 +1083,8 @@ The resulting figure should look like this:
 
 Visualizing plasticity kernel
 -----------------------------
-| In order to better understand why the changes the way it does given the specific pre and post spike pairs we can visualize the STDP kernel. The following tutorial can be found at ``~/teiliApps/examples/stdp_kernel_tutorial.py``
-| We start again by importing the required dependencies.
+In order to better understand why the synapt weight changes the way it does given the specific pre and post spike pairs we can visualize the STDP kernel. The following tutorial can be found at ``~/teiliApps/tutorials/stdp_kernel_tutorial.py``
+We start again by importing the required dependencies.
 
 .. code-block:: python
 
@@ -1122,18 +1121,22 @@ We need to define to variables used to visualize the kernel:
     tmax = 30 * ms
     N = 100
 
-| Where ``N`` is the number of simulated neurons and `tmax` represents the time window in which we visualize the STDP kernel.
-| Now we can define our neuronal populations and connect them via an STDP synapse.
+Where ``N`` is the number of simulated neurons and ``tmax`` represents the time window in which we visualize the STDP kernel.
+Now we can define our neuronal populations and connect them via an STDP synapse.
 
 .. code-block:: python
 
-    pre_neurons = Neurons(N, model='''tspike:second''', threshold='t>tspike', refractory=100 * ms)
+    pre_neurons = Neurons(N, model='''tspike:second''',
+                          threshold='t>tspike',
+                          refractory=100 * ms)
 
     pre_neurons.namespace.update({'tmax': tmax})
     post_neurons = Neurons(N, model='''
                                     Ii0 : amp
                                     Ie0 : amp
-                                    tspike:second''', threshold='t>tspike', refractory=100 * ms)
+                                    tspike:second''',
+                           threshold='t>tspike', refractory=100 * ms)
+
     post_neurons.namespace.update({'tmax': tmax})
 
     pre_neurons.tspike = 'i*tmax/(N-1)'
@@ -1141,7 +1144,8 @@ We need to define to variables used to visualize the kernel:
 
 
     stdp_synapse = Connections(pre_neurons, post_neurons,
-                                    equation_builder=DPIstdp(), name='stdp_synapse')
+                               equation_builder=DPIstdp(),
+                               name='stdp_synapse')
 
     stdp_synapse.connect('i==j')
 
@@ -1209,7 +1213,7 @@ The resulting figure should look like this:
     :alt: alternate text
     :figclass: align-center
 
-    Visualization of the weight update as faunction of the pre and post spikes.
+    Visualization of the weight update as a function of the pre and post synaptic spikes.
 
 Add mismatch
 ============

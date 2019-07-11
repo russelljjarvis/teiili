@@ -2,19 +2,19 @@
 Tools
 *****
 
-This is a collection of useful tools and functions mainly for use with brian2. Or other spiking network software or hardware.
+This is a collection of useful tools and functions mainly for use with `Brian2`. Or other spiking network software or hardware.
 
 
 converter
 ---------
-Functions in this module convert data from or to brian2 compatible formats.
+Functions in this module convert data from or to `Brian2` compatible formats.
 In particular, there are functions to convert and process data from DVS cameras.
 
 cpptools
 --------
 This provides functions that are used by the TeiliNetwork class to allow running the network several times with different parameters without recompiling.
 This is in particular useful if you have small networks and you would like to do parameter optimization.
-Have a look at sequence_learning_standalone_tutorial as an example for how to use it.
+Have a look at `sequence_learning_standalone_tutorial`_ as an example for how to use it.
 
 .. code-block:: python
 
@@ -27,8 +27,8 @@ Have a look at sequence_learning_standalone_tutorial as an example for how to us
 
 distance
 --------
-These functions to compute different distance measures are mainly there to provide an easy to use cpp implementation for brian2 cpp code generation.
-They are used by the synaptic kernel functions, but can also be added into any brian2 string.
+These functions to compute different distance measures are mainly there to provide an easy to use cpp implementation for `Brian2` cpp code generation.
+They are used by the synaptic kernel functions, but can also be added into any `Brian2` string.
 Make sure to add the functions you use to the namespace of the respective groups as follows:
 
 .. code-block:: python
@@ -39,7 +39,7 @@ Make sure to add the functions you use to the namespace of the respective groups
 indexing
 --------
 Functions that convert 1d indices to x, y coordinates and vice versa including cpp implementation.
-As brian2 uses 1d indexing for neurons, it is necessary to convert 1d to 2d indices every so often when e.g. generating synapses.
+As `Brian2` uses 1d indexing for neurons, it is necessary to convert 1d to 2d indices every so often when e.g. generating synapses.
 Numpy provides a good API for that, which we use here, but we also add a cpp implementation so the functions can be used in standalone mode.
 
 live
@@ -83,7 +83,7 @@ This is e.g. a plot of a 1d Gaussian:
 random_sampling
 ---------------
 This module provides functions to sample from a random distribution, e.g. for random initialization of weights.
-All functions in should be callable in a similar way as rand() or randn() that are provided by brian2.
+All functions in should be callable in a similar way as rand() or randn() that are provided by `Brian2`.
 
 Here is an example how this works in standalone mode:
 
@@ -207,3 +207,4 @@ E.g. Gaussian, mexican hat, Gabor with different dimensionality, also using diff
 In order to also use them with C++ code generation, all functions have a cpp implementation given by the @implementation decorator.
 
 
+.. _sequence_learning_standalone_tutorial: https://teili.readthedocs.io/en/latest/scripts/Other%examples.html#sequence&learning

@@ -1078,11 +1078,11 @@ The resulting figure should look like this:
     :alt: alternate text
     :figclass: align-center
 
-    Weight update as a function of pre-post pairs of spikes. Homeotasis, weak and strong potentation and depression are shown.
+    Weight update as a function of pre-post pairs of spikes. Homeostasis, weak and strong potentation and depression are shown.
 
 
-Visualizing plasticity kernel
------------------------------
+Visualizing plasticity kernel of STDP synapse
+---------------------------------------------
 In order to better understand why the synapt weight changes the way it does given the specific pre and post spike pairs we can visualize the STDP kernel. The following tutorial can be found at ``~/teiliApps/tutorials/stdp_kernel_tutorial.py``
 We start again by importing the required dependencies.
 

@@ -41,8 +41,8 @@ class PostInstallCommand(install):
 
             os.system('cp {}* {}'.format(source_path, target_path))
 
-            source_path = os.path.join(os.getcwd(), "examples", "")
-            target_path = os.path.join(path, "teiliApps", "examples", "")
+            source_path = os.path.join(os.getcwd(), "tutorials", "")
+            target_path = os.path.join(path, "teiliApps", "tutorials", "")
             if not os.path.isdir(target_path):
                 Path(target_path).mkdir(parents=True)
 
@@ -85,8 +85,8 @@ class PostDevelopCommand(develop):
 
             os.system('cp {}* {}'.format(source_path, target_path))
 
-            source_path = os.path.join(os.getcwd(), "examples", "")
-            target_path = os.path.join(path, "teiliApps", "examples", "")
+            source_path = os.path.join(os.getcwd(), "tutorials", "")
+            target_path = os.path.join(path, "teiliApps", "tutorials", "")
             if not os.path.isdir(target_path):
                 Path(target_path).mkdir(parents=True)
 
@@ -96,7 +96,7 @@ class PostDevelopCommand(develop):
 
 setup(
     name="teili",
-    version="0.2",
+    version="1.0",
     author="Moritz Milde",
     author_email="mmilde@ini.uzh.ch",
     description=("This toolbox was developed to provide computational  "
@@ -134,6 +134,7 @@ setup(
         'teili.building_blocks',
         'teili.stimuli',
         'teili.tools',
+        'teili.tools.run_regularly',
         'teili.tools.visualizer',
         'teili.tools.visualizer.DataControllers',
         'teili.tools.visualizer.DataModels',
@@ -142,7 +143,7 @@ setup(
 
 
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable - ",
         "License :: OSI Approved :: MIT License",
         "Intended Audience :: Computational neuroscientists",
         "Intended Audience :: Neuromorphic engineers",

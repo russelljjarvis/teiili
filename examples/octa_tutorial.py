@@ -3,7 +3,7 @@
 """
 Created on Thu Jun 27 14:45:02 2019
 
-@author: Matteo1
+@author: Matteo
 """
 import numpy as np
 import matplotlib.pyplot as plt 
@@ -19,7 +19,7 @@ from teili.tools.sorting import SortMatrix
 '''
 Minimal working example for the OCTA network.
 
-All documentation can be found on the teili website.
+All documentation can be found on the teili website or in the octa.py docstrings.
 
 The network parameters are found in teili.models.parameters.octa_params
 

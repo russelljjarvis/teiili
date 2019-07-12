@@ -45,7 +45,7 @@ An example of the ``neuron_model`` class is shown below:
     class DPI(NeuronEquationBuilder):
         """This class provides you with all equations to simulate a current-based
         exponential, adaptive leaky integrate and fire neuron as implemented on
-        the neuromorphic chips by the NCS group. The neuronmodel follows the DPI neuron
+        the neuromorphic chips by the NCS group. The neuron model follows the DPI neuron
         which was published in 2014 (Chicca et al. 2014).
         """
 
@@ -71,7 +71,8 @@ The ``NeuronEquationBuilder`` expects the following keyword arguments:
 
 The reason behind this is that the ``EquationBuilder`` has access to a set of templates defined in ``teili/models/builder/templates/`` such that the same neuron model can easily be simulated w/ and w/o leak for example. Of course we offer the possibility for work-around so that statically defined models can be simulated. For details please refer to the tutorial_
 
-For more information please consult the Equation builder section
+For more information please consult the `EquationBuilder`_ section.
+
 
 Let's connect neurons to one another.
 

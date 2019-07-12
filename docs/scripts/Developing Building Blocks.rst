@@ -2,6 +2,7 @@
 ***************
 Developing Building Blocks
 ***************
+
 This section explains the generation of new and more complex ``BuildingBlocks``:
 we provide users with an example of this in ``teili/building_blocks/octa.py`` and in ``teili/building_blocks/threeway.py``
 
@@ -13,7 +14,7 @@ Recommended practices for creating custom ``BuildingBlocks`` go as follow:
 - Keep the class initialization as concise as possible.
 - Create a generation function which implements the desired connectivity.
 - Label correctly ``sub_blocks``, ``input_groups``, ``output_groups`` and ``hidden_groups``.
-- Remember to ``_set_tags`` as you expand the network and its functionality,
+- Remember to ``_set_tags`` as you expand the network and its functionality, it really helps to keep track of the properties of individual groups.
 
 Important Notes:
 
@@ -30,4 +31,4 @@ Important Notes:
 
 - When overwriting an existing population in one of the ``sub_blocks._groups``, remember to re-initialize all the connections and monitors regarding that population. Which will now be specific to the parent class.
 
- Have fun developing your own ``BuildingBlocks`` and changing neuroscience. :)
+ Have fun developing your own ``BuildingBlocks`` and bringing neuroscience forward. :)

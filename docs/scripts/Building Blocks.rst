@@ -322,33 +322,33 @@ Given that all connections are subject to learning, the objective of one OCTA mo
 to continuously adjust its parameters, e.g. synaptic weights and time constants, based
 on local information to best capture the spatio-temporal statistics of its input.
 
-Parameters for the network are stored in two dictionaries located in ``teili/models/parameters/octa_params.py``.
+Parameters for the network are stored in two dictionaries located in ``tools/octa_tools/octa_params.py``
 
 The WTA keys are explained above, the OCTA keys are defined as:
 
-* **duration**: Duriation of the simulation
-* **revolutions**: Number of times input is presented
-* **num_neurons**: Number of neurons in the compressionWTA. Keep in mind it is a 2D WTA.
-* **num_input_neurons**: Number of neurons in the prediction WTA and in the starting data.
-* **distribution**: (0 or 1) Distribution from which to initialize the weights. Gamma(1) or Normal(0).
-* **dist_param_init**: Shape for Gamma distribution/ mean of normal distribution
-* **scale_init**: Scale for Gamma distribution / std of normal distribution
-* **dist_param_re_init**: Shape/mean for weight reinitialiazation in run_regular function
-* **scale_re_init**: Scale/std for weight reinitialiazation in run_regular function
-* **re_init_threshold**: (0 - 0.5) If the mean weight of a synapse is below or above
-                      (1- re_init_threshold) the weight is reinitialized
-* **buffer_size**: Size of the buffer for the weight dependent regularization
-* **buffer_size_plast**: Size of the buffer of the activity dependent regularization
-* **noise_weight**: Synaptic weight of the noise generator
-* **variance_th_c**: Variance threshold for the compression group. Parameter included in the
+* **duration** (int): Duration of the simulation
+* **revolutions** (int): Number of times input is presented
+* **num_neurons** (int): Number of neurons in the compression WTA group. Keep in mind it is a 2D WTA.
+* **num_input_neurons** (int): Number of neurons in the projection and prediction WTA.
+* **distribution** (bool): Distribution from which to initialize the weights. Gamma (1) or Normal (0) distributions.
+* **dist_param_init** (int): Shape for Gamma distribution or mean of Normal distribution to be used at initialization.
+* **scale_init** (int): Scale for Gamma distribution or std of Normal distribution.
+* **dist_param_re_init** (int): Shape for Gamma distribution or mean of Normal distribution used during the run regular functions.
+* **scale_re_init** (int): Scale for Gamma distribution or std of Normal distribution used during the run regular functions.
+* **re_init_threshold** (float): Parameter between 0 and 0.5. The weights gets reinitialized if the mean weight of a synapse is below the given value or above
+                      (1- re_init_threshold).
+* **buffer_size** (int): Size of the buffer for the weight dependent regularization.
+* **buffer_size_plast** (int): Size of the buffer of the activity dependent regularization.
+* **noise_weight** (int): Synaptic weight the noise is connected with.
+* **variance_th_c** (float): Variance threshold for the compression group. Parameter included in the
                     ``activity`` synapse template.
-* **variance_th_p**: Variance threshold for the prediction group.
-* **learning_rate**: Learning rate
-* **inh_learning_rate**: Inhibitory learning rate
-* **decay**:  Decay parameter of the decay in the activity dependent run_regular
-* **decay_strategy**: Type of weight decay ('global'/'local')
-* **tau_stdp**: Time constant for stdp plasticity
-
+* **variance_th_p** (float): Variance threshold for the prediction group.
+* **learning_rate** (float): Learning rate.
+* **inh_learning_rate** (float): Inhibitory learning rate.
+* **decay** (int):  Decay parameter of the decay in the activity dependent run_regular.
+* **weight_decay** (string): Type of weight decay (temporal/ event-based).
+* **seed** (int): Seed for mismatch. Default is 42.
+* **tau_stdp**(int): Time constant in ms, that defines the stdp plasticty.
 
 Initialisation of the building block goes as follows:
 
@@ -386,15 +386,17 @@ Initialisation of the building block goes as follows:
     OCTA_net.groups['spike_gen'].set_spikes(indices=testbench_stim.indices,
                                             times=testbench_stim.times * ms)
 
-
-    Net.add(OCTA_net,
+    Net.add(
+            OCTA_net,
             OCTA_net.sub_blocks['prediction'],
-            OCTA_net.sub_blocks['compression'])
+            OCTA_net.sub_blocks['compression']
+            )
 
-    Net.run(10000*ms, report='text')
+    Net.run(octa_params['duration']*ms, report='text')
 
 .. attention:: When ``Neurons`` or ``Connections`` groups of a ``BuildingBlock`` are changed from their default, one needs to ``add`` the affected ``sub_blocks`` explicitly.
 
+The additional keyword arguments are defined as:
 
 * **external_input**: Flag to include an input to the network
 * **noise**: Flag to include 10 Hz Poisson noise generator on ``n_exc`` of compression and prediction

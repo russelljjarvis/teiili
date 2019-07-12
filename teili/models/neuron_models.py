@@ -118,7 +118,7 @@ class OCTA_Neuron(NeuronEquationBuilder):
         NeuronEquationBuilder.__init__(self, base_unit='current',
                                        feedback='calcium_feedback',
                                        integration='exponential', location='spatial',
-                                       gain_modulationm='gain_modulation',
+                                       noise='none', gain_modulationm='gain_modulation',
                                        modulation='activity')
         self.add_input_currents(num_inputs)
 

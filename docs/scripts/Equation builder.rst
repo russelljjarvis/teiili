@@ -25,7 +25,7 @@ NeuronEquationBuilder keywords
 
     from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
     num_inputs = 2
-    my_neu_model = NeuronEquationBuilder.__init__(base_unit='current', adaptation='calcium_feedback',
+    my_neuron_model = NeuronEquationBuilder.__init__(base_unit='current', adaptation='calcium_feedback',
                                    integration_mode='exponential', leak='leaky',
                                    position='spatial', noise='none')
     my_neuron.add_input_currents(num_inputs)
@@ -33,7 +33,7 @@ NeuronEquationBuilder keywords
 The keywords explained:
 
 * **base_unit**: Indicates whether neuron is current or conductance based.
-* **adaptation**: What type of adaptive feedback should be used. So far only calciumFeedback is implemented.
+* **adaptation**: What type of adaptive feedback should be used. So far only calciumfeedback is implemented.
 * **integration_mode**: Determines whether integration up to spike-generation is linear or exponential.
 * **leak**: Enables leaky integration.
 * **position**: To enable spatial-like position indices on neuron.
@@ -41,13 +41,16 @@ The keywords explained:
   each neuron.
 * **refractory**: Refractory period of the neuron.
 
+Custom features (such as gain_modulation or activity_modulation) can be added by defining a custom equation template in ``teili/models/builder/templates/neuron_templates.py`` and adding them to the current_equation_sets or voltage_equation_sets dictionary.
+When defining a new neuron model, in ``teili\models\neuron_models.py``, import the new feature by passing the newly constructed keyword to the NeuronEquationBuilder.
+
 SynapseEquationBuilder keywords
 -------------------------------
 
 .. code-block:: python
 
     from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
-    my_syn_model = SynapseEquationBuilder.__init__(base_unit='DPI',
+    my_synapse_model = SynapseEquationBuilder.__init__(base_unit='DPI',
                                                    plasticity='non_plastic')
 
 The keywords explained:
@@ -57,6 +60,9 @@ The keywords explained:
   function.
 * **plasticity**: Plasticity algorithm for the synaptic weight. Can either be ``non_plastic``, ``fusi`` or
   ``stdp``.
+
+Custom features (such as new learning rules or new kernels) can be added by defining a custom equation template in ``teili/models/builder/templates/synapse_templates.py`` and adding them to the synaptic_equations dictionary.
+When defining a new synapse model, in ``teili\models\synapse_models.py``, import the new feature by passing the newly constructed keyword to the SynapseEquationBuilder.
 
 
 Dictionary structure
@@ -166,5 +172,3 @@ To replace variables and lines:
 
     from teili.models.builder.combine import var_replacer
     var_replacer(first_eq, second_eq, params)
-
-

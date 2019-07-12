@@ -187,7 +187,6 @@ The WTA ``BuildingBlock`` comes in two slightly different versions. The versions
 To generate a 2 dimensional WTA population you can do the following.
 
 .. code-block:: python
-
       # The number of neurons in your WTA population.
       # Note that this number is squared in the 2D WTA
       num_neurons = 7

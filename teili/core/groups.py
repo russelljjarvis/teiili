@@ -178,9 +178,10 @@ class TeiliGroup(Group):
         to a dictionary of parameters specified in the input dictionary (std_dict).
         Mismatch is drawn from a Gaussian distribution with mean equal to
         the parameter's current value.
-        
+
         If no dictionary is given, 20% mismatch is added to all the parameters of
-        the model.
+        the model except variables specified in the no_mismatch_keys list.
+
 
         Note:
             if you want to specify also lower and upper bound of the mismatch distribution
@@ -214,11 +215,16 @@ class TeiliGroup(Group):
             the current bias values:
             >>> testNeurons.add_mismatch({'Itau': 0.1})
         """
+        no_mismatch_keys = ['Inoise','Iconst','kn','kp','Ut_syn','Io','I_syn','kn_syn','kp_syn','Io_syn']
+
         if std_dict is  None:
             std_dict = {}
             parameters = list(self.equation_builder.keywords['parameters'].keys())
+
             for i in parameters:
-                std_dict[i] = 0.2
+                if i not in no_mismatch_keys:
+                    std_dict[i] = 0.2
+
 
         for parameter, std in std_dict.items():
              self._add_mismatch_param(parameter, std, seed=seed)
@@ -280,7 +286,7 @@ class TeiliGroup(Group):
             >>> testNeurons._add_mismatch_param(param='Ith', std=0.1, lower=-2)
 
         TODO: Consider the mismatch for the parameter 'Cm' as a separate case.
-        TODO: Add UserWarning if mismatch has been added twice both in numpy and 
+        TODO: Add UserWarning if mismatch has been added twice both in numpy and
               standalone mode.
         """
 

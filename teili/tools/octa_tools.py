@@ -38,10 +38,10 @@ def add_bb_mismatch(bb, seed=42):
     for i in bb.groups:
         if bb.groups[i]._tags['group_type'] == 'Neuron':
             bb.groups[i].add_mismatch(mismatch_neuron_param, seed=seed)
-            bb.groups[i]._tags['mismatch'] = 1
+            bb.groups[i]._tags['mismatch'] = True
         elif bb.groups[i]._tags['group_type'] == 'Connection':
             bb.groups[i].add_mismatch(mismatch_synap_param, seed=seed)
-            bb.groups[i]._tags['mismatch'] = 1
+            bb.groups[i]._tags['mismatch'] = True
         else:
             pass
     return None
@@ -139,7 +139,7 @@ def add_weight_re_init_ipred(group, re_init_threshold):
     """
     for grp in group:
         add_re_init_ipred(grp, re_init_threshold=re_init_threshold)
-        dict_append = {'re initializes weights (ipred)' : 1}
+        dict_append = {'re initializes weights (ipred)' : True}
         if hasattr(grp, "_tags"):
             grp._tags.update(dict_append)
         else:
@@ -157,7 +157,7 @@ def add_regulatization_weight(group, buffer_size):
     """
     for grp in group:
         add_weight_regularization(grp, buffer_size=buffer_size)
-        dict_append = {'weight regulatization' : 1}
+        dict_append = {'weight regulatization' : True}
         if hasattr(grp, "_tags"):
             grp._tags.update(dict_append)
         else:
@@ -177,7 +177,7 @@ def add_proxy_activity(group, buffer_size, decay):
         add_activity_proxy(grp,
                            buffer_size=buffer_size,
                            decay=decay)
-        dict_append = {'activity proxy' : 1}
+        dict_append = {'activity proxy' : True}
         if hasattr(grp, "_tags"):
             grp._tags.update(dict_append)
         else:
@@ -205,7 +205,6 @@ def add_weight_init(group , dist_param, scale, distribution):
         else:
             self._groups[target_group]._tags = {}
             self._groups[target_group]._tags.update(dict_append)
-
 
 class monitor_init():
 

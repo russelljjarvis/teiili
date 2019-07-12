@@ -139,11 +139,16 @@ class BuildingBlock(Nameable):
 
         Args:
             tags (dict): A dictionary of tags
-               {'level': '1',       # '2',..., '10'
-               'type': 'wta'       # 'reservoir', 'octa'
-               'sign': 'exc',      # 'inh'
-               'conn_type': 'rec', # 'ff', 'fb' or '' for neurons
-              }
+                                {'mismatch' : False,
+                                'noise' : False,
+              		            'level': 0 ,
+              		            'sign': 'None',
+              		            'target sign': 'None',
+              		            'num_inputs' : 0,
+              		            'bb_type' : 'None',
+              		            'group_type' : 'None',
+              		            'connection_type' : 'None',
+              	    	        }
             target_group (str): Name of group to set tags
         """
         tags = copy.deepcopy(tags)

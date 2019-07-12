@@ -405,8 +405,8 @@ def gen_octa(groupname,
     # initialiaze mismatch
     add_bb_mismatch(compression, seed)
     add_bb_mismatch(prediction, seed)
-    s_proj_pred.add_mismatch( seed=seed)
-    projection.add_mismatch( seed=seed)
+    s_proj_pred.add_mismatch(mismatch_synap_param, seed=seed)
+    projection.add_mismatch(mismatch_neuron_param, seed=seed)
 
     if external_input is True:
         spike_gen = SpikeGeneratorGroup(N=num_input_neurons**2,

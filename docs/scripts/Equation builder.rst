@@ -16,7 +16,7 @@ Each builder is wrapped by a neuron/synapse model generator class located in ``t
 
 Keyword arguments for builder
 =============================
-In order to generate a neuron/synapse model, its builder needs to be initialized by specifying **base_unit** and a set of values which will define the model itself and thus which template equation/parameters are combined.
+In order to generate a neuron/synapse model, its builder needs to be initialized by specifying a ``base_unit`` and a set of values which will define the model itself and thus which template equation/parameters are combined.
 
 The values that determine the model should be passed by defining a keyword which explains the functionality.
 

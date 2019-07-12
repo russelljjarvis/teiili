@@ -333,11 +333,10 @@ The WTA keys are explained above, the OCTA keys are defined as:
 * **distribution** (bool): Distribution from which to initialize the weights. Gamma (1) or Normal (0) distributions.
 * **dist_param_init** (int): Shape for Gamma distribution or mean of Normal distribution to be used at initialization.
 * **scale_init** (int): Scale for Gamma distribution or std of Normal distribution.
-* **dist_param_re_init** (int): Shape for Gamma distribution or mean of Normal distribution used during the run regular functions.
+* **dist_param_re_init** (int): Shape of Gamma distribution or mean of Normal distribution used during the run regular functions.
 * **scale_re_init** (int): Scale for Gamma distribution or std of Normal distribution used during the run regular functions.
 * **re_init_threshold** (float): Parameter between 0 and 0.5. The weights gets reinitialized if the mean weight of a synapse is below the given value or above
                       (1- re_init_threshold).
-* **buffer_size** (int): Size of the buffer for the weight dependent regularization.
 * **buffer_size_plast** (int): Size of the buffer of the activity dependent regularization.
 * **noise_weight** (int): Synaptic weight the noise is connected with.
 * **variance_th_c** (float): Variance threshold for the compression group. Parameter included in the
@@ -346,7 +345,7 @@ The WTA keys are explained above, the OCTA keys are defined as:
 * **learning_rate** (float): Learning rate.
 * **inh_learning_rate** (float): Inhibitory learning rate.
 * **decay** (int):  Decay parameter of the decay in the activity dependent run_regular.
-* **weight_decay** (string): Type of weight decay (temporal/ event-based).
+* **weight_decay** (string): Type of weight decay ('global'/'local').
 * **seed** (int): Seed for mismatch. Default is 42.
 * **tau_stdp**(int): Time constant in ms, that defines the stdp plasticty.
 

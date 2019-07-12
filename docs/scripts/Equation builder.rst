@@ -41,7 +41,7 @@ The keywords explained:
   each neuron.
 * **refractory**: Refractory period of the neuron.
 
-Custom features (such as gain_modulation or activity_modulation) can be added by defining a custom equation template in ``teili/models/builder/templates/neuron_templates.py`` and adding the keyword to **current_equation_sets** or to **voltage_equation_sets dictionary**.
+Custom keywords (such as gain_modulation or activity_modulation) can be added by defining a custom equation template in ``teili/models/builder/templates/neuron_templates.py`` and adding the keyword to either the **current_equation_sets** or to the **voltage_equation_sets** dictionary.
 When defining a new neuron model import the new feature by passing the newly constructed keyword to the ``NeuronEquationBuilder``.
 
 SynapseEquationBuilder keywords
@@ -61,7 +61,7 @@ The keywords explained:
 * **plasticity**: Plasticity algorithm for the synaptic weight. Can either be ``non_plastic``, ``fusi`` or
   ``stdp``.
 
-Custom features (such as new learning rules or new kernels) can be added by defining a custom equation template in ``teili/models/builder/templates/synapse_templates.py`` and adding the keywords to the **synaptic_equations** dictionary.
+Custom keywords (such as new learning rules or new kernels) can be added by defining a custom equation template in ``teili/models/builder/templates/synapse_templates.py`` and adding the keywords to the **synaptic_equations** dictionary.
 When defining a new synapse model import the new feature by passing the newly constructed keyword to the ``SynapseEquationBuilder``.
 
 

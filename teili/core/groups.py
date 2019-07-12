@@ -215,7 +215,7 @@ class TeiliGroup(Group):
             the current bias values:
             >>> testNeurons.add_mismatch({'Itau': 0.1})
         """
-        no_mismatch_keys = ['Inoise','Iconst','kn','kp','Ut_syn','Io','I_syn','kn_syn','kp_syn','Io_syn']
+        no_mismatch_keys = ['Iconst','kn','kp','Ut_syn','Io','I_syn','kn_syn','kp_syn','Io_syn']
 
         if std_dict is  None:
             std_dict = {}

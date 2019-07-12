@@ -56,7 +56,7 @@ def add_decay_weight(group, decay_strategy, decay_rate):
         group (list): List of Synapse group which should be subject to weight decay
         decay_strategy (str): Weight decay strategy. Either 'global' which decays weight
                 based o fixed time interval, or 'local' which performs event-driven weight decay
-        learning_rate (float): Amount of weight decay per time step
+        decay_rate (float): Amount of weight decay per time step
 
     Returns:
         None
@@ -74,15 +74,18 @@ def add_decay_weight(group, decay_strategy, decay_rate):
 
 
 def add_weight_pred_decay(group, decay_strategy, decay_rate):
-    """Summary
+    """
+        This allows to add a weight decay run regular function following a pre defined
+        decay strategay
 
     Args:
-        group (TYPE): Description
-        decay_strategy (TYPE): Description
-        decay_rate (TYPE): Description
+        group (list): List of Synapse group which should be subject to weight decay
+        decay_strategy (str): Weight decay strategy. Either 'global' which decays weight
+                based o fixed time interval, or 'local' which performs event-driven weight decay
+        decay_rate (float): Amount of weight decay per time step
 
     Returns:
-        TYPE: Description
+        None
     """
     for grp in group:
         add_pred_weight_decay(grp, decay_strategy, decay_rate)
@@ -97,17 +100,19 @@ def add_weight_pred_decay(group, decay_strategy, decay_rate):
 
 def add_weight_re_init(group, re_init_threshold, dist_param_re_init,
                        scale_re_init, distribution):
-    """Summary
+    """
+        This allows to add a weight re initialization run regular function specifying
+        the distribution parameters from which to sample.
 
     Args:
-        group (TYPE): Description
-        re_init_threshold (TYPE): Description
-        dist_param_re_init (TYPE): Description
-        scale_re_init (TYPE): Description
-        distribution (TYPE): Description
+        group (list): List of groups which are subject to weight initialiazion
+        re_init_threshold (float): Parameter between 0 and 0.5. Threshold which triggers reinitialization.
+        dist_param_re_init (bool): Shape of Gamma distribution or mean of Normal distribution used.
+        scale_re_init (int): Scale for Gamma distribution or std of Normal distribution used.
+        distribution (bool): Distribution from which to initialize the weights. Gamma (1) or Normal (0) distributions.
 
     Returns:
-        TYPE: Description
+        None
     """
     for grp in group:
         add_re_init_weights(grp,
@@ -128,14 +133,16 @@ def add_weight_re_init(group, re_init_threshold, dist_param_re_init,
 
 
 def add_weight_re_init_ipred(group, re_init_threshold):
-    """Summary
+    """
+        This allows to add a weight re initialization run regular function specifying
+        the distribution parameters from which to sample.
 
     Args:
-        group (TYPE): Description
-        re_init_threshold (TYPE): Description
+        group (list): List of groups which are subject to weight initialiazion
+        re_init_threshold (float): Parameter between 0 and 0.5. Threshold which triggers reinitialization.
 
     Returns:
-        TYPE: Description
+        None
     """
     for grp in group:
         add_re_init_ipred(grp, re_init_threshold=re_init_threshold)
@@ -166,12 +173,14 @@ def add_regulatization_weight(group, buffer_size):
 
 
 def add_proxy_activity(group, buffer_size, decay):
-    """Summary
+    """
+        This allows to add an activity proxy run regular function.
+
 
     Args:
-        group (TYPE): Description
-        buffer_size (TYPE): Description
-        decay (TYPE): Description
+        group (list): List of neuron groups which are subject to weight initialiazion
+        buffer_size (int): Size of the buffer which serves to calculate the activty
+        decay (TYPE): Decay
     """
     for grp in group:
         add_activity_proxy(grp,

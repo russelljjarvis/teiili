@@ -100,6 +100,13 @@ and updated:
 
   test_wta._tags['mismatch'] = True
 
+or added:
+
+.. code-block:: python
+
+  test_wta._set_tags({'custom_tag' : custom_tag }}, target_group)
+
+
 Getting Tags
 --------------------
 Specific groups can filtered using tags:

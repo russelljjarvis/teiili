@@ -16,7 +16,9 @@ Each builder is wrapped by a neuron/synapse model generator class located in ``t
 
 Keyword arguments for builder
 =============================
-In order to generate a neuron/synapse model, its builder needs to be initialized using specific keywords which define the model itself and thus which template equation/parameters are combined.
+In order to generate a neuron/synapse model, its builder needs to be initialized by specifying **base_unit** and a set of values which will define the model itself and thus which template equation/parameters are combined.
+
+The values that determine the model should be passed by defining a keyword which explains the functionality.
 
 NeuronEquationBuilder keywords
 ------------------------------
@@ -27,21 +29,20 @@ NeuronEquationBuilder keywords
     num_inputs = 2
     my_neuron_model = NeuronEquationBuilder.__init__(base_unit='current', adaptation='calcium_feedback',
                                    integration_mode='exponential', leak='leaky',
-                                   position='spatial', noise='none')
+                                   position='spatial', noise = 'None')
     my_neuron.add_input_currents(num_inputs)
 
-The keywords explained:
+* **base_unit**: Indicates whether the neuron model is ``current`` or ``voltage`` based.
 
-* **base_unit**: Indicates whether neuron is current or conductance based.
-* **adaptation**: What type of adaptive feedback should be used. So far only calciumfeedback is implemented.
-* **integration_mode**: Determines whether integration up to spike-generation is linear or exponential.
-* **leak**: Enables leaky integration.
-* **position**: To enable spatial-like position indices on neuron.
-* **noise**: *NOT YET IMPLEMENTED!* This will in the future allow independent mismatch-like noise to be added to
-  each neuron.
-* **refractory**: Refractory period of the neuron.
+The keywords used in the example and the values are explained below:
 
-Custom keywords (such as gain_modulation or activity_modulation) can be added by defining a custom equation template in ``teili/models/builder/templates/neuron_templates.py`` and adding the keyword to either the **current_equation_sets** or to the **voltage_equation_sets** dictionary.
+* **adaptation**: Determines what type of adaptive feedback should be used. Can be ``calciumfeedback`` or ``None``.
+* **integration_mode**: Determines what how the neuron integrates up to spike-generation. Can be ``linear`` or ``exponential``.
+* **leak**: Enables lead integration. Can be `leaky` or ``non_leaky``.
+* **position**: To enable spatial-like position indices on neuron. Can be ``spatial`` or ``None``.
+* **noise**: Determines what type of noise. Can be ``gaussian_noise`` or ``None``.
+
+Custom keywords (such as gain_modulation or activity_modulation) can be added by defining a custom equation template in ``teili/models/builder/templates/neuron_templates.py`` and adding the keyword to either the ``current_equation_sets`` or to the ``voltage_equation_sets`` dictionary.
 When defining a new neuron model import the new feature by passing the newly constructed keyword to the ``NeuronEquationBuilder``.
 
 SynapseEquationBuilder keywords
@@ -53,15 +54,16 @@ SynapseEquationBuilder keywords
     my_synapse_model = SynapseEquationBuilder.__init__(base_unit='DPI',
                                                    plasticity='non_plastic')
 
-The keywords explained:
+* **base_unit**: Indicates whether synapse is ``current``, ``conductance`` or a ``DPI`` current model.
 
-* **base_unit**: Indicates whether synapse is current-based, conductance-based or a DPI current model.
-* **kernel**: Specifying temporal kernel with which each spike gets convolved, i.e. exponential decay, or alpha
-  function.
+
+The keywords used in the example and the values are explained below:
+
+* **kernel**: Specifying temporal kernel with which each spike gets convolved. Can be ``exponential``,``resonant`` or ``alpha``.
 * **plasticity**: Plasticity algorithm for the synaptic weight. Can either be ``non_plastic``, ``fusi`` or
   ``stdp``.
 
-Custom keywords (such as new learning rules or new kernels) can be added by defining a custom equation template in ``teili/models/builder/templates/synapse_templates.py`` and adding the keywords to the **synaptic_equations** dictionary.
+Custom keywords (such as new learning rules or new kernels) can be added by defining a custom equation template in ``teili/models/builder/templates/synapse_templates.py`` and adding the keywords to the ``synaptic_equations`` dictionary.
 When defining a new synapse model import the new feature by passing the newly constructed keyword to the ``SynapseEquationBuilder``.
 
 

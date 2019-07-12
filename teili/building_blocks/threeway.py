@@ -505,4 +505,6 @@ def get_rates(spikemon, measurement_period=100 * ms):
 
 if __name__ == '__main__':
     
+    prefs.codegen.target = "numpy"
+    
     TW = Threeway('TestTW', debug = True)

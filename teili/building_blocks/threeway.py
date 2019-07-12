@@ -161,114 +161,6 @@ class Threeway(BuildingBlock):
                                   'C': self.C._groups['n_exc']})
         self.hidden_groups.update({'H': self.H._groups['n_exc']})
 
-    def plot(self, start_time=0 * ms, end_time=None):
-        """Plot three rasters for input/output populations A, B and C
-
-        Args:
-            start_time (int*ms, optional): Start time of plot in ms
-            end_time (int*ms, optional): End time of plot in ms
-        """
-
-#        if end_time is None:
-#            if len(self.spikemonR.t) > 0:
-#                end_time = max(self.spikemonR.t)
-#            else:
-#                end_time = end_time * ms
-        tw_raster = plot_threeway_raster(
-            self.monitors, self.name, start_time, end_time)
-        return tw_raster
-
-    def show_parameter_gui(self):
-        """Constructs and shows a parameter GUI which allows
-        to set A, B and C inputs on-line, or switch them off
-        """
-
-        param_a = Parameter.create(name="value A", type="float",
-                                   value=0.1, step=0.05, limits=[0, 1])
-        param_b = Parameter.create(name="value B", type="float",
-                                   value=0.1, step=0.05, limits=[0, 1])
-        param_c = Parameter.create(name="value C", type="float",
-                                   value=0.1, step=0.05, limits=[0, 1])
-        param_reset_a = Parameter.create(name="Shut off A", type="action")
-        param_reset_b = Parameter.create(name="Shut off B", type="action")
-        param_reset_c = Parameter.create(name="Shut off C", type="action")
-        twparams = Parameter.create(name="Three way params", type="group")
-        twparams.addChild(param_a)
-        twparams.addChild(param_reset_a)
-        twparams.addChild(param_b)
-        twparams.addChild(param_reset_b)
-        twparams.addChild(param_c)
-        twparams.addChild(param_reset_c)
-        twparams.param('value A').sigValueChanging.connect(self._param_changed)
-        twparams.param('Shut off A').sigActivated.connect(self.reset_A)
-        twparams.param('value B').sigValueChanging.connect(self._param_changed)
-        twparams.param('Shut off B').sigActivated.connect(self.reset_B)
-        twparams.param('value C').sigValueChanging.connect(self._param_changed)
-        twparams.param('Shut off C').sigActivated.connect(self.reset_C)
-        TwTree = ParameterTree()
-        TwTree.setParameters(twparams)
-        TwTree.show()
-
-        return TwTree
-
-    def plot_live_inputs(self, start_time=0 * ms, end_time=None):
-        """
-        Creates a plotGUI instance and a new timer to run
-        the update function (will be replaced with )
-        """
-
-        app = QtGui.QApplication.instance()
-        if app is None:
-            app = QtGui.QApplication(sys.argv)
-        else:
-            print('QApplication instance already exists: %s' % str(app))
-
-        if end_time is None:
-            if len(self.monitors['spikemon_A'].t):
-                end_time = max(self.monitors['spikemon_A'].t)
-            else:
-                end_time = 0 * ms
-
-        self.measurement_period = end_time - start_time
-
-        self.rates_A = get_rates(self.monitors['spikemon_A'])
-        self.rates_B = get_rates(self.monitors['spikemon_B'])
-        self.rates_C = get_rates(self.monitors['spikemon_C'])
-
-        plot_gui = PlotGUI(data=self.rates_A / Hz)
-
-        plot_gui.nextRow()
-
-        plot_gui.add(data=self.rates_B / Hz)
-        plot_gui.nextRow()
-        plot_gui.add(data=self.rates_C / Hz)
-
-        timer = QtCore.QTimer()
-        timer.timeout.connect(self._update_live_inputs)
-        timer.start(100)
-
-        self.plot_gui = plot_gui
-
-#        app.exec_()
-
-        return plot_gui
-
-    def _update_live_inputs(self):
-        """
-        Updates curves of the PlotGUI while live plotting the population codes of the populations A, B and C
-        """
-
-        self.rates_A = get_rates(self.monitors['spikemon_A'])
-        self.rates_B = get_rates(self.monitors['spikemon_B'])
-        self.rates_C = get_rates(self.monitors['spikemon_C'])
-        rates_ABC = [self.rates_A, self.rates_B, self.rates_C]
-        for curve, rates in zip(self.plot_gui.curveData, rates_ABC):
-            self.plot_gui.curveData[curve] = rates / Hz
-
-        a, b, c = self.get_values()
-
-        print("A = %g, B = %g, C = %g, t = %g ms, real_time = %g s" %
-              (a, b, c, self.monitors['spikemon_A'].clock.t / ms, time.clock() - self.start_time))
 
     def set_A(self, value):
         """
@@ -331,17 +223,6 @@ class Threeway(BuildingBlock):
         self.reset_A()
         self.reset_B()
         self.reset_C()
-
-    def _param_changed(self, param, value):
-        """
-        A helper function for live updating the inputs through GUI
-        """
-        if param.name() == "value A":
-            self.set_A(value)
-        if param.name() == "value B":
-            self.set_B(value)
-        if param.name() == "value C":
-            self.set_C(value)
 
     def get_values(self, measurement_period=100 * ms):
         """

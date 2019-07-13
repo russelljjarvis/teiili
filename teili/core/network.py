@@ -18,7 +18,7 @@ import pprint
 
 from brian2 import Network, second, device, get_device, ms, all_devices
 from brian2 import SpikeMonitor, StateMonitor, NeuronGroup, Synapses, Quantity
-from teili.tools.cpptools import build_cpp_and_replace,\
+from teili.tools.cpptools import build_cpp_and_replace, \
     print_dict, params2run_args
 from teili.building_blocks.building_block import BuildingBlock
 
@@ -37,44 +37,8 @@ class TeiliNetwork(Network):
     """
     has_run = False
 
-    @property
-    def spikemonitors(self):
-        """A spike monitor wrapper.
-
-        Returns:
-            dict: A dictionary of all spike monitors (e.g. for looping over them)
-        """
-        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,SpikeMonitor)}
-
-    @property
-    def statemonitors(self):
-        """A state monitor wrapper.
-
-        Returns:
-            dict: A dictionary of all statemonitors (e.g. for looping over them)
-        """
-        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,StateMonitor)}
-
-    @property
-    def neurongroups(self):
-        """A NeuronGroup wrapper.
-
-        Returns:
-            dict: A dictionary of all neurongroups (e.g. for looping over them)
-        """
-        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,NeuronGroup)}
-
-    @property
-    def synapses(self):
-        """A Synapses wrapper.
-
-        Returns:
-            dict: A dictionary of all synapses (e.g. for looping over them).
-        """
-        return {att.name: att for att in self.__dict__['objects'] if isinstance(att,Synapses)}
-
     def __init__(self, *objs, **kwds):
-        """Summary
+        """All parameters are passed to the Brian2 network.
 
         Args:
             *objs: Description
@@ -83,9 +47,46 @@ class TeiliNetwork(Network):
         self.blocks = []
         self.standalone_params = OrderedDict()
         self.standalone_params['duration'] = 0 * ms
+        self.thread = None
 
-        # Network.__init__(self, *objs, **kwds)
-        Network.__init__(self)
+        Network.__init__(self, *objs, **kwds)
+        # Network.__init__(self)
+
+    @property
+    def spikemonitors(self):
+        """property to conveniently get all spikemonitors in the network
+
+        Returns:
+            dict: A dictionary of all spike monitors (e.g. for looping over them)
+        """
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att, SpikeMonitor)}
+
+    @property
+    def statemonitors(self):
+        """property to conveniently get all statemonitors in the network
+
+        Returns:
+            dict: A dictionary of all statemonitors (e.g. for looping over them)
+        """
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att, StateMonitor)}
+
+    @property
+    def neurongroups(self):
+        """property to conveniently get all neurongroups in the network
+
+        Returns:
+            dict: A dictionary of all neurongroups (e.g. for looping over them)
+        """
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att, NeuronGroup)}
+
+    @property
+    def synapses(self):
+        """property to conveniently get all synapses in the network
+
+        Returns:
+            dict: A dictionary of all synapses (e.g. for looping over them).
+        """
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att, Synapses)}
 
     def add_standalone_params(self, **params):
         """Function to a add standalone parameter to the standaloneParam dict.

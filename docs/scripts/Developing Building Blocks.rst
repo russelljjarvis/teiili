@@ -31,4 +31,4 @@ Important Notes:
 
 - When overwriting an existing population in one of the ``sub_blocks._groups``, remember to re-initialize all the connections and monitors regarding that population. Which will now be specific to the parent class.
 
- Have fun developing your own ``BuildingBlocks`` and bringing neuroscience forward. :)
+Have fun developing your own ``BuildingBlocks`` and bringing neuroscience forward. :)

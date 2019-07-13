@@ -60,7 +60,7 @@ An example of the ``neuron_model`` class is shown below:
                                           position='spatial', noise='none')
             self.add_input_currents(num_inputs)
 
-The ``NeuronEquationBuilder`` expects the following keyword arguments:
+The ``NeuronEquationBuilder`` has following keyword arguments:
 
 * **base_unit**: Either set to ``current`` or ``voltage`` depending if you want to simulate current-based hardware neuron models
 * **adaptation**: Toggles spike-frequency adaptation mechanism in ``neuron_model``
@@ -116,7 +116,7 @@ An example of the ``synapse_model`` class is shown below:
           SynapseEquationBuilder.__init__(self, base_unit='DPI',
                                           plasticity='non_plastic')
 
-The ``SynapseEquationBuilder`` expects the following keyword arguments:
+The ``SynapseEquationBuilder`` has the following keyword arguments:
 
 * **base_unit**: Either set to ``current`` or ``conductance`` depending if you want to simulate current-based hardware neuron models. this keyword argument can also be set to ``DPI`` or ``DPIShunting`` for specific hardware model simulation.
 * **kernel**: Can be either set to ``exponential``, ``alpha`` or ``resonant`` which ultimately sets the shape of the EPSC and IPSC repectively.

@@ -335,19 +335,17 @@ The WTA keys are explained above, the OCTA keys are defined as:
 * **scale_init** (int): Scale for Gamma distribution or std of Normal distribution.
 * **dist_param_re_init** (int): Shape of Gamma distribution or mean of Normal distribution used during the run regular functions.
 * **scale_re_init** (int): Scale for Gamma distribution or std of Normal distribution used during the run regular functions.
-* **re_init_threshold** (float): Parameter between 0 and 0.5. The weights gets reinitialized if the mean weight of a synapse is below the given value or above
-                      (1- re_init_threshold).
+* **re_init_threshold** (float): Parameter between 0 and 0.5. The weights gets reinitialized if the mean weight of a synapse is below the given value or above (1- re_init_threshold).
 * **buffer_size_plast** (int): Size of the buffer of the activity dependent regularization.
 * **noise_weight** (int): Synaptic weight the noise is connected with.
-* **variance_th_c** (float): Variance threshold for the compression group. Parameter included in the
-                    ``activity`` synapse template.
+* **variance_th_c** (float): Variance threshold for the compression group. Parameter included in the  ``activity`` synapse template.
 * **variance_th_p** (float): Variance threshold for the prediction group.
 * **learning_rate** (float): Learning rate.
 * **inh_learning_rate** (float): Inhibitory learning rate.
 * **decay** (int):  Decay parameter of the decay in the activity dependent run_regular.
 * **weight_decay** (string): Type of weight decay ('global'/'local').
 * **seed** (int): Seed for mismatch. Default is 42.
-* **tau_stdp**(int): Time constant in ms, that defines the stdp plasticty.
+* **tau_stdp** (int): Time constant in ms, that defines the stdp plasticty.
 
 Initialisation of the building block goes as follows:
 
@@ -402,9 +400,6 @@ The additional keyword arguments are defined as:
 * **monitor**: Flag to return monitors of the network
 * **debug**: Flag for verbose debug
 
-.. note:: To be extended by Moritz Milde
-
-.. _OCTA: https://code.ini.uzh.ch/mmilde/OCTA/blob/dev/README.md
 .. __tags: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#tags
 .. _[1]: https://www.zora.uzh.ch/id/eprint/177970/
 .. _Download: https://www.dropbox.com/s/0ynid1730z7txfh/spike_based_computation.pdf?dl=1

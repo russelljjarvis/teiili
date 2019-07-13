@@ -59,7 +59,7 @@ SynapseEquationBuilder keywords
 
 The keywords used in the example and the values are explained below:
 
-* **kernel**: Specifying temporal kernel with which each spike gets convolved. Can be ``exponential``,``resonant`` or ``alpha``.
+* **kernel**: Specifying temporal kernel with which each spike gets convolved. Can be ``exponential``, ``resonant`` or ``alpha``.
 * **plasticity**: Plasticity algorithm for the synaptic weight. Can either be ``non_plastic``, ``fusi`` or
   ``stdp``.
 

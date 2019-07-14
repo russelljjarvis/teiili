@@ -27,6 +27,7 @@ from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 
 from teili.tools.three_way_kernels import A_plus_B_equals_C
+from teili.tools.visualizer.DataControllers import Rasterplot
 
 import time
 
@@ -245,6 +246,15 @@ class Threeway(BuildingBlock):
         else:
             raise ValueError(
                 'Unable to compute population vectors, monitoring has been turned off!')
+            
+    def plot(self):
+        """
+            Create a rasterplot of spikes of excitatory neurons of populations
+            A, B and C
+        """
+        plot_threeway_raster(self)
+        
+        
 
 
 def gen_threeway(name,
@@ -400,53 +410,48 @@ def set_TW_tags(TW_block, _groups):
                        _groups['s_H_to_C'])
 
 
-def plot_threeway_raster(tw_monitors, name, start_time, end_time):
-    """Function to easily visualize WTA activity.
+def plot_threeway_raster(TW):
+    """Function to easily visualize Threeway block activity.
 
     Args:
-        name (str, required): Name of the WTA population
-        start_time (brian2.units.fundamentalunits.Quantity, required): Start time
-            in ms from when network activity should be plotted.
-        end_time (brian2.units.fundamentalunits.Quantity, required): End time
-            in ms of plot. Can be smaller than simulation time but not larger
-        wta_monitors (dict.): Dictionary with keys to access spike- and statemonitors. in WTA.monitors
+        TW (Threeway BuildingBlock, required): Threeway block to be visualized
+        
+    Returns:
+        mainfig : pyqtgraph MainWindow of the plot
+        plot_A, plot_B, plot_C : Rasterplot objects of teili visualizer
     """
     app = QtGui.QApplication.instance()
     if app is None:
-        app = QtGui.QApplication(sys.argv)
+        app = QtGui.QApplication()
     else:
         print('QApplication instance already exists: %s' % str(app))
 
     pg.setConfigOptions(antialias=True)
 
-    win_raster = pg.GraphicsWindow(
-        title='Threeway Relation Network Test Simulation: Raster plots')
-    win_raster.resize(1000, 1800)
-    win_raster.setWindowTitle(
-        'Threeway Relation Network Test Simulation: Raster plots')
+    mainfig = pg.GraphicsWindow(title='Threeway Raster plots')
+    mainfig.resize(1200,850)
+    subfig1 = mainfig.addPlot(row=0, col=0)
+    subfig2 = mainfig.addPlot(row=1, col=0)
+    subfig3 = mainfig.addPlot(row=2, col=0)
+    subfig1.setXLink(subfig2)
+    subfig3.setXLink(subfig1)
+    
+    plot_A = Rasterplot([TW.monitors['spikemon_A']], neuron_id_range=(0,TW.A.num_neurons), title="Population A",
+                        ylabel='Neuron ID', xlabel='time, s',
+                  mainfig=mainfig, subfig_rasterplot=subfig1, backend='pyqtgraph', QtApp=app,
+                  show_immediately=False)
+    
+    plot_B = Rasterplot([TW.monitors['spikemon_B']], neuron_id_range=(0,TW.B.num_neurons), title="Population B",
+                        ylabel='Neuron ID', xlabel='time, s',
+                  mainfig=mainfig, subfig_rasterplot=subfig2, backend='pyqtgraph', QtApp=app,
+                  show_immediately=False)
+    
+    plot_C = Rasterplot([TW.monitors['spikemon_C']], neuron_id_range=(0,TW.C.num_neurons), title="Population C",
+                        ylabel='Neuron ID', xlabel='time, s',
+                  mainfig=mainfig, subfig_rasterplot=subfig3, backend='pyqtgraph', QtApp=app,
+                  show_immediately=True)
 
-    raster_A = win_raster.addPlot(title="Population A")
-    win_raster.nextRow()
-    raster_B = win_raster.addPlot(title="Population B")
-    win_raster.nextRow()
-    raster_C = win_raster.addPlot(title="Population C")
-
-    plot_spikemon_qt(monitor=tw_monitors['spikemon_A'], start_time=start_time,
-                     end_time=end_time,
-                     num_neurons=tw_monitors['spikemon_A'].source.N,
-                     window=raster_A)
-    plot_spikemon_qt(monitor=tw_monitors['spikemon_B'], start_time=start_time,
-                     end_time=end_time,
-                     num_neurons=tw_monitors['spikemon_B'].source.N,
-                     window=raster_B)
-    plot_spikemon_qt(monitor=tw_monitors['spikemon_C'], start_time=start_time,
-                     end_time=end_time,
-                     num_neurons=tw_monitors['spikemon_C'].source.N,
-                     window=raster_C)
-
-    app.exec_()
-
-    return win_raster
+    return mainfig, plot_A, plot_B, plot_C
 
 
 def gaussian(mu, sigma, amplitude, input_size):

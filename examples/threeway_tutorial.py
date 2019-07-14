@@ -7,13 +7,14 @@ Created on Thu Jun  7 17:18:17 2018
 """
 
 import time
-from brian2 import ms, prefs, set_device, defaultclock
-import sys
+from brian2 import ms, prefs, defaultclock
 
-from pyqtgraph import QtGui, QtCore
+import pyqtgraph as pg
+from pyqtgraph import QtGui
 from teili.building_blocks.threeway import Threeway
 from teili.tools.three_way_kernels import A_plus_B_equals_C
 from teili import TeiliNetwork
+from teili.tools.visualizer.DataControllers import Rasterplot
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 0.1 * ms
@@ -33,62 +34,50 @@ TW = Threeway('TestTW', hidden_layer_gen_func = A_plus_B_equals_C, cutoff = 2, m
 exampleNet.add(TW)
 
 #===============================================================================
-# Select test mode: Standard or Live 
-#
-# Standard mode: > simulation is performed in the main thread
-#                > input is provided from the start
-#                > output is computed once the simulation has finished
-# 
-# Live mode:     > simulation is performed in a background thread
-#                > network starts with no input, input is set on-line through gui
-#                > output is shown live in a plotGUI (TW.plot() for raster
-#                plotting is still available though)
-#
-#                Important: in live mode, make sure the duration of the simulation
-#                is large enough (at least 10000 ms)
-
-#test_mode = 'standard'
-test_mode = 'standard'
-
-#===============================================================================
 # reset the spike generators
 TW.reset_inputs()
 
 #===============================================================================
-# simulation
+# simulation    
+# set the example input values
+TW.set_A(0.4)
+TW.set_B(0.2)
 
-if test_mode == 'standard':
-    
-    # set the example input values
-    TW.set_A(0.4)
-    TW.set_B(0.2)
-    
-    print('Starting the simulation!')
-    start = time.clock()
-    exampleNet.run(duration, report = 'text')
-    end = time.clock()
-    print('simulation took ' + str(end - start) + ' sec')
-    print('simulation done!')
-    
-    # get the resulting population codes
-    a, b, c = TW.get_values()
+print('Starting the simulation!')
+start = time.clock()
+exampleNet.run(duration, report = 'text')
+end = time.clock()
+print('simulation took ' + str(end - start) + ' sec')
+print('simulation done!')
 
-    print("A = %g, B = %g, C = %g" % (a,b,c))
-    plot_raster = TW.plot()
-    
-elif test_mode == 'live':
-    
-    # run network as a thread
-    exampleNet.run_as_thread(duration=duration)
-    TW.start_time = time.clock()
-    
-    # create and show parameter and live plottin gui
-    param_gui = TW.show_parameter_gui()
-    plot_gui = TW.plot_live_inputs()
-    
+# get the resulting population codes
+a, b, c = TW.get_values()
 
-    
-    plot_raster = TW.plot()
+print("A = %g, B = %g, C = %g" % (a,b,c))
+
+#===============================================================================
+#Visualization
+
+QtApp = QtGui.QApplication.instance()
+
+mainfig = pg.GraphicsWindow()
+subfig1 = mainfig.addPlot(row=0, col=0)
+subfig2 = mainfig.addPlot(row=1, col=0)
+subfig3 = mainfig.addPlot(row=2, col=0)
+
+plot_A = Rasterplot([TW.monitors['spikemon_A']], neuron_id_range=(0,TW.A.num_neurons),
+                  mainfig=mainfig, subfig_rasterplot=subfig1, backend='pyqtgraph', QtApp=QtApp,
+                  show_immediately=False)
+
+plot_B = Rasterplot([TW.monitors['spikemon_B']], neuron_id_range=(0,TW.B.num_neurons),
+                  mainfig=mainfig, subfig_rasterplot=subfig2, backend='pyqtgraph', QtApp=QtApp,
+                  show_immediately=False)
+
+plot_C = Rasterplot([TW.monitors['spikemon_C']], neuron_id_range=(0,TW.C.num_neurons),
+                  mainfig=mainfig, subfig_rasterplot=subfig3, backend='pyqtgraph', QtApp=QtApp,
+                  show_immediately=True)
+
+
     
     
     

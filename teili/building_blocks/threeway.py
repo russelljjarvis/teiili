@@ -144,9 +144,9 @@ class Threeway(BuildingBlock):
         self.C = self.sub_blocks['wta_C']
         self.H = self.sub_blocks['wta_H']
         
-        self.Inp_A = self._groups['input_group_A']
-        self.Inp_B = self._groups['input_group_B']
-        self.Inp_C = self._groups['input_group_C']
+        self.Inp_A = self.A._groups['spike_gen']
+        self.Inp_B = self.B._groups['spike_gen']
+        self.Inp_C = self.C._groups['spike_gen']
 
         self.value_a = np.NAN
         self.value_b = np.NAN
@@ -252,7 +252,7 @@ class Threeway(BuildingBlock):
             Create a rasterplot of spikes of excitatory neurons of populations
             A, B and C
         """
-        plot_threeway_raster(self)
+        return plot_threeway_raster(self)
         
         
 
@@ -293,17 +293,13 @@ def gen_threeway(name,
         'wta_C': wta_C,
         'wta_H': wta_H}
 
-    input_group_A = PoissonGroup(name=name + '_input_group_A',
+    wta_A._groups['spike_gen'] = PoissonGroup(name=name + '_input_group_A',
         N=num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
-    input_group_B = PoissonGroup(name=name + '_input_group_B',
+    wta_B._groups['spike_gen'] = PoissonGroup(name=name + '_input_group_B',
         N=num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
-    input_group_C = PoissonGroup(name=name + '_input_group_C',
+    wta_C._groups['spike_gen'] = PoissonGroup(name=name + '_input_group_C',
         N=num_input_neurons, rates=np.zeros(num_input_neurons) * Hz)
 
-    input_groups = {
-        'input_group_A': input_group_A,
-        'input_group_B': input_group_B,
-        'input_group_C': input_group_C}
 
     # Creating interpopulation synapse groups
     syn_A_H = Connections(wta_A.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
@@ -320,11 +316,11 @@ def gen_threeway(name,
                           method="euler", name= name + '_s_H_to_C')
 
     # Creating input synapse groups
-    syn_inp_A = Connections(input_group_A, wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    wta_A._groups['s_inp_exc'] = Connections(wta_A._groups['spike_gen'], wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name=name + '_s_inp_A')
-    syn_inp_B = Connections(input_group_B, wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    wta_B._groups['s_inp_exc'] = Connections(wta_B._groups['spike_gen'], wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name=name + '_s_inp_B')
-    syn_inp_C = Connections(input_group_C, wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    wta_C._groups['s_inp_exc'] = Connections(wta_C._groups['spike_gen'], wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name=name + '_s_inp_C')
 
     interPopSynGroups = {
@@ -336,9 +332,10 @@ def gen_threeway(name,
         's_H_to_C' : syn_H_C}
 
     synGroups = {
-        's_inp_A' : syn_inp_A,
-        's_inp_B' : syn_inp_B,
-        's_inp_C' : syn_inp_C}
+            's_inp_A' : wta_A._groups['s_inp_exc'],
+            's_inp_B' : wta_B._groups['s_inp_exc'],
+            's_inp_C' : wta_C._groups['s_inp_exc']            
+            }
 
     for tmp_syn_group in synGroups:
         synGroups[tmp_syn_group].connect('i == j')
@@ -357,21 +354,20 @@ def gen_threeway(name,
         interPopSynGroups[tmp_syn_group_name].weight = wta_A.params['we_inp_exc']
 
     groups = {}
-    groups.update(input_groups)
-    groups.update(synGroups)
+    groups.update(interPopSynGroups)
 
     if monitor:
-        spikemon_InpA = SpikeMonitor(
-            input_group_A, name='spikemon' + name + '_InpA')
-        spikemon_InpB = SpikeMonitor(
-            input_group_B, name='spikemon' + name + '_InpB')
-        spikemon_InpC = SpikeMonitor(
-            input_group_C, name='spikemon' + name + '_InpC')
+        wta_A.monitors['spikemon_inp'] = SpikeMonitor(
+            wta_A._groups['spike_gen'], name='spikemon' + name + '_InpA')
+        wta_B.monitors['spikemon_inp'] = SpikeMonitor(
+            wta_B._groups['spike_gen'], name='spikemon' + name + '_InpB')
+        wta_C.monitors['spikemon_inp'] = SpikeMonitor(
+            wta_C._groups['spike_gen'], name='spikemon' + name + '_InpC')
 
     monitors = {
-        'spikemon_InpA': spikemon_InpA,
-        'spikemon_InpB': spikemon_InpB,
-        'spikemon_InpC': spikemon_InpC,
+        'spikemon_InpA': wta_A.monitors['spikemon_inp'],
+        'spikemon_InpB': wta_B.monitors['spikemon_inp'],
+        'spikemon_InpC': wta_C.monitors['spikemon_inp'],
         'spikemon_A': wta_A.monitors['spikemon_exc'],
         'spikemon_B': wta_B.monitors['spikemon_exc'],
         'spikemon_C': wta_C.monitors['spikemon_exc'],
@@ -451,7 +447,7 @@ def plot_threeway_raster(TW):
                   mainfig=mainfig, subfig_rasterplot=subfig3, backend='pyqtgraph', QtApp=app,
                   show_immediately=True)
 
-    return mainfig, plot_A, plot_B, plot_C
+    return mainfig
 
 
 def gaussian(mu, sigma, amplitude, input_size):

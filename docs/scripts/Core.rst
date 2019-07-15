@@ -54,7 +54,7 @@ Device Mismatch
 
 Mismatch is an inherent property of analog VLSI devices due to fabrication variability [1]_. The effect of mismatch on chip behavior can be studied, for example, with Monte Carlo simulations [2]_.
 Thus, if you are simulating neuron and synapse models of neuromorphic chips, e.g. the DPI neuron (DPI) and the DPI synapse (DPISyn), you might also want to simulate device mismatch.
-To this end, the class method ``add_mismatch()`` allows you to add a Gaussian distributed mismatch [3]_ with mean equal to the current parameter value and standard deviation set as a fraction of the current parameter value.
+To this end, the class method ``add_mismatch()`` allows you to add a Gaussian distributed mismatch with mean equal to the current parameter value and standard deviation set as a fraction of the current parameter value.
 
 As an example, once ``Neurons`` and ``Connections`` are created, device mismatch can be added to some selected parameters (e.g. Itau and refP for the DPI neuron) by specifying a dictionary with parameter names as keys and standard deviation as values, as shown in the example below.
 
@@ -104,8 +104,6 @@ Notice that this option allows you to add mismatch only to one parameter at a ti
 .. [1] Sheik, Sadique, Elisabetta Chicca, and Giacomo Indiveri. "Exploiting device mismatch in neuromorphic VLSI systems to implement axonal delays." Neural Networks (IJCNN), The 2012 International Joint Conference on. IEEE, 2012.
 
 .. [2] Hung, Hector, and Vladislav Adzic. "Monte Carlo simulation of device variations and mismatch in analog integrated circuits." Proc. NCUR 2006 (2006): 1-8.
-
-.. [3] ...
 
 .. _here: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#tags
 .. _neuron_synapse_tutorial: https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#neuron-synapse-tutorial

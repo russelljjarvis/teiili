@@ -1261,8 +1261,8 @@ The resulting figure should look like this:
 Add mismatch
 ============
 | This example shows how to add device mismatch to a neural network with one input neuron connected to 1000 output neurons.
-| Once our population is created, we will add device mismatch to the selected parameters by specifying a dictionary with parameter names as keys and mismatch standard deviation as values.
-The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.py``
+| Once our population is created, we will add device mismatch to the selected parameters by specifying a dictionary with parameter names as keys and mismatch standard deviation as values. 
+The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.py``.
 | Here neuron and synapse selected parameters are specified in ``mismatch_neuron_param`` and ``mismatch_synap_param`` respectively.
 
 .. code-block:: python
@@ -1323,7 +1323,7 @@ The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.
 
 | This choice will add variability to the neuron refractory period (``refP``) and to the synaptic weight (``baseweight``), with a standard deviation of 20% of the current value for both parameters.
 | Let's first create the input SpikeGeneratorGroup, the output layer and the synapses.
-Notice that a constant input current has been set for the output neurons.
+| Notice that a constant input current has been set for the output neurons.
 
 .. code-block:: python
 

@@ -9,8 +9,6 @@ Created on Thu Jun  7 17:18:17 2018
 import time
 from brian2 import ms, prefs, defaultclock
 
-import pyqtgraph as pg
-from pyqtgraph import QtGui
 from teili.building_blocks.threeway import Threeway
 from teili.tools.three_way_kernels import A_plus_B_equals_C
 from teili import TeiliNetwork

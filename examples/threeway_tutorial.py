@@ -21,14 +21,17 @@ defaultclock.dt = 0.1 * ms
 
 #==========Threeway building block test=========================================
 
-duration = 100 * ms
+duration = 500 * ms
 
 #===============================================================================
 # create the network
 
 exampleNet = TeiliNetwork()
 
-TW = Threeway('TestTW', hidden_layer_gen_func = A_plus_B_equals_C, cutoff = 2, monitor=True)
+TW = Threeway('TestTW',
+              hidden_layer_gen_func = A_plus_B_equals_C,
+              cutoff = 2,
+              monitor=True)
 
 exampleNet.add(TW)
 
@@ -57,7 +60,7 @@ print("A = %g, B = %g, C = %g" % (a,b,c))
 #===============================================================================
 #Visualization
 
-TW.plot()
+TW_plot = TW.plot()
 
 
 

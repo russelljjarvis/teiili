@@ -7,29 +7,22 @@ Created on Wed Apr 25 16:09:49 2018
 """
 
 import numpy as np
-from pyqtgraph import QtGui, QtCore
-from pyqtgraph.parametertree import Parameter, ParameterTree
+from pyqtgraph import QtGui
 import pyqtgraph as pg
-import sys
 
 from brian2 import ms, SpikeMonitor,\
     prefs, PoissonGroup, Hz
 
-from teili.tools.plotting import plot_spikemon_qt
-
 from teili.building_blocks.building_block import BuildingBlock
 from teili.building_blocks.wta import WTA
-from teili.core.groups import Neurons, Connections
+from teili.core.groups import Connections
 import teili.core.tags as tags_parameters 
-from teili.tools.live import PlotGUI
 
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 
 from teili.tools.three_way_kernels import A_plus_B_equals_C
 from teili.tools.visualizer.DataControllers import Rasterplot
-
-import time
 
 threeway_params = {}
 
@@ -165,7 +158,8 @@ class Threeway(BuildingBlock):
 
     def set_A(self, value):
         """
-        Sets spiking rates of neurons of the PoissonGroup Inp_A to satisfy a shape of a gaussian bump centered at 'value' between 0 and 1
+        Sets spiking rates of neurons of the PoissonGroup Inp_A to satisfy
+        a shape of a gaussian bump centered at 'value' between 0 and 1
 
         Args:
             value (float): a value to be encoded with an activity bump
@@ -176,7 +170,8 @@ class Threeway(BuildingBlock):
 
     def set_B(self, value):
         """
-        Sets spiking rates of neurons of the PoissonGroup Inp_B to satisfy a shape of a gaussian bump centered at 'value' between 0 and 1
+        Sets spiking rates of neurons of the PoissonGroup Inp_B to satisfy
+        a shape of a gaussian bump centered at 'value' between 0 and 1
 
         Args:
             value (float): a value to be encoded with an activity bump
@@ -187,7 +182,8 @@ class Threeway(BuildingBlock):
 
     def set_C(self, value):
         """
-        Sets spiking rates of neurons of the PoissonGroup Inp_C to satisfy a shape of a gaussian bump centered at 'value' between 0 and 1
+        Sets spiking rates of neurons of the PoissonGroup Inp_C to satisfy
+        a shape of a gaussian bump centered at 'value' between 0 and 1
 
         Args:
             value (float): a value to be encoded with an activity bump
@@ -198,21 +194,24 @@ class Threeway(BuildingBlock):
 
     def reset_A(self):
         """
-        Resets spiking rates of neurons of the PoissonGroup Inp_A to zero (e.g. turns the input A off)
+        Resets spiking rates of neurons of the PoissonGroup Inp_A to zero
+        (e.g. turns the input A off)
         """
         self.Inp_A.rates = np.zeros(self.num_input_neurons) * Hz
         self.value_a = np.NAN
 
     def reset_B(self):
         """
-        Resets spiking rates of neurons of the PoissonGroup Inp_B to zero (e.g. turns the input B off)
+        Resets spiking rates of neurons of the PoissonGroup Inp_B to zero
+        (e.g. turns the input B off)
         """
         self.Inp_B.rates = np.zeros(self.num_input_neurons) * Hz
         self.value_b = np.NAN
 
     def reset_C(self):
         """
-        Resets spiking rates of neurons of the PoissonGroup Inp_A to zero (e.g. turns the input A off)
+        Resets spiking rates of neurons of the PoissonGroup Inp_C to zero
+        (e.g. turns the input C off)
         """
         self.Inp_C.rates = np.zeros(self.num_input_neurons) * Hz
         self.value_c = np.NAN
@@ -232,7 +231,8 @@ class Threeway(BuildingBlock):
     
             Args:
                 measurement_period (ms, optional): Sets the interval back from
-                current moment in time for the spikes to be included into rate calculation
+                current moment in time for the spikes to be included into
+                rate calculation
         """
 
         if self.A.monitor is True and self.B.monitor is True and self.C.monitor is True:
@@ -245,7 +245,8 @@ class Threeway(BuildingBlock):
             return a, b, c
         else:
             raise ValueError(
-                'Unable to compute population vectors, monitoring has been turned off!')
+                'Unable to compute population vectors, monitoring has been\
+                    turned off!')
             
     def plot(self):
         """
@@ -278,14 +279,42 @@ def gen_threeway(name,
     if debug:
         print("Creating WTA's!")
 
-    wta_A = WTA(name + '_wta_A', dimensions=1, num_inputs=3, block_params = block_params, num_neurons=num_input_neurons,
-                num_inh_neurons=int(0.2 * num_input_neurons), cutoff=cutoff, monitor=True, debug=debug)
-    wta_B = WTA(name + '_wta_B', dimensions=1,  num_inputs=3, block_params = block_params, num_neurons=num_input_neurons,
-                num_inh_neurons=int(0.2 * num_input_neurons), cutoff=cutoff, monitor=True, debug=debug)
-    wta_C = WTA(name + '_wta_C', dimensions=1,  num_inputs=3, block_params = block_params, num_neurons=num_input_neurons,
-                num_inh_neurons=int(0.2 * num_input_neurons), cutoff=cutoff, monitor=True, debug=debug)
-    wta_H = WTA(name + '_wta_H', dimensions=2,  num_inputs=3, block_params = block_params, num_neurons=num_input_neurons,
-                num_inh_neurons=int(0.2 * num_hidden_neurons), cutoff=cutoff, monitor=monitor, debug=debug)
+    wta_A = WTA(name + '_wta_A',
+                dimensions=1,
+                num_inputs=3,
+                block_params=block_params,
+                num_neurons=num_input_neurons,
+                num_inh_neurons=int(0.2*num_input_neurons),
+                cutoff=cutoff,
+                monitor=True,
+                debug=debug)
+    wta_B = WTA(name + '_wta_B',
+                dimensions=1, 
+                num_inputs=3,
+                block_params=block_params,
+                num_neurons=num_input_neurons,
+                num_inh_neurons=int(0.2 * num_input_neurons),
+                cutoff=cutoff,
+                monitor=True,
+                debug=debug)
+    wta_C = WTA(name + '_wta_C',
+                dimensions=1,
+                num_inputs=3,
+                block_params=block_params,
+                num_neurons=num_input_neurons,
+                num_inh_neurons=int(0.2 * num_input_neurons),
+                cutoff=cutoff,
+                monitor=True,
+                debug=debug)
+    wta_H = WTA(name + '_wta_H',
+                dimensions=2,
+                num_inputs=3,
+                block_params=block_params,
+                num_neurons=num_input_neurons,
+                num_inh_neurons=int(0.2 * num_hidden_neurons),
+                cutoff=cutoff,
+                monitor=monitor,
+                debug=debug)
     
     sub_blocks = {
         'wta_A': wta_A,
@@ -302,25 +331,34 @@ def gen_threeway(name,
 
 
     # Creating interpopulation synapse groups
-    syn_A_H = Connections(wta_A.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    syn_A_H = Connections(wta_A.groups['n_exc'], wta_H.groups['n_exc'],
+                          equation_builder=synapse_eq_builder(),
                           method="euler", name=name + '_s_A_to_H')
-    syn_H_A = Connections(wta_H.groups['n_exc'], wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    syn_H_A = Connections(wta_H.groups['n_exc'], wta_A.groups['n_exc'],
+                          equation_builder=synapse_eq_builder(),
                           method="euler", name=name + '_s_H_to_A')
-    syn_B_H = Connections(wta_B.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    syn_B_H = Connections(wta_B.groups['n_exc'], wta_H.groups['n_exc'],
+                          equation_builder=synapse_eq_builder(),
                           method="euler", name=name + '_s_B_to_H')
-    syn_H_B = Connections(wta_H.groups['n_exc'], wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    syn_H_B = Connections(wta_H.groups['n_exc'], wta_B.groups['n_exc'],
+                          equation_builder=synapse_eq_builder(),
                           method="euler", name=name + '_s_H_to_B')
-    syn_C_H = Connections(wta_C.groups['n_exc'], wta_H.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    syn_C_H = Connections(wta_C.groups['n_exc'], wta_H.groups['n_exc'],
+                          equation_builder=synapse_eq_builder(),
                           method="euler", name=name + '_s_C_to_H')
-    syn_H_C = Connections(wta_H.groups['n_exc'], wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    syn_H_C = Connections(wta_H.groups['n_exc'], wta_C.groups['n_exc'],
+                          equation_builder=synapse_eq_builder(),
                           method="euler", name= name + '_s_H_to_C')
 
     # Creating input synapse groups
-    wta_A._groups['s_inp_exc'] = Connections(wta_A._groups['spike_gen'], wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    wta_A._groups['s_inp_exc'] = Connections(wta_A._groups['spike_gen'],
+                 wta_A.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name=name + '_s_inp_A')
-    wta_B._groups['s_inp_exc'] = Connections(wta_B._groups['spike_gen'], wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    wta_B._groups['s_inp_exc'] = Connections(wta_B._groups['spike_gen'],
+                 wta_B.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name=name + '_s_inp_B')
-    wta_C._groups['s_inp_exc'] = Connections(wta_C._groups['spike_gen'], wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
+    wta_C._groups['s_inp_exc'] = Connections(wta_C._groups['spike_gen'],
+                 wta_C.groups['n_exc'], equation_builder=synapse_eq_builder(),
                             method="euler", name=name + '_s_inp_C')
 
     interPopSynGroups = {
@@ -432,20 +470,29 @@ def plot_threeway_raster(TW):
     subfig1.setXLink(subfig2)
     subfig3.setXLink(subfig1)
     
-    plot_A = Rasterplot([TW.monitors['spikemon_A']], neuron_id_range=(0,TW.A.num_neurons), title="Population A",
+    plot_A = Rasterplot([TW.monitors['spikemon_A']],
+                        neuron_id_range=(0,TW.A.num_neurons),
+                        title="Population A",
                         ylabel='Neuron ID', xlabel='time, s',
-                  mainfig=mainfig, subfig_rasterplot=subfig1, backend='pyqtgraph', QtApp=app,
-                  show_immediately=False)
+                        mainfig=mainfig, subfig_rasterplot=subfig1,
+                        backend='pyqtgraph', QtApp=app,
+                        show_immediately=False)
     
-    plot_B = Rasterplot([TW.monitors['spikemon_B']], neuron_id_range=(0,TW.B.num_neurons), title="Population B",
+    plot_B = Rasterplot([TW.monitors['spikemon_B']],
+                        neuron_id_range=(0,TW.B.num_neurons),
+                        title="Population B",
                         ylabel='Neuron ID', xlabel='time, s',
-                  mainfig=mainfig, subfig_rasterplot=subfig2, backend='pyqtgraph', QtApp=app,
-                  show_immediately=False)
+                        mainfig=mainfig, subfig_rasterplot=subfig2,
+                        backend='pyqtgraph', QtApp=app,
+                        show_immediately=False)
     
-    plot_C = Rasterplot([TW.monitors['spikemon_C']], neuron_id_range=(0,TW.C.num_neurons), title="Population C",
+    plot_C = Rasterplot([TW.monitors['spikemon_C']],
+                        neuron_id_range=(0,TW.C.num_neurons),
+                        title="Population C",
                         ylabel='Neuron ID', xlabel='time, s',
-                  mainfig=mainfig, subfig_rasterplot=subfig3, backend='pyqtgraph', QtApp=app,
-                  show_immediately=True)
+                        mainfig=mainfig, subfig_rasterplot=subfig3,
+                        backend='pyqtgraph', QtApp=app,
+                        show_immediately=True)
 
     return mainfig
 
@@ -459,8 +506,8 @@ def gaussian(mu, sigma, amplitude, input_size):
     coarse = int(mu - shift)
 #    dist = amplitude*np.exp(-np.power((i - shift - int(input_size/2))/input_size, 2.) / (2 * np.power(sigma, 2.)))
     dist = amplitude*np.max([np.exp(-np.power((i - shift -
-                                    int(input_size/2))/input_size, 2.) /
-                                    (2 * np.power(sigma, 2.))),
+                            int(input_size/2))/input_size, 2.) /
+                            (2 * np.power(sigma, 2.))),
             np.exp(-np.power((i - shift - int(input_size/2))/input_size+1, 2.) /
                        (2 * np.power(sigma, 2.)))], axis = 0)
     return dist[(int(input_size/2) - coarse + i)%input_size]

@@ -56,7 +56,7 @@ input_synapse = Connections(input_spikegenerator, test_neurons1,
 input_synapse.connect(True)
 
 test_synapse = Connections(test_neurons1, test_neurons2,
-                           equation_builder=synapse_model,
+                           equation_builder=synapse_obj,
                            name="testSyn2")
 test_synapse.connect(True)
 
@@ -164,7 +164,7 @@ p1.plot(x=np.asarray(spikemon_input.t / ms), y=np.asarray(spikemon_input.i),
         symbolSize=7, symbolBrush=(255, 255, 255))
 
 # Input synapses
-for i, data in enumerate(np.asarray(statemon_input_synapse.Ie_syn)):
+for i, data in enumerate(np.asarray(statemon_input_synapse.I_syn)):
     name = 'Syn_{}'.format(i)
     p2.plot(x=np.asarray(statemon_input_synapse.t / ms), y=data,
             pen=pg.mkPen(colors[3], width=2), name=name)
@@ -180,7 +180,7 @@ if hasattr(statemon_test_neurons1, 'Vm'):
                 pen=pg.mkPen(colors[6], width=2))
 
 # Output synapses
-for i, data in enumerate(np.asarray(statemon_test_synapse.Ie_syn)):
+for i, data in enumerate(np.asarray(statemon_test_synapse.I_syn)):
     name = 'Syn_{}'.format(i)
     p4.plot(x=np.asarray(statemon_test_synapse.t / ms), y=data,
             pen=pg.mkPen(colors[1], width=2), name=name)

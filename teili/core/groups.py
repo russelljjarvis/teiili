@@ -172,12 +172,16 @@ class TeiliGroup(Group):
         """
         return self.equation_builder.keywords['model']
 
-    def add_mismatch(self, std_dict, seed=None, verbose=False):
+    def add_mismatch(self, std_dict = None, seed=None, verbose=False):
         """
         This function is a wrapper for the method _add_mismatch_param() to add mismatch
         to a dictionary of parameters specified in the input dictionary (std_dict).
         Mismatch is drawn from a Gaussian distribution with mean equal to
         the parameter's current value.
+
+        If no dictionary is given, 20% mismatch is added to all the parameters of
+        the model except variables specified in the no_mismatch_keys list.
+
 
         Note:
             if you want to specify also lower and upper bound of the mismatch distribution
@@ -211,6 +215,16 @@ class TeiliGroup(Group):
             the current bias values:
             >>> testNeurons.add_mismatch({'Itau': 0.1})
         """
+        no_mismatch_keys = ['Iconst','kn','kp','Ut_syn','Io','I_syn','kn_syn','kp_syn','Io_syn']
+
+        if std_dict is  None:
+            std_dict = {}
+            parameters = list(self.equation_builder.keywords['parameters'].keys())
+
+            for i in parameters:
+                if i not in no_mismatch_keys:
+                    std_dict[i] = 0.2
+
 
         for parameter, std in std_dict.items():
              self._add_mismatch_param(parameter, std, seed=seed)

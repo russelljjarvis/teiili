@@ -38,7 +38,7 @@ The keywords used in the example and the values are explained below:
 
 * **adaptation**: Determines what type of adaptive feedback should be used. Can be ``calciumfeedback`` or ``None``.
 * **integration_mode**: Determines what how the neuron integrates up to spike-generation. Can be ``linear`` or ``exponential``.
-* **leak**: Enables lead integration. Can be `leaky` or ``non_leaky``.
+* **leak**: Enables lead integration. Can be ``leaky`` or ``non_leaky``.
 * **position**: To enable spatial-like position indices on neuron. Can be ``spatial`` or ``None``.
 * **noise**: Determines what type of noise. Can be ``gaussian_noise`` or ``None``.
 

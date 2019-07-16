@@ -30,7 +30,8 @@ from teili.tools.random_sampling import Randn_trunc
 from teili import constants
 from scipy import size
 from scipy.stats import truncnorm
-
+from teili.models.parameters.no_mismatch_parameters import no_mismatch_neuron, \
+no_mismatch_synapse
 
 class TeiliGroup(Group):
     """just a bunch of methods that are shared between neurons and connections
@@ -180,7 +181,7 @@ class TeiliGroup(Group):
         the parameter's current value.
 
         If no dictionary is given, 20% mismatch is added to all the parameters of
-        the model except variables specified in the no_mismatch_keys list.
+        the model except variables specified in the no_mismatch_parameter file.
 
 
         Note:
@@ -215,15 +216,15 @@ class TeiliGroup(Group):
             the current bias values:
             >>> testNeurons.add_mismatch({'Itau': 0.1})
         """
-        no_mismatch_keys = ['Iconst','kn','kp','Ut_syn','Io','I_syn','kn_syn','kp_syn','Io_syn']
 
         if std_dict is  None:
             std_dict = {}
             parameters = list(self.equation_builder.keywords['parameters'].keys())
 
             for i in parameters:
-                if i not in no_mismatch_keys:
-                    std_dict[i] = 0.2
+                if i not in no_mismatch_neuron:
+                    if i not in no_mismatch_synapse:
+                        std_dict[i] = 0.2
 
 
         for parameter, std in std_dict.items():

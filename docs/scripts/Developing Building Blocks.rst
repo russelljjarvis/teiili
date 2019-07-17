@@ -29,6 +29,6 @@ Important Notes:
 
 - There is a fundamental difference between the attributes ``groups`` and ``_groups``. ``_groups``  is a dictionary containing the objects specific to that ``BuildingBlock``. ``groups`` is a property of the ``BuildingBlock`` class which returns all ``_groups`` included in the ``BuildingBlock`` and its ``sub_blocks``.
 
-- When overwriting an existing population in one of the ``sub_blocks._groups``, remember to re-initialize all the connections and monitors regarding that population. Which will now be specific to the parent class.
+- When overwriting an existing population in one of the ``sub_blocks._groups``, remember to re-initialize all the ``Connections`` and ``monitors`` regarding that population. Which will now be specific to the parent class.
 
 Have fun developing your own ``BuildingBlocks`` and bringing neuroscience forward. :)

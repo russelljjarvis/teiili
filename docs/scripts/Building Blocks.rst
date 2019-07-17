@@ -5,8 +5,8 @@ Building Blocks
 The core of the motivation for the development of teili was to provide users
 with a toolbox to easily build and combine neural ``BuildingBlocks`` which represent
 basic algorithms implemented using neurons and synapses.
-In order to provide these functionalities all ``BuildingBlocks`` share the same
-parent class which amongst other provide I/O groups and properties to stack
+In order to provide these functionalities, all ``BuildingBlocks`` share the same
+parent class which, amongst other things, provides I/O groups and properties to combine
 ``BuildingBlocks`` hierarchically.
 
 BuildingBlock
@@ -30,7 +30,7 @@ Attributes:
 * **output_groups** (dictionary): Dictionary containing all possible groups which are potential outputs
 * **hidden_groups** (dictionary): Dictionary containing all remaining groups which are neither inputs nor outputs
 
-And as each ``BuildingBlock`` inherits from this parent class all ``BuildingBlocks`` share the same attributes and properties.
+And as each ``BuildingBlock`` inherits from this parent class, all ``BuildingBlocks`` share the same attributes and properties.
 To assure this every ``BuildingBlock`` initialises the ``BuildingBlock`` class:
 
 .. code-block:: python
@@ -43,11 +43,12 @@ To assure this every ``BuildingBlock`` initialises the ``BuildingBlock`` class:
                          debug,
                          monitor)
 
-Furthermore, as described above as soon the parent class is initialised each ``BuildingBlock`` has a set of dictionaries which handle to I/O and different ``Neurons`` and ``Connections`` groups.
+Furthermore, as described above, as soon the parent class is initialised, each
+``BuildingBlock`` has a set of dictionaries which handle I/O to other ``Neuron`` and ``Connection`` groups.
 
 The ``BuildingBlock`` class comes with a set of ``__setter__`` and ``__getter__`` functions for collecting all ``groups`` involved or identifying a subset of groups which share the same `_tags`_
 
-To retrieve all ``Neuron``, ``Connection``, ``SpikeGeneratorGroup`` etc. simply call the ``groups`` property
+To retrieve all ``Neuron``s, ``Connection``s, ``SpikeGeneratorGroup``s etc. simply call the ``groups`` property:
 
 .. code-block:: python
 
@@ -57,7 +58,7 @@ To retrieve all ``Neuron``, ``Connection``, ``SpikeGeneratorGroup`` etc. simply 
 Tags
 ======================
 
-Each ``TeiliGroup`` has an attribute called ``_tags``. The idea behind the ``_tags`` are that the user can easily define a dictionary and use this dictionary to gather all ``TeiliGroups`` which share the same ``_tags``.
+Each ``TeiliGroup`` has an attribute called ``_tags``. The idea behind the ``_tags`` are that the user can easily define a dictionary and use this dictionary to obtain all ``TeiliGroups`` which share the same ``_tags``.
 
 Tags should be set as the network expands and the functionality changes.
 
@@ -109,7 +110,7 @@ or added:
 
 Getting Tags
 --------------------
-Specific groups can filtered using tags:
+Specific groups can be filtered using specific tags:
 
 .. code-block:: python
 
@@ -184,7 +185,7 @@ The WTA ``BuildingBlock`` comes in two slightly different versions. The versions
 2 Dimensional WTA
 ---------------
 
-To generate a 2 dimensional WTA population you can do the following.
+To generate a 2-dimensional WTA population you can do the following:
 
 .. code-block:: python
       # The number of neurons in your WTA population.
@@ -213,7 +214,7 @@ Changing a certain ``Connections`` group from being `static` to `plastic`:
                                                 name=my_wta._groups['s_exc_exc'].name)
       my_wta._groups['s_exc_exc'].connect(True)
 
-Now we changed the standard DPI synapse for the recurrent connection within a WTA population to an All-to-All STDP-based DPI synapse. In order to initialize the plastic weight ``w_plast`` we need to do:
+Now we replaced the standard DPI synapse for the recurrent connection within a WTA population with an All-to-All STDP-based DPI synapse. In order to initialize the plastic weight ``w_plast`` we need to do:
 
 .. code-block:: python
 
@@ -304,8 +305,8 @@ Online Clustering of Temporal Activity (OCTA)
 =============================================
 
 Online Clustering of Temporal Activity (OCTA) is a second generation ``BuildingBlock``:
-it uses multiple WTA networks recurrently connected to create a cortex
-inspired microcircuit that, leveraging the spike timing
+it uses multiple WTA networks recurrently connected to create a cortex-inspired 
+microcircuit that, leveraging the spike timing
 information, enables investigations of emergent network dynamics `[1]`_ (Download_).
 
 .. figure:: fig/OCTA_module.png
@@ -326,16 +327,16 @@ Parameters for the network are stored in two dictionaries located in ``tools/oct
 
 The WTA keys are explained above, the OCTA keys are defined as:
 
-* **duration** (int): Duration of the simulation
-* **revolutions** (int): Number of times input is presented
+* **duration** (int): Duration of the simulation.
+* **revolutions** (int): Number of times input is presented.
 * **num_neurons** (int): Number of neurons in the compression WTA group. Keep in mind it is a 2D WTA.
 * **num_input_neurons** (int): Number of neurons in the projection and prediction WTA.
-* **distribution** (bool): Distribution from which to initialize the weights. Gamma (1) or Normal (0) distributions.
-* **dist_param_init** (int): Shape for Gamma distribution or mean of Normal distribution to be used at initialization.
-* **scale_init** (int): Scale for Gamma distribution or std of Normal distribution.
-* **dist_param_re_init** (int): Shape of Gamma distribution or mean of Normal distribution used during the run regular functions.
-* **scale_re_init** (int): Scale for Gamma distribution or std of Normal distribution used during the run regular functions.
-* **re_init_threshold** (float): Parameter between 0 and 0.5. The weights gets reinitialized if the mean weight of a synapse is below the given value or above (1- re_init_threshold).
+* **distribution** (bool): Distribution from which to initialize the weights. Gamma (1) or normal (0) distributions.
+* **dist_param_init** (int): Shape for gamma distribution or mean of normal distribution to be used at initialization.
+* **scale_init** (int): Scale for gamma distribution or std of normal distribution.
+* **dist_param_re_init** (int): Shape of gamma distribution or mean of normal distribution used during the run regular functions.
+* **scale_re_init** (int): Scale for gamma distribution or std of normal distribution used during the run regular functions.
+* **re_init_threshold** (float): Parameter between 0 and 0.5. The weights gets reinitialized if the mean weight of a synapse is below the given value or above ``1 - re_init_threshold``.
 * **buffer_size_plast** (int): Size of the buffer of the activity dependent regularization.
 * **noise_weight** (int): Synaptic weight the noise is connected with.
 * **variance_th_c** (float): Variance threshold for the compression group. Parameter included in the  ``activity`` synapse template.
@@ -345,7 +346,7 @@ The WTA keys are explained above, the OCTA keys are defined as:
 * **decay** (int):  Decay parameter of the decay in the activity dependent run_regular.
 * **weight_decay** (string): Type of weight decay ('global'/'local').
 * **seed** (int): Seed for mismatch. Default is 42.
-* **tau_stdp** (int): Time constant in ms, that defines the stdp plasticty.
+* **tau_stdp** (int): Time constant in ms that defines the STDP plasticty.
 
 Initialisation of the building block goes as follows:
 
@@ -403,3 +404,4 @@ The additional keyword arguments are defined as:
 .. __tags: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#tags
 .. _[1]: https://www.zora.uzh.ch/id/eprint/177970/
 .. _Download: https://www.dropbox.com/s/0ynid1730z7txfh/spike_based_computation.pdf?dl=1
+.. [1] Milde, Moritz, PhD thesis, "Spike-Based Computational Primitives for Vision-Based Scene Understanding", University of Zurich, 2019.

@@ -9,12 +9,12 @@ we provide users with an example of this in ``teili/building_blocks/octa.py`` an
 Every building block inherits from the class ``BuildingBlocks`` which has attributes
 such as ``sub_blocks``, ``input_groups``, ``output_groups`` and ``hidden_groups``.
 
-Recommended practices for creating custom ``BuildingBlocks`` go as follow:
+Recommended practices for creating custom ``BuildingBlocks`` are as follow:
 
 - Keep the class initialization as concise as possible.
 - Create a generation function which implements the desired connectivity.
 - Label correctly ``sub_blocks``, ``input_groups``, ``output_groups`` and ``hidden_groups``.
-- Remember to ``_set_tags`` as you expand the network and its functionality, it really helps to keep track of the properties of individual groups.
+- Remember to ``_set_tags`` as you expand the network and its functionality; it really helps to keep track of the properties of individual groups.
 
 Important Notes:
 
@@ -31,4 +31,4 @@ Important Notes:
 
 - When overwriting an existing population in one of the ``sub_blocks._groups``, remember to re-initialize all the ``Connections`` and ``monitors`` regarding that population. Which will now be specific to the parent class.
 
-Have fun developing your own ``BuildingBlocks`` and bringing neuroscience forward. :)
+Have fun developing your own ``BuildingBlocks`` and advancing neuroscience! :)

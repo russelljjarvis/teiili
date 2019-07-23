@@ -16,10 +16,11 @@ Todo:
 # @Date:   2017-07-27 10:46:44
 
 
+import copy
+from collections import OrderedDict
+
 import numpy as np
 from brian2.core.names import Nameable
-from collections import OrderedDict
-import copy
 
 
 class BuildingBlock(Nameable):

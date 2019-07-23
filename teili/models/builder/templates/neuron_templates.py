@@ -381,24 +381,24 @@ modes = {'current': i_model_template, 'voltage': v_model_template}
 
 current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
                          'leaky': none, 'non_leaky': none, 'quadratic': none,
-                         'spatial': spatial, 'gaussian_noise': i_noise, 'none': none,
+                         'spatial': spatial, 'gaussian': i_noise, 'none': none,
                          'linear': none, 'gain_modulation' : i_gm, 'activity' : i_act}
 
 voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_exp_current,
                          'quadratic': v_quad_current,
                          'leaky': v_leak, 'non_leaky': none,
-                         'spatial': spatial, 'gaussian_noise': v_noise,
+                         'spatial': spatial, 'gaussian': v_noise,
                          'none': none, 'linear': none}
 
 current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
                       'quadratic': none_params, 'exponential': i_exponential_params,
                       'leaky': none_params, 'non_leaky': i_non_leaky_params,
-                      'spatial': none_params, 'gaussian_noise': i_noise_params,
+                      'spatial': none_params, 'gaussian': i_noise_params,
                       'none': none_params, 'linear': none_params,
                       'gain_modulation' : none_params, 'activity' : none_params}
 
 voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': v_adapt_params,
                       'exponential': v_exp_current_params, 'quadratic': v_quad_params,
                       'leaky': v_leak_params, 'non_leaky': none_params,
-                      'spatial': none_params, 'gaussian_noise': none_params,
+                      'spatial': none_params, 'gaussian': none_params,
                       'none': none_params, 'linear': none_params}

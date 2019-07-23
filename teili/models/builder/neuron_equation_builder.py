@@ -70,14 +70,14 @@ class NeuronEquationBuilder():
                 project to the target neuron population.
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
             **kwargs (str, optional): dictionary of equations such as:
-                 adaptation (str, optional): What type of adaptive feedback should be used.
+                adaptation (str, optional): What type of adaptive feedback should be used.
                      So far only calciumFeedback is implemented.
                 integration_mode (str, optional): Sets if integration up to spike-generation is
                    linear or exponential.
                 leak (str, optional): Enables leaky integration.
                 position (str, optional): To enable spatial-like position indices on neuron.
                 noise (str, optional): NOT YET IMPLMENTED! This will in the future allow independent
-                mismatch-like noise to be added on each neuron.
+                    mismatch-like noise to be added on each neuron.
                 refractory (str, optional): Refractory period of the neuron.
         """
         self.verbose = verbose
@@ -97,7 +97,7 @@ class NeuronEquationBuilder():
                     choose between 'current' or 'voltage'.
 
                     You can choose then what module to load for your neuron,
-                    the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussianNoise'.
+                    the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussian'.
                     If you don't want to load a module just use the keyword 'none'
                     example: NeuronEquationBuilder('current','none','exponential','leak','none','none'.....)
 

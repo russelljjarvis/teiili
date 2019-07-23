@@ -39,8 +39,8 @@ The keywords used in the example and the values are explained below:
 * **adaptation**: Determines what type of adaptive feedback should be used. Can be ``calciumfeedback`` or ``None``.
 * **integration_mode**: Determines how the neuron integrates up to spike-generation. Can be ``linear`` or ``exponential``.
 * **leak**: Enables leaky integration. Can be ``leaky`` or ``non_leaky``.
-* **position**: To enable spatial-like position indices on neuron. Can be ``spatial`` or ``None``.
-* **noise**: Determines what type of noise. Can be ``gaussian_noise`` or ``None``.
+* **position**: To enable spatial-like position indices (x, y) about the position of a neuron in space. Can be ``spatial`` or ``None``.
+* **noise**: Determines what type of distribution is used to inject noise into the neuron. Can be ``gaussian`` or ``None``.
 
 Custom keywords (such as gain_modulation or activity_modulation) can be added by defining a custom equation template in ``teili/models/builder/templates/neuron_templates.py`` and adding the keyword to either the ``current_equation_sets`` or to the ``voltage_equation_sets`` dictionary.
 When defining a new neuron model, import the new feature by passing the newly constructed keyword to the ``NeuronEquationBuilder``.

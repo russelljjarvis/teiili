@@ -9,7 +9,6 @@ Created on Wed Jun 26 12:58:50 2019
 from brian2 import ms
 from brian2 import SpikeGeneratorGroup, SpikeMonitor
 from brian2 import prefs
-
 import numpy as np
 
 from teili import TeiliNetwork
@@ -21,15 +20,12 @@ from teili.models.neuron_models import OCTA_Neuron as octa_neuron
 from teili.building_blocks.building_block import BuildingBlock
 from teili.building_blocks.wta import WTA
 from teili.stimuli.testbench import WTA_Testbench, OCTA_Testbench
-
-
-from teili.models.parameters.octa_params import *
-
-from teili.tools.octa_tools import add_decay_weight,\
-    add_weight_re_init, add_weight_re_init_ipred,\
-    add_proxy_activity,\
-    add_weight_pred_decay, add_bb_mismatch, add_weight_init
-
+from teili.models.parameters.octa_params import wta_params, octa_params,\
+    mismatch_neuron_param, mismatch_synap_param
+from teili.tools.octa_tools import add_weight_init, add_weight_re_init,\
+    add_weight_re_init_ipred,\
+    add_decay_weight, add_weight_pred_decay,\
+    add_proxy_activity, add_bb_mismatch
 from teili.tools.octa_tools import  save_monitor, load_monitor,\
     save_weights, load_weights, weight_init
 

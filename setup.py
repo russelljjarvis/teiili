@@ -138,7 +138,7 @@ setup(
         'teili.tools.visualizer.DataControllers',
         'teili.tools.visualizer.DataModels',
         'teili.tools.visualizer.DataViewers',
-        'teili.tools.run_regularly'
+        'teili.tools.run_regularly',
     ],
 
 

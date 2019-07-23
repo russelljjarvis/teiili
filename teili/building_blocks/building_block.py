@@ -154,14 +154,14 @@ class BuildingBlock(Nameable):
         """
         tags = copy.deepcopy(tags)
         if type(target_group) == str:
-            if hasattr(self._groups[target_group], "_tags"):
+            if hasattr(self._groups[target_group], '_tags'):
                 self._groups[target_group]._tags.update(tags)
             else:
                 self._groups[target_group]._tags = {}
                 self._groups[target_group]._tags.update(tags)
 
         else:
-            if hasattr(target_group, "_tags"):
+            if hasattr(target_group, '_tags'):
                 target_group._tags.update(tags)
             else:
                 target_group._tags = {}

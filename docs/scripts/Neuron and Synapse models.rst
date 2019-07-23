@@ -64,10 +64,10 @@ An example of the ``neuron_model`` class is shown below:
 The ``NeuronEquationBuilder`` has following keyword arguments:
 
 * **base_unit**: Either set to ``current`` or ``voltage`` depending whether you want to simulate current-based hardware neuron models
-* **adaptation**: Toggles spike-frequency adaptation mechanism in ``neuron_model``
+* **adaptation**: Toggles spike-frequency adaptation mechanism in ``neuron_model``. Can either be set to ``None`` or ``calcium_feedback``.
 * **integration_mode**: Can be set to ``linear``, ``quadratic`` or ``exponential``
-* **leak**: Toggles leaky integration
-* **position**: Adds positional x, y attribute to neuron in order to spatially arrange the neurons
+* **leak**: Toggles leaky integration. Possible values are ``leaky`` or ``non_leaky``.
+* **position**: Adds positional x, y attribute to neuron in order to spatially arrange the neurons. Once the ``neuron_model`` has these attributes the user can access and set them by ``neuron_obj.x``. 
 * **noise**: Adds constant noise to ``neuron_model``
 
 The reason behind this is that the ``EquationBuilder`` has access to a set of templates defined in ``teili/models/builder/templates/`` such that the same neuron model can easily be simulated with and without leak for example. Of course we offer the possibility of a work-around so that statically defined models can be simulated. For details please refer to the tutorial_

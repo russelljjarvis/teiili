@@ -33,21 +33,18 @@ prefs.codegen.target = "numpy"
 
 
 class Octa(BuildingBlock):
+    """The Online Clustering of Temporal Activity (OCTA) `BuildingBlock`.
+    This neural algorthm is designed to cluster incoming spatio-temporal patterns
+    of asynchronous streams of events as provided by event-driven sensors such
+    as the Dynamic Vision Sensor (DVS).
 
-    """The Online Clustering of Temporal Activity BuildingBlock.
-    This neural algorthm is designed to extract spatio tempoel meaning of incoming event-driven input
-
-    This module provides a hierarchical building block called OCTA.
-                -Online Clustering of Temporal Activity-
-
+    This class provides a basic hierarchical `BuildingBlock` called OCTA.
+    For more information please refer to our [Documentation](https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#online-clustering-of-temporal-activity-octa)
     This is a level 2 hierarchical building block, it uses basic building blocks such
     as the WTA.
 
     If you want to change the default parameters of your building block
         you need to define a dictionary, which you pass to the building_block:
-
-    Attributes:
-        standalone_params (TYPE): Description
     """
 
     def __init__(self, name='octa*',
@@ -64,15 +61,24 @@ class Octa(BuildingBlock):
         connectivity scheme.
 
         Args:
-            name (str): Name of the OCTA BuildingBlock
+            name (str): Name of the OCTA BuildingBlock.
             neuron_eq_builder (class, optional): neuron class as imported from
                 models/neuron_models.
-            wta_params (Dict, optional): WTA parameter dictionary
-            octa_params (Dict, optional): OCTA parameter dictionary
-            num_input_neurons (int, optional): Size of input population.
+            wta_params (Dict, optional): WTA parameter dictionary.
+            octa_params (Dict, optional): OCTA parameter dictionary.
+            num_input_neurons (int, optional): Size of input population. The
+                default is set 10 as OCTA was originally designed to learn
+                visual receptive fields from 10 x 10 patches. Note that the
+                number provided will be internally squared, meaning that
+                `num_input_neurons=10` will result in a input of 10x10.
             num_neurons (int, optional): Size of WTA neuron population.
-            external_input (bool, optional): Flag to include an input in the form of a rotating bar
-            noise (bool, optional): Flag to include a noise
+                Theoretically this number can be bigger than
+                `num_input_neurons`. However, as the objective is to cluster
+                the number is set to be by default smaller than
+                `number_input_neurons`.
+            external_input (bool, optional): Flag to include an input in the
+                form of a rotating bar.
+            noise (bool, optional): Flag to include a noise source.
             monitor (bool, optional): Flag to auto-generate spike and state
                 monitors.
             debug (bool, optional): Flag to gain additional information.
@@ -115,7 +121,6 @@ class Octa(BuildingBlock):
 
         set_OCTA_tags(self, self._groups)
 
-
 def gen_octa(groupname,
              neuron_eq_builder=octa_neuron,
              num_input_neurons=10,
@@ -132,71 +137,96 @@ def gen_octa(groupname,
              noise=True,
              monitor=True,
              debug=False):
-    """
-    Generator function for the OCTA building block
+    """ Generates an OCTA `BuildingBlock`.
 
     Args:
-            groupname (str): Name of the OCTA BuildingBlock
+            groupname (str): Name of the OCTA BuildingBlock.
             neuron_eq_builder (class, optional): Neuron model class as
-                imported from teili.models.neuron_models
+                imported from teili.models.neuron_models.
             num_input_neurons (int, optional): Number of neurons of the input.
-                Note that this number will be squared, e.g. 10 --> 100 input neurons
-            num_neurons (int, optional): Number of neurons in the compression layer.
-                Note that this number will be squared, e.g. 7 --> 49 neurons
-            wta_params (dict, optional): Dictionary of parameters for the WTA BB
-            distribution (str, optional): Parameter to determine the random distribution
-                to be used to initialise the weights. Possible 'gaussian' or 'gamma'
-            dist_param_init (float, optional): Mean of distribution in case of 'gaussian'
-                or shape parameter k for 'gamma' distribution
-            scale_init (float, optional): Standard deviation in case of 'gaussian'
-                or scale parameter sigma for 'gamma' distribution
-            dist_param_re_init (float, optional): Mean of distribution in case of 'gaussian'
-                or shape parameter k for 'gamma' distribution
-            scale_re_init (float, optional): Standard deviation in case of 'gaussian'
-                or scale parameter sigma for 'gamma' distribution
-            re_init_threshold (float, optional): Threshold below which weights are re-initialised
-            buffer_size_plast (int, optional): Parameter to set the size of the buffer for
-                adctivity dependent plasticity rule. Meaning how many samples are considered to
-                calculate the activity proxy of post synaptic neurons
-            noise_weight (float, optional): Synaptic strength of poisson noise SpikeGenerator
-            variance_th_c (float, optional): Mean of distribution to initialise the reference
-                values for activity dependent plasticity of the compression layer.
-                The reference values are sampled from a uniform distribution.
-            variance_th_p (float, optional): Mean of distribution to initialise the reference
-                values for activity dependent plasticity of the prediction layer.
-                The reference values are sampled from a uniform distribution.
-            learning_rate (float, optional): Learning rate for excitatory synapses
-            inh_learning_rate (float, optional): Learning rate for inhibitory synapses
-            decay (int, optional): Time constant for decay of exponentioally weighted activity proxy
-            decay_strategy (str, optional): Weight decay strategy. Either 'global' which decays weight
-                based o fixed time interval, or 'local' which performs event-driven weight decay
-            tau_stdp (float ms, optional): Time constant for STDP window
-            seed (int, optional): Seed to initialise random distribution from which
-                the mismatch is sampled
-            external_input (bool, optional): Flag to either provide external input to the OCTA block
-            noise (bool, optional): Flag to connect poisson noise generator
-            monitor (bool, optional): Flag to spawn SpikeMonitors
-            debug (bool, optional): Flag to print more debug information
+                Note that this number will be squared, e.g. 10 --> 100 input
+                neurons.
+            num_neurons (int, optional): Number of neurons in the compression
+                layer. Note that this number will be squared, e.g. 7 --> 49
+                neurons.
+            wta_params (dict, optional): Dictionary of parameters for the
+                WTA `BuildingBlock`.
+            distribution (str, optional): Parameter to determine the random
+                distribution to be used to initialise the weights. Possible
+                values are 'gaussian' or 'gamma'.
+            dist_param_init (float, optional): Mean of distribution to
+                initialise the synaptic weights in case of 'gaussian' or
+                shape parameter k for 'gamma' distribution.
+            scale_init (float, optional): Standard deviation of distribution
+                to initialise synaptic weights in case of 'gaussian' or
+                scale parameter sigma for 'gamma' distribution.
+            dist_param_re_init (float, optional): Mean of distribution to
+                re-initialise synaptic weights in case of 'gaussian' or
+                shape parameter k for 'gamma' distribution.
+            scale_re_init (float, optional): Standard deviation of
+                distribution to re-initialise synaptic weights in case of
+                'gaussian' or scale parameter sigma for 'gamma' distribution.
+            re_init_threshold (float, optional): Threshold below which
+                weights are re-initialised.
+            buffer_size_plast (int, optional): Parameter to set the size of
+                the buffer for activity dependent plasticity rule. The size
+                of the buffer determines how many samples are considered in
+                order to calculate the activity proxy of post synaptic
+                neurons.
+            noise_weight (float, optional): Synaptic strength of Poisson
+                noise SpikeGenerator.
+            variance_th_c (float, optional): Mean of distribution to
+                initialise the reference values for activity dependent
+                plasticity of the compression layer. The reference values are
+                sampled from a uniform distribution.
+            variance_th_p (float, optional): Mean of distribution to
+                initialise the reference values for activity dependent
+                plasticity of the prediction layer. The reference values are
+                sampled from a uniform distribution.
+            learning_rate (float, optional): Learning rate for excitatory
+                synapses.
+            inh_learning_rate (float, optional): Learning rate for inhibitory
+                synapses.
+            decay (int, optional): Time constant for decay of exponentionally
+                weighted activity proxy.
+            decay_strategy (str, optional): Weight decay strategy. Either
+                'global' which decays weight based on a fixed time interval,
+                on 'local' which performs event-driven weight decay.
+            tau_stdp (float ms, optional): Time constant for STDP window.
+            seed (int, optional): Seed to initialise random distribution
+                from which the mismatch is sampled.
+            external_input (bool, optional): Flag to connect an external
+                input to the OCTA block. If set to `False` the user is
+                expected to connect another neuron population.
+            noise (bool, optional): Flag to connect poisson noise generator.
+            monitor (bool, optional): Flag to spawn SpikeMonitors.
+            debug (bool, optional): Flag to print more debug information.
 
     Returns:
         sub_blocks (dictionary): Keys to all sub_blocks of the network
-        _groups (dictionary): Keys to all neuron and synapse groups specific to this BB.
-        monitors (dictionary): Keys to all spike and state monitors specific to this BB.
+        _groups (dictionary): Keys to all neuron and synapse groups
+            specific to this BB.
+        monitors (dictionary): Keys to all spike and state monitors specifics
+            to this BB.
+        standalone_params (dictionary): Not implemented at the moment as
+            OCTA depends on `run_regularly` functions which are not
+            supported.
 
     Functional information about the network:
-            The OCTA network is an implementation of the canonical microcircuit found in the
-            cortex levareging temporal information to extract meaning from the input data.
-            It consists of two WTA networks (compression and prediction) connected in a recurrent
-            manner (figure of connectivity can be found in the docs).
-            Every building block in the teili implementation has a cortical counterpart for which
-            the connectivity and function is preserved:
-                compression['n_proj'] : Layer 4
-                compression['n_exc'] : Layer 2/3
-                prediction['n_exc'] : Layer 5/6
+        The OCTA network is an implementation of the canonical microcircuit
+        found in the cortex leveraging temporal information to extract
+        meaning from the input data. It consists of two WTA networks
+        (compression and prediction) connected in a recurrent manner
+        (figure of connectivity can be found in the docs).
+        Every building block in the teili implementation has a cortical
+        counterpart for which the connectivity and function is preserved:
+            compression['n_proj'] : Layer 4
+            compression['n_exc'] : Layer 2/3
+            prediction['n_exc'] : Layer 5/6
 
-        Given a high dimensional input in L2/3 the network extracts in the recurrent connections of
-        L4 a lower dimensional representation of temporal dependencies by learniing spatio-temporal features.
-
+        Given a high dimensional input in L2/3 the network extracts in the
+        recurrent connections of L4 a lower dimensional representation of
+        temporal dependencies by learning spatio-temporal features.
     """
     if debug:
         print("Creating OCTA BuildingBlock!")

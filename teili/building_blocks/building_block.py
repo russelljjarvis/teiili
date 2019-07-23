@@ -140,16 +140,16 @@ class BuildingBlock(Nameable):
 
         Args:
             tags (dict): A dictionary of tags
-                                {'mismatch' : False,
-                                'noise' : False,
-              		            'level': 0 ,
-              		            'sign': 'None',
-              		            'target sign': 'None',
-              		            'num_inputs' : 0,
-              		            'bb_type' : 'None',
-              		            'group_type' : 'None',
-              		            'connection_type' : 'None',
-              	    	        }
+                {'mismatch' : False,
+                'noise' : False,
+                'level': 0 ,
+                'sign': 'None',
+                'target sign': 'None',
+                'num_inputs' : 0,
+                'bb_type' : 'None',
+                'group_type' : 'None',
+                'connection_type' : 'None',
+                }
             target_group (str): Name of group to set tags
         """
         tags = copy.deepcopy(tags)

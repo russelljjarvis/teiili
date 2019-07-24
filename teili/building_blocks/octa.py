@@ -34,9 +34,9 @@ prefs.codegen.target = "numpy"
 
 class Octa(BuildingBlock):
     """The Online Clustering of Temporal Activity (OCTA) `BuildingBlock`.
-    This neural algorthm is designed to cluster incoming spatio-temporal patterns
-    of asynchronous streams of events as provided by event-driven sensors such
-    as the Dynamic Vision Sensor (DVS).
+    This neural algorithm is designed to cluster incoming spatio-temporal
+    patterns of asynchronous streams of events as provided by event-driven
+    sensors such as the Dynamic Vision Sensor (DVS).
 
     This class provides a basic hierarchical `BuildingBlock` called OCTA.
     For more information please refer to our [Documentation](https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#online-clustering-of-temporal-activity-octa)
@@ -67,15 +67,15 @@ class Octa(BuildingBlock):
             wta_params (Dict, optional): WTA parameter dictionary.
             octa_params (Dict, optional): OCTA parameter dictionary.
             num_input_neurons (int, optional): Size of input population. The
-                default is set 10 as OCTA was originally designed to learn
+                default is set to 10 as OCTA was originally designed to learn
                 visual receptive fields from 10 x 10 patches. Note that the
                 number provided will be internally squared, meaning that
-                `num_input_neurons=10` will result in a input of 10x10.
+                `num_input_neurons=10` will result in an input of size 10*10.
             num_neurons (int, optional): Size of WTA neuron population.
                 Theoretically this number can be bigger than
-                `num_input_neurons`. However, as the objective is to cluster
-                the number is set to be by default smaller than
-                `number_input_neurons`.
+                `num_input_neurons`. However, as the objective is to cluster,
+                the number is set to be by default 7, i.e. smaller than
+                `num_input_neurons`.
             external_input (bool, optional): Flag to include an input in the
                 form of a rotating bar.
             noise (bool, optional): Flag to include a noise source.

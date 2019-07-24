@@ -23,18 +23,18 @@ from teili.stimuli.testbench import OCTA_Testbench
 from teili.tools.sorting import SortMatrix
 
 def plot_sorted_compression(OCTA):
-    """ Plot the spiking activity, i.e spike rasterplot of the compression layer
-    sorted by similarity. Similarity is calculated based on euclidean distance.
-    The sorting yields permuted indices which are use to re-order the neurons.
+    """ Plot the spiking activity, i.e. spike rasterplot of the compression
+    layer, sorted by similarity. Similarity is calculated based on euclidean
+    distance. The sorting yields permuted indices which are used to re-order the
+    neurons.
     The out-of-the-box network with the default testbench stimulus will show an
-    alignment with time, such that the sorted spike rasterplot can be fitted by a
-    line whichwith increasing or decreasing neuron index. As the starting neuron is
+    alignment with time, such that the sorted spike rasterplot can be fitted by
+    a line with increasing or decreasing neuron index. As the starting neuron is
     picked at random the alignment with time can vary between runs.
 
     Arguments:
         OCTA (TeiliNetwork): The `TeiliNetwork` which contains the OCTA `BuildingBlock`.
     """
-
     weights = OCTA.sub_blocks['compression'].groups['s_exc_exc'].w_plast
     s = SortMatrix(nrows=49, ncols=49, matrix=weights, axis=1)
     monitor = OCTA.sub_blocks['compression'].monitors['spikemon_exc']

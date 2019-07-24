@@ -61,7 +61,7 @@ An example of the ``neuron_model`` class is shown below:
                                           position='spatial', noise='none')
             self.add_input_currents(num_inputs)
 
-The ``NeuronEquationBuilder`` has following keyword arguments:
+The ``NeuronEquationBuilder`` has the following keyword arguments:
 
 * **base_unit**: Either set to ``current`` or ``voltage`` depending whether you want to simulate current-based hardware neuron models
 * **adaptation**: Toggles spike-frequency adaptation mechanism in ``neuron_model``. Can either be set to ``None`` or ``calcium_feedback``.

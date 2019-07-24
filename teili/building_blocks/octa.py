@@ -206,7 +206,7 @@ def gen_octa(groupname,
         sub_blocks (dictionary): Keys to all sub_blocks of the network
         _groups (dictionary): Keys to all neuron and synapse groups
             specific to this BB.
-        monitors (dictionary): Keys to all spike and state monitors specifics
+        monitors (dictionary): Keys to all spike and state monitors specific
             to this BB.
         standalone_params (dictionary): Not implemented at the moment as
             OCTA depends on `run_regularly` functions which are not
@@ -224,7 +224,7 @@ def gen_octa(groupname,
             compression['n_exc'] : Layer 2/3
             prediction['n_exc'] : Layer 5/6
 
-        Given a high dimensional input in L2/3 the network extracts in the
+        Given a high dimensional input in L2/3, the network extracts in the
         recurrent connections of L4 a lower dimensional representation of
         temporal dependencies by learning spatio-temporal features.
     """

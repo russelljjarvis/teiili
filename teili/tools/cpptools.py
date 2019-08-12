@@ -32,7 +32,7 @@ def deactivate_standalone():
     set_device('runtime')
 
 
-def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True, do_compile=True):
+def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True, do_compile=True, verbose=True):
     """Builds cpp standalone network and replaces variables/parameters with standalone_params
     This does string replacement in the generated c++ code.
 
@@ -58,7 +58,7 @@ def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True
 
     maincppPath = os.path.join(os.getcwd(), standalone_dir, 'main.cpp')  # this should always be the correct path
     replace_vars = [key for key in standalone_params]
-    replace_variables_in_cpp_code(replace_vars, replace_file_location=maincppPath)
+    replace_variables_in_cpp_code(replace_vars, replace_file_location=maincppPath, verbose=verbose)
     # ===============================================================================
     # compile
     if do_compile:
@@ -74,7 +74,7 @@ def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True
         print('\n\nstandalone was built, ready to compile!')
 
 
-def replace_variables_in_cpp_code(replace_vars, replace_file_location):
+def replace_variables_in_cpp_code(replace_vars, replace_file_location, verbose=True):
     '''Replaces a list of variables in CPP code for standalone code generation with changeable parameters
     and it adds duration as a changeable parameter (it is always the first argument)
 
@@ -87,9 +87,13 @@ def replace_variables_in_cpp_code(replace_vars, replace_file_location):
     # generate arg code
     cppArgCode = ""
     for ivar, rvar in enumerate(replace_vars):
-        cppArgCode += """\n float {replvar}_p = std::stof(argv[{num}],NULL);
+        if verbose:
+            cppArgCode += """\n float {replvar}_p = std::stof(argv[{num}],NULL);
     std::cout << "variable {replvar} is argument {num} with value " << {replvar}_p << std::endl;\n""".format(
-            num=(ivar + 1), replvar=rvar)
+                num=(ivar + 1), replvar=rvar)
+        else:
+            cppArgCode += """\n float {replvar}_p = std::stof(argv[{num}],NULL);\n""".format(
+                num=(ivar + 1), replvar=rvar)
         print("variable {replvar} is main() argument {num}".format(num=(ivar + 1), replvar=rvar))
 
     print('\n*********************************\n')

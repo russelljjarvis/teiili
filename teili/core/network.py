@@ -124,7 +124,7 @@ class TeiliNetwork(Network):
 
     def build(self, report="stdout", report_period=10 * second,
               namespace=None, profile=True, level=0, recompile=False,
-              standalone_params=None, clean=True):
+              standalone_params=None, clean=True, verbose=True):
         """Building the network.
 
         Args:
@@ -153,16 +153,16 @@ class TeiliNetwork(Network):
                     standalone_params = self.standalone_params
 
                 build_cpp_and_replace(standalone_params, get_device(
-                ).build_options['directory'], clean=clean)
+                ).build_options['directory'], clean=clean, verbose=verbose)
             else:
                 print("""Network was not recompiled, standalone_params are changed,
                       but Network structure is not!
                       This might lead to unexpected behavior.""")
         else:
-            print('Network was compiled; as you have not set the device to \
-                  cpp_standalone, you can still run() it using numpy code generation.')
+            print('Network was not compiled (net.build was ignored), as you have not set the device to \
+                  cpp_standalone. You can still run() it using numpy code generation.')
 
-    def run(self, duration=None, standalone_params=dict(), **kwargs):
+    def run(self, duration=None, standalone_params=dict(), verbose=True, **kwargs):
         """Wrapper function to simulate a network for the given duration.
 
         Parameters which should be changeable, especially after cpp compilation, need to
@@ -172,6 +172,9 @@ class TeiliNetwork(Network):
             duration (brain2.unit, optional): Simulation time in s, i.e. 1000 * ms.
             standalone_params (dict, optional): Dictionary whose keys refer to parameters
                 which should be changeable in cpp standalone mode.
+            verbose (bool, optional) : set to False if you don't want the prints, it is set to True
+                by default, as there are things that can go wrong during string replacement etc. so it is
+                better to have a look manually.
             **kwargs (optional): Additional keyword arguments.
         """
         # kwargs are if you want to use the StandaloneNetwork as a simple brian2
@@ -192,23 +195,25 @@ class TeiliNetwork(Network):
 
             if duration is not None:
                 standalone_params['duration'] = duration
-
-            startSim = time.time()
+            if verbose:
+                start_sim = time.time()
+                print_dict(standalone_params)
             # run simulation
-            print_dict(standalone_params)
             run_args = params2run_args(standalone_params)
             directory = os.path.abspath(
                 get_device().build_options['directory'])
             if not os.path.isdir(directory):
                 os.mkdir(directory)
-            print('standalone files are written to: ', directory)
+            if verbose:
+                print('standalone files are written to: ', directory)
 
             device.run(directory=directory,
                        with_output=True, run_args=run_args)
 
-            end = time.time()
-            print('simulation in c++ took ' + str(end - startSim) + ' sec')
-            print('simulation done!')
+            if verbose:
+                end = time.time()
+                print('simulation in c++ took ' + str(end - start_sim) + ' sec')
+                print('simulation done!')
 
         else:
             if duration is not None:

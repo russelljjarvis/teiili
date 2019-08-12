@@ -431,15 +431,11 @@ class Neurons(NeuronGroup, TeiliGroup):
                 and stop is out of bounds.
             TypeError: Error to indicate that wrong syntax has been used.
         """
-        if not isinstance(item, slice):
-            raise TypeError(
-                'Subgroups can only be constructed using slicing syntax')
-        start, stop, step = item.indices(self._N)
-        if step != 1:
-            raise IndexError('Subgroups have to be contiguous')
-        if start >= stop:
-            raise IndexError('Illegal start/end values for subgroup, %d>=%d' %
-                             (start, stop))
+        try:
+            from brian2.groups.neurongroup import to_start_stop
+            start, stop = to_start_stop(item, self._N)
+        except ImportError:
+            start, stop, step = item.indices(self._N)
 
         return TeiliSubgroup(self, start, stop)
 

@@ -11,31 +11,24 @@ parent class which amongst other provide I/O groups and properties to stack
 
 BuildingBlock
 =============
+
+Every ``BuildingBlock`` has a set of parameters such as weights and refractory period, which can be specified outside the ``BuildingBlock`` generation and unpacked to the building block.
 Each ``BuildingBlock`` has the following attributes:
 
-.. code-block:: python
+Attributes:
 
-    Attributes:
-            name (str, required): Name of the building_block population
-            neuron_eq_builder (class, optional): neuron class as imported from
-                models/neuron_models
-            synapse_eq_builder (class, optional): synapse class as imported from
-                models/synapse_models
-            params (dictionary, optional): Dictionary containing all relevant
-                parameters for each building block
-            debug (bool, optional): Flag to gain additional information
-            groups (dictionary): Keys to all neuron and synapse groups
-            monitors (dictionary): Keys to all spike and state monitors
-            monitor (bool, optional): Flag to auto-generate spike and state monitors
-            standalone_params (dictionary): Dictionary for all parameters to create
-                a standalone network
-            sub_blocks (dictionary): Dictionary for all parent building blocks
-            input_groups (dictionary): Dictionary containing all possible groups which are
-                potential inputs
-            output_groups (dictionary): Dictionary containing all possible groups which are
-                potential outputs
-            hidden (dictionary): Dictionary containing all remaining groups which are
-                neither inputs nor outputs
+* **name** (str, required): Name of the building_block population neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
+* **synapse_eq_builder** (class, optional): synapse class as imported from models/synapse_models
+* **params** (dictionary, optional): Dictionary containing all relevant parameters for each building block
+* **debug** (bool, optional): Flag to gain additional information
+* **groups** (dictionary): Keys to all neuron and synapse groups
+* **monitors** (dictionary): Keys to all spike and state monitors
+* **monitor** (bool, optional): Flag to auto-generate spike and state monitors
+* **standalone_params** (dictionary): Dictionary for all parameters to create a standalone network
+* **sub_blocks** (dictionary): Dictionary for all parent building blocks
+* **input_groups** (dictionary): Dictionary containing all possible groups which are potential inputs
+* **output_groups** (dictionary): Dictionary containing all possible groups which are potential outputs
+* **hidden_groups** (dictionary): Dictionary containing all remaining groups which are neither inputs nor outputs
 
 And as each ``BuildingBlock`` inherits from this parent class all ``BuildingBlocks`` share the same attributes and properties.
 To assure this every ``BuildingBlock`` initialises the ``BuildingBlock`` class:
@@ -50,8 +43,7 @@ To assure this every ``BuildingBlock`` initialises the ``BuildingBlock`` class:
                          debug,
                          monitor)
 
-Furthermore, as described above as soon the parent class is initialised each
-building block has a set of dictionaries which handle to I/O and different ``Neuron`` and ``Connection`` groups.
+Furthermore, as described above as soon the parent class is initialised each ``BuildingBlock`` has a set of dictionaries which handle to I/O and different ``Neurons`` and ``Connections`` groups.
 
 The ``BuildingBlock`` class comes with a set of ``__setter__`` and ``__getter__`` functions for collecting all ``groups`` involved or identifying a subset of groups which share the same `_tags`_
 
@@ -71,11 +63,11 @@ Tags should be set as the network expands and the functionality changes.
 
 Tags are defined as:
 
-* **mismatch**: (bool) Mismatch present of group
+* **mismatch**: (bool) Flag to indicate if mismatch is present in the ``Group``
 * **noise**: (bool) Noise input, noise connection or noise presence
 * **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1, OCTA groups are level 2 etc
 * **sign**: (str : exc/inh/None) Sign of neuronal population.
-* **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
+* **target_sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
 * **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
 * **bb_type**: (str : WTA/ OCTA/ 3-WAY) Building block type.
 * **group_type**: (str : Neuron/Connection/ SpikeGen) Group type
@@ -126,7 +118,7 @@ All tags of a group can be obtained by:
 Winner-takes-all (WTA)
 ======================
 
-Every building block has a set of parameters such as weights and refractory period, which can be specified outside the building block generation and unpacked to the building block. For the WTA building_block this dictionary looks as follows:
+For the WTA ``BuildingBlock`` the parameter dictionary looks as follows:
 
 .. code-block:: python
 
@@ -147,10 +139,10 @@ where each key is defined as:
 * **we_exc_inh**: Excitatory synaptic weight between WTA population and inhibitory interneuron.
 * **wi_inh_exc**: Inhibitory synaptic weight between inhibitory interneuron and WTA population.
 * **we_exc_exc**: Self-excitatory synaptic weight (WTA).
+* **wi_inh_inh**: Self-inhibitory weight of the interneuron population.
 * **sigm**: Standard deviation in number of neurons for Gaussian connectivity kernel.
 * **rp_exc**: Refractory period of WTA neurons.
 * **rp_inh**: Refractory period of inhibitory neurons.
-* **wiInhInh**: Self-inhibitory weight of the interneuron population.
 * **ei_connection_probability**: WTA to interneuron connectivity probability.
 * **ie_connection_probability**: Interneuron to WTA connectivity probability
 * **ii_connection_probability**: Interneuron to Interneuron connectivity probability.
@@ -162,12 +154,13 @@ Now we can import the necessary modules and build our building block.
       from teili.building_blocks.wta import WTA
       from teili.models.neuron_models import DPI
 
-1Dimensional WTA
+1 Dimensional WTA
 ----------------
 
-The WTA building block comes in two slightly different versions. The versions only differ in the dimensionality of the WTA.
+The WTA ``BuildingBlock`` comes in two slightly different versions. The versions only differ in the dimensionality of the WTA.
 
 .. code-block:: python
+
       # The number of neurons in your WTA population.
       # Note that this number is squared in the 2D WTA
       num_neurons = 50
@@ -181,7 +174,7 @@ The WTA building block comes in two slightly different versions. The versions on
                    block_params=wta_params,
                    monitor=True)
 
-2Dimensinal WTA
+2 Dimensional WTA
 ---------------
 
 To generate a 2 dimensional WTA population you can do the following.
@@ -201,7 +194,7 @@ To generate a 2 dimensional WTA population you can do the following.
                    block_params=wta_params,
                    monitor=True)
 
-Changing a certain synapse group from being static to plastic:
+Changing a certain ``Connections`` group from being `static` to `plastic`:
 
 .. code-block:: python
 
@@ -237,24 +230,93 @@ Sequence learning
 Threeway network
 ================
 
-.. note:: TBA by Dmitrii Zendrikov
+``Threeway`` block is a ``BuildingBlock`` that implements a network of
+three one-dimensional ``WTA`` populations A, B and C,
+connected to a hidden two-dimensional ``WTA`` population H.
+The role of the hidden population is to encode a relation between A, B and C,
+which serve as inputs and\or outputs.
+
+In this example A, B and C encode one-dimensional values in range from 0 to 1
+in a relation A + B = C to each other, which is hardcoded into connectivity of
+the hidden population.
+
+
+To use the block instantiate it and add to the ``TeiliNetwork``
+
+.. code-block:: python
+
+    from brian2 import ms, prefs, defaultclock
+
+    from teili.building_blocks.threeway import Threeway
+    from teili.tools.three_way_kernels import A_plus_B_equals_C
+    from teili import TeiliNetwork
+    
+    prefs.codegen.target = "numpy"
+    defaultclock.dt = 0.1 * ms
+
+    #==========Threeway building block test=========================================
+    
+    duration = 500 * ms
+    
+    #===============================================================================
+    # create the network
+
+    exampleNet = TeiliNetwork()
+    
+    TW = Threeway('TestTW',
+                  hidden_layer_gen_func = A_plus_B_equals_C,
+                  monitor=True)
+    
+    exampleNet.add(TW)
+    
+    #===============================================================================
+    # simulation    
+    # set the example input values
+    
+    TW.set_A(0.4)
+    TW.set_B(0.2)
+
+    exampleNet.run(duration, report = 'text')
+    
+    #===============================================================================
+    #Visualization
+    
+    TW_plot = TW.plot()
+
+Methods ``set_A(double)``, ``set_B(double)`` and ``set_C(double)`` send population
+coded values to respective populations. Here we send A=0.2, B=0.4 and activity in
+population C is inferred via H, shaping in an activity bump encoding ~0.6:
+
+.. figure:: fig/threeway_tutorial.png
+    :align: center
+    :height: 200px
+    :figclass: align-center
+    
+.. note:: To be extended by Dmitrii Zendrikov
 
 Online Clustering of Temporal Activity (OCTA)
 =============================================
 
-Online Clustering of Temporal Activity (OCTA) is a second generation building block:
+Online Clustering of Temporal Activity (OCTA) is a second generation ``BuildingBlock``:
 it uses multiple WTA networks recurrently connected to create a cortex
 inspired microcircuit that, leveraging the spike timing
-information, enables investigations of emergent network dynamics [1]_.
+information, enables investigations of emergent network dynamics `[1]`_.
 
-.. image:: fig/OCTA_module.png
+.. figure:: fig/OCTA_module.png
+    :width: 200px
+    :align: center
+    :height: 200px
+    :alt: alternate text
+    :figclass: align-center
 
-The basic OCTA module consists of a clustering (Layer2/3) and a prediction (L6) sub-module.
+    Schematic overview of a single OCTA ``BuildingBlock``
+
+The basic OCTA module consists of a projection (L4), a clustering (Layer2/3) and a prediction (L5/6) sub-module.
 Given that all connections are subject to learning, the objective of one OCTA module is
 to continuously adjust its parameters, e.g. synaptic weights and time constants, based
 on local information to best capture the spatio-temporal statistics of its input.
 
-Parameters for the network are stored in two dictionaries located in tools/octa_tools/octa_params.py
+Parameters for the network are stored in two dictionaries located in ``teili/models/parameters/octa_params.py``.
 
 The WTA keys are explained above, the OCTA keys are defined as:
 
@@ -271,7 +333,7 @@ The WTA keys are explained above, the OCTA keys are defined as:
 * **learning_rate**: Learning rate
 * **inh_learning_rate**: Inhibitory learning rate
 * **decay**:  Decay parameter of the decay in the activity dependent run_regular
-* **weight_decay**: Type of weight decay (temporal/event-based)
+* **decay_strategy**: Type of weight decay ('global'/'local')
 * **tau_stdp**: Time constant for stdp plasticity
 
 
@@ -318,8 +380,11 @@ Initialization of the building block goes as follows:
 
     Net.run(10000*ms, report='text')
 
+.. attention:: When ``Neurons`` or ``Connections`` groups of a ``BuildingBlock`` are changed from their default, one needs to ``add`` the affected ``sub_blocks`` explicitly.
+
+
 * **external_input**: Flag to include an input to the network
-* **noise**: Flag to include 10 Hz Poisson noise generator on ``n_exc`` of compressionWTA and predictionWTA
+* **noise**: Flag to include 10 Hz Poisson noise generator on ``n_exc`` of compression and prediction
 * **monitor**: Flag to return monitors of the network
 * **debug**: Flag for verbose debug
 
@@ -327,5 +392,5 @@ Initialization of the building block goes as follows:
 .. note:: To be extended by Moritz Milde
 
 .. _OCTA: https://code.ini.uzh.ch/mmilde/OCTA/blob/dev/README.md
-
-..[1] Moritz Milde PhD thesis
+.. __tags: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#tags
+.. _[1]: Moritz Milde PhD thesis

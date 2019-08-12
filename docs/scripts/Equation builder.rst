@@ -6,19 +6,19 @@ The equation builder serves as a dynamic model generator. It takes model templat
 
 There are two distinct equation builder classes:
 
-* NeuronEquationBuilder
-* SynapseEquationBuilder
+* ``NeuronEquationBuilder``
+* ``SynapseEquationBuilder``
 
 Each builder is wrapped by a neuron/synapse model generator class located in ``teili/models/``:
 
-* neuron_model
-* synapse_model
+* ``neuron_model``
+* ``synapse_model``
 
 Keyword arguments for builder
 =============================
 In order to generate a neuron/synapse model, its builder needs to be initialized using specific keywords which define the model itself and thus which template equation/parameters are combined.
 
-NeuronEuqationBuilder keywords
+NeuronEquationBuilder keywords
 ------------------------------
 
 .. code-block:: python
@@ -37,7 +37,7 @@ The keywords explained:
 * **integration_mode**: Determines whether integration up to spike-generation is linear or exponential.
 * **leak**: Enables leaky integration.
 * **position**: To enable spatial-like position indices on neuron.
-* **noise**: *NOT YET IMPLMENTED!* This will in the future allow independent mismatch-like noise to be added to
+* **noise**: *NOT YET IMPLEMENTED!* This will in the future allow independent mismatch-like noise to be added to
   each neuron.
 * **refractory**: Refractory period of the neuron.
 
@@ -62,8 +62,8 @@ The keywords explained:
 Dictionary structure
 ====================
 
-| Both equation builders have a dictionary attribute which keys represent the respective necessary keywords to generate a neuron/synapse model, in order to simulate it using brian2.
-| The keywords, given to the EquationBuilder class are used to select template dictionaries which are combined.
+Both ``EquationBuilders`` have a dictionary attribute which keys represent the respective necessary keywords to generate a neuron/synapse model, in order to simulate it using `Brian2`.
+The keywords, given to the EquationBuilder class are used to select template dictionaries which are combined.
 This is done by passing these keywords to ``current_equation_sets`` and ``current_parameters`` in case of neurons and to ``modes``, ``kernels``, ``plasticity_models`` and ``current_parameters``.
 
 .. code-block:: python
@@ -105,7 +105,7 @@ Class methods
 import_eq
 ---------
 
-A function to import pre-defined neuron_model. This function can load a dictionary and its keywords in order to initialize the EquationBuilder.
+A function to import pre-defined neuron_model. This function can load a dictionary and its keywords in order to initialize the ``EquationBuilder``.
 
 .. code-block:: python
 
@@ -113,7 +113,7 @@ A function to import pre-defined neuron_model. This function can load a dictiona
     my_neu_model = NeuronEquationBuilder.import_eq(
         'teili/models/equations/DPI', num_inputs=2)
 
-where num_inputs specifies how many distinct neuron population project to the target population.
+where ``num_inputs`` specifies how many distinct neuron populations project to the target population.
 
 For synapses the import works as follows:
 
@@ -142,14 +142,14 @@ For synapse models:
 .. code-block:: python
 
     path = os.path.dirname(os.path.realpath(teili.models.__file__))
-    dpiSyn = SynapseEquationBuilder(base_unit='DPI',
+    dpi_syn = SynapseEquationBuilder(base_unit='DPI',
                                    plasticity='non_plastic')
 
-    dpiSyn.export_eq(os.path.join(path, "DPISyn"))
+    dpi_syn.export_eq(os.path.join(path, "DPISyn"))
 
 
 var_replacer
-============
+------------
 
 This function takes two equation sets in form of strings and replaces all lines which start with '%'.
 

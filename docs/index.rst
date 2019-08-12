@@ -11,14 +11,14 @@ This toolbox was developed to provide computational neuroscientists, as well as 
 
    scripts/Getting started.rst
    scripts/Tutorials.rst
-   scripts/Other examples.md
-   scripts/Visualizer.rst
+   scripts/Advanced tutorials.rst
    scripts/Core.rst
-   scripts/Neuron and Synapse models.md
+   scripts/Neuron and Synapse models.rst
    scripts/Building Blocks.rst
    scripts/Equation builder.rst
-   scripts/Developing Building Blocks.md
-   scripts/Tools.md
+   scripts/Developing Building Blocks.rst
+   scripts/Tools.rst
+   scripts/Visualizer.rst
    scripts/Contributors.md
    modules/modules.rst
 

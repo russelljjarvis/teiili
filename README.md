@@ -23,34 +23,41 @@ Furthermore, by providing an easy and modular way to construct those algorithms 
 This toolbox is still in its alpha phase, so if you want to use it, follow the install instructions below.
 Please also contact the main contributors with feedback.
 
-Please look at the examples here: teili/examples/ and our [Documentation](https://teili.readthedocs.io/en/latest/)
+Please look at the examples here: `/teiliApps/tutorials/` after successfully installing **teili** and our [Documentation](https://teili.readthedocs.io/en/latest/)
 
 ### Installation
-*  Clone the [repository](https://code.ini.uzh.ch/ncs/teili) or [download](https://code.ini.uzh.ch/ncs/teili) the tar.gz file<br />
-    ```
-    git clone git@code.ini.uzh.ch:ncs/teili.git
-    ```
+
 * Create a virtual environment using [conda](https://conda.io/docs/user-guide/install/index.html)
-    ```
+    ``` bash
     # Replace myenv with the desired name for your virtual environment
     conda create --name myenv python=3.5
     ```
   If you want to use a specific version, as needed e.g. to use [CTXLCTL](http://ai-ctx.gitlab.io/ctxctl/index.html) add the particular python version to the conda environment
-   ```
+   ``` bash
    conda create --name myenv python=3.6.6
    ```
 
 *  Activate your conda environment
-    ```
+    ``` bash
     source activate myenv
     ```
 
+*  Simply run
+    ```
+    pip install teili
+    ```
+    if you want to use the stable release
+
+*  If you want to work with the latest version of **teili** clone the [repository](https://code.ini.uzh.ch/ncs/teili) or [download](https://code.ini.uzh.ch/ncs/teili) the tar.gz file<br />
+    ``` bash
+    git clone git@code.ini.uzh.ch:ncs/teili.git
+    ```
 *  Navigate to the parent folder containing the cloned repository or the downloaded `tar.gz` file
     ```
     cd Downloads/
     ```
 *  Install teili using pip
-    ```
+    ``` bash
     # Point pip to the location of the setup.py
     pip install teili/
     # or point pip to the downloaded tar.gz file
@@ -59,8 +66,8 @@ Please look at the examples here: teili/examples/ and our [Documentation](https:
     The `setup.py` will by default create a folder in your home directory called `teiliApps`.
     This folder contains a selection of neuron and synapse models, example scripts, as well as unit tests.
     Please run the unit tests to check if everything is working as expected by:
-    ```
-    cd ~/teiliApps
+    ``` bash
+    cd ~/teiliApps/
     python -m unittest discover unit_tests/
     ```
 
@@ -68,15 +75,18 @@ Please look at the examples here: teili/examples/ and our [Documentation](https:
 
 ### Alternative installation **NOT RECOMMENDED**
     If, however, you want to install all dependencies separately you can run the following commands **NOT RECOMMENDED**:
-    ```
+    
+    ```bash
     git clone git@code.ini.uzh.ch:ncs/teili.git
     sudo apt install python3 python3-pip, python3-matplotlib python3-setuptools cython
     pip3 install brian2 sparse seaborn h5py numpy scipy pyqtgraph pyqt5 easydict
     ```
+    
     if you did **not** use the setup.py you need to update your `$PYTHONPATH`:
 
-    You can add the following line to your `~/.bashrc`<sup>1</sup>:
-    ```
+    You can add the following line to your `~/.bashrc` <sup>1</sup>:
+    
+    ```bash
     export PYTHONPATH=$PYTHONPATH:"/path/to/parent_folder/of/teili"
     ```
 
@@ -90,7 +100,7 @@ otherwise, Windows and Mac OSX works fine.
 
 ### Usage
 
-```
+``` python
 from brian2 import ms
 from teili import Neurons, Connections
 from teili.models.neuron_models import DPI
@@ -109,12 +119,14 @@ Synapse1 = Connections(Neuron1, Neuron1,
                       name='Synapse1')
 ```
 For a more detailed explanation have a look at our [Tutorial](https://teili.readthedocs.io/en/latest/scripts/Tutorials.html)
+
 ## Examples
-Please look at the [Neuron & Synapse example](https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#neuron-synapse-tutorial), which is located in `~/teiliApps/examples/`.
+Please look at the [Neuron & Synapse tutorial](https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#neuron-synapse-tutorial), which is located in `~/teiliApps/tutorial/`.
 You can also use them to test your installation.
 To run an example and test if eveything is working, run the following command
-```
-cd `~/teiliApps/examples/
+
+``` bash
+cd ~/teiliApps/examples/
 python3 neuron_synapse_test.py
 ```
 The output should look like this

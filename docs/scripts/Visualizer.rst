@@ -1,4 +1,3 @@
-  
 .. code:: python
 
     # SPDX-License-Identifier: MIT
@@ -8,33 +7,36 @@ Visualizer
 =================================
 
 **Model**:
-
 The model represents the data, and does nothing else. The model does NOT depend on the controller or the view.
-   -  EventsModel
-   -  StateVariablesModel
-   -  …
+    -  EventsModel
+    -  StateVariablesModel
+    -  …
 
 **View**:
-
-The view displays the model data, and sends user actions (e.g. button clicks) to the controller. The view can:
--  be independent of both the model and the controller; or
--  actually be the controller, and therefore depend on the model.
+The view displays the model data, and sends user actions (e.g. button clicks) to the controller. The view can
+be independent of both the model and the controller or actually be the controller, and therefore depend on the model.
    -  HistogramViewer
    -  RasterplotViewer
    -  LineplotViewer
    -  …
 
 **Controller**:
-
-The controller provides model data to the view, and interprets user actions such as button clicks. The controller depends on the view and the model. In some cases, the controller and the view are the same object.
-   -  HistogramController (called Histogram)
-   -  RasterplotController (called Rasterplot)
-   -  LineplotController (called Lineplot)
-   -  …
+The controller provides model data to the view, and interprets user actions such as button clicks.
+The controller depends on the view and the model. In some cases, the controller and the view are the same object.
+    -  HistogramController (called Histogram)
+    -  RasterplotController (called Rasterplot)
+    -  LineplotController (called Lineplot)
+    -  …
 
 **PlotSettings()**
-   -  font sizes
-   -  …
+    -  font sizes
+    -  …
+
+**Backends**
+Currently, the visualizer supports matplotlib and pyqtgraph as backends.
+To switch between the two backends you simply have to change one input flag of
+the controller. This is shown below in the examples which are given for pyqtgraph
+and for matplotlib, however the figure are only shown for matplotlib.
 
 How to use it - in short
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,15 +67,16 @@ Rasterplot, Lineplot, …**
     subgroup_labels = [‘N1’, ‘N2’]
     HC = Histogram(MyPlotSettings=MyPlotSettings, DataModel_to_attr=DataModel_to_attr, subgroup_labels=subgroup_labels, backend=‘matplotlib’)
 
-**If you want to change anything else on the main figure/window or one of the subplots …**
-
-… you can directly access the mainfigure (matplotlib: figure, pyqtgraph:
-qt-window) as *my_controller.mainfig* or the corresponding
+If you want to change anything else on the main figure/window or one of the subplots
+you can directly access the mainfigure (matplotlib: figure, pyqtgraph: qt-window) as *my_controller.mainfig* or the corresponding
 subplot under *my_controller.subfig*
 
 
 How to use it - the slightly longer version
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Import the required modules and functions ...
+
 .. code-block:: python
 
     %pylab inline
@@ -93,7 +96,6 @@ How to use it - the slightly longer version
     from teili.models.parameters.dpi_synapse_param import parameters as synapse_model_param
     
     QtApp = QtGui.QApplication([])
-
 
 .. code-block:: python
 
@@ -146,138 +148,134 @@ Get the data to plot
 
 .. code-block:: python
 
-    spikemonN1, spikemonN2, statemonN1, statemonN2 = run_brian_network()
-
+   spikemonN1, spikemonN2, statemonN1, statemonN2 = run_brian_network()
 
 **Option B: create DataModel instance from arrays, lists or brian-SpikeMonitors/StateMonitors**
 
 Available DataModels:
 
--  StateVariablesModel 
+**EventsModel:**
+stores neuron_ids and spike_times
 
-    **EventsModel:** stores neuron_ids and spike_times
-    
-    .. code-block:: python
-    
-        # create from array/list
-        from teili.tools.visualizer.DataModels import EventsModel
-        neuron_ids  = [1, 1, 1, 2, 3, 1, 4, 5]
-        spike_times = [11, 14, 14, 16, 17, 25, 36, 40]
-        EM = EventsModel(neuron_ids=neuron_ids, spike_times=spike_times)
-        
-        # create from brian spike monitor
-        EM = EventsModel.from_brian_spike_monitor(spikemonN1)
-        
-        print('Then the created EventsModel EM has the following attributes:')
-        for var in vars(EM):
-            print(var,': \n', getattr(EM, var))
-    
-    .. parsed-literal::
+Example shows how to create it from array/list ...
 
-        Then the created EventsModel EM has the following attributes:
-        neuron_ids : 
-         [3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4
-         1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 3 2 4 1 3 0 2 4 1 3
-         0 2 4 1 3 0 2 4 1 3 0 2 4 3 1 0 2 4 3 1 0 2 4 3 1 0 2 4 3 1 0 2 4 3 1 0 2
-         4 3 1 0 2 4 3 1 0 2 4 3 1 0 2 3 4 1 0 2 3 4 1 0 3 2 4 1 0 3 4 2 1 3 0 4 2
-         1 3 0 4 2 1 3 0 4 2 1 3 0 4 2 1 3 4 0 2 1 3 4 0 2 1 3 4 0 2 1 3 4 0 2 3 1
-         4 0 2 3 1 4 0 2 3 1 4 0 3 2 1 4 0 3 2 1]
-        spike_times : 
-         [0.00387 0.004   0.00405 0.00411 0.00413 0.00628 0.00651 0.00659 0.00669
-         0.00673 0.0085  0.0088  0.00891 0.00903 0.00908 0.0107  0.0111  0.01124
-         0.01139 0.01145 0.01278 0.01326 0.01344 0.01363 0.0137  0.01491 0.01552
-         0.01574 0.01595 0.01603 0.01699 0.01764 0.01788 0.01812 0.01821 0.01907
-         0.01984 0.02012 0.02039 0.02049 0.02108 0.02183 0.02216 0.02247 0.02259
-         0.02304 0.02391 0.02426 0.0246  0.02473 0.02506 0.02604 0.02644 0.02684
-         0.027   0.02719 0.02822 0.02867 0.02914 0.02932 0.02935 0.03047 0.03094
-         0.03139 0.03144 0.03155 0.03261 0.03313 0.03351 0.03359 0.03375 0.0347
-         0.03525 0.03554 0.03576 0.03594 0.03682 0.03731 0.03748 0.03781 0.038
-         0.03885 0.03937 0.03945 0.03987 0.04005 0.04084 0.04141 0.04142 0.042
-         0.04222 0.04304 0.04359 0.04372 0.04438 0.04459 0.04526 0.04569 0.04591
-         0.04663 0.04688 0.04752 0.04786 0.04816 0.04878 0.04902 0.04953 0.0498
-         0.05021 0.0509  0.05117 0.05161 0.0518  0.05233 0.05309 0.05338 0.05373
-         0.05384 0.05449 0.05522 0.0555  0.05575 0.05579 0.05655 0.05743 0.05774
-         0.05788 0.05792 0.0587  0.05949 0.05978 0.05978 0.05989 0.06072 0.06163
-         0.0618  0.06194 0.06198 0.06289 0.06389 0.06391 0.06419 0.06423 0.06514
-         0.06605 0.06618 0.06643 0.06656 0.06748 0.06828 0.06855 0.06871 0.0689
-         0.06966 0.07033 0.07075 0.07086 0.07114 0.07195 0.0725  0.07303 0.07306
-         0.07343 0.07423 0.07471 0.0754  0.07545 0.0759  0.07656 0.07688 0.07763
-         0.07774 0.07815 0.07875 0.07899 0.07997 0.08017 0.08062 0.0811  0.08119
-         0.08212 0.08238 0.08286 0.08328 0.0833  0.08428 0.08459 0.08509 0.08537
-         0.0855  0.08647 0.08687 0.08744 0.08757 0.08783 0.08879 0.08929 0.08982
-         0.08987 0.0902  0.09128 0.0921  0.09261 0.09306 0.09351]
-    
-    
-    **StateVariablesModel:**  stores any number of variables with their name and the list of timepoints when the variable was sampled
-    
-    .. code-block:: python
-    
-        from teili.tools.visualizer.DataModels import StateVariablesModel
-        
-        # create from array/list
-        state_variable_names = ['var_name']
-        num_neurons, num_timesteps = 6, 50
-        state_variables       = [np.random.random((num_neurons, num_timesteps))]
-        state_variables_times = [np.linspace(0, 100, num_timesteps)]
-        SVM = StateVariablesModel(state_variable_names, state_variables, state_variables_times)
-        
-        # from brian state monitorS
-        skip_not_rec_neuron_ids=False
-        SVM = StateVariablesModel.from_brian_state_monitors([statemonN1, statemonN2], skip_not_rec_neuron_ids)
-        
-        skip_not_rec_neuron_ids=True
-        SVM = StateVariablesModel.from_brian_state_monitors([statemonN1, statemonN2], skip_not_rec_neuron_ids)
-        
-        print('Then the created StateVariablesModel SVM has the following attributes:')
-        for var in vars(SVM):
-            print(var,': \n', getattr(SVM, var))
-    
-    
-    .. parsed-literal::
-    
-        Then the created StateVariablesModel SVM has the following attributes:
-        Iin : 
-         [[0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
-          0.00000000e+00]
-         [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
-          0.00000000e+00]
-         [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
-          0.00000000e+00]
-         ...
-         [6.82521123e-09 7.02939025e-09 6.74769896e-09 7.76629202e-09
-          7.21872104e-09]
-         [6.81237889e-09 7.01617406e-09 6.73501234e-09 7.75169045e-09
-          7.20514890e-09]
-         [6.79957068e-09 7.00298271e-09 6.72234958e-09 7.73711634e-09
-          7.19160228e-09]]
-        t_Iin : 
-         [0.000e+00 1.000e-05 2.000e-05 ... 9.997e-02 9.998e-02 9.999e-02]
-        Iahp : 
-         [[5.00000000e-13 5.00000000e-13 5.00000000e-13 5.00000000e-13
-          5.00000000e-13]
-         [5.00000000e-13 5.00000000e-13 5.00000000e-13 5.00000000e-13
-          5.00000000e-13]
-         [5.00000000e-13 5.00000000e-13 5.00000000e-13 5.00000000e-13
-          5.00000000e-13]
-         ...
-         [2.35349697e-11 2.45322975e-11 2.37997191e-11 2.54116963e-11
-          2.38412778e-11]
-         [2.35283328e-11 2.45253794e-11 2.37930076e-11 2.54045302e-11
-          2.38345545e-11]
-         [2.35216978e-11 2.45184633e-11 2.37862979e-11 2.53973662e-11
-          2.38278332e-11]]
-        t_Iahp : 
-         [0.000e+00 1.000e-05 2.000e-05 ... 9.997e-02 9.998e-02 9.999e-02]
-        Imem : 
-         [[0.00000000e+00 0.00000000e+00 0.00000000e+00]
-         [4.74578721e-33 4.74578721e-33 4.74578721e-33]
-         [9.49157441e-33 9.49157441e-33 9.49157441e-33]
-         ...
-         [1.14559533e-10 2.80317027e-10 3.29995059e-10]
-         [1.15005619e-10 2.80084652e-10 3.29576244e-10]
-         [1.15447969e-10 2.79851599e-10 3.29157605e-10]]
-        t_Imem : 
-         [0.000e+00 1.000e-05 2.000e-05 ... 9.997e-02 9.998e-02 9.999e-02]
+.. code-block:: python
+
+    from teili.tools.visualizer.DataModels import EventsModel
+    neuron_ids  = [1, 1, 1, 2, 3, 1, 4, 5]
+    spike_times = [11, 14, 14, 16, 17, 25, 36, 40]
+    EM = EventsModel(neuron_ids=neuron_ids, spike_times=spike_times)
+
+... or create from brian spike monitor
+
+.. code-block:: python
+
+    EM = EventsModel.from_brian_spike_monitor(spikemonN1)
+
+Then the created EventsModel EM has the following attributes:
+
+.. parsed-literal::
+
+    neuron_ids :
+     [3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4
+     1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 2 3 4 1 0 3 2 4 1 3 0 2 4 1 3
+     0 2 4 1 3 0 2 4 1 3 0 2 4 3 1 0 2 4 3 1 0 2 4 3 1 0 2 4 3 1 0 2 4 3 1 0 2
+     4 3 1 0 2 4 3 1 0 2 4 3 1 0 2 3 4 1 0 2 3 4 1 0 3 2 4 1 0 3 4 2 1 3 0 4 2
+     1 3 0 4 2 1 3 0 4 2 1 3 0 4 2 1 3 4 0 2 1 3 4 0 2 1 3 4 0 2 1 3 4 0 2 3 1
+     4 0 2 3 1 4 0 2 3 1 4 0 3 2 1 4 0 3 2 1]
+    spike_times :
+     [0.00387 0.004   0.00405 0.00411 0.00413 0.00628 0.00651 0.00659 0.00669
+     0.00673 0.0085  0.0088  0.00891 0.00903 0.00908 0.0107  0.0111  0.01124
+     0.01139 0.01145 0.01278 0.01326 0.01344 0.01363 0.0137  0.01491 0.01552
+     0.01574 0.01595 0.01603 0.01699 0.01764 0.01788 0.01812 0.01821 0.01907
+     0.01984 0.02012 0.02039 0.02049 0.02108 0.02183 0.02216 0.02247 0.02259
+     0.02304 0.02391 0.02426 0.0246  0.02473 0.02506 0.02604 0.02644 0.02684
+     0.027   0.02719 0.02822 0.02867 0.02914 0.02932 0.02935 0.03047 0.03094
+     0.03139 0.03144 0.03155 0.03261 0.03313 0.03351 0.03359 0.03375 0.0347
+     0.03525 0.03554 0.03576 0.03594 0.03682 0.03731 0.03748 0.03781 0.038
+     0.03885 0.03937 0.03945 0.03987 0.04005 0.04084 0.04141 0.04142 0.042
+     0.04222 0.04304 0.04359 0.04372 0.04438 0.04459 0.04526 0.04569 0.04591
+     0.04663 0.04688 0.04752 0.04786 0.04816 0.04878 0.04902 0.04953 0.0498
+     0.05021 0.0509  0.05117 0.05161 0.0518  0.05233 0.05309 0.05338 0.05373
+     0.05384 0.05449 0.05522 0.0555  0.05575 0.05579 0.05655 0.05743 0.05774
+     0.05788 0.05792 0.0587  0.05949 0.05978 0.05978 0.05989 0.06072 0.06163
+     0.0618  0.06194 0.06198 0.06289 0.06389 0.06391 0.06419 0.06423 0.06514
+     0.06605 0.06618 0.06643 0.06656 0.06748 0.06828 0.06855 0.06871 0.0689
+     0.06966 0.07033 0.07075 0.07086 0.07114 0.07195 0.0725  0.07303 0.07306
+     0.07343 0.07423 0.07471 0.0754  0.07545 0.0759  0.07656 0.07688 0.07763
+     0.07774 0.07815 0.07875 0.07899 0.07997 0.08017 0.08062 0.0811  0.08119
+     0.08212 0.08238 0.08286 0.08328 0.0833  0.08428 0.08459 0.08509 0.08537
+     0.0855  0.08647 0.08687 0.08744 0.08757 0.08783 0.08879 0.08929 0.08982
+     0.08987 0.0902  0.09128 0.0921  0.09261 0.09306 0.09351]
+
+**StateVariablesModel:**
+stores any number of variables with their name and the list of timepoints when the variable was sampled
+
+Example shows how to create it from array/list or from brian spike monitor
+
+.. code-block:: python
+
+    from teili.tools.visualizer.DataModels import StateVariablesModel
+
+    # create from array/list
+    state_variable_names = ['var_name']
+    num_neurons, num_timesteps = 6, 50
+    state_variables       = [np.random.random((num_neurons, num_timesteps))]
+    state_variables_times = [np.linspace(0, 100, num_timesteps)]
+    SVM = StateVariablesModel(state_variable_names, state_variables, state_variables_times)
+
+    # create from brian state monitorS
+    skip_not_rec_neuron_ids=False
+    SVM = StateVariablesModel.from_brian_state_monitors([statemonN1, statemonN2], skip_not_rec_neuron_ids)
+    skip_not_rec_neuron_ids=True
+    SVM = StateVariablesModel.from_brian_state_monitors([statemonN1, statemonN2], skip_not_rec_neuron_ids)
+
+Then the created StateVariablesModel SVM has the following attributes:
+
+.. parsed-literal::
+
+    Iin :
+     [[0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+      0.00000000e+00]
+     [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+      0.00000000e+00]
+     [0.00000000e+00 0.00000000e+00 0.00000000e+00 0.00000000e+00
+      0.00000000e+00]
+     ...
+     [6.82521123e-09 7.02939025e-09 6.74769896e-09 7.76629202e-09
+      7.21872104e-09]
+     [6.81237889e-09 7.01617406e-09 6.73501234e-09 7.75169045e-09
+      7.20514890e-09]
+     [6.79957068e-09 7.00298271e-09 6.72234958e-09 7.73711634e-09
+      7.19160228e-09]]
+    t_Iin :
+     [0.000e+00 1.000e-05 2.000e-05 ... 9.997e-02 9.998e-02 9.999e-02]
+    Iahp :
+     [[5.00000000e-13 5.00000000e-13 5.00000000e-13 5.00000000e-13
+      5.00000000e-13]
+     [5.00000000e-13 5.00000000e-13 5.00000000e-13 5.00000000e-13
+      5.00000000e-13]
+     [5.00000000e-13 5.00000000e-13 5.00000000e-13 5.00000000e-13
+      5.00000000e-13]
+     ...
+     [2.35349697e-11 2.45322975e-11 2.37997191e-11 2.54116963e-11
+      2.38412778e-11]
+     [2.35283328e-11 2.45253794e-11 2.37930076e-11 2.54045302e-11
+      2.38345545e-11]
+     [2.35216978e-11 2.45184633e-11 2.37862979e-11 2.53973662e-11
+      2.38278332e-11]]
+    t_Iahp :
+     [0.000e+00 1.000e-05 2.000e-05 ... 9.997e-02 9.998e-02 9.999e-02]
+    Imem :
+     [[0.00000000e+00 0.00000000e+00 0.00000000e+00]
+     [4.74578721e-33 4.74578721e-33 4.74578721e-33]
+     [9.49157441e-33 9.49157441e-33 9.49157441e-33]
+     ...
+     [1.14559533e-10 2.80317027e-10 3.29995059e-10]
+     [1.15005619e-10 2.80084652e-10 3.29576244e-10]
+     [1.15447969e-10 2.79851599e-10 3.29157605e-10]]
+    t_Imem :
+     [0.000e+00 1.000e-05 2.000e-05 ... 9.997e-02 9.998e-02 9.999e-02]
     
 
 Plot the collected data
@@ -303,7 +301,10 @@ Define PlotSettings
 Call the DataController of the desired type of plot
 -------------------------------------------------------
 
-So far in teili: \* Histogram \* Rasterplot \* Lineplot
+So far in teili:
+    - Histogram
+    - Rasterplot
+    - Lineplot
 
 Histogram
 ---------------
@@ -324,12 +325,13 @@ Histogram
    * backend='matplotlib'
    * show_immediately=False
 
+Simple example to plot a histogram of two NeuronGroups to plot data
+from BrianSpikeMontiors/StateMonitors (or Datamodels) with matplotlib backend:
+
 .. code-block:: python
 
-    ''' Simple example to plot a histogram of two NeuronGroups '''
     from teili.tools.visualizer.DataControllers import Histogram
-    
-    # plot data from BrianSpikeMontiors/StateMonitors
+    # brian spike monitor
     DataModel_to_attr =  [(spikemonN1, 'i'), (spikemonN2, 'i')]
     
     # or plot data from DataModels
@@ -337,22 +339,19 @@ Histogram
     # EM2 = EventsModel.from_brian_spike_monitor(spikemonN2)
     # DataModel_to_attr = {EM1: 'neuron_ids', EM2:'neuron_ids'}
     subgroup_labels = ['N1', 'N2']
-    
-    # MATPLOTLIB backend
+
     HC = Histogram(DataModel_to_attr=DataModel_to_attr,
                     MyPlotSettings=MyPlotSettings,
                     subgroup_labels=subgroup_labels,
                     backend='matplotlib')
 
-
-
 .. image:: fig/example_histogram.png
 
+or PYQTGRAPH backend:
 
 .. code-block:: python
 
-    # PYQTGRAPH backend
-    HC = Histogram(DataModel_to_attr=DataModel_to_attr, 
+    HC = Histogram(DataModel_to_attr=DataModel_to_attr,
                     MyPlotSettings=MyPlotSettings,           
                     subgroup_labels=subgroup_labels,
                     backend='pyqtgraph',
@@ -377,11 +376,12 @@ Rasterplot
    * add_histogram=False           --> show histogram of spikes per neuron id next to rasterplot
    * show_immediately=False
 
+Simple example to plot a raster plot of two NeuronGroups to plot data
+from BrianSpikeMontiors/StateMonitors (or Datamodels) with matplotlib backend:
+
 .. code-block:: python
 
     from teili.tools.visualizer.DataControllers import Rasterplot
-    ''' Simple example to plot a rasterplot of two NeuronGroups '''
-    
     # plot data from BrianSpikeMontiors
     MyEventsModels = [spikemonN1, spikemonN2]
     
@@ -397,14 +397,11 @@ Rasterplot
     # MATPLOTLIB backend - WITH HISTOGRAM
     RC = Rasterplot(MyEventsModels=MyEventsModels, MyPlotSettings=MyPlotSettings, subgroup_labels=subgroup_labels, add_histogram=True)
 
-
-
 .. image:: fig/example_rasterplot.png
-
-
 
 .. image:: fig/example_rasterplot_with_histogram.png
 
+or PYQTGRAPH backend:
 
 .. code-block:: python
 
@@ -436,11 +433,12 @@ LinePlot
    * backend='matplotlib'
    * show_immediately=False
 
+Simple example to plot a line plot of two NeuronGroups to plot data
+from BrianSpikeMontiors/StateMonitors (or Datamodels) with matplotlib backend:
+
 .. code-block:: python
 
     from teili.tools.visualizer.DataControllers import Lineplot
-    ''' Simple example to plot a lineplot of two NeuronGroups '''
-    
     # plot data from BrianSpikeMontiors
     DataModel_to_x_and_y_attr = [(statemonN1, ('t', 'Iin')), (statemonN2, ('t', 'Imem'))]
     # or plot data from StateVariablesModel
@@ -449,21 +447,17 @@ LinePlot
     DataModel_to_x_and_y_attr = [(SVM_N1, ('t_Iin', 'Iin')), (SVM_N2, ('t_Imem', 'Imem'))]
     
     subgroup_labels = ['N1', 'N2']
-    
-    # MATPLOTLIB backend
     LC = Lineplot(DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
                       MyPlotSettings=MyPlotSettings,
                       subgroup_labels=subgroup_labels, 
                       backend='matplotlib')
 
-
-
 .. image:: fig/example_lineplot.png
 
+or PYQTGRAPH backend:
 
 .. code-block:: python
 
-    # PYQTGRAPH backend
     LC = Lineplot(DataModel_to_x_and_y_attr=DataModel_to_x_and_y_attr,
                       MyPlotSettings=MyPlotSettings,
                       subgroup_labels=subgroup_labels, 
@@ -474,6 +468,11 @@ Additional functionalities
 
 Combine different plots
 ----------------------------
+You can combine different plot in any kind of way. Just specifiy the location and
+size of the subplots you would want to have and then pass the respective subplots
+on to the different controller.
+When using more than one controller make sure to set show_immediately only to
+true in the controller that is called last.
 
 **… with matplotlib**
 
@@ -545,9 +544,10 @@ Combine different plots
 
 Add second plot with a detailed view of a given plot
 --------------------------------------------------------
+Create original plot of which you would like to have a detailed version as well TWICE
+
 .. code-block:: python
 
-    ''' Create original plot of which you would like to have a detailed version as well TWICE (sorry, about that...)'''
     MyEventsModels = [spikemonN1, spikemonN2]
     subgroup_labels = ['N1', 'N2']
     

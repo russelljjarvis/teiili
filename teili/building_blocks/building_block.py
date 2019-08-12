@@ -104,7 +104,6 @@ class BuildingBlock(Nameable):
                     for key in self.standalone_params]
         return run_args
 
-
     @property
     def groups(self):
         """ This property will collect all available groups from the respective
@@ -121,10 +120,12 @@ class BuildingBlock(Nameable):
         tmp_groups = {}
         tmp_groups.update(self._groups)
         for sub_block in self.sub_blocks:
-             # Needs to be groups and not _groups for recursive collection
-             tmp_groups.update(sub_block.groups)
+            # Needs to be groups and not _groups for recursive collection
+            tmp_groups.update(sub_block.groups)
         return tmp_groups
 
+    def __getitem__(self, key):
+        return self.groups[key]
 
     def _set_tags(self, tags, target_group):
         """ This method allows the user to set a list of tags to a specific
@@ -147,7 +148,6 @@ class BuildingBlock(Nameable):
         else:
             target_group._tags = tags
 
-
     def print_tags(self, target_group):
         """ Get the currently set tags for a given group.
 
@@ -155,7 +155,6 @@ class BuildingBlock(Nameable):
             target_group (str): Name of group to get tags from
         """
         print(self.groups[target_group]._tags)
-
 
     def get_tags(self, target_group):
         """ Get the currently set tags for a given group.
@@ -172,7 +171,6 @@ class BuildingBlock(Nameable):
             return self.groups[target_group]._tags
         else:
             return target_group._tags
-
 
     def get_groups(self, tags):
         """ Get all groups which have a certain set of tags

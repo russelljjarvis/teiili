@@ -123,6 +123,9 @@ class Plotter2d(object):
             # print(self._i)
             self._xi, self._yi = np.unravel_index(self._i, (dims[0], dims[1]))
             # assert(len(self._i) == len(self._t))
+        except ValueError as e:
+            print('You probably did not set the correct dimensions for your input!')
+            raise e
         except AttributeError:  # that should work, if it is a DVSmonitor (it has xi and yi instead of y)
             self._xi = np.asarray(monitor.xi, dtype='int')
             self._yi = np.asarray(monitor.yi, dtype='int')
@@ -135,17 +138,20 @@ class Plotter2d(object):
         try:
             self._pol = monitor.pol
         except:
-            self._pol = np.zeros_like(self._t)
+            self._pol = np.zeros_like(self._i)
 
         self.mask = range(len(monitor.t))  # [True] * (len(monitor.t))
-        if plotrange is None:
-            if len(self.t) > 0:
-                self.plotrange = (0 * second, np.max(self.t))
-            else:
-                self.plotrange = (0 * ms, 0 * ms)
-        else:
-            self.plotrange = plotrange
-            self.set_range(plotrange)
+
+        self._plotrange = (0 * ms, 0 * ms)
+        self.set_range(plotrange)
+
+    @property
+    def plotrange(self):
+        return self._plotrange
+
+    @plotrange.setter
+    def plotrange(self, plotrange):
+        self.set_range(plotrange)
 
     @property
     def pol(self):
@@ -228,19 +234,22 @@ class Plotter2d(object):
         # print(plottimesteps)
         return (plottimesteps, self.dims[0], self.dims[1])
 
-    def set_range(self, plotrange):
+    def set_range(self, plotrange=None):
         '''
         set a range with unit that is applied for all computations with this monitor
 
         Args:
             plotrange (TYPE): Description
         '''
-        if plotrange:
-            self.plotrange = plotrange
-            self.mask = np.where((self._t <= plotrange[1]) & (self._t >= plotrange[0]))[0]
-        else:
+        if plotrange is None:
             self.mask = range(len(self._t))  # slice(len(self._t))  # [True] * (len(self._t))
-            self.plotrange = (0 * second, np.max(self.t))
+            if len(self.t) > 0:
+                self._plotrange = (np.min(self.t), np.max(self.t))
+            else:
+                self._plotrange = (0 * ms, 0 * ms)
+        else:
+            self._plotrange = plotrange
+            self.mask = np.where((self._t <= plotrange[1]) & (self._t >= plotrange[0]))[0]
 
     def get_sparse3d(self, dt, align_to_min_t=True):
         """Using the package sparse (based of scipy sparse, but for 3d), the spiketimes
@@ -259,15 +268,18 @@ class Plotter2d(object):
         # print(np.max(self.t / dt))
         # print(self.plotshape(dt))
         if len(self.t) > 0:
-            # t = (self.t - np.min(self.t)) / dt
-            t = (self.t - self.plotrange[0]) / dt
+            if align_to_min_t:
+                min_t = np.min(self.t)
+            else:
+                min_t = 0 * ms
+
             try:
                 sparse_spikemat = sparse.COO(
-                    (np.ones(len(self.t)), (t, self.xi, self.yi)),
+                    (np.ones(len(self.t)), ((self.t - min_t) / dt, self.xi, self.yi)),
                     shape=self.plotshape(dt))
             except:
                 sparse_spikemat = sparse.COO(
-                    coords=(t, self.xi, self.yi),
+                    coords=((self.t - min_t) / dt, self.xi, self.yi),
                     data=np.ones(len(self.t)),
                     shape=self.plotshape(dt))
         else:
@@ -307,8 +319,8 @@ class Plotter2d(object):
             TYPE: Description
         """
         dense3d = self.get_dense3d(dt)
-
-        filtered = ndimage.uniform_filter1d(dense3d, size=round(filtersize / dt),axis=0, mode='constant') * second / dt
+        filtered = ndimage.uniform_filter1d(dense3d, size=int(filtersize / dt),
+                                            axis=0, mode='constant') * second / dt
         # filtered  = ndimage.zoom(filtered, (1, 2, 2))
         return filtered
 
@@ -336,6 +348,10 @@ class Plotter2d(object):
 
         video_filtered0 = 0
         video_filtered1 = 0
+
+        if self._pol is None:
+            print('no polarity information stored, cannot create on-off plot')
+            return
 
         time_mask = self.mask
         pol_mask = np.where((self._pol == 0))[0]
@@ -372,7 +388,7 @@ class Plotter2d(object):
 
         return imv
 
-    def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET, levels = None):
+    def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET, levels=None):
         """
         Args:
             plot_dt (TYPE, optional): Description
@@ -390,14 +406,14 @@ class Plotter2d(object):
 
         imv = pg.ImageView()
         imv.setImage(np.flip(video_filtered, 2), xvals=np.min(self.t / ms) + np.arange(
-            0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms), levels = levels)
+            0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms), levels=levels)
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")
         # imv.show()
         # imv.export("plot/plot_.png")
         return imv
 
-    def rate_histogram(self, filename, filtersize=50 * ms, plot_dt=defaultclock.dt * 100, num_bins=50):
+    def rate_histogram(self, filename=None, filtersize=50 * ms, plot_dt=defaultclock.dt * 100, num_bins=50):
         """Summary
 
         Args:
@@ -434,39 +450,64 @@ class Plotter2d(object):
         plt.xlabel('time in s')
         plt.ylabel('firing rate in Hz')
         # plt.show()
-        sns_fig.savefig(str(filename) + '_ratehistogram' + '.png')
+        if filename is not None:
+            sns_fig.savefig(str(filename) + '_ratehistogram' + '.png')
+            plt.close()
         # plt.figure()
         # plt.imshow(hist2d.T/np.max(hist2d))#, vmax = 0.1)
-        plt.close()
 
-    def ifr_histogram(self, filename, num_bins=50):
+    def get_dense_ifr(self, dt=50 * ms, plot=False, frames_timestamps=None):
+        """
+        calculates a vector of instantaneous frequencies for every timestep dt.
+        IFRs on timesteps without a spike are interpolated between the last two spikes
+        :return: matrix of IFRs for every neuron and every timestep
+        """
+
+        from functools import partial
+        import multiprocessing
+
+        if frames_timestamps is None:
+            densetimes = np.arange(
+                self.plotrange[0] / ms, self.plotrange[1] / ms, dt / ms)
+        else:
+            densetimes = frames_timestamps / ms
+            print('dt will be ignored as you have set frame_timestamps')
+
+        # denseisis = np.zeros((len(densetimes), self.cols * self.rows))
+
+        interp = partial(interpolate_isi, t=self.t_, i=self.i, densetimes=densetimes)
+
+        # for i in range(self.cols * self.rows):
+        #     interpolate_isi(i)
+        #     denseisis[:, i] = interpolate_isi(i)
+        num_cores = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(num_cores - 1)
+        indices = range(0, self.cols * self.rows)
+        res = pool.map(interp, indices)
+        denseisis = np.vstack(res).T
+
+        denseifrs = 1 / (denseisis / 1000)
+        denseifrs[denseifrs == np.inf] = 0
+
+        if plot:
+            imv = pg.ImageView()
+            # imv.setImage(np.reshape(1/(denseisis/1000),(denseisis.shape[0],self.cols,self.rows)))
+            # imv.setImage(np.reshape(denseisis, (denseisis.shape[0], self.cols, self.rows)))
+            imv.setImage(np.reshape(denseifrs, (denseifrs.shape[0], self.cols, self.rows)))
+            imv.setPredefinedGradient("thermal")
+            imv.show()
+            # app.exec()
+
+        return denseifrs, denseisis, densetimes
+
+    def ifr_histogram(self, filename=None, num_bins=50):
         """Summary
 
         Args:
             filename (TYPE): Description
             num_bins (int, optional): Description
         """
-        from scipy.interpolate import interp1d
-        dt = 5 * ms
-        densetimes = np.arange(
-            self.plotrange[0] / ms, self.plotrange[1] / ms, dt / ms)
-        denseisis = np.zeros((len(densetimes), self.cols * self.rows))
-        for i in range(self.cols * self.rows):
-            inds = np.where(i == self.i)[0]
-            isitimes = self.t_[inds]
-            if len(isitimes) > 2:
-                interpf = interp1d(isitimes[1:], np.diff(
-                    isitimes), kind='linear', bounds_error=False, fill_value=0.0)
-                denseisis[:, i] = interpf(densetimes)
-            else:
-                denseisis[:, i] = 0  # np.nan
-        #        imv = pg.ImageView()
-        #        imv.setImage(np.reshape(1/(denseisis/1000),(denseisis.shape[0],self.cols,self.rows)))
-        #        imv.setPredefinedGradient("thermal")
-        #        imv.show()
-
-        denseifrs = 1 / (denseisis / 1000)
-        denseifrs[denseifrs == np.inf] = 0
+        denseifrs, denseisis, densetimes = self.get_dense_ifr(dt=5 * ms)
         histrangeifr = (0, np.max(denseifrs))
         histrangeisi = (0, np.max(denseisis))
         histrangeisi = (0, 200)
@@ -507,15 +548,6 @@ class Plotter2d(object):
         else:
             sns_fig.savefig(str(filename) + '_ifrhistogram' + '.png')
             plt.close()
-
-    #        plt.figure()
-    #        sns_fig = sns.heatmap(hist2disi.T,yticklabels=np.flip(np.round(histisi[1][0:(len(histisi[1])-1)],0),0),vmax=100).get_figure()
-    #        plt.xlabel('timestep')
-    #        plt.ylabel('isi in ms')
-    #        #plt.show()
-    #        sns_fig.savefig(str(filename) + '_ratehistogram'+ '.png')
-    #        #plt.figure()
-    # plt.imshow(hist2d.T/np.max(hist2d))#, vmax = 0.1)
 
     def savez(self, filename):
         """
@@ -615,7 +647,8 @@ class Plotter2d(object):
             csvwriter.writerow(self.t / second)
             csvwriter.writerow(self.i)
 
-    def plot_panes(self, num_panes=None, timestep=None, filtersize=50 * ms, num_rows=2, filename=None):
+    def plot_panes(self, num_panes=None, timestep=None, filtersize=50 * ms, num_rows=2,
+                   plotfunction='plot3d', filename=None, colormap=cm.jet, **plotkwargs):
         """
         Args:
             num_panes (None, optional): Description
@@ -627,6 +660,10 @@ class Plotter2d(object):
         Returns:
             TYPE: Description
         """
+
+        if type(plotfunction) == str:
+            plotfunction = getattr(self, plotfunction)
+
         if num_panes is None and timestep is None:
             print('please specify either num_panes or timestep')
             return
@@ -636,40 +673,14 @@ class Plotter2d(object):
         if num_panes is not None:
             timestep = self.plotlength / num_panes
 
-        dt = filtersize / 10  # this is a choice we have to make
-        num_steps = int(timestep / dt)
-        video_filtered = self.get_filtered(dt, filtersize)
+        dt = filtersize / 10
+        num_steps = int(np.round(timestep / dt))
 
-        gw_paneplot = pg.GraphicsWindow(title="pane plot")
-        f = int(num_panes / num_rows)
-        width = 1920
-        gw_paneplot.resize(width, width / f * num_rows)
-
-        vb = dict()
-        imItems = dict()
-        for i in range(num_panes):
-            picture = video_filtered[i * num_steps]
-            imItems[i] = pg.ImageItem(cm.jet(picture / np.max(video_filtered)))
-            # imItems[i].setTitle(title=str(i*timestep)) #not possible for images
-            vb[i] = gw_paneplot.addViewBox()
-            vb[i].addItem(imItems[i])
-            if np.mod(i + 1, np.round(num_panes / num_rows)) == 0:
-                gw_paneplot.nextRow()
-
-        # gw_paneplot.ui.histogram.gradient.setColorMap(CM_JET)
-        # gw_paneplot.show()
-        QtGui.QApplication.processEvents()  # without this, only the first plot is exported
-        exp_img = pg.exporters.ImageExporter(gw_paneplot.scene())
-        if filename is None:
-            gw_paneplot.show()
-        elif filename.endswith('.png'):
-            exp_img.export(filename)
-        elif filename.endswith('.svg'):
-            exp = pg.exporters.SVGExporter(gw_paneplot.scene())
-            exp.export(filename + '.svg')
-        else:
-            exp_img.export(filename + '_panes.png')
-
+        video_filtered = plotfunction(plot_dt=dt, filtersize=filtersize, plot=False, **plotkwargs)
+        # frames_per_row = num_panes//num_rows #int(len(video_filtered)/num_steps/num_rows)
+        slice_indices = np.arange(0, num_panes * num_steps, num_steps)
+        gw_paneplot = create_panes(video_filtered, num_rows, slice_indices, colormap=colormap)
+        export_panes(gw_paneplot=gw_paneplot, filename=filename)
         return gw_paneplot
 
     def generate_movie(self, filename, scale=None, speed=1, plotfunction='plot3d',
@@ -703,11 +714,12 @@ class Plotter2d(object):
             Example usage:
             plotter2dobject.generate_gif('~/gifname.gif', plotfunction = 'plot3d_on_off', filtersize=100 * ms, plot_dt=50 * ms)
         """
-
-        fps = np.asarray(speed / plot_dt / Hz, dtype='int')
-        if abs(speed / plot_dt / Hz - fps) > 0.0000001:
-            plot_dt = 1 / fps * second
-            print('Your plot_dt was rounded to', plot_dt, 'in order to fit framerate of', fps)
+        desired_fps = 50
+        fps = np.asarray(speed / plot_dt / Hz, dtype='int')  # theoretical framerate for dt
+        pts = desired_fps / fps  # frames to drop in order to get actual framerate of 30 fps (presentation timestamp)
+        # if abs(speed / plot_dt / Hz - fps) > 0.0000001:
+        #     plot_dt = 1 / fps * second
+        #     print('Your plot_dt was rounded to', plot_dt, 'in order to fit framerate of', fps)
 
         gif_temp_dir = os.path.join(tempfolder, "gif_temp")
         # pgImage = self.plot3d(plot_dt=plot_dt, filtersize=filtersize)
@@ -716,7 +728,12 @@ class Plotter2d(object):
         pgImage = plotfunction(plot_dt=plot_dt, **plotkwargs)
         if not os.path.exists(gif_temp_dir):
             os.makedirs(gif_temp_dir)
-        pgImage.export(os.path.join(gif_temp_dir, "gif.png"))
+        try:
+            pgImage.export(os.path.join(gif_temp_dir, "gif.png"))
+        except AttributeError as e:
+            print(e)
+            print('No gif created, probably empty monitor')
+            return
 
         # before switching to ffmpeg we used convert, which is less flexible concerning framerates
         #        linux_command = "cd " + str(gif_temp_dir) + ";" + \
@@ -727,16 +744,111 @@ class Plotter2d(object):
 
         ffmpeg_command = "cd " + \
                          str(gif_temp_dir) + ";" + \
-                         "ffmpeg -f image2 -framerate " + str(fps) + " -pattern_type glob -i '*.png' "
+                         "ffmpeg -f image2 -framerate " + str(desired_fps) + " -pattern_type glob -i '*.png' "
+        # ffmpeg_command += "'setpts=" + str(pts) + "*PTS' "  # control speed
+
         if scale is not None:
-            ffmpeg_command += "-vf scale=" + scale + ' '
+            ffmpeg_command += "-filter_complex scale=" + scale + ",setpts=" + str(pts) + "*PTS  "
+        else:
+            ffmpeg_command += "-filter_complex setpts=" + str(pts) + "*PTS  "
 
         ffmpeg_command += '-y '  # overwrite existing output files
         ffmpeg_command += ffmpegoptions + ' '
-
-        ffmpeg_command +="'"+os.path.abspath(filename)+"'"
+        ffmpeg_command += os.path.abspath(filename)
 
         result = subprocess.check_output(ffmpeg_command, shell=True)
         print(result)
 
         shutil.rmtree(gif_temp_dir)
+
+    def calculate_pop_vector_trajectory(self, dt=50 * ms, plot=False, frames_timestamps=None):
+        denseifrs, denseisis, densetimes = self.get_dense_ifr(dt=dt, frames_timestamps=frames_timestamps)
+        denseifrs3d = np.reshape(denseifrs, (denseifrs.shape[0], self.cols, self.rows))
+        xsum = np.sum(denseifrs3d, axis=1)
+        ysum = np.sum(denseifrs3d, axis=2)
+        num_x = xsum.shape[1]
+        num_y = ysum.shape[1]
+        index_vector_x = np.arange(1, num_x + 1)
+        index_vector_y = np.arange(1, num_y + 1)
+        # calculate the weighted sum and normalize:
+        x_center = np.inner(xsum, index_vector_x) / np.sum(xsum, axis=1)
+        y_center = np.inner(ysum, index_vector_y) / np.sum(ysum, axis=1)
+        if plot:
+            plt.figure()
+            plt.plot(x_center, y_center)
+            plt.xlim(0, num_x)
+            plt.ylim(0, num_y)
+        return x_center, y_center
+
+
+def interpolate_isi(ind, t=None, i=None, densetimes=None):
+    from scipy.interpolate import interp1d
+    inds = np.where(ind == i)[0]
+    isitimes = t[inds]
+    # if ind % 100 == 0:
+    #     print(str(ind))
+    if len(isitimes) > 2:
+        interpf = interp1d(isitimes[1:], np.diff(
+            isitimes), kind='linear', bounds_error=False, fill_value=0.0)
+        return interpf(densetimes)
+    else:
+        return np.zeros_like(densetimes)
+
+
+def visualize_3d(video):
+    imv = pg.ImageView()
+    imv.setImage(video)
+    imv.setPredefinedGradient("thermal")
+    imv.show()
+    app.exec()
+
+
+def export_panes(gw_paneplot, filename):
+    """
+    generates a figure file from a GraphicsWindow object
+    :param gw_paneplot:
+    :param filename:
+    :return:
+    """
+    QtGui.QApplication.processEvents()  # without this, only the first plot is exported
+    exp_img = pg.exporters.ImageExporter(gw_paneplot.scene())
+    if filename is None:
+        gw_paneplot.show()
+    elif filename.endswith('.png'):
+        exp_img.export(filename)
+    elif filename.endswith('.svg'):
+        exp = pg.exporters.SVGExporter(gw_paneplot.scene())
+        exp.export(filename + '.svg')
+    else:
+        exp_img.export(filename + '_panes.png')
+
+
+def create_panes(video, num_rows, slice_indices=None, colormap=cm.jet):
+    """
+
+    :param video: the 3d matrix that should be plotted
+    :param slice_indices: the indices of the plotted slices in the first dim of the 3d matrix
+    :param num_rows: the number of rows for the pane plot
+    :return: the GraphicsWindow object
+    """
+    num_panes = len(slice_indices)
+    gw_paneplot = pg.GraphicsWindow(title="pane plot")
+    f = int(num_panes / num_rows)
+    width = 1920
+    gw_paneplot.resize(width, width / f * num_rows)
+
+    if slice_indices is None:
+        slice_indices = np.arange(num_panes)
+
+    vb = dict()
+    imItems = dict()
+    for i in range(num_panes):
+        picture = video[slice_indices[i]]
+        imItems[i] = pg.ImageItem(colormap(picture / np.max(video)))
+        # imItems[i].setTitle(title=str(i*timestep)) #not possible for images
+        vb[i] = gw_paneplot.addViewBox()
+        vb[i].addItem(imItems[i])
+        if np.mod(i + 1, np.round(num_panes / num_rows)) == 0:
+            gw_paneplot.nextRow()
+
+    return gw_paneplot

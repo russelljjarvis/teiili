@@ -61,7 +61,7 @@ class NeuronEquationBuilder():
 
     def __init__(self, keywords=None, base_unit='current', adaptation='calciumFeedback',
                  integration_mode='exponential', leak='leaky', position='spatial',
-                 noise='gaussianNoise', refractory='refractory', num_inputs=1, verbose=False):
+                 noise='gaussian_noise', refractory='refractory', num_inputs=1, verbose=False):
         """Initializes NeuronEquationBuilder with defined keyword arguments.
 
         Args:

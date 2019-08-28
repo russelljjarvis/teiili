@@ -40,7 +40,7 @@ none = {
          """,
     'on_post': """
          """
-    }
+}
 
 current = {
     'model': """
@@ -58,7 +58,7 @@ current = {
          """,
     'on_post': """
          """
-    }
+}
 
 # standard parameters for current based models
 current_params = {
@@ -66,7 +66,7 @@ current_params = {
     "w_plast": 1,
     "baseweight": 1 * nA,
     "kernel": 0 * nA * ms**-1
-    }
+}
 
 # Additional equations for conductance based models
 
@@ -89,7 +89,7 @@ conductance = {
         gI += baseweight * abs(weight) * w_plast
         ''',
     'on_post': ''' '''
-               }
+}
 """ Standard parameters for conductance based models
 
 TODO: For inhibitory synapse EIe is negative. Could this thus be a problem?
@@ -102,7 +102,7 @@ conductance_params = {
     "w_plast": 1,
     "baseweight": 7 * nS,
     "kernel": 0 * nS * ms**-1
-    }
+}
 
 # DPI type model
 dpi = {
@@ -131,7 +131,7 @@ dpi = {
          """,
     'on_post': """
          """,
-    }
+}
 
 # standard parameters for DPI models
 dpi_params = {
@@ -144,8 +144,8 @@ dpi_params = {
     'I_th': 10 * pA,
     'I_syn': constants.I0,
     'w_plast': 1,
-    'baseweight': 7. * pA #50. * pA
-    }
+    'baseweight': 7. * pA  # 50. * pA
+}
 
 # DPI shunting inhibition
 dpi_shunt = {
@@ -174,7 +174,7 @@ dpi_shunt = {
          """,
     'on_post': """
          """,
-    }
+}
 
 dpi_shunt_params = {
     'Csyn': 1.5 * pF,
@@ -186,7 +186,7 @@ dpi_shunt_params = {
     'kp_syn': 0.66,
     'I_th': 10 * pA,
     'I_syn': constants.I0
-    }
+}
 
 """ **Plasticity blocks**
 You need to declare two set of parameters for every block:
@@ -230,7 +230,7 @@ fusi = {
     'on_post': """
          Ca += w_ca
          """,
-    }
+}
 
 fusi_params_current = {
     "wplus": 0.2,
@@ -248,7 +248,7 @@ fusi_params_current = {
     "w_max": 1,
     "theta_w": 0.5,
     "w": 0
-    }
+}
 
 fusi_params_conductance = {
     "wplus": 0.2,
@@ -266,7 +266,7 @@ fusi_params_conductance = {
     "w_max": 1,
     "theta_w": 0.5,
     "w": 0
-    }
+}
 
 # STDP learning rule ##
 stdp = {
@@ -288,30 +288,30 @@ stdp = {
          Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
          w_plast = clip(w_plast + Apre, 0, w_max)
     """,
-    }
+}
 
 stdp_params_current = {
-        "baseweight": 7 * pA,
-        "taupre": 10 * ms,
-        "taupost": 10 * ms,
-        "w_max": 1.,
-        "dApre": 0.1,
-        "Q_diffAPrePost": 1.05,
-        "w_plast": 0
-    }
+    "baseweight": 7 * pA,
+    "taupre": 10 * ms,
+    "taupost": 10 * ms,
+    "w_max": 1.,
+    "dApre": 0.1,
+    "Q_diffAPrePost": 1.05,
+    "w_plast": 0
+}
 
 stdp_params_conductance = {
-        "baseweight": 7 * nS,
-        "taupre": 20 * ms,
-        "taupost": 20 * ms,
-        "w_max": 0.01,
-        "diffApre": 0.01,
-        "Q_diffAPrePost": 1.05,
-        "w_plast": 0
-    }
+    "baseweight": 7 * nS,
+    "taupre": 20 * ms,
+    "taupost": 20 * ms,
+    "w_max": 0.01,
+    "diffApre": 0.01,
+    "Q_diffAPrePost": 1.05,
+    "w_plast": 0
+}
 
 variance_modulation = {
-    'model' : '''
+    'model': '''
         inh_learning_rate: 1 (constant, shared)
         variance_th: 1 (constant)
         delta_w : 1
@@ -322,7 +322,7 @@ variance_modulation = {
         ''',
     'on_post': '''
         '''
-        }
+}
 
 SynSTDGM = {'model':
             '''
@@ -337,52 +337,52 @@ SynSTDGM = {'model':
     Q_diffAPrePost : 1 (shared, constant)
     scaling_factor : 1 (shared, constant)
     ''',
-    'on_pre':
-        '''
+            'on_pre':
+            '''
         Apre += dApre*gain_max
         Ipred_plast = clip(Ipred_plast + Apost, 0, gain_max)
         Ipred_post = (Ipred_post - (scaling_factor * Ipred_plast)) * (Ipred_post>0)
         ''',
-    'on_post':
-        '''
+            'on_post':
+            '''
         Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * gain_max
         Ipred_plast = clip(Ipred_plast + Apre, 0, gain_max)
         '''
-        }
+            }
 
 SynSTDGM_params = {
-        'dApre': '0.01',
-        'Ipred_plast': '0.0',
-        'gain_max': '1.0',
-        'taupre': '5 * msecond',
-        'taupost': '5 * msecond',
-        'Q_diffAPrePost': '1.05',
-        'scaling_factor': '0.1'
-        }
+    'dApre': '0.01',
+    'Ipred_plast': '0.0',
+    'gain_max': '1.0',
+    'taupre': '5 * msecond',
+    'taupost': '5 * msecond',
+    'Q_diffAPrePost': '1.05',
+    'scaling_factor': '0.1'
+}
 
-'''
+"""
 activity incorporates synaptic equations to be used with the DPI mode, the
 "var" neuronal template and add_activity_proxy in the run_regular function
- that is stored in the corresponding /tools/ folder.
-'''
+that is stored in the corresponding /tools/ folder.
+"""
 
-activity = {'model' : '''
+activity = {'model': '''
         inh_learning_rate: 1 (constant, shared)
         variance_th: 1 (constant)
         delta_w : 1
         ''',
-    'on_pre': '''
+            'on_pre': '''
         delta_w = inh_learning_rate * (normalized_activity_proxy_post - variance_th)
         w_plast = clip(w_plast + delta_w, 0, 1.0)
         ''',
-    'on_post': '''
+            'on_post': '''
         '''
-        }
+            }
 
 activity_params = {
-        'inh_learning_rate': '0.01',
-        'variance_th': '0.67',
-        }
+    'inh_learning_rate': '0.01',
+    'variance_th': '0.67',
+}
 # STDP learning rule ##
 
 stdp = {
@@ -402,23 +402,23 @@ stdp = {
         Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
         w_plast = clip(w_plast + Apre, 0, w_max)
         '''
-        }
+}
 
 stdp_para_current = {
-        "taupre": 10 * ms,
-        "taupost": 10 * ms,
-        "w_max": 1.,
-        "dApre": 0.1,
-        "Q_diffAPrePost": 1.05,
-        "w_plast": 0}
+    "taupre": 10 * ms,
+    "taupost": 10 * ms,
+    "w_max": 1.,
+    "dApre": 0.1,
+    "Q_diffAPrePost": 1.05,
+    "w_plast": 0}
 
 stdp_para_conductance = {
-        "taupre": 20 * ms,
-        "taupost": 20 * ms,
-        "w_max": 0.01,
-        "diffApre": 0.01,
-        "Q_diffAPrePost": 1.05,
-        "w_plast": 0}
+    "taupre": 20 * ms,
+    "taupost": 20 * ms,
+    "w_max": 0.01,
+    "diffApre": 0.01,
+    "Q_diffAPrePost": 1.05,
+    "w_plast": 0}
 
 """Kernels Blocks:
 You need to declare two set of parameters for every block:
@@ -439,17 +439,17 @@ alpha_kernel = {
          """,
     'on_post': """
          """,
-    }
+}
 
 alpha_params_current = {
     "tausyn": 0.5 * ms,
     "tausyn_rise": 2 * ms
-    }
+}
 
 alpha_params_conductance = {
     "tausyn": 0.5 * ms,
     "tausyn_rise": 1 * ms
-    }
+}
 
 # Resonant kernel ##
 resonant_kernel = {
@@ -466,25 +466,25 @@ resonant_kernel = {
          """,
     'on_post': """
          """,
-    }
+}
 
 resonant_params_current = {
     "tausyn": 0.5 * ms,
     "omega": 3 / ms,
     "tausyn_kernel": 0.5 * ms
-    }
+}
 
 resonant_params_conductance = {
     "tausyn": 0.5 * ms,
     "omega": 1 / ms,
-    }
+}
 
 none_params = {}
 
 none_model = {'model': '''    ''',
               'on_pre': '''     ''',
               'on_post': ''' ''',
-             }
+              }
 
 """Dictionary of keywords:
 
@@ -506,7 +506,7 @@ plasticity_models = {'non_plastic': none,
                      'fusi': fusi,
                      'stdp': stdp}
 
-synaptic_equations = {'activity' : activity,
+synaptic_equations = {'activity': activity,
                       'stdgm': stdgm}
 
 synaptic_equations.update(kernels)
@@ -516,7 +516,7 @@ synaptic_equations.update(plasticity_models)
 current_parameters = {'current': current_params, 'non_plastic': none_params,
                       'fusi': fusi_params_current, 'stdp': stdp_para_current,
                       'exponential': none_params, 'alpha': alpha_params_current,
-                      'resonant': resonant_params_current, 'activity' : none_params,
+                      'resonant': resonant_params_current, 'activity': none_params,
                       'stdgm': none_params}
 
 conductance_parameters = {'conductance': conductance_params, 'non_plastic': none_params,
@@ -528,17 +528,17 @@ conductance_parameters = {'conductance': conductance_params, 'non_plastic': none
 DPI_parameters = {'DPI': dpi_params, 'exponential': none_params,
                   'alpha': alpha_params_current, 'non_plastic': none_params,
                   'fusi': fusi_params_current, 'stdp': stdp_para_current,
-                  'resonant': none_params, 'activity' : activity_params,
+                  'resonant': none_params, 'activity': activity_params,
                   'stdgm': none_params}
 
 DPI_shunt_parameters = {'DPIShunting': dpi_shunt_params, 'exponential': none_params,
                         'non_plastic': none_params, 'fusi': fusi_params_current,
                         'stdp': stdp_para_current, 'resonant': none_params,
-                        'alpha' : none_params, 'activity' :none_params,
+                        'alpha': none_params, 'activity': none_params,
                         'stdgm': none_params}
 
 None_parameters = {'None': none_params, 'exponential': none_params,
                    'non_plastic': none_params, 'fusi': none_params,
                    'stdp': none_params, 'resonant': none_params,
-                   'alpha' : none_params, 'activity' :none_params,
+                   'alpha': none_params, 'activity': none_params,
                    'stdgm': stdgm_params}

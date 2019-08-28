@@ -20,13 +20,13 @@ This file contains:
     -saving and loading functions for monitors and weights
     -weight initialization
 
-All these functions are linked the the OCTA building block
+All these functions are linked the the OCTA building block.
 '''
 
 
 def add_bb_mismatch(bb, seed=42):
     '''
-    This allows to add mismatch to all the neuron and connection groups present in a building block
+    This allows to add mismatch to all the neuron and connection groups present in a building block.
 
     Args:
         bb (TYPE): Building block object to which mismatch should be added
@@ -49,8 +49,8 @@ def add_bb_mismatch(bb, seed=42):
 
 def add_decay_weight(group, decay_strategy, decay_rate):
     '''
-    This allows to add a weight decay run regular function following a pre defined
-    decay strategay
+    This allows to add a weight decay run regular function following a pre-defined
+    decay strategy.
 
     Args:
         group (list): List of Synapse group which should be subject to weight decay
@@ -101,15 +101,15 @@ def add_weight_pred_decay(group, decay_strategy, decay_rate):
 def add_weight_re_init(group, re_init_threshold, dist_param_re_init,
                        scale_re_init, distribution):
     """
-        This allows to add a weight re initialization run regular function specifying
+        This allows adding a weight re-initialization run-regular function specifying
         the distribution parameters from which to sample.
 
     Args:
-        group (list): List of groups which are subject to weight initialiazion
-        re_init_threshold (float): Parameter between 0 and 0.5. Threshold which triggers reinitialization.
-        dist_param_re_init (bool): Shape of Gamma distribution or mean of Normal distribution used.
-        scale_re_init (int): Scale for Gamma distribution or std of Normal distribution used.
-        distribution (bool): Distribution from which to initialize the weights. Gamma (1) or Normal (0) distributions.
+        group (list): List of groups which are subject to weight initialization
+        re_init_threshold (float): Parameter between 0 and 0.5. Threshold which triggers re-initialization.
+        dist_param_re_init (bool): Shape of gamma distribution or mean of normal distribution used.
+        scale_re_init (int): Scale for gamma distribution or std of normal distribution used.
+        distribution (bool): Distribution from which to initialize the weights. Gamma (1) or normal (0) distributions.
 
     Returns:
         None

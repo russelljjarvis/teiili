@@ -111,7 +111,7 @@ class OCTA_Neuron(NeuronEquationBuilder):
     """Custom equations for the OCTA network.
 
     octa_neuron : neuron_equation that comprises of all the components needed for octa.
-        in some synaptic connections not all features are used
+        In some synaptic connections not all features are used.
     """
 
     def __init__(self, num_inputs=2):

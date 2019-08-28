@@ -1,6 +1,6 @@
 
 """
-This file contains a list for values that should not have any mismatch added to thems
+This file contains lists of values that should not have any mismatch added to them.
 """
 
 no_mismatch_neuron = ['Io', 'Ut', 'kp','kn', 'Inoise']

@@ -4,7 +4,7 @@ Developing Building Blocks
 ***************
 
 This section explains the generation of new and more complex ``BuildingBlocks``:
-we provide users with an example of this in ``teili/building_blocks/octa.py`` and in ``teili/building_blocks/threeway.py``
+we provide users with an example of this in ``teili/building_blocks/octa.py``.
 
 Every building block inherits from the class ``BuildingBlocks`` which has attributes
 such as ``sub_blocks``, ``input_groups``, ``output_groups`` and ``hidden_groups``.

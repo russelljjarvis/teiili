@@ -42,9 +42,9 @@ def plot_sorted_compression(OCTA):
     moni = np.asarray([np.where(np.asarray(s.permutation) == int(i))[0][0] for i in monitor.i])
     plt.figure(1)
     plt.plot(monitor.t, moni, '.r')
-    plt.xlabel("Time")
-    plt.ylabel("Sorted spikes")
-    plt.title("Rasterplot compression block")
+    plt.xlabel('Time')
+    plt.ylabel('Sorted spikes')
+    plt.title('Rasterplot compression block')
 
 
 if __name__ == '__main__':

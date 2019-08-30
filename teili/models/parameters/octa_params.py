@@ -3,21 +3,19 @@
 """
 Created on Fri Jun 21 10:11:05 2019
 
-@author: matteo
+@author: matteo, mmilde
 
 This file contains default parameter for OCTA hierarchical BB.
-For more information look into Moritz Milde PhD dissertation 2019
+Parameters are stored as dictionaries.
+For more information look into
+M. B. Milde (2019) Spike-Based Computational Primitives for
+Vision-Based Scene Understanding, PhD diss., Institute of
+Neuroinformatics, University of Zurch and ETH Zurich,
+Zurich Switzerland.
 
 """
 
 from brian2 import pF, nS, mV, ms, pA, nA
-
-'''
-    octa_params (dict): Network parameters for the
-    wta_params (dict): WTA parameters
-
-'''
-
 
 wta_params = {'we_inp_exc': 100,
               'we_exc_inh': 300,  # 55/50

@@ -158,10 +158,19 @@ class NeuronEquationBuilder():
             self.print_all()
 
     def __call__(self, num_inputs):
-        """This allows the user to call the object with the num_inputs argument,
-        like it is done with the class.
-        Maybe this use is a bit confusing, but it may be convenient.
+        """In the recommended way of using Neurons as provided bey teili
+        the neuron model is imported from teili.models.neuron_models as
+        properly initialised python object in which the number of incoming
+        current, i.e. num_inputs, is set during the initialisation of the
+        class. However, teili also supports to initialise the `Equation_builder`
+        using a user-specified model without the need to implement the model
+        directly in the existing software stack. This allows faster development
+        time and mre flexibility as all functionality of teili is provided to
+        user-specified models. This function allows the user to set the
+        num_inputs argument to non-standard neuron model.
 
+        An usage example can be found in
+        `teiliApps/tutorials/neuron_synapse_builderobj_tutorial.py`
         Args:
             num_inputs (int, required): Number specifying how many distinct
                 neuron populations project to the target neuron population.

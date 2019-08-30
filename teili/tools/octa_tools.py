@@ -14,31 +14,31 @@ from teili.models.parameters.octa_params import *
 from teili.tools.run_regularly.add_run_reg import add_weight_decay,\
     add_pred_weight_decay, add_re_init_weights,\
     add_re_init_ipred, add_activity_proxy
-'''
-This file contains:
+"""
+this file contains:
     -wrapper functions for the run regular functions
     -saving and loading functions for monitors and weights
     -weight initialization
 
-All these functions are linked the the OCTA building block.
-'''
+all these functions are linked the the octa building block.
+"""
 
 
 def add_bb_mismatch(bb, seed=42):
-    '''
-    This allows to add mismatch to all the neuron and connection groups present in a building block.
+    """This allows to add mismatch to all the neuron and connection groups
+    present in a building block.
 
-    Args:
-        bb (TYPE): Building block object to which mismatch should be added
-        seed (int, optional): Random seed to sample the mismatch from
+    args:
+        bb (type): building block object to which mismatch should be added
+        seed (int, optional): random seed to sample the mismatch from
 
-    Returns:
-        None
-    '''
+    returns:
+        none
+    """
     for i in bb.groups:
-        if bb.groups[i]._tags['group_type'] == 'Neuron':
+        if bb.groups[i]._tags['group_type'] == 'neuron':
             bb.groups[i].add_mismatch(mismatch_neuron_param, seed=seed)
-            bb.groups[i]._tags['mismatch'] = True
+            bb.groups[i]._tags['mismatch'] = true
         elif bb.groups[i]._tags['group_type'] == 'Connection':
             bb.groups[i].add_mismatch(mismatch_synap_param, seed=seed)
             bb.groups[i]._tags['mismatch'] = True
@@ -48,9 +48,8 @@ def add_bb_mismatch(bb, seed=42):
 
 
 def add_decay_weight(group, decay_strategy, decay_rate):
-    '''
-    This allows to add a weight decay run regular function following a pre-defined
-    decay strategy.
+    """This allows to add a weight decay run regular function following a
+    pre-defined decay strategy.
 
     Args:
         group (list): List of Synapse group which should be subject to weight decay
@@ -60,7 +59,7 @@ def add_decay_weight(group, decay_strategy, decay_rate):
 
     Returns:
         None
-    '''
+    """
     for grp in group:
         add_weight_decay(grp, decay_strategy, decay_rate)
         dict_append = {'weight decay': decay_strategy}
@@ -74,9 +73,8 @@ def add_decay_weight(group, decay_strategy, decay_rate):
 
 
 def add_weight_pred_decay(group, decay_strategy, decay_rate):
-    """
-        This allows to add a weight decay run regular function following a pre defined
-        decay strategay
+    """ This allows to add a weight decay run regular function following a
+    pre defined decay strategay.
 
     Args:
         group (list): List of Synapse group which should be subject to weight decay
@@ -100,16 +98,19 @@ def add_weight_pred_decay(group, decay_strategy, decay_rate):
 
 def add_weight_re_init(group, re_init_threshold, dist_param_re_init,
                        scale_re_init, distribution):
-    """
-        This allows adding a weight re-initialization run-regular function specifying
-        the distribution parameters from which to sample.
+    """This allows adding a weight re-initialization run-regular function
+    specifying the distribution parameters from which to sample.
 
     Args:
         group (list): List of groups which are subject to weight initialization
-        re_init_threshold (float): Parameter between 0 and 0.5. Threshold which triggers re-initialization.
-        dist_param_re_init (bool): Shape of gamma distribution or mean of normal distribution used.
-        scale_re_init (int): Scale for gamma distribution or std of normal distribution used.
-        distribution (bool): Distribution from which to initialize the weights. Gamma (1) or normal (0) distributions.
+        re_init_threshold (float): Parameter between 0 and 0.5. Threshold which
+            triggers re-initialization.
+        dist_param_re_init (bool): Shape of gamma distribution or mean of normal
+            distribution used.
+        scale_re_init (int): Scale for gamma distribution or std of normal
+            distribution used.
+        distribution (bool): Distribution from which to initialize the weights.
+            Gamma (1) or normal (0) distributions.
 
     Returns:
         None
@@ -133,13 +134,13 @@ def add_weight_re_init(group, re_init_threshold, dist_param_re_init,
 
 
 def add_weight_re_init_ipred(group, re_init_threshold):
-    """
-        This allows to add a weight re initialization run regular function specifying
-        the distribution parameters from which to sample.
+    """This allows to add a weight re initialization run regular function
+    specifying the distribution parameters from which to sample.
 
     Args:
         group (list): List of groups which are subject to weight initialiazion
-        re_init_threshold (float): Parameter between 0 and 0.5. Threshold which triggers reinitialization.
+        re_init_threshold (float): Parameter between 0 and 0.5. Threshold which
+            triggers reinitialization.
 
     Returns:
         None
@@ -155,26 +156,8 @@ def add_weight_re_init_ipred(group, re_init_threshold):
     return None
 
 
-def add_regulatization_weight(group, buffer_size):
-    """Summary
-
-    Args:
-        group (TYPE): Description
-        buffer_size (TYPE): Description
-    """
-    for grp in group:
-        add_weight_regularization(grp, buffer_size=buffer_size)
-        dict_append = {'weight regulatization' : True}
-        if hasattr(grp, "_tags"):
-            grp._tags.update(dict_append)
-        else:
-            self._groups[target_group]._tags = {}
-            self._groups[target_group]._tags.update(dict_append)
-
-
 def add_proxy_activity(group, buffer_size, decay):
-    """
-        This allows to add an activity proxy run regular function.
+    """This allows to add an activity proxy run regular function.
 
 
     Args:
@@ -195,13 +178,18 @@ def add_proxy_activity(group, buffer_size, decay):
 
 
 def add_weight_init(group , dist_param, scale, distribution):
-    """Summary
+    """Function to add the weight initialisation to a given
+    `Connections` group.
 
     Args:
-        group (TYPE): Description
-        dist_param (TYPE): Description
-        scale (TYPE): Description
-        distribution (TYPE): Description
+        group (teili object): Connection group whose weights are intialised
+        dist_param (float): Parameter between 0 and 0.5. Threshold which
+            triggers re-initialization.
+        scale (float): Scale for gamma distribution or std of normal
+            distribution used.
+        distribution (bool): Distribution from which to initialize the weights.
+            Gamma (1) or normal (0) distributions.
+
     """
     for grp in group:
         grp.w_plast = weight_init(grp,
@@ -216,12 +204,12 @@ def add_weight_init(group , dist_param, scale, distribution):
             self._groups[target_group]._tags.update(dict_append)
 
 class monitor_init():
-
-    """Summary
+    """Proxy class to initialise monitor in order to visualise activity
+    using Visualizer
 
     Attributes:
-        i (TYPE): Description
-        t (TYPE): Description
+        i (np.ndarray): Array of neuron ids.
+        t (np.ndarray): Array of time stamps.
     """
 
     def __init__(self):

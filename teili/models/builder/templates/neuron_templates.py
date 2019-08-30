@@ -41,7 +41,7 @@ v_model_template = {
     'reset': """
          Vm = Vres;
          """
-    }
+}
 
 v_model_template_params = {
     "Cm": 281 * pF,
@@ -53,10 +53,10 @@ v_model_template_params = {
     "Iconst": 0 * pA,
     "Vthr": -50.4 * mV,
     "Vres": -70.6 * mV
-    }
+}
 
 # exponential current (see exponential I&F Model)
-#exponential
+# exponential
 v_exp_current = {
     'model': """
          %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
@@ -68,13 +68,13 @@ v_exp_current = {
     'threshold': "",
     'reset': """
          """
-    }
+}
 
 v_exp_current_params = {
-    "gL" : 4.3 * nS,
+    "gL": 4.3 * nS,
     "DeltaT": 2 * mV,
     "VT": -50.4 * mV
-    }
+}
 
 # quadratic current (see Izhikevich Model)
 v_quad_current = {
@@ -104,7 +104,7 @@ v_quad_current = {
          %Vm = c;
          Iadapt += wIadapt;
          """
-    }
+}
 """ Paramters for the quadratic model taken from
 Nicola & Clopath 2017. Please refer to this paper for more information.
 The parameter k represents k = 1/Rin in the original study.
@@ -118,9 +118,9 @@ v_quad_params = {
     "b": 0.0 * pS,
     "c": -65 * mV,
     "d": 200 * pA,
-    "k":  2.5  * nS / mV,
+    "k":  2.5 * nS / mV,
     "EL": -55 * mV,
-    }
+}
 
 # leak
 v_leak = {
@@ -134,9 +134,9 @@ v_leak = {
          """}
 
 v_leak_params = {
-    "gL" : 4.3 * nS,
-    "EL" : -55 * mV
-    }
+    "gL": 4.3 * nS,
+    "EL": -55 * mV
+}
 
 # adaptation
 v_adapt = {
@@ -157,7 +157,7 @@ v_adapt_params = {
     "wIadapt": 0.0805 * nA,
     "tauIadapt": 144 * ms,
     "EL": -70.6 * mV
-    }
+}
 
 # noise
 v_noise = {
@@ -169,7 +169,7 @@ v_noise = {
     'threshold': "",
     'reset': """
          """
-    }
+}
 
 """ Adds spatial location to neuron locate at the soma.
 This additional information is **not** set by default.
@@ -182,7 +182,7 @@ spatial = {
     'threshold': "",
     'reset': """
          """
-    }
+}
 
 # activity
 activity = {
@@ -195,7 +195,7 @@ activity = {
     'reset': """
          Activity += 1;
          """
-    }
+}
 
 none = {
     'model': """
@@ -203,7 +203,7 @@ none = {
     'threshold': "",
     'reset': """
          """
-    }
+}
 
 # Silicon Neuron as in Chicca et al. 2014
 # Author: Moritz Milde
@@ -254,19 +254,19 @@ i_model_template_params = {
     "Ut": constants.UT,
     "Io": constants.I0,
     "Cmem": 1.5 * pF,
-    #---------------------------------------------------------
+    # ---------------------------------------------------------
     # Positive feedback parameters
-    #---------------------------------------------------------
+    # ---------------------------------------------------------
     "Ia": constants.I0,                                # Feedback current
-    #rest set in exponenctial integratin
-    #---------------------------------------------------------
+    # rest set in exponenctial integratin
+    # ---------------------------------------------------------
     # Adaptative and Calcium parameters
-    #---------------------------------------------------------
+    # ---------------------------------------------------------
     "Ica": constants.I0,
     "Iahp": constants.I0,                                # Adaptation current
-    #---------------------------------------------------------
+    # ---------------------------------------------------------
     # Shunting inhibition
-    #---------------------------------------------------------
+    # ---------------------------------------------------------
     "Ishunt": constants.I0,
     "Ispkthr": 1. * nA,
     "Ireset": 0.6 * pA,
@@ -274,9 +274,6 @@ i_model_template_params = {
     "Itau": 8 * pA,
     "refP": 1 * ms,
 }
-
-
-
 
 # noise
 i_noise = {
@@ -290,12 +287,12 @@ i_noise = {
     'threshold': "",
     'reset': """
          """
-    }
+}
 
 i_noise_params = {
     "mu": 0.25 * pA,
     "sigma": 0.1 * pA
-    }
+}
 
 # Positive feedback current
 i_a = {
@@ -310,13 +307,13 @@ i_a = {
     'threshold': "",
     'reset': """
          """
-    }
+}
 
 i_a_params = {
     "Iath": 0.5 * nA,
     "Iagain": 50. * pA,
     "Ianorm": 10. * pA
-    }
+}
 
 # adaptation
 i_ahp = {'model': """
@@ -337,13 +334,13 @@ i_gm = {'model': """
           dIpred/dt = (1 - Ipred)/tau_pred  : 1
           tau_pred : second (constant)
           """,
-      'threshold': '',
-       'reset': ''
-       }
+        'threshold': '',
+        'reset': ''
+        }
 
 
-i_gm_params = {'Ipred': 1.0 ,
-              'tau_pred': 1.5 *ms
+i_gm_params = {'Ipred': 1.0,
+               'tau_pred': 1.5 * ms
                }
 
 # Keep track of the Imem activity. Usefull with run regular functions.
@@ -351,8 +348,8 @@ i_act = {'model': """
           normalized_activity_proxy : 1
           activity_proxy : amp
           """,
-      'threshold': '',
-      'reset': """
+         'threshold': '',
+         'reset': """
        """
          }
 
@@ -361,7 +358,7 @@ i_ahp_params = {
     "Ithahp": 1 * pA,
     "Ica": 2 * pA,
     "Cahp": 1 * pF
-    }
+}
 
 i_exponential_params = {
     "Ith": 0.9 * pA,
@@ -369,11 +366,11 @@ i_exponential_params = {
     "Iagain": 50 * pA,
     "Ianorm": 10 * pA,
     "Itau": 8 * pA
-    }
+}
 
 i_non_leaky_params = {
     "Itau": constants.I0
-    }
+}
 
 none_params = {}
 
@@ -382,7 +379,7 @@ modes = {'current': i_model_template, 'voltage': v_model_template}
 current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
                          'leaky': none, 'non_leaky': none, 'quadratic': none,
                          'spatial': spatial, 'gaussian': i_noise, 'none': none,
-                         'linear': none, 'gain_modulation' : i_gm, 'activity' : i_act}
+                         'linear': none, 'gain_modulation': i_gm, 'activity': i_act}
 
 voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_exp_current,
                          'quadratic': v_quad_current,
@@ -395,7 +392,7 @@ current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_
                       'leaky': none_params, 'non_leaky': i_non_leaky_params,
                       'spatial': none_params, 'gaussian': i_noise_params,
                       'none': none_params, 'linear': none_params,
-                      'gain_modulation' : none_params, 'activity' : none_params}
+                      'gain_modulation': none_params, 'activity': none_params}
 
 voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': v_adapt_params,
                       'exponential': v_exp_current_params, 'quadratic': v_quad_params,

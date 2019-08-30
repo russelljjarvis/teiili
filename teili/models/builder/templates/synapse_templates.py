@@ -176,6 +176,7 @@ dpi_shunt = {
          """,
 }
 
+
 dpi_shunt_params = {
     'Csyn': 1.5 * pF,
     'Io_syn': constants.I0,

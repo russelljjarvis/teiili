@@ -140,8 +140,6 @@ conductance_params = {"gI": 0 * nS,
                       #be a problem?
                       "EIi": -90.0 * mV,
                       "w_plast": 1,
-                      # should we find a way to replace baseweight_e/i, since we
-                      # already defined it in template?
                       "baseweight": 7 * nS,
                       "kernel": 0 * nS * ms**-1
                       }
@@ -346,8 +344,7 @@ stdp = {'model': '''
       Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
       w_plast = clip(w_plast + Apre, 0, w_max) '''}
 
-stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace since we would define it twice?
-                     "baseweight_i": 7 * pA,
+stdp_para_current = {"baseweight": 7 * pA,  # should we find a way to replace since we would define it twice?
                      "taupre": 10 * ms,
                      "taupost": 10 * ms,
                      "w_max": 1.,
@@ -355,8 +352,7 @@ stdp_para_current = {"baseweight_e": 7 * pA,  # should we find a way to replace 
                      "Q_diffAPrePost": 1.05,
                      "w_plast": 0}
 
-stdp_para_conductance = {"baseweight_e": 7 * nS,  # should we find a way to replace since we would define it twice?
-                         "baseweight_i": 3 * nS,
+stdp_para_conductance = {"baseweight": 7 * nS,  # should we find a way to replace since we would define it twice?
                          "taupre": 20 * ms,
                          "taupost": 20 * ms,
                          "w_max": 0.01,

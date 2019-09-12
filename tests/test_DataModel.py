@@ -1,5 +1,6 @@
 import unittest
 
+import os
 import numpy as np
 
 from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
@@ -45,6 +46,9 @@ class TestDataController(unittest.TestCase):
         self.assertTrue((SVM_org.var_name == SVM_restored.var_name).all())
         self.assertTrue((SVM_org.t_var_name == SVM_restored.t_var_name).all())
 
+        os.system('rm {}'.format(outputfilename_em))
+        os.system('rm {}'.format(outputfilename_svm))
+
     def test_fromfile(self):
         # EventsModel
         neuron_ids = [1, 1, 1, 2, 3, 1, 4, 5]
@@ -76,6 +80,9 @@ class TestDataController(unittest.TestCase):
             outputfilename_svm)
         self.assertTrue((SVM_org.var_name == SVM_restored_directly.var_name).all())
         self.assertTrue((SVM_org.t_var_name == SVM_restored_directly.t_var_name).all())
+
+        os.system('rm {}'.format(outputfilename_em))
+        os.system('rm {}'.format(outputfilename_svm))
 
 
 if __name__ == '__main__':

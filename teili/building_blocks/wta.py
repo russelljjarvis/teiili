@@ -325,7 +325,7 @@ def gen1dWTA(groupname,
         spikemon_inp = SpikeMonitor(
             spike_gen, name=groupname + 'spikemon_inp')
         try:
-            statemon_exc = StateMonitor(n_exc, ('Vm', 'Ie', 'Ii'), record=True,
+            statemon_exc = StateMonitor(n_exc, ('Vm', 'Iin'), record=True,
                                        name=groupname + 'statemon_exc')
         except KeyError:
             statemon_exc = StateMonitor(n_exc, ('Imem', 'Iin'), record=True,
@@ -503,7 +503,7 @@ def gen2dWTA(groupname,
     spikemon_inp = SpikeMonitor(
         spike_gen, name=groupname + 'spikemon_inp')
     try:
-        statemon_exc = StateMonitor(n_exc, ('Vm', 'Ie', 'Ii'), record=True,
+        statemon_exc = StateMonitor(n_exc, ('Vm', 'Iin'), record=True,
                                    name=groupname + 'statemon_exc')
     except KeyError:
         statemon_exc = StateMonitor(n_exc, ('Imem', 'Iin'), record=True,

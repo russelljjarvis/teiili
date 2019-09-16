@@ -10,6 +10,37 @@ from pathlib import Path
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
 
+class Exponential(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate an exponential decaying
+    voltage-based synapse without learning.
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate an exponential decaying
+        voltage-based synapse without.
+
+        Also see another example at:
+            https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='exponential', plasticity='non_plastic')
+
+class ExponentialStdp(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate an exponential decaying
+    voltage-based synapse without learning.
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate an exponential decaying
+        voltage-based synapse without.
+
+        Also see another example at:
+            https://brian2.readthedocs.io/en/stable/examples/synapses.STDP.html
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='current',
+                                        kernel='exponential', plasticity='stdp')
+
+
 class DoubleExponential(SynapseEquationBuilder):
     """This class provides you with all equations to simulate synapses with double
     exponential dynamics.
@@ -204,6 +235,9 @@ def main(path=None):
         Path(path).mkdir(parents=True)
 
     #Kernel synapses
+    exponential = Exponential()
+    exponential.export_eq(os.path.join(path, "Exponential"))
+
     doubleExponential = DoubleExponential()
     doubleExponential.export_eq(os.path.join(path, "DoubleExponential"))
 
@@ -224,6 +258,9 @@ def main(path=None):
 
     dpiShunt = DPIShunt()
     dpiShunt.export_eq(os.path.join(path, "DPIShunt"))
+
+    exponentialstdp = ExponentialStdp()
+    exponentialstdp.export_eq(os.path.join(path, "ExponentialStdp"))
 
     dpistdp = DPIstdp()
     dpistdp.export_eq(os.path.join(path, "DPIstdp"))

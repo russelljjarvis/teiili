@@ -151,7 +151,12 @@ class TeiliGroup(Group):
         """This function print the equation underlying the TeiliGroup member.
         """
         for key, value in sorted(self.equation_builder.keywords.items()):
-            print("{} : {}".format(key, value))
+            if type(value) == dict:
+                print("Parameters:")
+                for param_key, param_value in sorted(value.items()):
+                    print("         {} : {}".format(param_key, param_value))
+            else:
+                print("{} : {}".format(key, value))
 
     @property
     def model(self):

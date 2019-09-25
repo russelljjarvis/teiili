@@ -188,9 +188,10 @@ class NeuronEquationBuilder():
 
         if num_inputs > 10:
             warnings.warn(
-                '''num_inputs of this Neuron is larger than 10. Too large values may cause parser problems, 
-                please check the documentation if you are using num_inputs correctly (only different groups
-                need different inputs)''')
+                '''num_inputs of this Neuron is larger than 10.
+                Too large values may cause parser problems,
+                please check the documentation if you are using num_inputs correctly
+                (only different groups need different inputs)''')
 
         # remove previously added inputcurrent lines
         inputcurrent_pattern = re.compile("Iin\d+ : amp")
@@ -209,12 +210,12 @@ class NeuronEquationBuilder():
 
         self.keywords['model'] = '\n'.join(model)
 
-        Iins = ["Iin0"] + ["+ Iin" +
+        Iins = ["Iin0 "] + ["+ Iin" +
                          str(i + 1) + " " for i in range(num_inputs - 1)]
 
-        self.keywords['model'] = self.keywords['model'] + "\nIin = " + \
-            "".join(Iins) + " : amp # input currents\n"
-        Iinsline = ["        Iin" + str(i) + " : amp" for i in range(num_inputs)]
+        self.keywords['model'] = self.keywords['model'] + "\n         Iin = " + \
+            "".join(Iins) + " : amp # input currents\n\n"
+        Iinsline = ["         Iin" + str(i) + " : amp" for i in range(num_inputs)]
         self.add_state_vars(Iinsline)
         self.keywords['model'] += "\n"
 
@@ -227,7 +228,7 @@ class NeuronEquationBuilder():
         """
         if self.verbose:
             print("added to Equation: \n" + "\n".join(stateVars))
-        self.keywords['model'] += "\n            ".join(stateVars)
+        self.keywords['model'] += "\n".join(stateVars)
 
     def print_all(self):
         """Method to print all dictionaries within a neuron model

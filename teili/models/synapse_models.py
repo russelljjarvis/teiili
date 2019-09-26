@@ -244,6 +244,9 @@ def main(path=None):
     alpha = Alpha()
     alpha.export_eq(os.path.join(path, "Alpha"))
 
+    alphastdp = AlphaStdp()
+    alphastdp.export_eq(os.path.join(path, "AlphaStdp"))
+
     resonant = Resonant()
     resonant.export_eq(os.path.join(path, "Resonant"))
 

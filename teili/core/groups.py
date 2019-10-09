@@ -150,13 +150,18 @@ class TeiliGroup(Group):
     def print_equations(self):
         """This function print the equation underlying the TeiliGroup member.
         """
+        print("-_-_-_-_-_-_-_-_")
         for key, value in sorted(self.equation_builder.keywords.items()):
             if type(value) == dict:
                 print("Parameters:")
-                for param_key, param_value in sorted(value.items()):
-                    print("         {} : {}".format(param_key, param_value))
+                paramdict = self.get_params()
+                print_paramdict(paramdict)
+                # for param_key, param_value in sorted(value.items()):
+                    # print("         {} : {}".format(param_key, param_value))
+                print("-_-_-_-_-_-_-_-_")
             else:
                 print("{} : {}".format(key, value))
+                print("-_-_-_-_-_-_-_-_")
 
     @property
     def model(self):
@@ -677,7 +682,8 @@ def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False
                 raise AttributeError("Group " + str(briangroup.name) +
                                      " has no state variable " + str(par) +
                                      ', but you tried to set it with set_params ' +
-                                     'if you want to ignore this error, pass raise_error = False')
+                                     'if you want to ignore this error, ' +
+                                     'pass raise_error = False')
 
     if verbose:
         # This fails with synapses coming from SpikeGenerator groups, unidentified bug?

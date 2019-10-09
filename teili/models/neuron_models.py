@@ -26,6 +26,17 @@ class Izhikevich(NeuronEquationBuilder):
                                        position='spatial', noise='none')
         self.add_input_currents(num_inputs)
 
+class ExpLIF(NeuronEquationBuilder):
+    """This class provides you with all equations to simulate a voltage-based
+    exponential leaky integrate and fire neuron.
+    """
+
+    def __init__(self, num_inputs=1):
+        NeuronEquationBuilder.__init__(self, base_unit='voltage', adaptation='none',
+                                       integration_mode='exponential', leak='leaky',
+                                       position='spatial', noise='none')
+        self.add_input_currents(num_inputs)
+
 
 class ExpAdaptIF(NeuronEquationBuilder):
     """This class provides you with all equations to simulate a voltage-based
@@ -102,6 +113,9 @@ def main(path=None):
 
     if not os.path.isdir(path):
         Path(path).mkdir(parents=True)
+
+    expLIF = ExpLIF()
+    expLIF.export_eq(os.path.join(path, "ExpLIF"))
 
     expAdaptIF = ExpAdaptIF()
     expAdaptIF.export_eq(os.path.join(path, "ExpAdaptIF"))

@@ -118,7 +118,8 @@ v_quad_params = {
     "b": 0.0 * pS,
     "c": -65 * mV,
     "d": 200 * pA,
-    "k":  2.5  * nS / mV
+    "k":  2.5  * nS / mV,
+    "EL": -55 * mV,
     }
 
 # leak
@@ -145,7 +146,7 @@ v_adapt = {
         tauIadapt : second  (constant) # adaptation time constant
         gAdapt    : siemens (constant) # adaptation decay parameter
         wIadapt   : amp     (constant) # adaptation weight
-        %EL        : volt    (constant) # reversal potential
+        EL        : volt    (constant) # reversal potential
         """,
     'threshold': "",
     'reset': """

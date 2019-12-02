@@ -147,7 +147,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'w_plast'))],
             subfig=p2)
 
 datamodel = StateVariablesModel(state_variable_names=['I_syn'],
-                                state_variables=[np.asarray(statemon_post_synapse.Ie_syn[1])],
+                                state_variables=[np.asarray(statemon_post_synapse.I_syn[1])],
                                 state_variables_times=[np.asarray(statemon_post_synapse.t)])
 Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
             MyPlotSettings=PlotSettings(colors=['m']),

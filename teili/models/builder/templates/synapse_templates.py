@@ -363,9 +363,10 @@ stdgm_params = {
 }
 
 """
-activity incorporates synaptic equations to be used with the DPI mode, the
-"var" neuronal template and add_activity_proxy in the run_regular function
-that is stored in the corresponding /tools/ folder.
+The set of activation encapsulates `StateVariables` which are needed for
+Activity Dependent Plasticity (ADP) paradigm. ADP adjusts the inhibitory weight
+according to the 'activity' of the post-synaptic neuron.
+These equations are required by synapses projecting to _adp neuronal populations.
 """
 
 activity = {'model': '''

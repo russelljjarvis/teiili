@@ -15,8 +15,6 @@ Contributing guide:
 *  Corresponding dictionary containing default/init parameters.
     *  name: modelname_template_params
 
-TODO: TBA: How to add dictionaries to Model dictionaries (see bottom)
-
 If you want to override an equation add '%' before the variable of your
 block's explicit equation.
 
@@ -42,23 +40,27 @@ none = {
          """
 }
 
-current = {
-    'model': """
-         dI_syn/dt = (-I_syn) / tausyn + kernel: amp (clock-driven)
-         Iin{input_number}_post = I_syn *  sign(weight) : amp (summed)
+current = {'model': '''
+        dI_syn/dt = (-I_syn) / tausyn + kernel: amp (clock-driven)
 
-         tausyn     : second (constant) # synapse time constant
-         baseweight : amp (constant)    # synaptic gain
-         weight     : 1
-         w_plast    : 1
-         kernel     : amp * second **-1
-         """,
-    'on_pre': """
-         I_syn += baseweight * abs(weight) * w_plast
-         """,
-    'on_post': """
-         """
-}
+        kernel : amp * second **-1
+
+        Iin{input_number}_post = I_syn *  sign(weight) : amp (summed)
+
+        tausyn : second (constant) # synapse time constant
+        w_plast : 1
+
+        baseweight : amp (constant)     # synaptic gain
+        weight : 1
+
+        ''',
+
+           'on_pre': '''
+        I_syn += baseweight * abs(weight) * w_plast
+        ''',
+
+           'on_post': ''' '''
+           }
 
 # standard parameters for current based models
 current_params = {
@@ -69,7 +71,6 @@ current_params = {
 }
 
 # Additional equations for conductance based models
-
 conductance = {
     'model': '''
         dgI/dt = (-gI) / tausyn + kernel     : siemens (clock-driven)
@@ -325,33 +326,33 @@ variance_modulation = {
         '''
 }
 
-SynSTDGM = {'model':
-            '''
-    dApre/dt = -Apre / taupre : 1 (event-driven)
-    dApost/dt = -Apost / taupost : 1 (event-driven)
-    gain_max: 1 (shared, constant)
-    taupre : second (shared, constant)
-    taupost : second (shared, constant)
-    dApre : 1 (shared, constant)
-    dApost : 1 (shared, constant)
-    Ipred_plast : 1
-    Q_diffAPrePost : 1 (shared, constant)
-    scaling_factor : 1 (shared, constant)
-    ''',
-            'on_pre':
-            '''
+stdgm = {
+    'model': '''
+        dApre/dt = -Apre / taupre : 1 (event-driven)
+        dApost/dt = -Apost / taupost : 1 (event-driven)
+        gain_max: 1 (shared, constant)
+        taupre : second (shared, constant)
+        taupost : second (shared, constant)
+        dApre : 1 (shared, constant)
+        dApost : 1 (shared, constant)
+        Ipred_plast : 1
+        Q_diffAPrePost : 1 (shared, constant)
+        scaling_factor : 1 (shared, constant)
+        ''',
+    'on_pre':
+        '''
         Apre += dApre*gain_max
         Ipred_plast = clip(Ipred_plast + Apost, 0, gain_max)
         Ipred_post = (Ipred_post - (scaling_factor * Ipred_plast)) * (Ipred_post>0)
         ''',
-            'on_post':
-            '''
+    'on_post':
+        '''
         Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * gain_max
         Ipred_plast = clip(Ipred_plast + Apre, 0, gain_max)
         '''
-            }
+}
 
-SynSTDGM_params = {
+stdgm_params = {
     'dApre': '0.01',
     'Ipred_plast': '0.0',
     'gain_max': '1.0',
@@ -398,7 +399,8 @@ stdp = {
         ''',
     'on_pre': '''
         Apre += dApre*w_max
-        w_plast = clip(w_plast + Apost, 0, w_max) ''',
+        w_plast = clip(w_plast + Apost, 0, w_max)
+        ''',
     'on_post': '''
         Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
         w_plast = clip(w_plast + Apre, 0, w_max)

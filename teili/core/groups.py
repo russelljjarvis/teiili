@@ -173,7 +173,7 @@ class TeiliGroup(Group):
         """
         return self.equation_builder.keywords['model']
 
-    def add_mismatch(self, std_dict = None, seed=None, verbose=False):
+    def add_mismatch(self, std_dict=None, seed=None, verbose=False):
         """
         This function is a wrapper for the method _add_mismatch_param() to add mismatch
         to a dictionary of parameters specified in the input dictionary (std_dict).

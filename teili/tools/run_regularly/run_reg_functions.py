@@ -107,8 +107,7 @@ def re_init_weights(weights, source_N, target_N, re_init_threshold=0.2, dist_par
     """
     data = np.zeros((source_N, target_N)) * np.nan
     data = np.reshape(weights, (source_N, target_N))
-    # Summing weights
-    # summed_weights = np.sum(data, 0)
+
     # Thresholding post-synaptic weights
     reinit_index = np.logical_or(np.mean(data, 0) < re_init_threshold,
                                  np.mean(data, 0) > (1 - re_init_threshold))
@@ -127,21 +126,8 @@ def re_init_weights(weights, source_N, target_N, re_init_threshold=0.2, dist_par
 
 
 @implementation('numpy', discard_units=True)
-@check_units(Ipred_plast=1, source_N=1, target_N=1, re_init_threshold=1, result=1)
-def re_init_ipred(Ipred_plast, source_N, target_N, re_init_threshold=0.2):
-    data = np.zeros((source_N, target_N)) * np.nan
-    data = np.reshape(Ipred_plast, (source_N, target_N))
-
-    reinit_index = np.mean(data, 1) > (1 - re_init_threshold)
-
-    data[reinit_index, :] = np.zeros((np.sum(reinit_index), target_N))
-    data = np.clip(data, 0, 1)
-    return data.flatten()
-
-
-@implementation('numpy', discard_units=True)
 @check_units(Imem=amp, buffer_pointer=1, membrane_buffer=1, kernel=1, result=amp)
-def get_activity_proxy(Imem, buffer_pointer, membrane_buffer, kernel):
+def get_activity_proxy_imem(Imem, buffer_pointer, membrane_buffer, kernel):
     """This function calculates an activity proxy using an integrated, exponentially
     weighted estimate of Imem of the N last time steps and stores it in membrane_buffer.
 
@@ -254,12 +240,57 @@ def normalize_activity_proxy(activity_proxy, old_max):
         normalized_activity_proxy = np.zeros(np.shape(activity_proxy))
     else:
         normalized_activity_proxy = (activity_proxy / pA) / old_max
-    # if np.max((Imem_var)) == 0 or np.max((Imem_var / pA)) == np.min((Imem_var / pA)):
-    #     normalized_Imem_var = np.zeros(np.shape(Imem_var))
-    # else:
-    #     normalized_Imem_var = ((Imem_var / pA) - np.min((Imem_var / pA))) / (np.max((Imem_var / pA)) - np.min((Imem_var / pA)))
-    #     # normalized_Imem_var = (Imem_var / pA) / np.max((Imem_var / pA))
 
     return normalized_activity_proxy
 
 
+@implementation('numpy', discard_units=True)
+@check_units(weights=1, source_N=1, target_N=1, normalization_factor=1, upper_bound=1, lower_bound=1, result=1)
+def weight_normalization(weights, source_N, target_N,
+                         normalization_factor=0.1,
+                         upper_bound=.75,
+                         lower_bound=.25):
+    """This run regular function calculates the sum of the weights and
+    scales all weights up or down if the sum is larger or smaller than the
+    75 % or 25 % of the total possiblr maximum weight.
+
+    Conceptually this function can be understood as stumulatin all synapses
+    at the same time and performing a global operation on the weights if the
+    total sum of synaptic weights fall out of the boundaries.
+    """
+    data = np.reshape(weights, (source_N, target_N))
+    sum_of_weights = np.sum(data, 1) / source_N
+    try:
+        data[:, sum_of_weights < lower_bound] *= (1 + normalization_factor)
+        data[:, sum_of_weights > upper_bound] *= (1 - normalization_factor)
+    except IndexError:
+        data[sum_of_weights < lower_bound] *= (1 + normalization_factor)
+        data[sum_of_weights > upper_bound] *= (1 - normalization_factor)
+    return data.flatten()
+
+
+@implementation('numpy', discard_units=True)
+@check_units(weights=1, source_N=1, target_N=1, re_init_threshold=1, lastspike=second, t=second, result=1)
+def get_re_init_index(weights, source_N, target_N, re_init_threshold, lastspike, t):
+    data = np.zeros((source_N, target_N)) * np.nan
+    data = np.reshape(weights, (source_N, target_N))
+    re_init_index = np.mean(data, 0) < re_init_threshold
+    lastspike_tmp = np.reshape(lastspike, (source_N, target_N))
+    if (lastspike < 0*second).any() and (np.sum(lastspike_tmp[0, :] < 0 * second) > 2):
+        re_init_index = np.any(lastspike_tmp < 0 * second, axis=0)
+    elif ((t - np.abs(lastspike_tmp[0, :])) > (1 * second)).any():
+        re_init_index = np.any((t - lastspike_tmp) > (1 * second), axis=0)
+
+    return re_init_index
+
+
+@implementation('numpy', discard_units=True)
+@check_units(Vthr=volt, Vm=volt, EL=volt, Vres=volt, VT=volt, sigma_membrane=volt, not_refractory=1, result=volt)
+def update_threshold(Vthr, Vm, EL, Vres, VT, sigma_membrane, not_refractory):
+    data = np.zeros((len(Vthr))) * np.nan
+    data = np.asarray(Vthr / mV)
+
+    data += (((sigma_membrane / mV) * -1) * (Vm > (EL+1*mV)) + ((sigma_membrane / mV)* 5 * (Vm < (EL-1*mV))) * not_refractory)
+
+    # data = np.clip(data, (VT / mV), 50.)
+    return data * mV

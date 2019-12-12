@@ -11,7 +11,7 @@ import os
 from brian2 import ms
 from teili.models.parameters.octa_params import *
 
-from teili.tools.run_regularly.add_run_reg import add_weight_decay,\
+from teili.tools.add_run_reg import add_weight_decay,\
     add_re_init_weights, add_activity_proxy
 """
 this file contains:

@@ -22,24 +22,22 @@ this file contains:
 all these functions are linked the the octa building block.
 """
 
-def add_group_weight_decay(groups, decay_strategy, decay_rate):
+def add_group_weight_decay(groups, decay_rate, dt):
     """This allows to add a weight decay run regular function following a
     pre-defined decay strategy.
 
     Args:
         group (list): List of Synapse group which should be subject to
             weight decay
-        decay_strategy (str): Weight decay strategy. Either 'global' which
-            decays weight based o fixed time interval, or 'local' which
-            performs event-driven weight decay
-        decay_rate (float): Amount of weight decay per time step
+        decay_rate (float): Amount of weight decay per time step.
+        dt (float, second): Time step of run regularly.
 
     Returns:
         None
     """
     for group in groups:
-        add_weight_decay(group, decay_strategy, decay_rate)
-        dict_append = {'weight decay': decay_strategy}
+        add_weight_decay(group, decay_rate, dt)
+        dict_append = {'weight decay': 'clock-driven'}
         group._tags.update(dict_append)
 
 

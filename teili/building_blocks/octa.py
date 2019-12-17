@@ -22,15 +22,25 @@ from teili.building_blocks.wta import WTA
 from teili.stimuli.testbench import WTA_Testbench, OCTA_Testbench
 from teili.models.parameters.octa_params import wta_params, octa_params,\
     mismatch_neuron_param, mismatch_synap_param
-from teili.tools.octa_tools import add_weight_init, add_weight_re_init,\
-    add_weight_re_init_ipred,\
-    add_decay_weight, add_weight_pred_decay,\
-    add_proxy_activity, add_bb_mismatch
-from teili.tools.octa_tools import  save_monitor, load_monitor,\
-    save_weights, load_weights, weight_init
+from teili.tools.group_tools import add_goup_weight_init,\
+    add_group_weight_decay, add_group_weight_re_init,\
+    add_proxy_activity
+from teili.tools.bb_tools import add_bb_mismatch
+from teili.tools.io import  save_monitor, load_monitor,\
+    save_weights, load_weights
 
 prefs.codegen.target = "numpy"
+@implementation('numpy', discard_units=True)
+@check_units(Ipred_plast=1, source_N=1, target_N=1, re_init_threshold=1, result=1)
+def re_init_ipred(Ipred_plast, source_N, target_N, re_init_threshold=0.2):
+    data = np.zeros((source_N, target_N)) * np.nan
+    data = np.reshape(Ipred_plast, (source_N, target_N))
 
+    reinit_index = np.mean(data, 1) > (1 - re_init_threshold)
+
+    data[reinit_index, :] = np.zeros((np.sum(reinit_index), target_N))
+    data = np.clip(data, 0, 1)
+    return data.flatten()
 
 class Octa(BuildingBlock):
     """The Online Clustering of Temporal Activity (OCTA) `BuildingBlock`.
@@ -126,13 +136,21 @@ def gen_octa(groupname,
              num_input_neurons=10,
              num_neurons=7,
              wta_params=wta_params,
-             distribution='gamma', dist_param_init=0.5, scale_init=1.0,
-             dist_param_re_init=0.4, scale_re_init=0.9, re_init_threshold=0.2,
-             buffer_size_plast=200, noise_weight=30.0,
-             variance_th_c=0.5, variance_th_p=0.4,
-             learning_rate=0.007, inh_learning_rate=0.01,
-             decay=150, decay_strategy='global',
-             tau_stdp=10 * ms, seed=42,
+             distribution='gamma',
+             dist_param_init=0.5,
+             scale_init=1.0,
+             dist_param_re_init=0.4,
+             scale_re_init=0.9,
+             re_init_threshold=0.2,
+             buffer_size_plast=200,
+             noise_weight=30.0,
+             variance_th_c=0.5,
+             variance_th_p=0.4,
+             learning_rate=0.007,
+             inh_learning_rate=0.01,
+             decay=150,
+             tau_stdp=10 * ms,
+             seed=42,
              external_input=True,
              noise=True,
              monitor=True,
@@ -237,28 +255,35 @@ def gen_octa(groupname,
     num_inh_neurons_c = int(num_neurons**2 / 4)
     num_inh_neurons_p = int(num_input_neurons**2 / 4)
 
-    compression = WTA(name='compression', dimensions=2,
+    compression = WTA(name='compression',
+                      dimensions=2,
                       neuron_eq_builder=neuron_eq_builder,
-                      num_neurons=num_neurons, num_inh_neurons=num_inh_neurons_c,
-                      num_input_neurons=num_input_neurons, num_inputs=4,
+                      num_neurons=num_neurons,
+                      num_inh_neurons=num_inh_neurons_c,
+                      num_input_neurons=num_input_neurons,
+                      num_inputs=4,
                       block_params=wta_params,
                       monitor=monitor)
 
-    prediction = WTA(name='prediction', dimensions=2,
+    prediction = WTA(name='prediction',
+                     dimensions=2,
                      neuron_eq_builder=neuron_eq_builder,
-                     num_neurons=num_input_neurons, num_inh_neurons=num_inh_neurons_p,
-                     num_input_neurons=num_neurons, num_inputs=4,
+                     num_neurons=num_input_neurons,
+                     num_inh_neurons=num_inh_neurons_p,
+                     num_input_neurons=num_neurons,
+                     num_inputs=4,
                      block_params=wta_params,
                      monitor=monitor)
 
-    # Define a projection layer which recieves external input and relays it to
-    # the compression WTA with the s_inp_exc
+    # Define a projection layer which recieves external input and relays it
+    # to the compression WTA with the s_inp_exc
     projection = Neurons(N=num_input_neurons**2,
                          equation_builder=neuron_eq_builder(num_inputs=4),
                          refractory=wta_params['rp_exc'],
                          name=groupname + '_projection')
 
-    compression._groups['s_inp_exc'] = Connections(projection, compression._groups['n_exc'],
+    compression._groups['s_inp_exc'] = Connections(projection,
+                                                   compression._groups['n_exc'],
                                                    equation_builder=DPIstdp,
                                                    method='euler',
                                                    name='s_proj_comp')
@@ -273,7 +298,8 @@ def gen_octa(groupname,
     compression._groups['s_inp_exc'].taupre = tau_stdp
     compression._groups['s_inp_exc'].taupost = tau_stdp
 
-    # Change the equation model of the recurrent connections in compression WTA
+    # Change the equation model of the recurrent connections in
+    # compression WTA
     replace_connection(compression, 'n_exc',
                        compression, 'n_exc',
                        's_exc_exc',
@@ -295,9 +321,10 @@ def gen_octa(groupname,
                           compression._groups['s_inh_exc'])
 
     compression._groups['s_inh_exc'].weight = wta_params['wi_inh_exc']
-    compression._groups['s_inh_exc'].variance_th = np.random.uniform(low=variance_th_c - 0.1,
-                                                                     high=variance_th_c + 0.1,
-                                                                     size=len(compression._groups['s_inh_exc']))
+    compression._groups['s_inh_exc'].variance_th = np.random.uniform(
+        low=variance_th_c - 0.1,
+        high=variance_th_c + 0.1,
+        size=len(compression._groups['s_inh_exc']))
 
     # Change the eqaution model to include adaptation on the reccurrent
     # connection of the prediction WTA.
@@ -309,9 +336,10 @@ def gen_octa(groupname,
     prediction._set_tags(tags.basic_wta_s_inh_exc,
                          prediction._groups['s_inh_exc'])
     prediction._groups['s_inh_exc'].weight = wta_params['wi_inh_exc']
-    prediction._groups['s_inh_exc'].variance_th = np.random.uniform(low=variance_th_p - 0.1,
-                                                                    high=variance_th_p + 0.1,
-                                                                    size=len(prediction._groups['s_inh_exc']))
+    prediction._groups['s_inh_exc'].variance_th = np.random.uniform(
+        low=variance_th_p - 0.1,
+        high=variance_th_p + 0.1,
+        size=len(prediction._groups['s_inh_exc']))
 
     # Connect the compression WTA and the prediction WTA
     replace_connection(compression, 'n_exc',
@@ -383,10 +411,10 @@ def gen_octa(groupname,
                    [prediction._groups['s_exc_exc']] +\
                    [s_proj_pred]
 
-    add_weight_init(w_init_group,
-                    dist_param=dist_param_init,
-                    scale=scale_init,
-                    distribution=distribution)
+    add_goup_weight_init(w_init_group,
+                         dist_param=dist_param_init,
+                         scale=scale_init,
+                         distribution=distribution)
 
     weight_decay_group = [compression._groups['s_inp_exc']] +\
                          [compression._groups['s_exc_exc']] +\
@@ -394,9 +422,17 @@ def gen_octa(groupname,
                          [prediction._groups['s_exc_exc']] +\
                          [s_proj_pred]
 
-    add_decay_weight(weight_decay_group,
-                     decay_strategy=decay_strategy,
-                     decay_rate=None)
+    add_group_weight_decay(weight_decay_group,
+                           decay_rate=0.999,
+                           dt=100*ms)
+
+    s_pred_proj.add_state_variable('decay')
+    s_pred_proj.decay = 0.999
+    dict_append = {'weight decay': 'clock-driven'}
+    s_pred_proj._tags.update(dict_append)
+
+    s_pred_proj.run_regularly('''w_plast *= decay''', dt=100*ms)
+
 
     weight_re_init_group = [compression._groups['s_inp_exc']] +\
                            [compression._groups['s_exc_exc']] +\
@@ -404,29 +440,28 @@ def gen_octa(groupname,
                            [prediction._groups['s_exc_exc']] +\
                            [s_proj_pred]
 
-    add_weight_re_init(weight_re_init_group,
-                       re_init_threshold=re_init_threshold,
-                       dist_param_re_init=dist_param_re_init,
-                       scale_re_init=scale_re_init,
-                       distribution=distribution)
+    add_group_weight_re_init(weight_re_init_group,
+                             re_init_threshold=re_init_threshold,
+                             dist_param_re_init=dist_param_re_init,
+                             scale_re_init=scale_re_init,
+                             distribution=distribution)
 
-    pred_weight_decay_group = [s_pred_proj]
+    s_pred_proj.namespace.update({'re_init_ipred': re_init_ipred})
+    s_pred_proj.namespace['re_init_threshold'] = re_init_threshold
 
-    add_weight_pred_decay(pred_weight_decay_group,
-                          decay_strategy=decay_strategy,
-                          decay_rate=None)
+    s_pred_proj.run_regularly('''Ipred_plast = re_init_ipred(Ipred_plast,\
+                                                             N_pre,\
+                                                             N_post,\
+                                                             re_init_threshold)''',
+                               dt=50 * ms)
+
 
     activity_proxy_group = [compression._groups['n_exc']] + \
                            [prediction._groups['n_exc']]
 
-    add_proxy_activity(activity_proxy_group,
-                       buffer_size=buffer_size_plast,
-                       decay=decay)
-
-    weight_re_init_ipred_group = [s_pred_proj]
-
-    add_weight_re_init_ipred(weight_re_init_ipred_group,
-                             re_init_threshold=re_init_threshold)
+    add_group_activity_proxy(activity_proxy_group,
+                             buffer_size=buffer_size_plast,
+                             decay=decay)
 
     # initialiaze mismatch
     add_bb_mismatch(compression, seed)
@@ -532,23 +567,25 @@ def replace_connection(bb_source, population_source,
     This function replaces/ adds the connection between two groups
 
     Args:
-        bb_source (Obj): The source BuildingBlock object from wich the connection should be updated
+        bb_source (Obj): The source BuildingBlock object from wich the
+            connection should be updated
         population_source (str): The source population
-        bb_target (Obj): The target BuildingBlock object from wich the connection should be updated
+        bb_target (Obj): The target BuildingBlock object from wich the
+            connection should be updated
         population_target (str): The target population
         connection_name (str): The name of the connection
-        equation_builder (obj): The equation_builder object which holds the synapse model
+        equation_builder (obj): The equation_builder object which holds the
+            synapse model
         method (str, optional): Integration method, default is 'euler'
-        name (str, optional): If name of synapse differs from connection_name.
-
-    Returns:
-        TYPE: Description
+        name (str, optional): If name of synapse differs from
+            connection_name.
     '''
 
     if name is None:
         name = bb_target._groups[connection_name].name
 
-    bb_target._groups[connection_name] = Connections(bb_source._groups[population_source],
+    bb_target._groups[connection_name] = Connections(bb_source._groups[
+                                                         population_source],
                                                      bb_target._groups[
                                                          population_target],
                                                      equation_builder=equation_builder,
@@ -563,13 +600,16 @@ def set_OCTA_tags(self, _groups):
     '''Sets default tags to a OCTA network
 
     Args:
-        _groups (TYPE): Dictionary of all groups belonging to the BuildingBlock
+        _groups (Dictionary): Dictionary of all groups belonging to the
+            BuildingBlock
     '''
     self._set_tags(tags.basic_octa_s_proj_pred, _groups['s_proj_pred'])
     self._set_tags(tags.basic_octa_s_pred_proj, _groups['s_pred_proj'])
     self._set_tags(tags.basic_octa_n_sg, _groups['spike_gen'])
-    self._set_tags(tags.basic_octa_s_pred_noise, _groups['pred_noise_syn_exc'])
-    self._set_tags(tags.basic_octa_s_comp_noise, _groups['comp_noise_syn_exc'])
     self._set_tags(tags.basic_octa_pred_noise_sg, _groups['pred_noise_gen'])
     self._set_tags(tags.basic_octa_comp_noise_sg, _groups['comp_noise_gen'])
     self._set_tags(tags.basic_octa_n_proj, _groups['n_proj'])
+    self._set_tags(tags.basic_octa_s_pred_noise,
+                   _groups['pred_noise_syn_exc'])
+    self._set_tags(tags.basic_octa_s_comp_noise,
+                   _groups['comp_noise_syn_exc'])

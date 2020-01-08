@@ -248,7 +248,7 @@ def get_activity_proxy_imem(Imem,
 
 
 @implementation('numpy', discard_units=True)
-@check_units(Imem=volt,
+@check_units(Vm=volt,
              buffer_pointer=1,
              membrane_buffer=1,
              kernel=1,

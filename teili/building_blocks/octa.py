@@ -8,7 +8,7 @@ Created on Wed Jun 26 12:58:50 2019
 
 from brian2 import ms
 from brian2 import SpikeGeneratorGroup, SpikeMonitor
-from brian2 import prefs
+from brian2 import prefs, implementation, check_units
 import numpy as np
 
 from teili import TeiliNetwork
@@ -24,7 +24,7 @@ from teili.models.parameters.octa_params import wta_params, octa_params,\
     mismatch_neuron_param, mismatch_synap_param
 from teili.tools.group_tools import add_goup_weight_init,\
     add_group_weight_decay, add_group_weight_re_init,\
-    add_proxy_activity
+    add_group_activity_proxy
 from teili.tools.bb_tools import add_bb_mismatch
 from teili.tools.io import  save_monitor, load_monitor,\
     save_weights, load_weights

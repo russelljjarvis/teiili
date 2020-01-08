@@ -121,5 +121,5 @@ def add_goup_weight_init(groups, dist_param, scale, distribution):
         if distribution == 0:
             group._tags.update({'init_weights' : "Normal"})
         elif distribution == 1:
-            group._tags.update({'init_weights' : "Gamma"}
+            group._tags.update({'init_weights' : "Gamma"})
 

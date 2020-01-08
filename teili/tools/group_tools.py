@@ -110,11 +110,11 @@ def add_goup_weight_init(groups, dist_param, scale, distribution):
         if distribution == 'gamma':
             weights = np.random.gamma(shape=dist_param,
                                       scale=scale,
-                                      size=len(synapse_group))
+                                      size=len(group))
         if distribution == 'normal':
             weights = np.random.normal(loc=dist_param,
                                        scale=scale,
-                                       size=len(synapse_group))
+                                       size=len(group))
         weights = np.clip(weights, 0, 1)
 
         group.w_plast = weights

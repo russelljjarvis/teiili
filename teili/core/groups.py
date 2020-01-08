@@ -466,7 +466,7 @@ class Neurons(NeuronGroup, TeiliGroup):
                 self.equation_builder.keywords = import_eq(equation_builder)
             else:
                 self.equation_builder = equation_builder
-            self.equation_builder.add_input_currents(num_inputs)
+            # self.equation_builder.add_input_currents(num_inputs)
 
             Kwargs.update(self.equation_builder.keywords)
             Kwargs.update({'method': method})

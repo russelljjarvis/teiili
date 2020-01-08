@@ -329,8 +329,8 @@ def max_value_update_imem(activity_proxy, old_max):
 
     Returns:
         old_max (float): Updated maximum value
-
-    """if (np.max(activity_proxy / pA) > old_max[0]):
+    """
+    if (np.max(activity_proxy / pA) > old_max[0]):
         old_max[0] = np.array(np.max(activity_proxy / pA), copy=True)
     return old_max[0]
 

@@ -8,7 +8,8 @@ For more details see below.
 # @Date:   2018-06-22 10:05:24
 
 import numpy as np
-from brian2 import implementation, check_units, amp, pA
+from brian2 import implementation, check_units,\
+    amp, pA, second, ms
 
 
 @implementation('numpy', discard_units=True)

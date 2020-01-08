@@ -10,7 +10,9 @@ group and add all necessary state_variables and function calls.
 import numpy as np
 from brian2 import ms, pA, amp, second
 from teili.tools.run_reg_functions import re_init_weights,\
-    get_activity_proxy, max_value_update, normalize_activity_proxy
+    get_activity_proxy_vm, get_activity_proxy_imem,\
+    max_value_update_vm, max_value_update_imem,\
+    normalize_activity_proxy_vm, normalize_activity_proxy_imem
 
 
 
@@ -63,10 +65,16 @@ def add_activity_proxy(group, buffer_size, decay):
          decay (int, optional): Time constant for decay of exponentioally
             weighted activity proxy
     """
-    group.namespace.update({'get_activity_proxy': get_activity_proxy})
-    group.namespace.update({'max_value_update': max_value_update})
-    group.namespace.update(
-        {'normalize_activity_proxy': normalize_activity_proxy})
+    if 'Imem' in group.equations.names:
+        group.namespace.update({'get_activity_proxy': get_activity_proxy_imem})
+        group.namespace.update({'max_value_update': max_value_update_imem})
+        group.namespace.update(
+            {'normalize_activity_proxy': normalize_activity_proxy_imem})
+    else:
+        group.namespace.update({'get_activity_proxy': get_activity_proxy_vm})
+        group.namespace.update({'max_value_update': max_value_update_vm})
+        group.namespace.update(
+            {'normalize_activity_proxy': normalize_activity_proxy_vm})
 
     group.add_state_variable('buffer_size', shared=True, constant=True)
     group.add_state_variable('buffer_pointer', shared=True, constant=True)
@@ -85,8 +93,13 @@ def add_activity_proxy(group, buffer_size, decay):
         group.kernel.set_with_index_array(
             item=ind, value=mask, check_units=False)
 
-    group.run_regularly('''buffer_pointer = (buffer_pointer + 1) % buffer_size;\
-    activity_proxy = get_activity_proxy(Imem, buffer_pointer, membrane_buffer, kernel)''', dt=1 * ms)
+    if 'Imem' in group.equations.names:
+        group.run_regularly('''buffer_pointer = (buffer_pointer + 1) % buffer_size;\
+        activity_proxy = get_activity_proxy(Imem, buffer_pointer, membrane_buffer, kernel)''', dt=1 * ms)
+    else:
+        group.run_regularly('''buffer_pointer = (buffer_pointer + 1) % buffer_size;\
+        activity_proxy = get_activity_proxy(Vm, buffer_pointer, membrane_buffer, kernel)''', dt=1 * ms)
+
     group.run_regularly(
         '''old_max = max_value_update(activity_proxy, old_max)''', dt=5 * ms)
     group.run_regularly(

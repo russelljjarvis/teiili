@@ -9,7 +9,7 @@ For more details see below.
 
 import numpy as np
 from brian2 import implementation, check_units,\
-    amp, pA, second, ms
+    amp, pA, second, ms, volt, mv
 
 
 @implementation('numpy', discard_units=True)

@@ -431,7 +431,7 @@ def gen_octa(groupname,
     dict_append = {'weight decay': 'clock-driven'}
     s_pred_proj._tags.update(dict_append)
 
-    s_pred_proj.run_regularly('''w_plast *= decay''', dt=100*ms)
+    s_pred_proj.run_regularly('''Ipred_plast *= decay''', dt=100*ms)
 
 
     weight_re_init_group = [compression._groups['s_inp_exc']] +\

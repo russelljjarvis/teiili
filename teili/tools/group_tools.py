@@ -41,8 +41,12 @@ def add_group_weight_decay(groups, decay_rate, dt):
         group._tags.update(dict_append)
 
 
-def add_group_weight_re_init(groups, re_init_threshold, dist_param_re_init,
-                             scale_re_init, distribution):
+def add_group_weight_re_init(groups,
+                             re_init_index,
+                             re_init_threshold,
+                             dist_param_re_init,
+                             scale_re_init,
+                             distribution):
     """This allows adding a weight re-initialization run-regular function
     specifying the distribution parameters from which to sample.
 
@@ -60,6 +64,7 @@ def add_group_weight_re_init(groups, re_init_threshold, dist_param_re_init,
     """
     for group in groups:
         add_re_init_weights(group,
+                            re_init_index=re_init_index,
                             re_init_threshold=re_init_threshold,
                             dist_param_re_init=dist_param_re_init,
                             scale_re_init=scale_re_init,

@@ -53,12 +53,14 @@ def re_init_weights(weights,
         >>> sdist_param_re_init = 0.5
         >>> scale_re_init = 1.0
         >>> re_init_threshold = 0.2
+        >>> re_init_index = None
 
         >>> # Now we can connect and initialize the weight matrix
         >>> syn_obj.connect('True')
         >>> syn_obj.weight = wtaParams['weInpWTA']
         >>> syn_obj.namespace.update({'dist_param': dist_param})
         >>> syn_obj.namespace.update({'scale': scale_init})
+        >>> syn_obj.namespace.update({'re_init_index: re_init_index})
 
         >>> # Now we can add the run_regularly function
         >>> syn_obj.namespace.update({'re_init_weights': re_init_weights})
@@ -68,6 +70,7 @@ def re_init_weights(weights,
         >>> syn_obj.run_regularly('''w_plast = re_init_weights(w_plast,\
                                                                N_pre,\
                                                                N_post,\
+                                                               re_init_index,\
                                                                re_init_threshold,\
                                                                dist_param,\
                                                                scale)''',
@@ -96,18 +99,18 @@ def re_init_weights(weights,
 
     # Thresholding post-synaptic weights
     if re_init_index is None:
-        reinit_index = np.logical_or(np.mean(data, 0) < re_init_threshold,
+        re_init_index = np.logical_or(np.mean(data, 0) < re_init_threshold,
                                      np.mean(data, 0) > (1 - re_init_threshold))
 
     # Re-initializing weights with normal distribution
     if dist == 1:
-        data[:, reinit_index] = np.reshape(np.random.gamma(
+        data[:, re_init_index] = np.reshape(np.random.gamma(
             shape=dist_param,
             scale=scale,
             size=source_N * np.sum(reinit_index)),
             (source_N, np.sum(reinit_index)))
     if dist == 0:
-        data[:, reinit_index] = np.reshape(np.random.normal(
+        data[:, re_init_index] = np.reshape(np.random.normal(
             loc=dist_param,
             scale=scale,
             size=source_N * np.sum(reinit_index)),
@@ -474,7 +477,7 @@ def get_re_init_index(weights,
             parameters.
 
     """
-    data = np.zeros((source_N, target_N)) * np.nan
+    data = np.zeros((source_N, target_N)) * np.nanvariables.add_array
     data = np.reshape(weights, (source_N, target_N))
     re_init_index = np.mean(data, 0) < re_init_threshold
     lastspike_tmp = np.reshape(lastspike, (source_N, target_N))

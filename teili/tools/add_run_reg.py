@@ -12,12 +12,13 @@ from brian2 import ms, pA, amp, second
 from teili.tools.run_reg_functions import re_init_weights,\
     get_activity_proxy_vm, get_activity_proxy_imem,\
     max_value_update_vm, max_value_update_imem,\
-    normalize_activity_proxy_vm, normalize_activity_proxy_imem
+    normalize_activity_proxy_vm, normalize_activity_proxy_imem,\
+    get_re_init_index
 
 
 
 
-def add_re_init_weights(group, re_init_threshold, dist_param_re_init,
+def add_re_init_weights(group, re_init_index, re_init_threshold, dist_param_re_init,
                         scale_re_init, distribution):
     """Adds a re-initialization run_regularly to a synapse group
 
@@ -35,6 +36,10 @@ def add_re_init_weights(group, re_init_threshold, dist_param_re_init,
             'gaussian' or 'gamma'.
     """
     group.namespace.update({'re_init_weights': re_init_weights})
+    if re_init_index is None:
+        group.namespace['re_init_index'] = re_init_index
+    else:
+        group.variables.add_array('re_init_index', size=(len(group)))
     group.namespace['re_init_threshold'] = re_init_threshold
     group.namespace['dist_param'] = dist_param_re_init
     group.namespace['scale'] = scale_re_init
@@ -42,9 +47,18 @@ def add_re_init_weights(group, re_init_threshold, dist_param_re_init,
         group.namespace['dist'] = 0
     if distribution == 'gamma':
         group.namespace['dist'] = 1
+    if re_init_index is not None:
+        group.run_regularly('''re_init_index = get_re_init_index(w_plast,\
+                                                                 N_pre,\
+                                                                 N_post,\
+                                                                 re_init_threshold,\
+                                                                 lastspike,
+                                                                 t)''',
+                            dt=10 * ms)
     group.run_regularly('''w_plast = re_init_weights(w_plast,\
                                                      N_pre,\
                                                      N_post,\
+                                                     re_init_index,\
                                                      re_init_threshold,\
                                                      dist_param,\
                                                      scale,\

@@ -107,14 +107,14 @@ def re_init_weights(weights,
         data[:, re_init_index] = np.reshape(np.random.gamma(
             shape=dist_param,
             scale=scale,
-            size=source_N * np.sum(reinit_index)),
-            (source_N, np.sum(reinit_index)))
+            size=source_N * np.sum(re_init_index)),
+            (source_N, np.sum(re_init_index)))
     if dist == 0:
         data[:, re_init_index] = np.reshape(np.random.normal(
             loc=dist_param,
             scale=scale,
-            size=source_N * np.sum(reinit_index)),
-            (source_N, np.sum(reinit_index)))
+            size=source_N * np.sum(re_init_index)),
+            (source_N, np.sum(re_init_index)))
     data = np.clip(data, 0, 1)
     return data.flatten()
 

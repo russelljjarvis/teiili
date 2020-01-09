@@ -119,6 +119,7 @@ def add_weight_decay(group, decay_rate, dt):
     """
     group.add_state_variable('decay')
     group.decay = decay_rate
-
-    group.run_regularly('''w_plast *= decay''', dt=dt)
-
+    if 'w_plast' in group.equations.names:
+        group.run_regularly('''w_plast *= decay''', dt=dt)
+    elif 'Ipred_plast' in group.equations.names:
+        group.run_regularly('''Ipred_plast *= decay''', dt=dt)

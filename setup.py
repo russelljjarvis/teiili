@@ -111,7 +111,7 @@ setup(
         'numpy>=1.14.5',
         'seaborn>=0.8.1',
         'sparse>=0.3.0',
-        'Brian2>=2.1.3.1',
+        'Brian2==2.2.2.1',
         'scipy>=1.1.0',
         'pyqtgraph>=0.10.0',
         'pandas>=0.23.1',

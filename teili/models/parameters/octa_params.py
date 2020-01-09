@@ -36,6 +36,7 @@ octa_params = {'distribution': 'gamma',
                'scale_init': 1.0,  # sigma for gamma 1.0
                'dist_param_re_init': 0.4,
                'scale_re_init': 0.9,
+               're_init_index': None,
                're_init_threshold': 0.2,
                'buffer_size_plast': 200,
                'noise_weight': 30.0,

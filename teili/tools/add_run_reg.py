@@ -37,6 +37,7 @@ def add_re_init_weights(group, re_init_index, re_init_threshold, dist_param_re_i
     """
     group.namespace.update({'re_init_weights': re_init_weights})
     if re_init_index is None:
+        group.add_state_variable('re_init_index')
         group.namespace['re_init_index'] = re_init_index
     else:
         group.variables.add_array('re_init_index', size=(len(group)))

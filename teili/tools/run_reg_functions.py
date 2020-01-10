@@ -96,25 +96,24 @@ def re_init_weights(weights,
     """
     data = np.zeros((source_N, target_N)) * np.nan
     data = np.reshape(weights, (source_N, target_N))
-
     # Thresholding post-synaptic weights
-    if re_init_index is None:
+    if re_init_index is None or len(re_init_index) != target_N:
         re_init_index = np.logical_or(np.mean(data, 0) < re_init_threshold,
-                                     np.mean(data, 0) > (1 - re_init_threshold))
-
+                                      np.mean(data, 0) > (1 - re_init_threshold),
+                                      dtype=bool)
     # Re-initializing weights with normal distribution
     if dist == 1:
-        data[:, re_init_index] = np.reshape(np.random.gamma(
+        data[:, re_init_index.astype(bool)] = np.reshape(np.random.gamma(
             shape=dist_param,
             scale=scale,
-            size=int(source_N * np.sum(re_init_index))),
-            (source_N, int(np.sum(re_init_index))))
+            size=np.int(source_N * np.sum(re_init_index))),
+            (np.int(source_N), np.sum(re_init_index).astype(int)))
     if dist == 0:
-        data[:, re_init_index] = np.reshape(np.random.normal(
+        data[:, re_init_index.astype(bool)] = np.reshape(np.random.normal(
             loc=dist_param,
             scale=scale,
             size=int(source_N * np.sum(re_init_index))),
-            (source_N, int(np.sum(re_init_index))))
+            (np.int(source_N), np.sum(re_init_index)).astype(int))
     data = np.clip(data, 0, 1)
     return data.flatten()
 

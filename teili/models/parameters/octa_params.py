@@ -46,6 +46,7 @@ octa_params = {'distribution': 'gamma',
                'inh_learning_rate': 0.01,
                'decay': 150,
                'tau_stdp': 10 * ms,
+               'tau_pred': 1.5 * ms,
                'seed' : 42,
                }
 

@@ -6,7 +6,7 @@ Created on Wed Jun 26 12:58:50 2019
 @author: matteo
 """
 
-from brian2 import ms
+from brian2 import ms, pA
 from brian2 import SpikeGeneratorGroup, SpikeMonitor
 from brian2 import prefs, implementation, check_units
 import numpy as np
@@ -33,7 +33,7 @@ prefs.codegen.target = "numpy"
 @implementation('numpy', discard_units=True)
 @check_units(Ipred_plast=1, source_N=1, target_N=1, re_init_threshold=1, result=1)
 def re_init_ipred(Ipred_plast, source_N, target_N, re_init_threshold=0.2):
-    data = np.zeros((source_N, target_N)) * np.nan
+    data = np.zeros((source_N, target_N))
     data = np.reshape(Ipred_plast, (source_N, target_N))
 
     reinit_index = np.mean(data, 1) > (1 - re_init_threshold)
@@ -151,6 +151,7 @@ def gen_octa(groupname,
              inh_learning_rate=0.01,
              decay=150,
              tau_stdp=10 * ms,
+             tau_pred=1.5 * ms,
              seed=42,
              external_input=True,
              noise=True,
@@ -390,6 +391,7 @@ def gen_octa(groupname,
 
     s_pred_proj.connect(True)
     s_pred_proj.Ipred_plast = np.zeros((len(s_pred_proj)))
+    s_pred_proj.tau_pred = tau_pred
 
     # Set learning rate
     compression._groups['s_inp_exc'].dApre = learning_rate
@@ -465,7 +467,13 @@ def gen_octa(groupname,
                              buffer_size=buffer_size_plast,
                              decay=decay)
 
-    # initialiaze mismatch
+    # initialize neuron parameters
+    compression._groups['n_exc'].Imem = 0.5 * pA
+    compression._groups['n_inh'].Imem = 0.5 * pA
+    prediction._groups['n_exc'].Imem = 0.5 * pA
+    prediction._groups['n_inh'].Imem = 0.5 * pA
+
+    # initialize mismatch
     add_bb_mismatch(compression, seed)
     add_bb_mismatch(prediction, seed)
     s_proj_pred.add_mismatch(mismatch_synap_param, seed=seed)

@@ -335,6 +335,12 @@ def gen_octa(groupname,
                        's_inh_exc',
                        equation_builder=DPIadp)
 
+    compression._groups['n_exc'].tau_pred = tau_pred
+    compression._groups['n_inh'].tau_pred = tau_pred  
+    prediction._groups['n_exc'].tau_pred = tau_pred  
+    prediction._groups['n_inh'].tau_pred = tau_pred    
+    projection.tau_pred = tau_pred 
+
     prediction._set_tags(tags.basic_wta_s_inh_exc,
                          prediction._groups['s_inh_exc'])
     prediction._groups['s_inh_exc'].weight = wta_params['wi_inh_exc']
@@ -557,7 +563,7 @@ def gen_octa(groupname,
 
     if debug:
         print('The keys of the ' + groupname + ' output dict are:')
-        for key in group:
+        for key in _groups:
             print(key)
 
     standalone_params = {}

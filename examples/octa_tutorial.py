@@ -72,3 +72,4 @@ if __name__ == '__main__':
 
     plot_sorted_compression(OCTA=OCTA_net)
 
+    plt.show()

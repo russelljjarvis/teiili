@@ -113,7 +113,7 @@ def re_init_weights(weights,
             loc=dist_param,
             scale=scale,
             size=int(source_N * np.sum(re_init_index))),
-            (np.int(source_N), np.sum(re_init_index)).astype(int))
+            (np.int(source_N), np.sum(re_init_index).astype(int)))
     data = np.clip(data, 0, 1)
     return data.flatten()
 

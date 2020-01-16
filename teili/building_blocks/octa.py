@@ -3,7 +3,7 @@
 """
 Created on Wed Jun 26 12:58:50 2019
 
-@author: matteo
+@author: matteo, mmilde
 """
 
 from brian2 import ms, pA
@@ -306,7 +306,7 @@ def gen_octa(groupname,
                        compression, 'n_exc',
                        's_exc_exc',
                        equation_builder=DPIstdp,
-                       name='compression' + '_n_exc_exc')
+                       name='compression' + '_s_exc_exc')
 
     compression._set_tags(tags.basic_wta_s_exc_exc,
                           compression._groups['s_exc_exc'])

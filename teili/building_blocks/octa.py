@@ -335,10 +335,6 @@ def gen_octa(groupname,
                        's_inh_exc',
                        equation_builder=DPIadp)
 
-    compression._groups['n_exc'].tau_pred = tau_pred
-    compression._groups['n_inh'].tau_pred = tau_pred  
-    prediction._groups['n_exc'].tau_pred = tau_pred  
-    prediction._groups['n_inh'].tau_pred = tau_pred    
     projection.tau_pred = tau_pred 
 
     prediction._set_tags(tags.basic_wta_s_inh_exc,

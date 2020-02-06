@@ -9,10 +9,9 @@ in the docstrings of the `building_block` located in `teili/building_blocks/octa
 
 The network's parameters can be found in `teili/models/parameters/octa_params.py`.
 """
-
 import numpy as np
 import matplotlib.pyplot as plt 
-from brian2 import ms
+from brian2 import us, ms, prefs, defaultclock, core, float64
 
 from teili import TeiliNetwork
 from teili.building_blocks.octa import Octa
@@ -48,6 +47,9 @@ def plot_sorted_compression(OCTA):
 
 
 if __name__ == '__main__':
+    prefs.codegen.target = "numpy"
+    defaultclock.dt = 500 * us
+    core.default_float_dtype = float64
 
     Net = TeiliNetwork()
     OCTA_net = Octa(name='OCTA_net')
@@ -66,9 +68,9 @@ if __name__ == '__main__':
     Net.add(OCTA_net,
             OCTA_net.sub_blocks['compression'],
             OCTA_net.sub_blocks['prediction'])
-
     Net.run(np.max(testbench_stim.times) * ms,
             report='text')
+
 
     plot_sorted_compression(OCTA=OCTA_net)
 

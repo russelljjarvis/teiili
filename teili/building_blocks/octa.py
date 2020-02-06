@@ -305,7 +305,7 @@ def gen_octa(groupname,
     replace_connection(compression, 'n_exc',
                        compression, 'n_exc',
                        's_exc_exc',
-                       equation_builder=DPIstdp,
+                       equation_builder=DPIstdp(),
                        name='compression' + '_s_exc_exc')
 
     compression._set_tags(tags.basic_wta_s_exc_exc,
@@ -317,7 +317,7 @@ def gen_octa(groupname,
     replace_connection(compression, 'n_inh',
                        compression, 'n_exc',
                        's_inh_exc',
-                       equation_builder=DPIadp)
+                       equation_builder=DPIadp())
 
     compression._set_tags(tags.basic_wta_s_inh_exc,
                           compression._groups['s_inh_exc'])
@@ -333,7 +333,7 @@ def gen_octa(groupname,
     replace_connection(prediction, 'n_inh',
                        prediction, 'n_exc',
                        's_inh_exc',
-                       equation_builder=DPIadp)
+                       equation_builder=DPIadp())
 
     projection.tau_pred = tau_pred 
 
@@ -349,7 +349,7 @@ def gen_octa(groupname,
     replace_connection(compression, 'n_exc',
                        prediction, 'n_exc',
                        's_inp_exc',
-                       equation_builder=DPIstdp)
+                       equation_builder=DPIstdp())
 
     prediction._set_tags(tags.basic_wta_s_inp_exc,
                          prediction._groups['s_inp_exc'])
@@ -364,7 +364,7 @@ def gen_octa(groupname,
     replace_connection(prediction, 'n_exc',
                        prediction, 'n_exc',
                        's_exc_exc',
-                       equation_builder=DPIstdp)
+                       equation_builder=DPIstdp())
 
     compression._set_tags(tags.basic_wta_s_exc_exc,
                           prediction._groups['s_exc_exc'])
@@ -374,7 +374,7 @@ def gen_octa(groupname,
     # error connection
     s_proj_pred = Connections(projection,
                               prediction._groups['n_exc'],
-                              equation_builder=DPIstdp,
+                              equation_builder=DPIstdp(),
                               method='euler',
                               name=groupname + '_s_proj_pred')
 
@@ -387,7 +387,7 @@ def gen_octa(groupname,
     # predictive connection
     s_pred_proj = Connections(prediction._groups['n_exc'],
                               projection,
-                              equation_builder=DPIstdgm,
+                              equation_builder=DPIstdgm(),
                               method='euler',
                               name=groupname + '_s_pred_proj')
 
@@ -576,7 +576,7 @@ def replace_connection(bb_source, population_source,
                        equation_builder,
                        method='euler', name=None):
     '''
-    This function replaces/ adds the connection between two groups
+    This function replaces and adds a new connection between two groups
 
     Args:
         bb_source (Obj): The source BuildingBlock object from wich the

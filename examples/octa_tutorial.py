@@ -49,6 +49,7 @@ def plot_sorted_compression(OCTA_net):
     plt.xlabel('Time')
     plt.ylabel('Sorted spikes')
     plt.title('Rasterplot compression block')
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -77,3 +78,4 @@ if __name__ == '__main__':
             report='text')
 
     plot_sorted_compression(OCTA_net)
+

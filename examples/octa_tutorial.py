@@ -12,6 +12,7 @@ The network's parameters can be found in `teili/models/parameters/octa_params.py
 import numpy as np
 import matplotlib.pyplot as plt 
 from brian2 import us, ms, prefs, defaultclock, core, float64
+import copy as cp
 
 from teili import TeiliNetwork
 from teili.building_blocks.octa import Octa
@@ -21,7 +22,7 @@ from teili.models.neuron_models import OCTA_Neuron as octa_neuron
 from teili.stimuli.testbench import OCTA_Testbench
 from teili.tools.sorting import SortMatrix
 
-def plot_sorted_compression(OCTA):
+def plot_sorted_compression(OCTA_net):
     """ Plot the spiking activity, i.e. spike rasterplot of the compression
     layer, sorted by similarity. Similarity is calculated based on euclidean
     distance. The sorting yields permuted indices which are used to re-order the
@@ -32,15 +33,19 @@ def plot_sorted_compression(OCTA):
     picked at random the alignment with time can vary between runs.
 
     Arguments:
-        OCTA (TeiliNetwork): The `TeiliNetwork` which contains the OCTA `BuildingBlock`.
+        OCTA (TeiliNetwork): The `TeiliNetwork` which contains the OCTA `BuildingBlock`. 
     """
-    weights = OCTA.sub_blocks['compression'].groups['s_exc_exc'].w_plast
+    
+    weights = cp.deepcopy(np.asarray(OCTA_net.sub_blocks['compression'].groups['s_exc_exc'].w_plast))
+    indices = cp.deepcopy(np.asarray(OCTA_net.sub_blocks['compression'].monitors['spikemon_exc'].i))
+    time = cp.deepcopy(np.asarray(OCTA_net.sub_blocks['compression'].monitors['spikemon_exc'].t))
+
     s = SortMatrix(nrows=49, ncols=49, matrix=weights, axis=1)
-    monitor = OCTA.sub_blocks['compression'].monitors['spikemon_exc']
     # We use the permuted indices to sort the neuron ids
-    moni = np.asarray([np.where(np.asarray(s.permutation) == int(i))[0][0] for i in monitor.i])
+    sorted_ind = np.asarray([np.where(np.asarray(s.permutation) == int(i))[0][0] for i in indices])
+
     plt.figure(1)
-    plt.plot(monitor.t, moni, '.r')
+    plt.plot(time, sorted_ind, '.r')
     plt.xlabel('Time')
     plt.ylabel('Sorted spikes')
     plt.title('Rasterplot compression block')
@@ -71,7 +76,4 @@ if __name__ == '__main__':
     Net.run(np.max(testbench_stim.times) * ms,
             report='text')
 
-
-    plot_sorted_compression(OCTA=OCTA_net)
-
-    plt.show()
+    plot_sorted_compression(OCTA_net)

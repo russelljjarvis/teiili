@@ -115,3 +115,5 @@ ENV/
 *.svg
 
 teili/models/equations/
+.vscode
+core

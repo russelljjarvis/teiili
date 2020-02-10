@@ -7,6 +7,7 @@ Created on Wed Mar 14 15:43:12 2018
 """
 from brian2 import us, ms
 from teili.tools.plotter2d import Plotter2d
+from teili.tools.converter import aedat2numpy
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 app = QtGui.QApplication([])
@@ -16,15 +17,22 @@ from tkinter import filedialog
 root = tk.Tk()
 root.withdraw()
 
+print('Please select a file...\n[Can be either .npy or .aedat.]')
 eventsfile_Cam1 = filedialog.askopenfilename()
+print('Please select a file...\n[Can be either .npy or .aedat.]')
 eventsfile_Cam2 = filedialog.askopenfilename()
+if eventsfile_Cam1[-5:] == 'aedat':
+    eventsfile_Cam1 = aedat2numpy(eventsfile_Cam1, camera='DAVIS240')
+if eventsfile_Cam2[-5:] == 'aedat':
+    eventsfile_Cam2 = aedat2numpy(eventsfile_Cam2, camera='DAVIS240')
+
 spmon2d_Cam1 = Plotter2d.loaddvs(eventsfile_Cam1)
 spmon2d_Cam2 = Plotter2d.loaddvs(eventsfile_Cam2)
-imv1 = spmon2d_Cam1.plot3d_on_off(plot_dt=10 * ms, filtersize=100 * ms)
-imv2 = spmon2d_Cam2.plot3d_on_off(plot_dt=10 * ms, filtersize=50 * ms)
+imv1 = spmon2d_Cam1.plot3d_on_off(plot_dt=100 * ms, filtersize=250 * ms)
+imv2 = spmon2d_Cam2.plot3d_on_off(plot_dt=100 * ms, filtersize=250 * ms)
 
-imv3 = spmon2d_Cam1.plot3d(plot_dt=10 * ms, filtersize=200 * ms)
-imv4 = spmon2d_Cam2.plot3d(plot_dt=10 * ms, filtersize=200 * ms)
+imv3 = spmon2d_Cam1.plot3d(plot_dt=100 * ms, filtersize=250 * ms)
+imv4 = spmon2d_Cam2.plot3d(plot_dt=100 * ms, filtersize=250 * ms)
 # imv1.show()
 
 # Create window with ImageView widget

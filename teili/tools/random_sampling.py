@@ -70,12 +70,14 @@ class Randn_trunc(Function, Nameable):
             return truncnorm.rvs(lower, upper, size=N)
 
         Function.__init__(self, pyfunc=lambda: sample_function(1),
-                          arg_units=[], return_unit=1, stateless=False)
+                          arg_units=[], return_unit=1, stateless=False,
+                          auto_vectorise=True)
 
         self.implementations.add_implementation('numpy', sample_function)
 
         for target, func in Randn_trunc.implementations.items():
             code, dependencies = func(lower=lower, upper=upper, name=self.name)
+            # print('target:', target, '\ncode: ', code, '\ndependencies: ', dependencies, '\nname:', self.name)
             self.implementations.add_implementation(target, code,
                                                     dependencies=dependencies,
                                                     name=self.name)
@@ -126,7 +128,8 @@ class Rand_gamma(Function, Nameable):
                 return f * np.random.gamma(alpha, scale=f / beta, size=N)
 
         Function.__init__(self, pyfunc=lambda: sample_function(1),
-                          arg_units=[], return_unit=1, stateless=False)
+                          arg_units=[], return_unit=1, stateless=False,
+                          auto_vectorise=True)
 
         self.implementations.add_implementation('numpy', sample_function)
 

@@ -69,9 +69,16 @@ class Randn_trunc(Function, Nameable):
                 N = int(vectorisation_idx)
             return truncnorm.rvs(lower, upper, size=N)
 
-        Function.__init__(self, pyfunc=lambda: sample_function(1),
-                          arg_units=[], return_unit=1, stateless=False,
-                          auto_vectorise=True)
+        try:
+            Function.__init__(self, pyfunc=lambda: sample_function(1),
+                              arg_units=[], return_unit=1, stateless=False,
+                              auto_vectorise=True)
+        except TypeError as e:
+            # this is necessary for backward compatibility with brian2 < 2.3, as the argument auto_vectorise
+            # does not exist
+            print(e)
+            Function.__init__(self, pyfunc=lambda: sample_function(1),
+                              arg_units=[], return_unit=1, stateless=False)
 
         self.implementations.add_implementation('numpy', sample_function)
 
@@ -127,9 +134,15 @@ class Rand_gamma(Function, Nameable):
             else:
                 return f * np.random.gamma(alpha, scale=f / beta, size=N)
 
-        Function.__init__(self, pyfunc=lambda: sample_function(1),
-                          arg_units=[], return_unit=1, stateless=False,
-                          auto_vectorise=True)
+        try:
+            Function.__init__(self, pyfunc=lambda: sample_function(1),
+                              arg_units=[], return_unit=1, stateless=False,
+                              auto_vectorise=True)
+        except TypeError:
+            # this is necessary for backward compatibility with brian2 < 2.3, as the argument auto_vectorise
+            # does not exist
+            Function.__init__(self, pyfunc=lambda: sample_function(1),
+                              arg_units=[], return_unit=1, stateless=False)
 
         self.implementations.add_implementation('numpy', sample_function)
 

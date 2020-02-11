@@ -110,15 +110,11 @@ the first one)
 """
 if not standalone:
     mean_neuron_param = np.copy(getattr(output_neurons, 'refP'))[0]
-    unit_old_param_neu = getattr(output_neurons, 'refP').unit
     mean_synapse_param = np.copy(getattr(input_syn, 'baseweight'))[0]
-    unit_old_param_syn = getattr(input_syn, 'baseweight').unit
 else:
     mean_neuron_param = output_neurons.get_params()['refP'][0]
-    unit_old_param_neu = output_neurons.get_params()['refP'].unit
-    mean_synapse_param = input_syn.get_params()['baseweight'][0]
-    unit_old_param_syn = input_syn.get_params()['baseweight'].unit
-
+    mean_synapse_param = input_syn._init_parameters['baseweight']
+    
 output_neurons.add_mismatch(std_dict=mismatch_neuron_param, seed=10)
 input_syn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
 

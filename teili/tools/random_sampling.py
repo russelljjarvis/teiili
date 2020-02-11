@@ -37,7 +37,6 @@ def _randn_trunc_generate_cpp_code(lower, upper, name):
         do {retVal = _randn(_vectorisation_idx);
         } while ((retVal > %UPPER%) || (retVal < %LOWER%));
         return retVal;
-    grid_._gr['s_inp_exc]
     }
     '''
     cpp_code = replace(cpp_code, {'%NAME%': name, '%UPPER%': str(upper), '%LOWER%': str(lower)})

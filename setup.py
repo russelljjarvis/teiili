@@ -134,7 +134,6 @@ setup(
         'teili.building_blocks',
         'teili.stimuli',
         'teili.tools',
-        'teili.tools.run_regularly',
         'teili.tools.visualizer',
         'teili.tools.visualizer.DataControllers',
         'teili.tools.visualizer.DataModels',

@@ -628,32 +628,31 @@ def gen2dWTA(groupname,
 
 
 def set_wta_tags(self, _groups):
+    """Sets default tags to a WTA network
 
-"""Sets default tags to a WTA network
+    Args:
+        _groups (dictionary): Keys to all neuron and synapse groups.
 
-Args:
-    _groups (dictionary): Keys to all neuron and synapse groups.
+    No Longer Returned:
+        Tags will be added to all _groups passed. They follow this structure:
 
-No Longer Returned:
-    Tags will be added to all _groups passed. They follow this structure:
+        tags = {'mismatch' : (bool, 0/1)
+                'noise : (bool, 0/1)
+                'level': int
+                'sign': str (exc/inh/None)
+                'target sign': str (exc/inh/None)
+                'num_inputs' : int (0 if not Neuron group),
+                'bb_type' : str (WTA/3-WAY),
+                'group_type' : str (Neuron/Connection/ SpikeGen)
+                'connection_type' : str (rec/lateral/fb/ff/None)
+            }
+    """
 
-    tags = {'mismatch' : (bool, 0/1)
-            'noise : (bool, 0/1)
-            'level': int
-            'sign': str (exc/inh/None)
-            'target sign': str (exc/inh/None)
-            'num_inputs' : int (0 if not Neuron group),
-            'bb_type' : str (WTA/3-WAY),
-            'group_type' : str (Neuron/Connection/ SpikeGen)
-            'connection_type' : str (rec/lateral/fb/ff/None)
-        }
-"""
-
-self._set_tags(tags_parameters.basic_wta_n_exc, _groups['n_exc'])
-self._set_tags(tags_parameters.basic_wta_n_inh, _groups['n_inh'])
-self._set_tags(tags_parameters.basic_wta_n_sg, _groups['spike_gen'])
-self._set_tags(tags_parameters.basic_wta_s_exc_exc, _groups['s_exc_exc'])
-self._set_tags(tags_parameters.basic_wta_s_exc_inh, _groups['s_exc_inh'])
-self._set_tags(tags_parameters.basic_wta_s_inh_exc, _groups['s_inh_exc'])
-self._set_tags(tags_parameters.basic_wta_s_inh_inh, _groups['s_inh_inh'])
-self._set_tags(tags_parameters.basic_wta_s_inp_exc, _groups['s_inp_exc'])
+    self._set_tags(tags_parameters.basic_wta_n_exc, _groups['n_exc'])
+    self._set_tags(tags_parameters.basic_wta_n_inh, _groups['n_inh'])
+    self._set_tags(tags_parameters.basic_wta_n_sg, _groups['spike_gen'])
+    self._set_tags(tags_parameters.basic_wta_s_exc_exc, _groups['s_exc_exc'])
+    self._set_tags(tags_parameters.basic_wta_s_exc_inh, _groups['s_exc_inh'])
+    self._set_tags(tags_parameters.basic_wta_s_inh_exc, _groups['s_inh_exc'])
+    self._set_tags(tags_parameters.basic_wta_s_inh_inh, _groups['s_inh_inh'])
+    self._set_tags(tags_parameters.basic_wta_s_inp_exc, _groups['s_inp_exc'])

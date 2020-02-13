@@ -17,7 +17,7 @@ Example:
 
     >>> from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
     >>> my_syn_model = SynapseEquationBuilder.import_eq(
-        'teili/models/equations/DPISyn')
+        'teiliApps/equations/DPISyn')
 
     In both cases you can pass it to Connections:
 
@@ -101,7 +101,6 @@ class SynapseEquationBuilder():
                 for key, value in kwargs.items():
                     synaptic_equations[value]
 
-
             except KeyError:
                 print(ERRValue)
 
@@ -109,13 +108,16 @@ class SynapseEquationBuilder():
 
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
-                     eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
-                eq_templ =[modes[base_unit]]+ eq_templ_dummy
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
                 param_templ_dummy = []
                 for key, value in kwargs.items():
-                     param_templ_dummy = param_templ_dummy + [current_parameters[value]]
-                param_templ =[current_parameters[base_unit]]+ param_templ_dummy
+                    param_templ_dummy = param_templ_dummy + \
+                        [current_parameters[value]]
+                param_templ = [current_parameters[base_unit]] + \
+                    param_templ_dummy
 
                 keywords = combine_syn_dict(eq_templ, param_templ)
 
@@ -129,13 +131,16 @@ class SynapseEquationBuilder():
             if base_unit == 'conductance':
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
-                     eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
-                eq_templ =[modes[base_unit]]+ eq_templ_dummy
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
                 param_templ_dummy = []
                 for key, value in kwargs.items():
-                     param_templ_dummy = param_templ_dummy + [conductance_parameters[value]]
-                param_templ = [conductance_parameters[base_unit]]+ param_templ_dummy
+                    param_templ_dummy = param_templ_dummy + \
+                        [conductance_parameters[value]]
+                param_templ = [
+                    conductance_parameters[base_unit]] + param_templ_dummy
 
                 keywords = combine_syn_dict(eq_templ, param_templ)
 
@@ -150,16 +155,17 @@ class SynapseEquationBuilder():
 
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
-                     eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
-                eq_templ =[modes[base_unit]]+ eq_templ_dummy
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
                 param_templ_dummy = []
                 for key, value in kwargs.items():
-                     param_templ_dummy = param_templ_dummy + [DPI_parameters[value]]
-                param_templ = [DPI_parameters[base_unit]]+ param_templ_dummy
+                    param_templ_dummy = param_templ_dummy + \
+                        [DPI_parameters[value]]
+                param_templ = [DPI_parameters[base_unit]] + param_templ_dummy
 
                 keywords = combine_syn_dict(eq_templ, param_templ)
-
 
                 keywords['model'] = keywords['model'].format(
                     input_number="{input_number}", unit='amp')
@@ -171,13 +177,16 @@ class SynapseEquationBuilder():
             if base_unit == 'DPIShunting':
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
-                     eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
-                eq_templ =[modes[base_unit]]+ eq_templ_dummy
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
                 param_templ_dummy = []
                 for key, value in kwargs.items():
-                     param_templ_dummy = param_templ_dummy + [DPI_shunt_parameters[value]]
-                param_templ = [DPI_shunt_parameters[base_unit]]+ param_templ_dummy
+                    param_templ_dummy = param_templ_dummy + \
+                        [DPI_shunt_parameters[value]]
+                param_templ = [
+                    DPI_shunt_parameters[base_unit]] + param_templ_dummy
 
                 keywords = combine_syn_dict(eq_templ, param_templ)
 
@@ -191,13 +200,15 @@ class SynapseEquationBuilder():
             if base_unit == 'None':
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
-                     eq_templ_dummy = eq_templ_dummy + [synaptic_equations[value]]
-                eq_templ =[modes[base_unit]]+ eq_templ_dummy
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
                 param_templ_dummy = []
                 for key, value in kwargs.items():
-                     param_templ_dummy = param_templ_dummy + [None_parameters[value]]
-                param_templ = [None_parameters[base_unit]]+ param_templ_dummy
+                    param_templ_dummy = param_templ_dummy + \
+                        [None_parameters[value]]
+                param_templ = [None_parameters[base_unit]] + param_templ_dummy
 
                 keywords = combine_syn_dict(eq_templ, param_templ)
 
@@ -322,7 +333,10 @@ class SynapseEquationBuilder():
         # the predefined models
         fallback_import_path = filename
         if os.path.dirname(filename) is "":
-            filename = os.path.join('teili', 'models', 'equations', filename)
+            filename = os.path.join(os.path.expanduser("~"),
+                                    'teiliApps',
+                                    'equations',
+                                    filename)
 
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
@@ -341,13 +355,15 @@ class SynapseEquationBuilder():
             synapse_eq = eq_dict.__dict__[dict_name]
         except ImportError:
             # print(dict_name[:-3], fallback_import_path)
-            spec = importlib.util.spec_from_file_location(dict_name[:-3], fallback_import_path)
+            spec = importlib.util.spec_from_file_location(
+                dict_name[:-3], fallback_import_path)
             eq_dict = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(eq_dict)
             # print(eq_dict, spec)
             synapse_eq = eq_dict.__dict__[dict_name[:-3]]
 
         return cls(keywords=synapse_eq)
+
 
 def print_param_dictionaries(Dict):
     """Function to print dictionaries of parameters in an ordered way.
@@ -357,4 +373,3 @@ def print_param_dictionaries(Dict):
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
-

@@ -19,7 +19,7 @@ Example:
 
     >>> from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
     >>> my_neu_model = NeuronEquationBuilder.import_eq(
-        'teili/models/equations/DPI', num_inputs=2)
+        '~/teiliApps/equations/DPI', num_inputs=2)
 
     in both cases you can pass it to Neurons:
 
@@ -60,7 +60,6 @@ class NeuronEquationBuilder():
     """
 
     def __init__(self, keywords=None, base_unit='current', num_inputs=1, verbose=False, **kwargs):
-
         """Initializes NeuronEquationBuilder with defined keyword arguments.
 
         Args:
@@ -112,38 +111,43 @@ class NeuronEquationBuilder():
                 print(ERRValue)
 
             if base_unit == 'current':
-                 eq_templ_dummy = []
-                 for key, value in kwargs.items():
-                     eq_templ_dummy = eq_templ_dummy + [current_equation_sets[value]]
-                 eq_templ =[modes[base_unit]]+ eq_templ_dummy
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [current_equation_sets[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
-                 param_templ_dummy = []
-                 for key, value in kwargs.items():
-                     param_templ_dummy = param_templ_dummy + [current_parameters[value]]
-                 param_templ =[current_parameters[base_unit]]+ param_templ_dummy
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [current_parameters[value]]
+                param_templ = [current_parameters[base_unit]] + \
+                    param_templ_dummy
 
-                 if self.verbose:
-                     print("Equations",eq_templ)
-                     print("Parameters",eq_templ)
+                if self.verbose:
+                    print("Equations", eq_templ)
+                    print("Parameters", eq_templ)
 
-                 keywords = combine_neu_dict(eq_templ, param_templ)
+                keywords = combine_neu_dict(eq_templ, param_templ)
 
             if base_unit == 'voltage':
-                 eq_templ_dummy = []
-                 for key, value in kwargs.items():
-                     eq_templ_dummy = eq_templ_dummy + [voltage_equation_sets[value]]
-                 eq_templ =[modes[base_unit]]+ eq_templ_dummy
-                 param_templ_dummy = []
-                 for key, value in kwargs.items():
-                     param_templ_dummy = param_templ_dummy + [voltage_parameters[value]]
-                 param_templ =[voltage_parameters[base_unit]]+ param_templ_dummy
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [voltage_equation_sets[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [voltage_parameters[value]]
+                param_templ = [voltage_parameters[base_unit]] + \
+                    param_templ_dummy
 
-                 if self.verbose:
-                     print("Equations",eq_templ)
-                     print("Parameters",eq_templ)
+                if self.verbose:
+                    print("Equations", eq_templ)
+                    print("Parameters", eq_templ)
 
-                 keywords = combine_neu_dict(eq_templ, param_templ)
-
+                keywords = combine_neu_dict(eq_templ, param_templ)
 
             self.keywords = {'model': keywords['model'],
                              'threshold': keywords['threshold'],
@@ -220,11 +224,12 @@ class NeuronEquationBuilder():
         self.keywords['model'] = '\n'.join(model)
 
         Iins = ["Iin0 "] + ["+ Iin" +
-                         str(i + 1) + " " for i in range(num_inputs - 1)]
+                            str(i + 1) + " " for i in range(num_inputs - 1)]
 
         self.keywords['model'] = self.keywords['model'] + "\n         Iin = " + \
             "".join(Iins) + " : amp # input currents\n\n"
-        Iinsline = ["         Iin" + str(i) + " : amp" for i in range(num_inputs)]
+        Iinsline = ["         Iin" +
+                    str(i) + " : amp" for i in range(num_inputs)]
         self.add_state_vars(Iinsline)
         self.keywords['model'] += "\n"
 
@@ -307,7 +312,10 @@ class NeuronEquationBuilder():
         # the predefined models
         fallback_import_path = filename
         if os.path.dirname(filename) is "":
-            filename = os.path.join('teili', 'models', 'equations', filename)
+            filename = os.path.join(os.path.expanduser("~"),
+                                    'teiliApps',
+                                    'equations',
+                                    filename)
 
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
@@ -326,7 +334,8 @@ class NeuronEquationBuilder():
             neuron_eq = eq_dict.__dict__[dict_name]
         except ImportError:
             # print(dict_name[:-3], fallback_import_path)
-            spec = importlib.util.spec_from_file_location(dict_name[:-3], fallback_import_path)
+            spec = importlib.util.spec_from_file_location(
+                dict_name[:-3], fallback_import_path)
             eq_dict = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(eq_dict)
             # print(eq_dict, spec)
@@ -346,4 +355,3 @@ def print_param_dictionaries(Dict):
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
-

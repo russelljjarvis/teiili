@@ -50,7 +50,8 @@ import sys
 import time
 import numpy as np
 
-from brian2 import ms, mV, pA, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
+from brian2 import ms, mV, pA, SpikeGeneratorGroup,\
+    SpikeMonitor, StateMonitor, core
 
 import teili.tools.synaptic_kernel
 from teili.tools.misc import print_states
@@ -264,7 +265,7 @@ def gen1dWTA(groupname,
     if spatial_kernel is None:
         spatial_kernel = "kernel_gauss_1d"
 
-    if type(spatial_kernel) == brian2.core.functions.Function:
+    if type(spatial_kernel) == core.functions.Function:
         spatial_kernel_func = spatial_kernel
         spatial_kernel_name = spatial_kernel.pyfunc.__name__
     else:
@@ -473,7 +474,7 @@ def gen2dWTA(groupname,
     if spatial_kernel is None:
         spatial_kernel = "kernel_gauss_2d"
 
-    if type(spatial_kernel) == brian2.core.functions.Function:
+    if type(spatial_kernel) == core.functions.Function:
         spatial_kernel_func = spatial_kernel
         spatial_kernel_name = spatial_kernel.pyfunc.__name__
     else:

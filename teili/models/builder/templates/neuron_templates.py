@@ -394,7 +394,7 @@ current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_
                       'none': none_params, 'linear': none_params,
                       'gain_modulation': i_gm_params, 'activity': none_params}
 
-voltage_parameters = {'voltage': v_model_templatePara, 'calcium_feedback': v_adapt_params,
+voltage_parameters = {'voltage': v_model_template_params, 'calcium_feedback': v_adapt_params,
                       'exponential': v_exp_current_params, 'quadratic': v_quad_params,
                       'leaky': v_leak_params, 'non_leaky': none_params,
                       'spatial': none_params, 'gaussian': none_params,

@@ -597,39 +597,37 @@ def gen2dWTA(groupname,
             'spikemon_inp': spikemon_inp,
             'statemon_exc': statemon_exc}
 
+    else:
+        monitors = {}
 
-else:
-    monitors = {}
+    # replacevars should be the real names of the parameters,
+    # that can be changed by the arguments of this function:
+    # in this case: we_inp_exc, we_exc_inh, wi_inh_exc, we_exc_exc,rp_exc,
+    # rp_inh,sigm
+    standalone_params = {
+        s_inp_exc.name + '_weight': we_inp_exc,
+        s_exc_inh.name + '_weight': we_exc_inh,
+        s_inh_exc.name + '_weight': wi_inh_exc,
+        s_inh_inh.name + '_weight': wi_inh_inh,
+        s_exc_exc.name + '_lateral_weight': we_exc_exc,
+        s_exc_exc.name + '_lateral_sigma': sigm,
+        n_exc.name + '_refP': rp_exc,
+        n_inh.name + '_refP': rp_inh,
+    }
 
-# replacevars should be the real names of the parameters,
-# that can be changed by the arguments of this function:
-# in this case: we_inp_exc, we_exc_inh, wi_inh_exc, we_exc_exc,rp_exc,
-# rp_inh,sigm
-standalone_params = {
-    s_inp_exc.name + '_weight': we_inp_exc,
-    s_exc_inh.name + '_weight': we_exc_inh,
-    s_inh_exc.name + '_weight': wi_inh_exc,
-    s_inh_inh.name + '_weight': wi_inh_inh,
-    s_exc_exc.name + '_lateral_weight': we_exc_exc,
-    s_exc_exc.name + '_lateral_sigma': sigm,
-    n_exc.name + '_refP': rp_exc,
-    n_inh.name + '_refP': rp_inh,
-}
+    end = time.time()
+    if debug:
+        print('creating WTA of ' + str(num_neurons) + ' x ' +
+              str(num_neurons) + ' neurons with name ' +
+              groupname + ' took ' + str(end - start) + ' sec')
+        print('The keys of the ' + groupname + ' output dict are:')
+        for key in _groups:
+            print(key)
 
-end = time.time()
-if debug:
-    print('creating WTA of ' + str(num_neurons) + ' x ' +
-          str(num_neurons) + ' neurons with name ' +
-          groupname + ' took ' + str(end - start) + ' sec')
-    print('The keys of the ' + groupname + ' output dict are:')
-    for key in _groups:
-        print(key)
-
-return _groups, monitors, standalone_params
+    return _groups, monitors, standalone_params
 
 
 def set_wta_tags(self, _groups):
-
 
 '''
 Sets default tags to a WTA network

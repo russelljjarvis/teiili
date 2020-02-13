@@ -334,7 +334,6 @@ class NeuronEquationBuilder():
             eq_dict = importlib.import_module(importpath)
             neuron_eq = eq_dict.__dict__[dict_name]
         except ImportError:
-            print(fallback_import_path)
             spec = importlib.util.spec_from_file_location(
                 dict_name[:-3], fallback_import_path)
             eq_dict = importlib.util.module_from_spec(spec)

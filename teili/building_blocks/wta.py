@@ -64,7 +64,8 @@ from teili.core.groups import Neurons, Connections
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn
 
-import teili.core.tags as tags_parameters
+from teili.core import tags as tags_parameters
+
 
 wta_params = {'we_inp_exc': 1.5,
               'we_exc_inh': 1,

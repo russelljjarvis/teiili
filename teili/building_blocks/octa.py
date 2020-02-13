@@ -13,7 +13,7 @@ import numpy as np
 
 from teili import TeiliNetwork
 from teili.core.groups import Neurons, Connections
-import teili.core.tags as tags
+from teili.core import tags as tags
 
 from teili.models.synapse_models import DPISyn, DPIstdp, DPIadp, DPIstdgm
 from teili.models.neuron_models import OCTA_Neuron as octa_neuron
@@ -26,7 +26,7 @@ from teili.tools.group_tools import add_goup_weight_init,\
     add_group_weight_decay, add_group_weight_re_init,\
     add_group_activity_proxy
 from teili.tools.bb_tools import add_bb_mismatch
-from teili.tools.io import  save_monitor, load_monitor,\
+from teili.tools.io import save_monitor, load_monitor,\
     save_weights, load_weights
 
 prefs.codegen.target = "numpy"
@@ -41,6 +41,7 @@ def re_init_ipred(Ipred_plast, source_N, target_N, re_init_threshold=0.2):
     data[reinit_index, :] = np.zeros((np.sum(reinit_index), target_N))
     data = np.clip(data, 0, 1)
     return data.flatten()
+
 
 class Octa(BuildingBlock):
     """The Online Clustering of Temporal Activity (OCTA) `BuildingBlock`.
@@ -130,6 +131,7 @@ class Octa(BuildingBlock):
             'pred_n_inh': self.sub_blocks['prediction']._groups['n_inh']})
 
         set_OCTA_tags(self, self._groups)
+
 
 def gen_octa(groupname,
              neuron_eq_builder=octa_neuron,
@@ -335,7 +337,7 @@ def gen_octa(groupname,
                        's_inh_exc',
                        equation_builder=DPIadp())
 
-    projection.tau_pred = tau_pred 
+    projection.tau_pred = tau_pred
 
     prediction._set_tags(tags.basic_wta_s_inh_exc,
                          prediction._groups['s_inh_exc'])
@@ -438,7 +440,6 @@ def gen_octa(groupname,
 
     s_pred_proj.run_regularly('''Ipred_plast *= decay''', dt=100*ms)
 
-
     weight_re_init_group = [compression._groups['s_inp_exc']] +\
                            [compression._groups['s_exc_exc']] +\
                            [prediction._groups['s_inp_exc']] +\
@@ -459,8 +460,7 @@ def gen_octa(groupname,
                                                              N_pre,\
                                                              N_post,\
                                                              re_init_threshold)''',
-                               dt=50 * ms)
-
+                              dt=50 * ms)
 
     activity_proxy_group = [compression._groups['n_exc']] + \
                            [prediction._groups['n_exc']]
@@ -597,12 +597,12 @@ def replace_connection(bb_source, population_source,
         name = bb_target._groups[connection_name].name
 
     bb_target._groups[connection_name] = Connections(bb_source._groups[
-                                                         population_source],
-                                                     bb_target._groups[
-                                                         population_target],
-                                                     equation_builder=equation_builder,
-                                                     method=method,
-                                                     name=name)
+        population_source],
+        bb_target._groups[
+        population_target],
+        equation_builder=equation_builder,
+        method=method,
+        name=name)
     bb_target._groups[connection_name].connect(True)
 
     return None

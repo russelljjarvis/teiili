@@ -19,7 +19,7 @@ from brian2 import ms, second, pA, nA, prefs,\
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import DPI as neuron_model
-from teili.models.synapse_models import DPISyn as syn_model
+from teili.models.synapse_models import DPISyn as synapse_model
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
 from teili.tools.visualizer.DataViewers import PlotSettings
@@ -42,11 +42,11 @@ test_neurons2 = Neurons(2, equation_builder=neuron_model(
     num_inputs=2), name="test_neurons2")
 
 input_synapse = Connections(input_spikegenerator, test_neurons1,
-                            equation_builder=syn_model(), name="input_synapse", verbose=False)
+                            equation_builder=synapse_model(), name="input_synapse", verbose=False)
 input_synapse.connect(True)
 
 test_synapse = Connections(test_neurons1, test_neurons2,
-                           equation_builder=syn_model(), name="test_synapse")
+                           equation_builder=synapse_model(), name="test_synapse")
 test_synapse.connect(True)
 
 '''

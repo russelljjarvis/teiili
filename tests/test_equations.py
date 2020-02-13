@@ -20,7 +20,7 @@ class TestEquations(unittest.TestCase):
 
     def test_ExpAdaptIF(self):
         ExpAdaptIF = NeuronEquationBuilder.import_eq(
-            'ExpAdaptIF', num_inputs=1)
+            'ExpAdaptIF.py', num_inputs=1)
         testNeurons = Neurons(1, equation_builder=ExpAdaptIF(
             num_inputs=1), name="testNeuron", verbose=False)
         Net = TeiliNetwork()
@@ -28,7 +28,7 @@ class TestEquations(unittest.TestCase):
         Net.run(5 * ms)
 
     def test_DPI(self):
-        DPI = NeuronEquationBuilder.import_eq('DPI', num_inputs=1)
+        DPI = NeuronEquationBuilder.import_eq('DPI.py', num_inputs=1)
         testNeurons = Neurons(1, equation_builder=DPI(
             num_inputs=1), name="testNeuron", verbose=False)
         Net = TeiliNetwork()
@@ -37,12 +37,13 @@ class TestEquations(unittest.TestCase):
 
     def test_Izhikevich(self):
         Izhikevich = NeuronEquationBuilder.import_eq(
-            'Izhikevich', num_inputs=1)
+            'Izhikevich.py', num_inputs=1)
         testNeurons = Neurons(1, equation_builder=Izhikevich(
             num_inputs=1), name="testNeuron", verbose=False)
         Net = TeiliNetwork()
         Net.add(testNeurons)
         Net.run(5 * ms)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -334,9 +334,12 @@ class SynapseEquationBuilder():
         fallback_import_path = filename
         if os.path.dirname(filename) is "":
             filename = os.path.join(os.path.expanduser("~"),
-                                    'teiliApps',
-                                    'equations',
+                                    "teiliApps",
+                                    "equations",
                                     filename)
+            if not os.path.basename(filename)[-3:] == ".py":
+                filename += ".py"
+            fallback_import_path = filename
 
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
@@ -354,12 +357,10 @@ class SynapseEquationBuilder():
             eq_dict = importlib.import_module(importpath)
             synapse_eq = eq_dict.__dict__[dict_name]
         except ImportError:
-            # print(dict_name[:-3], fallback_import_path)
             spec = importlib.util.spec_from_file_location(
                 dict_name[:-3], fallback_import_path)
             eq_dict = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(eq_dict)
-            # print(eq_dict, spec)
             synapse_eq = eq_dict.__dict__[dict_name[:-3]]
 
         return cls(keywords=synapse_eq)

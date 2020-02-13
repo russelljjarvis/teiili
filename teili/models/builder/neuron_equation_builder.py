@@ -312,33 +312,33 @@ class NeuronEquationBuilder():
         # the predefined models
         fallback_import_path = filename
         if os.path.dirname(filename) is "":
-            filename = os.path.join(os.path.expanduser("~"),
-                                    'teiliApps',
-                                    'equations',
+            filename = os.path.join(os.path.expanduser('~'),
+                                    "teiliApps",
+                                    "equations",
                                     filename)
+            if not os.path.basename(filename)[-3:] == ".py":
+                filename += ".py"
+            fallback_import_path = filename
 
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
         else:
             dict_name = os.path.basename(filename)
             filename = os.path.join(filename, '')
-
         tmp_import_path = []
         while os.path.basename(os.path.dirname(filename)) is not "":
             tmp_import_path.append(os.path.basename(os.path.dirname(filename)))
             filename = os.path.dirname(filename)
         importpath = ".".join(tmp_import_path[::-1])
-
         try:
             eq_dict = importlib.import_module(importpath)
             neuron_eq = eq_dict.__dict__[dict_name]
         except ImportError:
-            # print(dict_name[:-3], fallback_import_path)
+            print(fallback_import_path)
             spec = importlib.util.spec_from_file_location(
                 dict_name[:-3], fallback_import_path)
             eq_dict = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(eq_dict)
-            # print(eq_dict, spec)
             neuron_eq = eq_dict.__dict__[dict_name[:-3]]
 
         builder_obj = cls(keywords=neuron_eq)

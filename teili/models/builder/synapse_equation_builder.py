@@ -333,7 +333,7 @@ class SynapseEquationBuilder():
         # the predefined models
         fallback_import_path = filename
         if os.path.dirname(filename) is "":
-            filename = os.path.join(os.path.expanduser("~"),
+            filename = os.path.join(os.path.expanduser('~'),
                                     "teiliApps",
                                     "equations",
                                     filename)

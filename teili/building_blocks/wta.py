@@ -629,8 +629,7 @@ def gen2dWTA(groupname,
 
 def set_wta_tags(self, _groups):
 
-'''
-Sets default tags to a WTA network
+"""Sets default tags to a WTA network
 
 Args:
     _groups (dictionary): Keys to all neuron and synapse groups.
@@ -648,7 +647,7 @@ No Longer Returned:
             'group_type' : str (Neuron/Connection/ SpikeGen)
             'connection_type' : str (rec/lateral/fb/ff/None)
         }
-'''
+"""
 
 self._set_tags(tags_parameters.basic_wta_n_exc, _groups['n_exc'])
 self._set_tags(tags_parameters.basic_wta_n_inh, _groups['n_inh'])

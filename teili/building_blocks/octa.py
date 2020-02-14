@@ -4,15 +4,6 @@
 Created on Wed Jun 26 12:58:50 2019
 
 @author: matteo, mmilde
-
-This module provides a hierarchical building block called OCTA.
-            -Online Clustering of Temporal Activity-
-
-This is a level 2 hierarchical building block, it uses basic building blocks such
-as the WTA.
-
-If you want to change the default parameters of your building block
-    you need to define a dictionary, which you pass to the building_block:
 """
 
 from brian2 import ms, pA
@@ -299,7 +290,7 @@ def gen_octa(groupname,
                                                    compression._groups['n_exc'],
                                                    equation_builder=DPIstdp,
                                                    method='euler',
-                                                   name=groupname +'_s_proj_comp')
+                                                   name='s_proj_comp')
 
     compression._groups['s_inp_exc'].connect(True)
     compression._set_tags(tags.basic_wta_s_inp_exc,
@@ -614,7 +605,6 @@ def replace_connection(bb_source, population_source,
         name=name)
     bb_target._groups[connection_name].connect(True)
 
-
     return None
 
 
@@ -631,5 +621,7 @@ def set_OCTA_tags(self, _groups):
     self._set_tags(tags.basic_octa_pred_noise_sg, _groups['pred_noise_gen'])
     self._set_tags(tags.basic_octa_comp_noise_sg, _groups['comp_noise_gen'])
     self._set_tags(tags.basic_octa_n_proj, _groups['n_proj'])
-    self._set_tags(tags.basic_octa_s_pred_noise, _groups['pred_noise_syn_exc'])
-    self._set_tags(tags.basic_octa_s_comp_noise, _groups['comp_noise_syn_exc'])
+    self._set_tags(tags.basic_octa_s_pred_noise,
+                   _groups['pred_noise_syn_exc'])
+    self._set_tags(tags.basic_octa_s_comp_noise,
+                   _groups['comp_noise_syn_exc'])

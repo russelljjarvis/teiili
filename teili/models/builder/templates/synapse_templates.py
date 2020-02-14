@@ -490,13 +490,13 @@ modes = {
     }
 
 kernels = {
-    'exponential': none,
+    'exponential': none_model,
     'alpha': alpha_kernel,
     'resonant': resonant_kernel
     }
 
 plasticity_models = {
-    'non_plastic': none,
+    'non_plastic': none_model,
     'fusi': fusi,
     'stdp': stdp
     }
@@ -563,4 +563,4 @@ None_parameters = {
     'resonant': none_params,
     'alpha': none_params,
     'activity': none_params,
-    'stdgm': stdgm_params}
+    'stdgm': none_params}

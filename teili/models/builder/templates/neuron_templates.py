@@ -391,7 +391,7 @@ current_equation_sets = {
     'spatial': spatial,
     'gaussian': i_noise,
     'none': none_model,
-    'linear': none,
+    'linear': none_model,
     'gain_modulation': i_gm,
     'activity': i_act}
 

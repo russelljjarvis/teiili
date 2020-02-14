@@ -24,23 +24,23 @@ pS = psiemens
 # voltage based equation building blocks
 v_model_template = {
     'model': """
-         dVm/dt  = (Ileak + Iexp + Iin + Iconst + Inoise - Iadapt)/Cm  : volt (unless refractory)
-         Ileak   : amp                            # leak current
+        dVm/dt  = (Ileak + Iexp + Iin + Iconst + Inoise - Iadapt)/Cm  : volt (unless refractory)
+        Ileak   : amp                            # leak current
 
-         Iexp    : amp                            # exponential current
-         Iadapt  : amp                            # adaptation current
-         Inoise  : amp                            # noise current
-         Iconst  : amp                            # additional input current
-         Cm      : farad     (constant)           # membrane capacitance
-         refP    : second    (constant)           # refractory period
-         Vthr    : volt
-         Vres    : volt      (constant)           # reset potential
-         gL      : siemens   (constant)           # leak conductance
-         """,
+        Iexp    : amp                            # exponential current
+        Iadapt  : amp                            # adaptation current
+        Inoise  : amp                            # noise current
+        Iconst  : amp                            # additional input current
+        Cm      : farad     (constant)           # membrane capacitance
+        refP    : second    (constant)           # refractory period
+        Vthr    : volt
+        Vres    : volt      (constant)           # reset potential
+        gL      : siemens   (constant)           # leak conductance
+        """,
     'threshold': "Vm > Vthr",
     'reset': """
-         Vm = Vres;
-         """
+        Vm = Vres;
+        """
 }
 
 v_model_template_params = {
@@ -53,58 +53,58 @@ v_model_template_params = {
     "Iconst": 0 * pA,
     "Vthr": -50.4 * mV,
     "Vres": -70.6 * mV
-}
+    }
 
 # exponential current (see exponential I&F Model)
 # exponential
 v_exp_current = {
     'model': """
-         %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
-         %Vthr = (VT + 5 * DeltaT) : volt
+        %Iexp = gL*DeltaT*exp((Vm - VT)/DeltaT) : amp
+        %Vthr = (VT + 5 * DeltaT) : volt
 
-         VT      : volt (constant)
-         DeltaT  : volt (constant) # slope factor
-         """,
+        VT      : volt (constant)
+        DeltaT  : volt (constant) # slope factor
+        """,
     'threshold': "",
-    'reset': """
-         """
-}
+    'reset': """ """
+    }
 
 v_exp_current_params = {
     "gL": 4.3 * nS,
     "DeltaT": 2 * mV,
     "VT": -50.4 * mV
-}
+    }
 
 # quadratic current (see Izhikevich Model)
 v_quad_current = {
     'model': """
-         %Iexp = k*(Vm - VR)*(Vm - VT) : amp
-         %tauIadapt = 1.0/a            : second  # adaptation time constant
-         %gAdapt = b                   : siemens # adaptation decay parameter
-         %wIadapt = d                  : amp     # adaptation weight
-         %EL = VR                      : volt
+        %Iexp = k*(Vm - VR)*(Vm - VT) : amp
+        %tauIadapt = 1.0/a            : second  # adaptation time constant
+        %gAdapt = b                   : siemens # adaptation decay parameter
+        %wIadapt = d                  : amp     # adaptation weight
+        %EL = VR                      : volt
 
-         VT      : volt                (constant)        # V integration threshold
-         Vpeak   : volt                (constant)        # V spike threshold
-         VR      : volt                (constant)        # V rest
-         k       : siemens * volt **-1 (constant)        # slope factor
-         a       : second **-1         (constant)        # recovery time constant
-         b       : siemens             (constant)        # 1/Rin
-         c       : volt                (constant)        # potential reset value
-         d       : amp                 (constant)        # outward minus inward currents
-                                                         # activated during the spike
-                                                         # and affecting the after-spike
-                                                         # behavior
-         %Vthr = Vpeak : volt
-         %Vres = VR : volt
-            """,
+        VT      : volt                (constant)        # V integration threshold
+        Vpeak   : volt                (constant)        # V spike threshold
+        VR      : volt                (constant)        # V rest
+        k       : siemens * volt **-1 (constant)        # slope factor
+        a       : second **-1         (constant)        # recovery time constant
+        b       : siemens             (constant)        # 1/Rin
+        c       : volt                (constant)        # potential reset value
+        d       : amp                 (constant)        # outward minus inward currents
+                                                        # activated during the spike
+                                                        # and affecting the after-spike
+                                                        # behavior
+        %Vthr = Vpeak : volt
+        %Vres = VR : volt
+        """,
     'threshold': "",
     'reset': """
-         %Vm = c;
-         Iadapt += wIadapt;
-         """
-}
+        %Vm = c;
+        Iadapt += wIadapt;
+        """
+    }
+
 """ Paramters for the quadratic model taken from
 Nicola & Clopath 2017. Please refer to this paper for more information.
 The parameter k represents k = 1/Rin in the original study.
@@ -125,18 +125,19 @@ v_quad_params = {
 # leak
 v_leak = {
     'model': """
-         %Ileak = -gL*(Vm - EL) : amp
+        %Ileak = -gL*(Vm - EL) : amp
 
-         EL : volt (constant) # leak reversal potential
-         """,
+        EL : volt (constant) # leak reversal potential
+        """,
     'threshold': "",
     'reset': """
-         """}
+    """
+    }
 
 v_leak_params = {
     "gL": 4.3 * nS,
     "EL": -55 * mV
-}
+    }
 
 # adaptation
 v_adapt = {
@@ -150,60 +151,54 @@ v_adapt = {
         """,
     'threshold': "",
     'reset': """
-         Iadapt += wIadapt;"""}
+        Iadapt += wIadapt;
+        """
+    }
 
 v_adapt_params = {
     "gAdapt": 4 * nS,
     "wIadapt": 0.0805 * nA,
     "tauIadapt": 144 * ms,
     "EL": -70.6 * mV
-}
+    }
 
 # noise
 v_noise = {
     'model': """
-         %Inoise = xi*Anoise*(second**0.5) : amp
+        %Inoise = xi*Anoise*(second**0.5) : amp
 
-         Anoise : amp (constant)
-         """,
+        Anoise : amp (constant)
+        """,
     'threshold': "",
-    'reset': """
-         """
-}
+    'reset': """ """
+    }
 
 """ Adds spatial location to neuron locate at the soma.
 This additional information is **not** set by default.
 """
 spatial = {
     'model': """
-         x : 1 (constant) # x location on 2d grid
-         y : 1 (constant) # y location on 2d grid
-         """,
+        x : 1 (constant) # x location on 2d grid
+        y : 1 (constant) # y location on 2d grid
+        """,
     'threshold': "",
-    'reset': """
-         """
-}
+    'reset': """ """
+    }
 
 # activity
 activity = {
     'model': """
-         dActivity/dt = -Activity/tauAct : 1
+        dActivity/dt = -Activity/tauAct : 1
 
-         tauAct : second (constant)
-         """,
+        tauAct : second (constant)
+        """,
     'threshold': "",
     'reset': """
-         Activity += 1;
-         """
-}
+        Activity += 1;
+        """
+    }
 
-none = {
-    'model': """
-         """,
-    'threshold': "",
-    'reset': """
-         """
-}
+
 
 # Silicon Neuron as in Chicca et al. 2014
 # Author: Moritz Milde
@@ -372,30 +367,70 @@ i_non_leaky_params = {
     "Itau": constants.I0
 }
 
+none_model = {
+    'model': """
+         """,
+    'threshold': "",
+    'reset': """
+         """
+    }
+
 none_params = {}
 
-modes = {'current': i_model_template, 'voltage': v_model_template}
+modes = {
+    'current': i_model_template,
+    'voltage': v_model_template
+    }
 
-current_equation_sets = {'calcium_feedback': i_ahp, 'exponential': i_a,
-                         'leaky': none, 'non_leaky': none, 'quadratic': none,
-                         'spatial': spatial, 'gaussian': i_noise, 'none': none,
-                         'linear': none, 'gain_modulation': i_gm, 'activity': i_act}
+current_equation_sets = {
+    'calcium_feedback': i_ahp,
+    'exponential': i_a,
+    'leaky': none_model,
+    'non_leaky': none_model,
+    'quadratic': none_model,
+    'spatial': spatial,
+    'gaussian': i_noise,
+    'none': none_model,
+    'linear': none,
+    'gain_modulation': i_gm,
+    'activity': i_act}
 
-voltage_equation_sets = {'calcium_feedback': v_adapt, 'exponential': v_exp_current,
-                         'quadratic': v_quad_current,
-                         'leaky': v_leak, 'non_leaky': none,
-                         'spatial': spatial, 'gaussian': v_noise,
-                         'none': none, 'linear': none}
+voltage_equation_sets = {
+    'calcium_feedback': v_adapt,
+    'exponential': v_exp_current,
+    'quadratic': v_quad_current,
+    'leaky': v_leak,
+    'non_leaky': none_model,
+    'spatial': spatial,
+    'gaussian': v_noise,
+    'none': none_model,
+    'linear': none_model
+    }
 
-current_parameters = {'current': i_model_template_params, 'calcium_feedback': i_ahp_params,
-                      'quadratic': none_params, 'exponential': i_exponential_params,
-                      'leaky': none_params, 'non_leaky': i_non_leaky_params,
-                      'spatial': none_params, 'gaussian': i_noise_params,
-                      'none': none_params, 'linear': none_params,
-                      'gain_modulation': i_gm_params, 'activity': none_params}
+current_parameters = {
+    'current': i_model_template_params,
+    'calcium_feedback': i_ahp_params,
+    'quadratic': none_params,
+    'exponential': i_exponential_params,
+    'leaky': none_params,
+    'non_leaky': i_non_leaky_params,
+    'spatial': none_params,
+    'gaussian': i_noise_params,
+    'none': none_params,
+    'linear': none_params,
+    'gain_modulation': i_gm_params,
+    'activity': none_params
+    }
 
-voltage_parameters = {'voltage': v_model_template_params, 'calcium_feedback': v_adapt_params,
-                      'exponential': v_exp_current_params, 'quadratic': v_quad_params,
-                      'leaky': v_leak_params, 'non_leaky': none_params,
-                      'spatial': none_params, 'gaussian': none_params,
-                      'none': none_params, 'linear': none_params}
+voltage_parameters = {
+    'voltage': v_model_template_params,
+    'calcium_feedback': v_adapt_params,
+    'exponential': v_exp_current_params,
+    'quadratic': v_quad_params,
+    'leaky': v_leak_params,
+    'non_leaky': none_params,
+    'spatial': none_params,
+    'gaussian': none_params,
+    'none': none_params,
+    'linear': none_params
+    }

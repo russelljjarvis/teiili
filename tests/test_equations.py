@@ -54,6 +54,32 @@ class TestEquations(unittest.TestCase):
         Net.add(testNeurons)
         Net.run(5 * ms)
 
+    def test_ExpAdaptIF(self):
+        filename = os.path.join(os.path.expanduser('~'),
+                                "teiliApps",
+                                "equations",
+                                "ExpAdaptIF.py")
 
+        ExpAdaptIF = NeuronEquationBuilder.import_eq(
+            filename, num_inputs=1)
+        testNeurons = Neurons(1, equation_builder=ExpAdaptIF(
+            num_inputs=1), name="testNeuron", verbose=False)
+        Net = TeiliNetwork()
+        Net.add(testNeurons)
+        Net.run(5 * ms)
+
+    def test_ExpLIF(self):
+        filename = os.path.join(os.path.expanduser('~'),
+                                "teiliApps",
+                                "equations",
+                                "ExpAdaptIF.py")
+
+        ExpLIF = NeuronEquationBuilder.import_eq(
+            filename, num_inputs=1)
+        testNeurons = Neurons(1, equation_builder=ExpLIF(
+            num_inputs=1), name="testNeuron", verbose=False)
+        Net = TeiliNetwork()
+        Net.add(testNeurons)
+        Net.run(5 * ms)
 if __name__ == '__main__':
     unittest.main()

@@ -53,6 +53,10 @@ coverage.xml
 # Pickle files
 *.pkl
 
+# numpy files
+*.npy
+*.npz
+
 # Translations
 *.mo
 *.pot
@@ -111,3 +115,5 @@ ENV/
 *.svg
 
 teili/models/equations/
+.vscode
+core

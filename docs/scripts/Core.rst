@@ -57,6 +57,9 @@ Thus, if you are simulating neuron and synapse models of neuromorphic chips, e.g
 To this end, the class method ``add_mismatch()`` allows you to add a Gaussian distributed mismatch with mean equal to the current parameter value and standard deviation set as a fraction of the current parameter value.
 
 As an example, once ``Neurons`` and ``Connections`` are created, device mismatch can be added to some selected parameters (e.g. Itau and refP for the DPI neuron) by specifying a dictionary with parameter names as keys and standard deviation as values, as shown in the example below.
+If no dictionary is passed to ``add_mismatch()`` 20% mismatch will be added to all variables except for variables that are found in `teili/models/parameters/no_mismatch_parameter.py`.
+
+If no dictionary is passed to ``add_mismatch()``, 20% mismatch will be added to all variables except for variables that are found in ``teili/models/parameters/no_mismatch_parameter.py``.
 
 .. code-block:: python
 
@@ -77,12 +80,13 @@ Let's assume that the estimated mismatch distribution has a standard deviation o
 This will change the current parameter values by drawing random values from the specified Gaussian distribution.
 
 If you set the mismatch seed in the input parameters, the random samples will be reproducible across simulations.
-Notice that ``self.add_mismatch()`` will automatically truncate the gaussian distribution
-at zero for the lower bound. This will prevent from setting neuron/synapse parameters (which
-are mainly transistor currents for the DPI model) to negative values. No upper bound is specified by default.
+| Note that ``self.add_mismatch()`` will automatically truncate the Gaussian distribution
+at zero for the lower bound. This will prevent neuron or synapse parameters (which
+are mainly transistor currents for the DPI model) from being set to negative values. No upper bound is specified by default.
 
-However, if you want to manually specify lower bound and upper bound of the mismatch gaussian distribution, you can use the method ``_add_mismatch_param()``, as shown below.
-With old_param being the current parameter value, this will draw samples from a Gaussian distribution with the following parameters:
+| However, if you want to manually specify the lower bound and upper bound of the mismatch
+Gaussian distribution, you can use the method ``_add_mismatch_param()``, as shown below.
+| With old_param being the current parameter value, this will draw samples from a Gaussian distribution with the following parameters:
 
 * **mean**: old_param
 * **standard deviation**: std * old_param
@@ -99,12 +103,10 @@ With old_param being the current parameter value, this will draw samples from a 
     test_neurons = Neurons(100, equation_builder=DPI(num_inputs=2))
     test_neurons._add_mismatch_param(param='Itau', std=0.1, lower=-0.2, upper = 0.2)
 
-Notice that this option allows you to add mismatch only to one parameter at a time.
+Note that this option allows you to add mismatch only to one parameter at a time.
 
 .. [1] Sheik, Sadique, Elisabetta Chicca, and Giacomo Indiveri. "Exploiting device mismatch in neuromorphic VLSI systems to implement axonal delays." Neural Networks (IJCNN), The 2012 International Joint Conference on. IEEE, 2012.
-
 .. [2] Hung, Hector, and Vladislav Adzic. "Monte Carlo simulation of device variations and mismatch in analog integrated circuits." Proc. NCUR 2006 (2006): 1-8.
-
 .. _here: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#tags
 .. _neuron_synapse_tutorial: https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#neuron-synapse-tutorial
 .. _Brian2 documentation: https://brian2.readthedocs.io/en/stable/user/running.html#networks

@@ -17,7 +17,7 @@ Example:
 
     >>> from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
     >>> my_syn_model = SynapseEquationBuilder.import_eq(
-        'teili/models/equations/DPISyn')
+        'teiliApps/equations/DPISyn')
 
     In both cases you can pass it to Connections:
 
@@ -40,7 +40,8 @@ import importlib
 from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_syn_dict
 from teili.models.builder.templates.synapse_templates import modes, kernels, plasticity_models,\
-    current_parameters, conductance_parameters, DPI_parameters, DPI_shunt_parameters
+    current_parameters, conductance_parameters, DPI_parameters, DPI_shunt_parameters, synaptic_equations,\
+    None_parameters
 import copy
 
 
@@ -55,19 +56,19 @@ class SynapseEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder.
     """
 
-    def __init__(self, keywords=None, base_unit='current', kernel='exponential',
-                 plasticity='non_plastic', verbose=False):
+    def __init__(self, keywords=None, base_unit='current', verbose=False, **kwargs):
         """Initializes SynapseEquationBuilder with defined keyword arguments.
 
         Args:
             keywords (dict, optional): Brian2 like model.
             base_unit (str, optional): Indicates if synapse is current-based, conductance-based
                 or a DPI current model (for reference see TODO).
-            kernel (str, optional): Specifying temporal kernel with which each spike gets
-                convolved, i.e. exponential, decay, or alpha function.
-            plasticity (str, optional): Plasticity algorithm for the synaptic weight.
-                Can either be 'non_plastic', 'fusi' or 'stdp'.
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
+            **kwargs (str, optional): dictionary of synaptic equations such as:
+                kernel (str, optional): Specifying temporal kernel with which each spike gets
+                    convolved, i.e. exponential, decay, or alpha function.
+                plasticity (str, optional): Plasticity algorithm for the synaptic weight.
+                    Can either be 'non_plastic', 'fusi' or 'stdp'.
         """
 
         self.verbose = verbose
@@ -97,22 +98,28 @@ class SynapseEquationBuilder():
 
             try:
                 modes[base_unit]
-                kernels[kernel]
-                plasticity_models[plasticity]
+                for key, value in kwargs.items():
+                    synaptic_equations[value]
 
             except KeyError:
                 print(ERRValue)
 
             if base_unit == 'current':
-                eq_tmpl = [modes[base_unit],
-                           kernels[kernel],
-                           plasticity_models[plasticity]]
 
-                param_templ = [current_parameters[base_unit],
-                               current_parameters[kernel],
-                               current_parameters[plasticity]]
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
-                keywords = combine_syn_dict(eq_tmpl, param_templ)
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [current_parameters[value]]
+                param_templ = [current_parameters[base_unit]] + \
+                    param_templ_dummy
+
+                keywords = combine_syn_dict(eq_templ, param_templ)
 
                 keywords['model'] = keywords['model'].format(
                     input_number="{input_number}", unit='amp')
@@ -122,15 +129,20 @@ class SynapseEquationBuilder():
                     input_number="{input_number}", unit='amp')
 
             if base_unit == 'conductance':
-                eq_tmpl = [modes[base_unit],
-                           kernels[kernel],
-                           plasticity_models[plasticity]]
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
-                param_templ = [conductance_parameters[base_unit],
-                               conductance_parameters[kernel],
-                               conductance_parameters[plasticity]]
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [conductance_parameters[value]]
+                param_templ = [
+                    conductance_parameters[base_unit]] + param_templ_dummy
 
-                keywords = combine_syn_dict(eq_tmpl, param_templ)
+                keywords = combine_syn_dict(eq_templ, param_templ)
 
                 keywords['model'] = keywords['model'].format(
                     input_number="{input_number}", unit='siemens')
@@ -140,15 +152,20 @@ class SynapseEquationBuilder():
                     input_number="{input_number}", unit='siemens')
 
             if base_unit == 'DPI':
-                eq_tmpl = [modes[base_unit],
-                           kernels[kernel],
-                           plasticity_models[plasticity]]
 
-                param_templ = [DPI_parameters[base_unit],
-                               DPI_parameters[kernel],
-                               DPI_parameters[plasticity]]
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
-                keywords = combine_syn_dict(eq_tmpl, param_templ)
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [DPI_parameters[value]]
+                param_templ = [DPI_parameters[base_unit]] + param_templ_dummy
+
+                keywords = combine_syn_dict(eq_templ, param_templ)
 
                 keywords['model'] = keywords['model'].format(
                     input_number="{input_number}", unit='amp')
@@ -158,15 +175,42 @@ class SynapseEquationBuilder():
                     input_number="{input_number}", unit='amp')
 
             if base_unit == 'DPIShunting':
-                eq_tmpl = [modes[base_unit],
-                           kernels[kernel],
-                           plasticity_models[plasticity]]
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
 
-                param_templ = [DPI_shunt_parameters[base_unit],
-                               DPI_shunt_parameters[kernel],
-                               DPI_shunt_parameters[plasticity]]
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [DPI_shunt_parameters[value]]
+                param_templ = [
+                    DPI_shunt_parameters[base_unit]] + param_templ_dummy
 
-                keywords = combine_syn_dict(eq_tmpl, param_templ)
+                keywords = combine_syn_dict(eq_templ, param_templ)
+
+                keywords['model'] = keywords['model'].format(
+                    input_number="{input_number}", unit='amp')
+                keywords['on_pre'] = keywords['on_pre'].format(
+                    input_number="{input_number}", unit='amp')
+                keywords['on_post'] = keywords['on_post'].format(
+                    input_number="{input_number}", unit='amp')
+
+            if base_unit == 'None':
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
+
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [None_parameters[value]]
+                param_templ = [None_parameters[base_unit]] + param_templ_dummy
+
+                keywords = combine_syn_dict(eq_templ, param_templ)
 
                 keywords['model'] = keywords['model'].format(
                     input_number="{input_number}", unit='amp')
@@ -289,7 +333,13 @@ class SynapseEquationBuilder():
         # the predefined models
         fallback_import_path = filename
         if os.path.dirname(filename) is "":
-            filename = os.path.join('teili', 'models', 'equations', filename)
+            filename = os.path.join(os.path.expanduser('~'),
+                                    "teiliApps",
+                                    "equations",
+                                    filename)
+            if not os.path.basename(filename)[-3:] == ".py":
+                filename += ".py"
+            fallback_import_path = filename
 
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
@@ -307,11 +357,10 @@ class SynapseEquationBuilder():
             eq_dict = importlib.import_module(importpath)
             synapse_eq = eq_dict.__dict__[dict_name]
         except ImportError:
-            # print(dict_name[:-3], fallback_import_path)
-            spec = importlib.util.spec_from_file_location(dict_name[:-3], fallback_import_path)
+            spec = importlib.util.spec_from_file_location(
+                dict_name[:-3], fallback_import_path)
             eq_dict = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(eq_dict)
-            # print(eq_dict, spec)
             synapse_eq = eq_dict.__dict__[dict_name[:-3]]
 
         return cls(keywords=synapse_eq)

@@ -8,6 +8,68 @@
 """
 This is a tutorial example used to learn the basics of the Brian2 INI library.
 The emphasise is on neuron groups and non-plastic synapses.
+
+ATTENTION
+Make sure to install the latest version of
+GeNN [https://github.com/genn-team/genn]
+&
+brian2genn [https://github.com/brian-team/brian2genn]
+
+In order to use teili2genn please copy and paste the following
+model to your local teiliApps folder and name the file
+DPI_Syn_genn.py
+The reason for this is that GeNN does not support subesxpression
+at the moment as discussed here:
+https://github.com/brian-team/brian2genn/issues/57
+https://github.com/brian-team/brian2genn/issues/86
+
+
+=============================== DPISyn_genn.py ================================
+
+from brian2.units import * 
+DPISyn_genn = {
+    'model':'''
+        dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(I_syn<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
+        Iin{input_number}_post = I_syn *  (-1 * (weight<0) + 1 * (weight>0))           : amp (summed)
+        tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn)           : second
+        kappa_syn = (kn_syn + kp_syn) / 2                        : 1
+        Iw 	    : amp
+        I_gain     : amp
+        Itau_syn   : amp
+        weight     : 1
+        w_plast    : 1
+        baseweight : amp   (constant)
+        I_tau      : amp   (constant)
+        I_th       : amp   (constant)
+        kn_syn     : 1     (constant)
+        kp_syn     : 1     (constant)
+        Ut_syn     : volt  (constant)
+        Io_syn     : amp   (constant)
+        Csyn       : farad (constant)
+         ''',
+    'on_pre':
+        '''
+        Iw = abs(weight) * baseweight
+        I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn)
+        Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn)
+        I_syn += Iw * w_plast * I_gain / (Itau_syn * ((I_gain/I_syn)+1))
+        ''',
+    'on_post':''' ''',
+
+    'parameters':{
+        'Io_syn' : '0.5 * pamp',
+        'kn_syn' : '0.75',
+        'kp_syn' : '0.66',
+        'Ut_syn' : '25. * mvolt',
+        'Csyn' : '1.5 * pfarad',
+        'I_tau' : '10. * pamp',
+        'I_th' : '10. * pamp',
+        'I_syn' : '0.5 * pamp',
+        'w_plast' : '1',
+        'baseweight' : '7. * pamp',
+        }
+}
+======================================================
 """
 import os
 from pyqtgraph.Qt import QtGui, QtCore
@@ -30,10 +92,10 @@ path = os.path.expanduser("~")
 model_path = os.path.join(path, "teiliApps", "equations", "")
 
 synapse_obj = SynapseEquationBuilder.import_eq(
-    model_path + 'DPISyn.py')
+    model_path + 'DPISyn_genn.py')
 
 #prefs.codegen.target = "numpy"
-set_device('genn', use_GPU= False, directory='teili2genn_test', debug=False)
+set_device('genn', use_GPU=False, directory='teili2genn_test', debug=False)
 
 input_timestamps = np.asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0])
@@ -97,7 +159,7 @@ statemon_input_synapse = StateMonitor(
 
 statemon_test_synapse = StateMonitor(
     test_synapse, variables='I_syn',
-    record=[1,2,3,4], name='statemon_test_synapse')
+    record=[1, 2, 3, 4], name='statemon_test_synapse')
 
 if 'Imem' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,

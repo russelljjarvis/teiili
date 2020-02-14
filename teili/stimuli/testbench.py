@@ -359,9 +359,6 @@ class OCTA_Testbench():
             self.events[1, :] = np.asarray(y_coord)
             self.events[2, :] = np.asarray(self.times)
             self.events[3, :] = np.asarray(pol)
-            if save_path is None:
-                save_path = os.path.join(os.getcwd(), '')
-            np.save(save_path + 'events.npy', self.events)
         if debug:
             print("Max X: {}. Max Y: {}".format(
                 np.max(self.events[0, :]), np.max(self.events[1, :])))

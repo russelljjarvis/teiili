@@ -81,7 +81,6 @@ wta_params = {'we_inp_exc': 1.5,
               }
 
 
-
 class WTA(BuildingBlock):
     '''A 1 or 2D square Winner-Takes_all (WTA) Building block.
 
@@ -187,8 +186,6 @@ class WTA(BuildingBlock):
                                                   **block_params)
 
             set_wta_tags(self, self._groups)
-
-            set_WTA_tags(self, self._groups)
 
         else:
             raise NotImplementedError(
@@ -601,6 +598,7 @@ def gen2dWTA(groupname,
             'spikemon_inh': spikemon_inh,
             'spikemon_inp': spikemon_inp,
             'statemon_exc': statemon_exc}
+
     else:
         monitors = {}
 

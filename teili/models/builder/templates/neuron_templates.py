@@ -252,13 +252,13 @@ i_model_template_params = {
     # ---------------------------------------------------------
     # Positive feedback parameters
     # ---------------------------------------------------------
-    "Ia": constants.I0, # Feedback current
-    # rest is set in exponential integration
-    #---------------------------------------------------------
+    "Ia": constants.I0,                                # Feedback current
+    # rest set in exponenctial integratin
+    # ---------------------------------------------------------
     # Adaptative and Calcium parameters
     # ---------------------------------------------------------
     "Ica": constants.I0,
-    "Iahp": constants.I0, # Adaptation current
+    "Iahp": constants.I0,                                # Adaptation current
     # ---------------------------------------------------------
     # Shunting inhibition
     # ---------------------------------------------------------
@@ -311,43 +311,32 @@ i_a_params = {
 }
 
 # adaptation
-i_ahp = {
-    'model': """
-        %dIahp/dt = (- Ithahp_clip - Iahp + 2*Io*(Iahp<=Io)) / (tauahp * (Ithahp_clip / Iahp + 1)) : amp # adaptation current
-        %Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
-        tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
-        Iahpmax = (Ica / Itauahp) * Ithahp_clip : amp     # Ratio of currents through diffpair and adaptation block
-        Ithahp : amp (constant)
-        Itauahp : amp (constant)
-        Cahp : farad (constant)
-        """,
-    'threshold': '',
-    'reset': '''
-        Iahp += Iahpmax;
-        '''
-    }
-
-i_ahp_params = {
-    "Itauahp": 1 * pA,
-    "Ithahp": 1 * pA,
-    "Ica": 2 * pA,
-    "Cahp": 1 * pF
-    }
-
+i_ahp = {'model': """
+          %dIahp/dt = (- Ithahp_clip - Iahp + 2*Io*(Iahp<=Io)) / (tauahp * (Ithahp_clip / Iahp + 1)) : amp # adaptation current
+          %Iahp_clip = Iahp*(Imem>Io) + Io*(Imem<=Io)  : amp
+          tauahp = (Cahp * Ut) / (kappa * Itauahp) : second # time constant of adaptation
+          Iahpmax = (Ica / Itauahp) * Ithahp_clip : amp     # Ratio of currents through diffpair and adaptation block
+          Ithahp : amp (constant)
+          Itauahp : amp (constant)
+          Cahp : farad (constant)
+         """,
+         'threshold': '',
+         'reset': '''
+             Iahp += Iahpmax;
+                  '''}
 # gain modulation
-i_gm = {
-    'model': """
-        dIpred/dt = (1 - Ipred)/tau_pred  : 1
-        tau_pred : second (constant)
-        """,
-    'threshold': '',
-    'reset': ''
-    }
+i_gm = {'model': """
+          dIpred/dt = (1 - Ipred)/tau_pred  : 1
+          tau_pred : second (constant)
+          """,
+        'threshold': '',
+        'reset': ''
+        }
 
-i_gm_params = {
-    'Ipred': 1.0 ,
-    'tau_pred': 1.5 *ms
-    }
+
+i_gm_params = {'Ipred': 1.0,
+               'tau_pred': 1.5 * ms
+               }
 
 # Keep track of the Imem activity. Usefull with run regular functions.
 i_act = {'model': """
@@ -358,6 +347,13 @@ i_act = {'model': """
          'reset': """
        """
          }
+
+i_ahp_params = {
+    "Itauahp": 1 * pA,
+    "Ithahp": 1 * pA,
+    "Ica": 2 * pA,
+    "Cahp": 1 * pF
+}
 
 i_exponential_params = {
     "Ith": 0.9 * pA,
@@ -370,6 +366,16 @@ i_exponential_params = {
 i_non_leaky_params = {
     "Itau": constants.I0
 }
+
+none_model = {
+    'model': """
+         """,
+    'threshold': "",
+    'reset': """
+         """
+    }
+
+none_params = {}
 
 modes = {
     'current': i_model_template,

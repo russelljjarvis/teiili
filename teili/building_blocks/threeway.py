@@ -16,7 +16,7 @@ from brian2 import ms, SpikeMonitor,\
 from teili.building_blocks.building_block import BuildingBlock
 from teili.building_blocks.wta import WTA
 from teili.core.groups import Connections
-import teili.core.tags as tags_parameters 
+from teili.core import tags as tags_parameters
 
 from teili.models.neuron_models import DPI
 from teili.models.synapse_models import DPISyn

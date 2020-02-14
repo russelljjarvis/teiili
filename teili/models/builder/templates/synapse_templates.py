@@ -31,36 +31,23 @@ your equation will be : %d{synvar_e}/dt = (-{synvar_e})**2 / synvar_e
 from teili import constants
 from brian2 import pF, nS, mV, ms, pA, nA, volt, second
 
-none = {
-    'model': """
-         """,
-    'on_pre': """
-         """,
-    'on_post': """
-         """
-}
-
-current = {'model': '''
+current = {
+    'model': '''
         dI_syn/dt = (-I_syn) / tausyn + kernel: amp (clock-driven)
-
-        kernel : amp * second **-1
-
         Iin{input_number}_post = I_syn *  sign(weight) : amp (summed)
 
+        kernel : amp * second **-1
         tausyn : second (constant) # synapse time constant
         w_plast : 1
-
         baseweight : amp (constant)     # synaptic gain
         weight : 1
-
         ''',
 
-           'on_pre': '''
+    'on_pre': '''
         I_syn += baseweight * abs(weight) * w_plast
         ''',
-
-           'on_post': ''' '''
-           }
+    'on_post': ''' '''
+    }
 
 # standard parameters for current based models
 current_params = {
@@ -76,8 +63,8 @@ conductance = {
         dgI/dt = (-gI) / tausyn + kernel     : siemens (clock-driven)
         I_syn = gI*(EI - Vm_post)            : amp
         Iin{input_number}_post = I_syn *  sign(weight)  : amp (summed)
-        EI =  EIe                            : volt        # reversal potential
 
+        EI =  EIe                            : volt        # reversal potential
         kernel                               : siemens * second **-1
         tausyn                               : second   (constant) # synapse time constant
         w_plast                              : 1
@@ -108,31 +95,30 @@ conductance_params = {
 # DPI type model
 dpi = {
     'model': """
-         dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(I_syn<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
-         Iin{input_number}_post = I_syn *  sign(weight)           : amp (summed)
-         Iw = abs(weight) * baseweight                            : amp
-         I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn)    : amp
-         Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn) : amp
-         tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn)           : second
-         kappa_syn = (kn_syn + kp_syn) / 2                        : 1
+        dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(I_syn<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
+        Iin{input_number}_post = I_syn *  sign(weight)           : amp (summed)
+        Iw = abs(weight) * baseweight                            : amp
+        I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn)    : amp
+        Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn) : amp
+        tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn)           : second
+        kappa_syn = (kn_syn + kp_syn) / 2                        : 1
 
-         weight     : 1
-         w_plast    : 1
-         baseweight : amp   (constant)
-         I_tau      : amp   (constant)
-         I_th       : amp   (constant)
-         kn_syn     : 1     (constant)
-         kp_syn     : 1     (constant)
-         Ut_syn     : volt  (constant)
-         Io_syn     : amp   (constant)
-         Csyn       : farad (constant)
-         """,
+        weight     : 1
+        w_plast    : 1
+        baseweight : amp   (constant)
+        I_tau      : amp   (constant)
+        I_th       : amp   (constant)
+        kn_syn     : 1     (constant)
+        kp_syn     : 1     (constant)
+        Ut_syn     : volt  (constant)
+        Io_syn     : amp   (constant)
+        Csyn       : farad (constant)
+        """,
     'on_pre': """
-         I_syn += Iw * w_plast * I_gain / (Itau_syn * ((I_gain/I_syn)+1))
-         """,
-    'on_post': """
-         """,
-}
+        I_syn += Iw * w_plast * I_gain / (Itau_syn * ((I_gain/I_syn)+1))
+        """,
+    'on_post': """ """,
+    }
 
 # standard parameters for DPI models
 dpi_params = {
@@ -151,32 +137,30 @@ dpi_params = {
 # DPI shunting inhibition
 dpi_shunt = {
     'model': """
-         dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(I_syn<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
-         Ishunt{input_number}_post = I_syn *  sign(weight)  * (weight<0) : amp (summed)
-         Iw = abs(weight) * baseweight                                   : amp
-         I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn)           : amp
-         Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn)        : amp
-         tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn)                  : second
-         kappa_syn = (kn_syn + kp_syn) / 2                               : 1
+        dI_syn/dt = (-I_syn - I_gain + 2*Io_syn*(I_syn<=Io_syn))/(tausyn*((I_gain/I_syn)+1)) : amp (clock-driven)
+        Ishunt{input_number}_post = I_syn *  sign(weight)  * (weight<0) : amp (summed)
+        Iw = abs(weight) * baseweight                                   : amp
+        I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn)           : amp
+        Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn)        : amp
+        tausyn = Csyn * Ut_syn /(kappa_syn * Itau_syn)                  : second
+        kappa_syn = (kn_syn + kp_syn) / 2                               : 1
 
-         weight     : 1
-         w_plast    : 1
-         baseweight : amp   (constant)
-         I_tau      : amp   (constant)
-         I_th       : amp   (constant)
-         kn_syn     : 1     (constant)
-         kp_syn     : 1     (constant)
-         Ut_syn     : volt  (constant)
-         Io_syn     : amp   (constant)
-         Csyn       : farad (constant)
-         """,
+        weight     : 1
+        w_plast    : 1
+        baseweight : amp   (constant)
+        I_tau      : amp   (constant)
+        I_th       : amp   (constant)
+        kn_syn     : 1     (constant)
+        kp_syn     : 1     (constant)
+        Ut_syn     : volt  (constant)
+        Io_syn     : amp   (constant)
+        Csyn       : farad (constant)
+        """,
     'on_pre': """
-         I_syn += Iw * w_plast * I_gain * (weight<0)/(Itau_syn*((I_gain/I_syn)+1
-         """,
-    'on_post': """
-         """,
-}
-
+        I_syn += Iw * w_plast * I_gain * (weight<0)/(Itau_syn*((I_gain/I_syn)+1
+        """,
+    'on_post': """ """,
+    }
 
 dpi_shunt_params = {
     'Csyn': 1.5 * pF,
@@ -201,38 +185,38 @@ Mitra et al., 2008
 """
 fusi = {
     'model': """
-         dCa/dt = (-Ca/tau_ca)                    : volt (event-driven)
+        dCa/dt = (-Ca/tau_ca)                    : volt (event-driven)
 
-         updrift = 1.0*(w>theta_w)                : 1
-         downdrift = 1.0*(w<=theta_w)             : 1
-         dw/dt = (alpha*updrift)-(beta*downdrift) : 1 (event-driven)
+        updrift = 1.0*(w>theta_w)                : 1
+        downdrift = 1.0*(w<=theta_w)             : 1
+        dw/dt = (alpha*updrift)-(beta*downdrift) : 1 (event-driven)
 
-         wplus       : 1
-         wminus      : 1
-         theta_upl   : volt     (constant)
-         theta_uph   : volt     (constant)
-         theta_downh : volt     (constant)
-         theta_downl : volt     (constant)
-         theta_V     : volt     (constant)
-         alpha       : 1/second (constant)
-         beta        : 1/second (constant)
-         tau_ca      : second   (constant)
-         w_min       : 1        (constant)
-         w_max       : 1        (constant)
-         theta_w     : 1        (constant)
-         w_ca        : volt     (constant)
-         """,
+        wplus       : 1
+        wminus      : 1
+        theta_upl   : volt     (constant)
+        theta_uph   : volt     (constant)
+        theta_downh : volt     (constant)
+        theta_downl : volt     (constant)
+        theta_V     : volt     (constant)
+        alpha       : 1/second (constant)
+        beta        : 1/second (constant)
+        tau_ca      : second   (constant)
+        w_min       : 1        (constant)
+        w_max       : 1        (constant)
+        theta_w     : 1        (constant)
+        w_ca        : volt     (constant)
+        """,
     'on_pre': """
-         up = 1. * (Vm_post>theta_V) * (Ca>theta_upl) * (Ca<theta_uph)
-         down = 1. * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh)
-         w += wplus * up - wminus * down
-         w = clip(w,w_min,w_max)
-         w_plast = floor(w+0.5)
-         """,
+        up = 1. * (Vm_post>theta_V) * (Ca>theta_upl) * (Ca<theta_uph)
+        down = 1. * (Vm_post<theta_V) * (Ca>theta_downl) * (Ca<theta_downh)
+        w += wplus * up - wminus * down
+        w = clip(w,w_min,w_max)
+        w_plast = floor(w+0.5)
+        """,
     'on_post': """
-         Ca += w_ca
-         """,
-}
+        Ca += w_ca
+        """,
+    }
 
 fusi_params_current = {
     "wplus": 0.2,
@@ -273,24 +257,24 @@ fusi_params_conductance = {
 # STDP learning rule ##
 stdp = {
     'model': """
-         dApre/dt = -Apre / taupre    : 1 (event-driven)
-         dApost/dt = -Apost / taupost : 1 (event-driven)
+        dApre/dt = -Apre / taupre    : 1 (event-driven)
+        dApost/dt = -Apost / taupost : 1 (event-driven)
 
-         w_max          : 1      (constant)
-         taupre         : second (constant)
-         taupost        : second (constant)
-         dApre          : 1      (constant)
-         Q_diffAPrePost : 1      (constant)
-         """,
+        w_max          : 1      (constant)
+        taupre         : second (constant)
+        taupost        : second (constant)
+        dApre          : 1      (constant)
+        Q_diffAPrePost : 1      (constant)
+        """,
     'on_pre': """
-         Apre += dApre*w_max
-         w_plast = clip(w_plast + Apost, 0, w_max)
-         """,
+        Apre += dApre*w_max
+        w_plast = clip(w_plast + Apost, 0, w_max)
+        """,
     'on_post': """
-         Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
-         w_plast = clip(w_plast + Apre, 0, w_max)
+        Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
+        w_plast = clip(w_plast + Apre, 0, w_max)
     """,
-}
+    }
 
 stdp_params_current = {
     "baseweight": 7 * pA,
@@ -322,9 +306,8 @@ variance_modulation = {
         delta_w = inh_learning_rate * (normalized_activity_proxy_post - variance_th)
         w_plast = clip(w_plast + delta_w, 0, 1.0)
         ''',
-    'on_post': '''
-        '''
-}
+    'on_post': ''' '''
+    }
 
 stdgm = {
     'model': '''
@@ -339,8 +322,7 @@ stdgm = {
         Q_diffAPrePost : 1 (shared, constant)
         scaling_factor : 1 (shared, constant)
         ''',
-    'on_pre':
-        '''
+    'on_pre': '''
         Apre += dApre*gain_max
         Ipred_plast = clip(Ipred_plast + Apost, 0, gain_max)
         Ipred_post = (Ipred_post - (scaling_factor * Ipred_plast)) * (Ipred_post>0)
@@ -350,7 +332,7 @@ stdgm = {
         Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * gain_max
         Ipred_plast = clip(Ipred_plast + Apre, 0, gain_max)
         '''
-}
+    }
 
 stdgm_params = {
     'dApre': '0.01',
@@ -360,7 +342,7 @@ stdgm_params = {
     'taupost': '5 * msecond',
     'Q_diffAPrePost': '1.05',
     'scaling_factor': '0.1'
-}
+    }
 
 """
 The set of activation encapsulates `StateVariables` which are needed for
@@ -369,25 +351,25 @@ according to the 'activity' of the post-synaptic neuron.
 These equations are required by synapses projecting to _adp neuronal populations.
 """
 
-activity = {'model': '''
+activity = {
+    'model': '''
         inh_learning_rate: 1 (constant, shared)
         variance_th: 1 (constant)
         delta_w : 1
         ''',
-            'on_pre': '''
+    'on_pre': '''
         delta_w = inh_learning_rate * (normalized_activity_proxy_post - variance_th)
         w_plast = clip(w_plast + delta_w, 0, 1.0)
         ''',
-            'on_post': '''
-        '''
-            }
+    'on_post': ''' '''
+    }
 
 activity_params = {
     'inh_learning_rate': '0.01',
     'variance_th': '0.67',
-}
-# STDP learning rule ##
+    }
 
+# STDP learning rule ##
 stdp = {
     'model': '''
         dApre/dt = -Apre / taupre : 1 (event-driven)
@@ -406,7 +388,7 @@ stdp = {
         Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
         w_plast = clip(w_plast + Apre, 0, w_max)
         '''
-}
+    }
 
 stdp_para_current = {
     "taupre": 10 * ms,
@@ -414,7 +396,8 @@ stdp_para_current = {
     "w_max": 1.,
     "dApre": 0.1,
     "Q_diffAPrePost": 1.05,
-    "w_plast": 0}
+    "w_plast": 0
+    }
 
 stdp_para_conductance = {
     "taupre": 20 * ms,
@@ -422,73 +405,75 @@ stdp_para_conductance = {
     "w_max": 0.01,
     "diffApre": 0.01,
     "Q_diffAPrePost": 1.05,
-    "w_plast": 0}
+    "w_plast": 0
+    }
 
 """Kernels Blocks:
 You need to declare two set of parameters for every block:
 *   current based models
 *   conductance based models
 """
-
 alpha_kernel = {
     'model': """
-         %kernel = s/tausyn  : {unit} * second **-1
-         ds/dt = -s/tausyn   : amp
+        %kernel = s/tausyn  : {unit} * second **-1
+        ds/dt = -s/tausyn   : amp
 
-         tausyn_rise : second
-         """,
+        tausyn_rise : second
+        """,
     'on_pre': """
-         s += baseweight * w_plast * abs(weight)
-         %I_syn += 0 * amp
-         """,
-    'on_post': """
-         """,
-}
+        s += baseweight * w_plast * abs(weight)
+        %I_syn += 0 * amp
+        """,
+    'on_post': """ """,
+    }
 
 alpha_params_current = {
     "tausyn": 0.5 * ms,
     "tausyn_rise": 2 * ms
-}
+    }
 
 alpha_params_conductance = {
     "tausyn": 0.5 * ms,
     "tausyn_rise": 1 * ms
-}
+    }
 
 # Resonant kernel ##
 resonant_kernel = {
     'model': """
-         %kernel  = s * omega : {unit} * second **-1
-         ds/dt = -s/tausyn - I_syn*omega : amp
+        %kernel  = s * omega : {unit} * second **-1
+        ds/dt = -s/tausyn - I_syn*omega : amp
 
-         omega: 1/second
-         tausyn_kernel : second
-         """,
+        omega: 1/second
+        tausyn_kernel : second
+        """,
     'on_pre': """
-         s += baseweight * w_plast * abs(weight)
-         %I_syn += 0 * amp
-         """,
-    'on_post': """
-         """,
-}
+        s += baseweight * w_plast * abs(weight)
+        %I_syn += 0 * amp
+        """,
+    'on_post': """ """,
+    }
 
 resonant_params_current = {
     "tausyn": 0.5 * ms,
     "omega": 3 / ms,
     "tausyn_kernel": 0.5 * ms
-}
+    }
 
 resonant_params_conductance = {
     "tausyn": 0.5 * ms,
     "omega": 1 / ms,
-}
+    }
 
 none_params = {}
 
-none_model = {'model': '''    ''',
-              'on_pre': '''     ''',
-              'on_post': ''' ''',
-              }
+none_model = {
+    'model': """
+         """,
+    'on_pre': """
+         """,
+    'on_post': """
+         """
+    }
 
 """Dictionary of keywords:
 
@@ -496,53 +481,86 @@ These dictionaries contains keyword and models and parameters names useful for t
 Every new block dictionaries must be added to these definitions.
 synaptic_equations is a dictionary that gathers all models and parameters.
 """
-modes = {'current': current,
-         'conductance': conductance,
-         'DPI': dpi,
-         'DPIShunting': dpi_shunt,
-         'None': none_model}
+modes = {
+    'current': current,
+    'conductance': conductance,
+    'DPI': dpi,
+    'DPIShunting': dpi_shunt,
+    'None': none_model
+    }
 
-kernels = {'exponential': none,
-           'alpha': alpha_kernel,
-           'resonant': resonant_kernel}
+kernels = {
+    'exponential': none,
+    'alpha': alpha_kernel,
+    'resonant': resonant_kernel
+    }
 
-plasticity_models = {'non_plastic': none,
-                     'fusi': fusi,
-                     'stdp': stdp}
+plasticity_models = {
+    'non_plastic': none,
+    'fusi': fusi,
+    'stdp': stdp
+    }
 
-synaptic_equations = {'activity': activity,
-                      'stdgm': stdgm}
+synaptic_equations = {
+    'activity': activity,
+    'stdgm': stdgm
+    }
 
 synaptic_equations.update(kernels)
 synaptic_equations.update(plasticity_models)
 
 # parameters dictionaries
-current_parameters = {'current': current_params, 'non_plastic': none_params,
-                      'fusi': fusi_params_current, 'stdp': stdp_para_current,
-                      'exponential': none_params, 'alpha': alpha_params_current,
-                      'resonant': resonant_params_current, 'activity': none_params,
-                      'stdgm': none_params}
+current_parameters = {
+    'current': current_params,
+    'non_plastic': none_params,
+    'fusi': fusi_params_current,
+    'stdp': stdp_para_current,
+    'exponential': none_params,
+    'alpha': alpha_params_current,
+    'resonant': resonant_params_current,
+    'activity': none_params,
+    'stdgm': none_params}
 
-conductance_parameters = {'conductance': conductance_params, 'non_plastic': none_params,
-                          'fusi': fusi_params_conductance, 'stdp': stdp_para_conductance,
-                          'exponential': none_params, 'alpha': alpha_params_conductance,
-                          'resonant': resonant_params_conductance, 'activity': none_params,
-                          'stdgm': none_params}
+conductance_parameters = {
+    'conductance': conductance_params,
+    'non_plastic': none_params,
+    'fusi': fusi_params_conductance,
+    'stdp': stdp_para_conductance,
+    'exponential': none_params,
+    'alpha': alpha_params_conductance,
+    'resonant': resonant_params_conductance,
+    'activity': none_params,
+    'stdgm': none_params}
 
-DPI_parameters = {'DPI': dpi_params, 'exponential': none_params,
-                  'alpha': alpha_params_current, 'non_plastic': none_params,
-                  'fusi': fusi_params_current, 'stdp': stdp_para_current,
-                  'resonant': none_params, 'activity': activity_params,
-                  'stdgm': none_params}
+DPI_parameters = {
+    'DPI': dpi_params,
+    'exponential': none_params,
+    'alpha': alpha_params_current,
+    'non_plastic': none_params,
+    'fusi': fusi_params_current,
+    'stdp': stdp_para_current,
+    'resonant': none_params,
+    'activity': activity_params,
+    'stdgm': none_params}
 
-DPI_shunt_parameters = {'DPIShunting': dpi_shunt_params, 'exponential': none_params,
-                        'non_plastic': none_params, 'fusi': fusi_params_current,
-                        'stdp': stdp_para_current, 'resonant': none_params,
-                        'alpha': none_params, 'activity': none_params,
-                        'stdgm': none_params}
+DPI_shunt_parameters = {
+    'DPIShunting': dpi_shunt_params,
+    'exponential': none_params,
+    'non_plastic': none_params,
+    'fusi': fusi_params_current,
+    'stdp': stdp_para_current,
+    'resonant': none_params,
+    'alpha': none_params,
+    'activity': none_params,
+    'stdgm': none_params}
 
-None_parameters = {'None': none_params, 'exponential': none_params,
-                   'non_plastic': none_params, 'fusi': none_params,
-                   'stdp': none_params, 'resonant': none_params,
-                   'alpha': none_params, 'activity': none_params,
-                   'stdgm': stdgm_params}
+None_parameters = {
+    'None': none_params,
+    'exponential': none_params,
+    'non_plastic': none_params,
+    'fusi': none_params,
+    'stdp': none_params,
+    'resonant': none_params,
+    'alpha': none_params,
+    'activity': none_params,
+    'stdgm': stdgm_params}

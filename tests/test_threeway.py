@@ -17,7 +17,7 @@ prefs.codegen.target = "numpy"
 
 
 class TestThreeway(unittest.TestCase):
-    
+
     def setUp(self):
         self.TW = Threeway('TestTW1', hidden_layer_gen_func = A_plus_B_equals_C,
                            cutoff = 2, monitor=True)
@@ -28,7 +28,7 @@ class TestThreeway(unittest.TestCase):
                          self.TW.C.num_neurons + self.TW.H._groups['n_exc'].N, 48 + 256)
 
     def test_sub_blocks(self):
-        self.assertEqual(len(self.TW.groups), 41)
+        self.assertEqual(len(self.TW.groups), 38)
         self.assertEqual(len(self.TW.sub_blocks), 4)
 
 

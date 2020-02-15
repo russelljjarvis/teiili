@@ -189,13 +189,36 @@ basic_octa_comp_noise_sg = {'mismatch': False,
                             'connection_type': 'None',
                             }
 
-basic_tags_empty = {'mismatch': False,
-                    'noise': False,
-                    'level': 0,
-                    'sign': 'None',
-                    'target sign': 'None',
-                    'num_inputs': 0,
-                    'bb_type': 'None',
-                    'group_type': 'None',
-                    'connection_type': 'None',
-                    }
+basic_threeway_1WTA_to_2WTA = {'mismatch' : 0,
+                           'noise' : 0,
+			               'level': 2,
+			               'sign': 'exc',
+			               'target sign': 'exc',
+			               'num_inputs' : 0,
+			               'bb_type' : 'Threeway',
+			               'group_type' : 'Connection',
+			               'connection_type' : 'ff',
+				            }
+
+basic_threeway_2WTA_to_1WTA = {'mismatch' : 0,
+                           'noise' : 0,
+			               'level': 2,
+			               'sign': 'exc',
+			               'target sign': 'exc',
+			               'num_inputs' : 0,
+			               'bb_type' : 'Threeway',
+			               'group_type' : 'Connection',
+			               'connection_type' : 'fb',
+				            }
+
+
+basic_tags_empty = {'mismatch' : 0,
+                    'noise' : 0,
+		            'level': 0 ,
+		            'sign': 'None',
+		            'target sign': 'None',
+		            'num_inputs' : 0,
+		            'bb_type' : 'None',
+		            'group_type' : 'None',
+		            'connection_type' : 'None',
+	    	        }

@@ -60,6 +60,7 @@ class NeuronEquationBuilder():
     """
 
     def __init__(self, keywords=None, base_unit='current', num_inputs=1, verbose=False, **kwargs):
+
         """Initializes NeuronEquationBuilder with defined keyword arguments.
 
         Args:
@@ -69,14 +70,14 @@ class NeuronEquationBuilder():
                 project to the target neuron population.
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
             **kwargs (str, optional): dictionary of equations such as:
-                adaptation (str, optional): What type of adaptive feedback should be used.
+                 adaptation (str, optional): What type of adaptive feedback should be used.
                      So far only calciumFeedback is implemented.
                 integration_mode (str, optional): Sets if integration up to spike-generation is
                    linear or exponential.
                 leak (str, optional): Enables leaky integration.
                 position (str, optional): To enable spatial-like position indices on neuron.
                 noise (str, optional): NOT YET IMPLMENTED! This will in the future allow independent
-                    mismatch-like noise to be added on each neuron.
+                mismatch-like noise to be added on each neuron.
                 refractory (str, optional): Refractory period of the neuron.
         """
         self.verbose = verbose
@@ -354,3 +355,17 @@ def print_param_dictionaries(Dict):
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
+
+
+def print_neuron_model(Neuron_group):
+    """Function to print keywords of a Neuron model
+    Usefull to check the entire equation and parameter list
+
+    Args:
+       Neuron group( Neurons ) : Synaptic group
+
+    NOTE: Even if mismatch is added, the values that are shown and not subject
+    to mismatch
+    """
+    print("Neuron group: {}" .format(Neuron_group.equation_builder.keywords))
+    return None

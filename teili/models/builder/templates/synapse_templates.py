@@ -79,7 +79,6 @@ conductance = {
     'on_post': ''' '''
 }
 """ Standard parameters for conductance based models
-
 TODO: For inhibitory synapse EIe is negative. Could this thus be a problem?
 """
 conductance_params = {
@@ -253,61 +252,6 @@ fusi_params_conductance = {
     "theta_w": 0.5,
     "w": 0
 }
-
-# STDP learning rule ##
-stdp = {
-    'model': """
-        dApre/dt = -Apre / taupre    : 1 (event-driven)
-        dApost/dt = -Apost / taupost : 1 (event-driven)
-
-        w_max          : 1      (constant)
-        taupre         : second (constant)
-        taupost        : second (constant)
-        dApre          : 1      (constant)
-        Q_diffAPrePost : 1      (constant)
-        """,
-    'on_pre': """
-        Apre += dApre*w_max
-        w_plast = clip(w_plast + Apost, 0, w_max)
-        """,
-    'on_post': """
-        Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
-        w_plast = clip(w_plast + Apre, 0, w_max)
-    """,
-    }
-
-stdp_params_current = {
-    "baseweight": 7 * pA,
-    "taupre": 10 * ms,
-    "taupost": 10 * ms,
-    "w_max": 1.,
-    "dApre": 0.1,
-    "Q_diffAPrePost": 1.05,
-    "w_plast": 0
-}
-
-stdp_params_conductance = {
-    "baseweight": 7 * nS,
-    "taupre": 20 * ms,
-    "taupost": 20 * ms,
-    "w_max": 0.01,
-    "diffApre": 0.01,
-    "Q_diffAPrePost": 1.05,
-    "w_plast": 0
-}
-
-variance_modulation = {
-    'model': '''
-        inh_learning_rate: 1 (constant, shared)
-        variance_th: 1 (constant)
-        delta_w : 1
-        ''',
-    'on_pre': '''
-        delta_w = inh_learning_rate * (normalized_activity_proxy_post - variance_th)
-        w_plast = clip(w_plast + delta_w, 0, 1.0)
-        ''',
-    'on_post': ''' '''
-    }
 
 stdgm = {
     'model': '''
@@ -505,6 +449,7 @@ synaptic_equations = {
     'activity': activity,
     'stdgm': stdgm
     }
+
 
 synaptic_equations.update(kernels)
 synaptic_equations.update(plasticity_models)

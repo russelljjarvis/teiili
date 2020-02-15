@@ -105,7 +105,6 @@ class SynapseEquationBuilder():
                 print(ERRValue)
 
             if base_unit == 'current':
-
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
                     eq_templ_dummy = eq_templ_dummy + \
@@ -152,7 +151,6 @@ class SynapseEquationBuilder():
                     input_number="{input_number}", unit='siemens')
 
             if base_unit == 'DPI':
-
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
                     eq_templ_dummy = eq_templ_dummy + \
@@ -365,7 +363,6 @@ class SynapseEquationBuilder():
 
         return cls(keywords=synapse_eq)
 
-
 def print_param_dictionaries(Dict):
     """Function to print dictionaries of parameters in an ordered way.
 
@@ -374,3 +371,17 @@ def print_param_dictionaries(Dict):
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
+
+def print_synaptic_model(synapse_group):
+        """Function to print keywords of a synaptic model
+            Usefull to check the entire equation and parameter list
+
+    Args:
+       Synaptic group( Connections ) : Synaptic group
+       
+   Note: Even if mismatch is added, the values that are shown and not subject
+        to mismatch   
+    """
+        print("Synaptic group: {}" .format(synapse_group.equation_builder.keywords))
+        return None
+    

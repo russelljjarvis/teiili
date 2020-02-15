@@ -238,6 +238,11 @@ class TeiliGroup(Group):
             10% of the current bias values:
             >>> testNeurons.add_mismatch({'Itau': 0.1})
         """
+        if std_dict is  None:
+            std_dict = {}
+            parameters = list(self.equation_builder.keywords['parameters'].keys())
+            for i in parameters:
+                std_dict[i] = 0.2
 
         if std_dict is None:
             std_dict = {}
@@ -707,7 +712,7 @@ class Connections(Synapses, TeiliGroup, Nameable):
                           'e.g. are all units specified correctly at the end ' +
                           'of every line?\n' +
                           'e.g. is the value of num_inputs correct?\n' +
-                          'e.g. are you connecting the correct populations?'
+                          'e.g. are you connecting the correct populations?'\
                           ).with_traceback(sys.exc_info()[2])
 
     def connect(self, condition=None, i=None, j=None, p=1., n=1,

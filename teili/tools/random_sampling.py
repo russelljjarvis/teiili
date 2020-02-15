@@ -75,7 +75,6 @@ class Randn_trunc(Function, Nameable):
         except TypeError as e:
             # this is necessary for backward compatibility with brian2 < 2.3, as the argument auto_vectorise
             # does not exist
-            print(e)
             Function.__init__(self, pyfunc=lambda: sample_function(1),
                               arg_units=[], return_unit=1, stateless=False)
 

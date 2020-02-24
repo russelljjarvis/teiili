@@ -16,38 +16,29 @@ import numpy as np
 import os
 from collections import OrderedDict
 
-from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs, SpikeGeneratorGroup, NeuronGroup,\
-    Synapses, SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel,\
-    seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray,\
+from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs, SpikeGeneratorGroup, NeuronGroup, \
+    Synapses, SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel, \
+    seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray, \
     defaultclock, profiling_summary, codegen, size, pamp, pfarad, msecond
-#from brian2 import *
 
 from teili.building_blocks.sequence_learning import SequenceLearning
 
-#from teili.models.neuron_models import ExpAdaptIF
-#from teili.models.synapse_models import ReversalSynV
-
 from teili import NeuronEquationBuilder, SynapseEquationBuilder
-
-ExpAdaptIF = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
-ReversalSynV = SynapseEquationBuilder.import_eq('ReversalSynV')
-
-#from teili.tools.cpptools import build_cpp_and_replace, collect_standalone_params, run_standalone
 from teili.core.network import TeiliNetwork
 
-standaloneDir = os.path.expanduser('~/SL_standalone')
-#isStandalone = True
+neuron_model = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
+synapse_model = SynapseEquationBuilder.import_eq('ReversalSynV')
 
-#prefs.codegen.target = 'numpy'
+standalone_dir = os.path.expanduser('~/SL_standalone')
+prefs.codegen.target = 'numpy'
 
 try:
-    seqNet.hasRun
+    seq_net.hasRun
     print('Network has been built already, rebuild it...')
     device.reinit()
-    device.activate(directory=standaloneDir, build_on_run=False)
+    device.activate(directory=standalone_dir, build_on_run=False)
 except:
-    set_device('cpp_standalone', directory=standaloneDir, build_on_run=False)
-
+    set_device('cpp_standalone', directory=standalone_dir, build_on_run=False)
 
 prefs.devices.cpp_standalone.openmp_threads = 4
 prefs.devices.cpp_standalone.extra_make_args_unix = ["-j$(nproc)"]
@@ -55,130 +46,132 @@ prefs.devices.cpp_standalone.extra_make_args_unix = ["-j$(nproc)"]
 defaultclock.dt = 100 * us
 
 duration = 330 * ms
-nPerGroup = 8
-nElem = 3
-nOrdNeurons = nElem * nPerGroup
+n_per_group = 8
+num_elem = 3
+num_ord_neurons = num_elem * n_per_group
 
-slParams = {'synInpOrd1e_weight': 1.3,
-            'synOrdMem1e_weight': 1.1,
-            'synMemOrd1e_weight': 0.16,
-            # local
-            'synOrdOrd1e_weight': 1.04,
-            'synMemMem1e_weight': 1.54,
-            # inhibitory
-            'synOrdOrd1i_weight': -1.95,
-            'synMemOrd1i_weight': -0.384,
-            'synCoSOrd1i_weight': -1.14,
-            'synResetOrd1i_weight': -1.44,
-            'synResetMem1i_weight': -2.6,
-            # refractory
-            'gOrdGroups_refP': 1.7 * ms,
-            'gMemGroups_refP': 2.3 * ms
-            }
+sl_params = {'synInpOrd1e_weight': 1.3,
+             'synOrdMem1e_weight': 1.1,
+             'synMemOrd1e_weight': 0.16,
+             # local
+             'synOrdOrd1e_weight': 1.04,
+             'synMemMem1e_weight': 1.54,
+             # inhibitory
+             'synOrdOrd1i_weight': -1.95,
+             'synMemOrd1i_weight': -0.384,
+             'synCoSOrd1i_weight': -1.14,
+             'synResetOrd1i_weight': -1.44,
+             'synResetMem1i_weight': -2.6,
+             # refractory
+             'gOrdGroups_refP': 1.7 * ms,
+             'gMemGroups_refP': 2.3 * ms
+             }
 
-SequenceLearningExample = SequenceLearning(name='Seq',
-                                           neuron_eq_builder=ExpAdaptIF,
-                                           synapse_eq_builder=ReversalSynV,
-                                           block_params=slParams,
-                                           num_elements=nElem,
-                                           num_neurons_per_group=nPerGroup,
-                                           verbose=False)
+sequence_learning_example = SequenceLearning(name='Seq',
+                                             neuron_eq_builder=neuron_model,
+                                             synapse_eq_builder=synapse_model,
+                                             block_params=sl_params,
+                                             num_elements=num_elem,
+                                             num_neurons_per_group=n_per_group,
+                                             verbose=False)
 
-#for key in SLGroups: print(key)
+# for key in SLGroups: print(key)
 
 # Input to start sequence manually
-tsInput = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 5, np.ones((nPerGroup,), dtype=np.int) * 6,
-                          np.ones((nPerGroup,), dtype=np.int) * 7
-                          )) * ms
-indInput = np.mod(np.arange(size(tsInput)), nPerGroup)
-SequenceLearningExample.input_group.set_spikes(indices=indInput, times=tsInput)
+ts_input = np.concatenate(
+    (np.ones((n_per_group,), dtype=np.int) * 5, np.ones((n_per_group,), dtype=np.int) * 6,
+     np.ones((n_per_group,), dtype=np.int) * 7
+     )) * ms
+ind_input = np.mod(np.arange(size(ts_input)), n_per_group)
+sequence_learning_example.input_group.set_spikes(indices=ind_input, times=ts_input)
 
 # CoS group
-tsCoS = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 100, np.ones((nPerGroup,), dtype=np.int) * 101,
-                        np.ones((nPerGroup,), dtype=np.int) * 102, np.ones((nPerGroup,), dtype=np.int) * 103,
-                        np.ones((nPerGroup,), dtype=np.int) * 104, np.ones((nPerGroup,), dtype=np.int) * 105,
+ts_cos = np.concatenate(
+    (np.ones((n_per_group,), dtype=np.int) * 100, np.ones((n_per_group,), dtype=np.int) * 101,
+     np.ones((n_per_group,), dtype=np.int) * 102, np.ones((n_per_group,), dtype=np.int) * 103,
+     np.ones((n_per_group,), dtype=np.int) * 104, np.ones((n_per_group,), dtype=np.int) * 105,
 
-                        np.ones((nPerGroup,), dtype=np.int) * 200, np.ones((nPerGroup,), dtype=np.int) * 201,
-                        np.ones((nPerGroup,), dtype=np.int) * 202, np.ones((nPerGroup,), dtype=np.int) * 203,
-                        np.ones((nPerGroup,), dtype=np.int) * 204, np.ones((nPerGroup,), dtype=np.int) * 205
-                        )) * ms
-indCoS = np.mod(np.arange(size(tsCoS)), nPerGroup)
-SequenceLearningExample.cos_group.set_spikes(indices=indCoS, times=tsCoS)
+     np.ones((n_per_group,), dtype=np.int) * 200, np.ones((n_per_group,), dtype=np.int) * 201,
+     np.ones((n_per_group,), dtype=np.int) * 202, np.ones((n_per_group,), dtype=np.int) * 203,
+     np.ones((n_per_group,), dtype=np.int) * 204, np.ones((n_per_group,), dtype=np.int) * 205
+     )) * ms
+ind_cos = np.mod(np.arange(size(ts_cos)), n_per_group)
+sequence_learning_example.cos_group.set_spikes(indices=ind_cos, times=ts_cos)
 
 # reset group
-tsReset = np.concatenate((np.ones((nPerGroup,), dtype=np.int) * 300, np.ones((nPerGroup,), dtype=np.int) * 301,
-                          np.ones((nPerGroup,), dtype=np.int) * 302, np.ones((nPerGroup,), dtype=np.int) * 303,
-                          np.ones((nPerGroup,), dtype=np.int) * 304, np.ones((nPerGroup,), dtype=np.int) * 305,
-                          np.ones((nPerGroup,), dtype=np.int) * 306, np.ones((nPerGroup,), dtype=np.int) * 307
-                          )) * ms
-indReset = np.mod(np.arange(size(tsReset)), nPerGroup)
-SequenceLearningExample.reset_group.set_spikes(indices=indReset, times=tsReset)
+ts_reset = np.concatenate(
+    (np.ones((n_per_group,), dtype=np.int) * 300, np.ones((n_per_group,), dtype=np.int) * 301,
+     np.ones((n_per_group,), dtype=np.int) * 302, np.ones((n_per_group,), dtype=np.int) * 303,
+     np.ones((n_per_group,), dtype=np.int) * 304, np.ones((n_per_group,), dtype=np.int) * 305,
+     np.ones((n_per_group,), dtype=np.int) * 306, np.ones((n_per_group,), dtype=np.int) * 307
+     )) * ms
+ind_reset = np.mod(np.arange(size(ts_reset)), n_per_group)
+sequence_learning_example.reset_group.set_spikes(indices=ind_reset, times=ts_reset)
 
-seqNet = TeiliNetwork()
-#seqNet = Network()
-seqNet.add(SequenceLearningExample,SequenceLearningExample.monitors)
+seq_net = TeiliNetwork()
+# seqNet = Network()
+seq_net.add(sequence_learning_example, sequence_learning_example.monitors)
 
 # This is how you add additional parameters that you want to change in the standalone run (you just have to find out their names...)
 # taugIi in this case is valid for all neurons!
 # Note that this is string replacement, so if you have another state variable that is called e.g. GammataugIi, this would also be replaced!
-#seqNet.add_standalone_params(gOrd_Seq_b=0.0805*nA, taugIi=6*ms)
+# seqNet.add_standalone_params(gOrd_Seq_b=0.0805*nA, taugIi=6*ms)
 
-standaloneParams = OrderedDict([('duration', 0.33 * second),
-                             ('sInpOrd1e_Seq_weight', 1.3),
-                             ('sOrdMem1e_Seq_weight', 1.1),
-                             ('sMemOrd1e_Seq_weight', 0.16),
-                             ('sOrdOrd1e_Seq_weight', 1.04),
-                             ('sMemMem1e_Seq_weight', 1.54),
-                             ('sOrdOrd1i_Seq_weight', -1.95),
-                             ('sMemOrd1i_Seq_weight', -0.384),
-                             ('sCoSOrd1i_Seq_weight', -1.14),
-                             ('sResOrd1i_Seq_weight', -1.44),
-                             ('sResMem1i_Seq_weight', -2.6),
-                             #('gOrd_Seq_refP', 1.7 * msecond),
-                             #('gMem_Seq_refP', 2.3 * msecond),
-                             #('gOrd_Seq_b', 80.5 * pamp),
-                             #('gOrd_Seq_C', 281. * pfarad),
-                             #('taugIi', 6. * msecond)
-                             ])
-#standalone_params = {'duration': 0.33 * second}
-seqNet.standalone_params = standaloneParams
-seqNet.build()
+standalone_params = OrderedDict([('duration', 0.33 * second),
+                                 ('sInpOrd1e_Seq_weight', 1.3),
+                                 ('sOrdMem1e_Seq_weight', 1.1),
+                                 ('sMemOrd1e_Seq_weight', 0.16),
+                                 ('sOrdOrd1e_Seq_weight', 1.04),
+                                 ('sMemMem1e_Seq_weight', 1.54),
+                                 ('sOrdOrd1i_Seq_weight', -1.95),
+                                 ('sMemOrd1i_Seq_weight', -0.384),
+                                 ('sCoSOrd1i_Seq_weight', -1.14),
+                                 ('sResOrd1i_Seq_weight', -1.44),
+                                 ('sResMem1i_Seq_weight', -2.6),
+                                 # ('gOrd_Seq_refP', 1.7 * msecond),
+                                 # ('gMem_Seq_refP', 2.3 * msecond),
+                                 # ('gOrd_Seq_b', 80.5 * pamp),
+                                 # ('gOrd_Seq_C', 281. * pfarad),
+                                 # ('taugIi', 6. * msecond)
+                                 ])
+# standalone_params = {'duration': 0.33 * second}
+seq_net.standalone_params = standalone_params
+seq_net.build()
 
-#%%
+# %%
 # Simulation
 
-seqNet['spikemonOrd_Seq']
-seqNet.run(duration*second,standaloneParams = standaloneParams)  # , report='text')
-print ('ready...')
+seq_net['spikemonOrd_Seq']
+seq_net.run(duration * second, standaloneParams=standalone_params)  # , report='text')
+print('ready...')
 
-SequenceLearningExample.plot(duration=duration)
+sequence_learning_example.plot(duration=duration)
 
-#%%
+# %%
 # You can now set the standaloneParams
 # First print them in order to see what we can change:
-seqNet.print_params()
+seq_net.print_params()
 
-#%%
-
-
-standaloneParams = OrderedDict([('duration', 0.33 * second),
-                 ('gOrd_Seq_refP', 1.7 * msecond),
-                 ('gMem_Seq_refP', 2.3 * msecond),
-                 ('sInpOrd1e_Seq_weight', 1.3),
-                 ('sOrdMem1e_Seq_weight', 1.1),
-                 ('sMemOrd1e_Seq_weight', 0.16),
-                 ('sOrdOrd1e_Seq_weight', 1.04),
-                 ('sMemMem1e_Seq_weight', 1.54),
-                 ('sOrdOrd1i_Seq_weight', -1.95),
-                 ('sMemOrd1i_Seq_weight', -0.384),
-                 ('sCoSOrd1i_Seq_weight', -1.14),
-                 ('sResOrd1i_Seq_weight', -1.44),
-                 ('sResMem1i_Seq_weight', -2.6)])
-#%%
-
-seqNet.run(standaloneParams=standaloneParams)
-#%%
-SequenceLearningExample.plot(duration=duration)
+# %%
 
 
-seqNet['gMem_Seq'].equation_builder.keywords
+standalone_params = OrderedDict([('duration', 0.33 * second),
+                                 ('gOrd_Seq_refP', 1.7 * msecond),
+                                 ('gMem_Seq_refP', 2.3 * msecond),
+                                 ('sInpOrd1e_Seq_weight', 1.3),
+                                 ('sOrdMem1e_Seq_weight', 1.1),
+                                 ('sMemOrd1e_Seq_weight', 0.16),
+                                 ('sOrdOrd1e_Seq_weight', 1.04),
+                                 ('sMemMem1e_Seq_weight', 1.54),
+                                 ('sOrdOrd1i_Seq_weight', -1.95),
+                                 ('sMemOrd1i_Seq_weight', -0.384),
+                                 ('sCoSOrd1i_Seq_weight', -1.14),
+                                 ('sResOrd1i_Seq_weight', -1.44),
+                                 ('sResMem1i_Seq_weight', -2.6)])
+# %%
+
+seq_net.run(standaloneParams=standalone_params)
+# %%
+sequence_learning_example.plot(duration=duration)
+
+seq_net['gMem_Seq'].equation_builder.keywords

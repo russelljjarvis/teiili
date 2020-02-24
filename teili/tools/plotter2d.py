@@ -335,7 +335,7 @@ class Plotter2d(object):
     #                  setup = 'from scipy import ndimage;import numpy as np',
     #                  globals={'dense3d':dense3d},number = 1)
 
-    def plot3d_on_off(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_ONOFF):
+    def plot3d_on_off(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_ONOFF, flipy= False):
         """
         Args:
             plot_dt (TYPE, optional): Description
@@ -378,8 +378,12 @@ class Plotter2d(object):
         video_filtered = video_filtered0 + video_filtered1
 
         self.mask = time_mask
+
+        if flipy:
+            video_filtered = np.flip(video_filtered, 2)
+
         imv = pg.ImageView()
-        imv.setImage(np.flip(video_filtered, 2), xvals=np.min(self.t / ms) + np.arange(
+        imv.setImage(video_filtered, xvals=np.min(self.t / ms) + np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms))
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")
@@ -388,7 +392,7 @@ class Plotter2d(object):
 
         return imv
 
-    def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET, levels=None):
+    def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET, levels=None, flipy= False):
         """
         Args:
             plot_dt (TYPE, optional): Description
@@ -404,8 +408,11 @@ class Plotter2d(object):
         except MemoryError:
             raise MemoryError("the dt you have set would generate a too large matrix for your memory")
 
+        if flipy:
+            video_filtered = np.flip(video_filtered, 2)
+
         imv = pg.ImageView()
-        imv.setImage(np.flip(video_filtered, 2), xvals=np.min(self.t / ms) + np.arange(
+        imv.setImage(video_filtered, xvals=np.min(self.t / ms) + np.arange(
             0, video_filtered.shape[0] * (plot_dt / ms), plot_dt / ms), levels=levels)
         imv.ui.histogram.gradient.setColorMap(colormap)
         # imv.setPredefinedGradient("thermal")

@@ -103,7 +103,7 @@ class Reservoir(BuildingBlock):
                  num_inputs=1,
                  spatial_kernel=None,
                  monitor=True,
-                 debug=False):
+                 verbose=False):
         """Summary
 
         Args:
@@ -129,7 +129,7 @@ class Reservoir(BuildingBlock):
                                neuron_eq_builder,
                                synapse_eq_builder,
                                block_params,
-                               debug,
+                               verbose,
                                monitor)
 
         self.Groups, self.Monitors, \
@@ -147,7 +147,7 @@ class Reservoir(BuildingBlock):
                                                    fraction_inh_neurons=fraction_inh_neurons,
                                                    spatial_kernel=spatial_kernel,
                                                    monitor=monitor,
-                                                   debug=debug,
+                                                   debug=verbose,
                                                    **block_params)
 
         if num_input_neurons:

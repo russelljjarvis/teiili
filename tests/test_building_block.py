@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 from teili.building_blocks.building_block import BuildingBlock
 from teili.building_blocks.wta import WTA
+from teili.core import tags as tags_parameters
 from brian2 import prefs, ms
 
 prefs.codegen.target = "numpy"
@@ -35,24 +36,20 @@ class TestBB(unittest.TestCase):
         a certain set of tags.'''
         test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, verbose=False)
         target_group = test1DWTA._groups['n_exc']
-        tags = {'level': '1',
-                'type': 'wta',
-                'sign': 'exc',
-                'conn_type': None}
-        test1DWTA._set_tags(tags, target_group)
-        self.assertEqual(test1DWTA.get_groups(tags), [target_group])
+        tags = tags_parameters.basic_wta_n_exc
+
+        # test1DWTA._set_tags(tags, target_group)
+        self.assertEqual(test1DWTA.get_groups(tags)['n_exc'], target_group)
 
     def test_set_tags(self):
         ''' Tests to set tags to a given group.'''
         test1DWTA = WTA(name='test1DWTA', dimensions=1, num_neurons=16, verbose=False)
-        tags = {'level': '1',
-                'type': 'wta',
-                'sign': 'exc',
-                'conn_type': None}
+        tags = tags_parameters.basic_wta_n_exc
+
         target_group = test1DWTA._groups['n_exc']
         test1DWTA._set_tags(tags, target_group)
         self.assertEqual(tags, test1DWTA.get_tags(target_group))
 
+
 if __name__ == '__main__':
     unittest.main()
-

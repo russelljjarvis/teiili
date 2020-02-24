@@ -100,11 +100,27 @@ class DPI(NeuronEquationBuilder):
         Args:
             num_inputs (int, optional): Description
         """
-        NeuronEquationBuilder.__init__(self, base_unit='current', adaptation='calcium_feedback',
+        NeuronEquationBuilder.__init__(self, base_unit='current',
+                                       adaptation='calcium_feedback',
                                        integration_mode='exponential', leak='leaky',
                                        position='spatial', noise='none')
         self.add_input_currents(num_inputs)
 
+
+class OCTA_Neuron(NeuronEquationBuilder):
+    """Custom equations for the OCTA network.
+
+    octa_neuron : neuron_equation that comprises of all the components needed for octa.
+        In some synaptic connections not all features are used.
+    """
+
+    def __init__(self, num_inputs=2):
+        NeuronEquationBuilder.__init__(self, base_unit='current',
+                                       feedback='calcium_feedback',
+                                       integration='exponential', location='spatial',
+                                       noise='none', gain_modulationm='gain_modulation',
+                                       modulation='activity')
+        self.add_input_currents(num_inputs)
 
 def main(path=None):
     if path is None:
@@ -132,6 +148,8 @@ def main(path=None):
     izhikevich = Izhikevich()
     izhikevich.export_eq(os.path.join(path, "Izhikevich"))
 
+    octa_neuron = OCTA_Neuron()
+    octa_neuron.export_eq(os.path.join(path, "OCTA_neuron"))
 
 if __name__ == '__main__':
     main()

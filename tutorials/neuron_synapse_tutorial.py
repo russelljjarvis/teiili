@@ -19,7 +19,7 @@ from brian2 import ms, second, pA, nA, prefs,\
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import DPI as neuron_model
-from teili.models.synapse_models import DPISyn as syn_model
+from teili.models.synapse_models import DPISyn as synapse_model
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
 from teili.tools.visualizer.DataViewers import PlotSettings
@@ -42,11 +42,11 @@ test_neurons2 = Neurons(2, equation_builder=neuron_model(
     num_inputs=2), name="test_neurons2")
 
 input_synapse = Connections(input_spikegenerator, test_neurons1,
-                            equation_builder=syn_model(), name="input_synapse", verbose=False)
+                            equation_builder=synapse_model(), name="input_synapse", verbose=False)
 input_synapse.connect(True)
 
 test_synapse = Connections(test_neurons1, test_neurons2,
-                           equation_builder=syn_model(), name="test_synapse")
+                           equation_builder=synapse_model(), name="test_synapse")
 test_synapse.connect(True)
 
 '''
@@ -138,30 +138,30 @@ p6 = win.addPlot(title="Output test neurons 2")
 
 # Spike generator
 Rasterplot(MyEventsModels=[spikemon_input],
-                     MyPlotSettings=MyPlotSettings,
-                     time_range=[0, duration],
-                     neuron_id_range=None,
-                     title="Input spike generator",
-                     xlabel='Time (ms)',
-                     ylabel="Neuron ID",
-                     backend='pyqtgraph',
-                     mainfig=win,
-                     subfig_rasterplot=p1,
-                     QtApp=app,
-                     show_immediately=False)
+           MyPlotSettings=MyPlotSettings,
+           time_range=[0, duration],
+           neuron_id_range=None,
+           title="Input spike generator",
+           xlabel='Time (ms)',
+           ylabel="Neuron ID",
+           backend='pyqtgraph',
+           mainfig=win,
+           subfig_rasterplot=p1,
+           QtApp=app,
+           show_immediately=False)
 
 # Input synapses
 Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'I_syn'))],
-                   MyPlotSettings=MyPlotSettings,
-                   x_range=[0, duration],
-                   title="Input synapses",
-                   xlabel="Time (ms)",
-                   ylabel="EPSC (A)",
-                   backend='pyqtgraph',
-                   mainfig=win,
-                   subfig=p2,
-                   QtApp=app,
-                   show_immediately=False)
+         MyPlotSettings=MyPlotSettings,
+         x_range=[0, duration],
+         title="Input synapses",
+         xlabel="Time (ms)",
+         ylabel="EPSC (A)",
+         backend='pyqtgraph',
+         mainfig=win,
+         subfig=p2,
+         QtApp=app,
+         show_immediately=False)
 
 # Intermediate neurons
 if hasattr(statemon_test_neurons1, 'Imem'):
@@ -171,59 +171,59 @@ if hasattr(statemon_test_neurons1, 'Vm'):
 
 i_current_name = 'Imem' if 'Imem' in neuron_model().keywords['model'] else 'Vm'
 Lineplot(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
-                   MyPlotSettings=MyPlotSettings,
-                   x_range=[0, duration],
-                   title='Intermediate test neurons 1',
-                   xlabel="Time (ms)",
-                   ylabel=i_current_name,
-                   backend='pyqtgraph',
-                   mainfig=win,
-                   subfig=p3,
-                   QtApp=app,
-                   show_immediately=False)
+         MyPlotSettings=MyPlotSettings,
+         x_range=[0, duration],
+         title='Intermediate test neurons 1',
+         xlabel="Time (ms)",
+         ylabel=i_current_name,
+         backend='pyqtgraph',
+         mainfig=win,
+         subfig=p3,
+         QtApp=app,
+         show_immediately=False)
 
 # Output synapses
 Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'I_syn'))],
-                   MyPlotSettings=MyPlotSettings,
-                   x_range=[0, duration],
-                   title="Test synapses",
-                   xlabel="Time (ms)",
-                   ylabel="EPSC (A)",
-                   backend='pyqtgraph',
-                   mainfig=win,
-                   subfig=p4,
-                   QtApp=app,
-                   show_immediately=False)
+         MyPlotSettings=MyPlotSettings,
+         x_range=[0, duration],
+         title="Test synapses",
+         xlabel="Time (ms)",
+         ylabel="EPSC (A)",
+         backend='pyqtgraph',
+         mainfig=win,
+         subfig=p4,
+         QtApp=app,
+         show_immediately=False)
 
 
 Rasterplot(MyEventsModels=[spikemon_test_neurons2],
-                     MyPlotSettings=MyPlotSettings,
-                     time_range=[0, duration],
-                     neuron_id_range=None,
-                     title="Rasterplot of output test neurons 2",
-                     xlabel='Time (ms)',
-                     ylabel="Neuron ID",
-                     backend='pyqtgraph',
-                     mainfig=win,
-                     subfig_rasterplot=p5,
-                     QtApp=app,
-                     show_immediately=False)
+           MyPlotSettings=MyPlotSettings,
+           time_range=[0, duration],
+           neuron_id_range=None,
+           title="Rasterplot of output test neurons 2",
+           xlabel='Time (ms)',
+           ylabel="Neuron ID",
+           backend='pyqtgraph',
+           mainfig=win,
+           subfig_rasterplot=p5,
+           QtApp=app,
+           show_immediately=False)
 
 if hasattr(statemon_test_neurons2, 'Imem'):
-    MyData_output = [(statemon_test_neurons2, ('t','Imem'))]
+    MyData_output = [(statemon_test_neurons2, ('t', 'Imem'))]
 if hasattr(statemon_test_neurons2, 'Vm'):
-    MyData_output = [(statemon_test_neurons2, ('t','Vm'))]
+    MyData_output = [(statemon_test_neurons2, ('t', 'Vm'))]
 
 Lineplot(DataModel_to_x_and_y_attr=MyData_output,
-                   MyPlotSettings=MyPlotSettings,
-                   x_range=[0, duration],
-                   title="Output test neurons 2",
-                   xlabel="Time (ms)",
-                   ylabel="%s" %i_current_name,
-                   backend='pyqtgraph',
-                   mainfig=win,
-                   subfig=p6,
-                   QtApp=app,
-                   show_immediately=False)
+         MyPlotSettings=MyPlotSettings,
+         x_range=[0, duration],
+         title="Output test neurons 2",
+         xlabel="Time (ms)",
+         ylabel="%s" % i_current_name,
+         backend='pyqtgraph',
+         mainfig=win,
+         subfig=p6,
+         QtApp=app,
+         show_immediately=False)
 
 app.exec()

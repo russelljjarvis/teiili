@@ -1,13 +1,14 @@
 ******
 Models
 ******
-`Teili` comes equipped with pre-built neuron and synapse models.
-Example models can be found in your `teiliApps` folder after successful
+**Teili** comes equipped with pre-built neuron and synapse models.
+Example models can be found in your **teiliApps** folder after successful
 installation.
 Below we provide a brief overview of the different keywords and properties.
 Examples how the pre-built and the dynamic models can be used in your simulations
 can be found in ``teiliApps/tutorials/neuron_synapse_tutorial.py`` and
 ``teiliApps/tutorials/neuron_synapse_builderobj_tutorial.py``
+
 
 
 Neurons
@@ -27,9 +28,9 @@ For static ``neuron_model`` usage please refer to
     test_neurons = Neurons(2, equation_builder=neuron_model(num_inputs=2),
                             name="test_neurons")
 
-where ``num_inputs`` defines how many distinct inputs the ``NeuronGroup`` is expecting.
-This allows us to potentially treat each synaptic connection as independent and don't
-perform a linear summation before the respective current is injected into the neuron.
+where **num_inputs** defines how many distinct inputs the ``NeuronGroup`` is expecting.
+This allows us to potentially treat each synaptic connection as independent and not to
+perform a linear summation before each current is injected into the neuron.
 For many simulations this is an unnecessary feature as most models expect a linear summation
 of all synaptic inputs.
 By defining the number of inputs explicitly, however, one can study branch specific inputs
@@ -45,7 +46,7 @@ An example of the ``neuron_model`` class is shown below:
     class DPI(NeuronEquationBuilder):
         """This class provides you with all equations to simulate a current-based
         exponential, adaptive leaky integrate and fire neuron as implemented on
-        the neuromorphic chips by the NCS group. The neuronmodel follows the DPI neuron
+        the neuromorphic chips by the NCS group. The neuron model follows the DPI neuron
         which was published in 2014 (Chicca et al. 2014).
         """
 
@@ -60,18 +61,21 @@ An example of the ``neuron_model`` class is shown below:
                                           position='spatial', noise='none')
             self.add_input_currents(num_inputs)
 
-The ``NeuronEquationBuilder`` expects the following keyword arguments:
+The ``NeuronEquationBuilder`` has the following keyword arguments:
 
-* **base_unit**: Either set to ``current`` or ``voltage`` depinding if you want to simulate current-based hardware neuron models
-* **adatation**: Toggles spike-frequency adaptation mechanism in ``neuron_model``
-* **integration_mode**: Can be either set to ``linear``, ``quadratic`` or ``exponential``
-* **leak**: Toggles leaky integration
-* **position**: Adds positional x, y attribute to neuron in order to spatially arrange the neurons
+* **base_unit**: Either set to ``current`` or ``voltage`` depending whether you want to simulate current-based hardware neuron models
+* **adaptation**: Toggles spike-frequency adaptation mechanism in ``neuron_model``. Can either be set to ``None`` or ``calcium_feedback``.
+* **integration_mode**: Can be set to ``linear``, ``quadratic`` or ``exponential``
+* **leak**: Toggles leaky integration. Possible values are ``leaky`` or ``non_leaky``.
+* **position**: Adds positional x, y attribute to neuron in order to spatially arrange the neurons. Once the ``neuron_model`` has these attributes the user can access and set them by ``neuron_obj.x``. 
 * **noise**: Adds constant noise to ``neuron_model``
 
-The reason behind this is that the ``EquationBuilder`` has access to a set of templates defined in ``teili/models/builder/templates/`` such that the same neuron model can easily be simulated w/ and w/o leak for example. Of course we offer the possibility for work-around so that statically defined models can be simulated. For details please refer to the tutorial_
+The reason behind this is that the ``EquationBuilder`` has access to a set of templates defined in ``teili/models/builder/templates/`` such that the same neuron model can easily be simulated with and without leak for example. Of course we offer the possibility of a work-around so that statically defined models can be simulated. For details please refer to the tutorial_
 
-Let's connect neurons to one another
+For more information please consult the `EquationBuilder`_ section.
+
+
+Let's connect neurons to one another.
 
 
 Connections
@@ -81,7 +85,7 @@ As in brian2_ we provide a ``Connections`` class which inherits from brian2's ``
 The required keyword arguments are the same as described in brian2's `synapse tutorial`_.
 See below a example use case of pre-defined ``synapse_models``.
 For static ``synapse_model`` usage please refer to 
-``~/teiliApps/examples/neuron_synapse_builderobj_tutorial.py``.
+``~/teiliApps/tutorials/neuron_synapse_builderobj_tutorial.py``.
 
 .. code-block:: python
 
@@ -113,14 +117,14 @@ An example of the ``synapse_model`` class is shown below:
           SynapseEquationBuilder.__init__(self, base_unit='DPI',
                                           plasticity='non_plastic')
 
-The ``SynapseEquationBuilder`` expects the following keyword arguments:
+The ``SynapseEquationBuilder`` has the following keyword arguments:
 
-* **base_unit**: Either set to ``current`` or ``conductance`` depending if you want to simulate current-based hardware neuron models. this keyword argument can also be set to ``DPI`` or ``DPIShunting`` for specific hardware model simulation.
-* **kernel**: Can be either set to ``exponential``, ``alpha`` or ``resonant`` which ultimately sets the shape of the EPSC and IPSC repectively.
-* **plasticity**: This keyword argument lets you easily generate any ``synapse_model`` with an either ``stdp`` or ``fusi`` learning rule. 
+* **base_unit**: Set to ``current`` or ``conductance`` depending whether you want to simulate current-based hardware neuron models. This keyword argument can also be set to ``DPI`` or ``DPIShunting`` for specific hardware model simulation.
+* **kernel**: Can be set to ``exponential``, ``alpha`` or ``resonant`` which ultimately sets the shapes of the EPSC and IPSC.
+* **plasticity**: This keyword argument lets you easily generate any ``synapse_model`` with either an ``stdp`` or ``fusi`` learning rule.
 
-The reason behind this is that the ``EquationBuilder`` has access to a set of templates defined in ``teili/models/builder/templates/`` such that the same ``synapse_model`` can easily be simulated w/ and w/o plasticity or different plasticity rules for example.
-Of course we offer the possibility for work-around so that statically defined models can be simulated.
+The reason behind this is that the ``EquationBuilder`` has access to a set of templates defined in ``teili/models/builder/templates/`` such that the same ``synapse_model`` can easily be simulated with and without plasticity or with different plasticity rules for example.
+Of course we offer the possibility of a work-around so that statically defined models can be simulated.
 For details please refer to the `plasticity tutorial`_
 
 .. note:: TBA Contributing guide for new templates

@@ -17,6 +17,7 @@ from teili.tools.random_sampling import *
 from teili.tools.visualizer import *
 
 from teili.models.parameters import constants
+from teili.models.parameters.no_mismatch_parameters import *
 
 # then the core modules
 from teili.core.groups import *

@@ -16,9 +16,11 @@ Todo:
 # @Date:   2017-07-27 10:46:44
 
 
+import copy
+from collections import OrderedDict
+
 import numpy as np
 from brian2.core.names import Nameable
-from collections import OrderedDict
 
 
 class BuildingBlock(Nameable):
@@ -43,7 +45,7 @@ class BuildingBlock(Nameable):
             potential inputs
         output_groups (dictionary): Dictionary containing all possible groups which are
             potential outputs
-        hidden (dictionary): Dictionary containing all remaining groups which are
+        hidden_groups (dictionary): Dictionary containing all remaining groups which are
             neither inputs nor outputs
     """
 
@@ -121,7 +123,9 @@ class BuildingBlock(Nameable):
         tmp_groups.update(self._groups)
         for sub_block in self.sub_blocks:
             # Needs to be groups and not _groups for recursive collection
-            tmp_groups.update(sub_block.groups)
+            for group in self.sub_blocks[sub_block].groups:
+                tmp_groups.update(
+                    {self.sub_blocks[sub_block].groups[group].name: self.sub_blocks[sub_block].groups[group]})
         return tmp_groups
 
     def __getitem__(self, key):
@@ -136,17 +140,32 @@ class BuildingBlock(Nameable):
 
         Args:
             tags (dict): A dictionary of tags
-               {'level': '1',       # '2',..., '10'
-               'type': 'wta'       # 'reservoir', 'octa'
-               'sign': 'exc',      # 'inh'
-               'conn_type': 'rec', # 'ff', 'fb' or '' for neurons
-              }
+                {'mismatch' : False,
+                'noise' : False,
+                'level': 0 ,
+                'sign': 'None',
+                'target sign': 'None',
+                'num_inputs' : 0,
+                'bb_type' : 'None',
+                'group_type' : 'None',
+                'connection_type' : 'None',
+                }
             target_group (str): Name of group to set tags
         """
+        tags = copy.deepcopy(tags)
         if type(target_group) == str:
-            self._groups[target_group]._tags = tags
+            if hasattr(self._groups[target_group], '_tags'):
+                self._groups[target_group]._tags.update(tags)
+            else:
+                self._groups[target_group]._tags = {}
+                self._groups[target_group]._tags.update(tags)
+
         else:
-            target_group._tags = tags
+            if hasattr(target_group, '_tags'):
+                target_group._tags.update(tags)
+            else:
+                target_group._tags = {}
+                target_group._tags.update(tags)
 
     def print_tags(self, target_group):
         """ Get the currently set tags for a given group.
@@ -179,17 +198,18 @@ class BuildingBlock(Nameable):
             tags (dict): A dictionary of tags
 
         Returns:
-            target_group (list): List of all group objects which
+            target_dict (dict): List of all group objects which
                 share the same tags as specified.
         """
-        target_groups = []
+
+        target_dict = {}
         for group in self.groups:
+
             try:
-                if self._groups[group]._tags == tags:
-                    target_groups.append(self._groups[group])
+                if tags.items() <= self.groups[group]._tags.items():
+                    target_dict[group] = self.groups[group]
                 else:
                     continue
             except AttributeError as e:
                 pass
-
-        return target_groups
+        return target_dict

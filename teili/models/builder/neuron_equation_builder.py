@@ -19,7 +19,7 @@ Example:
 
     >>> from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
     >>> my_neu_model = NeuronEquationBuilder.import_eq(
-        'teili/models/equations/DPI', num_inputs=2)
+        '~/teiliApps/equations/DPI', num_inputs=2)
 
     in both cases you can pass it to Neurons:
 
@@ -59,26 +59,26 @@ class NeuronEquationBuilder():
         verbose (bool): Flag to print more detailed output of neuron equation builder.
     """
 
-    def __init__(self, keywords=None, base_unit='current', adaptation='calciumFeedback',
-                 integration_mode='exponential', leak='leaky', position='spatial',
-                 noise='gaussian_noise', refractory='refractory', num_inputs=1, verbose=False):
+    def __init__(self, keywords=None, base_unit='current', num_inputs=1, verbose=False, **kwargs):
+
         """Initializes NeuronEquationBuilder with defined keyword arguments.
 
         Args:
             keywords (dict, optional): Brian2 like model.
             base_unit (str, optional): Indicates if neuron is current-based or conductance-based.
-            adaptation (str, optional): What type of adaptive feedback should be used.
-               So far only calciumFeedback is implemented.
-            integration_mode (str, optional): Sets if integration up to spike-generation is
-               linear or exponential.
-            leak (str, optional): Enables leaky integration.
-            position (str, optional): To enable spatial-like position indices on neuron.
-            noise (str, optional): NOT YET IMPLMENTED! This will in the future allow independent
-            mismatch-like noise to be added on each neuron.
-            refractory (str, optional): Refractory period of the neuron.
             num_inputs (int, optional): Number specifying how many distinct neuron population
                 project to the target neuron population.
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
+            **kwargs (str, optional): dictionary of equations such as:
+                 adaptation (str, optional): What type of adaptive feedback should be used.
+                     So far only calciumFeedback is implemented.
+                integration_mode (str, optional): Sets if integration up to spike-generation is
+                   linear or exponential.
+                leak (str, optional): Enables leaky integration.
+                position (str, optional): To enable spatial-like position indices on neuron.
+                noise (str, optional): NOT YET IMPLMENTED! This will in the future allow independent
+                mismatch-like noise to be added on each neuron.
+                refractory (str, optional): Refractory period of the neuron.
         """
         self.verbose = verbose
         if keywords is not None:
@@ -97,7 +97,7 @@ class NeuronEquationBuilder():
                     choose between 'current' or 'voltage'.
 
                     You can choose then what module to load for your neuron,
-                    the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussianNoise'.
+                    the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussian'.
                     If you don't want to load a module just use the keyword 'none'
                     example: NeuronEquationBuilder('current','none','exponential','leak','none','none'.....)
 
@@ -105,44 +105,49 @@ class NeuronEquationBuilder():
 
             try:
                 modes[base_unit]
-                current_equation_sets[adaptation]
-                current_equation_sets[integration_mode]
-                current_equation_sets[leak]
-                current_equation_sets[position]
-                current_equation_sets[noise]
+                for key, value in kwargs.items():
+                    current_equation_sets[value]
 
             except KeyError as e:
                 print(ERRValue)
 
             if base_unit == 'current':
-                eq_templ = [modes[base_unit],
-                            current_equation_sets[adaptation],
-                            current_equation_sets[integration_mode],
-                            current_equation_sets[leak],
-                            current_equation_sets[position],
-                            current_equation_sets[noise]]
-                param_templ = [current_parameters[base_unit],
-                               current_parameters[adaptation],
-                               current_parameters[integration_mode],
-                               current_parameters[leak],
-                               current_parameters[position],
-                               current_parameters[noise]]
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [current_equation_sets[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
+
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [current_parameters[value]]
+                param_templ = [current_parameters[base_unit]] + \
+                    param_templ_dummy
+
+                if self.verbose:
+                    print("Equations", eq_templ)
+                    print("Parameters", eq_templ)
 
                 keywords = combine_neu_dict(eq_templ, param_templ)
 
             if base_unit == 'voltage':
-                eq_templ = [modes[base_unit],
-                            voltage_equation_sets[adaptation],
-                            voltage_equation_sets[integration_mode],
-                            voltage_equation_sets[leak],
-                            voltage_equation_sets[position],
-                            voltage_equation_sets[noise]]
-                param_templ = [voltage_parameters[base_unit],
-                               voltage_parameters[adaptation],
-                               voltage_parameters[integration_mode],
-                               voltage_parameters[leak],
-                               voltage_parameters[position],
-                               voltage_parameters[noise]]
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [voltage_equation_sets[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [voltage_parameters[value]]
+                param_templ = [voltage_parameters[base_unit]] + \
+                    param_templ_dummy
+
+                if self.verbose:
+                    print("Equations", eq_templ)
+                    print("Parameters", eq_templ)
+
                 keywords = combine_neu_dict(eq_templ, param_templ)
 
             self.keywords = {'model': keywords['model'],
@@ -158,13 +163,22 @@ class NeuronEquationBuilder():
             self.print_all()
 
     def __call__(self, num_inputs):
-        """This allows the user to call the object with the num_inputs argument, like it is done with the class.
+        """In the recommended way of using Neurons as provided bey teili
+        the neuron model is imported from teili.models.neuron_models as
+        properly initialised python object in which the number of incoming
+        current, i.e. num_inputs, is set during the initialisation of the
+        class. However, teili also supports to initialise the `Equation_builder`
+        using a user-specified model without the need to implement the model
+        directly in the existing software stack. This allows faster development
+        time and mre flexibility as all functionality of teili is provided to
+        user-specified models. This function allows the user to set the
+        num_inputs argument to non-standard neuron model.
 
-        Maybe this use is a bit confusing, but it may be convenient.
-
+        An usage example can be found in
+        `teiliApps/tutorials/neuron_synapse_builderobj_tutorial.py`
         Args:
-            num_inputs (int, required): Number specifying how many distinct neuron populations project
-            to the target neuron population.
+            num_inputs (int, required): Number specifying how many distinct
+                neuron populations project to the target neuron population.
 
         Returns:
             NeuronEquationBuilder obj.: A deep copy of the NeuronEquationBuilder object.
@@ -211,11 +225,12 @@ class NeuronEquationBuilder():
         self.keywords['model'] = '\n'.join(model)
 
         Iins = ["Iin0 "] + ["+ Iin" +
-                         str(i + 1) + " " for i in range(num_inputs - 1)]
+                            str(i + 1) + " " for i in range(num_inputs - 1)]
 
         self.keywords['model'] = self.keywords['model'] + "\n         Iin = " + \
             "".join(Iins) + " : amp # input currents\n\n"
-        Iinsline = ["         Iin" + str(i) + " : amp" for i in range(num_inputs)]
+        Iinsline = ["         Iin" +
+                    str(i) + " : amp" for i in range(num_inputs)]
         self.add_state_vars(Iinsline)
         self.keywords['model'] += "\n"
 
@@ -298,29 +313,32 @@ class NeuronEquationBuilder():
         # the predefined models
         fallback_import_path = filename
         if os.path.dirname(filename) is "":
-            filename = os.path.join('teili', 'models', 'equations', filename)
+            filename = os.path.join(os.path.expanduser('~'),
+                                    "teiliApps",
+                                    "equations",
+                                    filename)
+            if not os.path.basename(filename)[-3:] == ".py":
+                filename += ".py"
+            fallback_import_path = filename
 
         if os.path.basename(filename) is "":
             dict_name = os.path.basename(os.path.dirname(filename))
         else:
             dict_name = os.path.basename(filename)
             filename = os.path.join(filename, '')
-
         tmp_import_path = []
         while os.path.basename(os.path.dirname(filename)) is not "":
             tmp_import_path.append(os.path.basename(os.path.dirname(filename)))
             filename = os.path.dirname(filename)
         importpath = ".".join(tmp_import_path[::-1])
-
         try:
             eq_dict = importlib.import_module(importpath)
             neuron_eq = eq_dict.__dict__[dict_name]
         except ImportError:
-            # print(dict_name[:-3], fallback_import_path)
-            spec = importlib.util.spec_from_file_location(dict_name[:-3], fallback_import_path)
+            spec = importlib.util.spec_from_file_location(
+                dict_name[:-3], fallback_import_path)
             eq_dict = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(eq_dict)
-            # print(eq_dict, spec)
             neuron_eq = eq_dict.__dict__[dict_name[:-3]]
 
         builder_obj = cls(keywords=neuron_eq)
@@ -337,3 +355,17 @@ def print_param_dictionaries(Dict):
     """
     for keys, values in Dict.items():
         print('      ' + keys + ' = ' + repr(values))
+
+
+def print_neuron_model(Neuron_group):
+    """Function to print keywords of a Neuron model
+    Usefull to check the entire equation and parameter list
+
+    Args:
+       Neuron group( Neurons ) : Synaptic group
+
+    NOTE: Even if mismatch is added, the values that are shown and not subject
+    to mismatch
+    """
+    print("Neuron group: {}" .format(Neuron_group.equation_builder.keywords))
+    return None

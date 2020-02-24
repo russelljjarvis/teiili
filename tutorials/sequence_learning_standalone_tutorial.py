@@ -28,6 +28,7 @@ from teili.building_blocks.sequence_learning import SequenceLearning
 #from teili.models.synapse_models import ReversalSynV
 
 from teili import NeuronEquationBuilder, SynapseEquationBuilder
+
 ExpAdaptIF = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
 ReversalSynV = SynapseEquationBuilder.import_eq('ReversalSynV')
 
@@ -81,7 +82,7 @@ SequenceLearningExample = SequenceLearning(name='Seq',
                                            block_params=slParams,
                                            num_elements=nElem,
                                            num_neurons_per_group=nPerGroup,
-                                           debug=False)
+                                           verbose=False)
 
 #for key in SLGroups: print(key)
 
@@ -115,7 +116,7 @@ SequenceLearningExample.reset_group.set_spikes(indices=indReset, times=tsReset)
 
 seqNet = TeiliNetwork()
 #seqNet = Network()
-seqNet.add(SequenceLearningExample,SequenceLearningExample.Monitors)
+seqNet.add(SequenceLearningExample,SequenceLearningExample.monitors)
 
 # This is how you add additional parameters that you want to change in the standalone run (you just have to find out their names...)
 # taugIi in this case is valid for all neurons!
@@ -139,17 +140,18 @@ standaloneParams = OrderedDict([('duration', 0.33 * second),
                              #('gOrd_Seq_C', 281. * pfarad),
                              #('taugIi', 6. * msecond)
                              ])
-
-seqNet.build(standalone_params = standaloneParams)
+#standalone_params = {'duration': 0.33 * second}
+seqNet.standalone_params = standaloneParams
+seqNet.build()
 
 #%%
 # Simulation
 
 seqNet['spikemonOrd_Seq']
-seqNet.run(duration,standaloneParams = standaloneParams)  # , report='text')
+seqNet.run(duration*second,standaloneParams = standaloneParams)  # , report='text')
 print ('ready...')
 
-SequenceLearningExample.plot()
+SequenceLearningExample.plot(duration=duration)
 
 #%%
 # You can now set the standaloneParams
@@ -176,7 +178,7 @@ standaloneParams = OrderedDict([('duration', 0.33 * second),
 
 seqNet.run(standaloneParams=standaloneParams)
 #%%
-SequenceLearningExample.plot()
+SequenceLearningExample.plot(duration=duration)
 
 
 seqNet['gMem_Seq'].equation_builder.keywords

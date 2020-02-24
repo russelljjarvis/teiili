@@ -32,7 +32,7 @@ class BuildingBlock(Nameable):
             models/synapse_models
         params (dictionary, optional): Dictionary containing all relevant
             parameters for each building block
-        debug (bool, optional): Flag to gain additional information
+        verbose (bool, optional): Flag to gain additional information
         groups (dictionary): Keys to all neuron and synapse groups
         monitors (dictionary): Keys to all spike and state monitors
         monitor (bool, optional): Flag to auto-generate spike and state monitors
@@ -48,7 +48,7 @@ class BuildingBlock(Nameable):
     """
 
     def __init__(self, name, neuron_eq_builder, synapse_eq_builder,
-                 block_params, debug, monitor=False):
+                 block_params, verbose, monitor=False):
         """This function initializes the BuildBlock parent class. All attributes
         are shared among building_blocks, such as WTA, OCTA etc.
 
@@ -60,14 +60,14 @@ class BuildingBlock(Nameable):
                 models/synapse_models
             block_params (dict): Dictionary which holds building_block specific
                 parameters
-            debug (bool, optional): Flag to gain additional information
+            verbose (bool, optional): Flag to gain additional information
             monitor (bool, optional): Flag to auto-generate spike and state
                 monitors
         """
         self.neuron_eq_builder = neuron_eq_builder
         self.synapse_eq_builder = synapse_eq_builder
         self.params = block_params
-        self.debug = debug
+        self.verbose = verbose
         self._groups = {}
         self.monitors = {}
         self.monitor = monitor

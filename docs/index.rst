@@ -7,7 +7,7 @@ This toolbox was developed to provide computational neuroscientists, as well as 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Content:
 
    scripts/Getting started.rst
    scripts/Tutorials.rst

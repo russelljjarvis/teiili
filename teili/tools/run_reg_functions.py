@@ -476,7 +476,7 @@ def get_re_init_index(weights,
             parameters.
 
     """
-    data = np.zeros((source_N, target_N)) * np.nanvariables.add_array
+    data = np.zeros((source_N, target_N))
     data = np.reshape(weights, (source_N, target_N))
     re_init_index = np.mean(data, 0) < re_init_threshold
     lastspike_tmp = np.reshape(lastspike, (source_N, target_N))

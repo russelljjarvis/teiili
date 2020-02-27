@@ -30,6 +30,7 @@ if run_as_standalone:
         prefs.devices.cpp_standalone.openmp_threads = 2
 num_neurons = 50
 num_input_neurons = num_neurons
+num_inh_neurons = 40
 
 Net = TeiliNetwork()
 duration = 500
@@ -46,20 +47,25 @@ wta_params = {'we_inp_exc': 900,
                 }
 
 test_WTA = WTA(name='test_WTA', dimensions=1,
-               num_neurons=num_neurons, num_inh_neurons=40,
+               num_neurons=num_neurons, 
+               num_inh_neurons=num_inh_neurons,
                num_input_neurons=num_input_neurons,
                num_inputs=2, block_params=wta_params,
                spatial_kernel="kernel_gauss_1d")
 
-testbench.stimuli(num_neurons=num_neurons, dimensions=1,
-                                start_time=100, end_time=duration)
-testbench.background_noise(num_neurons=num_neurons, rate=10)
+testbench.stimuli(num_neurons=num_input_neurons, 
+                  dimensions=1,
+                  start_time=100, end_time=duration)
+
+testbench.background_noise(num_input_neurons=num_neurons, rate=10)
 
 test_WTA.spike_gen.set_spikes(
     indices=testbench.indices, times=testbench.times * ms)
 
-noise_syn = Connections(testbench.noise_input, test_WTA._groups['n_exc'],
-                        equation_builder=DPISyn(), name="noise_syn")
+noise_syn = Connections(testbench.noise_input, 
+                        test_WTA._groups['n_exc'],
+                        equation_builder=DPISyn(), 
+                        name="noise_syn")
 noise_syn.connect("i==j")
 
 noise_syn.weight = 3000

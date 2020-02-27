@@ -217,7 +217,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'teili', 'teili Documentation',
-     author, 'teili', 'One line description of project.',
+     author, 'teili', 'Modular Framework for Hierarchical Neural Building Block Development.',
      'Miscellaneous'),
 ]
 

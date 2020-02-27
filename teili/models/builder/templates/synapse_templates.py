@@ -447,6 +447,7 @@ plasticity_models = {
 
 synaptic_equations = {
     'activity': activity,
+
     'stdgm': stdgm
     }
 
@@ -508,4 +509,4 @@ None_parameters = {
     'resonant': none_params,
     'alpha': none_params,
     'activity': none_params,
-    'stdgm': none_params}
+    'stdgm': stdgm_params}

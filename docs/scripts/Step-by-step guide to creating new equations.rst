@@ -67,6 +67,17 @@ Create a new template using new neuron/synapse models
 Defining the full dictionary of equations
 --------------------------------------------
 
+The file with the neuron equations needs to have the following structure:
+
+* the file name needs to be the same as the dictionary name. In the example below it would be: my_neuron_equations.py
+* dictionary entries are: **model**, **threshold**, **reset** and **parameters**
+* **parameters** needs to have the **refP** entrance
+
+The file with the synaptic equations needs to have the following structure:
+
+* the file name needs to be the same as the dictionary name.
+* dictionary entries are: **model**, **on_pre**, **on_post** and **parameters**
+
 .. code-block:: python
 
   from teili.core.groups import Neurons
@@ -76,18 +87,14 @@ Defining the full dictionary of equations
   N = Neurons(1, equation_builder= builder_object_N,  name = 'Neurons' )
 
 
-The file with the neuron equations needs to have the following structure:
-
-* the file name needs to be the same as the dictionary name. In this case it would be: my_equations.py
-* dictionary entries are: **model**, **threshold**, **reset** and **parameters**
-* **parameters** needs to have the **refP** entrance
+The `path/to/equations/my_equations.py` file is as follows:
 
 .. code-block:: python
 
   from brian2.units import *
   import numpy as np
 
-  my_equations ={'model':
+  my_neuron_equations ={'model':
   '''   ''',
   'threshold':
   '''   ''',
@@ -97,7 +104,7 @@ The file with the neuron equations needs to have the following structure:
   {	'refP' : '0.*second',
   }}
 
-
+  
 
 I want to create my own models and contribute
 -------------------------------------------------------------------------

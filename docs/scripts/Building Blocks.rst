@@ -59,18 +59,15 @@ Tags
 ======================
 
 Each ``TeiliGroup`` has an attribute called ``_tags``. The idea behind the ``_tags`` are that the user can easily define a dictionary and use this dictionary to obtain all ``TeiliGroups`` which share the same ``_tags``.
+| Tags are defined as:
 
-Tags should be set as the network expands and the functionality changes.
-
-Tags are defined as:
-
-* **mismatch**: (bool) Flag to indicate if mismatch is present in the ``Group``
+* **mismatch**: (bool) Mismatch present of group
 * **noise**: (bool) Noise input, noise connection or noise presence
-* **level**: (int) Level of BuildingBlock in the hierarchy. A WTA BuildingBlock which is connected directly to a sensor array is level 1. An OCTA BuildinBlock, however, is level 2 as it consists of level 1 WTAs
-* **sign**: (str : exc/inh/None) Sign on neuronal population. Following Dale law.
-* **target_sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
+* **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1. OCTA groups are level 2.
+* **sign**: (str : exc/inh/None) Sign on neuronal population. Follows Dale law.
+* **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
 * **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
-* **bb_type**: (str : WTA/ OCTA/ 3-WAY) Building block type.
+* **bb_type**: (str : WTA/ OCTA/ 3-WAY..) Building block type.
 * **group_type**: (str : Neuron/Connection/ SpikeGen) Group type
 * **connection_type**: (str : rec/lateral/fb/ff/None) Connection type
 
@@ -101,32 +98,8 @@ and updated:
 
   test_wta._tags['mismatch'] = True
 
-or added:
-
-Tags should be set as the network expands and the functionality changes.
-
-Tags are defined as:
-
-* **mismatch**: (bool) Mismatch present of group
-* **noise**: (bool) Noise input, noise connection or noise presence
-* **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1. OCTA groups are level 2.
-* **sign**: (str : exc/inh/None) Sign on neuronal population. Follows Dale law.
-* **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
-* **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
-* **bb_type**: (str : WTA/ OCTA/ 3-WAY..) Building block type.
-* **group_type**: (str : Neuron/Connection/ SpikeGen) Group type
-* **connection_type**: (str : rec/lateral/fb/ff/None) Connection type
-
-Setting Tags
---------------
-Tags can be set:
-.. code-block:: python
-
-  test_wta._set_tags({'custom_tag' : custom_tag }}, target_group)
-
-
 Getting Tags
---------------------
+-------------
 Specific groups can be filtered using specific tags:
 
 .. code-block:: python

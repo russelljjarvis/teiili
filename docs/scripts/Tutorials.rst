@@ -994,7 +994,7 @@ As before we can define the backend, as well as our ``TeiliNetwork``:
 
 Note that we changed the ``defaultclock``.
 This is usually helpful to prevent numerical integration error and to be sure that the network performs the desired computation. But keep in mind by decreasing the ``defaultclock.dt`` the simulation takes longer!
-In the next step we will load a simple STDP-protocol from ``teili/stimuli/testbench.py``, which provides us with pre-defined pre-post spikegenerators with specific delays between pre and post spiking activity.
+In the next step we will load a simple STDP-protocol from our `STDP testbench`_, which provides us with pre-defined pre-post spikegenerators with specific delays between pre and post spiking activity.
 
 .. code-block:: python
 
@@ -1031,6 +1031,7 @@ Now we generate our test_neurons and connect via non-plastic synapses to our ``S
     post_synapse.connect(True)
 
 We can now set the biases.
+
 .. note:: Note that we define the temporal window of the STDP kernel using ``taupost`` and ``taupost`` bias. The learning rate, i.e. the amount of maximal weight change, is set by ``dApre``.
 
 .. code-block:: python
@@ -1169,12 +1170,12 @@ The resulting figure should look like this:
     :alt: alternate text
     :figclass: align-center
 
-    Weight update as a function of pre-post pairs of spikes. Homeostasis, weak and strong potentation and depression are shown.
+    Synaptic weight (middle) and resulting EPSC over time as a function of pre-post pairs of spikes. Homeostasis, weak and strong potentation and depression are shown.
 
 
 Visualizing plasticity kernel of STDP synapse
 ---------------------------------------------
-In order to better understand why the synapt weight changes the way it does given the specific pre and post spike pairs we can visualize the STDP kernel. The following tutorial can be found at ``~/teiliApps/tutorials/stdp_kernel_tutorial.py``
+In order to better understand why the synaptic weight changes the way it does given the specific pre and post spike pairs we can visualize the STDP kernel. The following tutorial can be found at ``~/teiliApps/tutorials/stdp_kernel_tutorial.py``
 We start again by importing the required dependencies.
 
 .. code-block:: python
@@ -1213,7 +1214,7 @@ We need to define to variables used to visualize the kernel:
     N = 100
 
 Where ``N`` is the number of simulated neurons and ``tmax`` represents the time window in which we visualize the STDP kernel.
-Now we can define our neuronal populations and connect them via an STDP synapse.
+Now we can define our neuronal populations and connect them via a STDP synapse.
 
 .. code-block:: python
 
@@ -1303,14 +1304,21 @@ The resulting figure should look like this:
     :alt: alternate text
     :figclass: align-center
 
-    Visualization of the weight update as a function of the pre and post synaptic spikes.
+    Visualization of the weight update as a function of the difference between post- and pre-synaptic spike times (dw = t_post - t_pre).
 
 Add mismatch
 ============
-| This example shows how to add device mismatch to a neural network with one input neuron connected to 1000 output neurons.
-| Once our population is created, we will add device mismatch to the selected parameters by specifying a dictionary with parameter names as keys and mismatch standard deviation as values. 
+
+Most spiking neural network models use homeogenuous model parameters, such as synaptic time constants, spiking thresholds etc.
+Biological neurons and synapses, however, show high diversity in their morphology and thus in their behaviour which is modelled using model parameters.
+This diversity, i.e. heterogeneity, leads to highly variable responses which are usually not considered.
+On the one hand, this heterogeneity might be actually relevant for computation and stability, thus should be encapsulated in spiking neural network models.
+On the other hand neuromorphic mixed-signal analogue-digital sensory-processing systems are subject to so-called device mismatch due to imperfections in the manufacturing process.
+To better assess if a given model is suited for an implementation on neuromorphic hardware and to advance our understanding of computation in heterogenuous population of neurons `teili` provides a `Group` level method to add device mismatch.
+This example shows how to add device mismatch to a neural network with one input neuron connected to 1000 output neurons.
+Once our population is created, we will add device mismatch to the selected parameters by specifying a dictionary with parameter names as keys and mismatch standard deviation as values. 
 The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.py``.
-| Here neuron and synapse selected parameters are specified in ``mismatch_neuron_param`` and ``mismatch_synap_param`` respectively.
+Here the selected parameters for the neuron and synapse models are specified in ``mismatch_neuron_param`` and ``mismatch_synap_param`` respectively.
 
 .. code-block:: python
 
@@ -1368,9 +1376,9 @@ The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.
         'baseweight': 0.2
         }
 
-| This choice will add variability to the neuron refractory period (``refP``) and to the synaptic weight (``baseweight``), with a standard deviation of 20% of the current value for both parameters.
-| Let's first create the input SpikeGeneratorGroup, the output layer and the synapses.
-| Notice that a constant input current has been set for the output neurons.
+This choice will add variability to the neuron refractory period (``refP``) and to the synaptic weight (``baseweight``), with a standard deviation of 20% of the current value for both parameters.
+Let's first create the input ``SpikeGeneratorGroup``, the output layer and the synapses.
+Notice that a constant input current has been set for the output neurons.
 
 .. code-block:: python
 
@@ -1393,10 +1401,10 @@ The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.
     input_syn.weight = 5
 
 
-| Now we can add mismatch to the selected parameters.
-| First, we will store the current values of ``refP`` and ``baseweight`` to be able to compare them to those generated by adding mismatch (see mismatch distribution plot below).
-| Assuming that mismatch has not been added yet (e.g. if you have just created the neuron population), the values of the selected parameter will be the same for all the neurons in the population.
-| Here we will arbitrarily choose to store the first one.
+Now we can add mismatch to the selected parameters.
+First, we will store the current values of ``refP`` and ``baseweight`` to be able to compare them to those generated by adding mismatch (see mismatch distribution plot below).
+Assuming that mismatch has not been added yet (e.g. if you have just created the neuron population), the values of the selected parameter will be the same for all the neurons in the population.
+Here we will arbitrarily choose to store the first one.
 
 .. code-block:: python
 
@@ -1407,7 +1415,7 @@ The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.
 
 
 Now we can add mismatch to neurons and synapses by using the method ``add_mismatch()``.
-To be able to reproduce the same mismatch across multiple simulations, here we will also set the seed.
+To be able to reproduce the same mismatch across multiple simulations and to use the same random distribution across bigger populations, we can also set the ``seed``.
 
 .. code-block:: python
 
@@ -1536,7 +1544,7 @@ and the parameter distribution across neurons.
     :alt: alternate text
     :figclass: align-center
 
-    Effect of mismatch on neuron and synapse dynamics.
+    Effect of mismatch on neuron and synapse dynamics. Top) Input spike raster plot. Top/Middle) Output spike raster plot. Bottom/Middle) EPSC traces of different synapses. Note that the input spike time is the same but the temporal evolution, which is set by the synaptic paramters is different. Bottom) Traces of `Imem` of all neurons in th the output population. Note that due to the heterogeneity the spike timing and the temporal dyanmics differ for different neurons.
 
 
 .. code-block:: python
@@ -1588,7 +1596,7 @@ ately=False)
     :alt: alternate text
     :figclass: align-center
 
-    Effect of mismatch on paramters.
+    Effect of mismatch on paramters. Histogram plot of baseweight (top) and refractory period (bottom) after mismatch has been applied. The mean value indicated by the yellow bar is the one specified in the parameters dictionary.
 
 
 
@@ -1602,3 +1610,4 @@ ately=False)
 .. _standalone tutorial: https://code.ini.uzh.ch/ncs/teili/tree/dev/tutorials/wta_standalone_tutorial.py
 .. _visualiser tutorial: https://teili.readthedocs.io/en/latest/scripts/Visualizer.html
 .. _stimulus test class: https://teili.readthedocs.io/en/latest/modules/teili.stimuli.html#teili.stimuli.testbench.WTA_Testbench
+.. _STDP testbench: https://teili.readthedocs.io/en/latest/modules/teili.stimuli.html#teili.stimuli.testbench.STDP_Testbench

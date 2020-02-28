@@ -16,15 +16,23 @@ Groups
 Neurons
 -------
 ``Neurons`` is a subclass of ``brian2.NeuronGroup`` and can be used in the same way.
-Have a look at `neuron_synpse_tutorial`_ for an introduction.
+Have a look at `neuron_synapse_tutorial`_ for an introduction.
 In teili there are different ways to initialize a ``Neurons`` object:
 
 .. code-block:: python
 
+    import os
     from teili.core.groups import Neurons
     from teili.models.neuron_models import DPI
+    from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
     # the teili way
     G = Neurons(100, equation_builder=DPI(num_inputs=2))
+    # from a static file
+    path = os.path.expanduser("~")
+    model_path = os.path.join(path, "teiliApps", "equations", "")
+    neuron_model = NeuronEquationBuilder.import_eq(
+        filename=model_path + 'DPI.py', num_inputs=2)
+    G = Neurons(100, equation_builder=neuron_model)
     # or the brian2 way
     G = Neurons(100, model='dv/dt = -v / tau : 1')
 
@@ -87,25 +95,33 @@ The ``NeuronEquationBuilder`` has the following keyword arguments:
 The reason behind this is that the ``EquationBuilder`` has access to a set of templates defined in ``teili/models/builder/templates/`` such that the same neuron model can easily be simulated with and without leak for example. Of course we offer the possibility of a work-around so that statically defined models can be simulated. For details please refer to the tutorial_
 
 For more information please consult the `EquationBuilder`_ section.
-
-
 Let's connect neurons to one another.
 
 Connections
 -----------
-``Connections`` is a subclass of ``brian2.Synapses`` and can be used in the same way.
+The ``Connections`` class is a subclass of ``brian2.Synapses`` and can be used in the same way.
 Have a look at `neuron_synapse_tutorial`_ for an introduction.
-In teili there are different ways to initialize a ``Connections`` object:
+In `teili` there are different ways to initialize a ``Connections`` object:
 
 .. code-block:: python
 
+    import os
     from teili.core.groups import Connections
+    from teili.models.synapse_models import DPISyn
+    from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
     # the teili way
-    S = Connections(pre_neuron, post_neuron, model='w : volt', on_pre='v += w')
-    # or the brian2 way
     S = Connections(pre_neuron, post_neuron,
-                    equation_builder=syn_model(), name="synapse_name")
-
+                    equation_builder=DPISyn(), name="synapse_name")
+    # from a static file
+    path = os.path.expanduser("~")
+    model_path = os.path.join(path, "teiliApps", "equations", "")
+    synapse_model = = SynapseEquationBuilder.import_eq(
+        model_path + 'DPISyn.py')
+    S = Connections(pre_neuron, post_neuron,
+                    equation_builder=synapse_model, name="synapse_name")
+    # or the brian2 way
+    S = Connections(pre_neuron, post_neuron, model='w : volt', on_pre='v += w')
+    
 As in brian2_ we provide a ``Connections`` class which inherits from brian2's ``Synapses`` class.
 The required keyword arguments are the same as described in brian2's `synapse tutorial`_.
 See below a example use case of pre-defined ``synapse_models``.
@@ -203,10 +219,8 @@ Mismatch is an inherent property of analog VLSI devices due to fabrication varia
 Thus, if you are simulating neuron and synapse models of neuromorphic chips, e.g. the DPI neuron (DPI) and the DPI synapse (DPISyn), you might also want to simulate device mismatch.
 To this end, the class method ``add_mismatch()`` allows you to add a Gaussian distributed mismatch with mean equal to the current parameter value and standard deviation set as a fraction of the current parameter value.
 
-As an example, once ``Neurons`` and ``Connections`` are created, device mismatch can be added to some selected parameters (e.g. Itau and refP for the DPI neuron) by specifying a dictionary with parameter names as keys and standard deviation as values, as shown in the example below.
-If no dictionary is passed to ``add_mismatch()`` 20% mismatch will be added to all variables except for variables that are found in `teili/models/parameters/no_mismatch_parameter.py`.
-
-If no dictionary is passed to ``add_mismatch()``, 20% mismatch will be added to all variables except for variables that are found in ``teili/models/parameters/no_mismatch_parameter.py``.
+As an example, once ``Neurons`` and ``Connections`` are created, device mismatch can be added to some selected parameters (e.g. `Itau` and `refP` for the `DPI neuron`) by specifying a dictionary with parameter names as ``keys`` and standard deviation as ``values``, as shown in the example below.
+If no dictionary is passed to ``add_mismatch()`` 20% mismatch will be added to all variables except for variables that are found in ``teili/models/parameters/no_mismatch_parameter.py``.
 
 .. code-block:: python
 
@@ -227,13 +241,14 @@ Let's assume that the estimated mismatch distribution has a standard deviation o
 This will change the current parameter values by drawing random values from the specified Gaussian distribution.
 
 If you set the mismatch seed in the input parameters, the random samples will be reproducible across simulations.
-| Note that ``self.add_mismatch()`` will automatically truncate the Gaussian distribution
+
+.. note:: Note that ``self.add_mismatch()`` will automatically truncate the Gaussian distribution
+
 at zero for the lower bound. This will prevent neuron or synapse parameters (which
 are mainly transistor currents for the DPI model) from being set to negative values. No upper bound is specified by default.
-
 | However, if you want to manually specify the lower bound and upper bound of the mismatch
 Gaussian distribution, you can use the method ``_add_mismatch_param()``, as shown below.
-| With old_param being the current parameter value, this will draw samples from a Gaussian distribution with the following parameters:
+With old_param being the current parameter value, this will draw samples from a Gaussian distribution with the following parameters:
 
 * **mean**: old_param
 * **standard deviation**: std * old_param
@@ -250,7 +265,7 @@ Gaussian distribution, you can use the method ``_add_mismatch_param()``, as show
     test_neurons = Neurons(100, equation_builder=DPI(num_inputs=2))
     test_neurons._add_mismatch_param(param='Itau', std=0.1, lower=-0.2, upper = 0.2)
 
-Note that this option allows you to add mismatch only to one parameter at a time.
+.. note:: that this option allows you to add mismatch only to one parameter at a time.
 
 .. [1] Sheik, Sadique, Elisabetta Chicca, and Giacomo Indiveri. "Exploiting device mismatch in neuromorphic VLSI systems to implement axonal delays." Neural Networks (IJCNN), The 2012 International Joint Conference on. IEEE, 2012.
 .. [2] Hung, Hector, and Vladislav Adzic. "Monte Carlo simulation of device variations and mismatch in analog integrated circuits." Proc. NCUR 2006 (2006): 1-8.
@@ -261,7 +276,7 @@ Note that this option allows you to add mismatch only to one parameter at a time
 .. _tutorial: https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#import-equation-from-a-file
 .. _plasticity tutorial: https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#stdp-tutorial
 .. _neuron tutorial: https://brian2.readthedocs.io/en/stable/resources/tutorials/1-intro-to-brian-neurons.html
-.. _syapse tutorial: https://brian2.readthedocs.io/en/stable/resources/tutorials/2-intro-to-brian-synapses.html
+.. _synapse tutorial: https://brian2.readthedocs.io/en/stable/resources/tutorials/2-intro-to-brian-synapses.html
 .. _brian2: https://brian2.readthedocs.io/en/stable/index.html
 .. _EquationBuilder: https://teili.readthedocs.io/en/latest/scripts/Equation%20builder.html#
 .. _NeuronEquationBuilder: https://teili.readthedocs.io/en/latest/modules/teili.models.builder.html#module-teili.models.builder.neuron_equation_builder

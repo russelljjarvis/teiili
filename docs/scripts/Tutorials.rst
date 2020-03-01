@@ -5,25 +5,25 @@ Welcome to teili, a modular python-based framework for developing, testing and v
 Before going through our tutorials we highly recommend doing the tutorials provided by Brian2_
 
 
-Class object vs. import_eq
-===========================
+Dynamic model generation vs. static model import
+================================================
 
 To generate all pre-defined neuron and synapse models, which are stored by default in ``teiliApps/equations/``, please execute the following two scripts:
 
-.. note:: During installation the pre-defined models are generated be default. You only need to regenerate them if you manualy deleted them.
+.. note:: During installation the static models are generated be default. You only need to re-generate them if you manualy deleted or changed them and want the default static models.
 
-.. code-block:: bash
+.. code-block:: python
 
-    cd teili/models/
-    python -m synapse_models
-    python -m neuron_models
+    from teili import neuron_models, synapse_models
+
+    synapse_models()
+    neuron_models()
 
 
-Working with pre-assembled models
---------------------------------
-Once the pre-defined neuron and synapse models are exported to files you can choose between generating neuron/synapse models 'on the fly' or importing them from the generated files, which you can maually adapt to your needs without fiddling with the ``templates`` provided by `teili`.
+Working with the dynamic model generation method
+-------------------------------------------
 
-See an example for how to work with pre-assembled neuron and/or synapse models below.
+See an example for how to import model classes defined in ``models.neuron_models`` and ``models.synapse_models`` below. 
 
 .. code-block:: python
 
@@ -44,9 +44,10 @@ See an example for how to work with pre-assembled neuron and/or synapse models b
                                equation_builder=syn_model,
                                name="test_synapse")
 
-Import equation from a file
----------------------------
-If you prefer to import your model from a file you can do so:
+Working with the static model import method
+-------------------------------------------
+
+If you prefer to use neuron and synapse models statically specified in a file you can import default models from ``teiliApps/equations`` directory using the ``import_eq`` method. You can manully tweak these models and also generate your own models. For more information please have a look at the EquationBuilder_.
 
 .. code-block:: python
 
@@ -87,8 +88,13 @@ If you want to see a more detailed report on which equations were used during th
 Neuron & Synapse tutorial
 =========================
 
-We created a simple tutorial of how to simulate a small neural network either using the EquationBuilder.
-The tutorial is located in ``teiliApps/tutorials/neuron_synapse_tutorial.py``.
+We created a simple tutorial of how to simulate a small neural network either using the ``EquationBuilder``.
+The complete tutorial is located in ``teiliApps/tutorials/neuron_synapse_tutorial.py``.
+:raw-html:`<br />`
+
+Import relevant libraries
+-------------------------
+
 First we import all required libraries
 
 .. code-block:: python
@@ -117,6 +123,9 @@ For more details on how to run your code more efficient and faster have a look a
 
     prefs.codegen.target = "numpy"
 
+Defining the input stimulus
+---------------------------
+
 We can now generate a simple input pattern using Brian2's ``SpikeGeneratorGroup``
 
 .. code-block:: python
@@ -127,6 +136,9 @@ We can now generate a simple input pattern using Brian2's ``SpikeGeneratorGroup`
                                                times=input_timestamps, name='gtestInp')
 
 After defining the input group, we can build a ``TeiliNetwork``.
+
+Defining the network
+--------------------
 
 .. code-block:: python
 
@@ -153,16 +165,21 @@ After defining the input group, we can build a ``TeiliNetwork``.
     test_synapse.connect(True)
 
 
-After initializing the neuronal population and connecting them via synapses, we can set model parameters.
-Note that parameters are set by default. This example only shows how you would need to go about if you want to set non-standard (self-defined) parameters.
+After initialising the populations of ``Neurons`` and connecting them via synaptic ``Connections``, we can set model parameters.
+
+Setting parameters
+------------------
+
+Note that parameters are set by default. This example only shows how you would need to go about if you want to set non-default (user defined) parameters.
 Example parameter dictionaries can be found ``teili/models/parameters``.
-You can change all the parameters like this after creation of the neurongroup or synapsegroup.
-Note that the if condition is only there for convenience to switch between voltage- or current-based models.
-Normally, you have one or the other in your simulation, thus you will not need the if condition.
+You can change all the parameters like this after creation of the ``Neurons`` or ``Connections``.
 
-.. attention:: The ``weight`` multiplies the baseweight, which is currently initialised to 7 pA by default. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3250.
+.. note:: The ``if`` condition is only there for convenience of the user to run our tutorial and switch between voltage- or current-based models. Normally, you have either current or voltage-based models in your simulation, thus you will not need the ``if`` condition.
+          q
+,
+    y, x = np.histogram(input_syn_baseweights, bins="auto")
 
-.. code-block:: python
+.. attention:: The ``weight`` of a given ``Connection`` is multiplied with the ``baseweight``, which is currently initialised to `7 pA` by default for the **DPI synapse model**. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3250.. code-block:: python
 
     # Example of how to set parameters, saved as a dictionary
     test_neurons1.set_params(neuron_model_param)
@@ -182,6 +199,9 @@ Normally, you have one or the other in your simulation, thus you will not need t
             test_neurons1.Iconst = 3 * nA
 
 Now our simple spiking neural network is defined. In order to visualize what is happening during the simulation we need to monitor the spiking behavior of our neurons and other state variables of neurons and synapses.
+
+Defining monitors
+-----------------
 
 .. code-block:: python
 
@@ -225,6 +245,8 @@ Now our simple spiking neural network is defined. In order to visualize what is 
 
 
 
+Starting the simulation
+-----------------------
 
 We can now finally add all defined ``Neurons`` and ``Connections``, as well as the monitors to our ``TeiliNetwork`` and run the simulation.
 
@@ -242,7 +264,10 @@ We can now finally add all defined ``Neurons`` and ``Connections``, as well as t
     Net.run(duration * ms)
 
 
-If you, however, prefer to use the equation files located in ``teiliApss/equations/``, you need to change the way the neurons and synapses are defined. The only thing that changes from the example above is the import and neuron/synapse group definition:
+Using statically defined models instead
+---------------------------------------
+
+If you, however, prefer to use the equation files located in ``teiliApss/equations/``, you need to change the way the neurons and synapses are defined. The only thing that changes from the example above is the import and neuron/synapse group definition. The complete tutorial can be found in ``teiliApps/tutorials/neuron_synapse_import_eq_tutorial.py``.
 
 .. code-block:: python
 
@@ -280,7 +305,12 @@ If you, however, prefer to use the equation files located in ``teiliApss/equatio
 
 
 The way parameters are set remains the same.
+
+Visualising the networks activity
+---------------------------------
+
 In order to visualize the behavior the example script also plots a couple of spike and state monitors.
+For a full tutorial of how use `teili's` ``Visualizer`` class please refer to our `visualiser tutorial`_
 
 .. code-block:: python
 
@@ -404,7 +434,7 @@ In order to visualize the behavior the example script also plots a couple of spi
     app.exec()
 
 
-In both cases of model definition the resulting figure should look like this:
+In both cases of model definition (rather dynamic model generation or static model import) the resulting figure should look like this:
 
 .. figure:: fig/neuron_synapse_tutorial_dark.png
     :width: 800px
@@ -413,14 +443,16 @@ In both cases of model definition the resulting figure should look like this:
     :alt: alternate text
     :figclass: align-center
 
-    Simple neuron and networks dynamics.
+    Simple neuron and networks dynamics. Top left) Spike raster plot of the ``SpikeGeneratorGroup``. Top right) Excitatory post-synaptic current in nA of the input synapse over time. Middle left) Membrane current of the DPI neuron in nA over time. Middle right) Excitatory post-synaptic current in nA of the synapse between neuron populations over time. Bottom left) Spike raster plot of the second neuron population. Bottom right) Membrane current of the second population in nA over time.
 
 Synaptic kernels tutorial
 =========================
 
-In Teili we provide synaptic models that modify the shape of the synaptic current; we call them kernels. Here we provide an tutorial of how to use them and how they look when applied together with a neuron model.
+In `teili` we provide synaptic models that modify the shape of synaptic currents, which we call kernels. Here we provide a tutorial of how to use them and how they look when applied together with a neuron model.
 The first steps are the same as in the previous tutorial.
-The tutorial is located in ``teiliApps/tutorials/neuron_synapse_tutorial.py``.
+:raw-html:`<br />`
+The tutorial is located in ``teiliApps/tutorials/synaptic_kernels_tutorial.py``.
+:raw-html:`<br />`
 We first import all required libraries
 
 .. code-block:: python
@@ -464,7 +496,7 @@ We now build a ``TeiliNetwork``.
 
     Net = TeiliNetwork()
 
-In this tutorial we will show three kernels, therefore we have created three different neurons. The first one will receive synapses with an Alpha kernel shape, the second will receive synapses with a Resonant kernel shape and the third one will receive a synapse of the DPY synapse model, which has an exponential decay shape. Note that a single neuron can receive synapses with different kernels at the same time. Here we split them for better visualization.
+In this tutorial we will show three kernels, therefore we have created three different neurons. The first one will receive synapses with an ``Alpha`` kernel shape, the second will receive synapses with a ``Resonant`` kernel shape and the third one will receive a synapse which models the ``DPI synapse model``, which has an exponential decay shape. Note that a single neuron can receive synapses with different kernels at the same time. Here we split them for better visualisation.
 
 .. code-block:: python
 
@@ -486,10 +518,10 @@ In this tutorial we will show three kernels, therefore we have created three dif
     test_neurons3.set_params(neuron_model_param)
     test_neurons3.refP = 1 * ms
 
-.. attention:: We are using the DPI neuron model for this tutorial but the synaptic model is independent of the neuron's model and therefore other neuron models can be used.
+.. note:: We are using the DPI neuron model for this tutorial but the synaptic model is independent of the neuron's model and therefore other neuron models can be used.
 
 We already set the parameters for our neuron model. As explained above, we can set the standard parameters from a dictionary but also change single parameters as in this example with the refractory period.
-Now we specify the connections. The synaptic models are Alpha, Resonant and DPI.
+Now we specify the connections. The synaptic models are ``Alpha``, ``Resonant`` and ``DPI``.
 
 .. code-block:: python
 
@@ -505,7 +537,7 @@ Now we specify the connections. The synaptic models are Alpha, Resonant and DPI.
                      equation_builder=DPISyn(), name="test_syn_dpi", verbose=False)
     syn_dpi.connect(True)
     
-We set the parameters for the synases. In this case, we specify that the first neuron in the spike generator will have a postivie effect (weight>0) and the second one will have a negative effect (weight<0) on the post-synpatic neuron.
+We set the parameters for the synapses. In this case, we specify that the first neuron in the ``SpikeGenerator`` will have an excitatory effect (weight>0) and the second neuron will have an inhibitory effect (weight<0) on the post-synpatic neuron.
 
 .. code-block:: python
 
@@ -513,10 +545,11 @@ We set the parameters for the synases. In this case, we specify that the first n
     syn_resonant.weight = np.asarray([10,-10])
     syn_dpi.weight = np.asarray([10,-10])
 
-.. attention:: The ``weight`` multiplies the baseweight, which is currently initialised to 7 pA by default. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike, the weight must be greater than 3250.
+)
+.. attention:: The ``weight`` of a given ``Connection`` is multiplied with the ``baseweight``, which is currently initialised to `7 pA` by default for the **DPI synapse model**. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3250.
 
 Now our simple spiking neural network is defined. In order to visualize what is happening during the simulation
-we need to monitor the spiking behavior of our neurons and other state variables of the neurons and synapses.
+we need to monitor the spiking behavior of our ``Neurons`` and other state variables of our ``Neurons`` and ``Connections``.
 
 .. code-block:: python
 
@@ -538,12 +571,19 @@ We can now finally add all defined ``Neurons`` and ``Connections`` and also the 
 
 .. code-block:: python
 
-    Net.add(input_spikegenerator, test_neurons1, 
-            test_neurons2,test_neurons3,
-            syn_alpha, syn_resonant, syn_dpi, 
-            spikemon_inp, statemon_syn_alpha, 
-            statemon_syn_resonant,statemon_syn_dpi,
-            statemon_test_neuron1, statemon_test_neuron2, 
+    Net.add(input_spikegenerator,
+            test_neurons1, 
+            test_neurons2,
+            test_neurons3,
+            syn_alpha,
+            syn_resonant,
+            syn_dpi, 
+            spikemon_inp,
+            statemon_syn_alpha, 
+            statemon_syn_resonant,
+            statemon_syn_dpi,
+            statemon_test_neuron1,
+            statemon_test_neuron2, 
             statemon_test_neuron3)
 
     duration = 0.010
@@ -688,7 +728,7 @@ In order to visualize the behavior, the example script also plots a couple of sp
              show_immediately=True)
 
 
-The synaptic current is always positive, the negative effect is oberved in the `Iin` of the neuron. To better visualize the synapse dynamics, we have multiplied the I_syn of the inhibitory synapse by -1.
+The synaptic current is always positive, the negative effect is oberved in the `Iin` of the neuron. To better visualize the synapse dynamics, **we have multiplied the I_syn of the inhibitory synapse by -1**.
 The resulting figure should look like this:
 
 .. figure:: fig/synaptic_kernels_tutorial.png
@@ -698,16 +738,18 @@ The resulting figure should look like this:
     :alt: alternate text
     :figclass: align-center
 
+    Synaptic current traces for different synaptic kernels and the resulting effect on **Iin**. Alpha (top), resonant (middle) and DPI (bottom) synaptic kernel is shown.
+
 
 Winner-takes-all tutorial
 =========================
 
-`Teili` not only offers simple neuron-synapse models, but rather aims to provide high-level description of neuronal algorithm which can be formalized as scalable building block.
-One example ``BuildingBlock`` is the winner-takes-all (WTA).
-To show the basic interface of how to use a WTA we start with the imports.
+`teili` not only offers simple neuron-synapse models, but rather aims to provide high-level description of neuronal algorithms which can be formalised as scalable building blocks.
+One example ``BuildingBlock`` is the winner-takes-all (``WTA``) network.
+To show the basic interface of how to use a ``WTA`` network we start with the imports.
 The original file can be found in ``teiliApps/tutorials/wta_tutorial.py``
 
-.. note:: For instructions on how to design a novel `BuildingBlock` please refer to `Building block development`_
+.. note:: For instructions on how to design a novel `BuildingBlock` please refer to `BuildingBlock development`_
 
 .. code-block:: python
 
@@ -738,7 +780,7 @@ The original file can be found in ``teiliApps/tutorials/wta_tutorial.py``
 Now we can define the code generation backend.
 Here the user can either use the standard ``numpy`` backend, or by setting ``run_as_standalone = True`` the code will be compiled as C++ code before it is executed.
 
-.. note:: To run the WTA ``BuildingBlock`` in standalone mode please refer to the `standalone tutorial`_
+.. note:: To run the WTA ``BuildingBlock`` in standalone mode please refer to our standalone tutorial which is located in ``teiliApps/tutorials/wta_standalone_tutorial.py``.
 
 .. code-block:: python
 
@@ -752,21 +794,22 @@ Here the user can either use the standard ``numpy`` backend, or by setting ``run
             device.activate(directory=standaloneDir, build_on_run=False)
             prefs.devices.cpp_standalone.openmp_threads = 2
 
-We need to define two hyperparameters of our WTA and to illustrate its working behavior, we initialize an instance of a stimulus test class specifically designed for WTA's.
+We need to define two hyperparameters of our WTA and to illustrate its working behavior, we initialize an instance of a `stimulus test class`_ specifically designed for WTA's.
 
 .. code-block:: python
 
     num_neurons = 50
     num_input_neurons = num_neurons
+    num_inh_neurons = 40
 
     Net = TeiliNetwork()
     duration = 500
     testbench = WTA_Testbench()
 
-In contrast to the simple spiking network above, the ``BuildingBlocks`` are a bit more complicated.
+In contrast to the simple spiking network discussed so far, ``BuildingBlocks`` are a bit more complicated.
 When we generate our ``BuildingBlock``, we need to pass specific parameters, which set internal synaptic weights, connectivity kernels and connectivity probabilities.
-For more information see BuildingBlocks_ and the `source code`_, respectively.
-To do so we define a dictionary, which passed to the ``BuildingBlock`` class.
+For more information see BuildingBlocks_ documentation and the `source code`_, respectively.
+To do so we define a dictionary, which is passed to the ``BuildingBlock`` class.
 Feel free to change the parameters to see what effect it has on the stability and signal-to-noise ratio.
 
 .. code-block:: python
@@ -786,26 +829,30 @@ We can define our network structure and connect the different inputs to the WTA 
 .. code-block:: python
 
     test_WTA = WTA(name='test_WTA', dimensions=1,
-                  num_neurons=num_neurons, num_inh_neurons=40,
+                  num_neurons=num_neurons,
+                  num_inh_neurons=num_inh_neurons,
                   num_input_neurons=num_input_neurons,
                   num_inputs=2, block_params=wta_params,
                   spatial_kernel="kernel_gauss_1d")
 
-    testbench.stimuli(num_neurons=num_neurons, dimensions=1,
+    testbench.stimuli(num_neurons=num_input_neurons,
+                      dimensions=1,
                       start_time=100, end_time=duration)
 
-    testbench.background_noise(num_neurons=num_neurons, rate=10)
+    testbench.background_noise(num_neurons=num_input_neurons, rate=10)
 
     test_WTA.spike_gen.set_spikes(
             indices=testbench.indices, times=testbench.times * ms)
 
-    noise_syn = Connections(testbench.noise_input, test_WTA,_groups['n_exc'],
-                            equation_builder=DPISyn(), name="noise_syn")
+    noise_syn = Connections(testbench.noise_input,
+                            test_WTA,_groups['n_exc'],
+                            equation_builder=DPISyn(),
+                            name="noise_syn")
     noise_syn.connect("i==j")
 
 Before we can run the simulation we need to set bias parameter.
 
-.. attention:: Please note in order to elicit one spike in the DPI neuron per spike in a ``SpikeGenerator`` you need to set the synaptic weight to 3250 or crank up the ``baseweight`` parameter of the DPI synapse
+.. attention:: The ``weight`` of a given ``Connection`` is multiplied with the ``baseweight``, which is currently initialised to `7 pA` by default for the **DPI synapse model**. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3250.
 
 .. code-block:: python
 
@@ -826,7 +873,7 @@ Setting up monitors to track network activity and visualize it later.
     spikemonitor_noise = SpikeMonitor(
             testbench.noise_input, name="spikemonitor_noise")
 
-Add all objects to the network object and define standalone parameters, if you are using standalone mode.
+Add all population and monitor objects to the network object and define standalone parameters, if you are using standalone mode.
 
 .. code-block:: python
 
@@ -850,7 +897,7 @@ Add all objects to the network object and define standalone parameters, if you a
     Net.run(duration=duration * ms, standalone_params=standalone_params, report='text')
 
 
-Now we visualize the activity of our WTA.
+Now we can visualise the activity of our WTA network using our ``Visualizer``.
 
 .. code-block:: python
 
@@ -904,14 +951,14 @@ The resulting figure should look like this:
     :alt: alternate text
     :figclass: align-center
 
-    Simple signal restoration behaviour of soft WTA network.
+    Simple signal restoration behaviour of soft WTA network. The signal (shown in the bottom plot) is embededd in noise (top plot). The ``WTA`` restores the signal and effectively suppresses the noise (middle plot).
 
 
 STDP tutorial
 =============
 
 One key property of teili is that existing neuron/synapse models can easily be extended to provide additional functionality, such as extending a given synapse model with for example a Spike-Timing Dependent Plasticity (STDP) mechanism.
-STDP is one mechanism which has been identified experimentally how neurons adjust their synaptic weight according to some correlated firing pattern.
+STDP is one mechanism which has been identified experimentally how neurons adjust their synaptic weight according to correlated firing patterns.
 Feel free to read more about STDP_.
 The following tutorial can be found at ``teiliApps/tutorials/stdp_tutorial.py``
 If we want to add an activity dependent plasticity mechanism to our network we again start by importing the required packages.
@@ -947,7 +994,7 @@ As before we can define the backend, as well as our ``TeiliNetwork``:
 
 Note that we changed the ``defaultclock``.
 This is usually helpful to prevent numerical integration error and to be sure that the network performs the desired computation. But keep in mind by decreasing the ``defaultclock.dt`` the simulation takes longer!
-In the next step we will load a simple STDP-protocol from ``teili/stimuli/testbench.py``, which provides us with pre-defined pre-post spikegenerators with specific delays between pre and post spiking activity.
+In the next step we will load a simple STDP-protocol from our `STDP testbench`_, which provides us with pre-defined pre-post spikegenerators with specific delays between pre and post spiking activity.
 
 .. code-block:: python
 
@@ -984,6 +1031,7 @@ Now we generate our test_neurons and connect via non-plastic synapses to our ``S
     post_synapse.connect(True)
 
 We can now set the biases.
+
 .. note:: Note that we define the temporal window of the STDP kernel using ``taupost`` and ``taupost`` bias. The learning rate, i.e. the amount of maximal weight change, is set by ``dApre``.
 
 .. code-block:: python
@@ -1122,12 +1170,12 @@ The resulting figure should look like this:
     :alt: alternate text
     :figclass: align-center
 
-    Weight update as a function of pre-post pairs of spikes. Homeostasis, weak and strong potentation and depression are shown.
+    Synaptic weight (middle) and resulting EPSC over time as a function of pre-post pairs of spikes. Homeostasis, weak and strong potentation and depression are shown.
 
 
 Visualizing plasticity kernel of STDP synapse
 ---------------------------------------------
-In order to better understand why the synapt weight changes the way it does given the specific pre and post spike pairs we can visualize the STDP kernel. The following tutorial can be found at ``~/teiliApps/tutorials/stdp_kernel_tutorial.py``
+In order to better understand why the synaptic weight changes the way it does given the specific pre and post spike pairs we can visualize the STDP kernel. The following tutorial can be found at ``~/teiliApps/tutorials/stdp_kernel_tutorial.py``
 We start again by importing the required dependencies.
 
 .. code-block:: python
@@ -1166,7 +1214,7 @@ We need to define to variables used to visualize the kernel:
     N = 100
 
 Where ``N`` is the number of simulated neurons and ``tmax`` represents the time window in which we visualize the STDP kernel.
-Now we can define our neuronal populations and connect them via an STDP synapse.
+Now we can define our neuronal populations and connect them via a STDP synapse.
 
 .. code-block:: python
 
@@ -1256,14 +1304,21 @@ The resulting figure should look like this:
     :alt: alternate text
     :figclass: align-center
 
-    Visualization of the weight update as a function of the pre and post synaptic spikes.
+    Visualization of the weight update as a function of the difference between post- and pre-synaptic spike times (dw = t_post - t_pre).
 
 Add mismatch
 ============
-| This example shows how to add device mismatch to a neural network with one input neuron connected to 1000 output neurons.
-| Once our population is created, we will add device mismatch to the selected parameters by specifying a dictionary with parameter names as keys and mismatch standard deviation as values. 
+
+Most spiking neural network models use homeogenuous model parameters, such as synaptic time constants, spiking thresholds etc.
+Biological neurons and synapses, however, show high diversity in their morphology and thus in their behaviour which is modelled using model parameters.
+This diversity, i.e. heterogeneity, leads to highly variable responses which are usually not considered.
+On the one hand, this heterogeneity might be actually relevant for computation and stability, thus should be encapsulated in spiking neural network models.
+On the other hand neuromorphic mixed-signal analogue-digital sensory-processing systems are subject to so-called device mismatch due to imperfections in the manufacturing process.
+To better assess if a given model is suited for an implementation on neuromorphic hardware and to advance our understanding of computation in heterogenuous population of neurons `teili` provides a `Group` level method to add device mismatch.
+This example shows how to add device mismatch to a neural network with one input neuron connected to 1000 output neurons.
+Once our population is created, we will add device mismatch to the selected parameters by specifying a dictionary with parameter names as keys and mismatch standard deviation as values. 
 The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.py``.
-| Here neuron and synapse selected parameters are specified in ``mismatch_neuron_param`` and ``mismatch_synap_param`` respectively.
+Here the selected parameters for the neuron and synapse models are specified in ``mismatch_neuron_param`` and ``mismatch_synap_param`` respectively.
 
 .. code-block:: python
 
@@ -1321,9 +1376,9 @@ The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.
         'baseweight': 0.2
         }
 
-| This choice will add variability to the neuron refractory period (``refP``) and to the synaptic weight (``baseweight``), with a standard deviation of 20% of the current value for both parameters.
-| Let's first create the input SpikeGeneratorGroup, the output layer and the synapses.
-| Notice that a constant input current has been set for the output neurons.
+This choice will add variability to the neuron refractory period (``refP``) and to the synaptic weight (``baseweight``), with a standard deviation of 20% of the current value for both parameters.
+Let's first create the input ``SpikeGeneratorGroup``, the output layer and the synapses.
+Notice that a constant input current has been set for the output neurons.
 
 .. code-block:: python
 
@@ -1346,10 +1401,10 @@ The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.
     input_syn.weight = 5
 
 
-| Now we can add mismatch to the selected parameters.
-| First, we will store the current values of ``refP`` and ``baseweight`` to be able to compare them to those generated by adding mismatch (see mismatch distribution plot below).
-| Assuming that mismatch has not been added yet (e.g. if you have just created the neuron population), the values of the selected parameter will be the same for all the neurons in the population.
-| Here we will arbitrarily choose to store the first one.
+Now we can add mismatch to the selected parameters.
+First, we will store the current values of ``refP`` and ``baseweight`` to be able to compare them to those generated by adding mismatch (see mismatch distribution plot below).
+Assuming that mismatch has not been added yet (e.g. if you have just created the neuron population), the values of the selected parameter will be the same for all the neurons in the population.
+Here we will arbitrarily choose to store the first one.
 
 .. code-block:: python
 
@@ -1360,7 +1415,7 @@ The following tutorial can be found at ``~/teiliApps/examples/mismatch_tutorial.
 
 
 Now we can add mismatch to neurons and synapses by using the method ``add_mismatch()``.
-To be able to reproduce the same mismatch across multiple simulations, here we will also set the seed.
+To be able to reproduce the same mismatch across multiple simulations and to use the same random distribution across bigger populations, we can also set the ``seed``.
 
 .. code-block:: python
 
@@ -1489,7 +1544,7 @@ and the parameter distribution across neurons.
     :alt: alternate text
     :figclass: align-center
 
-    Effect of mismatch on neuron and synapse dynamics.
+    Effect of mismatch on neuron and synapse dynamics. Top) Input spike raster plot. Top/Middle) Output spike raster plot. Bottom/Middle) EPSC traces of different synapses. Note that the input spike time is the same but the temporal evolution, which is set by the synaptic paramters is different. Bottom) Traces of `Imem` of all neurons in th the output population. Note that due to the heterogeneity the spike timing and the temporal dyanmics differ for different neurons.
 
 
 .. code-block:: python
@@ -1515,9 +1570,10 @@ and the parameter distribution across neurons.
                         title='baseweight', xlabel='(pA)', ylabel='count',
                         backend='pyqtgraph',
                         mainfig=mainfig, subfig=subfig1, QtApp=QtApp,
-                        show_immediately=False)
-    y, x = np.histogram(input_syn_baseweights, bins="auto")
-    subfig1.plot(x=np.asarray([synapse_param_mean*10**12, synapse_param_mean*10**12]),
+                        q
+                        show_immedi                        title='baseweight', xlabel='(pA)', ylabel='count',
+ately=False)
+    y, x = np.histogram(input_syn_baseweights, bins="auto"ynapse_param_mean*10**12]),
                  y=np.asarray([0, 300]),
                     pen=pg.mkPen((0, 255, 0), width=2))
 
@@ -1540,14 +1596,18 @@ and the parameter distribution across neurons.
     :alt: alternate text
     :figclass: align-center
 
-    Effect of mismatch on paramters.
+    Effect of mismatch on paramters. Histogram plot of baseweight (top) and refractory period (bottom) after mismatch has been applied. The mean value indicated by the yellow bar is the one specified in the parameters dictionary.
 
 
 
-.. _Building block development: https://teili.readthedocs.io/en/latest/scripts/Developing%20Building%20Blocks.html
+.. _BuildingBlock development: https://teili.readthedocs.io/en/latest/scripts/Developing%20Building%20Blocks.html
 .. _BuildingBlocks: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html
+.. _EquationBuilder: https://teili.readthedocs.io/en/latest/scripts/Equation%20builder.html
 .. _source code: https://teili.readthedocs.io/en/latest/modules/teili.building_blocks.html#module-teili.building_blocks.wta
 .. _standalone mode: https://Brian2.readthedocs.io/en/stable/advanced/preferences.html
 .. _Brian2: https://Brian2.readthedocs.io/en/stable/resources/tutorials/index.html
 .. _STDP: https://scholar.google.com/scholar?&q=STDP
 .. _standalone tutorial: https://code.ini.uzh.ch/ncs/teili/tree/dev/tutorials/wta_standalone_tutorial.py
+.. _visualiser tutorial: https://teili.readthedocs.io/en/latest/scripts/Visualizer.html
+.. _stimulus test class: https://teili.readthedocs.io/en/latest/modules/teili.stimuli.html#teili.stimuli.testbench.WTA_Testbench
+.. _STDP testbench: https://teili.readthedocs.io/en/latest/modules/teili.stimuli.html#teili.stimuli.testbench.STDP_Testbench

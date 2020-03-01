@@ -195,7 +195,7 @@ class SynapseEquationBuilder():
                 keywords['on_post'] = keywords['on_post'].format(
                     input_number="{input_number}", unit='amp')
 
-            if base_unit == 'None':
+            if base_unit == 'unit_less':
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
                     eq_templ_dummy = eq_templ_dummy + \

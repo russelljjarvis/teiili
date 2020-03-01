@@ -430,7 +430,7 @@ modes = {
     'conductance': conductance,
     'DPI': dpi,
     'DPIShunting': dpi_shunt,
-    'None': none_model
+    'unit_less': none_model
     }
 
 kernels = {
@@ -447,6 +447,7 @@ plasticity_models = {
 
 synaptic_equations = {
     'activity': activity,
+
     'stdgm': stdgm
     }
 
@@ -499,7 +500,7 @@ DPI_shunt_parameters = {
     'activity': none_params,
     'stdgm': none_params}
 
-None_parameters = {
+unit_less = {
     'None': none_params,
     'exponential': none_params,
     'non_plastic': none_params,
@@ -508,4 +509,4 @@ None_parameters = {
     'resonant': none_params,
     'alpha': none_params,
     'activity': none_params,
-    'stdgm': none_params}
+    'stdgm': stdgm_params}

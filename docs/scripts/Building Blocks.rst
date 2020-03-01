@@ -12,20 +12,21 @@ parent class which, amongst other things, provides I/O groups and properties to 
 BuildingBlock
 =============
 
-Every ``BuildingBlock`` has a set of parameters such as weights and refractory period, which can be specified outside the ``BuildingBlock`` generation and unpacked to the building block.
+Every ``BuildingBlock`` has a set of parameters such as weights and refractory period, which can be specified outside the ``BuildingBlock``generation  in a dictionary and are unpacked to the ``BuildingBlock`` upon creation..
 Each ``BuildingBlock`` has the following attributes:
 
 Attributes:
 
-* **name** (str, required): Name of the building_block population neuron_eq_builder (class, optional): neuron class as imported from models/neuron_models
+* **name** (str, required): Name of the building_block population
+* **neuron_eq_builder** (class, optional): neuron class as imported from models/neuron_models
 * **synapse_eq_builder** (class, optional): synapse class as imported from models/synapse_models
 * **params** (dictionary, optional): Dictionary containing all relevant parameters for each building block
 * **debug** (bool, optional): Flag to gain additional information
-* **groups** (dictionary): Keys to all neuron and synapse groups
+* **groups** (property): Class property to collect all keys to all neuron and synapse groups
 * **monitors** (dictionary): Keys to all spike and state monitors
 * **monitor** (bool, optional): Flag to auto-generate spike and state monitors
 * **standalone_params** (dictionary): Dictionary for all parameters to create a standalone network
-* **sub_blocks** (dictionary): Dictionary for all parent building blocks
+* **sub_blocks** (dictionary): Dictionary for all children building blocks
 * **input_groups** (dictionary): Dictionary containing all possible groups which are potential inputs
 * **output_groups** (dictionary): Dictionary containing all possible groups which are potential outputs
 * **hidden_groups** (dictionary): Dictionary containing all remaining groups which are neither inputs nor outputs
@@ -44,11 +45,11 @@ To assure this every ``BuildingBlock`` initialises the ``BuildingBlock`` class:
                          monitor)
 
 Furthermore, as described above, as soon the parent class is initialised, each
-``BuildingBlock`` has a set of dictionaries which handle I/O to other ``Neuron`` and ``Connection`` groups.
+``BuildingBlock`` has a set of dictionaries which handle I/O to other ``Neuron`` and ``Connection`` groups or ``BuildingBlocks``.
 
-The ``BuildingBlock`` class comes with a set of ``__setter__`` and ``__getter__`` functions for collecting all ``groups`` involved or identifying a subset of groups which share the same `_tags`_
+The ``BuildingBlock`` class comes with a set of ``__setter__`` and ``__getter__`` functions for collecting all ``groups`` involved or identifying a subset of groups which share the same `tags`_
 
-To retrieve all ``Neuron``s, ``Connection``s, ``SpikeGeneratorGroup``s etc. simply call the ``groups`` property:
+To retrieve all ``Neurons``, ``Connections``, ``SpikeGeneratorGroups`` etc. simply call the ``groups`` property:
 
 .. code-block:: python
 
@@ -59,24 +60,21 @@ Tags
 ======================
 
 Each ``TeiliGroup`` has an attribute called ``_tags``. The idea behind the ``_tags`` are that the user can easily define a dictionary and use this dictionary to obtain all ``TeiliGroups`` which share the same ``_tags``.
+| Tags are defined as:
 
-Tags should be set as the network expands and the functionality changes.
-
-Tags are defined as:
-
-* **mismatch**: (bool) Flag to indicate if mismatch is present in the ``Group``
+* **mismatch**: (bool) Mismatch present of group
 * **noise**: (bool) Noise input, noise connection or noise presence
-* **level**: (int) Level of BuildingBlock in the hierarchy. A WTA BuildingBlock which is connected directly to a sensor array is level 1. An OCTA BuildinBlock, however, is level 2 as it consists of level 1 WTAs
-* **sign**: (str : exc/inh/None) Sign on neuronal population. Following Dale law.
-* **target_sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
+* **level**: (int) Level of BuildingBlock in the hierarchy.
+* **sign**: (str : exc/inh/None) Sign on neuronal population. Follows Dale law.
+* **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
 * **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
-* **bb_type**: (str : WTA/ OCTA/ 3-WAY) Building block type.
+* **bb_type**: (str : WTA/ OCTA/ 3-WAY..) Building block type.
 * **group_type**: (str : Neuron/Connection/ SpikeGen) Group type
 * **connection_type**: (str : rec/lateral/fb/ff/None) Connection type
 
 Setting Tags
 --------------
-Tags can be set:
+Tags can be set using an entire dictionary. See `tags`_ for additional information.
 
 .. code-block:: python
 
@@ -101,32 +99,8 @@ and updated:
 
   test_wta._tags['mismatch'] = True
 
-or added:
-
-Tags should be set as the network expands and the functionality changes.
-
-Tags are defined as:
-
-* **mismatch**: (bool) Mismatch present of group
-* **noise**: (bool) Noise input, noise connection or noise presence
-* **level**: (int) Level of hierarchy in the building blocks. WTA groups are level 1. OCTA groups are level 2.
-* **sign**: (str : exc/inh/None) Sign on neuronal population. Follows Dale law.
-* **target sign**: (str : exc/inh/None) Sign of target population. None if not applicable.
-* **num_inputs**: (int) Number of inputs in Neuron population. None if not applicable.
-* **bb_type**: (str : WTA/ OCTA/ 3-WAY..) Building block type.
-* **group_type**: (str : Neuron/Connection/ SpikeGen) Group type
-* **connection_type**: (str : rec/lateral/fb/ff/None) Connection type
-
-Setting Tags
---------------
-Tags can be set:
-.. code-block:: python
-
-  test_wta._set_tags({'custom_tag' : custom_tag }}, target_group)
-
-
 Getting Tags
---------------------
+-------------
 Specific groups can be filtered using specific tags:
 
 .. code-block:: python
@@ -161,16 +135,16 @@ For the WTA ``BuildingBlock`` the parameter dictionary looks as follows:
 
 where each key is defined as:
 
-* **we_inp_exc**: Excitatory synaptic weight between input SpikeGenerator and WTA neurons.
-* **we_exc_inh**: Excitatory synaptic weight between WTA population and inhibitory interneuron.
-* **wi_inh_exc**: Inhibitory synaptic weight between inhibitory interneuron and WTA population.
-* **we_exc_exc**: Self-excitatory synaptic weight (WTA).
+* **we_inp_exc**: Excitatory synaptic weight between input SpikeGenerator and excitatory neurons.
+* **we_exc_inh**: Excitatory synaptic weight between excitatory population and inhibitory interneuron.
+* **wi_inh_exc**: Inhibitory synaptic weight between inhibitory interneurons and excitatory population.
+* **we_exc_exc**: Self-excitatory synaptic weight.
 * **wi_inh_inh**: Self-inhibitory weight of the interneuron population.
 * **sigm**: Standard deviation in number of neurons for Gaussian connectivity kernel.
-* **rp_exc**: Refractory period of WTA neurons.
+* **rp_exc**: Refractory period of excitatory neurons.
 * **rp_inh**: Refractory period of inhibitory neurons.
-* **ei_connection_probability**: WTA to interneuron connectivity probability.
-* **ie_connection_probability**: Interneuron to WTA connectivity probability
+* **ei_connection_probability**: Excitatory to interneuron connectivity probability.
+* **ie_connection_probability**: Interneuron to excitatory connectivity probability
 * **ii_connection_probability**: Interneuron to Interneuron connectivity probability.
 
 Now we can import the necessary modules and build our building block.
@@ -195,7 +169,7 @@ The WTA ``BuildingBlock`` comes in two slightly different versions. The versions
       num_input_neurons = 50
       my_wta = WTA(name='my_wta', dimensions=1,
                    neuron_eq_builder=DPI,
-                   num_neurons=num_neurons, num_inh_neurons=int(num_neurons**2/4),
+                   num_neurons=num_neurons, num_inh_neurons=int(num_neurons/4),
                    num_input_neurons=num_input_neurons, num_inputs=2,
                    block_params=wta_params,
                    monitor=True)
@@ -206,6 +180,7 @@ The WTA ``BuildingBlock`` comes in two slightly different versions. The versions
 To generate a 2-dimensional WTA population you can do the following:
 
 .. code-block:: python
+
       # The number of neurons in your WTA population.
       # Note that this number is squared in the 2D WTA
       num_neurons = 7
@@ -218,6 +193,8 @@ To generate a 2-dimensional WTA population you can do the following:
                    num_input_neurons=num_input_neurons, num_inputs=2,
                    block_params=wta_params,
                    monitor=True)
+
+.. attention:: The generation of the 2D WTA internally squares the number of neurons specified in ``num_neurons`` only for the excitatory population, **not** for the inhibitory population.
 
 Changing a certain ``Connections`` group from being `static` to `plastic`:
 
@@ -255,68 +232,6 @@ Sequence learning
 Threeway network
 ================
 
-``Threeway`` block is a ``BuildingBlock`` that implements a network of
-three one-dimensional ``WTA`` populations A, B and C,
-connected to a hidden two-dimensional ``WTA`` population H.
-The role of the hidden population is to encode a relation between A, B and C,
-which serve as inputs and\or outputs.
-
-In this example A, B and C encode one-dimensional values in range from 0 to 1
-in a relation A + B = C to each other, which is hardcoded into connectivity of
-the hidden population.
-
-
-To use the block instantiate it and add to the ``TeiliNetwork``
-
-.. code-block:: python
-
-    from brian2 import ms, prefs, defaultclock
-
-    from teili.building_blocks.threeway import Threeway
-    from teili.tools.three_way_kernels import A_plus_B_equals_C
-    from teili import TeiliNetwork
-    
-    prefs.codegen.target = "numpy"
-    defaultclock.dt = 0.1 * ms
-
-    #==========Threeway building block test=========================================
-    
-    duration = 500 * ms
-    
-    #===============================================================================
-    # create the network
-
-    exampleNet = TeiliNetwork()
-    
-    TW = Threeway('TestTW',
-                  hidden_layer_gen_func = A_plus_B_equals_C,
-                  monitor=True)
-    
-    exampleNet.add(TW)
-    
-    #===============================================================================
-    # simulation    
-    # set the example input values
-    
-    TW.set_A(0.4)
-    TW.set_B(0.2)
-
-    exampleNet.run(duration, report = 'text')
-    
-    #===============================================================================
-    #Visualization
-    
-    TW_plot = TW.plot()
-
-Methods ``set_A(double)``, ``set_B(double)`` and ``set_C(double)`` send population
-coded values to respective populations. Here we send A=0.2, B=0.4 and activity in
-population C is inferred via H, shaping in an activity bump encoding ~0.6:
-
-.. figure:: fig/threeway_tutorial.png
-    :align: center
-    :height: 200px
-    :figclass: align-center
-    
 .. note:: To be extended by Dmitrii Zendrikov
 
 Online Clustering of Temporal Activity (OCTA)
@@ -347,22 +262,21 @@ The WTA keys are explained above, the OCTA keys are defined as:
 
 * **duration** (int): Duration of the simulation.
 * **revolutions** (int): Number of times input is presented.
-* **num_neurons** (int): Number of neurons in the compression WTA group. Keep in mind it is a 2D WTA.
+* **num_neurons** (int): Number of neurons in the compression WTA group. Keep in mind OCTA uses 2D WTAs.
 * **num_input_neurons** (int): Number of neurons in the projection and prediction WTA.
 * **distribution** (bool): Distribution from which to initialize the weights. Gamma (1) or normal (0) distributions.
-* **dist_param_init** (int): Shape for gamma distribution or mean of normal distribution to be used at initialization.
+* **dist_param_init** (int): Shape for gamma distribution or mean of Gaussian distribution to be used at initialisation.
 * **scale_init** (int): Scale for gamma distribution or std of normal distribution.
 * **dist_param_re_init** (int): Shape of gamma distribution or mean of normal distribution used during the run regular functions.
 * **scale_re_init** (int): Scale for gamma distribution or std of normal distribution used during the run regular functions.
-* **re_init_threshold** (float): Parameter between 0 and 0.5. The weights gets reinitialized if the mean weight of a synapse is below the given value or above ``1 - re_init_threshold``.
-* **buffer_size_plast** (int): Size of the buffer of the activity dependent regularization.
-* **noise_weight** (int): Synaptic weight the noise is connected with.
-* **variance_th_c** (float): Variance threshold for the compression group. Parameter included in the  ``activity`` synapse template.
-* **variance_th_p** (float): Variance threshold for the prediction group.
+* **re_init_threshold** (float): Parameter between 0 and 1.0. The weights gets reinitialized if the mean weight of a synapse is below the given value or above ``1 - re_init_threshold``.
+* **buffer_size_plast** (int): Length of the buffer used by the activity dependent plasticity (ADP) mechanism. ADP acts as homeostatic regulariser.
+* **noise_weight** (int): Synaptic weight the PoissonSpikeGenerator which injects noise to the network.
+* **variance_th_c** (float): Variance threshold for the compression group. Parameter included in the  ``activity`` synapse template used for ADP.
+* **variance_th_p** (float): Variance threshold for the prediction group. Parameter included in the  ``activity`` synapse template used for ADP.
 * **learning_rate** (float): Learning rate.
 * **inh_learning_rate** (float): Inhibitory learning rate.
 * **decay** (int):  Decay parameter of the decay in the activity dependent run_regular.
-* **weight_decay** (string): Type of weight decay ('global'/'local').
 * **seed** (int): Seed for mismatch. Default is 42.
 * **tau_stdp** (int): Time constant in ms that defines the STDP plasticty.
 
@@ -419,7 +333,7 @@ The additional keyword arguments are defined as:
 * **monitor**: Flag to return monitors of the network
 * **debug**: Flag for verbose debug
 
-.. __tags: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html#tags
+.. _tags: https://teili.readthedocs.io/en/latest/scripts/Core.html#tags
 .. _[1]: https://www.zora.uzh.ch/id/eprint/177970/
 .. _Download: https://www.dropbox.com/s/0ynid1730z7txfh/spike_based_computation.pdf?dl=1
 .. [1] Milde, Moritz, PhD thesis, "Spike-Based Computational Primitives for Vision-Based Scene Understanding", University of Zurich, 2019.

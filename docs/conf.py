@@ -41,11 +41,11 @@ MOCK_MODULES = [
 # -- Project information -----------------------------------------------------
 
 project = 'teili'
-copyright = '2018, Moritz Milde'
-author = 'Moritz Milde, Alpha Renner, Renate Krause, Adrian Whatley, Nicoletta Risi, Dmitrii Zendirkov, Karla Burelo, Vanessa Leite'
+copyright = '2018, Moritz Milde, Alpha Renner'
+author = 'Moritz Milde, Alpha Renner, Renate Krause, Adrian Whatley, Nicoletta Risi, Matteo Cartiglia, Dmitrii Zendirkov, Karla Burelo, Vanessa Leite'
 
 # The short X.Y version
-version = '0.2'
+version = '1.0'
 # The full version, including alpha/beta/rc tags
 release = 'Alpha'
 
@@ -196,7 +196,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'teili.tex', 'teili Documentation',
-     'Moritz Milde', 'manual'),
+     'Moritz Milde\\ Alpha Renner\\ Renate Krause\\ Matteo Cartiglia\\ Dmitrii Zenkov\\ Karla Burelo\\ Vanessa Leite\\ Adrian Whatley', 'manual'),
 ]
 
 
@@ -217,7 +217,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'teili', 'teili Documentation',
-     author, 'teili', 'One line description of project.',
+     author, 'teili', 'Modular Framework for Hierarchical Neural Building Block Development.',
      'Miscellaneous'),
 ]
 

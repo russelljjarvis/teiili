@@ -15,14 +15,15 @@ Using pre-existing modular building blocks
 
 
 Create a new template using new neuron/synapse models
---------------------------------------------------
+-------------------------------------------------------
 
 * Define your new model equations and the corresponding parameters in neuron and synapse models.
 * Neuron models have the following keywords: **model**, **threshold**, **reset** and **parameters**
 * Synapse models have the following keywords: **model**, **on_pre**, **on_post** and **parameters**
 * Make sure that both the new model equations and the corresponding parameters are added in the `Dictionary of keywords` at the bottom of the file.
 * Neuron templates are divided into two main modes: **current** and **voltage** based equations. Each mode supports equations and parameters.
-* Synapse templates are divided based on function. Equations are divided based on **modes**, **kernels**, **plasticity_models** and new **synaptic equations**.
+* Synapse templates are divided based on function. Equations are divided based on **modes**, **kernels**, **plasticity_models** and new **synaptic equations**. 
+* Synaptic **modes** are further devided into subcategories: **current**, **DPI**, **conductance**, **DPIShunting** or **unit_less**.
 * Create your model using the Neuron or SynapseEquationBuilder.
 
 .. code-block:: python
@@ -61,6 +62,38 @@ Create a new template using new neuron/synapse models
 
    my_model = my_model()
    my_model.export_eq(os.path.join(path, "my_model"))
+
+
+
+Create a new template using the unit_less dictionary
+--------------------------------------------------------
+
+* Same proceduce as in :ref:`Create a new template using new neuron/synapse models`
+* Parameters to be defined to the unit_less dictionary while the model needs to be added to one of the model dictionaries.
+* When creating the synapse model **base_unit** should be defined as **unit_less**.
+* This can be usefull wh
+
+.. code-block:: python
+
+# Define the new model
+  class my_model(SynapseEquationBuilder):
+      def __init__(self):
+          SynapseEquationBuilder.__init__(self, base_unit='unit_less')
+
+
+Combine equations and replace variables
+-------------------------------------------------------
+* Using the **var_replacer** function you can substitute specific strings in a parameter dictionary.
+* For docstrings consult :ref:`Equation Builder`
+
+.. code-block:: python
+
+from teili.models.builder.combine import var_replacer
+var_replacer(first_eq, second_eq, params)
+
+
+
+  
 
 
 
@@ -104,7 +137,6 @@ The `path/to/equations/my_equations.py` file is as follows:
   {	'refP' : '0.*second',
   }}
 
-  
 
 I want to create my own models and contribute
 -------------------------------------------------------------------------

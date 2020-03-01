@@ -71,11 +71,11 @@ Create a new template using the unit_less dictionary
 * Same proceduce as in :ref:`Create a new template using new neuron/synapse models`
 * Parameters to be defined to the unit_less dictionary while the model needs to be added to one of the model dictionaries.
 * When creating the synapse model **base_unit** should be defined as **unit_less**.
-* This can be usefull wh
+* This can be usefull to define learning rules that involve gain modulation or activity modulation. (e.g. `STDGM`)
 
 .. code-block:: python
 
-# Define the new model
+  # Define the new model
   class my_model(SynapseEquationBuilder):
       def __init__(self):
           SynapseEquationBuilder.__init__(self, base_unit='unit_less')
@@ -88,8 +88,8 @@ Combine equations and replace variables
 
 .. code-block:: python
 
-from teili.models.builder.combine import var_replacer
-var_replacer(first_eq, second_eq, params)
+  from teili.models.builder.combine import var_replacer
+  var_replacer(first_eq, second_eq, params)
 
 
 

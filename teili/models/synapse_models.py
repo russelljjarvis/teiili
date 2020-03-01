@@ -233,7 +233,7 @@ class DPIadp(SynapseEquationBuilder):
 
 class DPIstdgm(SynapseEquationBuilder):
     def __init__(self):
-        SynapseEquationBuilder.__init__(self, base_unit='None', 
+        SynapseEquationBuilder.__init__(self, base_unit='unit_less', 
                                         SynSTDGM='stdgm')
 
 

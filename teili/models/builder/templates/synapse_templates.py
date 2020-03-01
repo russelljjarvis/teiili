@@ -430,7 +430,7 @@ modes = {
     'conductance': conductance,
     'DPI': dpi,
     'DPIShunting': dpi_shunt,
-    'None': none_model
+    'unit_less': none_model
     }
 
 kernels = {
@@ -500,7 +500,7 @@ DPI_shunt_parameters = {
     'activity': none_params,
     'stdgm': none_params}
 
-None_parameters = {
+unit_less = {
     'None': none_params,
     'exponential': none_params,
     'non_plastic': none_params,

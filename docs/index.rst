@@ -16,6 +16,7 @@ This toolbox was developed to provide computational neuroscientists, as well as 
    scripts/Neuron and Synapse models.rst
    scripts/Building Blocks.rst
    scripts/Equation builder.rst
+   scripts/Developing Equation Templates.rst
    scripts/Developing Building Blocks.rst
    scripts/Tools.rst
    scripts/Visualizer.rst

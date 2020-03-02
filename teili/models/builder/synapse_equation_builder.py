@@ -32,6 +32,7 @@ Example:
     >>> my_synapse = Connections(testNeurons, testNeurons2,
                   equation_builder=DPISyn, name="my_synapse")
 """
+
 # @Author: mrax, alpren, mmilde
 # @Date:   2018-01-15 17:53:31
 
@@ -41,7 +42,7 @@ from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_syn_dict
 from teili.models.builder.templates.synapse_templates import modes, kernels, plasticity_models,\
     current_parameters, conductance_parameters, DPI_parameters, DPI_shunt_parameters, synaptic_equations,\
-    None_parameters
+    unit_less_parameters
 import copy
 
 
@@ -205,8 +206,8 @@ class SynapseEquationBuilder():
                 param_templ_dummy = []
                 for key, value in kwargs.items():
                     param_templ_dummy = param_templ_dummy + \
-                        [None_parameters[value]]
-                param_templ = [None_parameters[base_unit]] + param_templ_dummy
+                        [unit_less_parameters[value]]
+                param_templ = [unit_less_parameters[base_unit]] + param_templ_dummy
 
                 keywords = combine_syn_dict(eq_templ, param_templ)
 

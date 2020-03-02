@@ -418,6 +418,14 @@ none_model = {
     'on_post': """
          """
     }
+unit_less = {
+    'model': """
+         """,
+    'on_pre': """
+         """,
+    'on_post': """
+         """
+    }
 
 """Dictionary of keywords:
 
@@ -430,7 +438,7 @@ modes = {
     'conductance': conductance,
     'DPI': dpi,
     'DPIShunting': dpi_shunt,
-    'unit_less': none_model
+    'unit_less': unit_less
     }
 
 kernels = {
@@ -499,8 +507,8 @@ DPI_shunt_parameters = {
     'activity': none_params,
     'stdgm': none_params}
 
-unit_less = {
-    'None': none_params,
+unit_less_parameters = {
+    'unit_less': none_params,
     'exponential': none_params,
     'non_plastic': none_params,
     'fusi': none_params,

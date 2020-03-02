@@ -8,7 +8,8 @@ This is a collection of useful tools and functions mainly for use with `Brian2`.
 converter
 ---------
 Functions in this module convert data from or to `Brian2` compatible formats.
-In particular, there are functions to convert and process data from DVS cameras.
+In particular, there are functions to convert and process data from Dynamic Vision Sensors (DVSs), which are event-based cameras.
+If you want to learn more about a **DVS** checkout the original publication_
 
 cpptools
 --------
@@ -125,7 +126,10 @@ Functions that generate a random walk. E.g. as artificial input.
 
 sorting
 -------
-To understand the structure of in the rasterplots but also in the learned weight matrices, we need to sort the weight matrices according to some similarity measure, such as euclidean distance.
+To understand the structure in spiking activity of a network or more specifically the structure in the spike rasterplots of a neuronal population we need to sort the neuronal indicies.
+But also if we want to understand the strucuture of a learned weight matrix we need to be able to sort this matrix.
+This set of tools allows the user to sort a given weight matrix according to some similarity measure, such as euclidean distance.
+The class returns a list of permutated indices which can be used to sort a spike rasterplot or the weight matrix itself, before it is being displayed.
 However, the sorting algorithm is completely agnostic to the similarity measure. It connects each node with maximum two edges and constructs a directed graph.
 This is similar to the travelling salesman problem.
 
@@ -143,8 +147,10 @@ Example:
     print(obj.permutation)
     print(ob.sorted_matrix)
 
-    or instead of using a matrix you can also specify a
-    path to a stored matrix:
+or instead of using a matrix you can also specify a path to a stored matrix:
+    
+.. code-block:: python
+
 
     filename = '/path/to/your/matrix.npy'
     obj = SortMatrix(nrows=49, filename=filename)
@@ -208,3 +214,4 @@ In order to also use them with C++ code generation, all functions have a cpp imp
 
 
 .. _sequence_learning_standalone_tutorial: https://teili.readthedocs.io/en/latest/scripts/Other%examples.html#sequence&learning
+.. _publication: https://ieeexplore.ieee.org/abstract/document/4444573

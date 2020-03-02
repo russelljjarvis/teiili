@@ -3,8 +3,8 @@
 Developing Building Blocks
 ***************
 
-This section explains the generation of new and more complex ``BuildingBlocks``:
-we provide users with an example of this in ``teili/building_blocks/octa.py``.
+This section explains the generation of new and more complex ``BuildingBlocks``.
+An example of such a ``BuildingBlock``  can be found in the `Building Block`_ documentation, as well as in the respective `advanced tutorials`_ such as the ``threeway network`` or the ``OCTA network``.
 
 Every building block inherits from the class ``BuildingBlocks`` which has attributes
 such as ``sub_blocks``, ``input_groups``, ``output_groups`` and ``hidden_groups``.
@@ -33,3 +33,5 @@ Important Notes:
 
 Have fun developing your own ``BuildingBlocks`` and advancing neuroscience! :)
 
+.. _Building Block: https://teili.readthedocs.io/en/latest/scripts/Building%20Blocks.html
+.. _advanced tutorials: https://teili.readthedocs.io/en/latest/scripts/Advanced%20tutorials.html#

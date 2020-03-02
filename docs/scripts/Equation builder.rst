@@ -27,15 +27,18 @@ NeuronEquationBuilder keywords
 
     from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
     num_inputs = 2
-    my_neuron_model = NeuronEquationBuilder.__init__(base_unit='current', adaptation='calcium_feedback',
-                                   integration_mode='exponential', leak='leaky',
-                                   position='spatial', noise = 'None')
+    my_neuron_model = NeuronEquationBuilder.__init__(base_unit='current',
+                                                     adaptation='calcium_feedback',
+                                                     integration_mode='exponential',
+                                                     leak='leaky',
+                                                     position='spatial',
+                                                     noise = 'None')
     my_neuron.add_input_currents(num_inputs)
 
-* **base_unit**: Indicates whether the neuron model is ``current`` or ``voltage`` based.
 
 The keywords used in the example and the values are explained below:
 
+* **base_unit**: Indicates whether the neuron model is ``current`` or ``voltage`` based.
 * **adaptation**: Determines what type of adaptive feedback should be used. Can be ``calciumfeedback`` or ``None``.
 * **integration_mode**: Determines how the neuron integrates up to spike-generation. Can be ``linear`` or ``exponential``.
 * **leak**: Enables leaky integration. Can be ``leaky`` or ``non_leaky``.
@@ -52,13 +55,11 @@ SynapseEquationBuilder keywords
 
     from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
     my_synapse_model = SynapseEquationBuilder.__init__(base_unit='DPI',
-                                                   plasticity='non_plastic')
-
-* **base_unit**: Indicates whether synapse uses ``current``, ``conductance`` or ``DPI`` current models.
-
+                                                       plasticity='non_plastic')
 
 The keywords used in the example and the values are explained below:
 
+* **base_unit**: Indicates whether synapse uses ``current``, ``conductance`` or ``DPI`` current models.
 * **kernel**: Specifies temporal kernel with which each spike gets convolved. Can be ``exponential``, ``resonant`` or ``alpha``.
 * **plasticity**: Plasticity algorithm for the synaptic weight. Can either be ``non_plastic``, ``fusi`` or
   ``stdp``.
@@ -119,8 +120,9 @@ A function to import pre-defined neuron_model. This function can load a dictiona
 .. code-block:: python
 
     from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+
     my_neu_model = NeuronEquationBuilder.import_eq(
-        'teili/models/equations/DPI', num_inputs=2)
+        '~/teiliApps/equations/DPI', num_inputs=2)
 
 where ``num_inputs`` specifies how many distinct neuron populations project to the target population.
 
@@ -129,8 +131,9 @@ For synapses the import works as follows:
 .. code-block:: python
 
     from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+
     my_syn_model = SynapseEquationBuilder.import_eq(
-        'teili/models/equations/DPISyn')
+        'teiliApps/equations/DPISyn')
 
 export_eq
 ---------
@@ -139,7 +142,7 @@ In order to generate models which can later be changed manually and imported aga
 
 .. code-block:: python
 
-    path = os.path.dirname(os.path.realpath(teili.models.__file__))
+    path = '/home/YOU/teiliApps/equations/'
     DPI = NeuronEquationBuilder(base_unit='current', adaptation='calcium_feedback',
                                 integration_mode='exponential', leak='leaky',
                                 position='spatial', noise='none')
@@ -150,12 +153,13 @@ For synapse models:
 
 .. code-block:: python
 
-    path = os.path.dirname(os.path.realpath(teili.models.__file__))
+    path = '/home/YOU/teiliApps/equations/`)
     dpi_syn = SynapseEquationBuilder(base_unit='DPI',
                                    plasticity='non_plastic')
 
     dpi_syn.export_eq(os.path.join(path, "DPISyn"))
 
+.. note:: The path can be any existing path. You do not need to store your models within the teiliApps directory.
 
 var_replacer
 ------------

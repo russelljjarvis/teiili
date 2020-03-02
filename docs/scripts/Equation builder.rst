@@ -67,6 +67,7 @@ The keywords used in the example and the values are explained below:
 Custom keywords (such as new learning rules or new kernels) can be added by defining a custom equation template in ``teili/models/builder/templates/synapse_templates.py`` and adding the keywords to the ``synaptic_equations`` dictionary.
 When defining a new synapse model, import the new feature by passing the newly constructed keyword to the ``SynapseEquationBuilder``.
 
+Equations that do not fit into the existing synaptic modes:  *current*, **conductance**, **DPI**, **DPI shunting** can be grouped into the **unit_less** mode and the equation needs to be added to the **unit_less_parameters** dictionary.
 
 Dictionary structure
 ====================

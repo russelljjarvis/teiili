@@ -447,7 +447,6 @@ plasticity_models = {
 
 synaptic_equations = {
     'activity': activity,
-
     'stdgm': stdgm
     }
 

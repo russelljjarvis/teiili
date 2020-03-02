@@ -1,4 +1,4 @@
-Developing equation templates
+Developing Equation Templates
 =============================
 
 For using existing models please refer to our `neuron and synapse tutorials`_

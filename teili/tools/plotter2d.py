@@ -88,25 +88,31 @@ class DVSmonitor:
 
 class Plotter2d(object):
     """
-    TODO: Merge plotrange and mask?
+    Plotter2d is a class that contains a number of functions to create 2d plots over time, in particular events/spikes
+     that are arranged in 2d such as DVS camera recordings or 2d neural fields.
+     The class offers filtering, plotting and generation of gifs.
+
+     Data is passed into the plotter as a monitor (either from brian2 or using the DVSmonitor class)
 
     Attributes:
-        cols (TYPE): Description
-        dims (TYPE): Description
-        mask (TYPE): Description
-        plotrange (TYPE): Description
-        pol (TYPE): Description
-        rows (TYPE): Description
-        shape (TYPE): Description
+        dims (tuple): the dimensions of the 2d data (number of rows and columns)
+        monitor (TYPE): A monitor to sparsely store event data (e.g. from brian2),
+            it has a t (timestamps), xi (x event coordinates) and
+            yi (y coordinates) property or an i property (flat coordinates that are reshaped to 2d)
+        plotrange (tuple): Masks the monitor outside of the given range (in units of t)
+        shape (tuple): 3d shape of the data
+        rows (int): number of rows (dims[0])
+        cols (int): number of columns (dims[1])
+        mask (array): mask that masks out part of the data
     """
 
     def __init__(self, monitor, dims, plotrange=None):
         """Summary
 
         Args:
-            monitor (TYPE): Description
-            dims (TYPE): Description
-            plotrange (None, optional): Description
+            monitor (TYPE): A monitor, that has a t (timestamps), xi (x coordinates) and yi (y coordinates) property
+            dims (tuple): the dimensions of the 2d video that schould be plotted
+            plotrange (tuple): Masks the monitor outside of the given range (in units of t)
         """
         self.rows = dims[0]
         self.cols = dims[1]
@@ -155,19 +161,13 @@ class Plotter2d(object):
 
     @property
     def pol(self):
-        """Summary
-
-        Returns:
-            TYPE: Description
+        """polarity of DVS spikes
         """
         return self._pol[self.mask]
 
     @property
     def t(self):
-        """Summary
-
-        Returns:
-            TYPE: Description
+        """timestamps of events
         """
         return self._t[self.mask]
 
@@ -175,45 +175,30 @@ class Plotter2d(object):
     def t_(self):
         """
         unitless t in ms
-
-        Returns:
-            TYPE: Description
         """
         return self._t[self.mask] / ms
 
     @property
     def i(self):
-        """Summary
-
-        Returns:
-            TYPE: Description
+        """flattened indices (in 1d)
         """
         return self._i[self.mask]
 
     @property
     def xi(self):
-        """Summary
-
-        Returns:
-            TYPE: Description
+        """row coordinates of events
         """
         return self._xi[self.mask]
 
     @property
     def yi(self):
-        """Summary
-
-        Returns:
-            TYPE: Description
+        """columns coordinates of events
         """
         return self._yi[self.mask]
 
     @property
     def plotlength(self):
-        """Summary
-
-        Returns:
-            TYPE: Description
+        """number of timesteps
         """
         # if self.plotrange is not None:
         plotlength = self.plotrange[1] - self.plotrange[0]
@@ -222,13 +207,13 @@ class Plotter2d(object):
         return plotlength
 
     def plotshape(self, dt):
-        """Summary
+        """3d shape of the data (num_timestamps, num_rows, num_cols)
 
         Args:
-            dt (TYPE): Description
+            dt (float): timestep length
 
         Returns:
-            TYPE: Description
+            tuple: (num_timestamps, num_rows, num_cols)
         """
         plottimesteps = int(np.ceil(0.0001 + self.plotlength / dt))
         # print(plottimesteps)
@@ -239,7 +224,7 @@ class Plotter2d(object):
         set a range with unit that is applied for all computations with this monitor
 
         Args:
-            plotrange (TYPE): Description
+            plotrange (tuple): (from, to))
         '''
         if plotrange is None:
             self.mask = range(len(self._t))  # slice(len(self._t))  # [True] * (len(self._t))
@@ -259,10 +244,10 @@ class Plotter2d(object):
         sparse documentation can be found here: http://sparse.pydata.org/en/latest/
 
         Args:
-            dt (TYPE): Description
+            dt (float): the t dimension in the sparse representation is given in timesteps, so t is divided by dt
 
         Returns:
-            TYPE: Description
+            sparse.COO: Sparse representation of the data used to create the dense one efficiently.
         """
         # print(len(self.t))
         # print(np.max(self.t / dt))
@@ -302,7 +287,9 @@ class Plotter2d(object):
             dt (TYPE): Description
 
         Returns:
-            TYPE: Description
+            array: dense array of the data. E.g. if we have a single spike in the neuron at location (3, 5) at timestamp
+                10, in the dense array, all locations have a value of 0 at all timesteps apart from (10, 3, 5), where
+                the value is 1.
         """
         sparse3d = self.get_sparse3d(dt)
         return sparse3d.todense()
@@ -313,8 +300,8 @@ class Plotter2d(object):
         Spiketimes will be binned with a step size of dt that means that the filtersize should always be a int multiple of dt
 
         Args:
-            dt (TYPE): the time step with which the spike times are binned
-            filtersize (TYPE): length of the filter (in brian2 time units)
+            dt (brian2.Quantity): the time step with which the spike times are binned
+            filtersize (brian2.Quantity): length of the filter (in brian2 time units)
         Returns:
             TYPE: Description
         """
@@ -338,12 +325,12 @@ class Plotter2d(object):
     def plot3d_on_off(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_ONOFF, flipy= False):
         """
         Args:
-            plot_dt (TYPE, optional): Description
-            filtersize (TYPE, optional): Description
-            colormap (TYPE, optional): Description
+            plot_dt (brian2.Quantity, optional): timestep in which events are binned for plotting
+            filtersize (brian2.Quantity, optional): filtersize of rectangular filter
+            colormap (pyqtgraph.colormap.ColorMap, optional): colormap for on off plot
 
         Returns:
-            TYPE: Description
+            pyqtgraph.ImageView: ImageView object for usage in a larger pyqtgraph plot
         """
 
         video_filtered0 = 0
@@ -395,13 +382,13 @@ class Plotter2d(object):
     def plot3d(self, plot_dt=defaultclock.dt, filtersize=10 * ms, colormap=CM_JET, levels=None, flipy= False):
         """
         Args:
-            plot_dt (TYPE, optional): Description
-            filtersize (TYPE, optional): Description
-            colormap (TYPE, optional): Description
+            plot_dt (brian2.Quantity, optional): timestep in which events are binned for plotting
+            filtersize (brian2.Quantity, optional): filtersize of rectangular filter
+            colormap (pyqtgraph.colormap.ColorMap, optional): colormap for on off plot
             levels (tuple): (min, max); the white and black level values to use (passed to pyqtgraph)
 
         Returns:
-            TYPE: Description
+            pyqtgraph.ImageView: ImageView object for usage in a larger pyqtgraph plot
         """
         try:
             video_filtered = self.get_filtered(plot_dt, filtersize)
@@ -421,13 +408,13 @@ class Plotter2d(object):
         return imv
 
     def rate_histogram(self, filename=None, filtersize=50 * ms, plot_dt=defaultclock.dt * 100, num_bins=50):
-        """Summary
+        """plots a histogram of rates
 
         Args:
-            filename (TYPE): Description
-            filtersize (TYPE, optional): Description
-            plot_dt (TYPE, optional): Description
-            num_bins (int, optional): Description
+            filename (str): filename to save the histogram
+            filtersize (brian2.Quantity, optional): filtersize of the retangular filter to calculate the rate
+            plot_dt (brian2.Quantity, optional): binsize in which the data is binned
+            num_bins (int, optional): number of bins of the histogram
         """
         video_filtered = self.get_filtered(plot_dt, filtersize)
         histrange = (0, np.max(video_filtered))
@@ -508,11 +495,11 @@ class Plotter2d(object):
         return denseifrs, denseisis, densetimes
 
     def ifr_histogram(self, filename=None, num_bins=50):
-        """Summary
+        """histogram of instantaneous frequencies
 
         Args:
-            filename (TYPE): Description
-            num_bins (int, optional): Description
+            filename (str): filename to save the histogram
+            num_bins (int, optional): number of bins of the histogram
         """
         denseifrs, denseisis, densetimes = self.get_dense_ifr(dt=5 * ms)
         histrangeifr = (0, np.max(denseifrs))
@@ -562,7 +549,7 @@ class Plotter2d(object):
         only i,t, rows and cols are saved to an npz
 
         Args:
-            filename (TYPE): Description
+            filename (str): filename under which to save the data of the plotter object
         """
         np.savez_compressed(str(filename) + ".npz", self.i,
                             self.t, self.pol, self.dims)
@@ -579,7 +566,7 @@ class Plotter2d(object):
             spikemonObject.plot3d()
 
         Args:
-            filename (TYPE): Description
+            filename (str):  filename from where to load the data of the plotter object
 
         Returns:
             TYPE: Description
@@ -628,10 +615,7 @@ class Plotter2d(object):
             spikemonObject.plot3d()
 
         Args:
-            eventsfile (TYPE): Description
-
-        Returns:
-            TYPE: Description
+            eventsfile (str):   filename from where to load the data of the plotter object
         """
         if type(eventsfile) == str:
             events = np.load(eventsfile)
@@ -644,6 +628,7 @@ class Plotter2d(object):
 
     def savecsv(self, filename):
         """
+        export data as csv
         not tested
 
         Args:
@@ -657,12 +642,13 @@ class Plotter2d(object):
     def plot_panes(self, num_panes=None, timestep=None, filtersize=50 * ms, num_rows=2,
                    plotfunction='plot3d', filename=None, colormap=cm.jet, **plotkwargs):
         """
+        plots the 3d data as time slices (2d images at several timepoints)
         Args:
-            num_panes (None, optional): Description
-            timestep (None, optional): Description
-            filtersize (TYPE, optional): Description
-            num_rows (int, optional): Description
-            filename (None, optional): Description
+            num_panes (int, optional): number of panes to plot
+            timestep (TYPE, optional): timestep between panes
+            filtersize (TYPE, optional): filtersize at which the spikes are filtered to generate the images
+            num_rows (int, optional): number of rows of the pane plot
+            filename (str, optional): location where to save the plot
 
         Returns:
             TYPE: Description
@@ -769,6 +755,9 @@ class Plotter2d(object):
         shutil.rmtree(gif_temp_dir)
 
     def calculate_pop_vector_trajectory(self, dt=50 * ms, plot=False, frames_timestamps=None):
+        """
+        Calculates the trajectory of the center of mass over time.
+        """
         denseifrs, denseisis, densetimes = self.get_dense_ifr(dt=dt, frames_timestamps=frames_timestamps)
         denseifrs3d = np.reshape(denseifrs, (denseifrs.shape[0], self.cols, self.rows))
         xsum = np.sum(denseifrs3d, axis=1)
@@ -789,6 +778,9 @@ class Plotter2d(object):
 
 
 def interpolate_isi(ind, t=None, i=None, densetimes=None):
+    """
+    interplolate interspike intervals so that there is a value at all timesteps and not just at the spike times
+    """
     from scipy.interpolate import interp1d
     inds = np.where(ind == i)[0]
     isitimes = t[inds]

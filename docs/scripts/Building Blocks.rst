@@ -258,14 +258,10 @@ In addition to standard ``Building_block`` arguments you can also specify these 
 
 A list of attributes available specific to the block:
 
-* **A**, **B** and **C** (WTA): Shortcuts for input/output populations 1d ``WTA`` building blocks
-* **H** (WTA): A shortcut for a hidden population H implemented with 2d ``WTA`` building block
-* **Inp_A** (PoissonGroup): PoissonGroup obj. to stimulate population A
-* **Inp_B** (PoissonGroup): PoissonGroup obj. to stimulate population B
-* **Inp_C** (PoissonGroup): PoissonGroup obj. to stimulate population C
-* **value_a** (double): Stored input for A (center of a gaussian bump)
-* **value_b** (double): Stored input for B (center of a gaussian bump)
-* **value_c** (double): Stored input for C (center of a gaussian bump)
+* **A**, **B** and **C** (WTA): Shortcuts for input/output 1d ``WTA`` building blocks
+* **H** (WTA): A shortcut for the hidden population H implemented with a 2d ``WTA`` building block
+* **Inp_A**, **Inp_B**, **Inp_C** (PoissonGroup): Shortcuts to input spike generators
+* **value_a**, **value_b**, **value_c** (double): Population vector values decoded with **get_values()** input for A, B and C
 
 
 ``Threeway`` class also implements the following methods unique to the block:
@@ -273,8 +269,8 @@ A list of attributes available specific to the block:
 * **set_A(float)**, **set_B(float)** and **set_C(float)**: Sets spiking rates of neurons of the PoissonGroup ``Inp_A``, ``Inp_B`` and ``Inp_C``, respectively, to satisfy a shape of a gaussian bump centered at 'value' between 0 and 1
 * **reset_A()**, **reset_B()** and **reset_C()**: Resets spiking rates of the neurons of the respective ``PoissonGroup`` s to zero (e.g. turns the inputs off)
 * **reset_inputs()**: turns all three inputs off
-* **get_values(ms)**: Extracts and updates encoded values of A, B and C from the spiking rates of the corresponding populations. Must be called to get the numerical results.
-* **plot()**: calls a preconfigured instance of the ``Visualizer`` to plot the raster for populations A, B and C.
+* **get_values(ms)**: Extracts and updates encoded values of A, B and C from the spiking rates of the corresponding populations. Must be called to get the numerical results
+* **plot()**: calls a preconfigured instance of the ``Visualizer`` to plot the raster for populations A, B and C
 
 
 

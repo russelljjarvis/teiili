@@ -250,7 +250,7 @@ To initialize the block provide it with the connectivity pattern in the hidden l
                       
 .. note:: You always have to set **monitor** to **True** to be able to use the method **get_values()** to calculate the population vectors.
 
-In addition to standard ``Building_block`` arguments you can also specify these optional parameters:
+In addition to standard ``BuildingBlock`` arguments you can also specify these optional parameters:
 
 * **num_input_neurons** (int): Sizes of input/output populations A, B and C
 * **num_hidden_neurons** (int): Size of the hidden population H

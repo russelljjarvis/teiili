@@ -93,8 +93,6 @@ def run_teili_network():
             statemonN1, statemonN2,
             )
     Net.run(duration_sim * ms)
-    print('Simulation run for {} ms'.format(duration_sim))
-
     return Net, spikemonN1, statemonN1, statemonN2, statemonN2_2
 
 

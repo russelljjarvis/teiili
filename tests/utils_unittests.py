@@ -102,5 +102,4 @@ def run_brian_network(spikemonitors=True, statemonitors=True):
         returns.extend([statemonN1, statemonN2])
 
     Net.run(duration_sim * ms)
-    print('Simulation run for {} ms'.format(duration_sim))
     return returns

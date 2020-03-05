@@ -9,6 +9,7 @@ in the docstrings of the `building_block` located in `teili/building_blocks/octa
 
 The network's parameters can be found in `teili/models/parameters/octa_params.py`.
 """
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from pyqtgraph.Qt import QtGui
@@ -26,6 +27,7 @@ from teili.stimuli.testbench import OCTA_Testbench
 from teili.tools.sorting import SortMatrix
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataControllers.Rasterplot import Rasterplot
+from teili.tools.io import monitor_init
 
 
 def plot_sorted_compression(OCTA_net):
@@ -83,15 +85,17 @@ if __name__ == '__main__':
                                 direction='cw',
                                 ts_offset=3, angle_step=10,
                                 noise_probability=0.2,
-                                repetitions=100,
+                                repetitions=300,
                                 debug=False)
 
     OCTA_net.groups['spike_gen'].set_spikes(indices=testbench_stim.indices,
                                             times=testbench_stim.times * ms)
 
     Net.add(OCTA_net,
+            OCTA_net.monitors['spikemon_proj'],
             OCTA_net.sub_blocks['compression'],
             OCTA_net.sub_blocks['prediction'])
+
     Net.run(np.max(testbench_stim.times) * ms,
             report='text')
 
@@ -105,18 +109,19 @@ if __name__ == '__main__':
             print('QApplication instance already exists: %s' % str(app))
 
         pg.setConfigOptions(antialias=True)
-        labelStyle = {'color': '#FFF', 'font-size': 12}
-        MyPlotSettings = PlotSettings(fontsize_title=12,
+        labelStyle = {'color': '#FFF', 'font-size': 18}
+        MyPlotSettings = PlotSettings(fontsize_title=18,
                                       fontsize_legend=12,
-                                      fontsize_axis_labels=10,
-                                      marker_size=7)
+                                      fontsize_axis_labels=14,
+                                      marker_size=10)
         sort_rasterplot = True
         win = pg.GraphicsWindow(title="Network activity")
         win.resize(1024, 768)
-        p1 = win.addPlot(title+"Spike raster plot: L4")
+        p1 = win.addPlot(title="Spike raster plot: L4")
         p2 = win.addPlot(title="Zoomed in spike raster plot: L2/3")
         win.nextRow()
-        p3 = win.addPlot(title="Zoomed in spike raster plot: L5/6")
+        p3 = win.addPlot(title="Zoomed in spike raster plot: L5/6",
+                         colspan=2)
 
         p1.showGrid(x=True, y=True)
         p2.showGrid(x=True, y=True)
@@ -126,24 +131,32 @@ if __name__ == '__main__':
         region.setZValue(10)
 
         p1.addItem(region, ignoreBounds=True)
-
+        
 
         monitor_p1 = OCTA_net.monitors['spikemon_proj']
-        monitor_p2 = OCTA_net.sub_blocks['compression'].monitors['spikemon_exc']
-        monitor_p2 = OCTA_net.sub_blocks['prediction'].monitors['spikemon_exc']
-
+        monitor_p2 = monitor_init()
+        monitor_p2.i = cp.deepcopy(np.asarray(
+            OCTA_net.sub_blocks['compression'].monitors['spikemon_exc'].i))
+        monitor_p2.t = cp.deepcopy(np.asarray(
+            OCTA_net.sub_blocks['compression'].monitors['spikemon_exc'].t))
+        monitor_p3 = monitor_init()
+        monitor_p3.i = cp.deepcopy(np.asarray(
+            OCTA_net.sub_blocks['prediction'].monitors['spikemon_exc'].i))
+        monitor_p3.t = cp.deepcopy(np.asarray(
+            OCTA_net.sub_blocks['prediction'].monitors['spikemon_exc'].t))
+        
         if sort_rasterplot:
             weights_23 = cp.deepcopy(np.asarray(
                 OCTA_net.sub_blocks['compression'].groups['s_exc_exc'].w_plast))
-            s_23 = SortMatrix(nrows=np.shape(weights_23)[0],
-                              ncols=np.shape(weights_23)[1],
+            s_23 = SortMatrix(nrows=OCTA_net.sub_blocks['compression'].groups['s_exc_exc'].source.N,
+                              ncols=OCTA_net.sub_blocks['compression'].groups['s_exc_exc'].target.N,
                               matrix=weights_23,
                               axis=1)
 
             weights_23_56 = cp.deepcopy(np.asarray(
                 OCTA_net.sub_blocks['prediction'].groups['s_inp_exc'].w_plast))
-            s_23_56 = SortMatrix(nrows=np.shape(weights_23_56)[0],
-                                 ncols=np.shape(weights_23_56)[1],
+            s_23_56 = SortMatrix(nrows=OCTA_net.sub_blocks['prediction'].groups['s_inp_exc'].source.N,
+                                 ncols=OCTA_net.sub_blocks['prediction'].groups['s_inp_exc'].target.N,
                                  matrix=weights_23_56,
                                  axis=1)
 
@@ -153,13 +166,13 @@ if __name__ == '__main__':
                 np.asarray(s_23_56.permutation) == int(i))[0][0] for i in monitor_p3.i])
 
 
-
+        duration = np.max(testbench_stim.times)
         Rasterplot(MyEventsModels=[monitor_p1],
                    MyPlotSettings=MyPlotSettings,
                    time_range=[0, duration],
                    neuron_id_range=None,
-                   title="Input spike generator",
-                   xlabel='Time (ms)',
+                   title="Input rotating bar",
+                   xlabel='Time (s)',
                    ylabel="Neuron ID",
                    backend='pyqtgraph',
                    mainfig=win,
@@ -171,12 +184,12 @@ if __name__ == '__main__':
                    MyPlotSettings=MyPlotSettings,
                    time_range=[0, duration],
                    neuron_id_range=None,
-                   title="Input spike generator",
-                   xlabel='Time (ms)',
+                   title="Spike raster plot of L2/3",
+                   xlabel='Time (s)',
                    ylabel="Neuron ID",
                    backend='pyqtgraph',
                    mainfig=win,
-                   subfig_rasterplot=p1,
+                   subfig_rasterplot=p2,
                    QtApp=app,
                    show_immediately=False)
 
@@ -184,18 +197,19 @@ if __name__ == '__main__':
                    MyPlotSettings=MyPlotSettings,
                    time_range=[0, duration],
                    neuron_id_range=None,
-                   title="Input spike generator",
-                   xlabel='Time (ms)',
+                   title="Spike raster plot of L5/6",
+                   xlabel='Time (s)',
                    ylabel="Neuron ID",
                    backend='pyqtgraph',
                    mainfig=win,
-                   subfig_rasterplot=p1,
+                   subfig_rasterplot=p3,
                    QtApp=app,
                    show_immediately=False)
 
         region.sigRegionChanged.connect(update)
         p2.sigRangeChanged.connect(updateRegion)
         p3.sigRangeChanged.connect(updateRegion)
-        region.setRegion([700, 1420])
+        region.setRegion([29.6, 30])
+        p1.setXRange(25, 30, padding=0)
 
         app.exec_()

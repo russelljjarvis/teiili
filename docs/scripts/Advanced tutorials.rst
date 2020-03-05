@@ -9,9 +9,92 @@ DVS visualizer
 
 Sequence learning
 -----------------
-
 Online Clustering of Temporal Activity (OCTA)
 ---------------------------------------------
+
+
+The ``OCTA`` network is a ``Buildingblock`` implementation of the canonical microcircuit
+found in the cortex leveraging temporal information to extract
+meaning from the input data. It consists of two two-dimensional ``WTA`` networks
+(compression and prediction) connected in a recurrent manner.
+
+It is inspired by the connectivity between the different layers of the mammalian cortex:
+every element in the teili implementation has a cortical
+counterpart for which the connectivity and function is preserved:
+
+* compression['n_proj'] : Layer 4
+* compression['n_exc'] : Layer 2/3
+* prediction['n_exc'] : Layer 5/6
+
+Given a high dimensional input in L2/3, the network extracts in the
+recurrent connections of L4 a lower dimensional representation of
+temporal dependencies by learning spatio-temporal features.
+
+.. code-block:: python
+
+  from brian2 import ms, prefs, defaultclock
+  from teili.building_blocks.octa import Octa
+  from teili.models.parameters.octa_params import wta_params, octa_params,\
+      mismatch_neuron_param, mismatch_synap_param
+  from teili import TeiliNetwork
+  from teili.models.neuron_models import OCTA_Neuron as octa_neuron
+  from teili.stimuli.testbench import OCTA_Testbench
+  from teili.tools.sorting import SortMatrix
+
+
+  prefs.codegen.target = "numpy"
+  defaultclock.dt = 0.1 * ms
+
+  #==========Define Network=========================================
+  # create the network
+  Net = TeiliNetwork()
+  OCTA_net = Octa(name='OCTA_net')
+
+  #==========Define Input=========================================
+  #Input into the Layer 4 block: compression['n_proj']
+  testbench_stim = OCTA_Testbench()
+  testbench_stim.rotating_bar(length=10, nrows=10,
+                              direction='cw',
+                              ts_offset=3, angle_step=10,
+                              noise_probability=0.2,
+                              repetitions=300,
+                              debug=False)
+
+  OCTA_net.groups['spike_gen'].set_spikes(indices=testbench_stim.indices, times=testbench_stim.times * ms)
+
+#==========Add new block to Net=========================================
+
+  Net.add(OCTA_net,
+          OCTA_net.monitors['spikemon_proj'],
+          OCTA_net.sub_blocks['compression'],
+          OCTA_net.sub_blocks['prediction'])
+
+  Net.run(np.max(testbench_stim.times) * ms,
+          report='text')
+
+To be able to visualize the compressed activity it is necessary to sort the activity in
+the compressed representation.
+
+.. code-block:: python
+
+  from teili.tools.sorting import SortMatrix
+
+  weights = cp.deepcopy(np.asarray(OCTA_net.sub_blocks['compression'].groups['s_exc_exc'].w_plast))
+  indices = cp.deepcopy(np.asarray(OCTA_net.sub_blocks['compression'].monitors['spikemon_exc'].i))
+  time = cp.deepcopy(np.asarray(OCTA_net.sub_blocks['compression'].monitors['spikemon_exc'].t))
+
+  s = SortMatrix(nrows=49, ncols=49, matrix=weights, axis=1)
+  # We use the permuted indices to sort the neuron ids
+  sorted_ind = np.asarray([np.where(np.asarray(s.permutation) == int(i))[0][0] for i in indices])
+
+  plt.figure(1)
+  plt.plot(time, sorted_ind, '.r')
+  plt.xlabel('Time')
+  plt.ylabel('Sorted spikes')
+  plt.xlim(500,700)
+  plt.title('Rasterplot compression block')
+  plt.show()
+
 
 Three-way networks
 ------------------
@@ -34,37 +117,37 @@ To use the block instantiate it and add to the ``TeiliNetwork``
     from teili.building_blocks.threeway import Threeway
     from teili.tools.three_way_kernels import A_plus_B_equals_C
     from teili import TeiliNetwork
-    
+
     prefs.codegen.target = "numpy"
     defaultclock.dt = 0.1 * ms
 
     #==========Threeway building block test=========================================
-    
+
     duration = 500 * ms
-    
+
     #===============================================================================
     # create the network
 
     exampleNet = TeiliNetwork()
-    
+
     TW = Threeway('TestTW',
                   hidden_layer_gen_func = A_plus_B_equals_C,
                   monitor=True)
-    
+
     exampleNet.add(TW)
-    
+
     #===============================================================================
-    # simulation    
+    # simulation
     # set the example input values
-    
+
     TW.set_A(0.4)
     TW.set_B(0.2)
 
     exampleNet.run(duration, report = 'text')
-    
+
     #===============================================================================
     #Visualization
-    
+
     TW_plot = TW.plot()
 
 Methods ``set_A(double)``, ``set_B(double)`` and ``set_C(double)`` send population
@@ -87,7 +170,7 @@ Make sure to change the ``DPIsyn`` model located in ``teiliApps/equations/DPIsyn
 change this line:
 
 .. code-block:: python
-   
+
    Iin{input_number}_post = I_syn * sign(weight)  : amp (summed)
 
 to

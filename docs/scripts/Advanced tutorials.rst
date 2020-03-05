@@ -156,7 +156,8 @@ population C is inferred via H, shaping in an activity bump encoding ~0.6:
 
 .. figure:: fig/threeway_tutorial.png
     :align: center
-    :height: 200px
+    :width: 800px
+    :height: 400px
     :figclass: align-center
 
     Spike raster plot of the populations A, B and C encoding the relation A = B + C.

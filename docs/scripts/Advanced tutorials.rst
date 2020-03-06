@@ -222,6 +222,7 @@ to look at the spiking activity needs a more sophisticated sub plot arrangement.
     app.exec_()
 
 The generated plot should look like this:
+
 .. figure:: fig/octa_tutorial.png
     :align: left
     :width: 800px

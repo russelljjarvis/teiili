@@ -89,8 +89,7 @@ Neuron & Synapse tutorial
 =========================
 
 We created a simple tutorial of how to simulate a small neural network either using the ``EquationBuilder``.
-The complete tutorial is located in ``teiliApps/tutorials/neuron_synapse_tutorial.py``.
-:raw-html:`<br />`
+| The complete tutorial is located in ``teiliApps/tutorials/neuron_synapse_tutorial.py``.
 
 Import relevant libraries
 -------------------------
@@ -450,10 +449,8 @@ Synaptic kernels tutorial
 
 In `teili` we provide synaptic models that modify the shape of synaptic currents, which we call kernels. Here we provide a tutorial of how to use them and how they look when applied together with a neuron model.
 The first steps are the same as in the previous tutorial.
-:raw-html:`<br />`
-The tutorial is located in ``teiliApps/tutorials/synaptic_kernels_tutorial.py``.
-:raw-html:`<br />`
-We first import all required libraries
+| The tutorial is located in ``teiliApps/tutorials/synaptic_kernels_tutorial.py``.
+| We first import all required libraries:
 
 .. code-block:: python
 

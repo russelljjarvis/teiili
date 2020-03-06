@@ -318,10 +318,21 @@ to
 Also move the following lines:
 
 .. code-block:: python
+    Iw = abs(weight) * baseweight                            : amp
+    I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn)    : amp
+    Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn) : amp
+
 
 to the ``on_pre`` key, such that it looks like:
 
 .. code-block:: python
+   
+   'on_pre': """
+        Iw = abs(weight) * baseweight                            : amp
+        I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn)    : amp
+        Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn) : amp
+        I_syn += Iw * w_plast * I_gain / (Itau_syn * ((I_gain/I_syn)+1))
+        """,
 
 
 .. attention:: If you don't change the model `GeNN` **can't** run its code generation routines as ``Subexpressions`` are not supported.

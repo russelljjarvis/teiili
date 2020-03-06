@@ -17,7 +17,7 @@ information of events, is used to extract spatio-temporal correlated
 patterns from incoming streams of events. But also to learn temporally
 structured, i.e ordered, sequences of patterns in order to perform temporal
 predictions of future inputs.
-| A single ``OCTA BuildingBlock`` consists of two two-dimensional ``WTA``
+A single ``OCTA BuildingBlock`` consists of two two-dimensional ``WTA``
 networks (compression and prediction) connected in a recurrent manner to a
 relay (projection) population.
 

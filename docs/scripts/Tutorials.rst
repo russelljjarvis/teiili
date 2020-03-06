@@ -89,7 +89,7 @@ Neuron & Synapse tutorial
 =========================
 
 We created a simple tutorial of how to simulate a small neural network either using the ``EquationBuilder``.
-| The complete tutorial is located in ``teiliApps/tutorials/neuron_synapse_tutorial.py``.
+The complete tutorial is located in ``teiliApps/tutorials/neuron_synapse_tutorial.py``.
 
 Import relevant libraries
 -------------------------
@@ -173,12 +173,9 @@ Note that parameters are set by default. This example only shows how you would n
 Example parameter dictionaries can be found ``teili/models/parameters``.
 You can change all the parameters like this after creation of the ``Neurons`` or ``Connections``.
 
-.. note:: The ``if`` condition is only there for convenience of the user to run our tutorial and switch between voltage- or current-based models. Normally, you have either current or voltage-based models in your simulation, thus you will not need the ``if`` condition.
-          q
-,
-    y, x = np.histogram(input_syn_baseweights, bins="auto")
 
-.. attention:: The ``weight`` of a given ``Connection`` is multiplied with the ``baseweight``, which is currently initialised to `7 pA` by default for the **DPI synapse model**. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3250.. code-block:: python
+
+.. code-block:: python
 
     # Example of how to set parameters, saved as a dictionary
     test_neurons1.set_params(neuron_model_param)
@@ -196,6 +193,11 @@ You can change all the parameters like this after creation of the ``Neurons`` or
             input_synapse.weight = 1.5
             test_synapse.weight = 8.0
             test_neurons1.Iconst = 3 * nA
+
+
+.. note:: The ``if`` condition is only there for convenience of the user to run our tutorial and switch between voltage- or current-based models. Normally, you have either current or voltage-based models in your simulation, thus you will not need the ``if`` condition.
+
+.. attention:: The ``weight`` of a given ``Connection`` is multiplied with the ``baseweight``, which is currently initialised to `7 pA` by default for the **DPI synapse model**. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3250.
 
 Now our simple spiking neural network is defined. In order to visualize what is happening during the simulation we need to monitor the spiking behavior of our neurons and other state variables of neurons and synapses.
 
@@ -437,20 +439,22 @@ In both cases of model definition (rather dynamic model generation or static mod
 
 .. figure:: fig/neuron_synapse_tutorial_dark.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
     :alt: alternate text
     :figclass: align-center
 
-    Simple neuron and networks dynamics. Top left) Spike raster plot of the ``SpikeGeneratorGroup``. Top right) Excitatory post-synaptic current in nA of the input synapse over time. Middle left) Membrane current of the DPI neuron in nA over time. Middle right) Excitatory post-synaptic current in nA of the synapse between neuron populations over time. Bottom left) Spike raster plot of the second neuron population. Bottom right) Membrane current of the second population in nA over time.
+    Simple neuron and networks dynamics.
+
+    Top left) Spike raster plot of the ``SpikeGeneratorGroup``. Top right) Excitatory post-synaptic current in nA of the input synapse over time. Middle left) Membrane current of the DPI neuron in nA over time. Middle right) Excitatory post-synaptic current in nA of the synapse between neuron populations over time. Bottom left) Spike raster plot of the second neuron population. Bottom right) Membrane current of the second population in nA over time.
 
 Synaptic kernels tutorial
 =========================
 
 In `teili` we provide synaptic models that modify the shape of synaptic currents, which we call kernels. Here we provide a tutorial of how to use them and how they look when applied together with a neuron model.
 The first steps are the same as in the previous tutorial.
-| The tutorial is located in ``teiliApps/tutorials/synaptic_kernels_tutorial.py``.
-| We first import all required libraries:
+The tutorial is located in ``teiliApps/tutorials/synaptic_kernels_tutorial.py``.
+We first import all required libraries:
 
 .. code-block:: python
 
@@ -730,10 +734,12 @@ The resulting figure should look like this:
 
 .. figure:: fig/synaptic_kernels_tutorial.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
     :alt: alternate text
     :figclass: align-center
+
+    Synaptic kernels.
 
     Synaptic current traces for different synaptic kernels and the resulting effect on **Iin**. Alpha (top), resonant (middle) and DPI (bottom) synaptic kernel is shown.
 

@@ -1,14 +1,6 @@
 Advanced tutorials
 ==================
 
-WTA live plot
--------------
-
-DVS visualizer
---------------
-
-Sequence learning
------------------
 Online Clustering of Temporal Activity (OCTA)
 ---------------------------------------------
 
@@ -336,6 +328,23 @@ to the ``on_pre`` key, such that it looks like:
 
 After you made the change in ``teiliApps/equations/DPIsyn.py`` you can run the ``teili2genn_tutorial.py`` located in ``teiliApps/tutorials/``.
 The ``TeiliNetwork`` is the same as in ``neuron_synapse_tutorial`` but with the specific commands to use the **genn-backend**.
+
+
+WTA live plot
+-------------
+
+.. note:: To be added by Alpha Renner.
+          
+DVS visualizer
+--------------
+
+.. note:: To be added by Alpha Renner.
+
+Sequence learning
+-----------------
+
+.. note:: To be added by Alpha Renner.
+
 
 .. _brian2genn: https://github.com/brian-team/brian2genn
 .. _Milde 2019: https://www.zora.uzh.ch/id/eprint/177970/

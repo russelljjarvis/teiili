@@ -177,7 +177,7 @@ Tags
 Each ``TeiliGroup`` has an attribute called ``_tags``. For more information please see here_ for more detailed explanation of how to set and get tags from ``Groups``.
 
 Tags should be set as the network expands and the functionality changes.
-| Tags are defined as:
+Tags are defined as:
 
 * **mismatch**: (bool) Flag to indicate if mismatch is present in the ``Group``
 * **noise**: (bool) Noise input, noise connection or noise presence
@@ -246,7 +246,7 @@ If you set the mismatch seed in the input parameters, the random samples will be
 
 at zero for the lower bound. This will prevent neuron or synapse parameters (which
 are mainly transistor currents for the DPI model) from being set to negative values. No upper bound is specified by default.
-| However, if you want to manually specify the lower bound and upper bound of the mismatch
+However, if you want to manually specify the lower bound and upper bound of the mismatch
 Gaussian distribution, you can use the method ``_add_mismatch_param()``, as shown below.
 With old_param being the current parameter value, this will draw samples from a Gaussian distribution with the following parameters:
 

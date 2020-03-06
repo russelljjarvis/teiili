@@ -444,7 +444,7 @@ In both cases of model definition (rather dynamic model generation or static mod
     :figclass: align-left
 
     Simple neuron and networks dynamics.
-    Top left) Spike raster plot of the ``SpikeGeneratorGroup``. Top right) Excitatory post-synaptic current in nA of the input synapse over time. Middle left) Membrane current of the DPI neuron in nA over time. Middle right) Excitatory post-synaptic current in nA of the synapse between neuron populations over time. Bottom left) Spike raster plot of the second neuron population. Bottom right) Membrane current of the second population in nA over time.
+    **Top left)** Spike raster plot of the ``SpikeGeneratorGroup``. **Top right)** Excitatory post-synaptic current in nA of the input synapse over time. **Middle left)** Membrane current of the DPI neuron in nA over time. **Middle right)** Excitatory post-synaptic current in nA of the synapse between neuron populations over time. **Bottom left)** Spike raster plot of the second neuron population. **Bottom right)** Membrane current of the second population in nA over time.
 
 Synaptic kernels tutorial
 =========================
@@ -734,11 +734,9 @@ The resulting figure should look like this:
     :width: 800px
     :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
     Synaptic kernels.
-
     Synaptic current traces for different synaptic kernels and the resulting effect on **Iin**. Alpha (top), resonant (middle) and DPI (bottom) synaptic kernel is shown.
 
 
@@ -947,12 +945,12 @@ The resulting figure should look like this:
 
 .. figure:: fig/wta_tutorial.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
-    Simple signal restoration behaviour of soft WTA network. The signal (shown in the bottom plot) is embededd in noise (top plot). The ``WTA`` restores the signal and effectively suppresses the noise (middle plot).
+    Simple signal restoration behaviour of soft WTA network.
+    The signal (shown in the bottom plot) is embededd in noise (top plot). The ``WTA`` restores the signal and effectively suppresses the noise (middle plot).
 
 
 STDP tutorial
@@ -1166,11 +1164,11 @@ The resulting figure should look like this:
 
 .. figure:: fig/stdp_tutorial.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
+    Effect of spike-time dependent plasticity (STDP) on synaptic weight and EPSC.
     Synaptic weight (middle) and resulting EPSC over time as a function of pre-post pairs of spikes. Homeostasis, weak and strong potentation and depression are shown.
 
 
@@ -1300,10 +1298,9 @@ The resulting figure should look like this:
 
 .. figure:: fig/stdp_kernel_tutorial.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
     Visualization of the weight update as a function of the difference between post- and pre-synaptic spike times (dw = t_post - t_pre).
 
@@ -1540,12 +1537,12 @@ and the parameter distribution across neurons.
 
 .. figure:: fig/Mismatch_NN.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
-    Effect of mismatch on neuron and synapse dynamics. Top) Input spike raster plot. Top/Middle) Output spike raster plot. Bottom/Middle) EPSC traces of different synapses. Note that the input spike time is the same but the temporal evolution, which is set by the synaptic paramters is different. Bottom) Traces of `Imem` of all neurons in th the output population. Note that due to the heterogeneity the spike timing and the temporal dyanmics differ for different neurons.
+    Effect of mismatch on neuron and synapse dynamics.
+    **Top)** Input spike raster plot. **Top/Middle)** Output spike raster plot. **Bottom/Middle)** EPSC traces of different synapses. Note that the input spike time is the same but the temporal evolution, which is set by the synaptic paramters is different. **Bottom)** Traces of `Imem` of all neurons in th the output population. Note that due to the heterogeneity the spike timing and the temporal dyanmics differ for different neurons.
 
 
 .. code-block:: python
@@ -1592,12 +1589,12 @@ ately=False)
 
 .. figure:: fig/Mismatch_distribution.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
-    Effect of mismatch on paramters. Histogram plot of baseweight (top) and refractory period (bottom) after mismatch has been applied. The mean value indicated by the yellow bar is the one specified in the parameters dictionary.
+    Effect of mismatch on paramters.
+    **Top)** Histogram plot of baseweight. **Botoom)** Refractory period after mismatch has been applied. The mean value indicated by the yellow bar is the one specified in the parameters dictionary.
 
 
 

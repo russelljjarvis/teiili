@@ -60,7 +60,7 @@ Tags
 ======================
 
 Each ``TeiliGroup`` has an attribute called ``_tags``. The idea behind the ``_tags`` are that the user can easily define a dictionary and use this dictionary to obtain all ``TeiliGroups`` which share the same ``_tags``.
-| Tags are defined as:
+Tags are defined as:
 
 * **mismatch**: (bool) Mismatch present of group
 * **noise**: (bool) Noise input, noise connection or noise presence

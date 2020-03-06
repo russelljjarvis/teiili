@@ -441,7 +441,7 @@ In both cases of model definition (rather dynamic model generation or static mod
     :width: 800px
     :align: left
     :height: 400px
-    :figclass: align-center
+    :figclass: align-left
 
     Simple neuron and networks dynamics.
 

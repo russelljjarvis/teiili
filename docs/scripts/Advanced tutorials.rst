@@ -223,11 +223,12 @@ to look at the spiking activity needs a more sophisticated sub plot arrangement.
 
 The generated plot should look like this:
 .. figure:: fig/octa_tutorial.png
-    :align: center
+    :align: left
     :width: 800px
     :height: 400px
-    :figclass: align-center
+    :figclass: align-left
 
+    Network activity of the ``OCTA BuildingBlock``.
     Spike raster plot of the relay layer (L4, top left), the compression layer (L2/3, top right) and the prediction layer (L5/6, bottom). The blue bar indicates the zoomed-in region of the spike raster plot of L2/3 and L5/6. Note that the spike raster plots are sorted according to the recurrent weight matrix of L2/3 for the L2/3 spike raster plot and according to the L2/3 to L5/6 weights in the case of the L5/6 spike raster plot. This sorting enables us to see the learned structure of the synaptic weights. In case of L2/3 we can see that the temporally structured sequence is encoded in the recurrent weight matrix. In the case of L5/6 we can see that we can preserver temporal information in recurrent connections, which then can be used to predict the input. For more information plese refer to `Milde 2019`_  populations A, B and C encoding the relation A = B + C.
 
 
@@ -290,11 +291,12 @@ coded values to respective populations. Here we send A=0.2, B=0.4 and activity i
 population C is inferred via H, shaping in an activity bump encoding ~0.6:
 
 .. figure:: fig/threeway_tutorial.png
-    :align: center
+    :align: left
     :width: 800px
     :height: 400px
-    :figclass: align-center
+    :figclass: align-left
 
+    Network activity of a ``Threeway BuildingBlock``.
     Spike raster plot of the populations A, B and C encoding the relation A = B + C.
 
 

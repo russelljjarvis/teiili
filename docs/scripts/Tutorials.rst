@@ -444,7 +444,6 @@ In both cases of model definition (rather dynamic model generation or static mod
     :figclass: align-left
 
     Simple neuron and networks dynamics.
-
     Top left) Spike raster plot of the ``SpikeGeneratorGroup``. Top right) Excitatory post-synaptic current in nA of the input synapse over time. Middle left) Membrane current of the DPI neuron in nA over time. Middle right) Excitatory post-synaptic current in nA of the synapse between neuron populations over time. Bottom left) Spike raster plot of the second neuron population. Bottom right) Membrane current of the second population in nA over time.
 
 Synaptic kernels tutorial

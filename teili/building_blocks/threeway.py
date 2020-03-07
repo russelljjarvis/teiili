@@ -95,13 +95,13 @@ class Threeway(BuildingBlock):
             synapse_eq_builder (class, optional): synapse class as imported
                                                   from models/synapse_models
             block_params (dict, optional): Parameters for neuron populations
-            num_neurons (int, optional): Size of a single neuron population
-            fraction_inh_neurons (float, optional): Set to None to skip Dale's
-                                                    priciple
+            num_input_neurons (int, optional): Sizes of input/output populations A, B and C
+            num_hidden_neurons (int, optional): Size of the hidden population H
+            hidden_layer_gen_func (class, optional): A class providing connectivity pattern
+            cutoff (int, optional): connectivity kernel cutoff of WTAs
             additional_statevars (list, optional): List of additonal
                                                    statevariables which are
                                                    not standard
-            num_inputs (int, optional): Number of input currents to R
             monitor (bool, optional): Flag to auto-generate spike and
                                       statemonitors
             debug (bool, optional): Flag to gain additional information

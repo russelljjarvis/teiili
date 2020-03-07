@@ -53,7 +53,6 @@ Please run the unit tests to check if everything is working as expected by
     python -m unittest discover unit_tests/
 
 **You are good to go**.
-:raw-html:`<br />`
 In case you want the latest stable version of `teili` you refer to our repository_
 The following steps are only required, if you need the most recent stable version/unstable developments for your simulations. If you do not require the latest version please proceed to tutorials_.
 
@@ -68,11 +67,9 @@ Install latest development version of `teili`
     git clone https://code.ini.uzh.ch/ncs/teili.git
 
 .. note:: If you have set up git properly you can use of course
-   :raw-html:`<br />`
    **git clone git@code.ini.uzh.ch:ncs/teili.git**
 
 .. note:: For the **latest development version** of `teili` please checkout the `dev` branch:
-   :raw-html:`<br />`
    **git checkout dev**.
 
 - Navigate to the parent folder containing the cloned repository or the downloaded ``tar.gz`` file and install teili using pip (make sure you activated your virtual environment).
@@ -97,7 +94,9 @@ Please run the unit tests to check if everything is working as expected by
 
 
 **You are good to go!**
-:raw-html:`<br />`
+
+.. note:: Due to `pyqtgraph` the unit tests will print warnings, as we generate and close figures to test the functionality of `teili`. These warning are normal. As longer as no ``Error`` is returned, everything is behaving as expected.
+ 
 If you want to change the location of ``teiliApps``, you can do so by moving the folder manually.
 
 The installation instructions above will install all requirements and dependencies.

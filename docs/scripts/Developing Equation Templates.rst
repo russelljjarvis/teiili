@@ -2,7 +2,7 @@ Developing Equation Templates
 =============================
 
 For using existing models please refer to our `neuron and synapse tutorials`_
-| If you need a different model or you want to test a new idea it easy to use all of `teili's` functionality with your custom model.
+If you need a different model or you want to test a new idea it easy to use all of `teili's` functionality with your custom model.
 There are two ways to test, develop and use your custom model
 
 1. Defining a static static dictionary
@@ -12,7 +12,7 @@ The first way allows you to quickly define a model inside a `.py` file as a dict
 This way you can easily debug and test your new idea with fiddling with the `EquationBuilder` class.
 You can use the `import_eq` method to import your custm model into `teili`.
 See below_ for more details of how to create your custom dictionary.
-| The second way is to define a template of your model and use the `EquationBuilder` class to dynamically build your model.
+The second way is to define a template of your model and use the `EquationBuilder` class to dynamically build your model.
 This is a bit more tricky, but has the advantage that others can potentially use your model in the future.
 The second advantage is that you might just want to add a custom learning rule or a set of additional equations to calculate some proxy values, required for learning.
 So you intend to use the existing model, but want to change it's e.g. learning dynamics.
@@ -226,7 +226,7 @@ Instead you can initialise the ``EquationBuilder``  differently, such that the S
 Internally, the different equation sets are combined depending on the provided keyword arguments and equations which have a default definition but are defined differently in a given plasticity mechanism are replaced.
 We provide a method call ``var_replacer`` which uses the '%' symbol to replace equations in the original set of equations.
 Compare e.g. the ``synapse_models``: **Alpha** and **AlphaStdp** (located in ``teili/models/synapapse_models.py``) and their respective templates (located in ``teili/models/builder/templates/synapse_templates.py``)
-| For more information see our documentation on the `equation builder`_
+For more information see our documentation on the `equation builder`_
 
 
 How to contribute and publish your custom model

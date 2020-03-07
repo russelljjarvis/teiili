@@ -60,7 +60,7 @@ Tags
 ======================
 
 Each ``TeiliGroup`` has an attribute called ``_tags``. The idea behind the ``_tags`` are that the user can easily define a dictionary and use this dictionary to obtain all ``TeiliGroups`` which share the same ``_tags``.
-| Tags are defined as:
+Tags are defined as:
 
 * **mismatch**: (bool) Mismatch present of group
 * **noise**: (bool) Noise input, noise connection or noise presence
@@ -232,7 +232,47 @@ Sequence learning
 Threeway network
 ================
 
-.. note:: To be extended by Dmitrii Zendrikov
+``Threeway`` block consists of three 1D ``WTA`` blocks and one 2D ``WTA``,
+thus no additional parameters are passed in the ``block_params`` dictionary, only the ones
+needed to configure the ``WTA``.
+
+To initialize the block provide it with the connectivity pattern in the hidden layer and the cutoff setting used for all ``WTA`` blocks:
+
+.. code-block:: python
+
+        from teili.building_blocks.threeway import Threeway
+        from teili.tools.three_way_kernels import A_plus_B_equals_C
+        TW = Threeway('TestTW',
+                      hidden_layer_gen_func = A_plus_B_equals_C,
+                      cutoff = 2,
+                      monitor=True)
+                      
+                      
+.. note:: You always have to set **monitor** to **True** to be able to use the method **get_values()** to calculate the population vectors.
+
+In addition to standard ``BuildingBlock`` arguments you can also specify these optional parameters:
+
+* **num_input_neurons** (int): Sizes of input/output populations A, B and C
+* **num_hidden_neurons** (int): Size of the hidden population H
+* **hidden_layer_gen_func** (function): A function providing connectivity pattern
+
+A list of attributes available specific to the block:
+
+* **A**, **B** and **C** (WTA): Shortcuts for input/output 1d ``WTA`` building blocks
+* **H** (WTA): A shortcut for the hidden population H implemented with a 2d ``WTA`` building block
+* **Inp_A**, **Inp_B**, **Inp_C** (PoissonGroup): Shortcuts to input spike generators
+* **value_a**, **value_b**, **value_c** (double): Population vector values decoded with **get_values()** input for A, B and C
+
+
+``Threeway`` class also implements the following methods unique to the block:
+
+* **set_A(float)**, **set_B(float)** and **set_C(float)**: Sets spiking rates of neurons of the PoissonGroup ``Inp_A``, ``Inp_B`` and ``Inp_C``, respectively, to satisfy a shape of a gaussian bump centered at 'value' between 0 and 1
+* **reset_A()**, **reset_B()** and **reset_C()**: Resets spiking rates of the neurons of the respective ``PoissonGroup`` s to zero (e.g. turns the inputs off)
+* **reset_inputs()**: turns all three inputs off
+* **get_values(ms)**: Extracts and updates encoded values of A, B and C from the spiking rates of the corresponding populations. Must be called to get the numerical results
+* **plot()**: calls a preconfigured instance of the ``Visualizer`` to plot the raster for populations A, B and C
+
+
 
 Online Clustering of Temporal Activity (OCTA)
 =============================================

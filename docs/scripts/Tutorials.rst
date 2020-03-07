@@ -90,7 +90,6 @@ Neuron & Synapse tutorial
 
 We created a simple tutorial of how to simulate a small neural network either using the ``EquationBuilder``.
 The complete tutorial is located in ``teiliApps/tutorials/neuron_synapse_tutorial.py``.
-:raw-html:`<br />`
 
 Import relevant libraries
 -------------------------
@@ -174,12 +173,9 @@ Note that parameters are set by default. This example only shows how you would n
 Example parameter dictionaries can be found ``teili/models/parameters``.
 You can change all the parameters like this after creation of the ``Neurons`` or ``Connections``.
 
-.. note:: The ``if`` condition is only there for convenience of the user to run our tutorial and switch between voltage- or current-based models. Normally, you have either current or voltage-based models in your simulation, thus you will not need the ``if`` condition.
-          q
-,
-    y, x = np.histogram(input_syn_baseweights, bins="auto")
 
-.. attention:: The ``weight`` of a given ``Connection`` is multiplied with the ``baseweight``, which is currently initialised to `7 pA` by default for the **DPI synapse model**. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3250.. code-block:: python
+
+.. code-block:: python
 
     # Example of how to set parameters, saved as a dictionary
     test_neurons1.set_params(neuron_model_param)
@@ -197,6 +193,11 @@ You can change all the parameters like this after creation of the ``Neurons`` or
             input_synapse.weight = 1.5
             test_synapse.weight = 8.0
             test_neurons1.Iconst = 3 * nA
+
+
+.. note:: The ``if`` condition is only there for convenience of the user to run our tutorial and switch between voltage- or current-based models. Normally, you have either current or voltage-based models in your simulation, thus you will not need the ``if`` condition.
+
+.. attention:: The ``weight`` of a given ``Connection`` is multiplied with the ``baseweight``, which is currently initialised to `7 pA` by default for the **DPI synapse model**. In order to elicit an output spike in response to a single ``SpikeGenerator`` input spike the weight must be greater than 3250.
 
 Now our simple spiking neural network is defined. In order to visualize what is happening during the simulation we need to monitor the spiking behavior of our neurons and other state variables of neurons and synapses.
 
@@ -438,22 +439,20 @@ In both cases of model definition (rather dynamic model generation or static mod
 
 .. figure:: fig/neuron_synapse_tutorial_dark.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
-    Simple neuron and networks dynamics. Top left) Spike raster plot of the ``SpikeGeneratorGroup``. Top right) Excitatory post-synaptic current in nA of the input synapse over time. Middle left) Membrane current of the DPI neuron in nA over time. Middle right) Excitatory post-synaptic current in nA of the synapse between neuron populations over time. Bottom left) Spike raster plot of the second neuron population. Bottom right) Membrane current of the second population in nA over time.
+    Simple neuron and networks dynamics.
+    **Top left)** Spike raster plot of the ``SpikeGeneratorGroup``. **Top right)** Excitatory post-synaptic current in nA of the input synapse over time. **Middle left)** Membrane current of the DPI neuron in nA over time. **Middle right)** Excitatory post-synaptic current in nA of the synapse between neuron populations over time. **Bottom left)** Spike raster plot of the second neuron population. **Bottom right)** Membrane current of the second population in nA over time.
 
 Synaptic kernels tutorial
 =========================
 
 In `teili` we provide synaptic models that modify the shape of synaptic currents, which we call kernels. Here we provide a tutorial of how to use them and how they look when applied together with a neuron model.
 The first steps are the same as in the previous tutorial.
-:raw-html:`<br />`
 The tutorial is located in ``teiliApps/tutorials/synaptic_kernels_tutorial.py``.
-:raw-html:`<br />`
-We first import all required libraries
+We first import all required libraries:
 
 .. code-block:: python
 
@@ -733,11 +732,11 @@ The resulting figure should look like this:
 
 .. figure:: fig/synaptic_kernels_tutorial.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
+    Synaptic kernels.
     Synaptic current traces for different synaptic kernels and the resulting effect on **Iin**. Alpha (top), resonant (middle) and DPI (bottom) synaptic kernel is shown.
 
 
@@ -946,12 +945,12 @@ The resulting figure should look like this:
 
 .. figure:: fig/wta_tutorial.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
-    Simple signal restoration behaviour of soft WTA network. The signal (shown in the bottom plot) is embededd in noise (top plot). The ``WTA`` restores the signal and effectively suppresses the noise (middle plot).
+    Simple signal restoration behaviour of soft WTA network.
+    The signal (shown in the bottom plot) is embededd in noise (top plot). The ``WTA`` restores the signal and effectively suppresses the noise (middle plot).
 
 
 STDP tutorial
@@ -1165,11 +1164,11 @@ The resulting figure should look like this:
 
 .. figure:: fig/stdp_tutorial.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
+    Effect of spike-time dependent plasticity (STDP) on synaptic weight and EPSC.
     Synaptic weight (middle) and resulting EPSC over time as a function of pre-post pairs of spikes. Homeostasis, weak and strong potentation and depression are shown.
 
 
@@ -1299,10 +1298,9 @@ The resulting figure should look like this:
 
 .. figure:: fig/stdp_kernel_tutorial.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
     Visualization of the weight update as a function of the difference between post- and pre-synaptic spike times (dw = t_post - t_pre).
 
@@ -1539,12 +1537,12 @@ and the parameter distribution across neurons.
 
 .. figure:: fig/Mismatch_NN.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
-    Effect of mismatch on neuron and synapse dynamics. Top) Input spike raster plot. Top/Middle) Output spike raster plot. Bottom/Middle) EPSC traces of different synapses. Note that the input spike time is the same but the temporal evolution, which is set by the synaptic paramters is different. Bottom) Traces of `Imem` of all neurons in th the output population. Note that due to the heterogeneity the spike timing and the temporal dyanmics differ for different neurons.
+    Effect of mismatch on neuron and synapse dynamics.
+    **Top)** Input spike raster plot. **Top/Middle)** Output spike raster plot. **Bottom/Middle)** EPSC traces of different synapses. Note that the input spike time is the same but the temporal evolution, which is set by the synaptic paramters is different. **Bottom)** Traces of `Imem` of all neurons in th the output population. Note that due to the heterogeneity the spike timing and the temporal dyanmics differ for different neurons.
 
 
 .. code-block:: python
@@ -1591,12 +1589,12 @@ ately=False)
 
 .. figure:: fig/Mismatch_distribution.png
     :width: 800px
-    :align: center
+    :align: left
     :height: 400px
-    :alt: alternate text
-    :figclass: align-center
+    :figclass: align-left
 
-    Effect of mismatch on paramters. Histogram plot of baseweight (top) and refractory period (bottom) after mismatch has been applied. The mean value indicated by the yellow bar is the one specified in the parameters dictionary.
+    Effect of mismatch on paramters.
+    **Top)** Histogram plot of baseweight. **Botoom)** Refractory period after mismatch has been applied. The mean value indicated by the yellow bar is the one specified in the parameters dictionary.
 
 
 

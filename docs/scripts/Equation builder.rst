@@ -72,8 +72,8 @@ Equations that do not fit into the existing synaptic modes:  *current*, **conduc
 Dictionary structure
 ====================
 
-| Both ``EquationBuilders`` a dictionary attribute, the keys of which represent the keywords necessary to generate a neuron or synapse model in order to simulate it using `brian2`.
-| The keywords given to the EquationBuilder class are used to select template dictionaries which are combined.
+Both ``EquationBuilders`` a dictionary attribute, the keys of which represent the keywords necessary to generate a neuron or synapse model in order to simulate it using `brian2`.
+The keywords given to the EquationBuilder class are used to select template dictionaries which are combined.
 This is done by passing these keywords to ``current_equation_sets`` and ``current_parameters`` in the case of neurons and to ``modes``, ``kernels``, ``plasticity_models`` and ``current_parameters``
 in the case of synapses.
 

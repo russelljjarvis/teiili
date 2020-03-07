@@ -32,7 +32,9 @@ def deactivate_standalone():
     set_device('runtime')
 
 
-def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True, do_compile=True, verbose=True):
+def build_cpp_and_replace(standalone_params,
+                          standalone_dir=os.path.join(os.path.expanduser("~"), "Brian2Standalone"),
+                          clean=True, do_compile=True, verbose=True):
     """Builds cpp standalone network and replaces variables/parameters with standalone_params
     This does string replacement in the generated c++ code.
 
@@ -48,6 +50,7 @@ def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True
     prefs['codegen.cpp.extra_compile_args_msvc'].append('/std:c++14')
     prefs['codegen.cpp.headers'].append('<string>')
     # prefs['codegen.cpp.extra_compile_args_gcc'].append('-std=c++11')
+    device.build_options['directory'] = standalone_dir
     device.build(compile=False, run=False, directory=standalone_dir, clean=clean, debug=False)
 
     end = time.time()
@@ -56,7 +59,8 @@ def build_cpp_and_replace(standalone_params, standalone_dir='output', clean=True
     # ===============================================================================
     # Code that needs to be added to the main.cpp file
 
-    maincppPath = os.path.join(os.getcwd(), standalone_dir, 'main.cpp')  # this should always be the correct path
+    maincppPath = os.path.join(os.getcwd(), standalone_dir,
+                               'main.cpp')  # this should always be the correct path
     replace_vars = [key for key in standalone_params]
     replace_variables_in_cpp_code(replace_vars, replace_file_location=maincppPath, verbose=verbose)
     # ===============================================================================
@@ -121,13 +125,15 @@ def replace_variables_in_cpp_code(replace_vars, replace_file_location, verbose=T
                 keepFirstPart = line.split('=', 1)[0]
                 f.write(keepFirstPart + '= ' + rvar + '_p;\n')
                 print("replaced array " + rvar + " in line " + str(i_line))
-                replaceTODOlist = [elem for elem in replaceTODOlist if not elem == rvar]  # check element in todolist
+                replaceTODOlist = [elem for elem in replaceTODOlist if
+                                   not elem == rvar]  # check element in todolist
             if rvar + "[0]" in line:  # for scalar (shared) variables
                 replaced = True
                 keepFirstPart = line.split('=', 1)[0]
                 f.write(keepFirstPart + '= ' + rvar + '_p;\n')
                 print("replaced scalar " + rvar + " in line " + str(i_line))
-                replaceTODOlist = [elem for elem in replaceTODOlist if not elem == rvar]  # check element in todolist
+                replaceTODOlist = [elem for elem in replaceTODOlist if
+                                   not elem == rvar]  # check element in todolist
         if ('.run(' in line) and ("duration" in replace_vars):
             replaced = True
             keepNetworkName = line.split('.', 1)[0]  # this is actually the same as net.name

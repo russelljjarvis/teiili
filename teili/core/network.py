@@ -152,8 +152,13 @@ class TeiliNetwork(Network):
                 if standalone_params is None:
                     standalone_params = self.standalone_params
 
-                build_cpp_and_replace(standalone_params, get_device(
-                ).build_options['directory'], clean=clean, verbose=verbose)
+                try:
+                    directory = get_device().build_options['directory']
+                except KeyError:
+                    directory = os.path.join(os.path.expanduser("~"), "Brian2Standalone")
+
+                build_cpp_and_replace(standalone_params, standalone_dir=directory,
+                                      clean=clean, verbose=verbose)
             else:
                 print("""Network was not recompiled, standalone_params are changed,
                       but Network structure is not!

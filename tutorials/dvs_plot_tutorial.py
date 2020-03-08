@@ -5,12 +5,19 @@ Created on Wed Mar 14 15:43:12 2018
 
 @author: alpha
 """
+import sys
 from brian2 import us, ms
 from teili.tools.plotter2d import Plotter2d
 from teili.tools.converter import aedat2numpy
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
-app = QtGui.QApplication([])
+
+app = QtGui.QApplication.instance()
+if app is None:
+    app = QtGui.QApplication(sys.argv)
+else:
+    print('QApplication instance already exists: %s' % str(app))
+
 
 import tkinter as tk
 from tkinter import filedialog
@@ -53,6 +60,7 @@ imv2.play(50)
 imv3.play(50)
 imv4.play(50)
 
+app.exec()
 #spmon2d_Cam1.plot_panes(num_panes=40, filtersize=100 * ms, num_rows=4, filename=None)
 
 # please provide an absolute path, otherwise dvs.gif will be stored in your wd!

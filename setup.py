@@ -93,16 +93,23 @@ class PostDevelopCommand(develop):
             os.system('cp {}* {}'.format(source_path, target_path))
         develop.run(self)
 
+# The directory containing this file
+HERE = pathlib.Path(__file__).parent
+
+# The text of the README file
+README = (HERE / "README.md").read_text()
 
 setup(
     name="teili",
     version="1.0",
-    author="Moritz Milde",
-    author_email="mmilde@ini.uzh.ch",
+    author="Moritz B. Milde, Alpha Renner, Karla Burelo, Nicoletta Risi, Matteo Cartiglia, Dmitrii Zendirkov, Vanessa Leite, Adrian M. Whatley",
+    author_email="m.milde@westernsydney.edu.au",
     description=("This toolbox was developed to provide computational  "
                  "neuroscientists and neuromorphic engineers with a "
                  "playground for implementing neural algorithms which "
                  "are simulated using Brian 2."),
+    long_description=README,
+    long_description_content_type="text/markdown",
     license="MIT",
     keywords="Neural algorithms, building blocks, Spiking Neural Networks",
     url="https://code.ini.uzh.ch/ncs/teili",
@@ -149,6 +156,7 @@ setup(
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX",
-        "Programming Language :: Python3",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
     ],
 )

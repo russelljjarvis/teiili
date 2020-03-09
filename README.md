@@ -15,22 +15,23 @@ This toolbox was developed to provide computational neuroscientists and neuromor
 Please report issues via the gitlab [issue tracker](https://code.ini.uzh.ch/ncs/teili/issues). You can find the documentation [here](https://teili.readthedocs.io/en/latest/).
 
 
-By providing some pre-defined neural algorithms and an intuitive way to combine different aspects of those algorithms, e.g. plasticity, connectivity etc, we try to shorten the development time required to implement novel neural algorithms.
-Furthermore, by providing an easy and modular way to construct those algorithms from the basic building blocks of computaton, e.g. neurons and synapses, we aim to reduce the gap between software simulation and hardware emulation.
+By providing pre-defined neural algorithms, a contributing guide to create novel neural algorithms and an intuitive way to combine different aspects of those neural algorithms, e.g. plasticity, connectivity etc, we try to shorten the development time required to test and implement novel neural algorithms and hierarchically assemble them.
+Furthermore, by providing an easy and modular way to construct those algorithms from the basic building blocks of computaton, e.g. neurons, synapses and EI-networks, we aim to promote the development of reproducible computational models and networks thereof. 
+Additionally we aim to reduce the gap between software simulation and specific hardware emulation/implementation by an easy way to switch neuron/synapse models in a highly complex building block of a developed neural algorithm.
 
 ## Getting Started
 
 This toolbox is still in its alpha phase, so if you want to use it, follow the install instructions below.
 Please also contact the main contributors with feedback.
 
-Please look at the examples here: `/teiliApps/tutorials/` after successfully installing **teili** and our [Documentation](https://teili.readthedocs.io/en/latest/)
+Please look at the examples here: `~/teiliApps/tutorials/` after successfully installing **teili** and our [Documentation](https://teili.readthedocs.io/en/latest/)
 
 ### Installation
 
 * Create a virtual environment using [conda](https://conda.io/docs/user-guide/install/index.html)
     ``` bash
     # Replace myenv with the desired name for your virtual environment
-    conda create --name myenv python=3.5
+    conda create --name myenv python=3.7
     ```
   If you want to use a specific version, as needed e.g. to use [CTXLCTL](http://ai-ctx.gitlab.io/ctxctl/index.html) add the particular python version to the conda environment
    ``` bash
@@ -50,7 +51,7 @@ Please look at the examples here: `/teiliApps/tutorials/` after successfully ins
 
 *  If you want to work with the latest version of **teili** clone the [repository](https://code.ini.uzh.ch/ncs/teili) or [download](https://code.ini.uzh.ch/ncs/teili) the tar.gz file<br />
     ``` bash
-    git clone git@code.ini.uzh.ch:ncs/teili.git
+    git clone https://code.ini.uzh.ch/ncs/teili.git
     ```
 *  Navigate to the parent folder containing the cloned repository or the downloaded `tar.gz` file
     ```
@@ -66,6 +67,7 @@ Please look at the examples here: `/teiliApps/tutorials/` after successfully ins
     The `setup.py` will by default create a folder in your home directory called `teiliApps`.
     This folder contains a selection of neuron and synapse models, example scripts, as well as unit tests.
     Please run the unit tests to check if everything is working as expected by:
+
     ``` bash
     cd ~/teiliApps/
     python -m unittest discover unit_tests/
@@ -73,32 +75,12 @@ Please look at the examples here: `/teiliApps/tutorials/` after successfully ins
 
     You are good to go!<br />
 
-### Alternative installation **NOT RECOMMENDED**
-    If, however, you want to install all dependencies separately you can run the following commands **NOT RECOMMENDED**:
-    
-    ```bash
-    git clone git@code.ini.uzh.ch:ncs/teili.git
-    sudo apt install python3 python3-pip, python3-matplotlib python3-setuptools cython
-    pip3 install brian2 sparse seaborn h5py numpy scipy pyqtgraph pyqt5 easydict
-    ```
-    
-    if you did **not** use the setup.py you need to update your `$PYTHONPATH`:
-
-    You can add the following line to your `~/.bashrc` <sup>1</sup>:
-    
-    ```bash
-    export PYTHONPATH=$PYTHONPATH:"/path/to/parent_folder/of/teili"
-    ```
-
-
-<sup>1</sup> or type it on the terminal window that you are using.
-
-We would recommend using iPython with spyder or Jupyter.
+We would recommend using [iPython](https://pypi.org/project/ipython/) with [Spyder](https://www.spyder-ide.org/) or[Jupyter](https://pypi.org/project/jupyter/) as IDE, but any other editior/IDE is fine as well.
 
 You probably need to use Linux if you want to use standalone code generation,
 otherwise, Windows and Mac OSX works fine.
 
-### Usage
+## Basic usage
 
 ``` python
 from brian2 import ms
@@ -120,7 +102,7 @@ Synapse1 = Connections(Neuron1, Neuron1,
 ```
 For a more detailed explanation have a look at our [Tutorial](https://teili.readthedocs.io/en/latest/scripts/Tutorials.html)
 
-## Examples
+### Tutorials
 Please look at the [Neuron & Synapse tutorial](https://teili.readthedocs.io/en/latest/scripts/Tutorials.html#neuron-synapse-tutorial), which is located in `~/teiliApps/tutorial/`.
 You can also use them to test your installation.
 To run an example and test if eveything is working, run the following command
@@ -131,7 +113,7 @@ python3 neuron_synapse_test.py
 ```
 The output should look like this
 
-<img src="docs/scripts/fig/neuron_synapse_test.png" width="550" height="300">
+<img src="docs/scripts/fig/neuron_synapse_test.png" width="800" height="400">
 
 For more examples and use cases have look at our [Documentation](https://teili.readthedocs.io/en/latest/index.html)
 
@@ -147,7 +129,7 @@ Simulation is not going as expected?
 
 
 ## Authors
-See [docs/scripts/Contributors.md](https://teili.readthedocs.io/en/latest/scripts/Contributors.html) for a list of the authors.
+See here for a [list of the authors](https://teili.readthedocs.io/en/latest/scripts/Contributors.html).
 
 
 ## License

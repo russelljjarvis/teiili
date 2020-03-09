@@ -9,7 +9,7 @@
 This is a tutorial example used to learn how the different synaptic kernels behave and 
 how to set them in your network
 """
-
+import sys
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
@@ -149,9 +149,9 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron1, ('t', 'Iin'))],
          MyPlotSettings=MyPlotSettings,
          x_range=(0, duration),
          y_range=None,
-         title='Neuron response',
+         title="Neuron's input response",
          xlabel='Time (s)',
-         ylabel='Membrane current I_mem (A)',
+         ylabel='Iin (A)',
          backend='pyqtgraph',
          mainfig=win,
          subfig=p2,
@@ -185,9 +185,9 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron2, ('t', 'Iin'))],
          MyPlotSettings=MyPlotSettings,
          x_range=(0, duration),
          y_range=None,
-         title='Neuron response',
+         title="Neuron's input response",
          xlabel='Time (s)',
-         ylabel='Membrane current I_mem (A)',
+         ylabel='Iin (A)',
          backend='pyqtgraph',
          mainfig=win,
          subfig=p4,
@@ -222,9 +222,9 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron3, ('t', 'Iin'))],
          MyPlotSettings=MyPlotSettings,
          x_range=(0, duration),
          y_range=None,
-         title='Neuron response',
+         title="Neuron's input response",
          xlabel='Time (s)',
-         ylabel='Membrane current I_mem (A)',
+         ylabel='Iin (A)',
          backend='pyqtgraph',
          mainfig=win,
          subfig=p6,

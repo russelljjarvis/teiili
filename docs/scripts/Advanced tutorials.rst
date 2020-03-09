@@ -347,17 +347,80 @@ The ``TeiliNetwork`` is the same as in ``neuron_synapse_tutorial`` but with the 
 WTA live plot
 -------------
 
-.. note:: To be added by Alpha Renner.
-          
+The point of this tutorial is to demonstrate the live plot and parameter gui. They are imported as follows:
+.. code-block:: python
+
+    from teili.tools.live import ParameterGUI, PlotGUI
+
+We can add a live plot by instantiating a PlotGUI as follows:
+.. code-block:: python
+
+    plot_gui = PlotGUI(data=neuron_group.statevariable)
+
+Currently this only supports plotting a statevariable of a neuron or synapse group or subgroup with a line plot.
+
+The parameter GUI is instantiated as follows:
+.. code-block:: python
+
+    param_gui = ParameterGUI(net=Net)
+    param_gui.add_params(parameters=[synapse_group.weight, neuron_group.state_variable])
+    param_gui.show_gui()
+
+Make sure, you specify the state variables that you change in the GUI as (shared), so that they are the same for the whole group.
+Or, as shown here in the tutorial, you can also just add a new state variable and copy over the value (or do other things with it) in a run_regularly:
+
+.. code-block:: python
+
+    syn_in_ex.add_state_variable('guiweight', unit=1, shared=True, constant=False, changeInStandalone=False)
+    syn_in_ex.guiweight = 400
+    syn_in_ex.run_regularly("weight = guiweight", dt=1 * ms)
+
+
+.. figure:: fig/screenshot_wta_live_tutorial.png
+    :align: left
+    :width: 800px
+    :height: 400px
+    :figclass: align-left
+
+    Screenshot of the plot window and GUI of the wta_live_tutorial. The plot shows a bump that moves and the parameters can be adjusted in the GUI having an immediate effect on the simulation.
+
+
+.. note:: The brian2 simulator is not made for real time plotting. This currently only works with numpy code generation and timestep length can vary.
+
 DVS visualizer
 --------------
+The point of this tutorial is to demonstrate how you can use the Plotter2d class to make a plot of 2d neural activity or DVS recordings.
+In this tutorials, you are asked to provide a path for 2 .aedat or .npz files that are then plotted next to each other.
 
-.. note:: To be added by Alpha Renner.
+.. figure:: fig/screenshot_dvs_visualizer.png
+    :align: left
+    :width: 800px
+    :height: 400px
+    :figclass: align-left
 
-Sequence learning
------------------
+    On the left side, the on and off events of the two loaded DVS files are shown.
+    On the right side, a (temporally) filtered version of the dvs events is shown.
+    We use ``QtGui.QGridLayout`` to arrange the ImageViews that we get from the Plotter in a grid.
 
-.. note:: To be added by Alpha Renner.
+Sequence learning standalone
+----------------------------
+The point of this tutorial is to demonstrate the c++ standalone codegeneration and replacing of parameters in the c++ code so we can run the same compiled standalone program several times with different parameters.
+The tutorial reimplements the sequence learning architecture described by Kreiser et al. 2018 (https://www.frontiersin.org/articles/10.3389/fnins.2018.00717/full).
+
+After the standalone_params (that can be passed to the compiled program) are defined, the network is built:
+.. code-block:: python
+
+    seq_net.standalone_params = standalone_params
+    seq_net.build()
+
+Then it can be run several times with different parameters (without recompiling) and the results can be plotted in between.
+
+.. code-block:: python
+
+    seq_net.run(duration * second, standaloneParams=standalone_params)
+
+This can be used if you have networks that you need to run very often with different parameters in a loop.
+
 
 
 .. _brian2genn: https://github.com/brian-team/brian2genn

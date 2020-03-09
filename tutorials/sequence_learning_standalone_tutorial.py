@@ -16,15 +16,13 @@ import numpy as np
 import os
 from collections import OrderedDict
 
-from brian2 import ms, mV, pA, nS, nA, pF, us, volt, second, Network, prefs, SpikeGeneratorGroup, NeuronGroup, \
-    Synapses, SpikeMonitor, StateMonitor, figure, plot, show, xlabel, ylabel, \
-    seed, xlim, ylim, subplot, network_operation, set_device, device, TimedArray, \
-    defaultclock, profiling_summary, codegen, size, pamp, pfarad, msecond
+from brian2 import ms, us, second, prefs, set_device, defaultclock, size, msecond
 
 from teili.building_blocks.sequence_learning import SequenceLearning
 
 from teili import NeuronEquationBuilder, SynapseEquationBuilder
 from teili.core.network import TeiliNetwork
+from teili.tools.cpptools import activate_standalone
 
 neuron_model = NeuronEquationBuilder.import_eq('ExpAdaptIF', num_inputs=1)
 synapse_model = SynapseEquationBuilder.import_eq('ReversalSynV')
@@ -32,13 +30,7 @@ synapse_model = SynapseEquationBuilder.import_eq('ReversalSynV')
 standalone_dir = os.path.expanduser('~/SL_standalone')
 prefs.codegen.target = 'numpy'
 
-try:
-    seq_net.hasRun
-    print('Network has been built already, rebuild it...')
-    device.reinit()
-    device.activate(directory=standalone_dir, build_on_run=False)
-except:
-    set_device('cpp_standalone', directory=standalone_dir, build_on_run=False)
+activate_standalone(directory=standalone_dir, build_on_run=False)
 
 prefs.devices.cpp_standalone.openmp_threads = 4
 prefs.devices.cpp_standalone.extra_make_args_unix = ["-j$(nproc)"]

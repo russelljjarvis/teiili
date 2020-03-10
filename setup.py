@@ -5,6 +5,7 @@
 from setuptools import setup
 from setuptools.command.install import install
 from setuptools.command.develop import develop
+import pathlib
 from pathlib import Path
 import os
 

@@ -44,6 +44,9 @@ See an example for how to import model classes defined in ``models.neuron_models
                                equation_builder=syn_model,
                                name="test_synapse")
 
+.. note:: The ``Neurons`` class a ``num_inputs`` property. This allows the user to define how many different afferent connections this particular neuron population has to expect. The default is set to 1. Do not define more inputs than you expect.
+
+
 Working with the static model import method
 -------------------------------------------
 

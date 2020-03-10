@@ -48,6 +48,8 @@ The keywords used in the example and the values are explained below:
 Custom keywords (such as gain_modulation or activity_modulation) can be added by defining a custom equation template in ``teili/models/builder/templates/neuron_templates.py`` and adding the keyword to either the ``current_equation_sets`` or to the ``voltage_equation_sets`` dictionary.
 When defining a new neuron model, import the new feature by passing the newly constructed keyword to the ``NeuronEquationBuilder``.
 
+.. note:: The ``Neurons`` class a ``num_inputs`` property. This allows the user to define how many different afferent connections this particular neuron population has to expect. The default is set to 1. Do not define more inputs than you expect. See below for how to use this property.
+
 SynapseEquationBuilder keywords
 -------------------------------
 

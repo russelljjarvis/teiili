@@ -116,7 +116,7 @@ setup(
     url="https://code.ini.uzh.ch/ncs/teili",
     install_requires=[
         'setuptools>=39.2.0',
-        'numpy>=1.14.5',
+        'numpy>=1.15.1',
         'seaborn>=0.8.1',
         'sparse>=0.3.0',
         'Brian2==2.2.2.1',

@@ -45,7 +45,7 @@ For installing the latest stable release run the following command
 
 
 The first command will install `teili` and all its dependencies.
-The second command generates a ``teilieApps`` directory in your home folder.
+The second command generates a ``teiliApps`` directory in your home folder.
 This folder contains a selection of neuron and synapse models, tutorials, as well as unit tests.
 Please run the unit tests to check if everything is working as expected by
 

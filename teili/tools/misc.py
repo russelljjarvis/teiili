@@ -5,7 +5,8 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 11:54:09
 
-from brian2 import implementation, check_units, ms, mean, diff, declare_types
+from brian2 import implementation, check_units, ms, declare_types
+import numpy as np
 
 
 # This function is a workaround to allow if statements in run_regularly code.
@@ -52,16 +53,16 @@ def print_states(briangroup):
             should be printed
     """
     states = briangroup.get_states()
-    print ('\n')
-    print ('-_-_-_-_-_-_-_')
+    print('\n')
+    print('-_-_-_-_-_-_-_')
     print(briangroup.name)
     print('list of states and first value:')
     for key in states.keys():
         if states[key].size > 1:
-            print (key, states[key][1])
+            print(key, states[key][1])
         else:
-            print (key, states[key])
-    print ('----------')
+            print(key, states[key])
+    print('----------')
 
 
 def spikemon2firing_rate(spikemon, start_time=0 * ms, end_time="max"):
@@ -87,4 +88,4 @@ def spikemon2firing_rate(spikemon, start_time=0 * ms, end_time="max"):
     spiketimes = spiketimes / 1000
     if len(spiketimes) == 0:
         return 0
-    return(mean(1 / diff(spiketimes)))
+    return (np.mean(1 / np.diff(spiketimes)))

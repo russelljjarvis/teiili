@@ -18,7 +18,7 @@ Example:
             print('QApplication instance already exists: %s' % str(app))
 
     >>> testbench = OCTA_Testbench()
-    >>> testbench.rotating_bar(length=10, nrows=10, orientation='vertical', ts_offset=3,
+    >>> testbench.rotating_bar(length=10, nrows=10, direction='ccw', ts_offset=3,
                            angle_step=10, noise_probability=0.2, repetitions=90, debug=False)
 
     In order to visualize it:
@@ -51,8 +51,6 @@ import numpy as np
 import os
 import sys
 import operator
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
 
 
 class STDP_Testbench():
@@ -107,6 +105,68 @@ class STDP_Testbench():
         t_post_strongLTD = t_pre_strongLTD - 1  # post neurons spikes 1 ms before pre
         t_post_homoeotasis_2 = t_pre_homoeotasis_2 + \
             np.clip(np.random.randn(len(t_pre_homoeotasis_2)), -1, 1)
+
+        t_post = np.hstack((t_post_homoeotasis_1, t_post_weakLTP, t_post_weakLTD,
+                            t_post_strongLTP, t_post_strongLTD, t_post_homoeotasis_2))
+        ind_pre = np.zeros(len(t_pre))
+        ind_post = np.zeros(len(t_post))
+
+        pre = SpikeGeneratorGroup(
+            self.N, indices=ind_pre, times=t_pre * ms, name='gPre')
+        post = SpikeGeneratorGroup(
+            self.N, indices=ind_post, times=t_post * ms, name='gPost')
+        return pre, post
+
+
+class STDGM_Testbench():
+    """This class provides a stimulus to test your
+    spike-timing dependent gain modulation algorithm.
+    """
+
+    def __init__(self, N=1, stimulus_length=1200):
+        """Initializes the testbench class.
+
+        Args:
+            N (int, optional): Size of the pre and post neuronal population.
+            stimulus_length (int, optional): Length of stimuli in ms.
+        """
+        self.N = N  # Number of Neurons per input group
+        self.stimulus_length = stimulus_length
+
+    def stimuli(self, isi):
+        """Stimulus gneration for STDGM protocols.
+
+        This function returns two brian2 objects.
+        Both are Spikegeneratorgroups which hold a single index each
+        and varying spike times.
+        The protocol follows homoeostasis, weak LTP, weak LTD, strong LTP,
+        strong LTD, homoeostasis.
+
+        Args:
+            isi (int, optional): Interspike Interval. How many spikes per stimulus phase.
+
+        Returns:
+            SpikeGeneratorGroup (brian2.obj: Brian2 objects which hold the spiketimes and
+                the respective neuron indices.
+        """
+        t_pre_homoeotasis_1 = np.arange(20, 222, isi)
+        t_pre_weakLTP = np.arange(301, 502, isi)
+        t_pre_weakLTD = np.arange(601, 802, isi)
+        t_pre_strongLTP = np.arange(901, 1102, isi)
+        t_pre_strongLTD = np.arange(1201, 1402, isi)
+        t_pre_homoeotasis_2 = np.arange(1501, 1702, isi)
+        t_pre = np.hstack((t_pre_homoeotasis_1, t_pre_weakLTP, t_pre_weakLTD,
+                           t_pre_strongLTP, t_pre_strongLTD, t_pre_homoeotasis_2))
+
+        # Normal distributed shift of spike times to ensure homoeotasis
+        t_post_homoeotasis_1 = t_pre_homoeotasis_1 + \
+            np.random.randint(-20, 20, len(t_pre_homoeotasis_1))
+        t_post_weakLTP = t_pre_weakLTP + 7   # post neuron spikes 7 ms after pre
+        t_post_weakLTD = t_pre_weakLTD - 7   # post neuron spikes 7 ms before pre
+        t_post_strongLTP = t_pre_strongLTP + 1  # post neurons spikes 1 ms after pre
+        t_post_strongLTD = t_pre_strongLTD - 1  # post neurons spikes 1 ms before pre
+        t_post_homoeotasis_2 = t_pre_homoeotasis_2 + \
+            np.random.randint(-20, 20, len(t_pre_homoeotasis_2))
 
         t_post = np.hstack((t_post_homoeotasis_1, t_post_weakLTP, t_post_weakLTD,
                             t_post_strongLTP, t_post_strongLTD, t_post_homoeotasis_2))
@@ -191,7 +251,7 @@ class OCTA_Testbench():
         else:
             return int(x + 0.5)
 
-    def rotating_bar(self, length=10, nrows=10, ncols=None, orientation='vertical', ts_offset=10,
+    def rotating_bar(self, length=10, nrows=10, ncols=None, direction='ccw', ts_offset=10,
                      angle_step=10, artifical_stimulus=True, rec_path=None, save_path=None,
                      noise_probability=None, repetitions=1, debug=False):
         """This function returns a single SpikeGeneratorGroup (Brian object).
@@ -244,9 +304,11 @@ class OCTA_Testbench():
             center = (nrows / 2, ncols / 2)
             self.angles = np.arange(-np.pi / 2, np.pi *
                                     3 / 2, np.radians(angle_step))
+            if direction == 'cw':
+                self.angles = np.flip(self.angles, axis=0)
             for repetition in range(repetitions):
                 if repetition_offset != 0:
-                    repetition_offset += 10
+                    repetition_offset += ts_offset
                 for i, cAngle in enumerate(self.angles):
                     endy_1 = center[1] + ((length / 2.)
                                           * np.sin((np.pi / 2 + cAngle)))
@@ -280,7 +342,8 @@ class OCTA_Testbench():
                         pol.append(1)
                         if noise_probability is not None and noise_probability >= np.random.rand():
                             noise_index = np.random.randint(0, num_neurons)
-                            noise_x, noise_y = ind2xy(noise_index, nrows, ncols)
+                            noise_x, noise_y = ind2xy(
+                                noise_index, nrows, ncols)
                             if (noise_x, noise_y) not in list_of_coord:
                                 # print(noise_x, noise_y)
                                 # print(list_of_coord)
@@ -296,9 +359,6 @@ class OCTA_Testbench():
             self.events[1, :] = np.asarray(y_coord)
             self.events[2, :] = np.asarray(self.times)
             self.events[3, :] = np.asarray(pol)
-            if save_path is None:
-                save_path = os.path.join(os.getcwd(), '')
-            np.save(save_path + 'events.npy', self.events)
         if debug:
             print("Max X: {}. Max Y: {}".format(
                 np.max(self.events[0, :]), np.max(self.events[1, :])))
@@ -407,7 +467,8 @@ class OCTA_Testbench():
                 self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
                 self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
-                                      np.asarray(self.events[1, :], dtype='int'),
+                                      np.asarray(
+                                          self.events[1, :], dtype='int'),
                                       nrows, ncols)
                 print(np.max(self.indices), np.min(self.indices))
             nPixel = np.int(np.max(self.indices))
@@ -538,7 +599,8 @@ class OCTA_Testbench():
                 self.indices, self.times = dvs2ind(self.events, scale=False)
             else:
                 self.indices = xy2ind(np.asarray(self.events[0, :], dtype='int'),
-                                      np.asarray(self.events[1, :], dtype='int'),
+                                      np.asarray(
+                                          self.events[1, :], dtype='int'),
                                       nrows, ncols)
             nPixel = np.int(np.max(self.indices))
             gInpGroup = SpikeGeneratorGroup(
@@ -611,10 +673,10 @@ class WTA_Testbench():
         self.times = np.arange(start_time, end_time + 1, isi)
         if dimensions == 1:
             self.indices = np.round(np.linspace(
-                0, num_neurons, len(self.times)))
+                0, num_neurons - 1, len(self.times)))
         elif dimensions == 2:
             self.indices = np.round(np.linspace(
-                0, num_neurons, len(self.times))) + (num_neurons**2 / 2)
+                0, num_neurons - 1, len(self.times))) + (num_neurons**2 / 2)
         else:
             raise NotImplementedError("only 1 and 2 d WTA available, sorry")
 

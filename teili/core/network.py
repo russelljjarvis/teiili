@@ -18,12 +18,12 @@ import pprint
 
 from brian2 import Network, second, device, get_device, ms, all_devices
 from brian2 import SpikeMonitor, StateMonitor, NeuronGroup, Synapses, Quantity
-from teili.tools.cpptools import build_cpp_and_replace,\
+from teili.tools.cpptools import build_cpp_and_replace, \
     print_dict, params2run_args
 from teili.building_blocks.building_block import BuildingBlock
 
 
-class teiliNetwork(Network):
+class TeiliNetwork(Network):
     """This is a subclass of brian2.Network.
 
     This subclass does the same thing plus some additional methods for
@@ -37,44 +37,8 @@ class teiliNetwork(Network):
     """
     has_run = False
 
-    @property
-    def spikemonitors(self):
-        """A spike monitor wrapper.
-
-        Returns:
-            dict: A dictionary of all spike monitors (e.g. for looping over them)
-        """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == SpikeMonitor}
-
-    @property
-    def statemonitors(self):
-        """A state monitor wrapper.
-
-        Returns:
-            dict: A dictionary of all statemonitors (e.g. for looping over them)
-        """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == StateMonitor}
-
-    @property
-    def neurongroups(self):
-        """A NeuronGroup wrapper.
-
-        Returns:
-            dict: A dictionary of all neurongroups (e.g. for looping over them)
-        """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == NeuronGroup}
-
-    @property
-    def synapses(self):
-        """A Synapses wrapper.
-
-        Returns:
-            dict: A dictionary of all synapses (e.g. for looping over them).
-        """
-        return {att.name: att for att in self.__dict__['objects'] if type(att) == Synapses}
-
     def __init__(self, *objs, **kwds):
-        """Summary
+        """All parameters are passed to the Brian2 network.
 
         Args:
             *objs: Description
@@ -83,9 +47,46 @@ class teiliNetwork(Network):
         self.blocks = []
         self.standalone_params = OrderedDict()
         self.standalone_params['duration'] = 0 * ms
+        self.thread = None
 
-        # Network.__init__(self, *objs, **kwds)
-        Network.__init__(self)
+        Network.__init__(self, *objs, **kwds)
+        # Network.__init__(self)
+
+    @property
+    def spikemonitors(self):
+        """property to conveniently get all spikemonitors in the network
+
+        Returns:
+            dict: A dictionary of all spike monitors (e.g. for looping over them)
+        """
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att, SpikeMonitor)}
+
+    @property
+    def statemonitors(self):
+        """property to conveniently get all statemonitors in the network
+
+        Returns:
+            dict: A dictionary of all statemonitors (e.g. for looping over them)
+        """
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att, StateMonitor)}
+
+    @property
+    def neurongroups(self):
+        """property to conveniently get all neurongroups in the network
+
+        Returns:
+            dict: A dictionary of all neurongroups (e.g. for looping over them)
+        """
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att, NeuronGroup)}
+
+    @property
+    def synapses(self):
+        """property to conveniently get all synapses in the network
+
+        Returns:
+            dict: A dictionary of all synapses (e.g. for looping over them).
+        """
+        return {att.name: att for att in self.__dict__['objects'] if isinstance(att, Synapses)}
 
     def add_standalone_params(self, **params):
         """Function to a add standalone parameter to the standaloneParam dict.
@@ -123,7 +124,7 @@ class teiliNetwork(Network):
 
     def build(self, report="stdout", report_period=10 * second,
               namespace=None, profile=True, level=0, recompile=False,
-              standalone_params=None, clean=True):
+              standalone_params=None, clean=True, verbose=True):
         """Building the network.
 
         Args:
@@ -141,27 +142,32 @@ class teiliNetwork(Network):
             clean (bool, optional): Flag to clean-up standalone directory.
         """
         if get_device() == all_devices['cpp_standalone']:
-            if recompile or not teiliNetwork.has_run:
+            if recompile or not TeiliNetwork.has_run:
 
                 print('building network...')
                 Network.run(self, duration=0 * ms, report=report, report_period=report_period,
                             namespace=namespace, profile=profile, level=level + 1)
-                teiliNetwork.has_run = True
+                TeiliNetwork.has_run = True
 
                 if standalone_params is None:
                     standalone_params = self.standalone_params
 
-                build_cpp_and_replace(standalone_params, get_device(
-                ).build_options['directory'], clean=clean)
+                try:
+                    directory = get_device().build_options['directory']
+                except KeyError:
+                    directory = os.path.join(os.path.expanduser("~"), "Brian2Standalone")
+
+                build_cpp_and_replace(standalone_params, standalone_dir=directory,
+                                      clean=clean, verbose=verbose)
             else:
                 print("""Network was not recompiled, standalone_params are changed,
                       but Network structure is not!
                       This might lead to unexpected behavior.""")
         else:
-            print('Network was compiled; as you have not set the device to \
-                  cpp_standalone, you can still run() it using numpy code generation.')
+            print('Network was not compiled (net.build was ignored), as you have not set the device to \
+                  cpp_standalone. You can still run() it using numpy code generation.')
 
-    def run(self, duration=None, standalone_params=dict(), **kwargs):
+    def run(self, duration=None, standalone_params=dict(), verbose=True, **kwargs):
         """Wrapper function to simulate a network for the given duration.
 
         Parameters which should be changeable, especially after cpp compilation, need to
@@ -171,6 +177,9 @@ class teiliNetwork(Network):
             duration (brain2.unit, optional): Simulation time in s, i.e. 1000 * ms.
             standalone_params (dict, optional): Dictionary whose keys refer to parameters
                 which should be changeable in cpp standalone mode.
+            verbose (bool, optional) : set to False if you don't want the prints, it is set to True
+                by default, as there are things that can go wrong during string replacement etc. so it is
+                better to have a look manually.
             **kwargs (optional): Additional keyword arguments.
         """
         # kwargs are if you want to use the StandaloneNetwork as a simple brian2
@@ -191,23 +200,25 @@ class teiliNetwork(Network):
 
             if duration is not None:
                 standalone_params['duration'] = duration
-
-            startSim = time.time()
+            if verbose:
+                start_sim = time.time()
+                print_dict(standalone_params)
             # run simulation
-            print_dict(standalone_params)
             run_args = params2run_args(standalone_params)
             directory = os.path.abspath(
                 get_device().build_options['directory'])
             if not os.path.isdir(directory):
                 os.mkdir(directory)
-            print('standalone files are written to: ', directory)
+            if verbose:
+                print('standalone files are written to: ', directory)
 
             device.run(directory=directory,
                        with_output=True, run_args=run_args)
 
-            end = time.time()
-            print('simulation in c++ took ' + str(end - startSim) + ' sec')
-            print('simulation done!')
+            if verbose:
+                end = time.time()
+                print('simulation in c++ took ' + str(end - start_sim) + ' sec')
+                print('simulation done!')
 
         else:
             if duration is not None:

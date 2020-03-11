@@ -84,7 +84,7 @@ class Chain(BuildingBlock):
     def __init__(self, name, neuron_eq_builder=ExpAdaptIF,
                  synapse_eq_builder=ReversalSynV,
                  block_params=chain_params,
-                 num_inputs=1, debug=False):
+                 num_inputs=1, verbose=False):
         """Summary
 
         Args:
@@ -93,7 +93,7 @@ class Chain(BuildingBlock):
             synapse_eq_builder (teili.models.builder obj, optional): Synapse equation builder object.
             block_params (dict, optional): Dictionary of parameters such as synChaCha1e_weight or gChaGroup_refP.
             num_inputs (int, optional): Number of inputs from different source populations.
-            debug (bool, optional): Debug flag.
+            verbose (bool, optional): Debug flag.
         """
         self.num_chains = block_params['num_chains']
         self.num_neurons_per_chain = block_params['num_neurons_per_chain']
@@ -102,7 +102,7 @@ class Chain(BuildingBlock):
         self.gChaGroup_refP = block_params['gChaGroup_refP']
 
         BuildingBlock.__init__(self, name, neuron_eq_builder, synapse_eq_builder,
-                               block_params, debug)
+                               block_params, verbose)
 
         self.Groups, self.Monitors,\
             self.standalone_params = gen_chain(name,

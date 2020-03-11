@@ -91,7 +91,7 @@ class SequenceLearning(BuildingBlock):
                  neuron_eq_builder=ExpAdaptIF,
                  synapse_eq_builder=ReversalSynV,
                  block_params=sl_params, num_elements=3, num_neurons_per_group=6,
-                 num_inputs=1, debug=False):
+                 num_inputs=1, verbose=False):
         """Summary
 
         Args:
@@ -102,31 +102,31 @@ class SequenceLearning(BuildingBlock):
             num_elements (int, optional): Number of elements in the sequence.
             num_neurons_per_group (int, optional): Number of neurons used to remember each item.
             num_inputs (int, optional): Number of inputs from different source populations.
-            debug (bool, optional): Debug flag.
+            verbose (bool, optional): Debug flag.
         """
         BuildingBlock.__init__(self, name, neuron_eq_builder, synapse_eq_builder,
-                               block_params, debug)
+                               block_params, verbose)
 
-        self.Groups, self.Monitors,\
+        self._groups, self.monitors,\
             self.standalone_params = gen_sequence_learning(name,
-                                                        neuron_eq_builder=neuron_eq_builder,
-                                                        synapse_eq_builder=synapse_eq_builder,
-                                                        num_elements=num_elements,
-                                                        num_neurons_per_group=num_neurons_per_group,
-                                                        num_inputs=num_inputs,
-                                                        debug=debug, **block_params)
-        self.group = self.Groups['gOrdGroups']
-        self.input_group = self.Groups['gInputGroup']
-        self.cos_group = self.Groups['gCoSGroup']
-        self.reset_group = self.Groups['gResetGroup']
+                                                           neuron_eq_builder=neuron_eq_builder,
+                                                           synapse_eq_builder=synapse_eq_builder,
+                                                           num_elements=num_elements,
+                                                           num_neurons_per_group=num_neurons_per_group,
+                                                           num_inputs=num_inputs,
+                                                           verbose=verbose, **block_params)
+        self.group = self.groups['gOrdGroups']
+        self.input_group = self.groups['gInputGroup']
+        self.cos_group = self.groups['gCoSGroup']
+        self.reset_group = self.groups['gResetGroup']
 
-    def plot(self):
+    def plot(self, duration = None):
         """Simple plot for sequence learning network.
 
         Returns:
             pyqtgraph window: The window containing the plot.
         """
-        return plot_sequence_learning(self.Monitors)
+        return plot_sequence_learning(self.monitors, duration)
 
 
 def gen_sequence_learning(groupname='Seq',
@@ -146,7 +146,7 @@ def gen_sequence_learning(groupname='Seq',
                         gOrdGroups_refP=1.7 * ms,
                         gMemGroups_refP=2.3 * ms,
                         num_inputs=1,
-                        debug=False):
+                        verbose=False):
     """Create Sequence Learning Network after the model from Sandamirskaya and Schoener (2010).
 
     Args:
@@ -332,7 +332,7 @@ def gen_sequence_learning(groupname='Seq',
     return Groups, Monitors, standalone_params
 
 
-def plot_sequence_learning(Monitors):
+def plot_sequence_learning(Monitors, duration=None):
     """A simple matplotlib wrapper function to plot network activity.
 
     Args:
@@ -347,7 +347,8 @@ def plot_sequence_learning(Monitors):
     spikemonInp = Monitors['spikemonInp']
     spikemonCoS = Monitors['spikemonCoS']
     spikemonReset = Monitors['spikemonReset']
-    duration = max(spikemonOrd.t) + 10 * ms
+    if duration is None:
+        duration = max(spikemonOrd.t) + 10 * ms
     print('plot...')
     fig = figure(figsize=(8, 12))
     title('sequence learning')

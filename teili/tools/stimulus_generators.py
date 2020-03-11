@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # @Author: Alpha Renner
 # @Date:   2018-06-05 09:12:40
-# @Last Modified by:   Moritz Milde
-# @Last Modified time: 2018-06-05 09:38:25
 
 """
+The idea is to generate inputs based on a function.
+This avoids having to read large datafiles and makes generation of input easier.
+
 How to use them:
-TBA
+See example below.
 
 """
 
@@ -40,7 +41,7 @@ class StimulusSpikeGenerator(TeiliGroup, PoissonGroup):
 
     The first 2 args of any pattern function must always be the x/y coordinates
 
-    any user provided distance function has to have the brian2 decorators and take the following arguments:
+    Any user provided distance function has to have the brian2 decorators and take the following arguments:
     i, j, nrows, ncols (i and j are 1d indices in the 2d array)
 
     please have a look at the example of a moving gaussian below (if __name__ == '__main__':)
@@ -142,6 +143,10 @@ if __name__ == '__main__':
     nrows = 80
     ncols = 80
 
+    # Create a moving Gaussian with increasing sigma
+    # the update that happens every dt is given in the trajectory_eq
+    # the center coordinates move 5 to the right and 2 upwards every dt
+    # the sigma is increased by 0.1 in both directions every dt
     trajectory_eq = '''
                     mu_x = (mu_x + 5)%nrows
                     mu_y = (mu_y + 2)%nrows

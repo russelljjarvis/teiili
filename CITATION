@@ -5,7 +5,7 @@ To cite teili in publications, please use:
 A BibTeX entry for LaTeX users is
 
 @misc{teili,
-author		= {Moritz Milde and Alpha Renner and Renate Krause and Adrian Maurice Whatley and Sergio Solinas and Dmitrii Zendrikov and Nicoletta Risi and Marco Rasetto and Karla Burelo and Vanessa Rodrigues Coelho Leite},
+author		= {Moritz Milde and Alpha Renner and Renate Krause and Adrian Maurice Whatley and Sergio Solinas and Dmitrii Zendrikov and Nicoletta Risi and Marco Rasetto and Karla Burelo and Vanessa Rodrigues Coelho Leite and Germain Haessig},
 title		= {teili: A toolbox for building and testing neural algorithms and computational primitives using spiking neurons},
 year		= {2018},
 note		= {Unreleased software, Institute of Neuroinformatics, University of Zurich and ETH Zurich}

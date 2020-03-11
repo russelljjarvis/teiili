@@ -1,5 +1,6 @@
 # OS specific files
 .DS_Store
+*~
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -49,6 +50,13 @@ coverage.xml
 *,cover
 .hypothesis/
 
+# Pickle files
+*.pkl
+
+# numpy files
+*.npy
+*.npz
+
 # Translations
 *.mo
 *.pot
@@ -93,11 +101,14 @@ ENV/
 # Rope project settings
 .ropeproject
 
+# PyCharm project settings
+.idea/
 
 # eclipse project files
 .project
 .pydevproject
 .settings/
+
 
 *.png
 *.jpg
@@ -105,3 +116,5 @@ ENV/
 *.svg
 
 teili/models/equations/
+.vscode
+core

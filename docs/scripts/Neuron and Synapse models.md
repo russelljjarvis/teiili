@@ -1,5 +1,0 @@
-# Models
-
-## Neurons
-
-## Connections

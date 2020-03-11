@@ -116,9 +116,11 @@ def dist2d2dfloat(ix, iy, jx, jy):
 # this is not consistent with the other functions as this assumes normalized x and y coordinates
 @implementation('cpp', '''
     float torus_dist2d2dfloat(float ix_cpp, float iy_cpp, float jx_cpp, float jy_cpp) {
-
-    float dx = min( min(abs(ix_cpp - jx_cpp), abs(ix_cpp - jx_cpp + 1)), abs(ix_cpp - jx_cpp - 1));
-    float dy = min( min(abs(iy_cpp - jy_cpp), abs(iy_cpp - jy_cpp + 1)), abs(iy_cpp - jy_cpp - 1));
+    float xdiff = ix_cpp - jx_cpp;
+    float ydiff = iy_cpp - jy_cpp;
+    float one = 1.0;
+    float dx = min( min(abs(xdiff), abs(xdiff + one)), abs(xdiff - one));
+    float dy = min( min(abs(ydiff), abs(ydiff + one)), abs(ydiff - one));
 
     return sqrt(pow(dx,2) + pow(dy,2));
     }
@@ -138,6 +140,44 @@ def torus_dist2d2dfloat(ix, iy, jx, jy):
     Returns:
         float: Distance in 2D field with periodic boundary conditions.
     """
-    dx = min(abs(ix - jx), abs(ix - jx + 1), abs(ix - jx - 1))
-    dy = min(abs(iy - jy), abs(iy - jy + 1), abs(iy - jy - 1))
+    xdiff = ix - jx
+    ydiff = iy - jy
+    dx = np.minimum(np.minimum(abs(xdiff), abs(xdiff + 1.0)), abs(xdiff - 1.0))
+    dy = np.minimum(np.minimum(abs(ydiff), abs(ydiff + 1.0)), abs(ydiff - 1.0))
     return np.sqrt(dx**2 + dy**2)
+
+
+# this is not consistent with the other functions as this assumes normalized x and y coordinates
+@implementation('cpp', '''
+    float torus_dist2d2dfloat(float ix_cpp, float iy_cpp, float jx_cpp, float jy_cpp) {
+
+    float dx = min( min(abs(ix_cpp - jx_cpp), abs(ix_cpp - jx_cpp + 1.0)), abs(ix_cpp - jx_cpp - 1.0));
+    float dy = min( min(abs(iy_cpp - jy_cpp), abs(iy_cpp - jy_cpp + 1.0)), abs(iy_cpp - jy_cpp - 1.0));
+
+    return sqrt(pow(dx,2) + pow(dy,2));
+    }
+     ''')
+@declare_types(ix='float', iy='float', jx='float', jy='float', result='float')
+@check_units(ix=1, iy=1, jx=1, jy=1, result=1)
+def torus_dist2d2dfloat_backup(ix, iy, jx, jy):
+    """Function that calculates distance in torus (field with periodic boundary conditions),
+    !!! assuming that width and length are 1.
+
+    Args:
+        ix (float, required): x component of 2D source neuron coordinate.
+        iy (float, required): y component of 2D source neuron coordinate.
+        jx (float, required): x component of 2D target neuron coordinate.
+        jy (float, required): y component of 2D target neuron coordinate.
+
+    Returns:
+        float: Distance in 2D field with periodic boundary conditions.
+    """
+    xdiff = ix - jx
+    ydiff = iy - jy
+    dx = np.minimum(np.minimum(abs(xdiff), abs(xdiff + 1.0)), abs(xdiff - 1.0))
+    dy = np.minimum(np.minimum(abs(ydiff), abs(ydiff + 1.0)), abs(ydiff - 1.0))
+    return np.sqrt(dx**2 + dy**2)
+
+
+def circle_dist1d(x,y,N):
+    return np.min([np.abs(x-y),np.abs(x-y+N),np.abs(x-y-N)])

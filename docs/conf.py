@@ -41,13 +41,13 @@ MOCK_MODULES = [
 # -- Project information -----------------------------------------------------
 
 project = 'teili'
-copyright = '2018, Moritz Milde'
-author = 'Moritz Milde'
+copyright = '2018, Moritz Milde, Alpha Renner'
+author = 'Moritz Milde, Alpha Renner, Renate Krause, Adrian Whatley, Nicoletta Risi, Matteo Cartiglia, Dmitrii Zendirkov, Karla Burelo, Vanessa Leite'
 
 # The short X.Y version
-version = '0.2'
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = '1'
+release = 'Alpha'
 
 
 # -- General configuration ---------------------------------------------------
@@ -125,6 +125,8 @@ html_logo = 'scripts/fig/logo.svg'
 html_theme_options = {
     'logo_only': True,
     'display_version': True,
+    'sticky_navigation': False,
+    # 'codebgcolor': '#5F9EA0',
 }
 
 
@@ -137,7 +139,7 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['static']
+html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -194,7 +196,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'teili.tex', 'teili Documentation',
-     'Moritz Milde', 'manual'),
+     'Moritz Milde\\ Alpha Renner\\ Renate Krause\\ Matteo Cartiglia\\ Dmitrii Zenkov\\ Karla Burelo\\ Vanessa Leite\\ Adrian Whatley', 'manual'),
 ]
 
 
@@ -215,7 +217,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'teili', 'teili Documentation',
-     author, 'teili', 'One line description of project.',
+     author, 'teili', 'Modular Framework for Hierarchical Neural Building Block Development.',
      'Miscellaneous'),
 ]
 

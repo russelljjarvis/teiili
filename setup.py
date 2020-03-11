@@ -103,7 +103,7 @@ README = (HERE / "README.md").read_text()
 setup(
     name="teili",
     version="1.0.0",
-    author="Moritz B. Milde, Alpha Renner, Karla Burelo, Nicoletta Risi, Matteo Cartiglia, Dmitrii Zendirkov, Vanessa Leite, Adrian M. Whatley",
+    author="Moritz B. Milde",
     author_email="m.milde@westernsydney.edu.au",
     description=("This toolbox was developed to provide computational  "
                  "neuroscientists and neuromorphic engineers with a "
@@ -150,10 +150,9 @@ setup(
 
 
     classifiers=[
-        "Development Status :: 5 - Production/Stable - ",
+        "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: MIT License",
-        "Intended Audience :: Computational neuroscientists",
-        "Intended Audience :: Neuromorphic engineers",
+        "Intended Audience :: Science/Research",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX",

@@ -150,7 +150,7 @@ setup(
 
 
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: MIT License",
         "Intended Audience :: Computational neuroscientists",
         "Intended Audience :: Neuromorphic engineers",

@@ -47,21 +47,21 @@ The ``setup.py`` will by default create a folder in your home directory called `
 This folder contains a selection of neuron and synapse models, tutorials, as well as unit tests.
 Please run the unit tests to check if everything is working as expected by
 
-.. attention:: |Running the ``unit_tests`` will output a lot of ``Warnings`` to your terminal. This, however, does not mean that the ``unit_tests`` failed as we need to generate and kill test plots. As long as the last line states: |**-----------------------------------------------------------
-|Ran 78 tests in 93.373s
-| 
-|OK**
-|Everything is ok.
-
 .. code-block:: bash
 
     cd ~/teiliApps
     python -m unittest discover unit_tests/
 
+.. attention:: Running the ``unit_tests`` will output a lot of ``Warnings`` to your terminal. This, however, does not mean that the ``unit_tests`` failed as we need to generate and kill test plots. As long as the last line states:
+   **-----------------------------------------------------------**
+   **Ran 78 tests in 93.373s
+   **OK**
+   Everything is ok.
+
 **You are good to go**.
 
-.. note:: If you find yourself seeing an warning as shown below consider updating pyqtgraph to the current development version using **pip install git+https://github.com/pyqtgraph/pyqtgraph@develop**
-
+.. note:: If you find yourself seeing an warning as shown below consider updating pyqtgraph to the current development version using
+   **pip install git+https://github.com/pyqtgraph/pyqtgraph@develop**
 
 .. code-block:: bash
 

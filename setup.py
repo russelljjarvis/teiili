@@ -111,7 +111,6 @@ setup(
                  "are simulated using Brian 2."),
     long_description=README,
     long_description_content_type="text/markdown",
-    include_package_data=True,
     license="MIT",
     keywords="Neural algorithms, building blocks, Spiking Neural Networks",
     url="https://code.ini.uzh.ch/ncs/teili",

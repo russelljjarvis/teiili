@@ -111,10 +111,6 @@ To run an example and test if eveything is working, run the following command
 cd ~/teiliApps/examples/
 python3 neuron_synapse_test.py
 ```
-The output should look like this
-
-<img src="docs/scripts/fig/neuron_synapse_test.png" width="800" height="400">
-
 For more examples and use cases have look at our [Documentation](https://teili.readthedocs.io/en/latest/index.html)
 
 

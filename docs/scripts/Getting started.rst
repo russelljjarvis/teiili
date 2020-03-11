@@ -120,7 +120,7 @@ If you want to change the location of ``teiliApps``, you can do so by moving the
 
 The installation instructions above will install all requirements and dependencies.
 It will also build pre-defined neuron and synapse models and place them in ``teiliApps/equations/``.
-Make sure you checkout our ** tutorials_ **
+Make sure you checkout our tutorials_.
 
 Re-building models after installation
 =====================================

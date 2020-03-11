@@ -41,9 +41,11 @@ For installing the latest stable release run the following command
 .. code-block:: bash
 
    pip install teili
+   python -m teili.tools.generate_teiliApps
 
 
-The ``setup.py`` will by default create a folder in your home directory called ``teiliApps``.
+The first command will install `teili` and all its dependencies.
+The second command generates a ``teilieApps`` directory in your home folder.
 This folder contains a selection of neuron and synapse models, tutorials, as well as unit tests.
 Please run the unit tests to check if everything is working as expected by
 
@@ -99,7 +101,7 @@ Install latest development version of `teili`
     # or point pip to the downloaded tar.gz file
     pip install teili*.tar.gz
 
-.. note:: Note that the *path* provided in the install command needs to point to the folder which contains the **setup.py** file.
+.. note:: Note that the *path* provided in the install command needs to point to the folder which contains the **setup.py** file. When using the source files the ``teiliApps`` directory is generated automically.
 
 The ``setup.py`` will by default create a folder in your home directory called ``teiliApps``.
 This folder contains a selection of neuron and synapse models, tutorials, as well as unit tests.

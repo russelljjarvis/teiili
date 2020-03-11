@@ -102,7 +102,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="teili",
-    version="0.9.2",
+    version="1.0.0",
     author="Moritz B. Milde",
     author_email="m.milde@westernsydney.edu.au",
     description=("This toolbox was developed to provide computational  "

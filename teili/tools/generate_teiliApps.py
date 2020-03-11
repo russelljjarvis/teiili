@@ -6,7 +6,7 @@ from teili.models import neuron_models, synapse_models
 def generate_user_directory():
     path = os.path.expanduser("~")
     current_file_path = os.path.dirname(os.path.abspath(__file__))
-    teili_home = Path(current_file_path).parent.parent
+    teili_home = Path(current_file_path).parent
 
     equation_path = os.path.join(path, "teiliApps", "equations")
 

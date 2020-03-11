@@ -102,7 +102,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="teili",
-    version="1.0.0",
+    version="0.9.2",
     author="Moritz B. Milde",
     author_email="m.milde@westernsydney.edu.au",
     description=("This toolbox was developed to provide computational  "
@@ -111,6 +111,7 @@ setup(
                  "are simulated using Brian 2."),
     long_description=README,
     long_description_content_type="text/markdown",
+    include_package_data=True,
     license="MIT",
     keywords="Neural algorithms, building blocks, Spiking Neural Networks",
     url="https://code.ini.uzh.ch/ncs/teili",
@@ -146,6 +147,8 @@ setup(
         'teili.tools.visualizer.DataControllers',
         'teili.tools.visualizer.DataModels',
         'teili.tools.visualizer.DataViewers',
+        'tutorials',
+        'tests',
     ],
 
 

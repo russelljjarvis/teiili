@@ -48,6 +48,10 @@ Please look at the examples here: `~/teiliApps/tutorials/` after successfully in
     ```
     pip install teili
     ```
+*  To get all tutorials, unit tests and statically defined neuron and synapse models please run (simply inside your terminal)
+    ```
+    python -m teili.tools.generate_teiliApps
+    ```
 
 *  If you want to work with the latest version of **teili** clone the [repository](https://code.ini.uzh.ch/ncs/teili) or [download](https://code.ini.uzh.ch/ncs/teili) the tar.gz file<br />
     ``` bash
@@ -64,7 +68,7 @@ Please look at the examples here: `~/teiliApps/tutorials/` after successfully in
     # or point pip to the downloaded tar.gz file
     pip install teili*.tar.gz
     ```
-    The `setup.py` will by default create a folder in your home directory called `teiliApps`.
+    The `setup.py` will by default create a folder in your home directory called `teiliApps` (if you use the source files teiliApps will be automocally generated. In case of the stable release from pypi.org you need to manually call the function to generate teiliApps as described above).
     This folder contains a selection of neuron and synapse models, example scripts, as well as unit tests.
     Please run the unit tests to check if everything is working. As we test also plotting functionality of teili we generate and kill plotting windows which causes warnings.
 
@@ -73,7 +77,7 @@ Please look at the examples here: `~/teiliApps/tutorials/` after successfully in
     python -m unittest discover unit_tests/
     ```
 
-If you run the aboive command and the last line states ``Ran 78 tests in 93.373 OK``, everything is good. You are good to go!<br />
+If you run the above command and the last line states ``Ran 78 tests in 93.373 OK``, everything is good. You are good to go!<br />
 
 We would recommend using [iPython](https://pypi.org/project/ipython/) with [Spyder](https://www.spyder-ide.org/) or[Jupyter](https://pypi.org/project/jupyter/) as IDE, but any other editior/IDE is fine as well.
 

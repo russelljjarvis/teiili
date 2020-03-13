@@ -363,7 +363,7 @@ You need to declare two set of parameters for every block:
 alpha_kernel = {
     'model': """
         %kernel = s/tausyn  : {unit} * second **-1
-        ds/dt = -s/tausyn   : amp
+        ds/dt = -s/tausyn   : amp (clock-driven)
 
         tausyn_rise : second
         """,
@@ -388,7 +388,7 @@ alpha_params_conductance = {
 resonant_kernel = {
     'model': """
         %kernel  = s * omega : {unit} * second **-1
-        ds/dt = -s/tausyn - I_syn*omega : amp
+        ds/dt = -s/tausyn - I_syn*omega : amp (clock-driven)
 
         omega: 1/second
         tausyn_kernel : second

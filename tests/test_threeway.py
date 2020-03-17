@@ -14,6 +14,13 @@ from brian2 import prefs
 
 prefs.codegen.target = "numpy"
 #TODO: test plotting;
+try:
+    from PyQt5 import QtGui
+    import pyqtgraph as pg
+    QtApp = QtGui.QApplication([])
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = False
+except BaseException:
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = True
 
 
 class TestThreeway(unittest.TestCase):

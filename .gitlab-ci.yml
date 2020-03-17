@@ -18,11 +18,12 @@ before_script:
   - dpkg-reconfigure --frontend noninteractive tzdata
 
   # installing miniconda
-  - cd ~/Downloads/
+  - cd /tmp
   - wget -O miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p /opt/miniconda3
   - export PATH=$PATH:/opt/miniconda3/bin
+
   # Setting up test environments
   # - conda env create -q -n test_environment python=$TRAVIS_PYTHON_VERSION --file environment.yml
   - conda create -n test_environment python=3.7 
@@ -64,4 +65,5 @@ after_script:
   - coverage report
   - coveralls
   - rm -r /opt/miniconda3/
-  - rm ~/Downloads/miniconda.sh
+  - rm /tmp/miniconda.sh
+  - rm -rf ~/teiliApps/

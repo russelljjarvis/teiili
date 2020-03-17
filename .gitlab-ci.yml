@@ -18,14 +18,15 @@ before_script:
   - dpkg-reconfigure --frontend noninteractive tzdata
 
   # installing miniconda
+  - cd ~/Downloads/
   - wget -O miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
   - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-
+  - ./miniconda.sh -b -p /opt/miniconda3
+  - export PATH=$PATH:/opt/miniconda3/bin
   # Setting up test environments
   # - conda env create -q -n test_environment python=$TRAVIS_PYTHON_VERSION --file environment.yml
-  - conda env create -q -n test_environment python=3.7 
-  - source activate test_environment
+  - conda create -n test_environment python=3.7 
+  - conda activate test_environment
   - pip install --upgrade pip
   - pip install coverage coveralls flake8
   - pip install . 
@@ -60,5 +61,7 @@ unit-test-deploy:
 
 # generate a coverage report to send to back to user
 after_script:
-    - coverage report
-    - coveralls
+  - coverage report
+  - coveralls
+  - rm -r /opt/miniconda3/
+  - rm ~/Downloads/miniconda.sh

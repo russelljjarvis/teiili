@@ -1,16 +1,27 @@
+import os
+import sys
 import unittest
+from contextlib import contextmanager
 
 import numpy as np
-
 from brian2 import us, ms, prefs, defaultclock, start_scope, SpikeGeneratorGroup, SpikeMonitor, StateMonitor
-
-from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
+from teili.core.groups import Neurons, Connections
 from teili.models.neuron_models import DPI
-from teili.models.synapse_models import DPISyn
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
-
+from teili.models.synapse_models import DPISyn
 from teili.tools.visualizer.DataModels import StateVariablesModel
+
+
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
 
 
 def run_teili_network():
@@ -122,11 +133,12 @@ class TestDataModel(unittest.TestCase):
         state_variables = [np.random.random((num_neurons, num_timesteps)), np.random.random((num_neurons, num_timesteps))]
         state_variables_times = [np.linspace(0, 100, num_timesteps), np.linspace(0, 100, num_timesteps)]
 
-        with self.assertRaises(Exception) as context:
-            SVM = StateVariablesModel(
-                state_variable_names,
-                state_variables,
-                state_variables_times)
+        with suppress_stdout():
+            with self.assertRaises(Exception) as context:
+                SVM = StateVariablesModel(
+                    state_variable_names,
+                    state_variables,
+                    state_variables_times)
 
 
     def test_StateVariablesModelfrombrianstatemonitors(self):
@@ -149,10 +161,10 @@ class TestDataModel(unittest.TestCase):
         self.assertTrue(SVM.Iahp.shape[1] == len(statemonN2.record))
 
         # statemonN1 & statemonN2_2 store the a variable called 'Imem'
-        with self.assertRaises(Exception) as context:
-            SVM = StateVariablesModel.from_brian_state_monitors(
-                [statemonN1, statemonN2_2], skip_not_rec_neuron_ids=False)
-
+        with suppress_stdout():
+            with self.assertRaises(Exception) as context:
+                SVM = StateVariablesModel.from_brian_state_monitors(
+                    [statemonN1, statemonN2_2], skip_not_rec_neuron_ids=False)
 
 
 if __name__ == '__main__':

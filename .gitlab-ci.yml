@@ -26,7 +26,7 @@ before_script:
 
   # Setting up test environments
   # - conda env create -q -n test_environment python=$TRAVIS_PYTHON_VERSION --file environment.yml
-  - conda create -n test_environment python=3.7 
+  - conda create -n test_environment python=3.7 --file environment.yml
   - conda init bash
   - source ~/.bashrc
   - source activate test_environment

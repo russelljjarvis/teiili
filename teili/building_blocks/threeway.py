@@ -7,8 +7,6 @@ Created on Wed Apr 25 16:09:49 2018
 """
 
 import numpy as np
-from pyqtgraph import QtGui
-import pyqtgraph as pg
 
 from brian2 import ms, SpikeMonitor,\
     prefs, PoissonGroup, Hz
@@ -23,6 +21,15 @@ from teili.models.synapse_models import DPISyn
 
 from teili.tools.three_way_kernels import A_plus_B_equals_C
 from teili.tools.visualizer.DataControllers import Rasterplot
+
+try:
+    # from pyqtgraph import QtGui
+    from PyQt5 import QtGui
+    import pyqtgraph as pg
+    QtApp = QtGui.QApplication([])
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = False
+except BaseException:
+    SKIP_PYQTGRAPH_RELATED_UNITTESTS = True
 
 threeway_params = {}
 

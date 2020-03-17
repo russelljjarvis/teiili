@@ -9,8 +9,6 @@ variables:
 
 before_script:
   # general
-  - pwd
-  - ls -a
   - apt-get update
   - apt-get install -y software-properties-common wget
 
@@ -34,9 +32,8 @@ before_script:
   - source activate test_environment
   - pip install --upgrade pip
   - pip install coverage coveralls flake8
-  - cd /root/
-  - ls -a
-  - pip install teili/ 
+  - cd /builds/ncs/teili/
+  - pip install . 
 
   - flake8 codebase
 

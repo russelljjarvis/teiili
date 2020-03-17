@@ -32,6 +32,7 @@ before_script:
   - source activate test_environment
   - pip install --upgrade pip
   - pip install coverage coveralls flake8
+  - cd ~
   - ls -a
   - pip install teili/ 
 

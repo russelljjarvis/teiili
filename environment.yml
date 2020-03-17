@@ -1,6 +1,3 @@
-name: teili_test
-channels:
-  - defaults
 dependencies:
   - ca-certificates=2018.03.07=0
   - certifi=2018.10.15=py36_0

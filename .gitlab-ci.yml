@@ -10,7 +10,7 @@ variables:
 before_script:
   # general
   - apt-get update
-  - apt-get install -y software-properties-common
+  - apt-get install -y software-properties-common wget
 
   - export DEBIAN_FRONTEND=noninteractive
   - apt-get install -y tzdata

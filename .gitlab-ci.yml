@@ -9,6 +9,8 @@ variables:
 
 before_script:
   # general
+  - pwd
+  - ls -a
   - apt-get update
   - apt-get install -y software-properties-common wget
 

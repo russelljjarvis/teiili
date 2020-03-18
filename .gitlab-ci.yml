@@ -56,8 +56,8 @@ unit-tests:
 coverage-tests:
   stage: coverage
   script:
-    - cd ~/teiliApps/
-    - coverage run -m unittest discover unit_tests/
+    - cd /builds/ncs/teili/
+    - coverage run -m unittest discover tests/
     - coverage report
     - coveralls
   only:

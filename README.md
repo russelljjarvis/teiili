@@ -1,23 +1,11 @@
-<!-- <p align="center"> -->
-<!--  <a href='https://teili.readthedocs.io/en/latest/?badge=latest' alt="Documentation Status"> -->
-<!--     <img src='https://readthedocs.org/projects/teili/badge/?version=latest' /></a> -->
-<!--  <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev-ci" alt="build status"> -->
-<!--     <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/build.svg" /></a> -->
-<!--  <\!-- <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev-ci" alt="coverage"> -\-> -->
-<!--     <\!-- <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/coverage.svg" /></a> -\-> -->
-<!--  <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev-ci" alt="pipline status"> -->
-<!--     <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/pipeline.svg" /></a> -->
-<!-- </p> -->
-
-
-[![build status](https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/build.svg)](https://code.ini.uzh.ch/ncs/teili/commits/dev-ci)
-
-[![douentation status](https://readthedocs.org/projects/teili/badge/?version=latest)](https://teili.readthedocs.io/en/latest/?badge=latest)
-
-[![coverage report](https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/coverage.svg)](https://code.ini.uzh.ch/ncs/teili/commits/dev-ci)
-
-[![pipeline status](https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/pipeline.svg)](https://code.ini.uzh.ch/ncs/teili/commits/dev-ci)
-
+<p align="center">
+ <a href='https://teili.readthedocs.io/en/latest/?badge=latest' alt="Documentation Status">
+    <img src='https://readthedocs.org/projects/teili/badge/?version=latest' /></a>
+ <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev-ci" alt="build status">
+    <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/build.svg" /></a>
+ <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev-ci" alt="coverage report">
+    <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/coverage.svg" /></a>
+</p>
 
 # teili
 

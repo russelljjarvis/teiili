@@ -25,13 +25,12 @@ before_script:
   - export PATH=$PATH:/opt/miniconda3/bin
 
   # Setting up test environments
-  # - conda env create -q -n test_environment python=$TRAVIS_PYTHON_VERSION --file environment.yml
   - conda create -n test_environment python=3.7 
   - conda init bash
   - source ~/.bashrc
   - source activate test_environment
   - pip install --upgrade pip
-  - pip install coverage coveralls flake8 numpy pyqt5
+  - pip install coverage flake8
   - cd /builds/ncs/teili/
   - pip install . 
 
@@ -61,7 +60,6 @@ coverage-tests:
     # For coverage to report properly we need to delete  all .pyc files
     - find . -name \*.pyc -delete  
     - coverage report
-    # - coveralls
   only:
     - master
     - dev

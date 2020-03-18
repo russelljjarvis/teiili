@@ -47,7 +47,7 @@ unit-tests:
   # the actual commands to run
   script:
     - cd ~/teiliApps/
-    - coverage run -m unittest discover unit_tests/
+    - python -m unittest discover unit_tests/
   only:
     - master
     - dev
@@ -56,6 +56,7 @@ unit-tests:
 coverage-tests:
   stage: coverage
   script:
+    - coverage run -m unittest discover unit_tests/
     - coverage report
     - coveralls
   only:
@@ -70,12 +71,12 @@ unit-test-deploy:
     - python -m teili.tools.generate_teiliApps
     - cd ~/teiliApps/
     - python -m unittest discover unit_tests/
-    - coverage run -m unittest discover unit_tests/
-  only:
+      only:
     - master
 
 # generate a coverage report to send to back to user
 after_script:
+  - la ~
   - rm -r /opt/miniconda3/
   - rm /tmp/miniconda.sh
-  - rm -rf ~/teiliApps/
+  # - rm -rf ~/teiliApps/

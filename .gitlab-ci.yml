@@ -71,7 +71,7 @@ unit-test-deploy:
     - python -m teili.tools.generate_teiliApps
     - cd ~/teiliApps/
     - python -m unittest discover unit_tests/
-      only:
+  only:
     - master
 
 # generate a coverage report to send to back to user

@@ -77,7 +77,6 @@ unit-test-deploy:
 
 # generate a coverage report to send to back to user
 after_script:
-  - ls -a ~
   - rm -r /opt/miniconda3/
   - rm /tmp/miniconda.sh
-  # - rm -rf ~/teiliApps/
+  - rm -rf ~/teiliApps/

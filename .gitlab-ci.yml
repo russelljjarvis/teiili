@@ -61,7 +61,7 @@ coverage-tests:
     # For coverage to report properly we need to delete  all .pyc files
     - find . -name \*.pyc -delete  
     - coverage report
-    - coveralls
+    # - coveralls
   only:
     - master
     - dev

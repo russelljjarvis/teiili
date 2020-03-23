@@ -8,34 +8,75 @@ variables:
     QT_QPA_PLATFORM: "offscreen"
 
 before_script:
-    # general
-    - apt-get update
-    - apt-get install -y software-properties-common
+  # general
+  - apt-get update
+  - apt-get install -y software-properties-common wget
 
-    # tzdata
-    - export DEBIAN_FRONTEND=noninteractive
-    - apt-get install -y tzdata
-    - ln -fs /usr/share/zoneinfo/Europe/Zurich /etc/localtime
-    - dpkg-reconfigure --frontend noninteractive tzdata
+  - export DEBIAN_FRONTEND=noninteractive
+  - apt-get install -y tzdata
+  - ln -fs /usr/share/zoneinfo/Europe/Zurich /etc/localtime
+  - dpkg-reconfigure --frontend noninteractive tzdata
 
-    # python
-    - apt-get install -y python3-pip python3-numpy python3-matplotlib
-    - apt-get install -y python3-tk  build-essential libfontconfig1 mesa-common-dev libglu1-mesa-dev libgl1-mesa-glx
-    - apt-get install -y qtmultimedia5-dev libqt5multimedia5-plugins libqt5svg5-dev libqt5sql5-mysql libqt5websockets5-dev
+  # installing miniconda
+  - cd /tmp
+  - wget -O miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b -p /opt/miniconda3
+  - export PATH=$PATH:/opt/miniconda3/bin
 
-    # project dependencies
-    - pip3 install brian2
-    - pip3 install pyqt5
-    - pip3 install pyqtgraph
-    - pip3 install sparse
-    - pip3 install seaborn
+  # Setting up test environments
+  - conda create -n test_environment python=3.7 
+  - conda init bash
+  - source ~/.bashrc
+  - source activate test_environment
+  - pip install --upgrade pip
+  - pip install coverage flake8
+  - cd /builds/ncs/teili/
+  - pip install . 
 
-    # teili itself
-    - pip3 install .
+  - flake8 codebase
+
+stages:
+  - test
+  - coverage
+  - deploy
 
 unit-tests:
-    stage: test
-    script:
-        - cd ~/teiliApps
-        - python3 -m unittest discover unit_tests/
+  stage: test
+  # the actual commands to run
+  script:
+    - cd ~/teiliApps/
+    - python -m unittest discover unit_tests/
+  only:
+    - master
+    - dev
+    - dev-ci
 
+coverage-tests:
+  stage: coverage
+  script:
+    - cd /builds/ncs/teili/
+    - coverage run --source=./teili/ -m unittest discover tests/
+    # For coverage to report properly we need to delete  all .pyc files
+    - find . -name \*.pyc -delete  
+    - coverage report
+  only:
+    - master
+    - dev
+    - dev-ci
+
+unit-test-deploy:
+  stage: deploy
+  script:
+    - pip --no-cache-dir install --upgrade --force-reinstall teili
+    - python -m teili.tools.generate_teiliApps
+    - cd ~/teiliApps/
+    - python -m unittest discover unit_tests/
+  only:
+    - master
+
+# generate a coverage report to send to back to user
+after_script:
+  - rm -r /opt/miniconda3/
+  - rm /tmp/miniconda.sh
+  - rm -rf ~/teiliApps/

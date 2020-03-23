@@ -1,10 +1,10 @@
 <p align="center">
  <a href='https://teili.readthedocs.io/en/latest/?badge=latest' alt="Documentation Status">
     <img src='https://readthedocs.org/projects/teili/badge/?version=latest' /></a>
- <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev" alt="build status">
-       <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/build.svg" /></a>
- <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev" alt="Coverage">
-       <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/coverage.svg" /></a>
+ <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev-ci" alt="build status">
+    <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/build.svg" /></a>
+ <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev-ci" alt="coverage report">
+    <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev-ci/coverage.svg" /></a>
 </p>
 
 # teili

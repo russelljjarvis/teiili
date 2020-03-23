@@ -25,7 +25,6 @@ Example:
 # @Date:   2018-06-05 11:09:20
 
 import numpy as np
-from tkinter import filedialog
 import warnings
 
 
@@ -82,11 +81,12 @@ class SortMatrix():
             ndarray: loaded matrix from file.
         """
 
-        if self.filename is not None:
+        # if self.filename is not None:
+        try:
             matrix = np.load(self.filename)
-        else:
-            self.filename = filedialog.askopenfilename()
-            matrix = np.load(self.filename)
+        except TypeError:
+            raise TypeError('Invalid filename. Please specify a valid path and filename.')
+            return None
 
         self.matrix = matrix.reshape((self.nrows, self.ncols))
         return self.matrix

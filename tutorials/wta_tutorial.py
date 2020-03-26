@@ -57,7 +57,7 @@ testbench.stimuli(num_neurons=num_input_neurons,
                   dimensions=1,
                   start_time=100, end_time=duration)
 
-testbench.background_noise(num_input_neurons=num_neurons, rate=10)
+testbench.background_noise(num_neurons=num_input_neurons, rate=10)
 
 test_WTA.spike_gen.set_spikes(
     indices=testbench.indices, times=testbench.times * ms)

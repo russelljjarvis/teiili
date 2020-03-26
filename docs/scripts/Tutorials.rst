@@ -19,6 +19,7 @@ To generate all pre-defined neuron and synapse models, which are stored by defau
     synapse_models()
     neuron_models()
 
+.. attention:: If you develop your own custom models, make sure ro re-name them as all static models are re-compiled on install.
 
 Working with the dynamic model generation method
 -------------------------------------------

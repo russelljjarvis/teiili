@@ -848,7 +848,7 @@ We can define our network structure and connect the different inputs to the WTA 
             indices=testbench.indices, times=testbench.times * ms)
 
     noise_syn = Connections(testbench.noise_input,
-                            test_WTA,_groups['n_exc'],
+                            test_WTA._groups['n_exc'],
                             equation_builder=DPISyn(),
                             name="noise_syn")
     noise_syn.connect("i==j")
@@ -1209,7 +1209,7 @@ We define the simulation and visualization backend. And specify explicitly the f
                     'size': 16,
                     }
 
-We need to define to variables used to visualize the kernel:
+We need to define two variables used to visualize the kernel:
 
 .. code-block:: python
 
@@ -1546,7 +1546,7 @@ and the parameter distribution across neurons.
     :figclass: align-left
 
     Effect of mismatch on neuron and synapse dynamics.
-    **Top)** Input spike raster plot. **Top/Middle)** Output spike raster plot. **Bottom/Middle)** EPSC traces of different synapses. Note that the input spike time is the same but the temporal evolution, which is set by the synaptic paramters is different. **Bottom)** Traces of `Imem` of all neurons in th the output population. Note that due to the heterogeneity the spike timing and the temporal dyanmics differ for different neurons.
+    **Top)** Input spike raster plot. **Top/Middle)** Output spike raster plot. **Bottom/Middle)** EPSC traces of different synapses. Note that the input spike time is the same but the temporal evolution, which is set by the synaptic paramters is different. **Bottom)** Traces of `Imem` of all neurons in the output population. Note that due to the heterogeneity the spike timing and the temporal dynamics differ for different neurons.
 
 
 .. code-block:: python
@@ -1597,7 +1597,7 @@ and the parameter distribution across neurons.
     :figclass: align-left
 
     Effect of mismatch on paramters.
-    **Top)** Histogram plot of baseweight. **Botoom)** Refractory period after mismatch has been applied. The mean value indicated by the yellow bar is the one specified in the parameters dictionary.
+    **Top)** Histogram plot of baseweight. **Bottom)** Refractory period after mismatch has been applied. The mean value indicated by the yellow bar is the one specified in the parameters dictionary.
 
 
 

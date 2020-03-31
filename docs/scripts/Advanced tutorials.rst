@@ -390,7 +390,9 @@ Or, as shown here in the tutorial, you can also just add a new state variable an
     in the GUI having an immediate effect on the simulation.
 
 
+
 .. note:: The brian2 simulator is not made for real time plotting. This currently only works with numpy code generation and timestep length can vary.
+
 
 DVS visualizer
 --------------
@@ -413,6 +415,7 @@ The point of this tutorial is to demonstrate the c++ standalone codegeneration a
 The tutorial reimplements the sequence learning architecture described by Kreiser et al. 2018 (https://www.frontiersin.org/articles/10.3389/fnins.2018.00717/full).
 
 After the standalone_params (that can be passed to the compiled program) are defined, the network is built:
+
 .. code-block:: python
 
     seq_net.standalone_params = standalone_params

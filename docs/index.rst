@@ -20,6 +20,7 @@ This toolbox was developed to provide computational neuroscientists, as well as 
    scripts/Developing Building Blocks.rst
    scripts/Tools.rst
    scripts/Visualizer.rst
+   scripts/Frequently Asked Questions
    scripts/Contributors.md
    modules/modules.rst
 

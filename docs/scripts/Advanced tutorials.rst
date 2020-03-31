@@ -6,13 +6,13 @@ Online Clustering of Temporal Activity (OCTA)
 
 
 The ``OCTA`` network is a ``Buildingblock`` which implements a model
-of the canonical microcircuit [1]_. The canonical microcircuit, which itself is
+of the canonical microcircuit `[1]`_. The canonical microcircuit, which itself is
 an abstraction and generalisation of anatomical reality, is
 found throughout cortical domains, i.e. visual, auditory, motor etc., and
 throughout the hierarchy, i.e. primary sensory and pre-frontal cortex.
 The objective of the ``OCTA BuildingBlock`` is to leverage the temporal
 information of so-called event-based sensory systems which are completely
-time-continuous [2]_. The temporal information, or the precise timing
+time-continuous `[2]`_. The temporal information, or the precise timing
 information of events, is used to extract spatio-temporal correlated
 patterns from incoming streams of events. But also to learn temporally
 structured, i.e ordered, sequences of patterns in order to perform temporal

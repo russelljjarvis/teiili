@@ -30,19 +30,25 @@ prefs.codegen.target = "numpy"
 input_timestamps = np.asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
 input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
-                                           times=input_timestamps, name='input_spikegenerator')
+                                           times=input_timestamps, 
+                                           name='input_spikegenerator')
 
 
 Net = TeiliNetwork()
 
-test_neurons1 = Neurons(2, equation_builder=neuron_model(
-    num_inputs=2), name="test_neurons1")
+test_neurons1 = Neurons(N=2, 
+                        equation_builder=neuron_model(num_inputs=2), 
+                        name="test_neurons1",
+                        verbose=True)
 
-test_neurons2 = Neurons(2, equation_builder=neuron_model(
-    num_inputs=2), name="test_neurons2")
+test_neurons2 = Neurons(N=2, 
+                        equation_builder=neuron_model(num_inputs=2), 
+                        name="test_neurons2",
+                        verbose=True)
 
 input_synapse = Connections(input_spikegenerator, test_neurons1,
-                            equation_builder=synapse_model(), name="input_synapse", verbose=False)
+                            equation_builder=synapse_model(), 
+                            name="input_synapse", verbose=True)
 input_synapse.connect(True)
 
 test_synapse = Connections(test_neurons1, test_neurons2,

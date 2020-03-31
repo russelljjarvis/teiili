@@ -68,7 +68,7 @@ Please run the unit tests to check if everything is working as expected by
 
     Error in atexit._run_exitfuncs:
     Traceback (most recent call last):
-      File "/home/schlowmo/miniconda3/envs/teili_test/lib/python3.6/site-packages/pyqtgraph/__init__.py", line 312, in cleanup
+      File "/home/you/miniconda3/envs/teili_test/lib/python3.6/site-packages/pyqtgraph/__init__.py", line 312, in cleanup
         if isinstance(o, QtGui.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
     ReferenceError: weakly-referenced object no longer exists
 
@@ -128,21 +128,6 @@ Re-building models after installation
 
 .. note:: By default models are generated during installation. **Only if** you accidentally deleted them manually you need to rebuild models.
 
-In case you want to re-build the pre-defined models you need to navigate to the ``model`` folder:
-
-.. code-block:: bash
-
-    cd teili/models/
-    source activate <myenv>
-
-and run the following two scripts (if you want to use the default location ``/home/you/``):
-
-.. code-block:: bash
-
-    python -m neuron_models
-    python -m synapse_models
-
-
 By default the models will be placed in ``teiliApps/equations/``. If you want to place them at a different location follow the instructions below:
 
 .. code-block:: bash
@@ -157,6 +142,7 @@ By default the models will be placed in ``teiliApps/equations/``. If you want to
     synapse_models.main("/path/to/my/equations/")
 
 Note, that the following folder structure is generated in the specified location: ``/path/to/my/equations/teiliApps/equations/``.
+If you simply call the classes without a path the equations will be placed in ``~/teiliApps/equations/``.
 Have a look at our tutorials_ to see how to use teili and which features it provides to you.
 
 .. _conda: https://conda.io/docs/user-guide/install/index.html

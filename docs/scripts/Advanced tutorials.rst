@@ -12,7 +12,7 @@ found throughout cortical domains, i.e. visual, auditory, motor etc., and
 throughout the hierarchy, i.e. primary sensory and pre-frontal cortex.
 The objective of the ``OCTA BuildingBlock`` is to leverage the temporal
 information of so-called event-based sensory systems which are completely
-time-continuous `[2]`_. The temporal information, or the precise timing
+time-continuous `[2]_`. The temporal information, or the precise timing
 information of events, is used to extract spatio-temporal correlated
 patterns from incoming streams of events. But also to learn temporally
 structured, i.e ordered, sequences of patterns in order to perform temporal
@@ -348,11 +348,13 @@ WTA live plot
 -------------
 
 The point of this tutorial is to demonstrate the live plot and parameter gui. They are imported as follows:
+
 .. code-block:: python
 
     from teili.tools.live import ParameterGUI, PlotGUI
 
 We can add a live plot by instantiating a PlotGUI as follows:
+
 .. code-block:: python
 
     plot_gui = PlotGUI(data=neuron_group.statevariable)
@@ -360,6 +362,7 @@ We can add a live plot by instantiating a PlotGUI as follows:
 Currently this only supports plotting a statevariable of a neuron or synapse group or subgroup with a line plot.
 
 The parameter GUI is instantiated as follows:
+
 .. code-block:: python
 
     param_gui = ParameterGUI(net=Net)
@@ -382,7 +385,9 @@ Or, as shown here in the tutorial, you can also just add a new state variable an
     :height: 400px
     :figclass: align-left
 
-    Screenshot of the plot window and GUI of the wta_live_tutorial. The plot shows a bump that moves and the parameters can be adjusted in the GUI having an immediate effect on the simulation.
+    Screenshot of the plot window and GUI of the wta_live_tutorial. 
+    The plot shows a bump that moves and the parameters can be adjusted 
+    in the GUI having an immediate effect on the simulation.
 
 
 .. note:: The brian2 simulator is not made for real time plotting. This currently only works with numpy code generation and timestep length can vary.

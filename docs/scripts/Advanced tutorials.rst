@@ -311,17 +311,18 @@ change this line:
 
 .. code-block:: python
 
-   Iin{input_number}_post = I_syn * sign(weight)  : amp (summed)
+    Iin{input_number}_post = I_syn * sign(weight)  : amp (summed)
 
 to
 
 .. code-block:: python
 
-   Iin{input_number}_post = I_syn * (-1 * (weight<0) + 1 * (weight>0))  : amp (summed)
+    Iin{input_number}_post = I_syn * (-1 * (weight<0) + 1 * (weight>0))  : amp (summed)
 
 Also move the following lines:
 
 .. code-block:: python
+
     Iw = abs(weight) * baseweight                            : amp
     I_gain = Io_syn*(I_syn<=Io_syn) + I_th*(I_syn>Io_syn)    : amp
     Itau_syn = Io_syn*(I_syn<=Io_syn) + I_tau*(I_syn>Io_syn) : amp
@@ -389,7 +390,6 @@ Or, as shown here in the tutorial, you can also just add a new state variable an
     Screenshot of the plot window and GUI of the wta_live_tutorial. 
     The plot shows a bump that moves and the parameters can be adjusted 
     in the GUI having an immediate effect on the simulation.
-
 
 
 .. note:: The brian2 simulator is not made for real time plotting. This currently only works with numpy code generation and timestep length can vary.

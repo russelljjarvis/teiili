@@ -56,12 +56,20 @@ input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
 
 Net = TeiliNetwork()
 
-test_neurons1 = Neurons(2, equation_builder=builder_object1, name="test_neurons1")
+test_neurons1 = Neurons(N=2, 
+                        equation_builder=builder_object1, 
+                        name="test_neurons1",
+                        verbose=True)
 
-test_neurons2 = Neurons(2, equation_builder=builder_object2, name="test_neurons2")
+test_neurons2 = Neurons(N=2, 
+                        equation_builder=builder_object2, 
+                        name="test_neurons2",
+                        verbose=True)
 
 input_synapse = Connections(input_spikegenerator, test_neurons1,
-                     equation_builder=builder_object3, name="input_synapse")
+                            equation_builder=builder_object3, 
+                            name="input_synapse",
+                            verbose=True)
 input_synapse.connect(True)
 
 

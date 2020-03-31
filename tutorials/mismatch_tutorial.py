@@ -247,7 +247,7 @@ Histogram(DataModel_to_attr=[(MyData_baseweight, 'baseweight')],
 y, x = np.histogram(input_syn_baseweights, bins="auto")
 subfig1.plot(x=np.asarray([mean_synapse_param*10**12, mean_synapse_param*10**12]),
              y=np.asarray([0, 300]),
-                pen=pg.mkPen((0, 255, 0), width=2))
+             pen=pg.mkPen((0, 255, 0), width=2))
 
 Histogram(DataModel_to_attr=[(MyData_refP, 'refP')],
                     MyPlotSettings=MyPlotSettings,

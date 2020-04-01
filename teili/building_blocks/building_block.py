@@ -86,7 +86,7 @@ class BuildingBlock(Nameable):
         Block to a Network
 
         Returns:
-            TYPE: Returns a dictionary wich contains all brian objects
+            TYPE: Returns a dictionary which contains all brian objects
         """
         allBrianObjects = self.groups
         if self.monitor:

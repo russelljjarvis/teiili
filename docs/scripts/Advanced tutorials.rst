@@ -381,15 +381,15 @@ Or, as shown here in the tutorial, you can also just add a new state variable an
     syn_in_ex.run_regularly("weight = guiweight", dt=1 * ms)
 
 
-.. figure:: fig/screenshot_wta_live_tutorial.png
-    :align: left
-    :width: 800px
-    :height: 400px
-    :figclass: align-left
+.. .. figure:: fig/screenshot_wta_live_tutorial.png
+..     :align: left
+..     :width: 800px
+..     :height: 400px
+..     :figclass: align-left
 
-    Screenshot of the plot window and GUI of the wta_live_tutorial. 
-    The plot shows a bump that moves and the parameters can be adjusted 
-    in the GUI having an immediate effect on the simulation.
+..     Screenshot of the plot window and GUI of the wta_live_tutorial. 
+..     The plot shows a bump that moves and the parameters can be adjusted 
+..     in the GUI having an immediate effect on the simulation.
 
 
 .. note:: The brian2 simulator is not made for real time plotting. This currently only works with numpy code generation and timestep length can vary.

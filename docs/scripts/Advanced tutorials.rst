@@ -61,9 +61,9 @@ Please note the small ``dt``. In order to avoid integration errors and make sure
 the timing of spikes/events can be used we need to lower the simulation time step much more
 than in our other (simpler) tutorials.
 
-.. note:: The ``OCTA`` building block can **not** be run in ``standalone`` mode as it requires quite complicated ``run_regulary`` functions which are currently not available in c++.
+.. note:: The ``OCTA`` building block can **not** be run in ``standalone`` mode as it requires quite complicated ``run_regularly`` functions which are currently not available in c++.
 
-.. code-block:: pythone
+.. code-block:: python
 
     prefs.codegen.target = "numpy"
     defaultclock.dt = 0.1 * ms
@@ -231,7 +231,12 @@ The generated plot should look like this:
     :figclass: align-left
 
     Network activity of the ``OCTA BuildingBlock``.
-    Spike raster plot of the relay layer (L4, top left), the compression layer (L2/3, top right) and the prediction layer (L5/6, bottom). The blue bar indicates the zoomed-in region of the spike raster plot of L2/3 and L5/6. Note that the spike raster plots are sorted according to the recurrent weight matrix of L2/3 for the L2/3 spike raster plot and according to the L2/3 to L5/6 weights in the case of the L5/6 spike raster plot. This sorting enables us to see the learned structure of the synaptic weights. In case of L2/3 we can see that the temporally structured sequence is encoded in the recurrent weight matrix. In the case of L5/6 we can see that we can preserver temporal information in recurrent connections, which then can be used to predict the input. For more information plese refer to `Milde 2019`_  populations A, B and C encoding the relation A = B + C.
+    Spike raster plot of the relay layer (L4, top left), the compression layer (L2/3, top right) and the prediction layer (L5/6, bottom). 
+    The blue bar indicates the zoomed-in region of the spike raster plot of L2/3 and L5/6. Note that the spike raster plots are sorted 
+    according to the recurrent weight matrix of L2/3 for the L2/3 spike raster plot and according to the L2/3 to L5/6 weights in the case 
+    of the L5/6 spike raster plot. This sorting enables us to see the learned structure of the synaptic weights. In case of L2/3 we can see 
+    that the temporally structured sequence is encoded in the recurrent weight matrix. In the case of L5/6 we can see that we can preserver 
+    temporal information in recurrent connections, which then can be used to predict the input. For more information please refer to `Milde 2019`_.
 
 
 Three-way networks
@@ -288,6 +293,7 @@ To use the block instantiate it and add to the ``TeiliNetwork``
 
     TW_plot = TW.plot()
 
+
 Methods ``set_A(double)``, ``set_B(double)`` and ``set_C(double)`` send population
 coded values to respective populations. Here we send A=0.2, B=0.4 and activity in
 population C is inferred via H, shaping in an activity bump encoding ~0.6:
@@ -306,8 +312,8 @@ Teili2Genn
 ----------
 
 Using the already existing brian2genn_ we can generate ``GeNN`` code which can be executed on a nVidia graphics card.
-Make sure to change the ``DPIsyn`` model located in ``teiliApps/equations/DPIsyn.py``. To be able to use brian2genn_ with ``TeiliNetwork``
-change this line:
+Make sure to change the ``DPIsyn`` model located in `teiliApps/equations/DPIsyn.py`. 
+To be able to use brian2genn_ with ``TeiliNetwork`` change this line:
 
 .. code-block:: python
 
@@ -397,6 +403,7 @@ Or, as shown here in the tutorial, you can also just add a new state variable an
 
 DVS visualizer
 --------------
+
 The point of this tutorial is to demonstrate how you can use the Plotter2d class to make a plot of 2d neural activity or DVS recordings.
 In this tutorials, you are asked to provide a path for 2 .aedat or .npz files that are then plotted next to each other.
 
@@ -410,12 +417,16 @@ In this tutorials, you are asked to provide a path for 2 .aedat or .npz files th
     On the right side, a (temporally) filtered version of the dvs events is shown.
     We use ``QtGui.QGridLayout`` to arrange the ImageViews that we get from the Plotter in a grid.
 
+
 Sequence learning standalone
 ----------------------------
-The point of this tutorial is to demonstrate the c++ standalone codegeneration and replacing of parameters in the c++ code so we can run the same compiled standalone program several times with different parameters.
-The tutorial reimplements the sequence learning architecture described by Kreiser et al. 2018 (https://www.frontiersin.org/articles/10.3389/fnins.2018.00717/full).
 
-After the standalone_params (that can be passed to the compiled program) are defined, the network is built:
+The point of this tutorial is to demonstrate the c++ standalone codegeneration and replacing of parameters in the c++ code 
+so we can run the same compiled standalone program several times with different parameters.
+The tutorial re-implements the sequence learning architecture described by `Kreiser et al. 2018`_.
+The full tutorial can be found at ``~/teiliApps/tutorials/sequence_learning_standalone_tutorial.py``
+
+After the ``standalone_params`` (that can be passed to the compiled program) are defined, the network is built:
 
 .. code-block:: python
 
@@ -434,5 +445,6 @@ This can be used if you have networks that you need to run very often with diffe
 
 .. _brian2genn: https://github.com/brian-team/brian2genn
 .. _Milde 2019: https://www.zora.uzh.ch/id/eprint/177970/
+.. _Kreiser et al. 2018: https://www.frontiersin.org/articles/10.3389/fnins.2018.00717/full
 .. _[1]: https://physoc.onlinelibrary.wiley.com/doi/abs/10.1113/jphysiol.1991.sp018733
 .. _[2]: https://ieeexplore.ieee.org/abstract/document/5537149

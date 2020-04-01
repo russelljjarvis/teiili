@@ -141,6 +141,8 @@ By default the models will be placed in ``teiliApps/equations/``. If you want to
     neuron_models.main("/path/to/my/equations/")
     synapse_models.main("/path/to/my/equations/")
 
+.. attention:: You need to specify the absolute path. So use ``/home/<YOU>/your_custom_path/``, rather than ``~/your_custom_path/``.
+
 Note, that the following folder structure is generated in the specified location: ``/path/to/my/equations/teiliApps/equations/``.
 If you simply call the classes without a path the equations will be placed in ``~/teiliApps/equations/``.
 Have a look at our tutorials_ to see how to use teili and which features it provides to you.

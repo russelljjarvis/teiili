@@ -134,7 +134,7 @@ class BuildingBlock(Nameable):
     def _set_tags(self, tags, target_group):
         """ This method allows the user to set a list of tags to a specific
         target group. Normally the tags are already assigned by each building
-        block. So this method only adds convinience and a way to replace the
+        block. So this method only adds convenience and a way to replace the
         default tags if this is needed by any user. Typically this should not
         be the user's concern, that's why it is private method.
 

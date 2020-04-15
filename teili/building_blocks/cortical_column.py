@@ -11,3 +11,16 @@ import numpy as np
 
 from brian2 import ms, mV, pA, SpikeGeneratorGroup,\
     SpikeMonitor, StateMonitor, core 
+
+from teili.building_blocks.building_block import BuildingBlock
+from teili.core.groups import Neurons, Connections
+
+class CorticalColumn(BuildingBlock):
+    """
+    """
+
+    def __init(self):
+        """
+        """
+
+        pass

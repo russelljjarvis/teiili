@@ -118,3 +118,6 @@ ENV/
 teili/models/equations/
 .vscode
 core
+
+#include documentation figures
+!docs/scripts/fig/*

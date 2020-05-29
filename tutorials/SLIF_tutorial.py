@@ -21,8 +21,8 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 defaultclock.dt = 1*ms
 
 @implementation('numpy', discard_units=True)
-@check_units(lfsr_in=1, num_neurons=1, num_bits=1, result=1)
-def LFSR_gen(lfsr_in, num_neurons, num_bits):
+@check_units(decay_probability=1, num_neurons=1, lfsr_num_bits=1, result=1)
+def lfsr(decay_probability, num_neurons, lfsr_num_bits):
     """
     Generate a pseudorandom number between 0 and 1 with a 20-bit Linear
     Feedback Shift Register (LFSR). This is equivalent to generating random
@@ -39,11 +39,11 @@ def LFSR_gen(lfsr_in, num_neurons, num_bits):
 
     Parameters
     ----------
-    lfsr_in : float
+    decay_probability : float
         Value between 0 and 1 that will be the input to the LFSR
     num_neurons : int
         Number of neurons in the group
-    num_bits : int
+    lfsr_num_bits : int
         Number of bits of the LFSR
 
     Returns
@@ -56,30 +56,30 @@ def LFSR_gen(lfsr_in, num_neurons, num_bits):
     >>> number = 2**19 + 2**2
     >>> bin(number)
     '0b10000000000000000100'
-    >>> bin(int(LFSR_gen(number/2**20, 1)2**20))
+    >>> bin(int(lfsr(number/2**20, 1)2**20))
     '0b1'
     """
-    num_bits = int(num_bits)
-    lfsr_in *= 2**num_bits
-    mask = 2**num_bits - 1
+    lfsr_num_bits = int(lfsr_num_bits)
+    decay_probability *= 2**lfsr_num_bits
+    mask = 2**lfsr_num_bits - 1
 
     for _ in range(num_neurons):
-        lfsr_in = int(lfsr_in) << 1
-        overflow = True if lfsr_in & (1 << num_bits) else False
+        decay_probability = int(decay_probability) << 1
+        overflow = True if decay_probability & (1 << lfsr_num_bits) else False
         # Re-introduces 1s beyond last position
         if overflow:
-            lfsr_in |= 1
-        # Ensures variable is num_bits long
-        lfsr_in = lfsr_in & mask
+            decay_probability |= 1
+        # Ensures variable is lfsr_num_bits long
+        decay_probability = decay_probability & mask
         # Get bits from positions 0 and 3
-        fourth_tap = 1 if lfsr_in & (1 << 3) else 0
-        first_tap = 1 if lfsr_in & (1 << 0) else 0
+        fourth_tap = 1 if decay_probability & (1 << 3) else 0
+        first_tap = 1 if decay_probability & (1 << 0) else 0
         # Update bit in position 3
-        lfsr_in &=~ (1 << 3)
+        decay_probability &=~ (1 << 3)
         if bool(fourth_tap^first_tap):
-            lfsr_in |= (1 << 3)
+            decay_probability |= (1 << 3)
 
-    return lfsr_in/2**num_bits
+    return decay_probability/2**lfsr_num_bits
 
 def init_lfsr(lfsr_seed, num_neurons, num_bits):
     """
@@ -142,14 +142,16 @@ neuron = Neurons(N, equation_builder=builder_object, method=stochastic_decay,
                  name="test_neurons", verbose=True)
 
 lfsr_seed = 12345
-lfsr_len = 20
-neuron.add_state_variable('lfsr_len', shared=True, constant=True)
-neuron.lfsr_len = lfsr_len
-neuron.rand_input = init_lfsr(lfsr_seed, neuron.N, lfsr_len)
-neuron.namespace.update({'LFSR_gen': LFSR_gen})
+lfsr_num_bits = 20
+neuron.add_state_variable('lfsr_num_bits', shared=True, constant=True)
+neuron.lfsr_num_bits = lfsr_num_bits
+neuron.decay_probability = init_lfsr(lfsr_seed, neuron.N, lfsr_num_bits)
+neuron.namespace.update({'lfsr': lfsr})
 
 neuron.Vmem = 3
-neuron.run_regularly('''rand_input = LFSR_gen(rand_input, N, lfsr_len)
+neuron.run_regularly('''decay_probability = lfsr(decay_probability,\
+                                                 N,\
+                                                 lfsr_num_bits)
                         ''',
                      dt=1*ms)
 

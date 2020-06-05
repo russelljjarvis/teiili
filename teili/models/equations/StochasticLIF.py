@@ -3,7 +3,7 @@ StochasticLIF = {'model': '''
                      # Charging cell
                      #dVmem/dt = int(not refrac)*int(decay_rate*Vmem + (1-decay_rate)*Vin + decay_probability)/ms + int(refrac)*int(decay_rate_refrac*Vmem + (1-decay_rate_refrac)*Vrest + decay_probability)/ms :  1
                      # Input current
-                     dVmem/dt = int(not refrac)*int(decay_rate*Vmem + (1-decay_rate)*Vin + decay_probability + input_gain*Iin)/ms + int(refrac)*int(decay_rate_refrac*Vmem + (1-decay_rate_refrac)*Vrest + decay_probability)/ms :  1
+                     dVmem/dt = int(not refrac)*int(decay_rate*Vmem + (1-decay_rate)*Vin + decay_probability + input_gain*Iin/amp)/ms + int(refrac)*int(decay_rate_refrac*Vmem + (1-decay_rate_refrac)*Vrest + decay_probability)/ms :  1
                      # Refractory period alternative
                      #dVmem/dt = int(decay_rate*Vmem + (1-decay_rate)*Vin + decay_probability)/ms :  1 (unless refractory)
                      decay_rate = tau/(tau+1.0) : 1
@@ -13,7 +13,7 @@ StochasticLIF = {'model': '''
                      decay_probability : 1
                      input_gain : 1
                      Iin = Iin0  : 1 # input currents
-                     Iin0 : 1
+                     Iin0 : amp
                      tau : 1 (constant)
                      refrac_tau : 1 (constant)
                      Vthres : 1 (constant)

@@ -132,6 +132,7 @@ model_path = os.path.join(path, "teiliApps", "equations", "")
 
 neuron_model = NeuronEquationBuilder.import_eq(
     filename=model_path + 'StochasticLIF.py', num_inputs=2)
+#import pdb; pdb.set_trace()
 synapse_model = SynapseEquationBuilder.import_eq(
     #filename=model_path + 'Alpha.py')
     # TODO this doesnt work
@@ -164,15 +165,16 @@ neuron.Vmem = 3
 synapse = Connections(input_spike_generator, neuron, method=stochastic_decay,
                       equation_builder=synapse_model, verbose=True)
 synapse.connect(True)
-#synapse.add_state_variable('lfsr_num_bits', shared=True, constant=True)
-#synapse.lfsr_num_bits = lfsr_num_bits
-#synapse.psc_decay_probability = init_lfsr(lfsr_seed, neuron.N, lfsr_num_bits)
-#synapse.namespace.update({'lfsr': lfsr})
-#synapse.run_regularly('''psc_decay_probability = lfsr(psc_decay_probability,\
-#                                                      N,\
-#                                                      lfsr_num_bits)
-#                        ''',
-#                      dt=1*ms)
+synapse.add_state_variable('lfsr_num_bits_syn', shared=True, constant=True)
+lfsr_num_bits_syn = 20
+synapse.lfsr_num_bits_syn = lfsr_num_bits_syn
+synapse.psc_decay_probability = init_lfsr(lfsr_seed, neuron.N, lfsr_num_bits_syn)
+synapse.namespace.update({'lfsr': lfsr})
+synapse.run_regularly('''psc_decay_probability = lfsr(psc_decay_probability,\
+                                                      N,\
+                                                      lfsr_num_bits_syn)
+                        ''',
+                      dt=1*ms)
 synapse.weight = np.array([6 for _ in range(neuron.N)])
 
 spikemon = SpikeMonitor(neuron, name='spike_monitor')

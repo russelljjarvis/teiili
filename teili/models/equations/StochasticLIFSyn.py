@@ -1,7 +1,7 @@
 from brian2.units import *
 StochasticLIFSyn = {'model': '''
                         dI_syn/dt = int(I_syn*psc_decay + psc_decay_probability)/ms : 1 (clock-driven)
-                        Iin{input_number}_post = I_syn * sign(weight)   : 1 (summed)
+                        Iin{input_number}_post = I_syn * sign(weight)   : amp (summed)
                         psc_decay = tau_syn/(tau_syn+1.0)                    : 1
 
                         weight            : 1

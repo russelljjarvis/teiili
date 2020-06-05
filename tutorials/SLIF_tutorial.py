@@ -8,15 +8,16 @@ neurons charging and firing action potentials.
 
 import os
 import numpy as np
-
-from brian2 import ExplicitStateUpdater
 import matplotlib.pyplot as plt
 
+from brian2 import ExplicitStateUpdater
 from brian2 import StateMonitor, SpikeMonitor, ms, defaultclock,\
-        implementation, check_units
+        implementation, check_units, SpikeGeneratorGroup
+
 from teili import TeiliNetwork
-from teili.core.groups import Neurons
+from teili.core.groups import Neurons, Connections
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
 defaultclock.dt = 1*ms
 
@@ -126,39 +127,60 @@ def init_lfsr(lfsr_seed, num_neurons, num_bits):
 
     return np.asarray(lfsr_out)/2**num_bits
 
-N = 4
-duration = 400*ms
-
 path = os.path.expanduser("~")
 model_path = os.path.join(path, "teiliApps", "equations", "")
 
-builder_object = NeuronEquationBuilder.import_eq(
+neuron_model = NeuronEquationBuilder.import_eq(
     filename=model_path + 'StochasticLIF.py', num_inputs=2)
+synapse_model = SynapseEquationBuilder.import_eq(
+    #filename=model_path + 'Alpha.py')
+    # TODO this doesnt work
+    filename=model_path + 'StochasticLIFSyn.py')
 
-Net = TeiliNetwork()
-# With this state updater, the equation used is the one provided
-stochastic_decay = ExplicitStateUpdater('''x_new = dt*f(x,t)''')
-neuron = Neurons(N, equation_builder=builder_object, method=stochastic_decay,
-                 name="test_neurons", verbose=True)
+input_timestamps = np.array(range(1, 400, 100))*ms
+input_indices = np.zeros(len(input_timestamps))
+input_spike_generator = SpikeGeneratorGroup(1, indices=input_indices,
+                                            times=input_timestamps)
 
+# With this state updater, the equation used is the one provided as is
+N = 4
 lfsr_seed = 12345
 lfsr_num_bits = 20
+stochastic_decay = ExplicitStateUpdater('''x_new = dt*f(x,t)''')
+neuron = Neurons(N, equation_builder=neuron_model, method=stochastic_decay,
+                 name="test_neurons", verbose=True)
 neuron.add_state_variable('lfsr_num_bits', shared=True, constant=True)
 neuron.lfsr_num_bits = lfsr_num_bits
 neuron.decay_probability = init_lfsr(lfsr_seed, neuron.N, lfsr_num_bits)
 neuron.namespace.update({'lfsr': lfsr})
-
-neuron.Vmem = 3
 neuron.run_regularly('''decay_probability = lfsr(decay_probability,\
                                                  N,\
                                                  lfsr_num_bits)
                         ''',
                      dt=1*ms)
+neuron.Vmem = 3
+#neuron.synaptic_current = 5
+
+synapse = Connections(input_spike_generator, neuron, method=stochastic_decay,
+                      equation_builder=synapse_model, verbose=True)
+synapse.connect(True)
+#synapse.add_state_variable('lfsr_num_bits', shared=True, constant=True)
+#synapse.lfsr_num_bits = lfsr_num_bits
+#synapse.psc_decay_probability = init_lfsr(lfsr_seed, neuron.N, lfsr_num_bits)
+#synapse.namespace.update({'lfsr': lfsr})
+#synapse.run_regularly('''psc_decay_probability = lfsr(psc_decay_probability,\
+#                                                      N,\
+#                                                      lfsr_num_bits)
+#                        ''',
+#                      dt=1*ms)
+synapse.weight = np.array([6 for _ in range(neuron.N)])
 
 spikemon = SpikeMonitor(neuron, name='spike_monitor')
 M = StateMonitor(neuron, variables=['Vmem'], record=True, name='state_monitor')
 
-Net.add(neuron, spikemon, M)
+duration = 400*ms
+Net = TeiliNetwork()
+Net.add(input_spike_generator, neuron, synapse, spikemon, M)
 Net.run(duration)
 
 #plt.figure()

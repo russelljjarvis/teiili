@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from brian2 import ExplicitStateUpdater
-from brian2 import StateMonitor, SpikeMonitor, ms, defaultclock,\
+from brian2 import StateMonitor, SpikeMonitor, ms, mV, defaultclock,\
         implementation, check_units, SpikeGeneratorGroup
 
 from teili import TeiliNetwork
@@ -134,8 +134,6 @@ neuron_model = NeuronEquationBuilder.import_eq(
     filename=model_path + 'StochasticLIF.py', num_inputs=2)
 #import pdb; pdb.set_trace()
 synapse_model = SynapseEquationBuilder.import_eq(
-    #filename=model_path + 'Alpha.py')
-    # TODO this doesnt work
     filename=model_path + 'StochasticLIFSyn.py')
 
 input_timestamps = np.array(range(1, 400, 100))*ms
@@ -157,10 +155,9 @@ neuron.namespace.update({'lfsr': lfsr})
 neuron.run_regularly('''decay_probability = lfsr(decay_probability,\
                                                  N,\
                                                  lfsr_num_bits)
-                        ''',
+                     ''',
                      dt=1*ms)
-neuron.Vmem = 3
-#neuron.synaptic_current = 5
+neuron.Vm = 3*mV
 
 synapse = Connections(input_spike_generator, neuron, method=stochastic_decay,
                       equation_builder=synapse_model, verbose=True)
@@ -173,16 +170,18 @@ synapse.namespace.update({'lfsr': lfsr})
 synapse.run_regularly('''psc_decay_probability = lfsr(psc_decay_probability,\
                                                       N,\
                                                       lfsr_num_bits_syn)
-                        ''',
+                      ''',
                       dt=1*ms)
-synapse.weight = np.array([6 for _ in range(neuron.N)])
+psc_strength = 0.02 # 0.01 for no spike
+synapse.weight = np.array([psc_strength for _ in range(neuron.N)])
 
 spikemon = SpikeMonitor(neuron, name='spike_monitor')
-M = StateMonitor(neuron, variables=['Vmem'], record=True, name='state_monitor')
+neuron_monitor = StateMonitor(neuron, variables=['Vm', 'Iin'], record=True, name='state_monitor_neu')
+synapse_monitor = StateMonitor(synapse, variables=['I_syn'], record=True, name='state_monitor_syn')
 
 duration = 400*ms
 Net = TeiliNetwork()
-Net.add(input_spike_generator, neuron, synapse, spikemon, M)
+Net.add(input_spike_generator, neuron, synapse, spikemon, neuron_monitor, synapse_monitor)
 Net.run(duration)
 
 #plt.figure()
@@ -191,16 +190,30 @@ Net.run(duration)
 #_ = plt.hist(ISI, bins=20, range=(0, 100))
 
 plt.figure()
-plt.plot(spikemon.t/ms, spikemon.i, 'ro')
+plt.plot(spikemon.t/ms, spikemon.i, 'ko')
 plt.ylabel('Neuron index')
 plt.xlabel('Time (samples)')
 
 plt.figure()
 for i in range(N):
-    plt.plot(M.t/ms, M.Vmem[i], 'k')
+    plt.plot(neuron_monitor.t/ms, neuron_monitor.Vm[i], 'k')
 plt.xlabel('Time (samples)')
 plt.ylabel('membrane potential (a.u.)');
 plt.show()
 
+plt.figure()
+for i in range(N):
+    plt.plot(neuron_monitor.t/ms, neuron_monitor.Iin[i], 'k')
+plt.xlabel('Time (samples)')
+plt.ylabel('Iin (a.u.)');
+plt.show()
+
+plt.figure()
+for i in range(N):
+    plt.plot(synapse_monitor.t/ms, synapse_monitor.I_syn[i], 'k')
+plt.xlabel('Time (samples)')
+plt.ylabel('I_syn (a.u.)');
+plt.show()
+
 #with open('teili.npy', 'wb') as f:
-#    np.save(f, M.Vmem)
+#    np.save(f, neuron_monitor.Vm)

@@ -115,6 +115,7 @@ ENV/
 *.gif
 *.svg
 
-#teili/models/equations/
+teili/models/equations/*
+!teili/models/equations/StochasticLIF*.py
 .vscode
 core

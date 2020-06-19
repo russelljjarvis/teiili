@@ -26,10 +26,10 @@ StochasticLIFSyn = {'model': '''
 
                         ''',
                     'parameters': {
-                        'weight' : '1',
+                        'weight' : '5',
                         'w_plast' : '0',
                         'gain_syn' : '1*mA',
-                        'tau_syn': '10*ms',
+                        'tau_syn': '6*ms',
                         }
                    }
 

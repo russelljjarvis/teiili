@@ -178,9 +178,6 @@ synapse.run_regularly('''psc_decay_probability = lfsr(psc_decay_probability,\
                                                       lfsr_num_bits_syn)
                       ''',
                       dt=1*ms)
-psc_strength = 3 # some spikes
-#psc_strength = 2 # some spikes
-synapse.weight = np.array([psc_strength for _ in range(neuron.N)])
 
 spikemon = SpikeMonitor(neuron, name='spike_monitor')
 neuron_monitor = StateMonitor(neuron, variables=['Vm', 'Iin', 'decay_probability'], record=True, name='state_monitor_neu')
@@ -221,7 +218,7 @@ colors = ['k', 'r', 'g', 'b']
 for i in range(num_neurons):
     plt.plot(neuron_monitor.t/ms, neuron_monitor.Vm[i], colors[i], label=str(i))
 plt.xlabel('Time (samples)')
-plt.ylabel('membrane potential (a.u.)');
+plt.ylabel('membrane potential (a.u.)')
 plt.legend()
 
 plt.figure()

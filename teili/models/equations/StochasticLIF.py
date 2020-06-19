@@ -1,3 +1,12 @@
+'''This module defines the model of the stochastic leaky I&F neuron.
+
+The arguments of the function int() should contain units and should be greater
+than 1 (otherwise membrane would be always clipped to zero). This is why some
+multiplication and divisions with units were added to the equations. The
+problem with this approach is that manual intervention is necessary for other
+units, e.g. uV.
+'''
+
 from brian2.units import * 
 StochasticLIF = {'model': '''
                      # Charging cell
@@ -36,7 +45,7 @@ StochasticLIF = {'model': '''
                      'Vrest': '3*mV',
                      'Vreset': '0*mV',
                      'tau': '19*ms',
-                     'input_gain' : '1*kohm',
+                     'input_gain' : '1*ohm',
                      'refrac_tau': '10*ms',
                      'Vin': '3*mV',
                      'refP': '12.*ms'

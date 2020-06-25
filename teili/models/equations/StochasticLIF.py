@@ -6,11 +6,10 @@ multiplication and divisions with units were added to the equations. The
 problem with this approach is that manual intervention is necessary for other
 units, e.g. uV.
 '''
-
 from brian2.units import * 
 StochasticLIF = {'model': '''
                      dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*volt/second : volt
-                     normal_decay = (decay_rate*Vm + (1-decay_rate)*E + input_gain*Iin)/mV + decay_probability : 1
+                     normal_decay = (decay_rate*Vm + (1-decay_rate)*Vrest + input_gain*Iin)/mV + decay_probability : 1
                      refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
 
                      decay_rate = tau/(tau + 1.0*ms)                      : 1
@@ -27,7 +26,6 @@ StochasticLIF = {'model': '''
                      Vthres            : volt   (constant)
                      Vrest             : volt   (constant)
                      Vreset            : volt   (constant)
-                     E               : volt   (constant)
 
                      x : 1 (constant) # x position on a 2d grid
                      y : 1 (constant) # y position on a 2d grid
@@ -39,10 +37,9 @@ StochasticLIF = {'model': '''
                      'Vthres': '16*mV',
                      'Vrest': '3*mV',
                      'Vreset': '0*mV',
-                     'tau': '45*ms',
+                     'tau': '10*ms',
                      'input_gain' : '1*ohm',
                      'refrac_tau': '10*ms',
-                     'E': '0*mV',
                      'refP': '12.*ms'
                      }
                  }

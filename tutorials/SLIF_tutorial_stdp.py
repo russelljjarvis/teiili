@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 # @Author: pabloabur
-# @Date:   2020-27-05 18:05:05
+# @Date:   2020-20-06 18:05:05
 """
 This is a simple tutorial to simulate 4 stochastic leaky integrate and fire
-neurons charging and firing action potentials.
+neurons charging and firing action potentials with STDP. Inputs provided are
+digits from MNIST dataset.
 """
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from struct import unpack
 
 from brian2 import ExplicitStateUpdater
-from brian2 import StateMonitor, SpikeMonitor, ms, mV, defaultclock,\
-        implementation, check_units, SpikeGeneratorGroup
+from brian2 import StateMonitor, SpikeMonitor, ms, mV, Hz, defaultclock,\
+        implementation, check_units, SpikeGeneratorGroup, PoissonGroup
 
 from teili import TeiliNetwork
 from teili.core.groups import Neurons, Connections
@@ -20,6 +22,43 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
 defaultclock.dt = 1*ms
+
+MNIST_data_path = '/home/pablo/git/stdp-mnist-brian2/data/'
+
+def get_labeled_data(picklename, bTrain = True):
+    """Read input-vector (image) and target class (label, 0-9) and return
+       it as list of tuples.
+    """
+    # Open the images with gzip in read binary mode
+    if bTrain:
+        images = open(MNIST_data_path + 'train-images-idx3-ubyte','rb')
+        labels = open(MNIST_data_path + 'train-labels-idx1-ubyte','rb')
+    else:
+        images = open(MNIST_data_path + 't10k-images-idx3-ubyte','rb')
+        labels = open(MNIST_data_path + 't10k-labels-idx1-ubyte','rb')
+    # Get metadata for images
+    images.read(4)  # skip the magic_number
+    number_of_images = unpack('>I', images.read(4))[0]
+    rows = unpack('>I', images.read(4))[0]
+    cols = unpack('>I', images.read(4))[0]
+    # Get metadata for labels
+    labels.read(4)  # skip the magic_number
+    N = unpack('>I', labels.read(4))[0]
+
+    if number_of_images != N:
+        raise Exception('number of labels did not match the number of images')
+    # Get the data
+    x = np.zeros((N, rows, cols), dtype=np.uint8)  # Initialize numpy array
+    y = np.zeros((N, 1), dtype=np.uint8)  # Initialize numpy array
+    for i in range(N):
+        if i % 1000 == 0:
+            print("i: %i" % i)
+        x[i] = [[unpack('>B', images.read(1))[0] for unused_col in range(cols)]  for unused_row in range(rows) ]
+        y[i] = unpack('>B', labels.read(1))[0]
+
+    data = {'x': x, 'y': y, 'rows': rows, 'cols': cols}
+
+    return data
 
 @implementation('numpy', discard_units=True)
 @check_units(decay_probability=1, num_neurons=1, lfsr_num_bits=1, result=1)
@@ -135,9 +174,40 @@ neuron_model = NeuronEquationBuilder.import_eq(
 synapse_model = SynapseEquationBuilder.import_eq(
     filename=model_path + 'StochasticLIFSyn.py')
 
-input_timestamps = np.array(range(1, 400, 100))*ms
-input_indices = np.zeros(len(input_timestamps))
-input_spike_generator = SpikeGeneratorGroup(1, indices=input_indices,
+# Define inputs
+training = get_labeled_data(MNIST_data_path + 'training')
+testing = get_labeled_data(MNIST_data_path + 'testing', bTrain = False)
+num_examples = 2
+labels = [0] * num_examples
+digits = [0] * num_examples
+for i in range(num_examples):
+    labels[i] = training['y'][i][0]
+    digits[i] = training['x'][i]
+#    print(f'Sample {i}: {labels[i]}')
+#    plt.figure()
+#    plt.imshow(digits[i], cmap='gray')
+#plt.show()
+
+n_e = 400
+n_input = 28 * 28
+input_intensity = 2.
+
+input_groups = [PoissonGroup(n_input, 0*Hz) for _ in range(num_examples)]
+for i, digit in enumerate(digits):
+    # Scale rate as desired
+    rate = digit.reshape(n_input) / 8. *  input_intensity
+    input_groups[i].rates = rate * Hz
+
+duration = 20*ms
+input_monitor = SpikeMonitor(input_groups[0])
+Net = TeiliNetwork()
+Net.add(input_monitor, input_groups[0])
+Net.run(duration)
+input_timestamps = input_monitor.t
+input_indices = input_monitor.i
+#input_timestamps = np.array(range(1, 400, 100))*ms
+#input_indices = np.zeros(len(input_timestamps))
+input_spike_generator = SpikeGeneratorGroup(n_input, indices=input_indices,
                                             times=input_timestamps)
 
 num_neurons = 4
@@ -166,11 +236,13 @@ neuron.run_regularly('''decay_probability = lfsr(decay_probability,\
                      ''',
                      dt=1*ms)
 
-synapse.weight = 5
+synapse.weight = 0.1
 synapse.add_state_variable('lfsr_num_bits_syn', shared=True, constant=True)
 lfsr_num_bits_syn = 20
 synapse.lfsr_num_bits_syn = lfsr_num_bits_syn
-synapse.psc_decay_probability = init_lfsr(lfsr_seed, neuron.N, lfsr_num_bits_syn)
+#import pdb; pdb.set_trace()
+# TODO sending synapse.N results in an error with VariableView not being integer
+synapse.psc_decay_probability = init_lfsr(lfsr_seed, len(synapse.N_incoming), lfsr_num_bits_syn)
 synapse.namespace.update({'lfsr': lfsr})
 synapse.run_regularly('''psc_decay_probability = lfsr(psc_decay_probability,\
                                                       N,\
@@ -182,12 +254,9 @@ spikemon = SpikeMonitor(neuron, name='spike_monitor')
 neuron_monitor = StateMonitor(neuron, variables=['Vm', 'Iin', 'decay_probability'], record=True, name='state_monitor_neu')
 synapse_monitor = StateMonitor(synapse, variables=['I_syn'], record=True, name='state_monitor_syn')
 
-duration = 400*ms
 Net = TeiliNetwork()
 Net.add(input_spike_generator, neuron, synapse, spikemon, neuron_monitor, synapse_monitor)
-Net.run(duration)
-
-#import pdb; pdb.set_trace()
+Net.run(duration, report='text')
 
 # Visualize compare random numbers generated with rand, for 250s
 #plt.figure()
@@ -209,28 +278,38 @@ Net.run(duration)
 
 plt.figure()
 plt.plot(spikemon.t/ms, spikemon.i, 'ko')
+plt.title('Neurons raster')
 plt.ylabel('Neuron index')
-plt.xlabel('Time (samples)')
+plt.xlabel('Time (ms)')
+
+plt.figure()
+plt.plot(input_timestamps/ms, input_indices, 'ko')
+plt.title('Input poissonian spikes')
+plt.ylabel('Input index')
+plt.xlabel('Time (ms)')
 
 plt.figure()
 colors = ['k', 'r', 'g', 'b']
 for i in range(num_neurons):
     plt.plot(neuron_monitor.t/ms, neuron_monitor.Vm[i], colors[i], label=str(i))
-plt.xlabel('Time (samples)')
-plt.ylabel('membrane potential (a.u.)')
+plt.title('Membrane potential of the 4 neurons')
+plt.xlabel('Time (ms)')
+plt.ylabel('membrane potential (V)')
 plt.legend()
 
 plt.figure()
 for i in range(num_neurons):
     plt.plot(neuron_monitor.t/ms, neuron_monitor.Iin[i], 'k')
-plt.xlabel('Time (samples)')
-plt.ylabel('Iin (a.u.)');
+plt.title('Input current')
+plt.xlabel('Time (ms)')
+plt.ylabel('Iin (A)');
 
 plt.figure()
 for i in range(num_neurons):
     plt.plot(synapse_monitor.t/ms, synapse_monitor.I_syn[i], 'k')
-plt.xlabel('Time (samples)')
-plt.ylabel('I_syn (a.u.)');
+plt.title('Input current')
+plt.xlabel('Time (ms)')
+plt.ylabel('I_syn (A)');
 plt.show()
 
 #with open('teili.npy', 'wb') as f:

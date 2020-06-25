@@ -377,6 +377,44 @@ none_model = {
 
 none_params = {}
 
+"""LIF neuron model with stochastic decay taken from Wang et al. (2018).
+Please refer to this paper for more information.  The arguments of the function
+int() should contain units and should be greater than 1 (otherwise membrane
+would be always clipped to zero). For this reason some multiplication and
+divisions with units were added to the equations.
+"""
+stochastic_decay_model_template = {
+    'model': """
+        dVm/dt = int((decay_rate*Vm + (1-decay_rate)*Vrest + int(not refrac)*input_gain*Iin)/mV + decay_probability)*volt/second : volt
+        decay_rate = tau/(tau + 1.0*ms)                      : 1
+        decay_rate_refrac = refrac_tau/(refrac_tau + 1.0*ms) : 1
+        refrac = Vm<Vrest                                    : boolean
+
+        decay_probability : 1
+        input_gain        : ohm
+        Iin = Iin0        : amp
+        Iin0 : amp
+        tau               : second (constant)
+        refrac_tau        : second (constant)
+        refP              : second
+        Vthres            : volt   (constant)
+        Vrest             : volt   (constant)
+        Vreset            : volt   (constant)
+        """,
+    'threshold': """Vm>=Vthres""",
+    'reset': """Vm=Vreset""",
+}
+
+stochastic_decay_model_template = {
+    'Vthres': 16*mV,
+    'Vrest': 3*mV,
+    'Vreset': 0*mV,
+    'tau': 10*ms,
+    'input_gain' : 1*ohm,
+    'refrac_tau': 10*ms,
+    'refP': '12.*ms'
+    }
+
 modes = {
     'current': i_model_template,
     'voltage': v_model_template

@@ -176,6 +176,36 @@ dpi_shunt_params = {
     'I_syn': constants.I0
 }
 
+"""LIF neuron synapse model with stochastic decay taken from Wang et al. (2018).
+Please refer to this paper for more information.  The arguments of the function
+int() should contain units and should be greater than 1 (otherwise current
+would be always clipped to zero). For this reason some multiplication and
+divisions with units were added to the equations.
+"""
+stochastic_decay = {
+    'model': '''
+        dI_syn/dt = int(I_syn*psc_decay/mA + psc_decay_probability)*amp/second : amp (clock-driven)
+        Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
+
+        psc_decay = tau_syn/(tau_syn+1.0*ms) : 1
+
+        weight                : 1
+        psc_decay_probability : 1
+        gain_syn              : amp
+        tau_syn               : second (constant)
+        ''',
+    'on_pre': '''
+        I_syn += gain_syn*weight
+        ''',
+        'on_post': '''
+        '''
+}
+stochastic_decay_params: {
+    'weight' : '1',
+    'gain_syn' : '1*mA',
+    'tau_syn': '3*ms',
+}
+
 """ **Plasticity blocks**
 You need to declare two set of parameters for every block:
 *   current based models

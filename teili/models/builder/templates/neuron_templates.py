@@ -18,7 +18,7 @@ TBA: How to add dictionaries to Model dictionaries (see bottom)
 """
 
 from teili import constants
-from brian2 import pF, nS, mV, ms, pA, nA, psiemens
+from brian2 import pF, nS, mV, ms, pA, nA, psiemens, ohm
 pS = psiemens
 
 # voltage based equation building blocks
@@ -378,14 +378,17 @@ none_model = {
 none_params = {}
 
 """LIF neuron model with stochastic decay taken from Wang et al. (2018).
-Please refer to this paper for more information.  The arguments of the function
-int() should contain units and should be greater than 1 (otherwise membrane
-would be always clipped to zero). For this reason some multiplication and
-divisions with units were added to the equations.
+Please refer to this paper for more information. Note that this model was
+conceptualized in discrete time with backward euler scheme and an integer
+operation. An state updader with x_new = dt*f(x,t) and
+defaultclock.dt = 1*ms in the code using this model.
 """
-stochastic_decay_model_template = {
+q_model_template = {
     'model': """
-        dVm/dt = int((decay_rate*Vm + (1-decay_rate)*Vrest + int(not refrac)*input_gain*Iin)/mV + decay_probability)*volt/second : volt
+        dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*volt/second : volt
+        normal_decay = (decay_rate*Vm + (1-decay_rate)*Vrest + input_gain*Iin)/mV + decay_probability : 1
+        refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
+
         decay_rate = tau/(tau + 1.0*ms)                      : 1
         decay_rate_refrac = refrac_tau/(refrac_tau + 1.0*ms) : 1
         refrac = Vm<Vrest                                    : boolean
@@ -405,7 +408,7 @@ stochastic_decay_model_template = {
     'reset': """Vm=Vreset""",
 }
 
-stochastic_decay_model_template = {
+q_model_template_params = {
     'Vthres': 16*mV,
     'Vrest': 3*mV,
     'Vreset': 0*mV,
@@ -417,7 +420,8 @@ stochastic_decay_model_template = {
 
 modes = {
     'current': i_model_template,
-    'voltage': v_model_template
+    'voltage': v_model_template,
+    'quantized': q_model_template
     }
 
 current_equation_sets = {

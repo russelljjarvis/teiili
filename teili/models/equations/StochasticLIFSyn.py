@@ -18,6 +18,7 @@ StochasticLIFSyn = {'model': '''
                         psc_decay_probability : 1
                         gain_syn              : amp
                         tau_syn               : second (constant)
+                        lfsr_num_bits_syn : 1 # Number of bits in the LFSR used
                         ''',
                     'on_pre': '''
                         I_syn += gain_syn*weight
@@ -30,6 +31,7 @@ StochasticLIFSyn = {'model': '''
                         'w_plast' : '0',
                         'gain_syn' : '1*mA',
                         'tau_syn': '3*ms',
+                        'lfsr_num_bits_syn': '20'
                         }
                    }
 

@@ -60,11 +60,12 @@ def lfsr(decay_probability, num_neurons, lfsr_num_bits):
     >>> bin(int(lfsr(number/2**20, 1)*2**20))
     '0b1'
     """
+    #import pdb; pdb.set_trace()
     lfsr_num_bits = int(lfsr_num_bits)
     decay_probability *= 2**lfsr_num_bits
     mask = 2**lfsr_num_bits - 1
 
-    for _ in range(num_neurons):
+    for i in range(num_neurons):
         decay_probability = int(decay_probability) << 1
         overflow = True if decay_probability & (1 << lfsr_num_bits) else False
         # Re-introduces 1s beyond last position
@@ -80,7 +81,7 @@ def lfsr(decay_probability, num_neurons, lfsr_num_bits):
         if bool(fourth_tap^first_tap):
             decay_probability |= (1 << 3)
 
-    return decay_probability/2**lfsr_num_bits
+    return np.array(decay_probability)/2**lfsr_num_bits
 
 def init_lfsr(lfsr_seed, num_neurons, num_bits):
     """
@@ -152,31 +153,27 @@ synapse = Connections(input_spike_generator, neuron, method=stochastic_decay,
 synapse.connect(True)
 
 lfsr_seed = 12345
-lfsr_num_bits = 20
-lfsr_seed = 12345
-lfsr_num_bits = 20
-neuron.add_state_variable('lfsr_num_bits', shared=True, constant=True)
-neuron.lfsr_num_bits = lfsr_num_bits
-neuron.decay_probability = init_lfsr(lfsr_seed, neuron.N, lfsr_num_bits)
+num_bits = int(neuron.lfsr_num_bits[0])
+num_elements = len(neuron.lfsr_num_bits)
+neuron.decay_probability = init_lfsr(lfsr_seed, num_elements, num_bits)
 neuron.namespace.update({'lfsr': lfsr})
 neuron.Vm = 3*mV
 neuron.run_regularly('''decay_probability = lfsr(decay_probability,\
                                                  N,\
                                                  lfsr_num_bits)
                      ''',
-                     dt=1*ms)
+                     dt=defaultclock.dt)
 
-synapse.weight = 5
-synapse.add_state_variable('lfsr_num_bits_syn', shared=True, constant=True)
-lfsr_num_bits_syn = 20
-synapse.lfsr_num_bits_syn = lfsr_num_bits_syn
-synapse.psc_decay_probability = init_lfsr(lfsr_seed, neuron.N, lfsr_num_bits_syn)
+synapse.weight = 3
+num_bits = int(synapse.lfsr_num_bits_syn[0])
+num_elements = len(synapse.lfsr_num_bits_syn)
+synapse.psc_decay_probability = init_lfsr(lfsr_seed, num_elements, num_bits)
 synapse.namespace.update({'lfsr': lfsr})
 synapse.run_regularly('''psc_decay_probability = lfsr(psc_decay_probability,\
                                                       N,\
                                                       lfsr_num_bits_syn)
                       ''',
-                      dt=1*ms)
+                      dt=defaultclock.dt)
 
 spikemon = SpikeMonitor(neuron, name='spike_monitor')
 neuron_monitor = StateMonitor(neuron, variables=['Vm', 'Iin', 'decay_probability'], record=True, name='state_monitor_neu')
@@ -186,8 +183,6 @@ duration = 400*ms
 Net = TeiliNetwork()
 Net.add(input_spike_generator, neuron, synapse, spikemon, neuron_monitor, synapse_monitor)
 Net.run(duration)
-
-#import pdb; pdb.set_trace()
 
 # Visualize compare random numbers generated with rand, for 250s
 #plt.figure()

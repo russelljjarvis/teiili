@@ -565,26 +565,30 @@ def lfsr(decay_probability, num_neurons, lfsr_num_bits):
     >>> bin(int(lfsr(number/2**20, 1)*2**20))
     '0b1'
     """
-    #import pdb; pdb.set_trace()
-    lfsr_num_bits = int(lfsr_num_bits)
+    if isinstance(decay_probability, np.ndarray):
+        lfsr_num_bits = int(lfsr_num_bits[0])
+    else:
+        lfsr_num_bits = int(lfsr_num_bits)
+        decay_probability = np.array([decay_probability])
+
     decay_probability *= 2**lfsr_num_bits
+    decay_probability = decay_probability.astype(int)
     mask = 2**lfsr_num_bits - 1
 
-    for i in range(num_neurons):
-        decay_probability = int(decay_probability) << 1
-        overflow = True if decay_probability & (1 << lfsr_num_bits) else False
+    for _ in range(num_neurons):
+        decay_probability = decay_probability << 1
+        overflow = (decay_probability & (1 << lfsr_num_bits)).astype(bool)
         # Re-introduces 1s beyond last position
-        if overflow:
-            decay_probability |= 1
+        decay_probability |= overflow
         # Ensures variable is lfsr_num_bits long
         decay_probability = decay_probability & mask
         # Get bits from positions 0 and 3
-        fourth_tap = 1 if decay_probability & (1 << 3) else 0
-        first_tap = 1 if decay_probability & (1 << 0) else 0
+        fourth_tap = (decay_probability & (1 << 3)).astype(bool)
+        first_tap = (decay_probability & (1 << 0)).astype(bool)
         # Update bit in position 3
         decay_probability &=~ (1 << 3)
-        if bool(fourth_tap^first_tap):
-            decay_probability |= (1 << 3)
+        indexes = np.where(fourth_tap^first_tap==True)
+        decay_probability[indexes] |= (1 << 3)
 
-    return np.array(decay_probability)/2**lfsr_num_bits
+    return decay_probability/2**lfsr_num_bits
 

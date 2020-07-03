@@ -82,8 +82,10 @@ input_synapse.connect(True)
 
 
 test_synapse = Connections(test_neurons1, test_neurons2,
-                  method=stochastic_decay,
-                  equation_builder=builder_object4, name="test_synapse")
+                           equation_builder=builder_object4,
+                           name="test_synapse",
+                           method=stochastic_decay,
+                           verbose=True)
 test_synapse.connect(True)
 
 '''
@@ -104,10 +106,10 @@ add_lfsr(input_synapse, 12345, defaultclock.dt)
 add_lfsr(test_synapse, 12345, defaultclock.dt)
 
 # Example of how to set parameters, saved as a dictionary
-test_neurons1.set_params(neuron_model_param)
+#test_neurons1.set_params(neuron_model_param)
 # Example of how to set a single parameter
 test_neurons1.refP = 1 * ms
-test_neurons2.set_params(neuron_model_param)
+#test_neurons2.set_params(neuron_model_param)
 test_neurons2.refP = 1 * ms
 if 'Imem' in builder_object1.keywords['model']:
     input_synapse.weight = 5000

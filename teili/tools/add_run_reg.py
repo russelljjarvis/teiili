@@ -154,8 +154,12 @@ def add_lfsr(group, lfsr_seed, dt):
     dt : float
         Time step to run_regularly
     """
-    num_bits = int(group.lfsr_num_bits[0])
-    num_elements = len(group.lfsr_num_bits)
+    if isinstance(group, Neurons):
+        num_bits = int(group.lfsr_num_bits[0])
+        num_elements = len(group.lfsr_num_bits)
+    else:
+        num_bits = int(group.lfsr_num_bits_syn[0])
+        num_elements = len(group.lfsr_num_bits_syn)
     lfsr_out = [0 for _ in range(num_elements)]
     mask = 2**num_bits - 1
 
@@ -192,6 +196,6 @@ def add_lfsr(group, lfsr_seed, dt):
         group.namespace.update({'lfsr': lfsr})
         group.run_regularly('''decay_probability_syn = lfsr(decay_probability_syn,\
                                                          N,\
-                                                         lfsr_num_bits)
+                                                         lfsr_num_bits_syn)
                              ''',
                              dt=dt)

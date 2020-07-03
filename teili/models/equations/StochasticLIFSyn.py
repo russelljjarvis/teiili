@@ -8,10 +8,10 @@ units, e.g. nA.
 '''
 from brian2.units import *
 StochasticLIFSyn = {'model': '''
-                        dI_syn/dt = int(I_syn*psc_decay/mA + decay_probability_syn)*amp/second : amp (clock-driven)
+                        dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*amp/second : amp (clock-driven)
                         Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
 
-                        psc_decay = tau_syn/(tau_syn+1.0*ms) : 1
+                        decay_syn = tau_syn/(tau_syn+1.0*ms) : 1
 
                         weight                : 1
                         w_plast               : 1

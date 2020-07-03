@@ -9,11 +9,12 @@ group and add all necessary state_variables and function calls.
 
 import numpy as np
 from brian2 import ms, pA, amp, second
+from teili.core.groups import Neurons, Connections
 from teili.tools.run_reg_functions import re_init_weights,\
     get_activity_proxy_vm, get_activity_proxy_imem,\
     max_value_update_vm, max_value_update_imem,\
     normalize_activity_proxy_vm, normalize_activity_proxy_imem,\
-    get_re_init_index
+    get_re_init_index, lfsr
 
 
 
@@ -138,3 +139,59 @@ def add_weight_decay(group, decay_rate, dt):
         group.run_regularly('''w_plast *= decay''', dt=dt)
     elif 'Ipred_plast' in group.equations.names:
         group.run_regularly('''Ipred_plast *= decay''', dt=dt)
+
+def add_lfsr(group, lfsr_seed, dt):
+    """
+    Initializes numbers that will be used for each neuron on the LFSR
+    function by iterating on the LFSR num_elements times.
+
+    Parameters
+    ----------
+    group : Connection group
+        Group that the random numbers will be distributed to
+    lfsr_seed : int
+        The seed of the LFSR
+    dt : float
+        Time step to run_regularly
+    """
+    num_bits = int(group.lfsr_num_bits[0])
+    num_elements = len(group.lfsr_num_bits)
+    lfsr_out = [0 for _ in range(num_elements)]
+    mask = 2**num_bits - 1
+
+    for i in range(num_elements):
+        lfsr_seed = lfsr_seed << 1
+        overflow = True if lfsr_seed & (1 << num_bits) else False
+
+        # Re-introduces 1s beyond last position
+        if overflow:
+            lfsr_seed |= 1
+
+        # Ensures variable is num_bits long
+        lfsr_seed = lfsr_seed & mask
+
+        # Get bits from positions 0 and 3
+        fourth_tap = 1 if lfsr_seed & (1 << 3) else 0
+        first_tap = 1 if lfsr_seed & (1 << 0) else 0
+        # Update bit in position 3
+        lfsr_seed &=~ (1 << 3)
+        if bool(fourth_tap^first_tap):
+            lfsr_seed |= (1 << 3)
+        lfsr_out[i] = lfsr_seed
+
+    if isinstance(group, Neurons):
+        group.decay_probability = np.asarray(lfsr_out)/2**num_bits
+        group.namespace.update({'lfsr': lfsr})
+        group.run_regularly('''decay_probability = lfsr(decay_probability,\
+                                                         N,\
+                                                         lfsr_num_bits)
+                             ''',
+                             dt=dt)
+    else:
+        group.decay_probability_syn = np.asarray(lfsr_out)/2**num_bits
+        group.namespace.update({'lfsr': lfsr})
+        group.run_regularly('''decay_probability_syn = lfsr(decay_probability_syn,\
+                                                         N,\
+                                                         lfsr_num_bits)
+                             ''',
+                             dt=dt)

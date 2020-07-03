@@ -236,6 +236,18 @@ class DPIstdgm(SynapseEquationBuilder):
         SynapseEquationBuilder.__init__(self, base_unit='unit_less', 
                                         SynSTDGM='stdgm')
 
+class StochasticSyn_decay(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate a synapse with
+    stochastic decay as published in Wang et al. (2018).
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate a synapse with
+        stochastic decay as published in Wang et al. (2018).
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochasticDecay',
+                                        plasticity='non_plastic')
+
 
 def main(path=None):
     if path is None:
@@ -269,6 +281,9 @@ def main(path=None):
 
     dpiSyn = DPISyn()
     dpiSyn.export_eq(os.path.join(path, "DPISyn"))
+
+    slifSyn = StochasticSyn_decay()
+    slifSyn.export_eq(os.path.join(path, "StochasticSyn_decay"))
 
     dpiShunt = DPIShunt()
     dpiShunt.export_eq(os.path.join(path, "DPIShunt"))

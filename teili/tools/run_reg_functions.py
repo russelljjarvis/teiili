@@ -525,3 +525,66 @@ def update_threshold(Vthr, Vm, EL, VT, sigma_membrane, not_refractory):
              ((sigma_membrane / mV)* 5 * (Vm < (EL-1*mV))) * not_refractory)
 
     return data * mV
+
+@implementation('numpy', discard_units=True)
+@check_units(decay_probability=1, num_neurons=1, lfsr_num_bits=1, result=1)
+def lfsr(decay_probability, num_neurons, lfsr_num_bits):
+    """
+    Generate a pseudorandom number between 0 and 1 with a 20-bit Linear
+    Feedback Shift Register (LFSR). This is equivalent to generating random
+    numbers from an uniform distribution.
+
+    This function receives a given number and performs num_neurons iterations
+    of the LFSR. This is done to set the next input that will be used when a
+    given neuron needs another random number. The LFSR does a circular shift
+    (i.e. all the values are shifted left while the previous MSB becomes the
+    new LSB) and ensures the variable is no bigger than 20 bits. After that,
+    the 3rd bit is update with the result of a XOR between bits 3 and 0. Note
+    that, for convenience, the input and outputs are normalized, i.e.
+    value/2**20.
+
+    Parameters
+    ----------
+    decay_probability : float
+        Value between 0 and 1 that will be the input to the LFSR
+    num_neurons : int
+        Number of neurons in the group
+    lfsr_num_bits : int
+        Number of bits of the LFSR
+
+    Returns
+    -------
+    float
+        A random number between 0 and 1
+
+    Examples
+    --------
+    >>> number = 2**19 + 2**2
+    >>> bin(number)
+    '0b10000000000000000100'
+    >>> bin(int(lfsr(number/2**20, 1)*2**20))
+    '0b1'
+    """
+    #import pdb; pdb.set_trace()
+    lfsr_num_bits = int(lfsr_num_bits)
+    decay_probability *= 2**lfsr_num_bits
+    mask = 2**lfsr_num_bits - 1
+
+    for i in range(num_neurons):
+        decay_probability = int(decay_probability) << 1
+        overflow = True if decay_probability & (1 << lfsr_num_bits) else False
+        # Re-introduces 1s beyond last position
+        if overflow:
+            decay_probability |= 1
+        # Ensures variable is lfsr_num_bits long
+        decay_probability = decay_probability & mask
+        # Get bits from positions 0 and 3
+        fourth_tap = 1 if decay_probability & (1 << 3) else 0
+        first_tap = 1 if decay_probability & (1 << 0) else 0
+        # Update bit in position 3
+        decay_probability &=~ (1 << 3)
+        if bool(fourth_tap^first_tap):
+            decay_probability |= (1 << 3)
+
+    return np.array(decay_probability)/2**lfsr_num_bits
+

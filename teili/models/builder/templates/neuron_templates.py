@@ -464,7 +464,6 @@ voltage_equation_sets = {
     }
 
 quantized_equation_sets = {
-    'leaky': none_model,
     'none': none_model,
     'spatial': spatial}
 
@@ -498,4 +497,6 @@ voltage_parameters = {
 
 quantized_parameters = {
     'quantized': q_model_template_params,
+    'none': none_params,
+    'spatial': none_params,
     }

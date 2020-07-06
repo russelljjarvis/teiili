@@ -43,8 +43,8 @@ import warnings
 from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_neu_dict
 from teili.models.builder.templates.neuron_templates import modes, current_equation_sets, \
-    voltage_equation_sets, \
-    current_parameters, voltage_parameters
+    voltage_equation_sets, quantized_equation_sets, \
+    current_parameters, voltage_parameters, quantized_parameters
 
 
 class NeuronEquationBuilder():
@@ -142,6 +142,25 @@ class NeuronEquationBuilder():
                     param_templ_dummy = param_templ_dummy + \
                         [voltage_parameters[value]]
                 param_templ = [voltage_parameters[base_unit]] + \
+                    param_templ_dummy
+
+                if self.verbose:
+                    print("Equations", eq_templ)
+                    print("Parameters", eq_templ)
+
+                keywords = combine_neu_dict(eq_templ, param_templ)
+
+            if base_unit == 'quantized':
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [quantized_equation_sets[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [quantized_parameters[value]]
+                param_templ = [quantized_parameters[base_unit]] + \
                     param_templ_dummy
 
                 if self.verbose:

@@ -42,7 +42,7 @@ from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_syn_dict
 from teili.models.builder.templates.synapse_templates import modes, kernels, plasticity_models,\
     current_parameters, conductance_parameters, DPI_parameters, DPI_shunt_parameters, synaptic_equations,\
-    unit_less_parameters#, quantized_stochastic_decay_parameters
+    unit_less_parameters, quantized_stochastic_decay_parameters
 import copy
 
 

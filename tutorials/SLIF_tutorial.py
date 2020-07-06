@@ -64,28 +64,33 @@ spikemon = SpikeMonitor(neuron, name='spike_monitor')
 neuron_monitor = StateMonitor(neuron, variables=['Vm', 'Iin', 'decay_probability'], record=True, name='state_monitor_neu')
 synapse_monitor = StateMonitor(synapse, variables=['I_syn'], record=True, name='state_monitor_syn')
 
-duration = 500*ms
+duration = 250000*ms
 Net = TeiliNetwork()
 Net.add(input_spike_generator, neuron, synapse, spikemon, neuron_monitor, synapse_monitor)
 Net.run(duration)
 
 # Visualize compare random numbers generated with rand, for 250s
-#plt.figure()
-#Z = np.random.rand(250000)   # Test data
-#Z = np.reshape(Z, (500,500))
-#plt.imshow(Z, cmap='gray', interpolation='nearest')
-#plt.show()
-#for i in range(num_neurons):
-#    plt.figure()
-#    Z = neuron_monitor.decay_probability[i,:]
-#    Z = np.reshape(Z, (500,500))
-#    plt.imshow(Z, cmap='gray', interpolation='nearest')
-#    plt.show()
+plt.figure()
+Z = np.random.rand(250000)   # Test data
+Z = np.reshape(Z, (500,500))
+plt.imshow(Z, cmap='gray', interpolation='nearest')
+plt.show()
+for i in range(num_neurons):
+    plt.figure()
+    Z = neuron_monitor.decay_probability[i,:]
+    Z = np.reshape(Z, (500,500))
+    plt.imshow(Z, cmap='gray', interpolation='nearest')
+    plt.show()
 
-#plt.figure()
-#spike_times = spikemon[0].t/ms
-#ISI = spike_times[1:-1] - spike_times[0:-2]
-#_ = plt.hist(ISI, bins=20, range=(0, 100))
+plt.figure()
+plt.plot(neuron_monitor.decay_probability[0,:], 'k')
+plt.plot(neuron_monitor.decay_probability[1,:], 'r')
+plt.plot(neuron_monitor.decay_probability[2,:], 'b')
+plt.plot(neuron_monitor.decay_probability[3,:], 'g')
+plt.legend()
+plt.ylabel('Random numbers generated for each neuron')
+plt.xlabel('Time (samples)')
+plt.show()
 
 plt.figure()
 plt.plot(spikemon.t/ms, spikemon.i, 'ko')

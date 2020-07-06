@@ -99,9 +99,8 @@ class StochasticLIF(NeuronEquationBuilder):
         Args:
             num_inputs (int, optional): Description
         """
-        NeuronEquationBuilder.__init__(self, base_unit='quantized', adaptation='none',
-                                       integration_mode='linear', leak='leaky',
-                                       position='spatial', noise='none')
+        NeuronEquationBuilder.__init__(self, base_unit='quantized',
+                                       position='spatial')
         self.add_input_currents(num_inputs)
 
 class DPI(NeuronEquationBuilder):

@@ -162,6 +162,7 @@ def add_lfsr(group, lfsr_seed, dt):
         num_elements = len(group.lfsr_num_bits_syn)
     lfsr_out = [0 for _ in range(num_elements)]
     mask = 2**num_bits - 1
+    taps = {5: 2, 6: 1, 9: 4, 20:3}
 
     for i in range(num_elements):
         lfsr_seed = lfsr_seed << 1
@@ -174,12 +175,12 @@ def add_lfsr(group, lfsr_seed, dt):
         # Ensures variable is num_bits long
         lfsr_seed = lfsr_seed & mask
 
-        # Get bits from positions 0 and 3
-        fourth_tap = 1 if lfsr_seed & (1 << 3) else 0
+        # Get bits from proper positions
+        second_tap = 1 if lfsr_seed & (1 << taps[num_bits]) else 0
         first_tap = 1 if lfsr_seed & (1 << 0) else 0
         # Update bit in position 3
         lfsr_seed &=~ (1 << 3)
-        if bool(fourth_tap^first_tap):
+        if bool(second_tap^first_tap):
             lfsr_seed |= (1 << 3)
         lfsr_out[i] = lfsr_seed
 

@@ -74,14 +74,19 @@ convinience to switch between voltage- or current-based models.
 Normally, you have one or the other in yur simulation, thus
 you will not need the if condition.
 '''
-add_lfsr(test_neurons1, 12345, defaultclock.dt)
+num_bits = 20
+seed = 12
+test_neurons1.lfsr_num_bits = num_bits
+test_neurons2.lfsr_num_bits = num_bits
+add_lfsr(test_neurons1, seed, defaultclock.dt)
 test_neurons1.Vm = 3*mV
-add_lfsr(test_neurons2, 12345, defaultclock.dt)
+add_lfsr(test_neurons2, seed, defaultclock.dt)
 test_neurons2.Vm = 3*mV
 
-add_lfsr(input_synapse, 12345, defaultclock.dt)
-
-add_lfsr(test_synapse, 12345, defaultclock.dt)
+input_synapse.lfsr_num_bits_syn = num_bits
+test_synapse.lfsr_num_bits_syn = num_bits
+add_lfsr(input_synapse, seed, defaultclock.dt)
+add_lfsr(test_synapse, seed, defaultclock.dt)
 
 # Example of how to set parameters, saved as a dictionary
 #test_neurons1.set_params(neuron_model_param)

@@ -574,6 +574,7 @@ def lfsr(decay_probability, num_neurons, lfsr_num_bits):
     decay_probability *= 2**lfsr_num_bits
     decay_probability = decay_probability.astype(int)
     mask = 2**lfsr_num_bits - 1
+    taps = {5: 2, 6: 1, 9: 4, 20:3}
 
     for _ in range(num_neurons):
         decay_probability = decay_probability << 1
@@ -582,12 +583,12 @@ def lfsr(decay_probability, num_neurons, lfsr_num_bits):
         decay_probability |= overflow
         # Ensures variable is lfsr_num_bits long
         decay_probability = decay_probability & mask
-        # Get bits from positions 0 and 3
-        fourth_tap = (decay_probability & (1 << 3)).astype(bool)
+        # Get bits from appropriate positions
+        second_tap = (decay_probability & (1 << taps[lfsr_num_bits])).astype(bool)
         first_tap = (decay_probability & (1 << 0)).astype(bool)
         # Update bit in position 3
         decay_probability &=~ (1 << 3)
-        indexes = np.where(fourth_tap^first_tap==True)
+        indexes = np.where(second_tap^first_tap==True)
         decay_probability[indexes] |= (1 << 3)
 
     return decay_probability/2**lfsr_num_bits

@@ -57,8 +57,9 @@ synapse.connect(True)
 synapse.weight = 3 # No spikes
 #synapse.weight = 4 # Spikes
 neuron.Vm = 3*mV
-add_lfsr(neuron, 12345, defaultclock.dt)
-add_lfsr(synapse, 12345, defaultclock.dt)
+seed = 12 # e.g. 12345 for 20 bits
+add_lfsr(neuron, seed, defaultclock.dt)
+add_lfsr(synapse, seed, defaultclock.dt)
 
 spikemon = SpikeMonitor(neuron, name='spike_monitor')
 neuron_monitor = StateMonitor(neuron, variables=['Vm', 'Iin', 'decay_probability'], record=True, name='state_monitor_neu')

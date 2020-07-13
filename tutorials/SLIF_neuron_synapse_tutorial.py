@@ -12,7 +12,7 @@ import pyqtgraph as pg
 import numpy as np
 import sys
 
-from brian2 import ExplicitStateUpdater, ms, mV, second, pA, nA, prefs,\
+from brian2 import ExplicitStateUpdater, ms, mV, ohm, second, pA, nA, prefs,\
     SpikeMonitor, StateMonitor, \
     SpikeGeneratorGroup, defaultclock
 
@@ -88,20 +88,14 @@ test_synapse.lfsr_num_bits_syn = num_bits
 add_lfsr(input_synapse, seed, defaultclock.dt)
 add_lfsr(test_synapse, seed, defaultclock.dt)
 
-# Example of how to set parameters, saved as a dictionary
-#test_neurons1.set_params(neuron_model_param)
 # Example of how to set a single parameter
-test_neurons1.refP = 1 * ms
-#test_neurons2.set_params(neuron_model_param)
-test_neurons2.refP = 1 * ms
-if 'Imem' in neuron_model().keywords['model']:
-    input_synapse.weight = 5000
-    test_synapse.weight = 800
-    test_neurons1.Iconst = 10 * nA
-elif 'Vm' in neuron_model().keywords['model']:
-    input_synapse.weight = 1.5
-    test_synapse.weight = 8.0
-    test_neurons1.Iconst = 10000000 * nA
+test_neurons1.refrac_tau = 2 * ms
+test_neurons1.g_psc = 2 * ohm
+test_neurons2.refrac_tau = 2 * ms
+test_neurons2.g_psc = 2 * ohm
+input_synapse.weight = 200
+test_synapse.weight = 30.0
+test_neurons1.Iconst = 10000000 * nA
 
 spikemon_input = SpikeMonitor(input_spikegenerator, name='spikemon_input')
 spikemon_test_neurons1 = SpikeMonitor(

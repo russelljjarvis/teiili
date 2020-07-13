@@ -187,7 +187,7 @@ quantized_stochastic_decay = {
         dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*amp/second : amp (clock-driven)
         Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
         
-        decay_syn = tau_syn/(tau_syn+1.0*ms) : 1
+        decay_syn = tau_syn/(tau_syn + dt) : 1
         
         weight                : 1
         w_plast               : 1
@@ -197,7 +197,7 @@ quantized_stochastic_decay = {
         lfsr_num_bits_syn : 1 # Number of bits in the LFSR used
         ''',
         'on_pre': '''
-        I_syn += gain_syn*weight
+        I_syn += gain_syn * weight * w_plast
         ''',
         'on_post': '''
         '''
@@ -205,10 +205,10 @@ quantized_stochastic_decay = {
 
 quantized_stochastic_decay_params = {
     'weight' : 1,
-    'w_plast' : 0,
+    'w_plast' : 1,
     'gain_syn' : 1*mA,
     'tau_syn': 3*ms,
-    'lfsr_num_bits_syn': 20
+    'lfsr_num_bits_syn': 6
 }
 
 """ **Plasticity blocks**

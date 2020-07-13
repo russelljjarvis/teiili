@@ -12,7 +12,7 @@ import pyqtgraph as pg
 import numpy as np
 import os
 
-from brian2 import ms, mV, us, second, pA, prefs,\
+from brian2 import ms, ohm, mV, us, second, pA, prefs,\
     SpikeMonitor, StateMonitor, defaultclock,\
     implementation, check_units, ExplicitStateUpdater
 
@@ -21,7 +21,9 @@ from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import DPI
-from teili.models.synapse_models import DPISyn, DPIstdp
+from teili.models.neuron_models import StochasticLIF as neuron_model
+from teili.models.synapse_models import DPIstdp, StochasticSyn_decay_stdp
+from teili.models.synapse_models import StochasticSyn_decay as synapse_model
 from teili.stimuli.testbench import STDP_Testbench
 from teili.tools.add_run_reg import add_lfsr
 
@@ -66,14 +68,6 @@ def get_labeled_data(picklename, bTrain = True):
 
     return data
 
-path = os.path.expanduser("~")
-model_path = os.path.join(path, "teiliApps", "equations", "")
-
-neuron_model = NeuronEquationBuilder.import_eq(
-    filename=model_path + 'StochasticLIF.py', num_inputs=2)
-synapse_model = SynapseEquationBuilder.import_eq(
-    filename=model_path + 'StochasticLIFSyn.py')
-
 ################
 # Define MNIST inputs
 ################
@@ -113,71 +107,78 @@ synapse_model = SynapseEquationBuilder.import_eq(
 #                                            times=input_timestamps)
 
 prefs.codegen.target = "numpy"
-defaultclock.dt = 50 * us
+defaultclock.dt = 1 * ms
 Net = TeiliNetwork()
 
-stochastic_decay = ExplicitStateUpdater('''x_new = dt*f(x,t)''')
 stdp = STDP_Testbench()
 pre_spikegenerator, post_spikegenerator = stdp.stimuli(isi=30)
 
-pre_neurons = Neurons(2, equation_builder=neuron_model, method=stochastic_decay,
-                      name='pre_neurons', verbose=True)
+stochastic_decay = ExplicitStateUpdater('''x_new = dt*f(x,t)''')
+pre_neurons = Neurons(2,
+                      equation_builder=neuron_model(num_inputs=2),
+                      method=stochastic_decay,
+                      name='pre_neurons',
+                      verbose=True)
 
-post_neurons = Neurons(2, equation_builder=neuron_model, method=stochastic_decay,
-                       name='post_neurons', verbose=True)
-
+post_neurons = Neurons(2,
+                       equation_builder=neuron_model(num_inputs=2),
+                       method=stochastic_decay,
+                       name='post_neurons',
+                       verbose=True)
 
 #synapse = Connections(input_spike_generator, neuron, method=stochastic_decay,
-#                      equation_builder=synapse_model, verbose=True)
+#                      equation_builder=synapse_model(), verbose=True)
 #synapse.connect(True)
-pre_synapse = Connections(pre_spikegenerator, pre_neurons, method=stochastic_decay,
-                          equation_builder=synapse_model, name='pre_synapse')
+pre_synapse = Connections(pre_spikegenerator, pre_neurons,
+                          method=stochastic_decay,
+                          equation_builder=synapse_model(),
+                          name='pre_synapse')
 
-post_synapse = Connections(post_spikegenerator, post_neurons, method=stochastic_decay,
-                           equation_builder=synapse_model, name='post_synapse')
+post_synapse = Connections(post_spikegenerator, post_neurons,
+                           method=stochastic_decay,
+                           equation_builder=synapse_model(),
+                           name='post_synapse')
 
 stdp_synapse = Connections(pre_neurons, post_neurons,
-                           equation_builder=DPIstdp(), name='stdp_synapse')
+                           method=stochastic_decay,
+                           equation_builder=StochasticSyn_decay_stdp(),
+                           name='stdp_synapse')
 
 pre_synapse.connect(True)
 post_synapse.connect(True)
-# Set parameters:
-pre_neurons.refP = 3 * ms
-# TODO
-#pre_neurons.Itau = 6 * pA
-#post_neurons.Itau = 6 * pA
-
-pre_synapse.weight = 4000.
-
-post_synapse.weight = 4000.
-
 stdp_synapse.connect("i==j")
-stdp_synapse.weight = 300.
-stdp_synapse.I_tau = 10 * pA
+
+# Set parameters:
+seed = 12
+add_lfsr(pre_neurons, seed, defaultclock.dt)
+pre_neurons.Vm = 3*mV
+add_lfsr(post_neurons, seed, defaultclock.dt)
+post_neurons.Vm = 3*mV
+
+pre_synapse.weight = 91
+add_lfsr(pre_synapse, seed, defaultclock.dt)
+post_synapse.weight = 91
+add_lfsr(post_synapse, seed, defaultclock.dt)
+stdp_synapse.weight = 91
+
+stdp_synapse.tau_syn = 5*ms
+post_synapse.tau_syn = 5*ms
+pre_synapse.tau_syn = 5*ms
+
 stdp_synapse.dApre = 0.01
 stdp_synapse.taupre = 3 * ms
 stdp_synapse.taupost = 3 * ms
-
-add_lfsr(pre_neurons, 12345, defaultclock.dt)
-pre_neurons.Vm = 3*mV
-add_lfsr(post_neurons, 12345, defaultclock.dt)
-post_neurons.Vm = 3*mV
-
-pre_synapse.weight = 3
-add_lfsr(pre_synapse, 12345, defaultclock.dt)
-post_synapse.weight = 3
-add_lfsr(post_synapse, 12345, defaultclock.dt)
+add_lfsr(stdp_synapse, seed, defaultclock.dt)
 
 # Setting up monitors
 spikemon_pre_neurons = SpikeMonitor(pre_neurons, name='spikemon_pre_neurons')
-statemon_pre_neurons = StateMonitor(pre_neurons, variables='Vm',# TODO variables='Imem', 
+statemon_pre_neurons = StateMonitor(pre_neurons, variables=['Vm', 'Iin'],
                                     record=0, name='statemon_pre_neurons')
 
 spikemon_post_neurons = SpikeMonitor(
     post_neurons, name='spikemon_post_neurons')
-statemon_post_neurons = StateMonitor(# TODO variables='Imem', 
-    post_neurons, variables='Vm', record=0, name='statemon_post_neurons')
-
+statemon_post_neurons = StateMonitor(
+    post_neurons, variables=['Vm', 'Iin'], record=0, name='statemon_post_neurons')
 
 statemon_pre_synapse = StateMonitor(
     pre_synapse, variables=['I_syn'], record=0, name='statemon_pre_synapse')
@@ -207,6 +208,9 @@ win_stdp.nextRow()
 p2 = win_stdp.addPlot()
 win_stdp.nextRow()
 p3 = win_stdp.addPlot()
+
+p2.setXLink(p1)
+p3.setXLink(p2)
 
 text1 = pg.TextItem(text='Homoeostasis', anchor=(-0.3, 0.5))
 text2 = pg.TextItem(text='Weak Pot.', anchor=(-0.3, 0.5))
@@ -243,21 +247,48 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'w_plast'))],
             x_range=(0, duration),
             title="Plastic synaptic weight",
             xlabel="Time (s)",
-            ylabel="Synpatic weight w_plast",
+            ylabel="w_plast",
             backend='pyqtgraph',
             mainfig=win_stdp,
             subfig=p2)
 
 datamodel = StateVariablesModel(state_variable_names=['I_syn'],
-                                state_variables=[np.asarray(statemon_post_synapse.I_syn[1])],
+                                state_variables=[np.asarray(statemon_post_synapse.I_syn[0])],
                                 state_variables_times=[np.asarray(statemon_post_synapse.t)])
 Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
             MyPlotSettings=PlotSettings(colors=['m']),
             x_range=(0, duration),
             title="Post synaptic current",
             xlabel="Time (s)",
-            ylabel="Synapic current I (pA)",
+            ylabel="I_syn (pA)",
             backend='pyqtgraph',
             mainfig=win_stdp,
             subfig=p3,
             show_immediately=True)
+
+#datamodel = StateVariablesModel(state_variable_names=['Vm'],
+#                                state_variables=[np.asarray(statemon_post_neurons.Vm[0])],
+#                                state_variables_times=[np.asarray(statemon_post_neurons.t)])
+#Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Vm', 'Vm'))],
+#            MyPlotSettings=PlotSettings(colors=['m']),
+#            x_range=(0, duration),
+#            title="Post neuron 0 Vm",
+#            xlabel="Time (s)",
+#            ylabel="voltage",
+#            backend='pyqtgraph',
+#            mainfig=win_stdp,
+#            subfig=p2)
+#
+#datamodel = StateVariablesModel(state_variable_names=['Iin'],
+#                                state_variables=[np.asarray(statemon_post_neurons.Iin[0])],
+#                                state_variables_times=[np.asarray(statemon_post_neurons.t)])
+#Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Iin', 'Iin'))],
+#            MyPlotSettings=PlotSettings(colors=['m']),
+#            x_range=(0, duration),
+#            title="Post neuron 0 I_syn",
+#            xlabel="Time (s)",
+#            ylabel="Iin",
+#            backend='pyqtgraph',
+#            mainfig=win_stdp,
+#            subfig=p3,
+#            show_immediately=True)

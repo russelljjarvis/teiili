@@ -386,24 +386,22 @@ defaultclock.dt = 1*ms in the code using this model.
 q_model_template = {
     'model': '''
         dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*volt/second : volt
-        normal_decay = (decay_rate*Vm + (1-decay_rate)*(Vrest + Rm*I))/mV + decay_probability : 1
+        normal_decay = (decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability : 1
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
 
-        I = Iexp + Iin + Iconst + Inoise - Iadapt : amp
+        I = Iin + Iconst + Inoise - Iadapt : amp
         decay_rate = tau/(tau + dt)                      : 1
-        tau = Rm*Cm : second
         decay_rate_refrac = refrac_tau/(refrac_tau + dt) : 1
         refrac = Vm<Vrest                                    : boolean
 
         decay_probability : 1
-        Rm                : ohm    (constant) # membrane resistance
-        Cm      : farad     (constant)        # membrane capacitance
+        g_psc                : ohm    (constant) # Gain of post synaptic current
         Iconst  : amp                         # constant input current
-        Iexp    : amp                            # exponential current
         Iadapt  : amp                            # adaptation current
         Inoise  : amp                            # noise current
         Iin = Iin0        : amp
         Iin0 : amp
+        tau               : second (constant)
         refrac_tau        : second (constant)
         refP              : second
         Vthres            : volt   (constant)
@@ -421,15 +419,14 @@ q_model_template_params = {
     'Vthres': 16*mV,
     'Vrest': 3*mV,
     'Vreset': 0*mV,
-    'Iexp': 0*pA,
     'Iadapt': 0*pA,
     'Inoise': 0*pA,
     'Iconst': 0*pA,
-    'Cm': 500*uF,
-    'Rm' : 20*ohm,
-    'refrac_tau': 10*ms,
+    'g_psc' : 1*ohm,
+    'tau': 19*ms,
+    'refrac_tau': 2*ms,
     'refP': 12.*ms,
-    'lfsr_num_bits': 20
+    'lfsr_num_bits': 6
     }
 
 modes = {

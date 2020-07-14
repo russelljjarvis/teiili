@@ -159,15 +159,17 @@ pre_synapse.weight = 91
 add_lfsr(pre_synapse, seed, defaultclock.dt)
 post_synapse.weight = 91
 add_lfsr(post_synapse, seed, defaultclock.dt)
-stdp_synapse.weight = 91
 
 stdp_synapse.tau_syn = 5*ms
 post_synapse.tau_syn = 5*ms
 pre_synapse.tau_syn = 5*ms
 
-stdp_synapse.dApre = 0.01
+stdp_synapse.dApre = 0.1
 stdp_synapse.taupre = 3 * ms
 stdp_synapse.taupost = 3 * ms
+stdp_synapse.w_plast = 0
+stdp_synapse.w_max = 30
+stdp_synapse.weight = 1
 add_lfsr(stdp_synapse, seed, defaultclock.dt)
 
 # Setting up monitors
@@ -242,6 +244,19 @@ Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
             mainfig=win_stdp,
             subfig_rasterplot=p1)
 
+#datamodel = StateVariablesModel(state_variable_names=['Vm'],
+#                                state_variables=[np.asarray(statemon_post_neurons.Vm[0])],
+#                                state_variables_times=[np.asarray(statemon_post_neurons.t)])
+#Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Vm', 'Vm'))],
+#            MyPlotSettings=PlotSettings(colors=['m']),
+#            x_range=(0, duration),
+#            title="Post neuron 0 Vm",
+#            xlabel="Time (s)",
+#            ylabel="voltage",
+#            backend='pyqtgraph',
+#            mainfig=win_stdp,
+#            subfig=p2)
+
 Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'w_plast'))],
             MyPlotSettings=PlotSettings(colors=['g']),
             x_range=(0, duration),
@@ -260,25 +275,12 @@ Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
             x_range=(0, duration),
             title="Post synaptic current",
             xlabel="Time (s)",
-            ylabel="I_syn (pA)",
+            ylabel="I_syn (A)",
             backend='pyqtgraph',
             mainfig=win_stdp,
             subfig=p3,
             show_immediately=True)
 
-#datamodel = StateVariablesModel(state_variable_names=['Vm'],
-#                                state_variables=[np.asarray(statemon_post_neurons.Vm[0])],
-#                                state_variables_times=[np.asarray(statemon_post_neurons.t)])
-#Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Vm', 'Vm'))],
-#            MyPlotSettings=PlotSettings(colors=['m']),
-#            x_range=(0, duration),
-#            title="Post neuron 0 Vm",
-#            xlabel="Time (s)",
-#            ylabel="voltage",
-#            backend='pyqtgraph',
-#            mainfig=win_stdp,
-#            subfig=p2)
-#
 #datamodel = StateVariablesModel(state_variable_names=['Iin'],
 #                                state_variables=[np.asarray(statemon_post_neurons.Iin[0])],
 #                                state_variables_times=[np.asarray(statemon_post_neurons.t)])

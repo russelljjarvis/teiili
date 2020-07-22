@@ -74,7 +74,7 @@ convinience to switch between voltage- or current-based models.
 Normally, you have one or the other in yur simulation, thus
 you will not need the if condition.
 '''
-num_bits = 20
+num_bits = 6
 seed = 12
 test_neurons1.lfsr_num_bits = num_bits
 test_neurons2.lfsr_num_bits = num_bits
@@ -90,11 +90,9 @@ add_lfsr(test_synapse, seed, defaultclock.dt)
 
 # Example of how to set a single parameter
 test_neurons1.refrac_tau = 2 * ms
-test_neurons1.g_psc = 2 * ohm
 test_neurons2.refrac_tau = 2 * ms
-test_neurons2.g_psc = 2 * ohm
 input_synapse.weight = 200
-test_synapse.weight = 30.0
+test_synapse.weight = 5.0
 test_neurons1.Iconst = 10000000 * nA
 
 spikemon_input = SpikeMonitor(input_spikegenerator, name='spikemon_input')

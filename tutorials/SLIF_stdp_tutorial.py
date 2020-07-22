@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# @Author: mmilde
-# @Date:   2018-01-16 17:57:35
+# @Author: pabloabur
+# @Date:   2020-07-12 11:50:45
 
 """
 This file provides an example of how to use neuron and synapse models which are present
@@ -31,81 +31,6 @@ from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
 
-MNIST_data_path = '/home/pablo/git/stdp-mnist-brian2/data/'
-
-def get_labeled_data(picklename, bTrain = True):
-    """Read input-vector (image) and target class (label, 0-9) and return
-       it as list of tuples.
-    """
-    # Open the images with gzip in read binary mode
-    if bTrain:
-        images = open(MNIST_data_path + 'train-images-idx3-ubyte','rb')
-        labels = open(MNIST_data_path + 'train-labels-idx1-ubyte','rb')
-    else:
-        images = open(MNIST_data_path + 't10k-images-idx3-ubyte','rb')
-        labels = open(MNIST_data_path + 't10k-labels-idx1-ubyte','rb')
-    # Get metadata for images
-    images.read(4)  # skip the magic_number
-    number_of_images = unpack('>I', images.read(4))[0]
-    rows = unpack('>I', images.read(4))[0]
-    cols = unpack('>I', images.read(4))[0]
-    # Get metadata for labels
-    labels.read(4)  # skip the magic_number
-    N = unpack('>I', labels.read(4))[0]
-
-    if number_of_images != N:
-        raise Exception('number of labels did not match the number of images')
-    # Get the data
-    x = np.zeros((N, rows, cols), dtype=np.uint8)  # Initialize numpy array
-    y = np.zeros((N, 1), dtype=np.uint8)  # Initialize numpy array
-    for i in range(N):
-        if i % 1000 == 0:
-            print("i: %i" % i)
-        x[i] = [[unpack('>B', images.read(1))[0] for unused_col in range(cols)]  for unused_row in range(rows) ]
-        y[i] = unpack('>B', labels.read(1))[0]
-
-    data = {'x': x, 'y': y, 'rows': rows, 'cols': cols}
-
-    return data
-
-################
-# Define MNIST inputs
-################
-#training = get_labeled_data(MNIST_data_path + 'training')
-#testing = get_labeled_data(MNIST_data_path + 'testing', bTrain = False)
-#num_examples = 2
-#labels = [0] * num_examples
-#digits = [0] * num_examples
-#for i in range(num_examples):
-#    labels[i] = training['y'][i][0]
-#    digits[i] = training['x'][i]
-##    print(f'Sample {i}: {labels[i]}')
-##    plt.figure()
-##    plt.imshow(digits[i], cmap='gray')
-##plt.show()
-#
-#n_e = 400
-#n_input = 28 * 28
-#input_intensity = 2.
-#
-#input_groups = [PoissonGroup(n_input, 0*Hz) for _ in range(num_examples)]
-#for i, digit in enumerate(digits):
-#    # Scale rate as desired
-#    rate = digit.reshape(n_input) / 8. *  input_intensity
-#    input_groups[i].rates = rate * Hz
-#
-#duration = 20*ms
-#input_monitor = SpikeMonitor(input_groups[0])
-#Net2 = TeiliNetwork()
-#Net2.add(input_monitor, input_groups[0])
-#Net2.run(duration)
-#input_timestamps = input_monitor.t
-#input_indices = input_monitor.i
-##input_timestamps = np.array(range(1, 400, 100))*ms
-##input_indices = np.zeros(len(input_timestamps))
-#input_spike_generator = SpikeGeneratorGroup(n_input, indices=input_indices,
-#                                            times=input_timestamps)
-
 prefs.codegen.target = "numpy"
 defaultclock.dt = 1 * ms
 Net = TeiliNetwork()
@@ -126,9 +51,6 @@ post_neurons = Neurons(2,
                        name='post_neurons',
                        verbose=True)
 
-#synapse = Connections(input_spike_generator, neuron, method=stochastic_decay,
-#                      equation_builder=synapse_model(), verbose=True)
-#synapse.connect(True)
 pre_synapse = Connections(pre_spikegenerator, pre_neurons,
                           method=stochastic_decay,
                           equation_builder=synapse_model(),
@@ -180,7 +102,8 @@ statemon_pre_neurons = StateMonitor(pre_neurons, variables=['Vm', 'Iin'],
 spikemon_post_neurons = SpikeMonitor(
     post_neurons, name='spikemon_post_neurons')
 statemon_post_neurons = StateMonitor(
-    post_neurons, variables=['Vm', 'Iin'], record=0, name='statemon_post_neurons')
+    post_neurons, variables=['Vm', 'Iin', 'decay_probability'], record=0,
+    name='statemon_post_neurons')
 
 statemon_pre_synapse = StateMonitor(
     pre_synapse, variables=['I_syn'], record=0, name='statemon_pre_synapse')
@@ -244,19 +167,6 @@ Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
             mainfig=win_stdp,
             subfig_rasterplot=p1)
 
-#datamodel = StateVariablesModel(state_variable_names=['Vm'],
-#                                state_variables=[np.asarray(statemon_post_neurons.Vm[0])],
-#                                state_variables_times=[np.asarray(statemon_post_neurons.t)])
-#Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Vm', 'Vm'))],
-#            MyPlotSettings=PlotSettings(colors=['m']),
-#            x_range=(0, duration),
-#            title="Post neuron 0 Vm",
-#            xlabel="Time (s)",
-#            ylabel="voltage",
-#            backend='pyqtgraph',
-#            mainfig=win_stdp,
-#            subfig=p2)
-
 Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'w_plast'))],
             MyPlotSettings=PlotSettings(colors=['g']),
             x_range=(0, duration),
@@ -281,16 +191,53 @@ Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
             subfig=p3,
             show_immediately=True)
 
-#datamodel = StateVariablesModel(state_variable_names=['Iin'],
-#                                state_variables=[np.asarray(statemon_post_neurons.Iin[0])],
-#                                state_variables_times=[np.asarray(statemon_post_neurons.t)])
-#Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Iin', 'Iin'))],
-#            MyPlotSettings=PlotSettings(colors=['m']),
-#            x_range=(0, duration),
-#            title="Post neuron 0 I_syn",
-#            xlabel="Time (s)",
-#            ylabel="Iin",
-#            backend='pyqtgraph',
-#            mainfig=win_stdp,
-#            subfig=p3,
-#            show_immediately=True)
+win_traces = pg.GraphicsWindow(title="STDP Unit Test")
+win_traces.resize(2500, 1500)
+win_traces.setWindowTitle("States during STDP")
+
+p1 = win_traces.addPlot()
+win_traces.nextRow()
+p2 = win_traces.addPlot()
+win_traces.nextRow()
+p3 = win_traces.addPlot()
+p2.setXLink(p1)
+p3.setXLink(p2)
+
+datamodel = StateVariablesModel(state_variable_names=['Vm'],
+                                state_variables=[np.asarray(statemon_post_neurons.Vm[0])],
+                                state_variables_times=[np.asarray(statemon_post_neurons.t)])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Vm', 'Vm'))],
+            MyPlotSettings=PlotSettings(colors=['m']),
+            x_range=(0, duration),
+            title="Post neuron 0 Vm",
+            xlabel="Time (s)",
+            ylabel="voltage",
+            backend='pyqtgraph',
+            mainfig=win_stdp,
+            subfig=p1)
+
+datamodel = StateVariablesModel(state_variable_names=['decay_probability'],
+                                state_variables=[np.asarray(statemon_post_neurons.decay_probability[0])],
+                                state_variables_times=[np.asarray(statemon_post_neurons.t)])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_decay_probability', 'decay_probability'))],
+            MyPlotSettings=PlotSettings(colors=['m']),
+            x_range=(0, duration),
+            xlabel="Time (s)",
+            ylabel="decay_probability",
+            backend='pyqtgraph',
+            mainfig=win_stdp,
+            subfig=p2)
+
+datamodel = StateVariablesModel(state_variable_names=['Iin'],
+                                state_variables=[np.asarray(statemon_post_neurons.Iin[0])],
+                                state_variables_times=[np.asarray(statemon_post_neurons.t)])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Iin', 'Iin'))],
+            MyPlotSettings=PlotSettings(colors=['m']),
+            x_range=(0, duration),
+            title="Post neuron 0 Iin",
+            xlabel="Time (s)",
+            ylabel="Iin",
+            backend='pyqtgraph',
+            mainfig=win_stdp,
+            subfig=p3,
+            show_immediately=True)

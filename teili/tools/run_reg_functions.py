@@ -530,18 +530,17 @@ def update_threshold(Vthr, Vm, EL, VT, sigma_membrane, not_refractory):
 @check_units(decay_probability=1, num_neurons=1, lfsr_num_bits=1, result=1)
 def lfsr(decay_probability, num_neurons, lfsr_num_bits):
     """
-    Generate a pseudorandom number between 0 and 1 with a 20-bit Linear
+    Generate a pseudorandom number between 0 and 1 with a Linear
     Feedback Shift Register (LFSR). This is equivalent to generating random
     numbers from an uniform distribution.
 
     This function receives a given number and performs num_neurons iterations
-    of the LFSR. This is done to set the next input that will be used when a
-    given neuron needs another random number. The LFSR does a circular shift
-    (i.e. all the values are shifted left while the previous MSB becomes the
-    new LSB) and ensures the variable is no bigger than 20 bits. After that,
-    the 3rd bit is update with the result of a XOR between bits 3 and 0. Note
-    that, for convenience, the input and outputs are normalized, i.e.
-    value/2**20.
+    of the LFSR. This is done when a given neuron needs another random number.
+    The LFSR does a circular shift (i.e. all the values are shifted left while
+    the previous MSB becomes the new LSB) and ensures the variable is no bigger
+    than the specified number of bits. After that, the taps are update
+    accordingly wth the result of a XOR operation. Note that, for convenience,
+    the input and outputs are normalized, i.e. value/2**20.
 
     Parameters
     ----------
@@ -559,12 +558,15 @@ def lfsr(decay_probability, num_neurons, lfsr_num_bits):
 
     Examples
     --------
-    >>> number = 2**19 + 2**2
+    >>> from teili.tools.run_reg_functions import lfsr
+    >>> number = 2**4 + 2**3 + 2**1
+    >>> n_bits = 5
     >>> bin(number)
-    '0b10000000000000000100'
-    >>> bin(int(lfsr(number/2**20, 1)*2**20))
-    '0b1'
+    '0b11010'
+    >>> bin(int(lfsr(number/2**n_bits, 1, b_bits)*2**n_bits))
+    '0b10101'
     """
+    # Use np.array regardless of prefs.codegen.target
     if isinstance(decay_probability, np.ndarray):
         lfsr_num_bits = int(lfsr_num_bits[0])
     else:
@@ -574,7 +576,7 @@ def lfsr(decay_probability, num_neurons, lfsr_num_bits):
     decay_probability *= 2**lfsr_num_bits
     decay_probability = decay_probability.astype(int)
     mask = 2**lfsr_num_bits - 1
-    taps = {5: 2, 6: 1, 9: 4, 20:3}
+    taps = {3: 1, 5: 2, 6: 1, 9: 4, 20: 3}
 
     for _ in range(num_neurons):
         decay_probability = decay_probability << 1
@@ -586,10 +588,10 @@ def lfsr(decay_probability, num_neurons, lfsr_num_bits):
         # Get bits from appropriate positions
         second_tap = (decay_probability & (1 << taps[lfsr_num_bits])).astype(bool)
         first_tap = (decay_probability & (1 << 0)).astype(bool)
-        # Update bit in position 3
-        decay_probability &=~ (1 << 3)
+        # Update taps the decay_probability array
+        decay_probability &=~ (1 << taps[lfsr_num_bits])
         indexes = np.where(second_tap^first_tap==True)
-        decay_probability[indexes] |= (1 << 3)
+        decay_probability[indexes] |= (1 << taps[lfsr_num_bits])
 
     return decay_probability/2**lfsr_num_bits
 

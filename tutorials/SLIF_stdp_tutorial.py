@@ -22,7 +22,7 @@ from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import DPI
 from teili.models.neuron_models import StochasticLIF as neuron_model
-from teili.models.synapse_models import DPIstdp, StochasticSyn_decay_stdp
+from teili.models.synapse_models import StochasticSyn_decay_stdp as stdp_synapse_model
 from teili.models.synapse_models import StochasticSyn_decay as synapse_model
 from teili.stimuli.testbench import STDP_Testbench
 from teili.tools.add_run_reg import add_lfsr
@@ -63,7 +63,7 @@ post_synapse = Connections(post_spikegenerator, post_neurons,
 
 stdp_synapse = Connections(pre_neurons, post_neurons,
                            method=stochastic_decay,
-                           equation_builder=StochasticSyn_decay_stdp(),
+                           equation_builder=stdp_synapse_model(),
                            name='stdp_synapse')
 
 pre_synapse.connect(True)
@@ -109,7 +109,7 @@ statemon_pre_synapse = StateMonitor(
     pre_synapse, variables=['I_syn'], record=0, name='statemon_pre_synapse')
 
 statemon_post_synapse = StateMonitor(stdp_synapse, variables=[
-    'I_syn', 'w_plast', 'weight'],
+    'I_syn', 'w_plast', 'weight', 'decay_probability_stdp'],
     record=True, name='statemon_post_synapse')
 
 Net.add(pre_spikegenerator, post_spikegenerator,

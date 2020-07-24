@@ -258,7 +258,7 @@ class StochasticSyn_decay_stdp(SynapseEquationBuilder):
         stochastic decay as published in Wang et al. (2018).
         """
         SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochasticDecay',
-                                        plasticity='stdp')
+                                        plasticity='stochastic_decay_stdp')
 
 def main(path=None):
     if path is None:

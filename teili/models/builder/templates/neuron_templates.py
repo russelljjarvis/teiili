@@ -389,7 +389,7 @@ q_model_template = {
         normal_decay = (decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability : 1
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
 
-        I = Iin + Iconst + Inoise - Iadapt : amp
+        I = Iin + Iconst : amp
         decay_rate = tau/(tau + dt)                      : 1
         decay_rate_refrac = refrac_tau/(refrac_tau + dt) : 1
         refrac = Vm<Vrest                                    : boolean
@@ -397,8 +397,6 @@ q_model_template = {
         decay_probability : 1
         g_psc                : ohm    (constant) # Gain of post synaptic current
         Iconst  : amp                         # constant input current
-        Iadapt  : amp                            # adaptation current
-        Inoise  : amp                            # noise current
         Iin = Iin0        : amp
         Iin0 : amp
         tau               : second (constant)
@@ -419,8 +417,6 @@ q_model_template_params = {
     'Vthres': 16*mV,
     'Vrest': 3*mV,
     'Vreset': 0*mV,
-    'Iadapt': 0*pA,
-    'Inoise': 0*pA,
     'Iconst': 0*pA,
     'g_psc' : 1*ohm,
     'tau': 19*ms,

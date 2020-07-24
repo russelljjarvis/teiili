@@ -12,7 +12,7 @@ import pyqtgraph as pg
 import numpy as np
 import sys
 
-from brian2 import ExplicitStateUpdater, ms, mV, ohm, second, pA, nA, prefs,\
+from brian2 import ExplicitStateUpdater, ms, mV, ohm, second, mA, prefs,\
     SpikeMonitor, StateMonitor, \
     SpikeGeneratorGroup, defaultclock
 
@@ -30,8 +30,8 @@ defaultclock.dt = 1*ms
 
 prefs.codegen.target = "numpy"
 
-input_timestamps = np.asarray([1, 3, 4, 5, 6, 7, 8, 9]) * ms
-input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0])
+input_timestamps = np.asarray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]) * ms
+input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
                                            times=input_timestamps, 
                                            name='input_spikegenerator')
@@ -89,11 +89,19 @@ add_lfsr(input_synapse, seed, defaultclock.dt)
 add_lfsr(test_synapse, seed, defaultclock.dt)
 
 # Example of how to set a single parameter
-test_neurons1.refrac_tau = 2 * ms
-test_neurons2.refrac_tau = 2 * ms
-input_synapse.weight = 200
-test_synapse.weight = 5.0
-test_neurons1.Iconst = 10000000 * nA
+# Fast neuron to allow more spikes
+test_neurons1.refrac_tau = 1 * ms
+test_neurons2.refrac_tau = 1 * ms
+test_neurons1.tau = 10 * ms
+test_neurons2.tau = 10 * ms
+
+# long EPSC or big weight to allow summations
+input_synapse.tau_syn = 10*ms
+test_synapse.tau_syn = 10*ms
+input_synapse.weight = 2
+test_synapse.weight = 15
+test_neurons1.Iconst = 13.0 * mA
+
 
 spikemon_input = SpikeMonitor(input_spikegenerator, name='spikemon_input')
 spikemon_test_neurons1 = SpikeMonitor(
@@ -157,6 +165,12 @@ win.nextRow()
 p5 = win.addPlot(title="Rasterplot of output test neurons 2")
 p6 = win.addPlot(title="Output test neurons 2")
 
+p2.setXLink(p1)
+p3.setXLink(p2)
+p4.setXLink(p3)
+p4.setXLink(p3)
+p5.setXLink(p4)
+p6.setXLink(p5)
 
 # Spike generator
 Rasterplot(MyEventsModels=[spikemon_input],

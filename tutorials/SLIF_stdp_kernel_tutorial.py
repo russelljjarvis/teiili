@@ -9,7 +9,7 @@ This script is adapted from https://code.ini.uzh.ch/alpren/gridcells/blob/master
 This script contains a simple event based way to simulate complex STDP kernels
 """
 
-from brian2 import ms, prefs, SpikeMonitor, run, defaultclock,\
+from brian2 import ms, prefs, StateMonitor, SpikeMonitor, run, defaultclock,\
         ExplicitStateUpdater
 from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
@@ -62,17 +62,20 @@ stdp_synapse = Connections(pre_neurons, post_neurons,
 stdp_synapse.connect('i==j')
 
 # Setting parameters
-stdp_synapse.w_plast = 2.5
-stdp_synapse.dApre = 0.1
-stdp_synapse.taupre = 10 * ms
-stdp_synapse.taupost = 10 * ms
-stdp_synapse.w_max = 30
+stdp_synapse.w_plast = 7
+stdp_synapse.w_max = 15
+stdp_synapse.dApre = 4
+stdp_synapse.taupre = 30 * ms
+stdp_synapse.taupost = 30 * ms
 stdp_synapse.weight = 1
 add_lfsr(stdp_synapse, 12, defaultclock.dt)
 
 
 spikemon_pre_neurons = SpikeMonitor(pre_neurons, record=True)
 spikemon_post_neurons = SpikeMonitor(post_neurons, record=True)
+statemon_post_synapse = StateMonitor(stdp_synapse, variables=[
+    'decay_probability_stdp', 'dApre'],
+    record=True, name='statemon_post_synapse')
 
 run(tmax + 1 * ms)
 
@@ -96,6 +99,14 @@ Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
         backend=visualization_backend,
         QtApp=app,
         show_immediately=False)
+
+#Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'dApre'))],
+#        title="dApre",
+#        xlabel='time',  # delta t
+#        ylabel='dApre',
+#        backend=visualization_backend,
+#        QtApp=app,
+#        show_immediately=False)
 
 Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
             MyPlotSettings=PlotSettings(colors=['w', 'r']),

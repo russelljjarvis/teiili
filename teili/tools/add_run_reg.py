@@ -142,7 +142,7 @@ def add_weight_decay(group, decay_rate, dt):
 
 def add_lfsr(group, lfsr_seed, dt):
     """
-    Initializes numbers that will be used for each neuron on the LFSR
+    Initializes numbers that will be used for each element on the LFSR
     function by iterating on the LFSR num_elements times.
 
     Parameters
@@ -159,7 +159,12 @@ def add_lfsr(group, lfsr_seed, dt):
         num_elements = len(group.lfsr_num_bits)
     else:
         num_bits = int(group.lfsr_num_bits_syn[0])
-        num_elements = len(group.lfsr_num_bits_syn)
+        num_elements_syn = len(group.lfsr_num_bits_syn)
+        if hasattr(group, 'decay_probability_stdp'):
+            num_elements_stdp = len(group.lfsr_num_bits_syn)
+        else:
+            num_elements_stdp = 0
+        num_elements = num_elements_syn + num_elements_stdp
     lfsr_out = [0 for _ in range(num_elements)]
     mask = 2**num_bits - 1
     taps = {3: 1, 5: 2, 6: 1, 9: 4, 20: 3}
@@ -193,10 +198,17 @@ def add_lfsr(group, lfsr_seed, dt):
                              ''',
                              dt=dt)
     else:
-        group.decay_probability_syn = np.asarray(lfsr_out)/2**num_bits
+        group.decay_probability_syn = np.asarray(lfsr_out)[0:num_elements_syn]/2**num_bits
         group.namespace.update({'lfsr': lfsr})
         group.run_regularly('''decay_probability_syn = lfsr(decay_probability_syn,\
                                                          N,\
                                                          lfsr_num_bits_syn)
                              ''',
                              dt=dt)
+        if hasattr(group, 'decay_probability_stdp'):
+            group.decay_probability_stdp = np.asarray(lfsr_out)[num_elements_syn:]/2**num_bits
+            group.run_regularly('''decay_probability_stdp = lfsr(decay_probability_stdp,\
+                                                             N,\
+                                                             lfsr_num_bits_syn)
+                                 ''',
+                                 dt=dt)

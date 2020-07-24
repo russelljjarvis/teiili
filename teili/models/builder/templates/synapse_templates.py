@@ -390,6 +390,40 @@ stdp_para_conductance = {
     "w_plast": 0
 }
 
+stochastic_decay_stdp = {
+    'model': '''
+        dApre/dt = int(Apre * .96 + decay_probability_stdp)/second : 1 (event-driven)
+        dApost/dt = int(Apost * .96 + decay_probability_stdp)/second : 1 (event-driven)
+
+        #decay_stdp_Apre = .96 : 1#taupre/(taupre + dt) : 1
+        #decay_stdp_Apost = .96 : 1#taupost/(taupost + dt) : 1
+
+        decay_probability_stdp : 1
+        w_max: 1 (constant)
+        taupre : second (constant)
+        taupost : second (constant)
+        dApre : 1 (constant)
+        Q_diffAPrePost : 1 (constant)
+        ''',
+    'on_pre': '''
+        Apre += dApre*w_max
+        w_plast = clip(w_plast + Apost, 0, w_max)
+        ''',
+    'on_post': '''
+        Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
+        w_plast = clip(w_plast + Apre, 0, w_max)
+        '''
+}
+
+stochastic_decay_stdp_params = {
+    "taupre": 10 * ms,
+    "taupost": 10 * ms,
+    "w_max": 1.,
+    "dApre": 0.1,
+    "Q_diffAPrePost": 1.05,
+    "w_plast": 0
+}
+
 """Kernels Blocks:
 You need to declare two set of parameters for every block:
 *   current based models
@@ -489,7 +523,8 @@ kernels = {
 plasticity_models = {
     'non_plastic': none_model,
     'fusi': fusi,
-    'stdp': stdp
+    'stdp': stdp,
+    'stochastic_decay_stdp': stochastic_decay_stdp
 }
 
 synaptic_equations = {
@@ -548,7 +583,8 @@ DPI_shunt_parameters = {
 quantized_stochastic_decay_parameters = {
     'QuantizedStochasticDecay': quantized_stochastic_decay_params,
     'non_plastic': none_params,
-    'stdp': stdp_para_current}
+    'stdp': stdp_para_current,
+    'stochastic_decay_stdp': stochastic_decay_stdp_params}
 
 unit_less_parameters = {
     'unit_less': none_params,

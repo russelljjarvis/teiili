@@ -380,12 +380,12 @@ none_params = {}
 """LIF neuron model with stochastic decay taken from Wang et al. (2018).
 Please refer to this paper for more information. Note that this model was
 conceptualized in discrete time with backward euler scheme and an integer
-operation. An state updader with x_new = dt*f(x,t) and
+operation. An state updader with x_new = f(x,t) and
 defaultclock.dt = 1*ms in the code using this model.
 """
 q_model_template = {
     'model': '''
-        dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*volt/second : volt
+        dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*mV/second : volt
         normal_decay = (decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability : 1
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
 

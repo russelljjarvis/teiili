@@ -179,12 +179,12 @@ dpi_shunt_params = {
 """LIF neuron model with stochastic decay taken from Wang et al. (2018).
 Please refer to this paper for more information. Note that this model was
 conceptualized in discrete time with backward euler scheme and an integer
-operation. An state updader with x_new = dt*f(x,t) and
+operation. An state updader with x_new = f(x,t) and
 defaultclock.dt = 1*ms in the code using this model.
 """
 quantized_stochastic_decay = {
     'model': '''
-        dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*amp/second : amp (clock-driven)
+        dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
         Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
         
         decay_syn = tau_syn/(tau_syn + dt) : 1
@@ -392,14 +392,15 @@ stdp_para_conductance = {
 
 stochastic_decay_stdp = {
     'model': '''
-        dApre/dt = int(Apre * .96 + decay_probability_stdp)/second : 1 (event-driven)
-        dApost/dt = int(Apost * .96 + decay_probability_stdp)/second : 1 (event-driven)
+        dApre/dt = (Apre * decay_stdp_Apre + decay_probability_stdp)/second : 1 (clock-driven)
+        dApost/dt = (Apost * decay_stdp_Apost + decay_probability_stdp)/second : 1 (clock-driven)
 
-        #decay_stdp_Apre = .96 : 1#taupre/(taupre + dt) : 1
-        #decay_stdp_Apost = .96 : 1#taupost/(taupost + dt) : 1
+        decay_stdp_Apre = taupre/(taupre + dt) : 1
+        decay_stdp_Apost = taupost/(taupost + dt) : 1
 
         decay_probability_stdp : 1
         w_max: 1 (constant)
+        w_max_normalized: 1 (constant)
         taupre : second (constant)
         taupost : second (constant)
         dApre : 1 (constant)
@@ -407,11 +408,11 @@ stochastic_decay_stdp = {
         ''',
     'on_pre': '''
         Apre += dApre*w_max
-        w_plast = clip(w_plast + Apost, 0, w_max)
+        w_plast = int(clip(w_plast + Apost*w_max_normalized, 0, w_max_normalized))
         ''',
     'on_post': '''
         Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
-        w_plast = clip(w_plast + Apre, 0, w_max)
+        w_plast = int(clip(w_plast + Apre*w_max_normalized, 0, w_max_normalized))
         '''
 }
 
@@ -419,6 +420,7 @@ stochastic_decay_stdp_params = {
     "taupre": 10 * ms,
     "taupost": 10 * ms,
     "w_max": 1.,
+    "w_max_normalized": 15,
     "dApre": 0.1,
     "Q_diffAPrePost": 1.05,
     "w_plast": 0

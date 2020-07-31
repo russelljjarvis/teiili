@@ -250,6 +250,18 @@ class StochasticSyn_decay(SynapseEquationBuilder):
 
 class StochasticSyn_decay_stdp(SynapseEquationBuilder):
     """This class provides you with all the equations to simulate a synapse with
+    stochastic decay as published in Wang et al. (2018), but with standard STDP
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate a synapse with
+        stochastic decay as published in Wang et al. (2018).
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochasticDecay',
+                                        plasticity='stdp')
+
+class StochasticSyn_decay_stoch_stdp(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate a synapse with
     stochastic decay as published in Wang et al. (2018).
     """
 
@@ -298,6 +310,9 @@ def main(path=None):
 
     slifSynstdp = StochasticSyn_decay_stdp()
     slifSynstdp.export_eq(os.path.join(path, "StochasticSyn_decay_stdp"))
+
+    slifSynStochstdp = StochasticSyn_decay_stoch_stdp()
+    slifSynstdp.export_eq(os.path.join(path, "StochasticSyn_decay_stoch_stdp"))
 
     dpiShunt = DPIShunt()
     dpiShunt.export_eq(os.path.join(path, "DPIShunt"))

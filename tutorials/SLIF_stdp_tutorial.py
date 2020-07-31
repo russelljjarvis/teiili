@@ -20,10 +20,10 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
-from teili.models.neuron_models import DPI
 from teili.models.neuron_models import StochasticLIF as neuron_model
 from teili.models.synapse_models import StochasticSyn_decay_stdp as stdp_synapse_model
 from teili.models.synapse_models import StochasticSyn_decay as synapse_model
+from teili.models.synapse_models import DPIstdp
 from teili.stimuli.testbench import STDP_Testbench
 from teili.tools.add_run_reg import add_lfsr
 
@@ -38,7 +38,7 @@ Net = TeiliNetwork()
 stdp = STDP_Testbench()
 pre_spikegenerator, post_spikegenerator = stdp.stimuli(isi=30)
 
-stochastic_decay = ExplicitStateUpdater('''x_new = dt*f(x,t)''')
+stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 pre_neurons = Neurons(2,
                       equation_builder=neuron_model(num_inputs=2),
                       method=stochastic_decay,
@@ -86,12 +86,6 @@ stdp_synapse.tau_syn = 5*ms
 post_synapse.tau_syn = 5*ms
 pre_synapse.tau_syn = 5*ms
 
-stdp_synapse.dApre = 0.1
-stdp_synapse.taupre = 3 * ms
-stdp_synapse.taupost = 3 * ms
-stdp_synapse.w_plast = 0
-stdp_synapse.w_max = 30
-stdp_synapse.weight = 1
 add_lfsr(stdp_synapse, seed, defaultclock.dt)
 
 # Setting up monitors
@@ -109,7 +103,7 @@ statemon_pre_synapse = StateMonitor(
     pre_synapse, variables=['I_syn'], record=0, name='statemon_pre_synapse')
 
 statemon_post_synapse = StateMonitor(stdp_synapse, variables=[
-    'I_syn', 'w_plast', 'weight', 'decay_probability_stdp'],
+    'I_syn', 'w_plast', 'weight'],
     record=True, name='statemon_post_synapse')
 
 Net.add(pre_spikegenerator, post_spikegenerator,

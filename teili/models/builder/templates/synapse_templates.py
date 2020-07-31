@@ -426,6 +426,15 @@ stochastic_decay_stdp_params = {
     "w_plast": 0
 }
 
+quantized_standard_stdp_params = {
+    "taupre": 10 * ms,
+    "taupost": 10 * ms,
+    "w_max": 15,
+    "dApre": 1,
+    "Q_diffAPrePost": 1.05,
+    "w_plast": 1
+}
+
 """Kernels Blocks:
 You need to declare two set of parameters for every block:
 *   current based models
@@ -585,7 +594,7 @@ DPI_shunt_parameters = {
 quantized_stochastic_decay_parameters = {
     'QuantizedStochasticDecay': quantized_stochastic_decay_params,
     'non_plastic': none_params,
-    'stdp': stdp_para_current,
+    'stdp': quantized_standard_stdp_params,
     'stochastic_decay_stdp': stochastic_decay_stdp_params}
 
 unit_less_parameters = {

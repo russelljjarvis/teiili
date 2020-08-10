@@ -102,7 +102,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="teili",
-    version="1.0.0",
+    version="1.0.2",
     author="Moritz B. Milde",
     author_email="m.milde@westernsydney.edu.au",
     description=("This toolbox was developed to provide computational  "
@@ -126,7 +126,8 @@ setup(
         'pandas>=0.23.1',
         'matplotlib>=2.2.2',
         'h5py>=2.8.0',
-        'pyqt5>=5.10.1'
+        'pyqt5>=5.10.1',
+        'sympy==1.5.1'
     ],
     cmdclass={
         'install': PostInstallCommand,

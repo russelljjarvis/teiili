@@ -30,11 +30,9 @@ before_script:
   - source ~/.bashrc
   - source activate test_environment
   - pip install --upgrade pip
-  - pip install coverage flake8
+  - pip install coverage
   - cd /builds/ncs/teili/
   - pip install . 
-
-    - flake8 .
 
 stages:
   - test

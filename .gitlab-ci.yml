@@ -34,7 +34,7 @@ before_script:
   - cd /builds/ncs/teili/
   - pip install . 
 
-    #- flake8 codebase
+    - flake8 .
 
 stages:
   - test

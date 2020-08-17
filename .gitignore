@@ -119,3 +119,6 @@ teili/models/equations/*
 !teili/models/equations/StochasticLIF*.py
 .vscode
 core
+
+# Shell scripts
+run.sh

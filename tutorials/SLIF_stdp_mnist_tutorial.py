@@ -11,6 +11,7 @@ We use a standard STDP protocal with a exponentioally decaying window.
 import pyqtgraph as pg
 import numpy as np
 import os
+import pickle
 from struct import unpack
 
 from brian2 import ms, Hz, ohm, mV, us, second, pA, prefs,\
@@ -37,50 +38,91 @@ def get_labeled_data(picklename, bTrain = True):
     """Read input-vector (image) and target class (label, 0-9) and return
        it as list of tuples.
     """
-    # Open the images with gzip in read binary mode
-    if bTrain:
-        images = open(MNIST_data_path + 'train-images-idx3-ubyte','rb')
-        labels = open(MNIST_data_path + 'train-labels-idx1-ubyte','rb')
+    if os.path.isfile('%s.pickle' % picklename):
+        data = pickle.load(open('%s.pickle' % picklename))
     else:
-        images = open(MNIST_data_path + 't10k-images-idx3-ubyte','rb')
-        labels = open(MNIST_data_path + 't10k-labels-idx1-ubyte','rb')
-    # Get metadata for images
-    images.read(4)  # skip the magic_number
-    number_of_images = unpack('>I', images.read(4))[0]
-    rows = unpack('>I', images.read(4))[0]
-    cols = unpack('>I', images.read(4))[0]
-    # Get metadata for labels
-    labels.read(4)  # skip the magic_number
-    N = unpack('>I', labels.read(4))[0]
+        # Open the images with gzip in read binary mode
+        if bTrain:
+            images = open(MNIST_data_path + 'train-images-idx3-ubyte','rb')
+            labels = open(MNIST_data_path + 'train-labels-idx1-ubyte','rb')
+        else:
+            images = open(MNIST_data_path + 't10k-images-idx3-ubyte','rb')
+            labels = open(MNIST_data_path + 't10k-labels-idx1-ubyte','rb')
+        # Get metadata for images
+        images.read(4)  # skip the magic_number
+        number_of_images = unpack('>I', images.read(4))[0]
+        rows = unpack('>I', images.read(4))[0]
+        cols = unpack('>I', images.read(4))[0]
+        # Get metadata for labels
+        labels.read(4)  # skip the magic_number
+        N = unpack('>I', labels.read(4))[0]
 
-    if number_of_images != N:
-        raise Exception('number of labels did not match the number of images')
-    # Get the data
-    x = np.zeros((N, rows, cols), dtype=np.uint8)  # Initialize numpy array
-    y = np.zeros((N, 1), dtype=np.uint8)  # Initialize numpy array
-    for i in range(10):#range(N):
-        if i % 1000 == 0:
-            print("i: %i" % i)
-        x[i] = [[unpack('>B', images.read(1))[0] for unused_col in range(cols)]  for unused_row in range(rows) ]
-        y[i] = unpack('>B', labels.read(1))[0]
+        if number_of_images != N:
+            raise Exception('number of labels did not match the number of images')
+        # Get the data
+        x = np.zeros((N, rows, cols), dtype=np.uint8)  # Initialize numpy array
+        y = np.zeros((N, 1), dtype=np.uint8)  # Initialize numpy array
+        for i in range(10):#range(N):
+            if i % 1000 == 0:
+                print("i: %i" % i)
+            x[i] = [[unpack('>B', images.read(1))[0] for unused_col in range(cols)]  for unused_row in range(rows) ]
+            y[i] = unpack('>B', labels.read(1))[0]
 
-    data = {'x': x, 'y': y, 'rows': rows, 'cols': cols}
-
+        data = {'x': x, 'y': y, 'rows': rows, 'cols': cols}
+        # TODO error when I try to load pickled files
+        #pickle.dump(data, open("%s.pickle" % picklename, "wb"))
     return data
 
 training = get_labeled_data(MNIST_data_path + 'training')
 testing = get_labeled_data(MNIST_data_path + 'testing', bTrain = False)
-num_examples = 2
+
+test_mode = False
+np.random.seed(0)
+data_path = './'
+if test_mode:
+    weight_path = data_path + 'weights/'
+    num_examples = 10000 * 1
+    use_testing_set = True
+    do_plot_performance = False
+    record_spikes = True
+    ee_STDP_on = False
+    update_interval = num_examples
+else:
+    weight_path = data_path + 'random/'  
+    num_examples = 60000 * 3
+    use_testing_set = False
+    do_plot_performance = True
+    record_spikes = True
+    ee_STDP_on = True
+
+ending = ''
+n_input = 28 * 28
+n_e = 400
+n_i = n_e 
+single_example_time =   350 * ms
+resting_time = 150 * ms
+runtime = num_examples * (single_example_time + resting_time)
+# TODO don't understand things below
+#if num_examples <= 10000:    
+#    update_interval = num_examples
+#    weight_update_interval = 20
+#else:
+#    update_interval = 10000
+#    weight_update_interval = 100
+#if num_examples <= 60000:    
+#    save_connections_interval = 10000
+#else:
+#    save_connections_interval = 10000
+#    update_interval = 10000
+
 labels = [0] * num_examples
 digits = [0] * num_examples
 for i in range(num_examples):
     labels[i] = training['y'][i][0]
     digits[i] = training['x'][i]
 
-n_input = 28 * 28
 input_intensity = 2.
 norm_factor = 8
-
 input_groups = [PoissonGroup(n_input, 0*Hz) for _ in range(num_examples)]
 for i, digit in enumerate(digits):
     # Scale rate as desired

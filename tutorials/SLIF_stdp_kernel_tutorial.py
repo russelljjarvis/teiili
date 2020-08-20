@@ -16,7 +16,7 @@ import pyqtgraph as pg
 import numpy as np
 
 from teili.core.groups import Neurons, Connections
-from teili.models.synapse_models import DPIstdp, StochasticSyn_decay_stdp
+from teili.models.synapse_models import StochasticSyn_decay_stoch_stdp
 from teili.tools.add_run_reg import add_lfsr
 
 from teili.tools.visualizer.DataViewers import PlotSettings
@@ -56,24 +56,24 @@ post_neurons.tspike = '(N-1-i)*tmax/(N-1)'
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 stdp_synapse = Connections(pre_neurons, post_neurons,
                 method=stochastic_decay,
-                equation_builder=StochasticSyn_decay_stdp(),
+                equation_builder=StochasticSyn_decay_stoch_stdp(),
                 name='stdp_synapse')
 
 stdp_synapse.connect('i==j')
 
 # Setting parameters
 stdp_synapse.w_plast = 7
+stdp_synapse.dApre = 7
 stdp_synapse.taupre = 10*ms
 stdp_synapse.taupost = 10*ms
-stdp_synapse.dApre = 0.2
 add_lfsr(stdp_synapse, 12, defaultclock.dt)
 
 
 spikemon_pre_neurons = SpikeMonitor(pre_neurons, record=True)
 spikemon_post_neurons = SpikeMonitor(post_neurons, record=True)
 statemon_post_synapse = StateMonitor(stdp_synapse, variables=[
-    'Apre', 'Apost'],
-    record=45, name='statemon_post_synapse')
+    'decay_probability_stdp', 'Apre', 'Apost'],
+    record=(48,47,46), name='statemon_post_synapse')
 
 run(tmax + 1 * ms)
 
@@ -101,7 +101,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
         show_immediately=False)
 
 win_2 = pg.GraphicsWindow(title="2")
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'Apre'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse[46], ('t', 'Apre')), (statemon_post_synapse[46], ('t', 'Apost'))],
         title="Apre",
         xlabel='time',  # delta t
         ylabel='Apre',
@@ -111,7 +111,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'Apre'))],
         show_immediately=False)
 
 win_3 = pg.GraphicsWindow(title="3")
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'Apost'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse[47], ('t', 'Apre')), (statemon_post_synapse[47], ('t', 'Apost'))],
         title="Apost",
         xlabel='time',  # delta t
         ylabel='Apost',
@@ -120,17 +120,27 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'Apost'))],
         mainfig=win_3,
         show_immediately=False)
 
-#win_4 = pg.GraphicsWindow(title="4")
-#Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'decay_probability_stdp'))],
-#        title="decay_probability_stdp",
-#        xlabel='time',  # delta t
-#        ylabel='decay_probability_stdp',
-#        backend=visualization_backend,
-#        QtApp=app,
-#        mainfig=win_4,
-#        show_immediately=False)
+win_4 = pg.GraphicsWindow(title="4")
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse[48], ('t', 'Apre')), (statemon_post_synapse[48], ('t', 'Apost'))],
+        title="Apost",
+        xlabel='time',  # delta t
+        ylabel='Apost',
+        backend=visualization_backend,
+        QtApp=app,
+        mainfig=win_4,
+        show_immediately=False)
 
 win_5 = pg.GraphicsWindow(title="5")
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'decay_probability_stdp'))],
+        title="decay_probability_stdp",
+        xlabel='time',  # delta t
+        ylabel='decay_probability_stdp',
+        backend=visualization_backend,
+        QtApp=app,
+        mainfig=win_5,
+        show_immediately=False)
+
+win_6 = pg.GraphicsWindow(title="6")
 Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
             MyPlotSettings=PlotSettings(colors=['w', 'r']),
             title='',
@@ -138,5 +148,5 @@ Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
             ylabel='Neuron ID',
             backend=visualization_backend,
             QtApp=app,
-            mainfig=win_5,
+            mainfig=win_6,
             show_immediately=True)

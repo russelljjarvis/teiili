@@ -10,20 +10,18 @@ We use a standard STDP protocal with a exponentioally decaying window.
 """
 import pyqtgraph as pg
 import numpy as np
-import os
 
-from brian2 import ms, ohm, mV, us, second, pA, prefs,\
+from brian2 import ms, mV, second, prefs,\
     SpikeMonitor, StateMonitor, defaultclock,\
-    implementation, check_units, ExplicitStateUpdater
+    ExplicitStateUpdater
 
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import StochasticLIF as neuron_model
-from teili.models.synapse_models import StochasticSyn_decay_stdp as stdp_synapse_model
+from teili.models.synapse_models import StochasticSyn_decay_stoch_stdp as stdp_synapse_model
 from teili.models.synapse_models import StochasticSyn_decay as synapse_model
-from teili.models.synapse_models import DPIstdp
 from teili.stimuli.testbench import STDP_Testbench
 from teili.tools.add_run_reg import add_lfsr
 
@@ -77,9 +75,9 @@ pre_neurons.Vm = 3*mV
 add_lfsr(post_neurons, seed, defaultclock.dt)
 post_neurons.Vm = 3*mV
 
-pre_synapse.weight = 91
+pre_synapse.weight = 80
 add_lfsr(pre_synapse, seed, defaultclock.dt)
-post_synapse.weight = 91
+post_synapse.weight = 80
 add_lfsr(post_synapse, seed, defaultclock.dt)
 
 stdp_synapse.tau_syn = 5*ms

@@ -186,9 +186,9 @@ quantized_stochastic_decay = {
     'model': '''
         dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
         Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
-        
+
         decay_syn = tau_syn/(tau_syn + dt) : 1
-        
+
         weight                : 1
         w_plast               : 1
         decay_probability_syn : 1
@@ -392,38 +392,34 @@ stdp_para_conductance = {
 
 stochastic_decay_stdp = {
     'model': '''
-        dApre/dt = (Apre * decay_stdp_Apre + decay_probability_stdp)/second : 1 (clock-driven)
-        dApost/dt = (Apost * decay_stdp_Apost + decay_probability_stdp)/second : 1 (clock-driven)
+        dApre/dt = int(Apre * decay_stdp_Apre + decay_probability_stdp)/second : 1 (clock-driven)
+        dApost/dt = int(Apost * decay_stdp_Apost + decay_probability_stdp)/second : 1 (clock-driven)
 
         decay_stdp_Apre = taupre/(taupre + dt) : 1
         decay_stdp_Apost = taupost/(taupost + dt) : 1
 
         decay_probability_stdp : 1
         w_max: 1 (constant)
-        w_max_normalized: 1 (constant)
+        dApre: 1 (constant)
         taupre : second (constant)
         taupost : second (constant)
-        dApre : 1 (constant)
-        Q_diffAPrePost : 1 (constant)
         ''',
     'on_pre': '''
-        Apre += dApre*w_max
-        w_plast = int(clip(w_plast + Apost*w_max_normalized, 0, w_max_normalized))
+        Apre += dApre
+        w_plast = clip(w_plast - Apost, 0, w_max)
         ''',
     'on_post': '''
-        Apost += -dApre * (taupre / taupost) * Q_diffAPrePost * w_max
-        w_plast = int(clip(w_plast + Apre*w_max_normalized, 0, w_max_normalized))
+        Apost += dApre
+        w_plast = clip(w_plast + Apre, 0, w_max)
         '''
 }
 
 stochastic_decay_stdp_params = {
-    "taupre": 10 * ms,
-    "taupost": 10 * ms,
-    "w_max": 1.,
-    "w_max_normalized": 15,
-    "dApre": 0.1,
-    "Q_diffAPrePost": 1.05,
-    "w_plast": 0
+    "taupre": 3 * ms,
+    "taupost": 3 * ms,
+    "w_max": 15,
+    "dApre": 1,
+    "w_plast": 1
 }
 
 quantized_standard_stdp_params = {

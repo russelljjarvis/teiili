@@ -62,7 +62,7 @@ def get_labeled_data(picklename, bTrain = True):
         # Get the data
         x = np.zeros((N, rows, cols), dtype=np.uint8)  # Initialize numpy array
         y = np.zeros((N, 1), dtype=np.uint8)  # Initialize numpy array
-        for i in range(10):#range(N):
+        for i in range(10):#range(N): TODO use N instead
             if i % 1000 == 0:
                 print("i: %i" % i)
             x[i] = [[unpack('>B', images.read(1))[0] for unused_col in range(cols)]  for unused_row in range(rows) ]
@@ -89,7 +89,7 @@ if test_mode:
     update_interval = num_examples
 else:
     weight_path = data_path + 'random/'  
-    num_examples = 60000 * 3
+    num_examples = 2#60000 * 3 TODO go back to 10000
     use_testing_set = False
     do_plot_performance = True
     record_spikes = True

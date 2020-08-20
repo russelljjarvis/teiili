@@ -20,7 +20,6 @@ from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import StochasticLIF as neuron_model
 from teili.models.synapse_models import StochasticSyn_decay as synapse_model
-from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 from teili.tools.add_run_reg import add_lfsr
 
 from teili.tools.visualizer.DataViewers import PlotSettings
@@ -39,7 +38,7 @@ input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
 
 Net = TeiliNetwork()
 
-stochastic_decay = ExplicitStateUpdater('''x_new = dt*f(x,t)''')
+stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 test_neurons1 = Neurons(N=2, 
                         equation_builder=neuron_model(num_inputs=2), 
                         name="test_neurons1",
@@ -126,7 +125,7 @@ elif 'Vm' in neuron_model().keywords['model']:
                                           variables=['Vm'],
                                           record=0, name='statemon_test_neurons2')
     statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
-        "Iin", "Vm", "Iadapt"], record=[0, 1], name='statemon_test_neurons1')
+        "Iin", "Vm"], record=[0, 1], name='statemon_test_neurons1')
 
 
 Net.add(input_spikegenerator, test_neurons1, test_neurons2,

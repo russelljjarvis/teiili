@@ -421,7 +421,7 @@ q_model_template_params = {
     'g_psc' : 1*ohm,
     'tau': 19*ms,
     'refrac_tau': 2*ms,
-    'refP': 12.*ms,
+    'refP': 0.*ms,
     'lfsr_num_bits': 6
     }
 

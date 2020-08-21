@@ -11,7 +11,7 @@ We use a standard STDP protocal with a exponentioally decaying window.
 import pyqtgraph as pg
 import numpy as np
 
-from brian2 import ms, mV, second, prefs,\
+from brian2 import ms, mV, mA, second, prefs,\
     SpikeMonitor, StateMonitor, defaultclock,\
     ExplicitStateUpdater
 
@@ -81,6 +81,7 @@ post_synapse.weight = 80
 add_lfsr(post_synapse, seed, defaultclock.dt)
 
 stdp_synapse.tau_syn = 5*ms
+stdp_synapse.dApre = 4
 post_synapse.tau_syn = 5*ms
 pre_synapse.tau_syn = 5*ms
 
@@ -101,7 +102,7 @@ statemon_pre_synapse = StateMonitor(
     pre_synapse, variables=['I_syn'], record=0, name='statemon_pre_synapse')
 
 statemon_post_synapse = StateMonitor(stdp_synapse, variables=[
-    'I_syn', 'w_plast', 'weight'],
+    'I_syn', 'w_plast', 'weight', 'Apre', 'Apost'],
     record=True, name='statemon_post_synapse')
 
 Net.add(pre_spikegenerator, post_spikegenerator,
@@ -125,9 +126,12 @@ win_stdp.nextRow()
 p2 = win_stdp.addPlot()
 win_stdp.nextRow()
 p3 = win_stdp.addPlot()
+win_stdp.nextRow()
+p4 = win_stdp.addPlot()
 
 p2.setXLink(p1)
 p3.setXLink(p2)
+p4.setXLink(p3)
 
 text1 = pg.TextItem(text='Homoeostasis', anchor=(-0.3, 0.5))
 text2 = pg.TextItem(text='Weak Pot.', anchor=(-0.3, 0.5))
@@ -180,7 +184,17 @@ Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
             ylabel="I_syn (A)",
             backend='pyqtgraph',
             mainfig=win_stdp,
-            subfig=p3,
+            subfig=p3)
+
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'Apre')), (statemon_post_synapse, ('t', 'Apost'))],
+            MyPlotSettings=PlotSettings(colors=['b', 'r']),
+            x_range=(0, duration),
+            title="Time windows",
+            xlabel="Time (s)",
+            ylabel="Apre and Apost",
+            backend='pyqtgraph',
+            mainfig=win_stdp,
+            subfig=p4,
             show_immediately=True)
 
 win_traces = pg.GraphicsWindow(title="STDP Unit Test")
@@ -233,3 +247,35 @@ Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_Iin', 'Iin'))],
             mainfig=win_stdp,
             subfig=p3,
             show_immediately=True)
+
+from bokeh.plotting import figure, show
+from bokeh.layouts import gridplot
+from bokeh.models import ColumnDataSource, LabelSet
+
+p1 = figure(y_range=[-.5, .5], x_axis_label='Time (ms)',
+        y_axis_label='Neuron ID', width=1200, height=150)
+p1.circle(spikemon_pre_neurons.t/ms, np.array(spikemon_pre_neurons.i), color='navy', legend_label='pre')
+p1.circle(spikemon_post_neurons.t/ms, np.array(spikemon_post_neurons.i), color='red', legend_label='post')
+source = ColumnDataSource(data=dict(x=[0, 300, 600, 900, 1200, 1500],
+                                    y=[.2, .2, .2, .2, .2, .2],
+                                    names=['Homoeostasis', 'Weak Pot.', 'Weak Dep.',
+                                           'Strong Pot.', 'Strong Dep.', 'Homoeostasis']))
+labels = LabelSet(x='x', y='y', text='names',
+              source=source, render_mode='canvas')
+p1.add_layout(labels)
+
+p2 = figure(x_axis_label='Time (ms)',
+        y_axis_label='Weight', width=1200, height=150, x_range=p1.x_range)
+p2.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].w_plast, line_color='black', line_width=2)
+
+p3 = figure(x_axis_label='Time (ms)',
+        y_axis_label='PSC (mA)', width=1200, height=150, x_range=p1.x_range)
+p3.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].I_syn/mA, line_color='black', line_width=2)
+
+p4 = figure(x_axis_label='Time (ms)',
+        y_axis_label='Amplitude', width=1200, height=150, x_range=p1.x_range)
+p4.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].Apre, line_color='navy', line_width=2, legend_label='pre')
+p4.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].Apost, line_color='red', line_width=2, legend_label='post')
+
+pf = gridplot([[p1], [p2], [p3], [p4]])
+show(pf)

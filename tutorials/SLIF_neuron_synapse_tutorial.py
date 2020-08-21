@@ -262,3 +262,20 @@ Lineplot(DataModel_to_x_and_y_attr=MyData_output,
          show_immediately=False)
 
 app.exec()
+from bokeh.plotting import figure, show
+from bokeh.layouts import gridplot
+p1 = figure(y_range=[-.5, .5], x_axis_label='Time (ms)',
+        y_axis_label='Neuron ID', width=650, height=300, x_range=[-5,100])
+p1.circle(np.array(spikemon_input.t/ms), np.array(spikemon_input.i), line_color='black')
+p2 = figure(x_axis_label='Time (ms)',
+        y_axis_label='EPCS (mA)', width=650, height=300, x_range=p1.x_range)
+p2.line(np.array(statemon_input_synapse.t/ms), np.array(statemon_input_synapse[0].I_syn/mA), line_color='black', line_width=2)
+p3 = figure(x_axis_label='Time (ms)',
+        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
+p3.line(np.array(statemon_test_neurons1.t/ms), np.array(statemon_test_neurons1[0].Vm/mV), line_color='black', line_width=2)
+p4 = figure(x_axis_label='Time (ms)',
+        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
+p4.line(np.array(statemon_test_neurons2.t/ms), np.array(statemon_test_neurons2[0].Vm/mV), line_color='black', line_width=2)
+pf = gridplot([[p1, p2], [p3, p4]])
+show(pf)
+

@@ -13,7 +13,7 @@ import struct
 import itertools
 
 
-def delete_doublets(spiketimes, indices):
+def delete_doublets(spiketimes, indices, verbose=False):
     """
     Removes spikes that happen at the same time and at the same index.
     This happens when you donwnsample, but Brian2 cannot cope with more that 1 spike per ts.
@@ -30,8 +30,9 @@ def delete_doublets(spiketimes, indices):
     spiketimes = buff_data[:, 0]
     indices = np.asarray(buff_data[:, 1], dtype=int)
 
-    print(len_before - len(spiketimes), 'spikes removed')
-    print(len(spiketimes) / len_before * 100, '% spikes removed')
+    if verbose:
+        print(len_before - len(spiketimes), 'spikes removed')
+        print(100 - (len(spiketimes) / len_before * 100), '% spikes removed')
     return spiketimes, indices
 
 

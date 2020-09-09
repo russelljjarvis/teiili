@@ -689,3 +689,102 @@ class WTA_Testbench():
         """
         num2d_neurons = num_neurons**2
         self.noise_input = PoissonGroup(num2d_neurons, rate * Hz)
+
+
+
+class SequenceTestbench():
+    """ This class provides a simple poisson encoded sequence testbench.
+    This class returns neuron indices and spike times, which can used to
+    instantiate a SpikeGeneratorGroup in brian2."""
+    
+    def __init__(self, n_channels, n_items, 
+                 cycle_length, noise_probability=None,
+                 rate=None):
+        """ Creates arrays of neuron index and spike times for
+        a simple sequence learning benchmark. The sequence consists of
+        a number of items which are encoded in spatially distinct input channels.
+        
+        Args:
+            n_channels (int, required): Total numbers of channels.
+            n_items (in, required): Number of items. The number of channels
+                per item is determined automatically based on the available
+                number of channels.
+            cycle_length (int, required): The length in ms for one cycle.
+            noise_probability (float, optional): Probability of noise spikes per
+                time step (ms).
+            rate (int, optional): Frequency of each item. Default is 30.
+            
+        Returns:
+            indices (1darray, int): An array of neuron indices.
+            times (1darray, int): An array of spike times in ms.
+        """
+        self.n_channels = n_channels
+        self.n_items = n_items
+        self.noise_probability = noise_probability
+        self.rate = rate
+        self.cycle_length = cycle_length
+        self.item_length = cycle_length / n_items
+        self.channels_per_item = n_channels / n_items
+        
+    def create_poisson_items(self):
+        """ This function creates the Poisson distributed items with the
+        specificed rate.
+        """
+        if self.rate is None:
+            self.rate = 30
+        
+        P = PoissonGroup(N=self.n_channels, rates=self.rate*Hz)
+        self.monitor = SpikeMonitor(P, record=True)
+        net = Network()
+        net.add(P, self.monitor)
+        net.run(duration=self.cycle_length*ms)
+        
+    def add_noise(self):
+        """ 
+        This function adds noise spike given the noise_probability.
+        """
+        
+        if self.noise_probability is not None:
+            noise_spikes = np.random.rand(self.n_channels, self.cycle_length)
+    
+            self.noise_indices = np.where(noise_spikes < self.noise_probability)[0]
+            self.noise_times = np.where(noise_spikes < self.noise_probability)[1] * ms
+            
+        
+    def stimuli(self):
+        """ This function creates the stimuli and returns neuron indices and
+        spike times.
+        """
+        
+        self.create_poisson_items()
+        
+        t_start = 0
+        i_start = 0
+        for item in range(self.n_items):
+            t_stop = t_start + self.item_length
+            i_stop = i_start + self.channels_per_item
+            
+            cInd = np.logical_and(np.logical_and(np.logical_and(
+                self.monitor.t>t_start*ms, self.monitor.i>i_start),\
+                self.monitor.t<t_stop*ms), self.monitor.i<=i_stop)
+            
+            t_start += self.item_length
+            i_start += self.channels_per_item
+            try:
+                self.indices = np.concatenate((self.indices, np.asarray(self.monitor.i[cInd])))
+                self.times = np.concatenate((self.times, np.asarray(self.monitor.t[cInd])))
+            except AttributeError:
+                self.indices = np.asarray(self.monitor.i[cInd])
+                self.times = np.asarray(self.monitor.t[cInd])
+        
+        self.add_noise()
+        
+        if self.noise_probability is not None:
+            self.indices = np.concatenate((self.indices, self.noise_indices))
+            self.times = np.concatenate((self.times, self.noise_times))
+            sorting_index = np.argsort(self.times)
+            self.indices = self.indices[sorting_index]
+            self.times = self.times[sorting_index]
+        
+        self.times, self.indices = delete_doublets(self.times / ms, self.indices)
+        return self.indices, self.times*ms

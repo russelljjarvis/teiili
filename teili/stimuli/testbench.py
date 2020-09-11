@@ -42,16 +42,18 @@ Todo:
 """
 # @Author: Moritz Milde
 # @Date:   2017-12-17 13:22:16
-
-from brian2 import SpikeGeneratorGroup, PoissonGroup
-from brian2 import Network, SpikeMonitor
-from brian2 import ms, Hz
-from teili.tools.converter import dvs2ind, aedat2numpy
-from teili.tools.indexing import xy2ind, ind2xy
 import numpy as np
 import os
 import sys
 import operator
+
+from brian2 import SpikeGeneratorGroup, PoissonGroup
+from brian2 import Network, SpikeMonitor
+from brian2 import ms, Hz
+
+from teili.tools.converter import dvs2ind, aedat2numpy
+from teili.tools.indexing import xy2ind, ind2xy
+from teili.tools.converter import delete_doublets
 
 
 class STDP_Testbench():

@@ -44,7 +44,7 @@ Todo:
 # @Date:   2017-12-17 13:22:16
 
 from brian2 import SpikeGeneratorGroup, PoissonGroup
-from brian2 import SpikeMonitor
+from brian2 import Network, SpikeMonitor
 from brian2 import ms, Hz
 from teili.tools.converter import dvs2ind, aedat2numpy
 from teili.tools.indexing import xy2ind, ind2xy

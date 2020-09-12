@@ -68,11 +68,11 @@ def add_re_init_weights(group, re_init_index, re_init_threshold, dist_param_re_i
 
 
 def add_activity_proxy(group, buffer_size, decay):
-    """Adds all needed functionality to track normalised Imem variance for
-    Variance Dependent Plasticity.
+    """Adds all needed functionality to track normalised Vm/Imem activity proxy 
+    for Activity Dependent Plasticity.
 
     Args:
-        group (Synapse group): Synapse group
+        group (Neuron group): Neuron group
         buffer_size (int, optional): Parameter to set the size of the buffer
             for activity dependent plasticity rule. Meaning how many
             samples are considered to calculate the activity proxy of post

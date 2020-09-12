@@ -22,7 +22,7 @@ from teili.building_blocks.wta import WTA
 from teili.stimuli.testbench import WTA_Testbench, OCTA_Testbench
 from teili.models.parameters.octa_params import wta_params, octa_params,\
     mismatch_neuron_param, mismatch_synap_param
-from teili.tools.group_tools import add_goup_weight_init,\
+from teili.tools.group_tools import add_group_weight_init,\
     add_group_weight_decay, add_group_weight_re_init,\
     add_group_activity_proxy
 from teili.tools.bb_tools import add_bb_mismatch
@@ -418,7 +418,7 @@ def gen_octa(groupname,
                    [prediction._groups['s_exc_exc']] +\
                    [s_proj_pred]
 
-    add_goup_weight_init(w_init_group,
+    add_group_weight_init(w_init_group,
                          dist_param=dist_param_init,
                          scale=scale_init,
                          distribution=distribution)

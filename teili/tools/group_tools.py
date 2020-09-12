@@ -93,7 +93,7 @@ def add_group_activity_proxy(groups, buffer_size, decay):
         group._tags.update(dict_append)
 
 
-def add_goup_weight_init(groups, dist_param, scale, distribution):
+def add_group_weight_init(groups, dist_param, scale, distribution):
     """Function to add the weight initialisation to a given
     `Connections` group.
 

@@ -76,7 +76,8 @@ def add_group_weight_re_init(groups,
 
 
 def add_group_activity_proxy(groups, buffer_size, decay):
-    """This allows to add an activity proxy run regular function.
+    """This warpper function allows to add an activity proxy 
+    run regular function.
 
     Args:
         group (list): List of neuron groups which are subject to

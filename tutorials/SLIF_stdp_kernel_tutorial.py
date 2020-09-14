@@ -63,7 +63,6 @@ stdp_synapse.connect('i==j')
 
 # Setting parameters
 stdp_synapse.w_plast = 7
-stdp_synapse.dApre = 7
 stdp_synapse.taupre = 10*ms
 stdp_synapse.taupost = 10*ms
 add_lfsr(stdp_synapse, 12, defaultclock.dt)

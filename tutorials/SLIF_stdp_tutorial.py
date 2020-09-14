@@ -75,13 +75,13 @@ pre_neurons.Vm = 3*mV
 add_lfsr(post_neurons, seed, defaultclock.dt)
 post_neurons.Vm = 3*mV
 
-pre_synapse.weight = 80
+pre_synapse.weight = 90
 add_lfsr(pre_synapse, seed, defaultclock.dt)
-post_synapse.weight = 80
+post_synapse.weight = 90
 add_lfsr(post_synapse, seed, defaultclock.dt)
 
 stdp_synapse.tau_syn = 5*ms
-stdp_synapse.dApre = 4
+stdp_synapse.weight = 2
 post_synapse.tau_syn = 5*ms
 pre_synapse.tau_syn = 5*ms
 
@@ -115,7 +115,6 @@ Net.add(pre_spikegenerator, post_spikegenerator,
 duration = 2.
 Net.run(duration * second)
 
-
 # Visualize
 win_stdp = pg.GraphicsWindow(title="STDP Unit Test")
 win_stdp.resize(2500, 1500)
@@ -126,12 +125,12 @@ win_stdp.nextRow()
 p2 = win_stdp.addPlot()
 win_stdp.nextRow()
 p3 = win_stdp.addPlot()
-win_stdp.nextRow()
-p4 = win_stdp.addPlot()
+#win_stdp.nextRow()
+#p4 = win_stdp.addPlot()
 
 p2.setXLink(p1)
 p3.setXLink(p2)
-p4.setXLink(p3)
+#p4.setXLink(p3)
 
 text1 = pg.TextItem(text='Homoeostasis', anchor=(-0.3, 0.5))
 text2 = pg.TextItem(text='Weak Pot.', anchor=(-0.3, 0.5))
@@ -173,28 +172,30 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'w_plast'))],
             mainfig=win_stdp,
             subfig=p2)
 
-datamodel = StateVariablesModel(state_variable_names=['I_syn'],
-                                state_variables=[np.asarray(statemon_post_synapse.I_syn[0])],
-                                state_variables_times=[np.asarray(statemon_post_synapse.t)])
-Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
-            MyPlotSettings=PlotSettings(colors=['m']),
-            x_range=(0, duration),
-            title="Post synaptic current",
-            xlabel="Time (s)",
-            ylabel="I_syn (A)",
-            backend='pyqtgraph',
-            mainfig=win_stdp,
-            subfig=p3)
+#datamodel = StateVariablesModel(state_variable_names=['I_syn'],
+#                                state_variables=[np.asarray(statemon_post_synapse.I_syn[0])],
+#                                state_variables_times=[np.asarray(statemon_post_synapse.t)])
+#Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_I_syn', 'I_syn'))],
+#            MyPlotSettings=PlotSettings(colors=['m']),
+#            x_range=(0, duration),
+#            title="Post synaptic current",
+#            xlabel="Time (s)",
+#            ylabel="I_syn (A)",
+#            backend='pyqtgraph',
+#            mainfig=win_stdp,
+#            subfig=p3)
 
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'Apre')), (statemon_post_synapse, ('t', 'Apost'))],
-            MyPlotSettings=PlotSettings(colors=['b', 'r']),
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse, ('t', 'Apre')),
+                                    (statemon_post_synapse, ('t', 'Apost'))
+                                    ],
+            MyPlotSettings=PlotSettings(colors=['w', 'r']),
             x_range=(0, duration),
             title="Time windows",
             xlabel="Time (s)",
             ylabel="Apre and Apost",
             backend='pyqtgraph',
             mainfig=win_stdp,
-            subfig=p4,
+            subfig=p3,
             show_immediately=True)
 
 win_traces = pg.GraphicsWindow(title="STDP Unit Test")
@@ -252,30 +253,63 @@ from bokeh.plotting import figure, show
 from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource, LabelSet
 
-p1 = figure(y_range=[-.5, .5], x_axis_label='Time (ms)',
+p1 = figure(y_range=[-.5, 1.5], x_axis_label='Time (ms)',
         y_axis_label='Neuron ID', width=1200, height=150)
-p1.circle(spikemon_pre_neurons.t/ms, np.array(spikemon_pre_neurons.i), color='navy', legend_label='pre')
-p1.circle(spikemon_post_neurons.t/ms, np.array(spikemon_post_neurons.i), color='red', legend_label='post')
+p1.circle(spikemon_pre_neurons.t/ms, np.array(spikemon_pre_neurons.i),
+          color='navy', legend_label='pre')
+p1.circle(spikemon_post_neurons.t/ms, np.array(spikemon_post_neurons.i),
+          color='red', legend_label='post')
+pre_spikes0 = spikemon_pre_neurons.t[np.where(spikemon_pre_neurons.i==0)[0]]
+post_spikes0 = spikemon_post_neurons.t[np.where(spikemon_post_neurons.i==0)[0]]
+coincidences = [x for y in post_spikes0 for x in pre_spikes0 if x==y]
+p1.circle(coincidences/ms, 0, size=10, alpha=.2)
+pre_spikes1 = spikemon_pre_neurons.t[np.where(spikemon_pre_neurons.i==1)[0]]
+post_spikes1 = spikemon_post_neurons.t[np.where(spikemon_post_neurons.i==1)[0]]
+coincidences = [x for y in post_spikes1 for x in pre_spikes1 if x==y]
+p1.circle(coincidences/ms, 1, size=10, alpha=.2)
+print(pre_spikes0, post_spikes0, pre_spikes1, post_spikes1)
 source = ColumnDataSource(data=dict(x=[0, 300, 600, 900, 1200, 1500],
                                     y=[.2, .2, .2, .2, .2, .2],
-                                    names=['Homoeostasis', 'Weak Pot.', 'Weak Dep.',
-                                           'Strong Pot.', 'Strong Dep.', 'Homoeostasis']))
+                                    names=['Homoeostasis', 'Weak Pot.',
+                                           'Weak Dep.', 'Strong Pot.',
+                                           'Strong Dep.', 'Homoeostasis']))
 labels = LabelSet(x='x', y='y', text='names',
-              source=source, render_mode='canvas')
+                  source=source, render_mode='canvas')
 p1.add_layout(labels)
 
 p2 = figure(x_axis_label='Time (ms)',
-        y_axis_label='Weight', width=1200, height=150, x_range=p1.x_range)
-p2.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].w_plast, line_color='black', line_width=2)
+            y_axis_label='Weight', width=1200, height=150,
+            x_range=p1.x_range)
+p2.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].w_plast,
+        line_color='green', line_width=2, legend_label='0')
+p2.line(statemon_post_synapse[1].t/ms, statemon_post_synapse[1].w_plast,
+        line_color='black', line_width=2, legend_label='1')
 
 p3 = figure(x_axis_label='Time (ms)',
-        y_axis_label='PSC (mA)', width=1200, height=150, x_range=p1.x_range)
-p3.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].I_syn/mA, line_color='black', line_width=2)
+            y_axis_label='PSC (mA)', width=1200, height=150,
+            x_range=p1.x_range)
+p3.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].I_syn/mA,
+        line_color='green', line_width=2)
+p3.line(statemon_post_synapse[1].t/ms, statemon_post_synapse[1].I_syn/mA,
+        line_color='black', line_width=2)
 
 p4 = figure(x_axis_label='Time (ms)',
         y_axis_label='Amplitude', width=1200, height=150, x_range=p1.x_range)
-p4.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].Apre, line_color='navy', line_width=2, legend_label='pre')
-p4.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].Apost, line_color='red', line_width=2, legend_label='post')
+p4.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].Apre,
+        line_color='navy', line_width=2, legend_label='pre0')
+p4.line(statemon_post_synapse[0].t/ms, statemon_post_synapse[0].Apost,
+        line_color='red', line_width=2, legend_label='post0')
+p4.line(statemon_post_synapse[1].t/ms, statemon_post_synapse[1].Apre,
+        line_color='navy', line_width=2, legend_label='pre1')
+p4.line(statemon_post_synapse[1].t/ms, statemon_post_synapse[1].Apost,
+        line_color='red', line_width=2, legend_label='post1')
 
-pf = gridplot([[p1], [p2], [p3], [p4]])
+p5 = figure(y_range=[-.5, 1.5], x_axis_label='Time (ms)',
+        y_axis_label='Neuron ID', width=1200, height=150)
+p5.circle(pre_spikegenerator._spike_time, [1 for x in pre_spikegenerator._spike_time], color='navy',
+          legend_label='pre', alpha=0.5)
+p5.circle(post_spikegenerator._spike_time, [1 for x in post_spikegenerator._spike_time], color='red',
+          legend_label='post', alpha=0.5)
+
+pf = gridplot([[p1], [p2], [p3], [p4], [p5]])
 show(pf)

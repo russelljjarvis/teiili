@@ -407,11 +407,11 @@ stochastic_decay_stdp = {
         ''',
     'on_pre': '''
         Apre += dApre
-        w_plast = clip(w_plast - Apost/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max)
+        w_plast = int(clip(w_plast - Apost/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max))
         ''',
     'on_post': '''
         Apost += dApre
-        w_plast = clip(w_plast + Apre/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max)
+        w_plast = int(clip(w_plast + Apre/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max))
         '''
 }
 

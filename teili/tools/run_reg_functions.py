@@ -527,29 +527,35 @@ def update_threshold(Vthr, Vm, EL, VT, sigma_membrane, not_refractory):
     return data * mV
 
 @implementation('numpy', discard_units=True)
-@check_units(decay_probability=1, num_neurons=1, lfsr_num_bits=1, result=1)
-def lfsr(decay_probability, num_neurons, lfsr_num_bits):
+@check_units(decay_probability=1, num_elements=1, lfsr_num_bits=1, mask=1, result=1)
+def lfsr(decay_probability, num_elements, lfsr_num_bits, mask):
     """
     Generate a pseudorandom number between 0 and 1 with a Linear
-    Feedback Shift Register (LFSR). This is equivalent to generating random
-    numbers from an uniform distribution.
+    Feedback Shift Register (LFSR), which is equivalent to generating random
+    numbers from an uniform distribution. This is a Galois or many-to-one
+    implementation.
 
-    This function receives a given number and performs num_neurons iterations
+    This function receives a given number and performs num_elements iterations
     of the LFSR. This is done when a given neuron needs another random number.
     The LFSR does a circular shift (i.e. all the values are shifted left while
     the previous MSB becomes the new LSB) and ensures the variable is no bigger
-    than the specified number of bits. After that, the taps are update
-    accordingly wth the result of a XOR operation. Note that, for convenience,
-    the input and outputs are normalized, i.e. value/2**20.
+    than the specified number of bits. Note that, for convenience,
+    the input and outputs are normalized, i.e. value/2**lfsr_num_bits.
+
+    In practice, when there is not overflow, the operation is a normal shift.
+    Otherwise, a XOR operation between the mask and the shifted value is
+    necessary to send MSB to LSB and update relative taps.
 
     Parameters
     ----------
     decay_probability : float
         Value between 0 and 1 that will be the input to the LFSR
-    num_neurons : int
+    num_elements : int
         Number of neurons in the group
     lfsr_num_bits : int
         Number of bits of the LFSR
+    mask : int
+        Value to be used in XOR operation, depending on number of bits used
 
     Returns
     -------
@@ -563,35 +569,24 @@ def lfsr(decay_probability, num_neurons, lfsr_num_bits):
     >>> n_bits = 5
     >>> bin(number)
     '0b11010'
-    >>> bin(int(lfsr(number/2**n_bits, 1, b_bits)*2**n_bits))
-    '0b10101'
+    >>> bin(int(lfsr([number/2**n_bits], 1, [n_bits], 0b100101)*2**n_bits))
+    '0b10001'
     """
-    # Use np.array regardless of prefs.codegen.target
-    if isinstance(decay_probability, np.ndarray):
+    try:
         lfsr_num_bits = int(lfsr_num_bits[0])
-    else:
-        lfsr_num_bits = int(lfsr_num_bits)
-        decay_probability = np.array([decay_probability])
+        seed = int(decay_probability[-1]*2**lfsr_num_bits)
+    except:
+        print('Please use numpy target')
+        quit()
 
-    decay_probability *= 2**lfsr_num_bits
-    decay_probability = decay_probability.astype(int)
-    mask = 2**lfsr_num_bits - 1
-    taps = {3: 1, 5: 2, 6: 1, 9: 4, 20: 3}
+    updated_probabilities = [0 for _ in range(num_elements)]
+    mask = int(mask)
 
-    for _ in range(num_neurons):
-        decay_probability = decay_probability << 1
-        overflow = (decay_probability & (1 << lfsr_num_bits)).astype(bool)
-        # Re-introduces 1s beyond last position
-        decay_probability |= overflow
-        # Ensures variable is lfsr_num_bits long
-        decay_probability = decay_probability & mask
-        # Get bits from appropriate positions
-        second_tap = (decay_probability & (1 << taps[lfsr_num_bits])).astype(bool)
-        first_tap = (decay_probability & (1 << 0)).astype(bool)
-        # Update taps the decay_probability array
-        decay_probability &=~ (1 << taps[lfsr_num_bits])
-        indexes = np.where(second_tap^first_tap==True)
-        decay_probability[indexes] |= (1 << taps[lfsr_num_bits])
+    for i in range(num_elements):
+        seed = seed << 1
+        overflow = seed >> lfsr_num_bits
+        if overflow:
+            seed ^= mask
+        updated_probabilities[i] = seed
 
-    return decay_probability/2**lfsr_num_bits
-
+    return np.array(updated_probabilities)/2**lfsr_num_bits

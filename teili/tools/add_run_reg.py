@@ -143,7 +143,14 @@ def add_weight_decay(group, decay_rate, dt):
 def add_lfsr(group, lfsr_seed, dt):
     """
     Initializes numbers that will be used for each element on the LFSR
-    function by iterating on the LFSR num_elements times.
+    function by iterating on the LFSR num_elements times. This is a
+    Galois or many-to-one implementation.
+
+    The value of the mask is hard-coded according to the number of
+    bits used. The MSB and LSB bits of the mask should be 1 to
+    perform the equivalent of a circular shift. Moreover, bits relative
+    to taps+1 (because it was shifted first) should also be 1 to XOR
+    the correct bits.
 
     Parameters
     ----------
@@ -166,35 +173,25 @@ def add_lfsr(group, lfsr_seed, dt):
             num_elements_stdp = 0
         num_elements = num_elements_syn + num_elements_stdp
     lfsr_out = [0 for _ in range(num_elements)]
-    mask = 2**num_bits - 1
-    taps = {3: 1, 5: 2, 6: 1, 9: 4, 20: 3}
+    taps = {3: 0b1011, 5: 0b100101, 6:0b1000011, 9: 0b1000010001}
+    mask = taps[num_bits]
 
     for i in range(num_elements):
         lfsr_seed = lfsr_seed << 1
-        overflow = True if lfsr_seed & (1 << num_bits) else False
-
-        # Re-introduces 1s beyond last position
+        overflow = lfsr_seed >> num_bits
         if overflow:
-            lfsr_seed |= 1
-
-        # Ensures variable is num_bits long
-        lfsr_seed = lfsr_seed & mask
-
-        # Get bits from proper positions
-        second_tap = 1 if lfsr_seed & (1 << taps[num_bits]) else 0
-        first_tap = 1 if lfsr_seed & (1 << 0) else 0
-        # Update bit
-        lfsr_seed &=~ (1 << taps[num_bits])
-        if bool(second_tap^first_tap):
-            lfsr_seed |= (1 << taps[num_bits])
+            lfsr_seed ^= mask
         lfsr_out[i] = lfsr_seed
 
+    group.add_state_variable('mask', shared=True, constant=True)
+    group.mask = mask
     if isinstance(group, Neurons):
         group.decay_probability = np.asarray(lfsr_out)/2**num_bits
         group.namespace.update({'lfsr': lfsr})
         group.run_regularly('''decay_probability = lfsr(decay_probability,\
                                                          N,\
-                                                         lfsr_num_bits)
+                                                         lfsr_num_bits,\
+                                                         mask)
                              ''',
                              dt=dt)
     else:
@@ -202,13 +199,15 @@ def add_lfsr(group, lfsr_seed, dt):
         group.namespace.update({'lfsr': lfsr})
         group.run_regularly('''decay_probability_syn = lfsr(decay_probability_syn,\
                                                          N,\
-                                                         lfsr_num_bits_syn)
+                                                         lfsr_num_bits_syn,\
+                                                         mask)
                              ''',
                              dt=dt)
         if hasattr(group, 'decay_probability_stdp'):
             group.decay_probability_stdp = np.asarray(lfsr_out)[num_elements_syn:]/2**num_bits
             group.run_regularly('''decay_probability_stdp = lfsr(decay_probability_stdp,\
                                                              N,\
-                                                             lfsr_num_bits_syn)
+                                                             lfsr_num_bits_syn,\
+                                                             mask)
                                  ''',
                                  dt=dt)

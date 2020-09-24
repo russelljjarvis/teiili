@@ -43,7 +43,7 @@ class SortMatrix():
         sorted_matrix (TYPE): Sorted matrix according to permutation.
     """
 
-    def __init__(self, nrows, ncols=None, filename=None, matrix=None, axis=0):
+    def __init__(self, nrows, ncols=None, filename=None, matrix=None, axis=0, fill_ids=None):
         """Summary
 
         Args:
@@ -53,6 +53,9 @@ class SortMatrix():
             matrix (ndarray, optional): Instead of providing filename and location
                 one can also pass the matrix to sort directly to the class.
             axis (int, optional): Axis along which similarity should be computed.
+            fill_ids (ndarray, optional): Postsynaptic target indices of a presynaptic
+                projection. This is an additional information that must be compatible
+                with the argument matrix.
         """
         self.nrows = nrows
         self.ncols = ncols
@@ -66,7 +69,15 @@ class SortMatrix():
         if matrix is None:
             self.matrix = self.load_matrix()
         elif matrix is not None:
-            self.matrix = np.reshape(matrix, (nrows, ncols))
+            if fill_ids is None:
+                self.matrix = np.reshape(matrix, (nrows, ncols))
+            elif fill_ids is not None:
+                # Fill un-connected inputs with zero
+                filled_matrix = np.zeros((self.nrows, self.ncols))
+                for i in range(self.nrows):
+                    filled_matrix[i,:][fill_ids[i,:]] = matrix[i,:]
+                self.matrix = filled_matrix
+
         # Compute similarity along specified axis
         self.similarity_matrix = self.get_similarity_matrix(axis=axis)
         # Get permutation along specified axis

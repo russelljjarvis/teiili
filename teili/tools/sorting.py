@@ -55,7 +55,8 @@ class SortMatrix():
             axis (int, optional): Axis along which similarity should be computed.
             fill_ids (ndarray, optional): Postsynaptic target indices of a presynaptic
                 projection. This is an additional information that must be compatible
-                with the argument matrix.
+                with the argument matrix and can be used to sort neurons according to
+                the similarity of their recurrent weights.
         """
         self.nrows = nrows
         self.ncols = ncols
@@ -70,12 +71,12 @@ class SortMatrix():
             self.matrix = self.load_matrix()
         elif matrix is not None:
             if fill_ids is None:
-                self.matrix = np.reshape(matrix, (nrows, ncols))
+                self.matrix = np.reshape(matrix, (self.nrows, self.ncols))
             elif fill_ids is not None:
                 # Fill un-connected inputs with zero
                 filled_matrix = np.zeros((self.nrows, self.ncols))
                 for i in range(self.nrows):
-                    filled_matrix[i,:][fill_ids[i,:]] = matrix[i,:]
+                    filled_matrix[i,:][fill_ids[i][:]] = matrix[i][:]
                 self.matrix = filled_matrix
 
         # Compute similarity along specified axis

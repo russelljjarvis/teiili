@@ -10,7 +10,7 @@ This file contains unittest for tools.py
 import unittest
 import numpy as np
 import os
-from teili.tools import indexing, converter, misc, synaptic_kernel
+from teili.tools import indexing, converter, misc, synaptic_kernel, sorting
 
 
 class TestTools(unittest.TestCase):
@@ -112,6 +112,22 @@ class TestTools(unittest.TestCase):
         #                   event_directory='/tmp/Events.npy')
         # os.command('rm /tmp/Events.npy')
 
+    def test_matrix_permutation(self):
+        m = np.array([9, 9, 5,
+                      1, 1, 1,
+                      5, 1, 9])
+        sorted_m = sorting.SortMatrix(nrows=3, matrix=m)
+        self.assertEqual(sorted_m.permutation, [0, 2, 1])
+
+    def test_filled_matrix_permutation(self):
+        m = np.array([[5,    5],
+                      [5, 1, 4],
+                      [1,    2]])
+        m_indices = np.array([[0,    2],
+                              [0, 1, 2],
+                              [0,    2]])
+        sorted_m = sorting.SortMatrix(nrows=3, matrix=m, axis=1, fill_ids=m_indices)
+        self.assertEqual(sorted_m.permutation, [0, 2, 1])
 
 if __name__ == '__main__':
     unittest.main()

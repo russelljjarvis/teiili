@@ -308,11 +308,8 @@ def main(path=None):
     slifSyn = StochasticSyn_decay()
     slifSyn.export_eq(os.path.join(path, "StochasticSyn_decay"))
 
-    slifSynstdp = StochasticSyn_decay_stdp()
-    slifSynstdp.export_eq(os.path.join(path, "StochasticSyn_decay_stdp"))
-
     slifSynStochstdp = StochasticSyn_decay_stoch_stdp()
-    slifSynstdp.export_eq(os.path.join(path, "StochasticSyn_decay_stoch_stdp"))
+    slifSynStochstdp.export_eq(os.path.join(path, "StochasticSyn_decay_stoch_stdp"))
 
     dpiShunt = DPIShunt()
     dpiShunt.export_eq(os.path.join(path, "DPIShunt"))

@@ -5,7 +5,7 @@ network with STDP.
 import numpy as np
 
 from brian2 import ms, mV, prefs, SpikeMonitor, StateMonitor, defaultclock,\
-    ExplicitStateUpdater, SpikeGeneratorGroup
+    ExplicitStateUpdater, SpikeGeneratorGroup, TimedArray
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
@@ -29,7 +29,20 @@ item_rate = 80
 sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
                              noise_prob, item_rate)
 spike_indices, spike_times = sequence.stimuli()
-seq_cells = SpikeGeneratorGroup(num_channels, spike_indices, spike_times)
+# Save them for comparison
+spk_i, spk_t = spike_indices, spike_times
+
+# Reproduce activity in a neuron group (necessary for STDP compatibility)
+spike_times = [spike_times[np.where(spike_indices==i)] for i in range(num_channels)]
+converted_input = (np.zeros((num_channels, int(sequence_duration/(defaultclock.dt/ms)))) - 1)*ms
+for ind, val in enumerate(spike_times):
+    converted_input[ind, (val/defaultclock.dt).astype(int)] = val
+converted_input = np.transpose(converted_input)
+converted_input = TimedArray(converted_input, dt=defaultclock.dt)
+#seq_cells = SpikeGeneratorGroup(num_channels, spike_indices, spike_times)
+seq_cells = Neurons(num_channels, model='tspike=converted_input(t, i): second',
+        threshold='t==tspike', refractory='tspike < 0*ms')
+seq_cells.namespace.update({'converted_input':converted_input})
 
 # Create neuron groups
 num_exc = 85
@@ -59,7 +72,7 @@ inh_exc_conn = Connections(inh_cells, exc_cells,
                            method=stochastic_decay,
                            name='inh_exc_conn')
 feedforward_exc = Connections(seq_cells, exc_cells,
-                              equation_builder=static_synapse_model(),
+                              equation_builder=stdp_synapse_model(),
                               method=stochastic_decay,
                               name='feedforward_exc')
 feedforward_inh = Connections(seq_cells, inh_cells,
@@ -93,6 +106,7 @@ add_lfsr(feedforward_inh, seed, defaultclock.dt)
 
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
+spikemon_seq_neurons = SpikeMonitor(seq_cells, name='spikemon_seq_neurons')
 statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm'], record=True,
                                   name='statemon_exc_cells')
 statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast'], record=True,
@@ -100,14 +114,16 @@ statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast'], record=Tr
 
 net = TeiliNetwork()
 net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-        feedforward_exc, feedforward_inh, spikemon_exc_neurons, statemon_exc_cells)
-duration = 10*ms
+        feedforward_exc, feedforward_inh, statemon_exc_cells,
+        spikemon_exc_neurons, spikemon_seq_neurons)
+duration = 500*ms
 net.run(duration, report='stdout', report_period=100*ms)
 
 import matplotlib.pyplot as plt
 
 plt.figure()
-plt.plot(spike_times/ms, spike_indices, '.')
+plt.plot(spikemon_seq_neurons.t/ms, spikemon_seq_neurons.i, '.')
+plt.plot(spk_t/ms, spk_i, '+')
 plt.figure()
 plt.plot(spikemon_exc_neurons.t/ms, spikemon_exc_neurons.i, '.')
 plt.figure()

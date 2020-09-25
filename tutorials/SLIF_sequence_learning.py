@@ -14,6 +14,7 @@ from teili.models.synapse_models import StochasticSyn_decay_stoch_stdp as stdp_s
 from teili.models.synapse_models import StochasticSyn_decay as static_synapse_model
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.add_run_reg import add_lfsr
+from teili.tools.sorting import SortMatrix
 
 # Initialize simulation preferences
 prefs.codegen.target = "numpy"
@@ -21,14 +22,19 @@ defaultclock.dt = 1 * ms
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
 # Initialize input sequence
-num_items = 7
+num_items = 2
 num_channels = 100
-sequence_duration = 500
+sequence_duration = 200
 noise_prob = .007
 item_rate = 80
-sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
-                             noise_prob, item_rate)
-spike_indices, spike_times = sequence.stimuli()
+spike_times, spike_indices = [], []
+for i in range(10):
+    sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
+                                 noise_prob, item_rate)
+    tmp_i, tmp_t = sequence.stimuli()
+    spike_indices.extend(tmp_i)
+    tmp_t = [(x/ms+i*200)*ms for x in tmp_t]
+    spike_times.extend(tmp_t)
 seq_cells = SpikeGeneratorGroup(num_channels, spike_indices, spike_times)
 
 # Create neuron groups
@@ -86,7 +92,7 @@ exc_inh_conn.weight = 1
 add_lfsr(exc_inh_conn, seed, defaultclock.dt)
 inh_exc_conn.weight = -1
 add_lfsr(inh_exc_conn, seed, defaultclock.dt)
-feedforward_exc.weight = 1
+feedforward_exc.weight = 2
 add_lfsr(feedforward_exc, seed, defaultclock.dt)
 feedforward_inh.weight = -1
 add_lfsr(feedforward_inh, seed, defaultclock.dt)
@@ -101,18 +107,36 @@ statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast'], record=Tr
 net = TeiliNetwork()
 net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
         feedforward_exc, feedforward_inh, spikemon_exc_neurons, statemon_exc_cells)
-duration = 10*ms
+duration = 2000*ms
 net.run(duration, report='stdout', report_period=100*ms)
+
+n_rows = num_exc
+n_cols = n_rows
+w_plast = []
+recurrent_ids = []
+for i in range(n_rows):
+    w_plast.append(list(exc_exc_conn.w_plast[i, :]))
+    recurrent_ids.append(list(exc_exc_conn.j[i, :]))
+sorted_w = SortMatrix(ncols=n_cols, nrows=n_rows, matrix=np.array(w_plast, dtype=object), 
+        fill_ids=np.array(recurrent_ids, dtype=object))
+sorted_i = np.asarray([np.where(
+                np.asarray(sorted_w.permutation) == int(i))[0][0] for i in spikemon_exc_neurons.i])
 
 import matplotlib.pyplot as plt
 
-plt.figure()
-plt.plot(spike_times/ms, spike_indices, '.')
-plt.figure()
-plt.plot(spikemon_exc_neurons.t/ms, spikemon_exc_neurons.i, '.')
-plt.figure()
-plt.plot(statemon_rec_conns.w_plast[0])
-plt.figure()
-plt.plot(statemon_exc_cells.Vm[0])
-plt.show()
-import pdb;pdb.set_trace()
+#plt.figure()
+#plt.plot(spike_times/ms, spike_indices, '.')
+#plt.title('Input')
+#plt.figure()
+#plt.plot(spikemon_exc_neurons.t/ms, spikemon_exc_neurons.i, '.')
+#plt.title('Raster')
+#plt.figure()
+#plt.plot(spikemon_exc_neurons.t/ms, sorted_i, '.')
+#plt.title('Sorted raster')
+#plt.figure()
+#plt.plot(statemon_rec_conns.w_plast[0])
+#plt.title('receptive field 0')
+#plt.figure()
+#plt.plot(statemon_exc_cells.Vm[0])
+#plt.title('Membrane potential 0')
+#plt.show()

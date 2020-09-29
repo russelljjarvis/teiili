@@ -239,7 +239,7 @@ class SortMatrix():
         """
         if len(self.permutation) == 0:
             self.permutation = self.get_permutation(matrix=self.matrix)
-        tmp_matrix = self.matrix
+        tmp_matrix = np.array(self.matrix)
         if len(self.permutation) == np.size(tmp_matrix, 0) and len(self.permutation) == np.size(tmp_matrix, 1):
             # First sort each row
             for row in range(len(self.permutation)):

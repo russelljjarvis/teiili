@@ -30,6 +30,7 @@ for i, trial in enumerate(trials):
     input_rate = trial.name[:-4].split('_')[2]
     ei_conn = trial.name[:-4].split('_')[3]
     num_exc = 15
+    num_channels = 30
 
     l = pg.LayoutWidget()
     text = f"""Num. inh. neuron: {num_inh}, Input Poisson rate: {input_rate}, EI conn.: {ei_conn}"""
@@ -83,10 +84,43 @@ for i, trial in enumerate(trials):
     docks[i].addWidget(p5, 3, 0)
     docks[i].addWidget(p6, 3, 1)
 
-    #w3 = pg.ImageView()
-    #w3.setImage(np.reshape(statemon_ffe_conns.w_plast, (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
-    #w4 = pg.ImageView()
-    #w4.setImage(np.reshape(feedforward_exc.w_plast, (num_channels, num_exc)), axes={'y':0, 'x':1})
-    #d2.addWidget(w3, 0, 0)
-    #d2.addWidget(w4, 0, 1)
+    # Plot matrices
+    colors = [
+        (0, 0, 0),
+        (0, 0, 255),
+        (255, 255, 0),
+        (255, 255, 255)
+    ]
+    cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 4), color=colors)
+
+    image_axis = pg.PlotItem()
+    image_axis.setLabel(axis='bottom', text='RF pixels')
+    image_axis.hideAxis('left')
+    m1 = pg.ImageView(view=image_axis)
+    m1.ui.histogram.hide()
+    m1.ui.roiBtn.hide()
+    m1.ui.menuBtn.hide()
+    m1.setImage(np.reshape(data['rf'], (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
+    m1.setColorMap(cmap)
+    image_axis = pg.PlotItem()
+    image_axis.setLabel(axis='bottom', text='AM pixels')
+    image_axis.hideAxis('left')
+    m2 = pg.ImageView(view=image_axis)
+    m2.ui.histogram.hide()
+    m2.ui.roiBtn.hide()
+    m2.ui.menuBtn.hide() 
+    m2.setImage(np.reshape(data['rf'], (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1}) #FIXME data['am']
+    m2.setColorMap(cmap)
+    image_axis = pg.PlotItem()
+    image_axis.setLabel(axis='bottom', text='sorted')
+    image_axis.hideAxis('left')
+    m3 = pg.ImageView(view=image_axis)
+    m3.ui.histogram.hide()
+    m3.ui.roiBtn.hide()
+    m3.ui.menuBtn.hide() 
+    m3.setImage(np.reshape(data['rf'], (num_channels, num_exc, -1))[:,:,-1])
+    m3.setColorMap(cmap)
+    docks[i].addWidget(m1, 1, 3)
+    docks[i].addWidget(m2, 2, 3)
+    docks[i].addWidget(m3, 3, 3)
 win.show()

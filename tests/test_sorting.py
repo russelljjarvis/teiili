@@ -1,16 +1,17 @@
+# TODO put this on test_tools.py
 import numpy as np
 from teili.tools.sorting import SortMatrix
 import random
 
 import matplotlib.pyplot as plt
 
-trials = {#'trial1': [True, 3, 3, 1, False, .5, .7],
-          #'trial2': [True, 4, 4, 1, False, .5, .7],
-          #'trial3': [True, 5, 5, 1, False, .5, .7],
-          'trial4': [True, 6, 6, 1, False, .5, .7]}
-          #'trial2': [False, 20, 20, 0, False, .5, .7],
-          #'trial2': [False, 20, 20, 1, False, .5, .7],
-          #'trial3': [False, 20, 20, 2, False, .5, .7]}
+# With required diag>=1, only 8x8 start to look like a fair test
+trials = {#'trial1': [True, 3, 3, 0, False, .5, .7],
+          'trial4': [False, 8, 8, 1, False, .5, .7],
+          'trial5': [True, 8, 8, 1, False, .5, .7],
+          'trial2': [False, 20, 20, 1, False, .5, .7],
+          'trial3': [True, 20, 20, 1, False, .5, .7],
+          }
 
 for values in trials.values():
     # Base matrix

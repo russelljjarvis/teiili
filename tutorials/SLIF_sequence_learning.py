@@ -15,7 +15,6 @@ from teili.models.synapse_models import StochasticSyn_decay_stoch_stdp as stdp_s
 from teili.models.synapse_models import StochasticSyn_decay as static_synapse_model
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.add_run_reg import add_lfsr
-from teili.tools.sorting import SortMatrix
 
 import sys
 
@@ -159,17 +158,13 @@ if not np.array_equal(spk_t, spikemon_seq_neurons.t):
     print('Proxy activity and generated input do not match.')
     sys.exit()
 
+# Save targets of recurrent connections as python object
 n_rows = num_exc
-n_cols = n_rows
-w_plast = []
 recurrent_ids = []
+recurrent_weights = []
 for i in range(n_rows):
-    w_plast.append(list(exc_exc_conn.w_plast[i, :]))
+    recurrent_weights.append(list(exc_exc_conn.w_plast[i, :]))
     recurrent_ids.append(list(exc_exc_conn.j[i, :]))
-#sorted_w = SortMatrix(ncols=n_cols, nrows=n_rows, matrix = np.array(w_plast, dtype=object),
-#        fill_ids=np.array(recurrent_ids, dtype=object))
-#sorted_i = np.asarray([np.where(
-#                np.asarray(sorted_w.permutation) == int(i))[0][0] for i in spikemon_exc_neurons.i])
 
 # Save data
 np.savez(f'data_{desc_arg}.npz',
@@ -179,6 +174,7 @@ np.savez(f'data_{desc_arg}.npz',
          inh_spikes_t=np.array(spikemon_inh_neurons.t/ms), inh_spikes_i=np.array(spikemon_inh_neurons.i),
          exc_rate_t=np.array(statemon_pop_rate_e.t/ms), exc_rate=np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz),
          inh_rate_t=np.array(statemon_pop_rate_i.t/ms), inh_rate=np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz),
-          rf=statemon_ffe_conns.w_plast,
-          am=statemon_rec_conns.w_plast,
+         rf=statemon_ffe_conns.w_plast,
+         am=statemon_rec_conns.w_plast,
+         rec_ids=recurrent_ids, rec_w=recurrent_weights
         )

@@ -56,6 +56,7 @@ class SortMatrix():
         """
         self.nrows = nrows
         self.ncols = ncols
+        self.axis = axis
 
         if self.ncols is None:
             warnings.warn('You did not specify ncols. Matrix is assumed to be squared')
@@ -86,7 +87,6 @@ class SortMatrix():
             matrix = np.load(self.filename)
         except TypeError:
             raise TypeError('Invalid filename. Please specify a valid path and filename.')
-            return None
 
         self.matrix = matrix.reshape((self.nrows, self.ncols))
         return self.matrix
@@ -226,7 +226,7 @@ class SortMatrix():
             ndarray: Sorted matrix according to similarity in euclidean distance.
         """
         if len(self.permutation) == 0:
-            self.permutation = self.get_permutation(matrix=self.matrix)
+            self.permutation = self.get_permutation(axis=self.axis)
         tmp_matrix = self.matrix
         if len(self.permutation) == np.size(tmp_matrix, 0) and len(self.permutation) == np.size(tmp_matrix, 1):
             # First sort each row

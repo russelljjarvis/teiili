@@ -235,10 +235,10 @@ class SortMatrix():
             # Second sort each column
             self.sorted_matrix = tmp_matrix[self.permutation]
 
-        elif len(self.permutation) == np.size(tmp_matrix, 0):
+        elif len(self.permutation) == np.size(tmp_matrix, 0) and not len(self.permutation) == np.size(tmp_matrix, 1):
             self.sorted_matrix = tmp_matrix[self.permutation, :]
 
-        elif len(self.permutation) == np.size(tmp_matrix, 1):
+        elif len(self.permutation) == np.size(tmp_matrix, 1) and not len(self.permutation) == np.size(tmp_matrix, 0):
             self.sorted_matrix = tmp_matrix[:, self.permutation]
 
         return self.sorted_matrix

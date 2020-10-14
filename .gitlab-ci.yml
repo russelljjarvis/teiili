@@ -31,6 +31,7 @@ before_script:
   - source activate test_environment
   - pip install --upgrade pip
   - pip install coverage
+  - mkdir -p /builds/ncs/teili/
   - cd /builds/ncs/teili/
   - pip install . 
 

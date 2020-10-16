@@ -37,7 +37,7 @@ num_items = 3
 num_channels = 64
 sub_sequence_duration = seq_dur
 noise_prob = .005
-item_rate = 50
+item_rate = 15
 spike_times, spike_indices = [], []
 sequence_repetitions = 80
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
@@ -108,10 +108,10 @@ for i in range(num_inh):
 for i in range(num_exc):
     weight_length = np.shape(exc_inh_conn.weight[i,:])
     exc_inh_conn.weight[i,:] = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
+feedforward_exc.weight = 1
 for i in range(num_channels):
     weight_length = np.shape(feedforward_exc.w_plast[i,:])
     feedforward_exc.w_plast[i,:] = gamma.rvs(a=3, size=weight_length).astype(int)
-    feedforward_exc.weight[i,:] = gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
 add_lfsr(exc_cells, seed, defaultclock.dt)
 add_lfsr(inh_cells, seed, defaultclock.dt)
 add_lfsr(exc_inh_conn, seed, defaultclock.dt)

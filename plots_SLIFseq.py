@@ -7,11 +7,12 @@ import pyqtgraph as pg
 from pyqtgraph.dockarea import *
 
 from pathlib import Path
+import sys
 
 from teili.tools.sorting import SortMatrix
 
 data_files = [] # TODO now each is a datafile
-data_folder = './2020.10.15_15.40/'
+data_folder = sys.argv[1]
 for i in Path(data_folder).glob('*.npz'):
     data_files.append(i)
 
@@ -158,7 +159,11 @@ if plot_d2:
     m3.ui.histogram.hide()
     m3.ui.roiBtn.hide()
     m3.ui.menuBtn.hide() 
-    m3.setImage(np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1], axes={'y':0, 'x':1})# [:, sorted_w.permutation,-1] FIXME
+    tmp_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
+    sorted_w = SortMatrix(ncols=num_exc, nrows=num_channels,
+            matrix=tmp_matrix, axis=1)
+    
+    m3.setImage(sorted_w.sorted_matrix, axes={'y':0, 'x':1})
     m3.setColorMap(cmap)
     m4 = pg.PlotWidget(title='Population rate')
     m4.plot(exc_rate_t*1e-3,

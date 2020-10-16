@@ -15,11 +15,18 @@ from teili.models.synapse_models import StochasticSyn_decay_stoch_stdp as stdp_s
 from teili.models.synapse_models import StochasticSyn_decay as static_synapse_model
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.add_run_reg import add_lfsr
+from teili.tools.group_tools import add_group_activity_proxy
 
 import sys
+import json
+import os
+from datetime import datetime
 
-# = int(sys.argv[6]) FIXME
-#desc_arg = f'data'
+# process inputs
+seq_dur = int(sys.argv[1])
+learn_factor = int(sys.argv[2])
+ei_p = float(sys.argv[3])
+ei_w = float(sys.argv[4])
 
 # Initialize simulation preferences
 prefs.codegen.target = "numpy"
@@ -28,12 +35,12 @@ stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
 # Initialize input sequence
 num_items = 3
-num_channels = 30
-sub_sequence_duration = 300
+num_channels = 64
+sub_sequence_duration = seq_dur
 noise_prob = .005
 item_rate = 50
 spike_times, spike_indices = [], []
-sequence_repetitions = 80#400 FIXME?
+sequence_repetitions = 80
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
 for i in range(sequence_repetitions):
     sequence = SequenceTestbench(num_channels, num_items, sub_sequence_duration,
@@ -98,13 +105,14 @@ feedforward_inh = Connections(seq_cells, inh_cells,
 feedforward_exc.connect('True')#, p=.2) # FIXME
 feedforward_inh.connect('True')#, p=.2)
 exc_exc_conn.connect('i!=j', p=.85)
-exc_inh_conn.connect('True', p=.15)
+exc_inh_conn.connect('True', p=ei_p)
 inh_exc_conn.connect('True', p=.85)
 
 # Setting parameters
 seed = 12
 exc_cells.Vm = 3*mV
 inh_cells.Vm = 3*mV
+feedforward_exc.A_gain = learn_factor
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
     inh_exc_conn.weight[i,:] = -gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
@@ -131,6 +139,17 @@ add_lfsr(exc_inh_conn, seed, defaultclock.dt)
 add_lfsr(inh_exc_conn, seed, defaultclock.dt)
 add_lfsr(feedforward_exc, seed, defaultclock.dt)
 add_lfsr(feedforward_inh, seed, defaultclock.dt) 
+
+# Add proxy activity group
+activity_proxy_group = [exc_cells]
+add_group_activity_proxy(activity_proxy_group,
+                         buffer_size=buffer_size_plast,
+                         decay=decay)
+#for group in self.adp_synapse_group:
+#    group.variance_th = np.random.uniform(
+#        low=self.parameters['variance_th'] - 0.1,
+#        high=self.parameters['variance_th'] + 0.1,
+#        size=len(group))
 
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
@@ -168,18 +187,38 @@ for i in range(n_rows):
     recurrent_ids.append(list(exc_exc_conn.j[i, :]))
 
 # Save data
-np.savez(f'rasters.npz',
+date_time = datetime.now()
+path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
+os.mkdir(path)
+np.savez(path+f'rasters.npz',
          input_t=np.array(spikemon_seq_neurons.t/ms), input_i=np.array(spikemon_seq_neurons.i),
          exc_spikes_t=np.array(spikemon_exc_neurons.t/ms), exc_spikes_i=np.array(spikemon_exc_neurons.i),
          inh_spikes_t=np.array(spikemon_inh_neurons.t/ms), inh_spikes_i=np.array(spikemon_inh_neurons.i),
         )
-np.savez(f'matrices.npz',
+np.savez(path+f'matrices.npz',
          rf=statemon_ffe_conns.w_plast,
          am=statemon_rec_conns.w_plast,
          rec_ids=recurrent_ids, rec_w=recurrent_weights
         )
-np.savez(f'traces.npz',
+np.savez(path+f'traces.npz',
          Vm_e=statemon_exc_cells.Vm, Vm_i=statemon_inh_cells.Vm,
          exc_rate_t=np.array(statemon_pop_rate_e.t/ms), exc_rate=np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz),
          inh_rate_t=np.array(statemon_pop_rate_i.t/ms), inh_rate=np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz),
         )
+
+Metadata = {'time_step': defaultclock.dt/ms,
+            'num_symbols': num_items,
+            'num_channels': num_channels,
+            'sequence_duration': sub_sequence_duration,
+            'input_noise': noise_prob,
+            'input_rate': item_rate,
+            'sequence_repetitions': sequence_repetitions,
+            'num_exc': num_exc,
+            'num_inh': num_inh,
+            'e->i p': ei_p,
+            'i->e p': .85,
+            'mean e->i w': ei_w,
+            'learn_factor': learn_factor
+        }
+with open(path+'metadata.json', 'w') as f:
+    json.dump(Metadata, f)

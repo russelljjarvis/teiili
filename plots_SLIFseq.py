@@ -62,9 +62,9 @@ exc_rate = traces['exc_rate'][data_start:data_end]
 inh_rate_t = traces['inh_rate_t'][data_start:data_end]
 inh_rate = traces['inh_rate'][data_start:data_end]
 rf = matrices['rf']
-#am = matrices['am'][:, data_start:data_end]
-#rec_ids = matrices['rec_ids'] FIXME
-#rec_w = matrices['rec_w']
+am = matrices['am']
+rec_ids = matrices['rec_ids']
+rec_w = matrices['rec_w']
 del matrices
 del rasters
 del traces
@@ -129,11 +129,6 @@ colors = [
 ]
 cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 4), color=colors)
 if plot_d2:
-    #sorted_w = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w, FIXME
-    #        fill_ids=rec_ids) #TODO change axis
-    #sorted_i = np.asarray([np.where(
-    #                np.asarray(sorted_w.permutation) == int(i))[0][0] for i in exc_spikes_i])
-
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='RF pixels')
     image_axis.hideAxis('left')
@@ -144,26 +139,31 @@ if plot_d2:
     m1.setImage(np.reshape(rf, (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
     m1.setColorMap(cmap)
     image_axis = pg.PlotItem()
-    image_axis.setLabel(axis='bottom', text='RF pixels')#TODO same as below
+    image_axis.setLabel(axis='bottom', text='sorted rec.')
     image_axis.hideAxis('left')
+    sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w, #FIXME for each t?
+              fill_ids=rec_ids) #FIXME axis=1?
+    #sorted_i = np.asarray([np.where(
+    #                np.asarray(sorted_rec.permutation) == int(i))[0][0] for i in exc_spikes_i])
     m2 = pg.ImageView(view=image_axis)
     m2.ui.histogram.hide()
     m2.ui.roiBtn.hide()
     m2.ui.menuBtn.hide() 
-    m2.setImage(np.reshape(rf, (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1}) # TODO sorted rf[-1]
+    m2.setImage(sorted_rec.sorted_matrix, axes={'y':0, 'x':1})
     m2.setColorMap(cmap)
     image_axis = pg.PlotItem()
-    image_axis.setLabel(axis='bottom', text='sorted')
+    image_axis.setLabel(axis='bottom', text='sorted RF.')
     image_axis.hideAxis('left')
     m3 = pg.ImageView(view=image_axis)
     m3.ui.histogram.hide()
     m3.ui.roiBtn.hide()
     m3.ui.menuBtn.hide() 
-    tmp_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
-    sorted_w = SortMatrix(ncols=num_exc, nrows=num_channels,
-            matrix=tmp_matrix, axis=1)
+    rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
+    sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
+            matrix=rf_matrix, axis=1)
     
-    m3.setImage(sorted_w.sorted_matrix, axes={'y':0, 'x':1})
+    #m3.setImage(sorted_rf.sorted_matrix, axes={'y':0, 'x':1})
+    m3.setImage(sorted_rf.matrix[:, sorted_rec.permutation], axes={'y':0, 'x':1})
     m3.setColorMap(cmap)
     m4 = pg.PlotWidget(title='Population rate')
     m4.plot(exc_rate_t*1e-3,

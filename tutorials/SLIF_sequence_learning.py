@@ -26,6 +26,8 @@ from datetime import datetime
 seq_dur = int(sys.argv[1])
 learn_factor = int(sys.argv[2])
 ei_p = float(sys.argv[3])
+ie_p = 0.40
+ee_p = 0.40
 ei_w = float(sys.argv[4])
 
 # Initialize simulation preferences
@@ -38,7 +40,7 @@ num_items = 3
 num_channels = 64
 sub_sequence_duration = seq_dur
 noise_prob = .005
-item_rate = 50
+item_rate = 15
 spike_times, spike_indices = [], []
 sequence_repetitions = 80
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
@@ -104,9 +106,9 @@ feedforward_inh = Connections(seq_cells, inh_cells,
 # Connect synapses
 feedforward_exc.connect('True')#, p=.2) # FIXME
 feedforward_inh.connect('True')#, p=.2)
-exc_exc_conn.connect('i!=j', p=.85)
+exc_exc_conn.connect('i!=j', p=ee_p)
 exc_inh_conn.connect('True', p=ei_p)
-inh_exc_conn.connect('True', p=.85)
+inh_exc_conn.connect('True', p=ie_p)
 
 # Setting parameters
 seed = 12
@@ -116,16 +118,16 @@ feedforward_exc.A_gain = learn_factor
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
     inh_exc_conn.weight[i,:] = -gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
+exc_exc_conn.weight = 1
 for i in range(num_exc):
     weight_length = np.shape(exc_exc_conn.w_plast[i,:])
-    exc_exc_conn.w_plast[i,:] = gamma.rvs(a=3, size=weight_length).astype(int)
-    exc_exc_conn.weight[i,:] = gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
+    exc_exc_conn.w_plast[i,:] = gamma.rvs(a=1.3, size=weight_length).astype(int)
     weight_length = np.shape(exc_inh_conn.weight[i,:])
-    exc_inh_conn.weight[i,:] = gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
+    exc_inh_conn.weight[i,:] = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
+feedforward_exc.weight = 1
 for i in range(num_channels):
     weight_length = np.shape(feedforward_exc.w_plast[i,:])
     feedforward_exc.w_plast[i,:] = gamma.rvs(a=3, size=weight_length).astype(int)
-    feedforward_exc.weight[i,:] = gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
     weight_length = np.shape(feedforward_inh.weight[i,:])
     feedforward_inh.weight[i,:] = gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
 #a=1.3
@@ -141,10 +143,10 @@ add_lfsr(feedforward_exc, seed, defaultclock.dt)
 add_lfsr(feedforward_inh, seed, defaultclock.dt) 
 
 # Add proxy activity group
-activity_proxy_group = [exc_cells]
-add_group_activity_proxy(activity_proxy_group,
-                         buffer_size=buffer_size_plast,
-                         decay=decay)
+#activity_proxy_group = [exc_cells]
+#add_group_activity_proxy(activity_proxy_group,
+#                         buffer_size=buffer_size_plast,
+#                         decay=decay)
 #for group in self.adp_synapse_group:
 #    group.variance_th = np.random.uniform(
 #        low=self.parameters['variance_th'] - 0.1,
@@ -195,15 +197,17 @@ np.savez(path+f'rasters.npz',
          exc_spikes_t=np.array(spikemon_exc_neurons.t/ms), exc_spikes_i=np.array(spikemon_exc_neurons.i),
          inh_spikes_t=np.array(spikemon_inh_neurons.t/ms), inh_spikes_i=np.array(spikemon_inh_neurons.i),
         )
-np.savez(path+f'matrices.npz',
-         rf=statemon_ffe_conns.w_plast,
-         am=statemon_rec_conns.w_plast,
-         rec_ids=recurrent_ids, rec_w=recurrent_weights
-        )
+del spikemon_seq_neurons, spikemon_exc_neurons, spikemon_inh_neurons
 np.savez(path+f'traces.npz',
          Vm_e=statemon_exc_cells.Vm, Vm_i=statemon_inh_cells.Vm,
          exc_rate_t=np.array(statemon_pop_rate_e.t/ms), exc_rate=np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz),
          inh_rate_t=np.array(statemon_pop_rate_i.t/ms), inh_rate=np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz),
+        )
+del statemon_pop_rate_i, statemon_pop_rate_e, statemon_exc_cells, statemon_inh_cells
+np.savez(path+f'matrices.npz',
+         rf=statemon_ffe_conns.w_plast,
+         am=statemon_rec_conns.w_plast,
+         rec_ids=recurrent_ids, rec_w=recurrent_weights
         )
 
 Metadata = {'time_step': defaultclock.dt/ms,
@@ -216,7 +220,8 @@ Metadata = {'time_step': defaultclock.dt/ms,
             'num_exc': num_exc,
             'num_inh': num_inh,
             'e->i p': ei_p,
-            'i->e p': .85,
+            'i->e p': ie_p,
+            'e->e p': ee_p,
             'mean e->i w': ei_w,
             'learn_factor': learn_factor
         }

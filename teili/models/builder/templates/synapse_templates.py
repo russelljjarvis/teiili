@@ -29,7 +29,7 @@ your equation will be : %d{synvar_e}/dt = (-{synvar_e})**2 / synvar_e
 
 
 from teili import constants
-from brian2 import pF, nS, mV, ms, pA, nA, volt, second
+from brian2 import pF, nS, mV, ms, pA, nA, mA, volt, second
 
 current = {
     'model': '''
@@ -174,6 +174,41 @@ dpi_shunt_params = {
     'kp_syn': 0.66,
     'I_th': 10 * pA,
     'I_syn': constants.I0
+}
+
+"""LIF neuron model with stochastic decay taken from Wang et al. (2018).
+Please refer to this paper for more information. Note that this model was
+conceptualized in discrete time with backward euler scheme and an integer
+operation. An state updader with x_new = f(x,t) and
+defaultclock.dt = 1*ms in the code using this model.
+"""
+quantized_stochastic_decay = {
+    'model': '''
+        dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
+        Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
+
+        decay_syn = tau_syn/(tau_syn + dt) : 1
+
+        weight                : 1
+        w_plast               : 1
+        decay_probability_syn : 1
+        gain_syn              : amp
+        tau_syn               : second (constant)
+        lfsr_num_bits_syn : 1 # Number of bits in the LFSR used
+        ''',
+        'on_pre': '''
+        I_syn += gain_syn * abs(weight) * w_plast
+        ''',
+        'on_post': '''
+        '''
+}
+
+quantized_stochastic_decay_params = {
+    'weight' : 1,
+    'w_plast' : 1,
+    'gain_syn' : 1*mA,
+    'tau_syn': 3*ms,
+    'lfsr_num_bits_syn': 6
 }
 
 """ **Plasticity blocks**
@@ -355,6 +390,49 @@ stdp_para_conductance = {
     "w_plast": 0
 }
 
+stochastic_decay_stdp = {
+    'model': '''
+        dApre/dt = int(Apre * decay_stdp_Apre + decay_probability_stdp)/second : 1 (clock-driven)
+        dApost/dt = int(Apost * decay_stdp_Apost + decay_probability_stdp)/second : 1 (clock-driven)
+
+        decay_stdp_Apre = taupre/(taupre + dt) : 1
+        decay_stdp_Apost = taupost/(taupost + dt) : 1
+
+        decay_probability_stdp : 1
+        w_max: 1 (constant)
+        dApre: 1 (constant)
+        A_gain: 1 (constant)
+        taupre : second (constant)
+        taupost : second (constant)
+        ''',
+    'on_pre': '''
+        Apre += dApre
+        w_plast = int(clip(w_plast - Apost/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max))
+        ''',
+    'on_post': '''
+        Apost += dApre
+        w_plast = int(clip(w_plast + Apre/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max))
+        '''
+}
+
+stochastic_decay_stdp_params = {
+    "taupre": 3 * ms,
+    "taupost": 3 * ms,
+    "w_max": 15,
+    "A_gain": 4,
+    "dApre": 15,
+    "w_plast": 1
+}
+
+quantized_standard_stdp_params = {
+    "taupre": 10 * ms,
+    "taupost": 10 * ms,
+    "w_max": 15,
+    "dApre": 1,
+    "Q_diffAPrePost": 1.05,
+    "w_plast": 1
+}
+
 """Kernels Blocks:
 You need to declare two set of parameters for every block:
 *   current based models
@@ -441,7 +519,8 @@ modes = {
     'conductance': conductance,
     'DPI': dpi,
     'DPIShunting': dpi_shunt,
-    'unit_less': unit_less
+    'unit_less': unit_less,
+    'QuantizedStochasticDecay': quantized_stochastic_decay
 }
 
 kernels = {
@@ -453,7 +532,8 @@ kernels = {
 plasticity_models = {
     'non_plastic': none_model,
     'fusi': fusi,
-    'stdp': stdp
+    'stdp': stdp,
+    'stochastic_decay_stdp': stochastic_decay_stdp
 }
 
 synaptic_equations = {
@@ -508,6 +588,12 @@ DPI_shunt_parameters = {
     'alpha': none_params,
     'activity': none_params,
     'stdgm': none_params}
+
+quantized_stochastic_decay_parameters = {
+    'QuantizedStochasticDecay': quantized_stochastic_decay_params,
+    'non_plastic': none_params,
+    'stdp': quantized_standard_stdp_params,
+    'stochastic_decay_stdp': stochastic_decay_stdp_params}
 
 unit_less_parameters = {
     'unit_less': none_params,

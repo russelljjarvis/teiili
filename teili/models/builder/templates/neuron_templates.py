@@ -18,7 +18,7 @@ TBA: How to add dictionaries to Model dictionaries (see bottom)
 """
 
 from teili import constants
-from brian2 import pF, nS, mV, ms, pA, nA, psiemens
+from brian2 import pF, uF, nS, mV, ms, pA, nA, psiemens, ohm
 pS = psiemens
 
 # voltage based equation building blocks
@@ -377,9 +377,58 @@ none_model = {
 
 none_params = {}
 
+"""LIF neuron model with stochastic decay taken from Wang et al. (2018).
+Please refer to this paper for more information. Note that this model was
+conceptualized in discrete time with backward euler scheme and an integer
+operation. An state updader with x_new = f(x,t) and
+defaultclock.dt = 1*ms in the code using this model.
+"""
+q_model_template = {
+    'model': '''
+        dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*mV/second : volt
+        normal_decay = (decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability : 1
+        refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
+
+        I = Iin + Iconst : amp
+        decay_rate = tau/(tau + dt)                      : 1
+        decay_rate_refrac = refrac_tau/(refrac_tau + dt) : 1
+        refrac = Vm<Vrest                                    : boolean
+
+        decay_probability : 1
+        g_psc                : ohm    (constant) # Gain of post synaptic current
+        Iconst  : amp                         # constant input current
+        Iin = Iin0        : amp
+        Iin0 : amp
+        tau               : second (constant)
+        refrac_tau        : second (constant)
+        refP              : second
+        Vthres            : volt   (constant)
+        Vrest             : volt   (constant)
+        Vreset            : volt   (constant)
+
+        lfsr_num_bits : 1 # Number of bits in the LFSR used
+
+    ''',
+    'threshold': '''Vm>=Vthres''',
+    'reset': '''Vm=Vreset''',
+}
+
+q_model_template_params = {
+    'Vthres': 16*mV,
+    'Vrest': 3*mV,
+    'Vreset': 0*mV,
+    'Iconst': 0*pA,
+    'g_psc' : 1*ohm,
+    'tau': 19*ms,
+    'refrac_tau': 2*ms,
+    'refP': 0.*ms,
+    'lfsr_num_bits': 6
+    }
+
 modes = {
     'current': i_model_template,
-    'voltage': v_model_template
+    'voltage': v_model_template,
+    'quantized': q_model_template
     }
 
 current_equation_sets = {
@@ -407,6 +456,10 @@ voltage_equation_sets = {
     'linear': none_model
     }
 
+quantized_equation_sets = {
+    'none': none_model,
+    'spatial': spatial}
+
 current_parameters = {
     'current': i_model_template_params,
     'calcium_feedback': i_ahp_params,
@@ -433,4 +486,10 @@ voltage_parameters = {
     'gaussian': none_params,
     'none': none_params,
     'linear': none_params
+    }
+
+quantized_parameters = {
+    'quantized': q_model_template_params,
+    'none': none_params,
+    'spatial': none_params,
     }

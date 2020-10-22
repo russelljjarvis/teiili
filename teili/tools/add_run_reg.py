@@ -9,11 +9,12 @@ group and add all necessary state_variables and function calls.
 
 import numpy as np
 from brian2 import ms, pA, amp, second
+from teili.core.groups import Neurons, Connections
 from teili.tools.run_reg_functions import re_init_weights,\
     get_activity_proxy_vm, get_activity_proxy_imem,\
     max_value_update_vm, max_value_update_imem,\
     normalize_activity_proxy_vm, normalize_activity_proxy_imem,\
-    get_re_init_index
+    get_re_init_index, lfsr
 
 
 
@@ -138,3 +139,75 @@ def add_weight_decay(group, decay_rate, dt):
         group.run_regularly('''w_plast *= decay''', dt=dt)
     elif 'Ipred_plast' in group.equations.names:
         group.run_regularly('''Ipred_plast *= decay''', dt=dt)
+
+def add_lfsr(group, lfsr_seed, dt):
+    """
+    Initializes numbers that will be used for each element on the LFSR
+    function by iterating on the LFSR num_elements times. This is a
+    Galois or many-to-one implementation.
+
+    The value of the mask is hard-coded according to the number of
+    bits used. The MSB and LSB bits of the mask should be 1 to
+    perform the equivalent of a circular shift. Moreover, bits relative
+    to taps+1 (because it was shifted first) should also be 1 to XOR
+    the correct bits.
+
+    Parameters
+    ----------
+    group : Connection group
+        Group that the random numbers will be distributed to
+    lfsr_seed : int
+        The seed of the LFSR
+    dt : float
+        Time step to run_regularly
+    """
+    if isinstance(group, Neurons):
+        num_bits = int(group.lfsr_num_bits[0])
+        num_elements = len(group.lfsr_num_bits)
+    else:
+        num_bits = int(group.lfsr_num_bits_syn[0])
+        num_elements_syn = len(group.lfsr_num_bits_syn)
+        if hasattr(group, 'decay_probability_stdp'):
+            num_elements_stdp = len(group.lfsr_num_bits_syn)
+        else:
+            num_elements_stdp = 0
+        num_elements = num_elements_syn + num_elements_stdp
+    lfsr_out = [0 for _ in range(num_elements)]
+    taps = {3: 0b1011, 5: 0b100101, 6:0b1000011, 9: 0b1000010001}
+    mask = taps[num_bits]
+
+    for i in range(num_elements):
+        lfsr_seed = lfsr_seed << 1
+        overflow = lfsr_seed >> num_bits
+        if overflow:
+            lfsr_seed ^= mask
+        lfsr_out[i] = lfsr_seed
+
+    group.add_state_variable('mask', shared=True, constant=True)
+    group.mask = mask
+    if isinstance(group, Neurons):
+        group.decay_probability = np.asarray(lfsr_out)/2**num_bits
+        group.namespace.update({'lfsr': lfsr})
+        group.run_regularly('''decay_probability = lfsr(decay_probability,\
+                                                         N,\
+                                                         lfsr_num_bits,\
+                                                         mask)
+                             ''',
+                             dt=dt)
+    else:
+        group.decay_probability_syn = np.asarray(lfsr_out)[0:num_elements_syn]/2**num_bits
+        group.namespace.update({'lfsr': lfsr})
+        group.run_regularly('''decay_probability_syn = lfsr(decay_probability_syn,\
+                                                         N,\
+                                                         lfsr_num_bits_syn,\
+                                                         mask)
+                             ''',
+                             dt=dt)
+        if hasattr(group, 'decay_probability_stdp'):
+            group.decay_probability_stdp = np.asarray(lfsr_out)[num_elements_syn:]/2**num_bits
+            group.run_regularly('''decay_probability_stdp = lfsr(decay_probability_stdp,\
+                                                             N,\
+                                                             lfsr_num_bits_syn,\
+                                                             mask)
+                                 ''',
+                                 dt=dt)

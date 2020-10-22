@@ -236,6 +236,41 @@ class DPIstdgm(SynapseEquationBuilder):
         SynapseEquationBuilder.__init__(self, base_unit='unit_less', 
                                         SynSTDGM='stdgm')
 
+class StochasticSyn_decay(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate a synapse with
+    stochastic decay as published in Wang et al. (2018).
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate a synapse with
+        stochastic decay as published in Wang et al. (2018).
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochasticDecay',
+                                        plasticity='non_plastic')
+
+class StochasticSyn_decay_stdp(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate a synapse with
+    stochastic decay as published in Wang et al. (2018), but with standard STDP
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate a synapse with
+        stochastic decay as published in Wang et al. (2018).
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochasticDecay',
+                                        plasticity='stdp')
+
+class StochasticSyn_decay_stoch_stdp(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate a synapse with
+    stochastic decay as published in Wang et al. (2018).
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate a synapse with
+        stochastic decay as published in Wang et al. (2018).
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochasticDecay',
+                                        plasticity='stochastic_decay_stdp')
 
 def main(path=None):
     if path is None:
@@ -269,6 +304,12 @@ def main(path=None):
 
     dpiSyn = DPISyn()
     dpiSyn.export_eq(os.path.join(path, "DPISyn"))
+
+    slifSyn = StochasticSyn_decay()
+    slifSyn.export_eq(os.path.join(path, "StochasticSyn_decay"))
+
+    slifSynStochstdp = StochasticSyn_decay_stoch_stdp()
+    slifSynStochstdp.export_eq(os.path.join(path, "StochasticSyn_decay_stoch_stdp"))
 
     dpiShunt = DPIShunt()
     dpiShunt.export_eq(os.path.join(path, "DPIShunt"))

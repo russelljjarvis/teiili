@@ -115,9 +115,12 @@ ENV/
 *.gif
 *.svg
 
-teili/models/equations/
+teili/models/equations/*
+!teili/models/equations/Stochastic*.py
 .vscode
 core
 
 #include documentation figures
 !docs/scripts/fig/*
+# Shell scripts
+run.sh

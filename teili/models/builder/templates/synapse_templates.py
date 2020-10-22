@@ -197,7 +197,7 @@ quantized_stochastic_decay = {
         lfsr_num_bits_syn : 1 # Number of bits in the LFSR used
         ''',
         'on_pre': '''
-        I_syn += gain_syn * weight * w_plast
+        I_syn += gain_syn * abs(weight) * w_plast
         ''',
         'on_post': '''
         '''

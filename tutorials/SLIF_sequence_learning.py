@@ -16,7 +16,6 @@ from teili.models.synapse_models import StochasticSyn_decay as static_synapse_mo
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.add_run_reg import add_lfsr
 from teili.tools.group_tools import add_group_activity_proxy
-from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
 import sys
 import json
@@ -33,7 +32,7 @@ adp_synapse_model = SynapseEquationBuilder.import_eq(
 seq_dur = int(sys.argv[1])
 learn_factor = int(sys.argv[2])
 ei_p = float(sys.argv[3])
-ie_p = 0.40
+ie_p = 0.70
 ee_p = 0.40
 ei_w = float(sys.argv[4])
 
@@ -44,12 +43,12 @@ stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
 # Initialize input sequence
 num_items = 3
-num_channels = 64
+num_channels = 144
 sub_sequence_duration = seq_dur
-noise_prob = .005
-item_rate = 15
+noise_prob = .001
+item_rate = 20
 spike_times, spike_indices = [], []
-sequence_repetitions = 1
+sequence_repetitions = 80
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
 for i in range(sequence_repetitions):
     sequence = SequenceTestbench(num_channels, num_items, sub_sequence_duration,
@@ -111,32 +110,40 @@ feedforward_inh = Connections(seq_cells, inh_cells,
                               name='feedforward_inh')
 
 # Connect synapses
-feedforward_exc.connect('True')#, p=.2) # FIXME
-feedforward_inh.connect('True')#, p=.2)
+feedforward_exc.connect()#, p=.2) # FIXME
+feedforward_inh.connect()#, p=.2)
 exc_exc_conn.connect('i!=j', p=ee_p)
-exc_inh_conn.connect('True', p=ei_p)
-inh_exc_conn.connect('True', p=ie_p)
+exc_inh_conn.connect(p=ei_p)
+inh_exc_conn.connect(p=ie_p)
 
 # Setting parameters
 seed = 12
 exc_cells.Vm = 3*mV
 inh_cells.Vm = 3*mV
 feedforward_exc.A_gain = learn_factor
+mean_ie_w = 2
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
-    inh_exc_conn.weight[i,:] = -gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
+    sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
+    sampled_weights = -np.clip(sampled_weights, 0, 15)
+    inh_exc_conn.weight[i,:] = sampled_weights
 exc_exc_conn.weight = 1
+mean_ee_w = 3
 for i in range(num_exc):
     weight_length = np.shape(exc_exc_conn.w_plast[i,:])
-    exc_exc_conn.w_plast[i,:] = gamma.rvs(a=1.3, size=weight_length).astype(int)
+    exc_exc_conn.w_plast[i,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
     weight_length = np.shape(exc_inh_conn.weight[i,:])
-    exc_inh_conn.weight[i,:] = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
+    sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
+    sampled_weights = np.clip(sampled_weights, 0, 15)
+    exc_inh_conn.weight[i,:] = sampled_weights
 feedforward_exc.weight = 1
+mean_ffe_w = 2
+mean_ffi_w = 1
 for i in range(num_channels):
     weight_length = np.shape(feedforward_exc.w_plast[i,:])
-    feedforward_exc.w_plast[i,:] = gamma.rvs(a=3, size=weight_length).astype(int)
+    feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=weight_length).astype(int)
     weight_length = np.shape(feedforward_inh.weight[i,:])
-    feedforward_inh.weight[i,:] = gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
+    feedforward_inh.weight[i,:] = gamma.rvs(a=mean_ffi_w, loc=1, size=weight_length).astype(int)
 #a=1.3
 #x = np.linspace(gamma.ppf(0.01, a, loc=1),gamma.ppf(0.99, a, loc=1), 100)
 #plt.plot(x, gamma.pdf(x, a,loc=1),'r-', lw=5, alpha=0.6, label='gamma pdf')
@@ -147,7 +154,7 @@ add_lfsr(exc_exc_conn, seed, defaultclock.dt)
 add_lfsr(exc_inh_conn, seed, defaultclock.dt)
 add_lfsr(inh_exc_conn, seed, defaultclock.dt)
 add_lfsr(feedforward_exc, seed, defaultclock.dt)
-add_lfsr(feedforward_inh, seed, defaultclock.dt) 
+add_lfsr(feedforward_inh, seed, defaultclock.dt)
 
 # Add proxy activity group
 activity_proxy_group = [exc_cells]
@@ -230,7 +237,11 @@ Metadata = {'time_step': defaultclock.dt/ms,
             'i->e p': ie_p,
             'e->e p': ee_p,
             'mean e->i w': ei_w,
-            'learn_factor': learn_factor
+            'mean i->e w': mean_ie_w,
+            'mean e->e w': mean_ee_w,
+            'learn_factor': learn_factor,
+            'mean ffe w': mean_ffe_w,
+            'mean ffi w': mean_ffi_w
         }
 with open(path+'metadata.json', 'w') as f:
     json.dump(Metadata, f)

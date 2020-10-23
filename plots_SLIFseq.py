@@ -11,6 +11,8 @@ import sys
 
 from teili.tools.sorting import SortMatrix
 
+simple = False
+
 data_files = [] # TODO now each is a datafile
 data_folder = sys.argv[1]
 for i in Path(data_folder).glob('*.npz'):
@@ -43,7 +45,7 @@ num_channels = metadata['num_channels']
 rasters = np.load(f'{data_folder}rasters.npz')
 traces = np.load(f'{data_folder}traces.npz')
 matrices = np.load(f'{data_folder}matrices.npz', allow_pickle=True)
-plot_d1, plot_d2, plot_d3 = True, True, True
+plot_d1, plot_d2, plot_d3 = True, True, False
 
 # Avoid storing too much data on memory
 data_start, data_end = 0, -1
@@ -62,9 +64,10 @@ exc_rate = traces['exc_rate'][data_start:data_end]
 inh_rate_t = traces['inh_rate_t'][data_start:data_end]
 inh_rate = traces['inh_rate'][data_start:data_end]
 rf = matrices['rf']
-am = matrices['am']
-rec_ids = matrices['rec_ids']
-rec_w = matrices['rec_w']
+#am = matrices['am'] #FIXME
+if not simple:
+    rec_ids = matrices['rec_ids']
+    rec_w = matrices['rec_w']
 del matrices
 del rasters
 del traces
@@ -88,9 +91,18 @@ if plot_d1:
     d1.addWidget(p1, 1, 0)
     d1.addWidget(p2, 1, 1)
 
-    p3 = pg.PlotWidget(title='Raster plot (exc. pop.)')
-    p3.plot(exc_spikes_t*1e-3, exc_spikes_i, pen=None, symbolSize=3,
-            symbol='o')
+    if not simple:
+        sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w, #FIXME for each t?
+                  fill_ids=rec_ids) #FIXME axis=1?
+        sorted_i = np.asarray([np.where(
+                        np.asarray(sorted_rec.permutation) == int(i))[0][0] for i in exc_spikes_i])
+        p3 = pg.PlotWidget(title='Sorted raster plot (exc. pop.)')
+        p3.plot(exc_spikes_t*1e-3, sorted_i, pen=None, symbolSize=3,
+                symbol='o')
+    else:
+        p3 = pg.PlotWidget(title='Raster plot (exc. pop.)')
+        p3.plot(exc_spikes_t*1e-3, exc_spikes_i, pen=None, symbolSize=3,
+                symbol='o')
     p3.setLabel('left', 'Neuron index')
     p3.setLabel('bottom', 'Time', units='s')
     p3.setXLink(p1)
@@ -141,15 +153,12 @@ if plot_d2:
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='sorted rec.')
     image_axis.hideAxis('left')
-    sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w, #FIXME for each t?
-              fill_ids=rec_ids) #FIXME axis=1?
-    #sorted_i = np.asarray([np.where(
-    #                np.asarray(sorted_rec.permutation) == int(i))[0][0] for i in exc_spikes_i])
     m2 = pg.ImageView(view=image_axis)
     m2.ui.histogram.hide()
     m2.ui.roiBtn.hide()
     m2.ui.menuBtn.hide() 
-    m2.setImage(sorted_rec.sorted_matrix, axes={'y':0, 'x':1})
+    if not simple:
+        m2.setImage(sorted_rec.sorted_matrix, axes={'y':0, 'x':1})
     m2.setColorMap(cmap)
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='sorted RF.')
@@ -162,8 +171,10 @@ if plot_d2:
     sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
             matrix=rf_matrix, axis=1)
     
-    #m3.setImage(sorted_rf.sorted_matrix, axes={'y':0, 'x':1})
-    m3.setImage(sorted_rf.matrix[:, sorted_rec.permutation], axes={'y':0, 'x':1})
+    if not simple:
+        m3.setImage(sorted_rf.matrix[:, sorted_rec.permutation], axes={'y':0, 'x':1})
+    else:
+        m3.setImage(sorted_rf.matrix[:, sorted_rf.permutation], axes={'y':0, 'x':1})
     m3.setColorMap(cmap)
     m4 = pg.PlotWidget(title='Population rate')
     m4.plot(exc_rate_t*1e-3,

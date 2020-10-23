@@ -5,7 +5,7 @@ network with STDP.
 import numpy as np
 from scipy.stats import gamma
 
-from brian2 import ms, mV, Hz, prefs, SpikeMonitor, StateMonitor, defaultclock,\
+from brian2 import mA, ms, mV, Hz, prefs, SpikeMonitor, StateMonitor, defaultclock,\
     ExplicitStateUpdater, SpikeGeneratorGroup, TimedArray, PopulationRateMonitor
 
 from teili.core.groups import Neurons, Connections
@@ -25,6 +25,7 @@ from datetime import datetime
 seq_dur = int(sys.argv[1])
 learn_factor = int(sys.argv[2])
 ei_p = float(sys.argv[3])
+ie_p = 0.70
 ei_w = float(sys.argv[4])
 
 # Initialize simulation preferences
@@ -34,10 +35,10 @@ stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
 # Initialize input sequence
 num_items = 3
-num_channels = 64
+num_channels = 144
 sub_sequence_duration = seq_dur
-noise_prob = .005
-item_rate = 15
+noise_prob = .001
+item_rate = 20
 spike_times, spike_indices = [], []
 sequence_repetitions = 80
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
@@ -68,7 +69,7 @@ seq_cells.namespace.update({'converted_input':converted_input})
 num_exc = 81
 num_inh = 20
 exc_cells = Neurons(num_exc,
-                    equation_builder=neuron_model(num_inputs=3),
+                    equation_builder=neuron_model(num_inputs=2),
                     method=stochastic_decay,
                     name='exc_cells',
                     verbose=True)
@@ -91,38 +92,53 @@ feedforward_exc = Connections(seq_cells, exc_cells,
                               equation_builder=stdp_synapse_model(),
                               method=stochastic_decay,
                               name='feedforward_exc')
+feedforward_inh = Connections(seq_cells, inh_cells,
+                              equation_builder=static_synapse_model(),
+                              method=stochastic_decay,
+                              name='feedforward_inh')
 
 # Connect synapses
-feedforward_exc.connect('True')
-exc_inh_conn.connect('True', p=ei_p)
-inh_exc_conn.connect('True', p=.85)
+feedforward_exc.connect()
+feedforward_inh.connect()
+exc_inh_conn.connect(p=ei_p)
+inh_exc_conn.connect(p=ie_p)
 
 # Setting parameters
 seed = 12
 exc_cells.Vm = 3*mV
 inh_cells.Vm = 3*mV
 feedforward_exc.A_gain = learn_factor
+mean_ie_w = 2
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
-    inh_exc_conn.weight[i,:] = -gamma.rvs(a=1.3, loc=1, size=weight_length).astype(int)
+    sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
+    sampled_weights = -np.clip(sampled_weights, 0, 15)
+    inh_exc_conn.weight[i,:] = sampled_weights
 for i in range(num_exc):
     weight_length = np.shape(exc_inh_conn.weight[i,:])
-    exc_inh_conn.weight[i,:] = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
+    sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
+    sampled_weights = np.clip(sampled_weights, 0, 15)
+    exc_inh_conn.weight[i,:] = sampled_weights
 feedforward_exc.weight = 1
+mean_ffe_w = 2
+mean_ffi_w = 1
 for i in range(num_channels):
     weight_length = np.shape(feedforward_exc.w_plast[i,:])
-    feedforward_exc.w_plast[i,:] = gamma.rvs(a=3, size=weight_length).astype(int)
+    feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=weight_length).astype(int)
+    weight_length = np.shape(feedforward_inh.weight[i,:])
+    feedforward_inh.weight[i,:] = gamma.rvs(a=mean_ffi_w, loc=1, size=weight_length).astype(int)
 add_lfsr(exc_cells, seed, defaultclock.dt)
 add_lfsr(inh_cells, seed, defaultclock.dt)
 add_lfsr(exc_inh_conn, seed, defaultclock.dt)
 add_lfsr(inh_exc_conn, seed, defaultclock.dt)
 add_lfsr(feedforward_exc, seed, defaultclock.dt)
+add_lfsr(feedforward_inh, seed, defaultclock.dt)
 
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
 spikemon_inh_neurons = SpikeMonitor(inh_cells, name='spikemon_inh_neurons')
 spikemon_seq_neurons = SpikeMonitor(seq_cells, name='spikemon_seq_neurons')
-statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm'], record=True,
+statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm', 'Iin'], record=True,
                                   name='statemon_exc_cells')
 statemon_inh_cells = StateMonitor(inh_cells, variables=['Vm'], record=True,
                                   name='statemon_inh_cells')
@@ -133,7 +149,7 @@ statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
 
 net = TeiliNetwork()
 net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
-        feedforward_exc, statemon_exc_cells, statemon_inh_cells,
+        feedforward_exc, feedforward_inh, statemon_exc_cells, statemon_inh_cells,
         spikemon_exc_neurons, spikemon_inh_neurons,
         spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
         statemon_pop_rate_i)
@@ -171,9 +187,12 @@ Metadata = {'time_step': defaultclock.dt/ms,
             'num_exc': num_exc,
             'num_inh': num_inh,
             'e->i p': ei_p,
-            'i->e p': .85,
+            'i->e p': ie_p,
             'mean e->i w': ei_w,
-            'learn_factor': learn_factor
+            'mean i->e w': mean_ie_w,
+            'learn_factor': learn_factor,
+            'mean ffe w': mean_ffe_w,
+            'mean ffi w': mean_ffi_w
         }
 with open(path+'metadata.json', 'w') as f:
     json.dump(Metadata, f)

@@ -16,11 +16,18 @@ from teili.models.synapse_models import StochasticSyn_decay as static_synapse_mo
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.add_run_reg import add_lfsr
 from teili.tools.group_tools import add_group_activity_proxy
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 
 import sys
 import json
 import os
 from datetime import datetime
+
+# Load ADP synapse
+path = os.path.expanduser("~")
+model_path = os.path.join(path, "git", "teili", "teili", "models", "equations", "")
+adp_synapse_model = SynapseEquationBuilder.import_eq(
+        model_path + 'StochSynAdp.py')
 
 # process inputs
 seq_dur = int(sys.argv[1])
@@ -42,7 +49,7 @@ sub_sequence_duration = seq_dur
 noise_prob = .005
 item_rate = 15
 spike_times, spike_indices = [], []
-sequence_repetitions = 80
+sequence_repetitions = 1
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
 for i in range(sequence_repetitions):
     sequence = SequenceTestbench(num_channels, num_items, sub_sequence_duration,
@@ -91,7 +98,7 @@ exc_inh_conn = Connections(exc_cells, inh_cells,
                            method=stochastic_decay,
                            name='exc_inh_conn')
 inh_exc_conn = Connections(inh_cells, exc_cells,
-                           equation_builder=static_synapse_model(),
+                           equation_builder=adp_synapse_model,#static_synapse_model(),
                            method=stochastic_decay,
                            name='inh_exc_conn')
 feedforward_exc = Connections(seq_cells, exc_cells,
@@ -143,15 +150,15 @@ add_lfsr(feedforward_exc, seed, defaultclock.dt)
 add_lfsr(feedforward_inh, seed, defaultclock.dt) 
 
 # Add proxy activity group
-#activity_proxy_group = [exc_cells]
-#add_group_activity_proxy(activity_proxy_group,
-#                         buffer_size=buffer_size_plast,
-#                         decay=decay)
-#for group in self.adp_synapse_group:
-#    group.variance_th = np.random.uniform(
-#        low=self.parameters['variance_th'] - 0.1,
-#        high=self.parameters['variance_th'] + 0.1,
-#        size=len(group))
+activity_proxy_group = [exc_cells]
+add_group_activity_proxy(activity_proxy_group,
+                         buffer_size=200,
+                         decay=150)
+import pdb;pdb.set_trace()
+inh_exc_conn.variance_th = np.random.uniform(
+        low=inh_exc_conn.variance_th - 0.1,
+        high=inh_exc_conn.variance_th + 0.1,
+        size=len(inh_exc_conn))
 
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')

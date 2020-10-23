@@ -11,7 +11,7 @@ import sys
 
 from teili.tools.sorting import SortMatrix
 
-simple = False
+simple = (sys.argv[2] == 'True')
 
 data_files = [] # TODO now each is a datafile
 data_folder = sys.argv[1]
@@ -91,6 +91,10 @@ if plot_d1:
     d1.addWidget(p1, 1, 0)
     d1.addWidget(p2, 1, 1)
 
+    # Prepate matrices
+    rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
+    sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
+            matrix=rf_matrix, axis=1)
     if not simple:
         sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w, #FIXME for each t?
                   fill_ids=rec_ids) #FIXME axis=1?
@@ -100,8 +104,10 @@ if plot_d1:
         p3.plot(exc_spikes_t*1e-3, sorted_i, pen=None, symbolSize=3,
                 symbol='o')
     else:
-        p3 = pg.PlotWidget(title='Raster plot (exc. pop.)')
-        p3.plot(exc_spikes_t*1e-3, exc_spikes_i, pen=None, symbolSize=3,
+        sorted_i = np.asarray([np.where(
+                        np.asarray(sorted_rf.permutation) == int(i))[0][0] for i in exc_spikes_i])
+        p3 = pg.PlotWidget(title='Sorted raster plot (exc. pop.)')
+        p3.plot(exc_spikes_t*1e-3, sorted_i, pen=None, symbolSize=3,
                 symbol='o')
     p3.setLabel('left', 'Neuron index')
     p3.setLabel('bottom', 'Time', units='s')
@@ -167,9 +173,6 @@ if plot_d2:
     m3.ui.histogram.hide()
     m3.ui.roiBtn.hide()
     m3.ui.menuBtn.hide() 
-    rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
-    sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
-            matrix=rf_matrix, axis=1)
     
     if not simple:
         m3.setImage(sorted_rf.matrix[:, sorted_rec.permutation], axes={'y':0, 'x':1})

@@ -22,19 +22,22 @@ import json
 import os
 from datetime import datetime
 
-# Load ADP synapse
-path = os.path.expanduser("~")
-model_path = os.path.join(path, "git", "teili", "teili", "models", "equations", "")
-adp_synapse_model = SynapseEquationBuilder.import_eq(
-        model_path + 'StochSynAdp.py')
+# Load ADP synapse FIXME
+#path = os.path.expanduser("~")
+#model_path = os.path.join(path, "git", "teili", "teili", "models", "equations", "")
+#adp_synapse_model = SynapseEquationBuilder.import_eq(
+#        model_path + 'StochSynAdp.py')
 
 # process inputs
-seq_dur = int(sys.argv[1])
-learn_factor = int(sys.argv[2])
-ei_p = float(sys.argv[3])
+seq_dur = 300
+learn_factor = 4
+ei_p = 0.80
 ie_p = 0.70
-ee_p = 0.40
-ei_w = float(sys.argv[4])
+ee_p = 0.30
+ei_w = 2
+
+# Defines if recurrent connections are included
+simple = (sys.argv[1] == 'True')
 
 # Initialize simulation preferences
 prefs.codegen.target = "numpy"
@@ -46,7 +49,7 @@ num_items = 3
 num_channels = 144
 sub_sequence_duration = seq_dur
 noise_prob = .001
-item_rate = 20
+item_rate = 25#FIXME 20
 spike_times, spike_indices = [], []
 sequence_repetitions = 80
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
@@ -89,7 +92,7 @@ inh_cells = Neurons(num_inh,
 
 # Create synapses
 exc_exc_conn = Connections(exc_cells, exc_cells,
-                           equation_builder=stdp_synapse_model(),
+                           equation_builder=static_synapse_model() if simple else stdp_synapse_model(),
                            method=stochastic_decay,
                            name='exc_exc_conn')
 exc_inh_conn = Connections(exc_cells, inh_cells,
@@ -97,7 +100,8 @@ exc_inh_conn = Connections(exc_cells, inh_cells,
                            method=stochastic_decay,
                            name='exc_inh_conn')
 inh_exc_conn = Connections(inh_cells, exc_cells,
-                           equation_builder=adp_synapse_model,#static_synapse_model(),
+                           #equation_builder=adp_synapse_model,#FIXME
+                           equation_builder=static_synapse_model(),
                            method=stochastic_decay,
                            name='inh_exc_conn')
 feedforward_exc = Connections(seq_cells, exc_cells,
@@ -127,11 +131,12 @@ for i in range(num_inh):
     sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
     sampled_weights = -np.clip(sampled_weights, 0, 15)
     inh_exc_conn.weight[i,:] = sampled_weights
-exc_exc_conn.weight = 1
-mean_ee_w = 3
+exc_exc_conn.weight = 0 if simple else 1
+mean_ee_w = 2
 for i in range(num_exc):
-    weight_length = np.shape(exc_exc_conn.w_plast[i,:])
-    exc_exc_conn.w_plast[i,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
+    if not simple:
+        weight_length = np.shape(exc_exc_conn.w_plast[i,:])
+        exc_exc_conn.w_plast[i,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
     weight_length = np.shape(exc_inh_conn.weight[i,:])
     sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
     sampled_weights = np.clip(sampled_weights, 0, 15)
@@ -156,16 +161,16 @@ add_lfsr(inh_exc_conn, seed, defaultclock.dt)
 add_lfsr(feedforward_exc, seed, defaultclock.dt)
 add_lfsr(feedforward_inh, seed, defaultclock.dt)
 
-# Add proxy activity group
-activity_proxy_group = [exc_cells]
-add_group_activity_proxy(activity_proxy_group,
-                         buffer_size=200,
-                         decay=150)
-import pdb;pdb.set_trace()
-inh_exc_conn.variance_th = np.random.uniform(
-        low=inh_exc_conn.variance_th - 0.1,
-        high=inh_exc_conn.variance_th + 0.1,
-        size=len(inh_exc_conn))
+# Add proxy activity group FIXME
+#activity_proxy_group = [exc_cells]
+#add_group_activity_proxy(activity_proxy_group,
+#                         buffer_size=200,
+#                         decay=150)
+#import pdb;pdb.set_trace()
+#inh_exc_conn.variance_th = np.random.uniform(
+#        low=inh_exc_conn.variance_th - 0.1,
+#        high=inh_exc_conn.variance_th + 0.1,
+#        size=len(inh_exc_conn))
 
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
@@ -175,19 +180,27 @@ statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm'], record=True,
                                   name='statemon_exc_cells')
 statemon_inh_cells = StateMonitor(inh_cells, variables=['Vm'], record=True,
                                   name='statemon_inh_cells')
-statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast'], record=True,
-                                  name='statemon_rec_conns')
+if not simple:
+    statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast'], record=True,
+                                      name='statemon_rec_conns')
 statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast'], record=True,
                                   name='statemon_ffe_conns')
 statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
 statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
 
 net = TeiliNetwork()
-net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-        feedforward_exc, feedforward_inh, statemon_exc_cells, statemon_inh_cells,
-        statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
-        spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-        statemon_pop_rate_i)
+if not simple:
+    net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
+            feedforward_exc, feedforward_inh, statemon_exc_cells, statemon_inh_cells,
+            statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
+            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+            statemon_pop_rate_i)
+else:
+    net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
+            feedforward_exc, feedforward_inh, statemon_exc_cells, statemon_inh_cells,
+            spikemon_exc_neurons, spikemon_inh_neurons,
+            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+            statemon_pop_rate_i)
 net.run(sequence_duration + 0*ms, report='stdout', report_period=100*ms)
 
 if not np.array_equal(spk_t, spikemon_seq_neurons.t):
@@ -198,9 +211,10 @@ if not np.array_equal(spk_t, spikemon_seq_neurons.t):
 n_rows = num_exc
 recurrent_ids = []
 recurrent_weights = []
-for i in range(n_rows):
-    recurrent_weights.append(list(exc_exc_conn.w_plast[i, :]))
-    recurrent_ids.append(list(exc_exc_conn.j[i, :]))
+if not simple:
+    for i in range(n_rows):
+        recurrent_weights.append(list(exc_exc_conn.w_plast[i, :]))
+        recurrent_ids.append(list(exc_exc_conn.j[i, :]))
 
 # Save data
 date_time = datetime.now()
@@ -220,7 +234,7 @@ np.savez(path+f'traces.npz',
 del statemon_pop_rate_i, statemon_pop_rate_e, statemon_exc_cells, statemon_inh_cells
 np.savez(path+f'matrices.npz',
          rf=statemon_ffe_conns.w_plast,
-         am=statemon_rec_conns.w_plast,
+         #am=statemon_rec_conns.w_plast, FIXME
          rec_ids=recurrent_ids, rec_w=recurrent_weights
         )
 

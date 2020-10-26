@@ -24,7 +24,7 @@ StochSynAdp = {'model':
         
         delta_w = inh_learning_rate * (normalized_activity_proxy_post - variance_th)
         delta_w = int(delta_w * 15)
-        w_plast = int(clip(w_plast + delta_w, 0, 15))
+        w_plast = int(clip(w_plast + delta_w, 0, -15))
          ''',
 'on_post':
 '''

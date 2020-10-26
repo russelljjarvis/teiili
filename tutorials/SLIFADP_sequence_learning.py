@@ -58,7 +58,7 @@ sub_sequence_duration = seq_dur
 noise_prob = .001
 item_rate = 25#FIXME 20
 spike_times, spike_indices = [], []
-sequence_repetitions = 2#FIXME 80
+sequence_repetitions = 40#FIXME 80
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
 for i in range(sequence_repetitions):
     sequence = SequenceTestbench(num_channels, num_items, sub_sequence_duration,
@@ -141,12 +141,13 @@ seed = 12
 exc_cells.Vm = 3*mV
 inh_cells.Vm = 3*mV
 feedforward_exc.A_gain = learn_factor
+inh_exc_conn.weight = 1# FIXME
 mean_ie_w = 2
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
     sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
     sampled_weights = -np.clip(sampled_weights, 0, 15)
-    inh_exc_conn.weight[i,:] = sampled_weights
+    inh_exc_conn.w_plast[i,:] = sampled_weights#FIXME .weight
 exc_exc_conn.weight = 0 if simple else 1
 mean_ee_w = 2
 for i in range(num_exc):

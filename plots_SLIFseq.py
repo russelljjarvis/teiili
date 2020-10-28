@@ -11,7 +11,7 @@ import sys
 
 from teili.tools.sorting import SortMatrix
 
-simple = (sys.argv[2] == 'True')
+sort_type = sys.argv[2]
 
 data_files = [] # TODO now each is a datafile
 data_folder = sys.argv[1]
@@ -65,7 +65,7 @@ inh_rate_t = traces['inh_rate_t'][data_start:data_end]
 inh_rate = traces['inh_rate'][data_start:data_end]
 rf = matrices['rf']
 #am = matrices['am'] #FIXME
-if not simple:
+if not sort_type == 'rf_sort':
     rec_ids = matrices['rec_ids']
     rec_w = matrices['rec_w']
 del matrices
@@ -95,20 +95,24 @@ if plot_d1:
     rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
     sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
             matrix=rf_matrix, axis=1)
-    if not simple:
+    # recurrent connections are not present when RF is used for sorting
+    if not sort_type == 'rf_sort':
         sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w, #FIXME for each t?
                   fill_ids=rec_ids) #FIXME axis=1?
-        sorted_i = np.asarray([np.where(
-                        np.asarray(sorted_rec.permutation) == int(i))[0][0] for i in exc_spikes_i])
-        p3 = pg.PlotWidget(title='Sorted raster plot (exc. pop.)')
-        p3.plot(exc_spikes_t*1e-3, sorted_i, pen=None, symbolSize=3,
-                symbol='o')
-    else:
-        sorted_i = np.asarray([np.where(
-                        np.asarray(sorted_rf.permutation) == int(i))[0][0] for i in exc_spikes_i])
-        p3 = pg.PlotWidget(title='Sorted raster plot (exc. pop.)')
-        p3.plot(exc_spikes_t*1e-3, sorted_i, pen=None, symbolSize=3,
-                symbol='o')
+
+    if sort_type == 'rec_sort':
+        permutation = sorted_rec.permutation
+    elif sort_type == 'rate_sort':
+        permutation = np.load(f'{data_folder}permutation.npz')
+        permutation = permutation['ids']
+        #permutation =[13, 19, 28, 40, 49, 55, 64, 69, 77, 1, 24, 58, 6, 15, 29, 60, 75, 10, 11, 12, 25, 56, 66, 68, 22, 23, 43, 51, 30, 39 , 5, 14, 16, 34, 74, 37, 48, 52, 3, 20, 32, 38, 42, 47, 65, 67, 76, 78, 79] 
+    elif sort_type == 'rf_sort':
+        permutation = sorted_rf.permutation
+    sorted_i = np.asarray([np.where(
+                    np.asarray(permutation) == int(i))[0][0] for i in exc_spikes_i])
+    p3 = pg.PlotWidget(title='Sorted raster plot (exc. pop.)')
+    p3.plot(exc_spikes_t*1e-3, sorted_i, pen=None, symbolSize=3,
+            symbol='o')
     p3.setLabel('left', 'Neuron index')
     p3.setLabel('bottom', 'Time', units='s')
     p3.setXLink(p1)
@@ -163,8 +167,8 @@ if plot_d2:
     m2.ui.histogram.hide()
     m2.ui.roiBtn.hide()
     m2.ui.menuBtn.hide() 
-    if not simple:
-        m2.setImage(sorted_rec.sorted_matrix, axes={'y':0, 'x':1})
+    if not sort_type == 'rf_sort':
+        m2.setImage(sorted_rec.matrix[:, permutation][permutation, :], axes={'y':0, 'x':1})
     m2.setColorMap(cmap)
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='sorted RF.')
@@ -174,10 +178,7 @@ if plot_d2:
     m3.ui.roiBtn.hide()
     m3.ui.menuBtn.hide() 
     
-    if not simple:
-        m3.setImage(sorted_rf.matrix[:, sorted_rec.permutation], axes={'y':0, 'x':1})
-    else:
-        m3.setImage(sorted_rf.matrix[:, sorted_rf.permutation], axes={'y':0, 'x':1})
+    m3.setImage(sorted_rf.matrix[:, permutation], axes={'y':0, 'x':1})
     m3.setColorMap(cmap)
     m4 = pg.PlotWidget(title='Population rate')
     m4.plot(exc_rate_t*1e-3,
@@ -215,6 +216,3 @@ if plot_d3:
             k += 1
 win.show()
 QtGui.QApplication.instance().exec_()
-# TODO those are global and for all t, should adapt
-#spikemon.count/duration) and/or
-# _ = hist(spikemon.t/ms, 100, histtype='stepfilled', facecolor='k', weights=list(ones(len(spikemon))/(N*defaultclock.dt)))

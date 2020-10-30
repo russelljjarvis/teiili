@@ -4,6 +4,7 @@ network with STDP.
 """
 import numpy as np
 from scipy.stats import gamma
+from scipy.signal import savgol_filter
 
 from brian2 import ms, mV, Hz, prefs, SpikeMonitor, StateMonitor, defaultclock,\
     ExplicitStateUpdater, SpikeGeneratorGroup, TimedArray, PopulationRateMonitor
@@ -24,23 +25,23 @@ import os
 from datetime import datetime
 
 # Load ADP synapse
-path = os.path.expanduser("~/git/teili_gl/teili")
+path = os.path.expanduser("/home/pablo/teili_gl/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochSynAdp.py')
 
 # process inputs
-seq_dur = 300
+seq_dur = 150
 learn_factor = 4
 ei_p = 0.80
 ie_p = 0.70
-ee_p = 0.30
+ee_p = 0.50#FIXME 0.30
 ei_w = 2
 
 # Defines if recurrent connections are included
-if sys.argv[1] == 'True':
+if sys.argv[1] == 'no_rec':
     simple = True
-elif sys.argv[1] == 'False':
+elif sys.argv[1] == 'rec':
     simple = False
 else:
     print('Provide correct argument')
@@ -58,7 +59,7 @@ sub_sequence_duration = seq_dur
 noise_prob = .001
 item_rate = 25#FIXME 20
 spike_times, spike_indices = [], []
-sequence_repetitions = 40#FIXME 80
+sequence_repetitions = 150
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
 for i in range(sequence_repetitions):
     sequence = SequenceTestbench(num_channels, num_items, sub_sequence_duration,
@@ -139,9 +140,11 @@ inh_exc_conn.connect(p=ie_p)
 # Setting parameters
 seed = 12
 exc_cells.Vm = 3*mV
+exc_cells.lfsr_num_bits = 9
 inh_cells.Vm = 3*mV
 feedforward_exc.A_gain = learn_factor
 inh_exc_conn.weight = 1# FIXME
+inh_exc_conn.variance_th = 0.50
 mean_ie_w = 2
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
@@ -150,6 +153,8 @@ for i in range(num_inh):
     inh_exc_conn.w_plast[i,:] = sampled_weights#FIXME .weight
 exc_exc_conn.weight = 0 if simple else 1
 mean_ee_w = 2
+#exc_exc_conn.taupre = 10*ms FIXME
+#exc_exc_conn.taupost = 10*ms
 for i in range(num_exc):
     if not simple:
         weight_length = np.shape(exc_exc_conn.w_plast[i,:])
@@ -234,6 +239,22 @@ if not simple:
         recurrent_weights.append(list(exc_exc_conn.w_plast[i, :]))
         recurrent_ids.append(list(exc_exc_conn.j[i, :]))
 
+tmp_spike_trains = spikemon_exc_neurons.spike_trains()
+neuron_rate = {}
+peak_instants = {}
+interval = (sequence_duration/ms-sub_sequence_duration, sequence_duration/ms)
+for key, val in tmp_spike_trains.items():
+    selected_spikes = [x for x in val/ms if x>(sequence_duration/ms-sub_sequence_duration)]
+    h, b = np.histogram(selected_spikes, range=interval)
+    neuron_rate[key] = {'rate': savgol_filter(h, 9, 5), 't': b[:-1]}
+    max_id = np.where(neuron_rate[key]['rate'] == max(neuron_rate[key]['rate']))[0]
+    if neuron_rate[key]['rate'].any():
+        peak_instants[key] = neuron_rate[key]['t'][max_id]
+remove_keys = [key for key, val in peak_instants.items() if len(val)>1]
+[peak_instants.pop(key) for key in remove_keys]
+sorted_peaks = dict(sorted(peak_instants.items(), key=lambda x: x[1]))
+permutation_ids = [x[0] for x in sorted_peaks.items()]
+[permutation_ids.append(i) for i in range(num_exc) if not i in permutation_ids]
 # Save data
 date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
@@ -254,6 +275,10 @@ np.savez(path+f'matrices.npz',
          rf=statemon_ffe_conns.w_plast,
          #am=statemon_rec_conns.w_plast, FIXME
          rec_ids=recurrent_ids, rec_w=recurrent_weights
+        )
+
+np.savez(path+f'permutation.npz',
+         ids = permutation_ids
         )
 
 Metadata = {'time_step': defaultclock.dt/ms,

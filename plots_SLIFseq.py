@@ -65,9 +65,8 @@ inh_rate_t = traces['inh_rate_t'][data_start:data_end]
 inh_rate = traces['inh_rate'][data_start:data_end]
 rf = matrices['rf']
 #am = matrices['am'] #FIXME
-if not sort_type == 'rf_sort':
-    rec_ids = matrices['rec_ids']
-    rec_w = matrices['rec_w']
+rec_ids = matrices['rec_ids']
+rec_w = matrices['rec_w']
 del matrices
 del rasters
 del traces
@@ -95,10 +94,12 @@ if plot_d1:
     rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
     sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
             matrix=rf_matrix, axis=1)
-    # recurrent connections are not present when RF is used for sorting
-    if not sort_type == 'rf_sort':
+    # recurrent connections are not present in some simulations
+    try:
         sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w, #FIXME for each t?
                   fill_ids=rec_ids) #FIXME axis=1?
+    except:
+        sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=np.zeros((num_exc, num_exc)))
 
     if sort_type == 'rec_sort':
         permutation = sorted_rec.permutation
@@ -164,11 +165,10 @@ if plot_d2:
     image_axis.setLabel(axis='bottom', text='sorted rec.')
     image_axis.hideAxis('left')
     m2 = pg.ImageView(view=image_axis)
-    m2.ui.histogram.hide()
+    #m2.ui.histogram.hide()
     m2.ui.roiBtn.hide()
     m2.ui.menuBtn.hide() 
-    if not sort_type == 'rf_sort':
-        m2.setImage(sorted_rec.matrix[:, permutation][permutation, :], axes={'y':0, 'x':1})
+    m2.setImage(sorted_rec.matrix[:, permutation][permutation, :], axes={'y':0, 'x':1})
     m2.setColorMap(cmap)
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='sorted RF.')

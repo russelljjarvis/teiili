@@ -4,6 +4,7 @@ network with STDP.
 """
 import numpy as np
 from scipy.stats import gamma
+from scipy.stats import truncnorm #FIXME
 from scipy.signal import savgol_filter
 
 from brian2 import ms, mV, Hz, prefs, SpikeMonitor, StateMonitor, defaultclock,\
@@ -32,9 +33,9 @@ ee_p = 0.30
 ei_w = 2
 
 # Defines if recurrent connections are included
-if sys.argv[1] == 'True':
+if sys.argv[1] == 'no_rec':
     simple = True
-elif sys.argv[1] == 'False':
+elif sys.argv[1] == 'rec':
     simple = False
 else:
     print('Provide correct argument')
@@ -48,11 +49,11 @@ stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 # Initialize input sequence
 num_items = 3
 num_channels = 144
-sub_sequence_duration = 300
+sub_sequence_duration = 150
 noise_prob = .001
-item_rate = 25#FIXME 20
+item_rate = 25
 spike_times, spike_indices = [], []
-sequence_repetitions = 40#FIXME 80
+sequence_repetitions = 150
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
 for i in range(sequence_repetitions):
     sequence = SequenceTestbench(num_channels, num_items, sub_sequence_duration,
@@ -130,34 +131,50 @@ exc_inh_conn.connect(p=ei_p)
 inh_exc_conn.connect(p=ie_p)
 
 # Setting parameters
+#exc_exc_conn.tau_syn = 5*ms#TODO
+#exc_inh_conn.tau_syn = 5*ms
+#inh_exc_conn.tau_syn = 10*ms
+#feedforward_exc.tau_syn = 5*ms
+#feedforward_inh.tau_syn = 5*ms
+
 seed = 12
 exc_cells.Vm = 3*mV
+exc_cells.lfsr_num_bits = 9
 inh_cells.Vm = 3*mV
 feedforward_exc.A_gain = learn_factor
 mean_ie_w = 2
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
-    sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
+    #FIXME sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
+    sampled_weights = truncnorm.rvs(a=0, b=15, scale=1, loc=mean_ie_w, size=weight_length).astype(int)
     sampled_weights = -np.clip(sampled_weights, 0, 15)
     inh_exc_conn.weight[i,:] = sampled_weights
 exc_exc_conn.weight = 0 if simple else 1
 mean_ee_w = 2
+#exc_exc_conn.taupre = 10*ms#TODO
+#exc_exc_conn.taupost = 10*ms
 for i in range(num_exc):
     if not simple:
         weight_length = np.shape(exc_exc_conn.w_plast[i,:])
-        exc_exc_conn.w_plast[i,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
+        #FIXME exc_exc_conn.w_plast[i,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
+        exc_exc_conn.w_plast[i,:] = truncnorm.rvs(a=-1, b=15, scale=1, loc=mean_ee_w, size=weight_length).astype(int)
     weight_length = np.shape(exc_inh_conn.weight[i,:])
-    sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
+    #FIXME sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
+    sampled_weights = truncnorm.rvs(a=0, b=15, scale=1, loc=ei_w, size=weight_length).astype(int)
     sampled_weights = np.clip(sampled_weights, 0, 15)
     exc_inh_conn.weight[i,:] = sampled_weights
 feedforward_exc.weight = 1
+#feedforward_exc.taupre = 10*ms#TODO
+#feedforward_exc.taupost = 10*ms
 mean_ffe_w = 2
 mean_ffi_w = 1
 for i in range(num_channels):
     weight_length = np.shape(feedforward_exc.w_plast[i,:])
-    feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=weight_length).astype(int)
+    #FIXME feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=weight_length).astype(int)
+    feedforward_exc.w_plast[i,:] = truncnorm.rvs(a=-1, b=15, scale=1, loc=mean_ffe_w, size=weight_length).astype(int)
     weight_length = np.shape(feedforward_inh.weight[i,:])
-    feedforward_inh.weight[i,:] = gamma.rvs(a=mean_ffi_w, loc=1, size=weight_length).astype(int)
+    #FIXME feedforward_inh.weight[i,:] = gamma.rvs(a=mean_ffi_w, loc=1, size=weight_length).astype(int)
+    feedforward_inh.weight[i,:] = truncnorm.rvs(a=0, b=15, scale=1, loc=mean_ffi_w, size=weight_length).astype(int)
 #a=1.3
 #x = np.linspace(gamma.ppf(0.01, a, loc=1),gamma.ppf(0.99, a, loc=1), 100)
 #plt.plot(x, gamma.pdf(x, a,loc=1),'r-', lw=5, alpha=0.6, label='gamma pdf')
@@ -225,12 +242,11 @@ for key, val in tmp_spike_trains.items():
     max_id = np.where(neuron_rate[key]['rate'] == max(neuron_rate[key]['rate']))[0]
     if neuron_rate[key]['rate'].any():
         peak_instants[key] = neuron_rate[key]['t'][max_id]
-num_peaks = [len(x[1]) for x in peak_instants.items()]
-remove_keys = np.where(num_peaks > 1)[0]
+remove_keys = [key for key, val in peak_instants.items() if len(val)>1]
 [peak_instants.pop(key) for key in remove_keys]
 sorted_peaks = dict(sorted(peak_instants.items(), key=lambda x: x[1]))
 permutation_ids = [x[0] for x in sorted_peaks.items()]
-[permutation_ids.append(i) for i in range(num_exc) if not i in permutation]
+[permutation_ids.append(i) for i in range(num_exc) if not i in permutation_ids]
 #TODO PETH, i.e. \sum vk(t) over N trials for each neuron k
 
 # Save data
@@ -250,8 +266,8 @@ np.savez(path+f'traces.npz',
         )
 del statemon_pop_rate_i, statemon_pop_rate_e, statemon_exc_cells, statemon_inh_cells
 np.savez(path+f'matrices.npz',
-         rf=statemon_ffe_conns.w_plast,
          #am=statemon_rec_conns.w_plast, FIXME
+         rf=statemon_ffe_conns.w_plast,
          rec_ids=recurrent_ids, rec_w=recurrent_weights
         )
 

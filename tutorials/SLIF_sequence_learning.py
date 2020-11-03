@@ -25,6 +25,12 @@ import json
 import os
 from datetime import datetime
 
+# Load ADP synapse
+path = os.path.expanduser("/home/pablo/teili_gl/teili")
+model_path = os.path.join(path, "teili", "models", "equations", "")
+adp_synapse_model = SynapseEquationBuilder.import_eq(
+        model_path + 'StochSynAdp.py')
+
 # process inputs
 learn_factor = 4
 ei_p = 0.80
@@ -37,6 +43,13 @@ if sys.argv[1] == 'no_rec':
     simple = True
 elif sys.argv[1] == 'rec':
     simple = False
+else:
+    print('Provide correct argument')
+    sys.exit(0)
+if sys.argv[2] == 'plastic_inh':
+    i_plast = True
+elif sys.argv[2] == 'static_inh':
+    i_plast = False
 else:
     print('Provide correct argument')
     sys.exit(0)
@@ -111,7 +124,7 @@ exc_inh_conn = Connections(exc_cells, inh_cells,
                            method=stochastic_decay,
                            name='exc_inh_conn')
 inh_exc_conn = Connections(inh_cells, exc_cells,
-                           equation_builder=static_synapse_model(),
+                           equation_builder=adp_synapse_model if i_plast else static_synapse_model(),
                            method=stochastic_decay,
                            name='inh_exc_conn')
 feedforward_exc = Connections(seq_cells, exc_cells,
@@ -142,13 +155,19 @@ exc_cells.Vm = 3*mV
 exc_cells.lfsr_num_bits = 9
 inh_cells.Vm = 3*mV
 feedforward_exc.A_gain = learn_factor
+if i_plast:
+    inh_exc_conn.weight = 1# FIXME
+    inh_exc_conn.variance_th = 0.50
 mean_ie_w = 2
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
-    #FIXME sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
-    sampled_weights = truncnorm.rvs(a=0, b=15, scale=1, loc=mean_ie_w, size=weight_length).astype(int)
+    sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
+    #FIXME sampled_weights = truncnorm.rvs(a=0, b=15, scale=1, loc=mean_ie_w, size=weight_length).astype(int)
     sampled_weights = -np.clip(sampled_weights, 0, 15)
-    inh_exc_conn.weight[i,:] = sampled_weights
+    if i_plast:
+        inh_exc_conn.w_plast[i,:] = sampled_weights
+    else:
+        inh_exc_conn.weight[i,:] = sampled_weights
 exc_exc_conn.weight = 0 if simple else 1
 mean_ee_w = 2
 #exc_exc_conn.taupre = 10*ms#TODO
@@ -156,11 +175,11 @@ mean_ee_w = 2
 for i in range(num_exc):
     if not simple:
         weight_length = np.shape(exc_exc_conn.w_plast[i,:])
-        #FIXME exc_exc_conn.w_plast[i,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
-        exc_exc_conn.w_plast[i,:] = truncnorm.rvs(a=-1, b=15, scale=1, loc=mean_ee_w, size=weight_length).astype(int)
+        exc_exc_conn.w_plast[i,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
+        #FIXME exc_exc_conn.w_plast[i,:] = truncnorm.rvs(a=-1, b=15, scale=1, loc=mean_ee_w, size=weight_length).astype(int)
     weight_length = np.shape(exc_inh_conn.weight[i,:])
-    #FIXME sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
-    sampled_weights = truncnorm.rvs(a=0, b=15, scale=1, loc=ei_w, size=weight_length).astype(int)
+    sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
+    #FIXME sampled_weights = truncnorm.rvs(a=0, b=15, scale=1, loc=ei_w, size=weight_length).astype(int)
     sampled_weights = np.clip(sampled_weights, 0, 15)
     exc_inh_conn.weight[i,:] = sampled_weights
 feedforward_exc.weight = 1
@@ -170,11 +189,11 @@ mean_ffe_w = 2
 mean_ffi_w = 1
 for i in range(num_channels):
     weight_length = np.shape(feedforward_exc.w_plast[i,:])
-    #FIXME feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=weight_length).astype(int)
-    feedforward_exc.w_plast[i,:] = truncnorm.rvs(a=-1, b=15, scale=1, loc=mean_ffe_w, size=weight_length).astype(int)
+    feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=weight_length).astype(int)
+    #FIXME feedforward_exc.w_plast[i,:] = truncnorm.rvs(a=-1, b=15, scale=1, loc=mean_ffe_w, size=weight_length).astype(int)
     weight_length = np.shape(feedforward_inh.weight[i,:])
-    #FIXME feedforward_inh.weight[i,:] = gamma.rvs(a=mean_ffi_w, loc=1, size=weight_length).astype(int)
-    feedforward_inh.weight[i,:] = truncnorm.rvs(a=0, b=15, scale=1, loc=mean_ffi_w, size=weight_length).astype(int)
+    feedforward_inh.weight[i,:] = gamma.rvs(a=mean_ffi_w, loc=1, size=weight_length).astype(int)
+    #FIXME feedforward_inh.weight[i,:] = truncnorm.rvs(a=0, b=15, scale=1, loc=mean_ffi_w, size=weight_length).astype(int)
 #a=1.3
 #x = np.linspace(gamma.ppf(0.01, a, loc=1),gamma.ppf(0.99, a, loc=1), 100)
 #plt.plot(x, gamma.pdf(x, a,loc=1),'r-', lw=5, alpha=0.6, label='gamma pdf')
@@ -187,6 +206,17 @@ add_lfsr(inh_exc_conn, seed, defaultclock.dt)
 add_lfsr(feedforward_exc, seed, defaultclock.dt)
 add_lfsr(feedforward_inh, seed, defaultclock.dt)
 
+if i_plast:
+    # Add proxy activity group
+    activity_proxy_group = [exc_cells]
+    add_group_activity_proxy(activity_proxy_group,
+                             buffer_size=200,
+                             decay=150)
+    inh_exc_conn.variance_th = np.random.uniform(
+            low=inh_exc_conn.variance_th - 0.1,
+            high=inh_exc_conn.variance_th + 0.1,
+            size=len(inh_exc_conn))
+
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
 spikemon_inh_neurons = SpikeMonitor(inh_cells, name='spikemon_inh_neurons')
@@ -198,6 +228,9 @@ statemon_inh_cells = StateMonitor(inh_cells, variables=['Vm'], record=True,
 if not simple:
     statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast'], record=True,
                                       name='statemon_rec_conns')
+if i_plast:
+    statemon_inh_conns = StateMonitor(inh_exc_conn, variables=['w_plast', 'delta_w'], record=True,
+                                      name='statemon_inh_conns')
 statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast'], record=True,
                                   name='statemon_ffe_conns')
 statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
@@ -205,18 +238,25 @@ statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
 
 net = TeiliNetwork()
 if not simple:
-    net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-            feedforward_exc, feedforward_inh, statemon_exc_cells, statemon_inh_cells,
-            statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
-            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-            statemon_pop_rate_i)
+    if i_plast:
+        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
+                feedforward_exc, feedforward_inh, statemon_exc_cells, statemon_inh_cells,
+                statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
+                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+                statemon_pop_rate_i, statemon_inh_conns)
+    else:
+        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
+                feedforward_exc, feedforward_inh, statemon_exc_cells, statemon_inh_cells,
+                statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
+                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+                statemon_pop_rate_i)
 else:
     net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
             feedforward_exc, feedforward_inh, statemon_exc_cells, statemon_inh_cells,
             spikemon_exc_neurons, spikemon_inh_neurons,
             spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
             statemon_pop_rate_i)
-net.run(sequence_duration + 0*ms, report='stdout', report_period=100*ms)
+net.run(sequence_duration + 1000*ms, report='stdout', report_period=100*ms)
 
 if not np.array_equal(spk_t, spikemon_seq_neurons.t):
     print('Proxy activity and generated input do not match.')
@@ -266,7 +306,7 @@ np.savez(path+f'traces.npz',
         )
 del statemon_pop_rate_i, statemon_pop_rate_e, statemon_exc_cells, statemon_inh_cells
 np.savez(path+f'matrices.npz',
-         #am=statemon_rec_conns.w_plast, FIXME
+         am=statemon_rec_conns.w_plast,
          rf=statemon_ffe_conns.w_plast,
          rec_ids=recurrent_ids, rec_w=recurrent_weights
         )

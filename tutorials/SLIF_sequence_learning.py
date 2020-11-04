@@ -58,6 +58,7 @@ else:
 prefs.codegen.target = "numpy"
 defaultclock.dt = 1 * ms
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
+net = TeiliNetwork()
 
 # Initialize input sequence
 num_items = 3
@@ -68,31 +69,37 @@ item_rate = 25
 spike_times, spike_indices = [], []
 sequence_repetitions = 150
 sequence_duration = sequence_repetitions*sub_sequence_duration*ms
-for i in range(sequence_repetitions):
-    sequence = SequenceTestbench(num_channels, num_items, sub_sequence_duration,
-                                 noise_prob, item_rate)
-    tmp_i, tmp_t = sequence.stimuli()
-    spike_indices.extend(tmp_i)
-    tmp_t = [(x/ms+i*sub_sequence_duration) for x in tmp_t]
-    spike_times.extend(tmp_t)
-spike_indices = np.array(spike_indices)
-spike_times = np.array(spike_times) * ms
+sequence = SequenceTestbench(num_channels, num_items, sub_sequence_duration,
+                                     noise_prob, item_rate)
+tmp_i, tmp_t = sequence.stimuli()
+input_spikes = SpikeGeneratorGroup(num_channels, tmp_i, tmp_t,
+                period=sub_sequence_duration*ms)
+input_monitor = SpikeMonitor(input_spikes)
+net.add(input_spikes, input_monitor)
+print('Generating input...')
+net.run(sequence_duration, report='stdout', report_period=100*ms)
+spike_indices = input_monitor.i
+spike_times = input_monitor.t
 # Save them for comparison
-spk_i, spk_t = spike_indices, spike_times
+spk_i, spk_t = input_monitor.i, input_monitor.t 
 
 # Reproduce activity in a neuron group (necessary for STDP compatibility)
 spike_times = [spike_times[np.where(spike_indices==i)[0]] for i in range(num_channels)]
+# Create matrix where each row (neuron id) is associated with time when there
+# is a spike or -1 when there is not
 converted_input = (np.zeros((num_channels, int(sequence_duration/defaultclock.dt))) - 1)*ms
 for ind, val in enumerate(spike_times):
     converted_input[ind, np.around(val/defaultclock.dt).astype(int)] = val
 converted_input = np.transpose(converted_input)
 converted_input = TimedArray(converted_input, dt=defaultclock.dt)
+# t is simulation time, and will be equal to tspike when there is a spike
+# Cell remains refractory when there is no spike, i.e. tspike=-1
 seq_cells = Neurons(num_channels, model='tspike=converted_input(t, i): second',
         threshold='t==tspike', refractory='tspike < 0*ms')
 seq_cells.namespace.update({'converted_input':converted_input})
 
 # Create neuron groups
-num_exc = 81
+num_exc = 36
 num_inh = 20
 exc_cells = Neurons(num_exc,
                     equation_builder=neuron_model(num_inputs=3),
@@ -156,13 +163,12 @@ exc_cells.lfsr_num_bits = 9
 inh_cells.Vm = 3*mV
 feedforward_exc.A_gain = learn_factor
 if i_plast:
-    inh_exc_conn.weight = 1# FIXME
-    inh_exc_conn.variance_th = 0.50
+    inh_exc_conn.weight = 1
+    inh_exc_conn.variance_th = 0.80
 mean_ie_w = 2
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
     sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
-    #FIXME sampled_weights = truncnorm.rvs(a=0, b=15, scale=1, loc=mean_ie_w, size=weight_length).astype(int)
     sampled_weights = -np.clip(sampled_weights, 0, 15)
     if i_plast:
         inh_exc_conn.w_plast[i,:] = sampled_weights
@@ -176,10 +182,8 @@ for i in range(num_exc):
     if not simple:
         weight_length = np.shape(exc_exc_conn.w_plast[i,:])
         exc_exc_conn.w_plast[i,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
-        #FIXME exc_exc_conn.w_plast[i,:] = truncnorm.rvs(a=-1, b=15, scale=1, loc=mean_ee_w, size=weight_length).astype(int)
     weight_length = np.shape(exc_inh_conn.weight[i,:])
     sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
-    #FIXME sampled_weights = truncnorm.rvs(a=0, b=15, scale=1, loc=ei_w, size=weight_length).astype(int)
     sampled_weights = np.clip(sampled_weights, 0, 15)
     exc_inh_conn.weight[i,:] = sampled_weights
 feedforward_exc.weight = 1
@@ -190,10 +194,8 @@ mean_ffi_w = 1
 for i in range(num_channels):
     weight_length = np.shape(feedforward_exc.w_plast[i,:])
     feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=weight_length).astype(int)
-    #FIXME feedforward_exc.w_plast[i,:] = truncnorm.rvs(a=-1, b=15, scale=1, loc=mean_ffe_w, size=weight_length).astype(int)
     weight_length = np.shape(feedforward_inh.weight[i,:])
     feedforward_inh.weight[i,:] = gamma.rvs(a=mean_ffi_w, loc=1, size=weight_length).astype(int)
-    #FIXME feedforward_inh.weight[i,:] = truncnorm.rvs(a=0, b=15, scale=1, loc=mean_ffi_w, size=weight_length).astype(int)
 #a=1.3
 #x = np.linspace(gamma.ppf(0.01, a, loc=1),gamma.ppf(0.99, a, loc=1), 100)
 #plt.plot(x, gamma.pdf(x, a,loc=1),'r-', lw=5, alpha=0.6, label='gamma pdf')
@@ -274,20 +276,36 @@ if not simple:
 tmp_spike_trains = spikemon_exc_neurons.spike_trains()
 neuron_rate = {}
 peak_instants = {}
-interval = (sequence_duration/ms-sub_sequence_duration, sequence_duration/ms)
+last_sequence_t = sequence_duration/ms-sub_sequence_duration
+interval = range(int(last_sequence_t), int(sequence_duration/ms)+1)
+# Create normalized and truncated gaussian time window
+kernel = np.exp(-(np.arange(-100, 100)) ** 2 / (2 * 10 ** 2))
+kernel = kernel[np.where(kernel>0.001)]
+kernel = kernel / kernel.sum()
 for key, val in tmp_spike_trains.items():
-    selected_spikes = [x for x in val/ms if x>(sequence_duration/ms-sub_sequence_duration)]
-    h, b = np.histogram(selected_spikes, range=interval)
-    neuron_rate[key] = {'rate': savgol_filter(h, 9, 5), 't': b[:-1]}
-    max_id = np.where(neuron_rate[key]['rate'] == max(neuron_rate[key]['rate']))[0]
+    selected_spikes = [x for x in val/ms if x>last_sequence_t]
+    # Use histogram to get values that will be convolved
+    h, b = np.histogram(selected_spikes, bins=interval, range=(min(interval), max(interval)))
+    neuron_rate[key] = {'rate': np.convolve(h, kernel, mode='same'), 't': b[:-1]}
+    peak_id = np.where(neuron_rate[key]['rate'] == max(neuron_rate[key]['rate']))[0]
     if neuron_rate[key]['rate'].any():
-        peak_instants[key] = neuron_rate[key]['t'][max_id]
-remove_keys = [key for key, val in peak_instants.items() if len(val)>1]
-[peak_instants.pop(key) for key in remove_keys]
+        peak_instants[key] = neuron_rate[key]['t'][peak_id]
+# Remove unspecific cases or choose a single peak
+double_peaks = [key for key, val in peak_instants.items() if len(val)>1]
+#triple_peaks = [key for key, val in peak_instants.items() if len(val)>2] TODO
+#if triple_peaks:
+#    import pdb;pdb.set_trace()
+for i in double_peaks:
+    h, b = np.histogram(peak_instants[i], bins=num_items, range=(min(interval), max(interval)))
+    if any(h==1):
+        peak_instants.pop(i)
+    else:
+        peak_instants[i] = np.array(peak_instants[i][0])
 sorted_peaks = dict(sorted(peak_instants.items(), key=lambda x: x[1]))
 permutation_ids = [x[0] for x in sorted_peaks.items()]
 [permutation_ids.append(i) for i in range(num_exc) if not i in permutation_ids]
 #TODO PETH, i.e. \sum vk(t) over N trials for each neuron k
+
 
 # Save data
 date_time = datetime.now()

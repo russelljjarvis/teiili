@@ -400,6 +400,7 @@ stochastic_decay_stdp = {
 
         decay_probability_stdp : 1
         w_max: 1 (constant)
+        A_max: 1 (constant)
         dApre: 1 (constant)
         A_gain: 1 (constant)
         taupre : second (constant)
@@ -407,10 +408,12 @@ stochastic_decay_stdp = {
         ''',
     'on_pre': '''
         Apre += dApre
+        Apre = clip(Apre, 0, A_max)
         w_plast = int(clip(w_plast - Apost/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max))
         ''',
     'on_post': '''
         Apost += dApre
+        Apost = clip(Apost, 0, A_max)
         w_plast = int(clip(w_plast + Apre/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max))
         '''
 }
@@ -419,6 +422,7 @@ stochastic_decay_stdp_params = {
     "taupre": 3 * ms,
     "taupost": 3 * ms,
     "w_max": 15,
+    "A_max": 15,
     "A_gain": 4,
     "dApre": 15,
     "w_plast": 1

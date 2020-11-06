@@ -46,10 +46,13 @@ if noise:
 
 
 # Shuffle matrix
+shuffled_matrix_tmp = np.zeros((n_rows, n_cols)) # this is to test recurrent matrices which need to be shuffled along rows and columns
 shuffled_matrix = np.zeros((n_rows, n_cols))
 inds = np.arange(n_cols, dtype='uint32')  # 32 bits is enough for numbers up to about 4 billion
 np.random.shuffle(inds)
-shuffled_matrix[:, inds] = test_matrix
+shuffled_matrix_tmp[:, inds] = copy.deepcopy(test_matrix)
+shuffled_matrix[inds, :] = shuffled_matrix_tmp
+
 sm1 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1, matrix=copy.deepcopy(shuffled_matrix))
 
 

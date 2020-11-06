@@ -106,7 +106,6 @@ if plot_d1:
     elif sort_type == 'rate_sort':
         permutation = np.load(f'{data_folder}permutation.npz')
         permutation = permutation['ids']
-        #permutation =[13, 19, 28, 40, 49, 55, 64, 69, 77, 1, 24, 58, 6, 15, 29, 60, 75, 10, 11, 12, 25, 56, 66, 68, 22, 23, 43, 51, 30, 39 , 5, 14, 16, 34, 74, 37, 48, 52, 3, 20, 32, 38, 42, 47, 65, 67, 76, 78, 79] 
     elif sort_type == 'rf_sort':
         permutation = sorted_rf.permutation
     sorted_i = np.asarray([np.where(
@@ -160,6 +159,7 @@ if plot_d2:
     m1.ui.roiBtn.hide()
     m1.ui.menuBtn.hide()
     m1.setImage(np.reshape(rf, (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
+    #FIXME m1.setImage(np.reshape(am, (num_exc, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
     m1.setColorMap(cmap)
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='sorted rec.')
@@ -180,19 +180,19 @@ if plot_d2:
     
     m3.setImage(sorted_rf.matrix[:, permutation], axes={'y':0, 'x':1})
     m3.setColorMap(cmap)
-    m4 = pg.PlotWidget(title='Population rate')
-    m4.plot(exc_rate_t*1e-3,
-            exc_rate,
-            pen='r')
-    m4.plot(inh_rate_t*1e-3,
-            inh_rate,
-            pen='b')
-    m4.setLabel('bottom', 'Time', units='s')
-    m4.setLabel('left', 'Rate', units='Hz')
+    #m4 = pg.PlotWidget(title='Population rate')
+    #m4.plot(exc_rate_t*1e-3,
+    #        exc_rate,
+    #        pen='r')
+    #m4.plot(inh_rate_t*1e-3,
+    #        inh_rate,
+    #        pen='b')
+    #m4.setLabel('bottom', 'Time', units='s')
+    #m4.setLabel('left', 'Rate', units='Hz')
     d2.addWidget(m1, 0, 0)
     d2.addWidget(m2, 0, 1)
     d2.addWidget(m3, 0, 2)
-    d2.addWidget(m4, 1, colspan=3)
+    #d2.addWidget(m4, 1, colspan=3)
 
 # Plot receptive fields for each neuron
 if plot_d3:
@@ -206,7 +206,7 @@ if plot_d3:
         rfs[-1].ui.histogram.hide()
         rfs[-1].ui.roiBtn.hide()
         rfs[-1].ui.menuBtn.hide() 
-        rfs[-1].setImage(np.reshape(last_frame[:, i], (dims, dims)), axes={'y':0, 'x':1})# [:, sorted_w.permutation,-1] FIXME
+        rfs[-1].setImage(np.reshape(last_frame[:, i], (dims, dims)), axes={'y':0, 'x':1})
         rfs[-1].setColorMap(cmap)
         d3.addWidget(rfs[-1], j, k)
         if j < np.sqrt(num_exc)-1:

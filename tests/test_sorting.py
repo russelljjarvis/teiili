@@ -12,7 +12,7 @@ n_cols = 50
 diag_width = 3
 
 test_matrix = np.zeros((n_rows, n_cols))
-test_matrix = (15*np.random.rand(n_rows, n_cols)).astype(int)
+test_matrix = (13*np.random.rand(n_rows, n_cols)).astype(int)
 test_matrix = np.clip(test_matrix, 0, 15)
 
 # Construct matrix
@@ -38,9 +38,9 @@ test_matrix[7,6] = 0.
 
 # Shuffle matrix
 shuffled_matrix = np.zeros((n_rows, n_cols))
-ids = numpy.arange(n_cols), dtype='uint32')  # 32 bits is enough for numbers up to about 4 billion
-rnd_ids = np.random.shuffle(ids)
-shuffled_matrix[:, rnd_ind] = test_matrix
+inds = np.arange(n_cols, dtype='uint32')  # 32 bits is enough for numbers up to about 4 billion
+np.random.shuffle(inds)
+shuffled_matrix[:, inds] = test_matrix
 sm1 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1, matrix=copy.deepcopy(shuffled_matrix))
 
 plt.figure()

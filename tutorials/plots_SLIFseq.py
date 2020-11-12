@@ -1,6 +1,7 @@
 import numpy as np
 import copy
-import json
+import pickle
+import pprint
 
 from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
@@ -13,17 +14,11 @@ from teili.tools.sorting import SortMatrix
 
 sort_type = sys.argv[2]
 
-data_files = [] # TODO now each is a datafile
-data_folder = sys.argv[1]
-for i in Path(data_folder).glob('*.npz'):
-    data_files.append(i)
-
 app = QtGui.QApplication([])
 win = QtGui.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
 
-trials = ['maoi'] # TODO this should now be whatever I want on docks
 d1 = Dock('traces and raster', size=(1, 1))
 d2 = Dock('matrices', size=(1, 1))
 d3 = Dock('receptive fields', size=(1, 1))
@@ -34,8 +29,9 @@ area.moveDock(d2, 'above', d3)
 area.moveDock(d1, 'above', d2)
 
 # Load metadata of given simulation
-with open(f'{data_folder}metadata.json', 'r') as f:
-    metadata = json.load(f)
+data_folder = sys.argv[1]
+with open(f'{data_folder}general.data', 'rb') as f:
+    metadata = pickle.load(f)
 num_inh = metadata['num_inh']
 input_rate = metadata['input_rate']
 ei_conn = metadata['e->i p']
@@ -46,6 +42,15 @@ rasters = np.load(f'{data_folder}rasters.npz')
 traces = np.load(f'{data_folder}traces.npz')
 matrices = np.load(f'{data_folder}matrices.npz', allow_pickle=True)
 plot_d1, plot_d2, plot_d3 = True, True, False
+
+# Print more info
+with open(f'{data_folder}connections.data', 'rb') as f:
+    info_conn = pickle.load(f)
+with open(f'{data_folder}population.data', 'rb') as f:
+    info_pop = pickle.load(f)
+pp = pprint.PrettyPrinter()
+pp.pprint(info_conn)
+pp.pprint(info_pop)
 
 # Avoid storing too much data on memory
 data_start, data_end = 0, -1
@@ -64,7 +69,6 @@ exc_rate = traces['exc_rate'][data_start:data_end]
 inh_rate_t = traces['inh_rate_t'][data_start:data_end]
 inh_rate = traces['inh_rate'][data_start:data_end]
 rf = matrices['rf']
-#am = matrices['am'] #FIXME
 rec_ids = matrices['rec_ids']
 rec_w = matrices['rec_w']
 del matrices
@@ -77,9 +81,10 @@ if plot_d1:
     l.addLabel(text)
     d1.addWidget(l, 0, 0, colspan=2)
 
-    p1 = pg.PlotWidget(title='Input')
+    p1 = pg.PlotWidget(title='Input sequence')
     p1.plot(input_t*1e-3, input_i, pen=None, symbolSize=3, symbol='o')
     p1.setLabel('bottom', 'Time', units='s')
+    p1.setLabel('left', 'Input channels')
     p2 = pg.PlotWidget(title='Membrane potential')
     p2.addLegend(offset=(30, 1))
     p2.plot(Vm_e, pen='r', name=f'exc. id {neuron_id_e}')
@@ -96,16 +101,16 @@ if plot_d1:
             matrix=rf_matrix, axis=1)
     # recurrent connections are not present in some simulations
     try:
-        sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w, #FIXME for each t?
-                  fill_ids=rec_ids) #FIXME axis=1?
+        sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w,
+                  fill_ids=rec_ids)
     except:
         sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=np.zeros((num_exc, num_exc)))
 
     if sort_type == 'rec_sort':
         permutation = sorted_rec.permutation
     elif sort_type == 'rate_sort':
-        permutation = np.load(f'{data_folder}permutation.npz')
-        permutation = permutation['ids']
+        permutation_file = np.load(f'{data_folder}permutation.npz')
+        permutation = permutation_file['ids']
     elif sort_type == 'rf_sort':
         permutation = sorted_rf.permutation
     sorted_i = np.asarray([np.where(
@@ -152,18 +157,19 @@ colors = [
 cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 4), color=colors)
 if plot_d2:
     image_axis = pg.PlotItem()
-    image_axis.setLabel(axis='bottom', text='RF pixels')
-    image_axis.hideAxis('left')
+    image_axis.setLabel(axis='bottom', text='Neuron index')
+    image_axis.setLabel(axis='left', text='Input channels')
+    #image_axis.hideAxis('left')
     m1 = pg.ImageView(view=image_axis)
     m1.ui.histogram.hide()
     m1.ui.roiBtn.hide()
     m1.ui.menuBtn.hide()
     m1.setImage(np.reshape(rf, (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
-    #FIXME m1.setImage(np.reshape(am, (num_exc, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
     m1.setColorMap(cmap)
     image_axis = pg.PlotItem()
-    image_axis.setLabel(axis='bottom', text='sorted rec.')
-    image_axis.hideAxis('left')
+    image_axis.setLabel(axis='bottom', text='postsynaptic neuron')
+    image_axis.setLabel(axis='left', text='presynaptic neuron')
+    #image_axis.hideAxis('left')
     m2 = pg.ImageView(view=image_axis)
     #m2.ui.histogram.hide()
     m2.ui.roiBtn.hide()
@@ -172,7 +178,8 @@ if plot_d2:
     m2.setColorMap(cmap)
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='sorted RF.')
-    image_axis.hideAxis('left')
+    image_axis.setLabel(axis='left', text='Input channel')
+    #image_axis.hideAxis('left')
     m3 = pg.ImageView(view=image_axis)
     m3.ui.histogram.hide()
     m3.ui.roiBtn.hide()
@@ -216,3 +223,16 @@ if plot_d3:
             k += 1
 win.show()
 QtGui.QApplication.instance().exec_()
+# Generate plots with matplotlib
+#from brian2 import *
+#figure()
+#imshow(sorted_rec.matrix[:, permutation_file['ids']][permutation_file['ids'], :])
+#xlabel('postsynaptic neuron')
+#ylabel('presynaptic neuron')
+#colorbar()
+#figure()
+#imshow(sorted_rf.matrix[:, permutation_file['ids']], origin='lower')
+#xlabel('Neuron index')
+#ylabel('Input channel')
+#colorbar()
+#show()

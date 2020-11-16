@@ -43,7 +43,7 @@ class SortMatrix():
         sorted_matrix (TYPE): Sorted matrix according to permutation.
     """
 
-    def __init__(self, nrows, ncols=None, filename=None, matrix=None, axis=0, fill_ids=None):
+    def __init__(self, nrows, ncols=None, filename=None, matrix=None, axis=0, fill_ids=None, rec_matrix=False):
         """Summary
 
         Args:
@@ -57,10 +57,14 @@ class SortMatrix():
                 projection. This is an additional information that must be compatible
                 with the argument matrix and can be used to sort neurons according to
                 the similarity of their recurrent weights.
+            rec_matrix (boolean, optional): Informs whether it is the matrix
+                represents recurrent connections or not. If it is a recurrent
+                matrix, both dimensions will be sorted according to permutation.
         """
         self.nrows = nrows
         self.ncols = ncols
         self.axis = axis
+        self.recurrent_matrix = rec_matrix
 
         if self.ncols is None:
             warnings.warn('You did not specify ncols. Matrix is assumed to be squared')
@@ -77,7 +81,7 @@ class SortMatrix():
                 # Fill un-connected inputs with zero
                 filled_matrix = np.zeros((self.nrows, self.ncols))
                 for i in range(self.nrows):
-                    filled_matrix[i,:][fill_ids[i][:]] = matrix[i][:]
+                    filled_matrix[i, fill_ids[i][:]] = matrix[i][:]
                 self.matrix = filled_matrix
 
         # Compute similarity along specified axis
@@ -240,17 +244,17 @@ class SortMatrix():
         if len(self.permutation) == 0:
             self.permutation = self.get_permutation(axis=self.axis)
         tmp_matrix = self.matrix
-        if len(self.permutation) == np.size(tmp_matrix, 0) and len(self.permutation) == np.size(tmp_matrix, 1):
+        if self.recurrent_matrix:
             # First sort each row
             for row in range(len(self.permutation)):
                 tmp_matrix[row] = tmp_matrix[row][self.permutation]
             # Second sort each column
             self.sorted_matrix = tmp_matrix[self.permutation]
+        else:
+            if self.axis==0:
+                self.sorted_matrix = tmp_matrix[self.permutation, :]
 
-        elif len(self.permutation) == np.size(tmp_matrix, 0) and not len(self.permutation) == np.size(tmp_matrix, 1):
-            self.sorted_matrix = tmp_matrix[self.permutation, :]
-
-        elif len(self.permutation) == np.size(tmp_matrix, 1) and not len(self.permutation) == np.size(tmp_matrix, 0):
-            self.sorted_matrix = tmp_matrix[:, self.permutation]
+            else:
+                self.sorted_matrix = tmp_matrix[:, self.permutation]
 
         return self.sorted_matrix

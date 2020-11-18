@@ -26,7 +26,7 @@ import os
 from datetime import datetime
 
 # Load ADP synapse
-path = os.path.expanduser("/home/pablo/teili_gl/teili")
+path = os.path.expanduser("/home/pablo/git/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochSynAdp.py')
@@ -38,10 +38,10 @@ adp_synapse_model = SynapseEquationBuilder.import_eq(
 
 # process inputs
 learn_factor = 4
-ei_p = 0.50
-ie_p = 0.70
+ei_p = 0.15#FIXME 0.50
+ie_p = 0.90#FIXME 0.70
 ee_p = 0.50
-ei_w = 5
+ei_w = 3#FIXME 5
 
 # Defines if recurrent connections are included
 if sys.argv[1] == 'no_rec':
@@ -134,7 +134,7 @@ if i_plast:
                                    size=exc_cells.N)
 
 inh_cells = Neurons(num_inh,
-                    equation_builder=neuron_model(num_inputs=1),
+                    equation_builder=neuron_model(num_inputs=2),
                     method=stochastic_decay,
                     name='inh_cells',
                     verbose=True)
@@ -163,19 +163,19 @@ feedforward_exc = Connections(seq_cells, exc_cells,
                               equation_builder=stdp_synapse_model(),
                               method=stochastic_decay,
                               name='feedforward_exc')
-#feedforward_inh = Connections(seq_cells, inh_cells,
-#                              equation_builder=static_synapse_model(),
-#                              method=stochastic_decay,
-#                              name='feedforward_inh')
+feedforward_inh = Connections(seq_cells, inh_cells,
+                              equation_builder=static_synapse_model(),
+                              method=stochastic_decay,
+                              name='feedforward_inh')
 
 # Connect synapses
 feedforward_exc.connect()
-#feedforward_inh.connect()
+feedforward_inh.connect()
 if not simple:
     exc_exc_conn.connect('i!=j', p=ee_p)
-    #exc_exc_conn.delay = np.random.randint(0, 2, size=np.shape(exc_exc_conn.j)[0]) * ms
+    exc_exc_conn.delay = np.random.randint(0, 3, size=np.shape(exc_exc_conn.j)[0]) * ms
 exc_inh_conn.connect(p=ei_p)
-#exc_inh_conn.delay = np.random.randint(0, 2, size=np.shape(exc_inh_conn.j)[0]) * ms
+exc_inh_conn.delay = np.random.randint(0, 3, size=np.shape(exc_inh_conn.j)[0]) * ms
 inh_exc_conn.connect(p=ie_p)
 
 # Setting parameters
@@ -183,7 +183,7 @@ exc_exc_conn.tau_syn = 30*ms
 exc_inh_conn.tau_syn = 30*ms
 inh_exc_conn.tau_syn = 15*ms
 feedforward_exc.tau_syn = 30*ms
-#feedforward_inh.tau_syn = 30*ms
+feedforward_inh.tau_syn = 10*ms
 
 seed = 12
 exc_cells.Vm = 3*mV
@@ -194,7 +194,7 @@ inh_cells.lfsr_num_bits = 9
 if i_plast:
     inh_exc_conn.weight = 1
     inh_exc_conn.variance_th = 0.80
-mean_ie_w = 7
+mean_ie_w = 13#FIXME 7
 inh_exc_conn.lfsr_num_bits_syn = 9
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
@@ -223,13 +223,14 @@ feedforward_exc.weight = 1
 feedforward_exc.taupre = 5*ms
 feedforward_exc.taupost = 10*ms
 mean_ffe_w = 4
-mean_ffi_w = 0
+mean_ffi_w = 1
 feedforward_exc.lfsr_num_bits_syn = 9
+feedforward_inh.lfsr_num_bits_syn = 9
 for i in range(num_channels):
     weight_length = np.shape(feedforward_exc.w_plast[i,:])
     feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=weight_length).astype(int)
-    #weight_length = np.shape(feedforward_inh.weight[i,:])
-    #feedforward_inh.weight[i,:] = 0#gamma.rvs(a=mean_ffi_w, size=weight_length).astype(int)
+    weight_length = np.shape(feedforward_inh.weight[i,:])
+    feedforward_inh.weight[i,:] = gamma.rvs(a=mean_ffi_w, size=weight_length).astype(int)
 #a=1.3
 #x = np.linspace(gamma.ppf(0.01, a, loc=1),gamma.ppf(0.99, a, loc=1), 100)
 #plt.plot(x, gamma.pdf(x, a,loc=1),'r-', lw=5, alpha=0.6, label='gamma pdf')
@@ -240,7 +241,7 @@ add_lfsr(exc_exc_conn, seed, defaultclock.dt)
 add_lfsr(exc_inh_conn, seed, defaultclock.dt)
 add_lfsr(inh_exc_conn, seed, defaultclock.dt)
 add_lfsr(feedforward_exc, seed, defaultclock.dt)
-#add_lfsr(feedforward_inh, seed, defaultclock.dt)
+add_lfsr(feedforward_inh, seed, defaultclock.dt)
 
 if i_plast:
     # Add proxy activity group
@@ -280,19 +281,19 @@ net = TeiliNetwork()
 if not simple:
     if i_plast:
         net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-                feedforward_exc, statemon_exc_cells, statemon_inh_cells,# feedforward_inh,
+                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
                 statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
                 spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
                 statemon_pop_rate_i, statemon_inh_conns, statemon_ei_conns, statemon_ie_conns)
     else:
         net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-                feedforward_exc, statemon_exc_cells, statemon_inh_cells,#feedforward_inh, 
+                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh, 
                 statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
                 spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
                 statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns)
 else:
     net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
-            feedforward_exc, statemon_exc_cells, statemon_inh_cells,#feedforward_inh, 
+            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh, 
             spikemon_exc_neurons, spikemon_inh_neurons,
             spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
             statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns)
@@ -401,8 +402,8 @@ with open(path+'population.data', 'wb') as f:
 Metadata = {'e->i': exc_inh_conn.get_params(),
             'i->e': inh_exc_conn.get_params(),
             'e->e': exc_exc_conn.get_params(),
-            'ffe': feedforward_exc.get_params()#,
-            #TODO 'ffi': feedforward_inh.get_params()
+            'ffe': feedforward_exc.get_params(),
+            'ffi': feedforward_inh.get_params()
             }
 with open(path+'connections.data', 'wb') as f:
     pickle.dump(Metadata, f)

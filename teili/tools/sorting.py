@@ -243,7 +243,7 @@ class SortMatrix():
         """
         if len(self.permutation) == 0:
             self.permutation = self.get_permutation(axis=self.axis)
-        tmp_matrix = self.matrix
+        tmp_matrix = np.array(self.matrix)
         if self.recurrent_matrix:
             # First sort each row
             for row in range(len(self.permutation)):

@@ -13,7 +13,6 @@ import os
 import copy
 from teili.tools import indexing, converter, misc, synaptic_kernel, sorting
 
-
 class TestTools(unittest.TestCase):
 
     # def test_printStates(self):
@@ -27,8 +26,8 @@ class TestTools(unittest.TestCase):
         max_weight = 15
         noise = True 
         noise_probability = 0.05
-        conn_probability = 0.8
-        np.random.seed(0)
+        conn_probability = 0.9
+        np.random.seed(26)
 
         test_matrix = np.zeros((n_rows, n_cols))
         if max_weight > 1:
@@ -75,11 +74,11 @@ class TestTools(unittest.TestCase):
         conn_matrix = [[] for x in range(n_cols)]
         rec_matrix = [[] for x in range(n_cols)]
         for ind, val in enumerate(source):
-            conn_matrix[val].append(self.shuffled_matrix[val, target[ind]].astype(int))
-        self.conn_matrix = np.array(conn_matrix)
+            conn_matrix[val].append(target[ind])
+        self.conn_matrix = np.array(conn_matrix, dtype=object)
         for ind_source, ind_target in enumerate(self.conn_matrix):
             rec_matrix[ind_source] = self.shuffled_matrix[ind_source, ind_target]
-        self.rec_matrix = np.array(rec_matrix)
+        self.rec_matrix = np.array(rec_matrix, dtype=object)
 
     def test_return_value_if(self):
         testVal = 3.7
@@ -179,11 +178,11 @@ class TestTools(unittest.TestCase):
         n_rows = np.size(self.shuffled_matrix, 0)
         n_cols = np.size(self.shuffled_matrix, 1)
         sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-                matrix=copy.deepcopy(self.shuffled_matrix))
-        permutation_expected = [8, 16, 18, 45, 15, 48, 38, 44, 30, 41, 34, 37,\
-                1, 21, 39, 2, 27, 28, 7, 49, 23, 36, 11, 40, 25, 31, 20, 3, 5,\
-                10, 24, 4, 42, 47, 22, 0, 13, 33, 6, 12, 17, 29, 19, 46, 32, 14,\
-                35, 43, 9, 26]
+                matrix=copy.deepcopy(self.shuffled_matrix), rec_matrix=True)
+        permutation_expected = [12, 19, 25, 41, 42, 45, 9, 35, 2, 4, 46, 40,\
+                14, 22, 38, 47, 31, 27, 3, 10, 49, 21 , 34, 36, 43, 28, 44, 6,\
+                33, 24, 39, 17, 18, 32, 1, 0, 5, 23, 26, 13, 48, 15, 11, 37,\
+                16, 8 , 7, 20, 30, 29]
         self.assertEqual(sorted_matrix.permutation, permutation_expected)
 
     def test_filled_matrix_permutation(self):
@@ -192,10 +191,10 @@ class TestTools(unittest.TestCase):
         sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
                 matrix=copy.deepcopy(self.rec_matrix), rec_matrix=True,
                 fill_ids=self.conn_matrix)
-        permutation_expected = [8, 16, 18, 45, 15, 48, 38, 44, 30, 41, 34, 37,\
-                1, 21, 39, 2, 27, 28, 7, 49, 23, 36, 11, 40, 25, 31, 20, 3, 5,\
-                10, 24, 4, 42, 47, 22, 0, 13, 33, 6, 12, 17, 29, 19, 46, 32, 14,\
-                35, 43, 9, 26]
+        permutation_expected = [28, 34, 21, 36, 43, 44, 33, 6, 39, 24, 17, 18,\
+                32, 26, 5, 1, 23, 0, 31, 49, 10, 3, 27, 38, 47, 22, 14, 29, 12,\
+                19, 41, 25, 42, 45, 35, 9, 2, 40, 46, 4, 7, 8, 16, 37, 30, 20,\
+                11, 15, 13, 48]
         self.assertEqual(sorted_matrix.permutation, permutation_expected)
 
 if __name__ == '__main__':

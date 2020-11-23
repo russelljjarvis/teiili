@@ -13,7 +13,7 @@ diag_width = 3
 max_weight = 15
 noise = True 
 noise_probability = 0.05
-conn_probability = 0.9
+conn_probability = 0.6
 np.random.seed(26)
 
 test_matrix = np.zeros((n_rows, n_cols))
@@ -62,12 +62,13 @@ rec_matrix = [[] for x in range(n_cols)]
 for ind, val in enumerate(source):
     conn_matrix[val].append(target[ind])
 conn_matrix = np.array(conn_matrix, dtype=object)
-for ind_source, ind_target in enumerate(self.conn_matrix):
-    rec_matrix[ind_source] = self.shuffled_matrix[ind_source, ind_target]
+for ind_source, ind_target in enumerate(conn_matrix):
+    rec_matrix[ind_source] = shuffled_matrix[ind_source, ind_target]
 rec_matrix = np.array(rec_matrix, dtype=object)
 
-sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-        matrix=copy.deepcopy(shuffled_matrix), rec_matrix=True)
+sorted_matrix = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
+        matrix=copy.deepcopy(rec_matrix), rec_matrix=True,
+        fill_ids=conn_matrix)
 
 # TODO pyqtgraph
 plt.figure(figsize=(11,8))
@@ -82,11 +83,12 @@ plt.title('Shuffled matrix')
 plt.colorbar()
 
 plt.subplot(2,2,3)
-plt.imshow(shuffled_matrix[:, sm1.permutation])
+plt.imshow(shuffled_matrix[:, sorted_matrix.permutation])
 plt.title('Sorted with permutation indices')
 plt.colorbar()
 
 plt.subplot(2,2,4)
-plt.imshow(sm1.sorted_matrix)
+plt.imshow(sorted_matrix.sorted_matrix)
 plt.title('Sorted matrix')
 plt.colorbar()
+plt.show()

@@ -1,18 +1,26 @@
 from brian2 import *
+from tutorials.lfsr import create_lfsr
 
 defaultclock.dt = 1*ms
 prefs.codegen.target = "numpy"
 
 # Generate lfsr numbers
-lfsr_numbers = np.array([1,2,3,1,2,3,4,5,6,7])*mV
-ta = TimedArray(lfsr_numbers, dt=1*ms)
-G = NeuronGroup(4, '''v = ta( ((seed+t) % lfsr_len) + lfsr_init ) : volt
-                      lfsr_len : second
+G = NeuronGroup(4, '''v = decay_prob : volt
+                      decay_prob = ta( ((seed+t) % lfsr_max_value) + lfsr_init ) / (2**lfsr_num_bits-1) : volt
+                      lfsr_max_value : second
+                      lfsr_num_bits : 1
                       seed : second
                       lfsr_init : second''')
-G.lfsr_len = [3, 7, 3, 7]*ms # get it considering whole array
-G.lfsr_init = [0, 3, 0, 3]*ms # get it considering whole array
-G.seed = [1, 1, 2, 3]*ms # get it thinking like each has an array
+# Set parameter
+G.lfsr_num_bits = [3, 5, 3, 5]
+
+lfsr = create_lfsr(G.lfsr_num_bits)
+
+G.lfsr_max_value = lfsr['max_value']*ms
+G.lfsr_init = lfsr['init']*ms
+G.seed = lfsr['seed']*ms
+
+ta = TimedArray(lfsr['array']*mV, dt=defaultclock.dt)
 mon = StateMonitor(G, 'v', record=True)
 net = Network(G, mon)
 net.run(7*ms)

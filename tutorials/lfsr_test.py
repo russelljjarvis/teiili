@@ -1,5 +1,5 @@
 from brian2 import *
-from tutorials.lfsr import create_lfsr
+from lfsr import create_lfsr
 
 defaultclock.dt = 1*ms
 prefs.codegen.target = "numpy"
@@ -12,7 +12,7 @@ G = NeuronGroup(4, '''v = decay_prob : volt
                       seed : second
                       lfsr_init : second''')
 # Set parameter
-G.lfsr_num_bits = [3, 5, 3, 5]
+G.lfsr_num_bits = 3
 
 lfsr = create_lfsr(G.lfsr_num_bits)
 

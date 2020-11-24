@@ -29,9 +29,7 @@ def create_lfsr(num_bits):
             lfsr['array'].append(lfsr_val)
 
     # Creates values for each element
-    # TODO seed represent position in array, check if it is right. Also
-    # it should not start from 1 for everyone
-    lfsr['seed'] = [np.random.randint(1, 2**x) for x in num_bits]
+    lfsr['seed'] = [np.random.randint(2**x-1) for x in num_bits]
     lfsr['max_value'] = [2**x-1 for x in num_bits]
     lfsr['init'] = [init_map[x] for x in num_bits]
 

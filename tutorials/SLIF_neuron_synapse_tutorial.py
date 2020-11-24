@@ -14,13 +14,14 @@ import sys
 
 from brian2 import ExplicitStateUpdater, ms, mV, ohm, second, mA, prefs,\
     SpikeMonitor, StateMonitor, \
-    SpikeGeneratorGroup, defaultclock
+    SpikeGeneratorGroup, defaultclock, TimedArray
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import StochasticLIF as neuron_model
 from teili.models.synapse_models import StochasticSyn_decay as synapse_model
 from teili.tools.add_run_reg import add_lfsr
+from lfsr import create_lfsr
 
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataControllers import Rasterplot, Lineplot
@@ -77,15 +78,31 @@ num_bits = 6
 seed = 12
 test_neurons1.lfsr_num_bits = num_bits
 test_neurons2.lfsr_num_bits = num_bits
-add_lfsr(test_neurons1, seed, defaultclock.dt)
+lfsr1 = create_lfsr(test_neurons1.lfsr_num_bits)
+test_neurons1.lfsr_max_value = lfsr1['max_value']*ms
+test_neurons1.lfsr_init = lfsr1['init']*ms
+test_neurons1.seed = lfsr1['seed']*ms
+neuron_timedarray = TimedArray(lfsr1['array']*mV, dt=defaultclock.dt)
+#add_lfsr(test_neurons1, seed, defaultclock.dt)
 test_neurons1.Vm = 3*mV
-add_lfsr(test_neurons2, seed, defaultclock.dt)
+test_neurons2.lfsr_max_value = lfsr1['max_value']*ms
+test_neurons2.lfsr_init = lfsr1['init']*ms
+test_neurons2.seed = lfsr1['seed']*ms
+#add_lfsr(test_neurons2, seed, defaultclock.dt)
 test_neurons2.Vm = 3*mV
 
 input_synapse.lfsr_num_bits_syn = num_bits
 test_synapse.lfsr_num_bits_syn = num_bits
-add_lfsr(input_synapse, seed, defaultclock.dt)
-add_lfsr(test_synapse, seed, defaultclock.dt)
+#add_lfsr(input_synapse, seed, defaultclock.dt)
+#add_lfsr(test_synapse, seed, defaultclock.dt)
+input_synapse.lfsr_max_value_syn = lfsr1['max_value']*ms
+input_synapse.lfsr_init_syn = lfsr1['init']*ms
+input_synapse.seed_syn = lfsr1['seed']*ms
+lfsr2 = create_lfsr(test_synapse.lfsr_num_bits_syn)
+test_synapse.lfsr_max_value_syn = lfsr2['max_value']*ms
+test_synapse.lfsr_init_syn = lfsr2['init']*ms
+test_synapse.seed_syn = lfsr2['seed']*ms
+syn_timedarray = TimedArray(lfsr1['array']*mV, dt=defaultclock.dt)
 
 # Example of how to set a single parameter
 # Fast neuron to allow more spikes
@@ -109,10 +126,12 @@ spikemon_test_neurons2 = SpikeMonitor(
     test_neurons2, name='spikemon_test_neurons2')
 
 statemon_input_synapse = StateMonitor(
-    input_synapse, variables='I_syn', record=True, name='statemon_input_synapse')
+    input_synapse, variables=['I_syn', 'decay_probability_syn'], record=True,
+    name='statemon_input_synapse')
 
 statemon_test_synapse = StateMonitor(
-    test_synapse, variables='I_syn', record=True, name='statemon_test_synapse')
+    test_synapse, variables=['I_syn', 'decay_probability_syn'], record=True,
+    name='statemon_test_synapse')
 
 if 'Imem' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
@@ -122,10 +141,10 @@ if 'Imem' in neuron_model().keywords['model']:
         "Iin", "Imem", "Iahp"], record=[0, 1], name='statemon_test_neurons1')
 elif 'Vm' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
-                                          variables=['Vm'],
-                                          record=0, name='statemon_test_neurons2')
+                                          variables=['Vm', 'decay_probability'],
+                                          record=True, name='statemon_test_neurons2')
     statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
-        "Iin", "Vm"], record=[0, 1], name='statemon_test_neurons1')
+        "Iin", "Vm", 'decay_probability'], record=True, name='statemon_test_neurons1')
 
 
 Net.add(input_spikegenerator, test_neurons1, test_neurons2,

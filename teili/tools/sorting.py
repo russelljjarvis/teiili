@@ -44,7 +44,7 @@ class SortMatrix():
     """
 
     def __init__(self, nrows, ncols=None, filename=None, matrix=None,
-                 axis=0, fill_ids=None, rec_matrix=False):
+                 axis=0, target_ids=None, rec_matrix=False):
         """Summary
 
         Args:
@@ -56,7 +56,7 @@ class SortMatrix():
                 to the class.
             axis (int, optional): Axis along which similarity should be
                 computed.
-            fill_ids (ndarray, optional): Postsynaptic target indices of a
+            target_ids (ndarray, optional): Postsynaptic target indices of a
                 presynaptic projection. This is an additional information
                 that must be compatible with the argument matrix and can be
                 used to sort neurons according to the similarity of their
@@ -80,13 +80,13 @@ class SortMatrix():
         if matrix is None:
             self.matrix = self.load_matrix()
         elif matrix is not None:
-            if fill_ids is None:
+            if target_ids is None:
                 self.matrix = np.reshape(matrix, (self.nrows, self.ncols))
-            elif fill_ids is not None:
+            elif target_ids is not None:
                 # Fill un-connected inputs with zero
                 filled_matrix = np.zeros((self.nrows, self.ncols))
                 for i in range(self.nrows):
-                    filled_matrix[i, fill_ids[i][:]] = matrix[i][:]
+                    filled_matrix[i, target_ids[i][:]] = matrix[i][:]
                 self.matrix = filled_matrix
 
         # Compute similarity along specified axis
@@ -169,7 +169,8 @@ class SortMatrix():
         similarity graph to infinity.
 
         Args:
-            axis (int, optional): Axis along which similarity should be computed.
+            axis (int, optional): Axis along which similarity should be
+                computed.
 
         Returns:
             list: Vector of permuted indices.
@@ -183,7 +184,8 @@ class SortMatrix():
             # Get the index (tuple) of the most similar entry in the similarity
             # matrix
             ind_nearest = np.unravel_index(
-                np.argmin(similarity_matrix, axis=None), similarity_matrix.shape)
+                np.argmin(similarity_matrix, axis=None),
+                similarity_matrix.shape)
             # Define the two to be connected nodes
             vertexA = ind_nearest[0]  # we gonna draw an edge between A and B
             vertexB = ind_nearest[1]
@@ -207,8 +209,8 @@ class SortMatrix():
             # Set the distance between the new ends of the graph to infinity
             similarity_matrix[endA, endB] = np.inf
             similarity_matrix[endB, endA] = np.inf
-            # Break condition that stops the construction of the graph as soon as every node
-            # except the two end points are connected twice
+            # Break condition that stops the construction of the graph as soon
+            # as every node except the two end points are connected twice
             if np.sum(degree) >= np.size(similarity_matrix, 0) * 2 - 2:
                 break
 
@@ -245,7 +247,8 @@ class SortMatrix():
         the permutation indices.
 
         Returns:
-            ndarray: Sorted matrix according to similarity in euclidean distance.
+            ndarray: Sorted matrix according to similarity in euclidean
+                distance.
         """
         if len(self.permutation) == 0:
             self.permutation = self.get_permutation(axis=self.axis)

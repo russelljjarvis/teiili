@@ -1,9 +1,8 @@
 import numpy as np
 from teili.tools.sorting import SortMatrix
-import random
 import copy
+import sys
 
-import matplotlib.pyplot as plt
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
@@ -48,31 +47,43 @@ if noise:
 
 # Test recurrent matrices which need to be shuffled along rows & columns
 shuffled_matrix_tmp = np.zeros((n_rows, n_cols))
-shuffled_matrix = np.zeros((n_rows, n_cols))
+shuffled_matrix_2dims = np.zeros((n_rows, n_cols))
+shuffled_matrix_1dim = np.zeros((n_rows, n_cols))
 # 32 bits is enough for numbers up to about 4 billion
 inds = np.arange(n_cols, dtype='uint32')
 np.random.shuffle(inds)
 shuffled_matrix_tmp[:, inds] = copy.deepcopy(test_matrix)
-shuffled_matrix[inds, :] = shuffled_matrix_tmp
+shuffled_matrix_2dims[inds, :] = shuffled_matrix_tmp
+shuffled_matrix_1dim[:, inds] = copy.deepcopy(test_matrix)
 
 # Add connectivity of recurrent matrix
 conn_ind = np.where(np.random.rand(n_rows, n_cols) < conn_probability)
 source, target = conn_ind[0], conn_ind[1]
 conn_matrix = [[] for x in range(n_cols)]
-rec_matrix = [[] for x in range(n_cols)]
+rec_matrix_2dims = [[] for x in range(n_cols)]
+rec_matrix_1dim = [[] for x in range(n_cols)]
 for ind, val in enumerate(source):
     conn_matrix[val].append(target[ind])
 conn_matrix = np.array(conn_matrix, dtype=object)
 for ind_source, ind_target in enumerate(conn_matrix):
-    rec_matrix[ind_source] = shuffled_matrix[ind_source, ind_target]
-rec_matrix = np.array(rec_matrix, dtype=object)
+    rec_matrix_2dims[ind_source] = shuffled_matrix_2dims[ind_source, ind_target]
+    rec_matrix_1dim[ind_source] = shuffled_matrix_1dim[ind_source, ind_target]
+rec_matrix_2dims = np.array(rec_matrix_2dims, dtype=object)
+rec_matrix_1dim = np.array(rec_matrix_1dim, dtype=object)
 
+# Recurrent matrices
 sorted_matrix1 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-                            matrix=copy.deepcopy(rec_matrix), rec_matrix=True,
-                            fill_ids=conn_matrix)
+                            matrix=copy.deepcopy(rec_matrix_2dims),
+                            rec_matrix=True, target_ids=conn_matrix)
 sorted_matrix2 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-                            matrix=copy.deepcopy(shuffled_matrix),
+                            matrix=copy.deepcopy(shuffled_matrix_2dims),
                             rec_matrix=True)
+# Nonrecurrent matrices
+sorted_matrix3 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
+                            matrix=copy.deepcopy(rec_matrix_1dim),
+                            target_ids=conn_matrix)
+sorted_matrix4 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
+                            matrix=copy.deepcopy(shuffled_matrix_1dim))
 
 app = QtGui.QApplication.instance()
 if app is None:
@@ -82,6 +93,7 @@ else:
 
 app = pg.mkQApp()
 win = QtGui.QMainWindow()
+win.setWindowTitle('Recurrent matrices')
 cw = QtGui.QWidget()
 win.setCentralWidget(cw)
 layout = QtGui.QGridLayout()
@@ -95,6 +107,7 @@ colors = [
 ]
 cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 4), color=colors)
 
+# Plots of recurrent matrices
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='Original matrix')
 imv = pg.ImageView(view=image_axis)
@@ -105,23 +118,60 @@ layout.addWidget(imv, 0, 0, 1, 1)
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='Shuffled matrix')
 imv = pg.ImageView(view=image_axis)
-imv.setImage(shuffled_matrix)
+imv.setImage(shuffled_matrix_2dims)
 imv.setColorMap(cmap)
 layout.addWidget(imv, 0, 1, 1, 1)
 
 image_axis = pg.PlotItem()
-image_axis.setLabel(axis='bottom', text='Sorted matrix (conn less than 1)')
+image_axis.setLabel(axis='bottom', text='Sorted matrix (p less than 1)')
 imv = pg.ImageView(view=image_axis)
 imv.setImage(sorted_matrix1.sorted_matrix)
 imv.setColorMap(cmap)
 layout.addWidget(imv, 1, 0, 1, 1)
 
 image_axis = pg.PlotItem()
-image_axis.setLabel(axis='bottom', text='Sorted matrix (conn equals 1)')
+image_axis.setLabel(axis='bottom', text='Sorted matrix (p equals 1)')
 imv = pg.ImageView(view=image_axis)
 imv.setImage(sorted_matrix2.sorted_matrix)
 imv.setColorMap(cmap)
 layout.addWidget(imv, 1, 1, 1, 1)
 
+# Plots of nonrecurrent matrices
+win2 = QtGui.QMainWindow()
+win2.setWindowTitle('Nonrecurrent matrices')
+cw2 = QtGui.QWidget()
+win2.setCentralWidget(cw2)
+layout2 = QtGui.QGridLayout()
+cw2.setLayout(layout2)
+
+image_axis = pg.PlotItem()
+image_axis.setLabel(axis='bottom', text='Original matrix')
+imv = pg.ImageView(view=image_axis)
+imv.setImage(test_matrix)
+imv.setColorMap(cmap)
+layout2.addWidget(imv, 0, 0, 1, 1)
+
+image_axis = pg.PlotItem()
+image_axis.setLabel(axis='bottom', text='Shuffled matrix')
+imv = pg.ImageView(view=image_axis)
+imv.setImage(shuffled_matrix_1dim)
+imv.setColorMap(cmap)
+layout2.addWidget(imv, 0, 1, 1, 1)
+
+image_axis = pg.PlotItem()
+image_axis.setLabel(axis='bottom', text='Sorted matrix (p less than 1)')
+imv = pg.ImageView(view=image_axis)
+imv.setImage(sorted_matrix3.sorted_matrix)
+imv.setColorMap(cmap)
+layout2.addWidget(imv, 1, 0, 1, 1)
+
+image_axis = pg.PlotItem()
+image_axis.setLabel(axis='bottom', text='Sorted matrix (p equals 1)')
+imv = pg.ImageView(view=image_axis)
+imv.setImage(sorted_matrix4.sorted_matrix)
+imv.setColorMap(cmap)
+layout2.addWidget(imv, 1, 1, 1, 1)
+
 win.show()
+win2.show()
 app.exec_()

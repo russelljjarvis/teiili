@@ -12,7 +12,7 @@ n_rows = 50
 n_cols = 50
 diag_width = 3
 max_weight = 15
-noise = True 
+noise = True
 noise_probability = 0.05
 conn_probability = 0.6
 np.random.seed(26)
@@ -33,9 +33,9 @@ for central_id in ids:
     values_to_add = np.array([max_weight for _ in range(2*diag_width+1)])
     # Remove values outside dimensions of matrix
     values_to_add = np.delete(values_to_add, np.append(
-        np.where(add_to_ids<0), np.where(add_to_ids>n_rows-1)))
+        np.where(add_to_ids < 0), np.where(add_to_ids > n_rows-1)))
     add_to_ids = np.delete(add_to_ids, np.append(
-        np.where(add_to_ids<0), np.where(add_to_ids>n_rows-1)))
+        np.where(add_to_ids < 0), np.where(add_to_ids > n_rows-1)))
     try:
         test_matrix[central_id][add_to_ids] = values_to_add
     except IndexError:
@@ -68,10 +68,11 @@ for ind_source, ind_target in enumerate(conn_matrix):
 rec_matrix = np.array(rec_matrix, dtype=object)
 
 sorted_matrix1 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-        matrix=copy.deepcopy(rec_matrix), rec_matrix=True,
-        fill_ids=conn_matrix)
+                            matrix=copy.deepcopy(rec_matrix), rec_matrix=True,
+                            fill_ids=conn_matrix)
 sorted_matrix2 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-        matrix=copy.deepcopy(shuffled_matrix), rec_matrix=True)
+                            matrix=copy.deepcopy(shuffled_matrix),
+                            rec_matrix=True)
 
 app = QtGui.QApplication.instance()
 if app is None:
@@ -99,28 +100,28 @@ image_axis.setLabel(axis='bottom', text='Original matrix')
 imv = pg.ImageView(view=image_axis)
 imv.setImage(test_matrix)
 imv.setColorMap(cmap)
-layout.addWidget(imv,0,0, 1, 1)
+layout.addWidget(imv, 0, 0, 1, 1)
 
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='Shuffled matrix')
 imv = pg.ImageView(view=image_axis)
 imv.setImage(shuffled_matrix)
 imv.setColorMap(cmap)
-layout.addWidget(imv,0,1, 1, 1)
+layout.addWidget(imv, 0, 1, 1, 1)
 
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='Sorted matrix (conn less than 1)')
 imv = pg.ImageView(view=image_axis)
 imv.setImage(sorted_matrix1.sorted_matrix)
 imv.setColorMap(cmap)
-layout.addWidget(imv,1,0, 1, 1)
+layout.addWidget(imv, 1, 0, 1, 1)
 
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='Sorted matrix (conn equals 1)')
 imv = pg.ImageView(view=image_axis)
 imv.setImage(sorted_matrix2.sorted_matrix)
 imv.setColorMap(cmap)
-layout.addWidget(imv,1,1, 1, 1)
+layout.addWidget(imv, 1, 1, 1, 1)
 
 win.show()
 app.exec_()

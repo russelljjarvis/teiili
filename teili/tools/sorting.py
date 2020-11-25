@@ -37,29 +37,34 @@ class SortMatrix():
         matrix (ndarray, optional): matrix as provided by load_matrix.
         ncols (int, optional): number of columns of the 2d array.
         nrows (int, required): number of rows of the 2d array.
-        permutation (list): List of indices which are more similar to each other
-            in (euclidean) distance.
+        permutation (list): List of indices which are more similar to
+            each other in (euclidean) distance.
         similarity_matrix (ndarray, optional): Matrix containing similarities.
         sorted_matrix (TYPE): Sorted matrix according to permutation.
     """
 
-    def __init__(self, nrows, ncols=None, filename=None, matrix=None, axis=0, fill_ids=None, rec_matrix=False):
+    def __init__(self, nrows, ncols=None, filename=None, matrix=None,
+                 axis=0, fill_ids=None, rec_matrix=False):
         """Summary
 
         Args:
             nrows (int, required): number of rows of the 2d array.
             ncols (int, optional): number of columns of the 2d array.
             filename (str, optional): path/to/matrix/name.npy.
-            matrix (ndarray, optional): Instead of providing filename and location
-                one can also pass the matrix to sort directly to the class.
-            axis (int, optional): Axis along which similarity should be computed.
-            fill_ids (ndarray, optional): Postsynaptic target indices of a presynaptic
-                projection. This is an additional information that must be compatible
-                with the argument matrix and can be used to sort neurons according to
-                the similarity of their recurrent weights.
+            matrix (ndarray, optional): Instead of providing filename
+                and location one can also pass the matrix to sort directly
+                to the class.
+            axis (int, optional): Axis along which similarity should be
+                computed.
+            fill_ids (ndarray, optional): Postsynaptic target indices of a
+                presynaptic projection. This is an additional information
+                that must be compatible with the argument matrix and can be
+                used to sort neurons according to the similarity of their
+                recurrent weights.
             rec_matrix (boolean, optional): Informs whether it is the matrix
                 represents recurrent connections or not. If it is a recurrent
-                matrix, both dimensions will be sorted according to permutation.
+                matrix, both dimensions will be sorted according to
+                permutation.
         """
         self.nrows = nrows
         self.ncols = ncols
@@ -67,7 +72,7 @@ class SortMatrix():
         self.recurrent_matrix = rec_matrix
 
         if self.ncols is None:
-            warnings.warn('You did not specify ncols. Matrix is assumed to be squared')
+            warnings.warn('unspecified ncols. Matrix is assumed to be squared')
             self.ncols = self.nrows
 
         self.filename = filename
@@ -125,7 +130,8 @@ class SortMatrix():
         matrix.
 
         Args:
-            axis (int, optional): Axis along which similarity should be computed.
+            axis (int, optional): Axis along which similarity should be
+                computed.
 
         Returns:
             ndarray: Matrix containing similarities.
@@ -251,7 +257,7 @@ class SortMatrix():
             # Second sort each column
             self.sorted_matrix = tmp_matrix[self.permutation]
         else:
-            if self.axis==0:
+            if self.axis == 0:
                 self.sorted_matrix = tmp_matrix[self.permutation, :]
 
             else:

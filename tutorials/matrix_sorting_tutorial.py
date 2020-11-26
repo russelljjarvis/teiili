@@ -1,7 +1,6 @@
 import numpy as np
 from teili.tools.sorting import SortMatrix
 import copy
-import sys
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
@@ -13,8 +12,8 @@ diag_width = 3
 max_weight = 15
 noise = True
 noise_probability = 0.05
-conn_probability = 0.6
-np.random.seed(26)
+conn_probability = 0.9
+np.random.seed(0)
 
 test_matrix = np.zeros((n_rows, n_cols))
 if max_weight > 1:
@@ -61,15 +60,15 @@ conn_ind = np.where(np.random.rand(n_rows, n_cols) < conn_probability)
 source, target = conn_ind[0], conn_ind[1]
 conn_matrix = [[] for x in range(n_cols)]
 rec_matrix_2dims = [[] for x in range(n_cols)]
-rec_matrix_1dim = [[] for x in range(n_cols)]
+input_matrix_1dim = [[] for x in range(n_cols)]
 for ind, val in enumerate(source):
     conn_matrix[val].append(target[ind])
 conn_matrix = np.array(conn_matrix, dtype=object)
-for ind_source, ind_target in enumerate(conn_matrix):
-    rec_matrix_2dims[ind_source] = shuffled_matrix_2dims[ind_source, ind_target]
-    rec_matrix_1dim[ind_source] = shuffled_matrix_1dim[ind_source, ind_target]
+for i_source, i_target in enumerate(conn_matrix):
+    rec_matrix_2dims[i_source] = shuffled_matrix_2dims[i_source, i_target]
+    input_matrix_1dim[i_source] = shuffled_matrix_1dim[i_source, i_target]
 rec_matrix_2dims = np.array(rec_matrix_2dims, dtype=object)
-rec_matrix_1dim = np.array(rec_matrix_1dim, dtype=object)
+input_matrix_1dim = np.array(input_matrix_1dim, dtype=object)
 
 # Recurrent matrices
 sorted_matrix1 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
@@ -80,16 +79,10 @@ sorted_matrix2 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
                             rec_matrix=True)
 # Nonrecurrent matrices
 sorted_matrix3 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-                            matrix=copy.deepcopy(rec_matrix_1dim),
+                            matrix=copy.deepcopy(input_matrix_1dim),
                             target_ids=conn_matrix)
 sorted_matrix4 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
                             matrix=copy.deepcopy(shuffled_matrix_1dim))
-
-app = QtGui.QApplication.instance()
-if app is None:
-    app = QtGui.QApplication(sys.argv)
-else:
-    print('QApplication instance already exists: %s' % str(app))
 
 app = pg.mkQApp()
 win = QtGui.QMainWindow()
@@ -154,21 +147,23 @@ layout2.addWidget(imv, 0, 0, 1, 1)
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='Shuffled matrix')
 imv = pg.ImageView(view=image_axis)
-imv.setImage(shuffled_matrix_1dim)
+# pyqtgraph uses column-major order, so transposed is used for
+# visualization purposes
+imv.setImage(shuffled_matrix_1dim.T)
 imv.setColorMap(cmap)
 layout2.addWidget(imv, 0, 1, 1, 1)
 
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='Sorted matrix (p less than 1)')
 imv = pg.ImageView(view=image_axis)
-imv.setImage(sorted_matrix3.sorted_matrix)
+imv.setImage(sorted_matrix3.sorted_matrix.T)
 imv.setColorMap(cmap)
 layout2.addWidget(imv, 1, 0, 1, 1)
 
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='Sorted matrix (p equals 1)')
 imv = pg.ImageView(view=image_axis)
-imv.setImage(sorted_matrix4.sorted_matrix)
+imv.setImage(sorted_matrix4.sorted_matrix.T)
 imv.setColorMap(cmap)
 layout2.addWidget(imv, 1, 1, 1, 1)
 

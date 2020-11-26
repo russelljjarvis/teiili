@@ -64,14 +64,16 @@ class TestTools(unittest.TestCase):
             test_matrix[noise_ind] = 0.3
 
         # Shuffle matrix
-        # test recurrent matrices (shuffled along rows & columns)
+        # test matrices (shuffled along rows and/or columns)
         shuffled_matrix_tmp = np.zeros((n_rows, n_cols))
         self.shuffled_matrix = np.zeros((n_rows, n_cols))
+        self.shuffled_input_matrix = np.zeros((n_rows, n_cols))
         # 32 bits is enough for numbers up to about 4 billion
         inds = np.arange(n_cols, dtype='uint32')
         np.random.shuffle(inds)
         shuffled_matrix_tmp[:, inds] = copy.deepcopy(test_matrix)
         self.shuffled_matrix[inds, :] = shuffled_matrix_tmp
+        self.shuffled_input_matrix[:, inds] = copy.deepcopy(test_matrix)
 
         # Add connectivity of recurrent matrix
         conn_ind = np.where(np.random.rand(n_rows, n_cols) < conn_probability)
@@ -138,7 +140,7 @@ class TestTools(unittest.TestCase):
     def test_ind2xy_rectangular(self):
         ind = 1327
         nrows, ncols = (240, 180)
-        #self.assertTupleEqual(n2d_neurons, (240, 180))
+        # self.assertTupleEqual(n2d_neurons, (240, 180))
         coordinates = indexing.ind2xy(ind, nrows, ncols)
         self.assertEqual(coordinates, np.unravel_index(ind, (nrows, ncols)))
 
@@ -167,7 +169,8 @@ class TestTools(unittest.TestCase):
     def test_aedat2numpy(self):
         self.assertRaises(FileNotFoundError,
                           converter.aedat2numpy, datafile='/tmp/aerout.aedat')
-        # self.assertRaises(ValueError, converter.aedat2numpy, datafile='tmp/aerout.aedat', camera='DAVIS128')
+        # self.assertRaises(ValueError, converter.aedat2numpy,
+        #                   datafile='tmp/aerout.aedat', camera='DAVIS128')
         # Create a small/simple aedat file to test all functions which rely on
         # edat2numpy
 
@@ -177,14 +180,15 @@ class TestTools(unittest.TestCase):
         self.assertRaises(AssertionError, converter.dvs2ind,
                           event_directory='/These/Are/Not/Events.txt')
         # os.command('touch /tmp/Events.npy')
-        # self.assertRaises(AssertionError, tools.dvs2ind, Events=np.zeros((4, 100)),
+        # self.assertRaises(AssertionError, tools.dvs2ind,
+        #                   Events=np.zeros((4, 100)),
         #                   event_directory='/tmp/Events.npy')
         # os.command('rm /tmp/Events.npy')
 
     def test_matrix_permutation(self):
         n_rows = np.size(self.shuffled_matrix, 0)
         n_cols = np.size(self.shuffled_matrix, 1)
-        tmp_matrix = copy.deepcopy(self.shuffled_matrix)
+        tmp_matrix = copy.deepcopy(self.shuffled_input_matrix)
         sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
                                            matrix=tmp_matrix)
         permutation_expected = [12, 19, 25, 41, 42, 45, 9, 35, 2, 4, 46,

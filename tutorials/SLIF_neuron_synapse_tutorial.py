@@ -83,6 +83,8 @@ test_neurons1.lfsr_max_value = lfsr1['max_value']*ms
 test_neurons1.lfsr_init = lfsr1['init']*ms
 test_neurons1.seed = lfsr1['seed']*ms
 neuron_timedarray = TimedArray(lfsr1['array']*mV, dt=defaultclock.dt)
+test_neurons1.namespace['neuron_timedarray'] = neuron_timedarray 
+test_neurons2.namespace['neuron_timedarray'] = neuron_timedarray 
 #add_lfsr(test_neurons1, seed, defaultclock.dt)
 test_neurons1.Vm = 3*mV
 test_neurons2.lfsr_max_value = lfsr1['max_value']*ms
@@ -103,6 +105,8 @@ test_synapse.lfsr_max_value_syn = lfsr2['max_value']*ms
 test_synapse.lfsr_init_syn = lfsr2['init']*ms
 test_synapse.seed_syn = lfsr2['seed']*ms
 syn_timedarray = TimedArray(lfsr1['array']*mV, dt=defaultclock.dt)
+input_synapse.namespace['syn_timedarray'] = syn_timedarray 
+test_synapse.namespace['syn_timedarray'] = syn_timedarray 
 
 # Example of how to set a single parameter
 # Fast neuron to allow more spikes
@@ -141,10 +145,10 @@ if 'Imem' in neuron_model().keywords['model']:
         "Iin", "Imem", "Iahp"], record=[0, 1], name='statemon_test_neurons1')
 elif 'Vm' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
-                                          variables=['Vm', 'decay_probability'],
+                                          variables=['Vm'],
                                           record=True, name='statemon_test_neurons2')
     statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
-        "Iin", "Vm", 'decay_probability'], record=True, name='statemon_test_neurons1')
+        "Iin", "Vm"], record=True, name='statemon_test_neurons1')
 
 
 Net.add(input_spikegenerator, test_neurons1, test_neurons2,
@@ -281,20 +285,19 @@ Lineplot(DataModel_to_x_and_y_attr=MyData_output,
          show_immediately=False)
 
 app.exec()
-from bokeh.plotting import figure, show
-from bokeh.layouts import gridplot
-p1 = figure(y_range=[-.5, .5], x_axis_label='Time (ms)',
-        y_axis_label='Neuron ID', width=650, height=300, x_range=[-5,100])
-p1.circle(np.array(spikemon_input.t/ms), np.array(spikemon_input.i), line_color='black')
-p2 = figure(x_axis_label='Time (ms)',
-        y_axis_label='EPCS (mA)', width=650, height=300, x_range=p1.x_range)
-p2.line(np.array(statemon_input_synapse.t/ms), np.array(statemon_input_synapse[0].I_syn/mA), line_color='black', line_width=2)
-p3 = figure(x_axis_label='Time (ms)',
-        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
-p3.line(np.array(statemon_test_neurons1.t/ms), np.array(statemon_test_neurons1[0].Vm/mV), line_color='black', line_width=2)
-p4 = figure(x_axis_label='Time (ms)',
-        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
-p4.line(np.array(statemon_test_neurons2.t/ms), np.array(statemon_test_neurons2[0].Vm/mV), line_color='black', line_width=2)
-pf = gridplot([[p1, p2], [p3, p4]])
-show(pf)
-
+#from bokeh.plotting import figure, show
+#from bokeh.layouts import gridplot
+#p1 = figure(y_range=[-.5, .5], x_axis_label='Time (ms)',
+#        y_axis_label='Neuron ID', width=650, height=300, x_range=[-5,100])
+#p1.circle(np.array(spikemon_input.t/ms), np.array(spikemon_input.i), line_color='black')
+#p2 = figure(x_axis_label='Time (ms)',
+#        y_axis_label='EPCS (mA)', width=650, height=300, x_range=p1.x_range)
+#p2.line(np.array(statemon_input_synapse.t/ms), np.array(statemon_input_synapse[0].I_syn/mA), line_color='black', line_width=2)
+#p3 = figure(x_axis_label='Time (ms)',
+#        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
+#p3.line(np.array(statemon_test_neurons1.t/ms), np.array(statemon_test_neurons1[0].Vm/mV), line_color='black', line_width=2)
+#p4 = figure(x_axis_label='Time (ms)',
+#        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
+#p4.line(np.array(statemon_test_neurons2.t/ms), np.array(statemon_test_neurons2[0].Vm/mV), line_color='black', line_width=2)
+#pf = gridplot([[p1, p2], [p3, p4]])
+#show(pf)

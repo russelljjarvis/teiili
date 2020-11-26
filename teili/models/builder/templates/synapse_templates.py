@@ -195,7 +195,6 @@ quantized_stochastic_decay = {
         lfsr_max_value_syn : second
         seed_syn : second
         lfsr_init_syn : second
-        decay_probability_syn : 1
         gain_syn              : amp
         tau_syn               : second (constant)
         lfsr_num_bits_syn : 1 # Number of bits in the LFSR used

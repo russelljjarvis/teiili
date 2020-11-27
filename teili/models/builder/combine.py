@@ -184,6 +184,10 @@ def var_replacer(first_eq, second_eq, params):
 
     for k, line in enumerate(second_eq.splitlines()):
         if '%' in line:  # if the replace character '%' is found, extract the variable
+            # Only make changes when '%' is in the beginning
+            str_before_char = line.split('%', 1)[0].strip()
+            if str_before_char:
+                continue
             var = line.split('%', 1)[1].split()[0]
             line = line.replace("%", "")
             if '/' in var:

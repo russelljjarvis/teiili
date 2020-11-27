@@ -11,6 +11,7 @@ before_script:
   # general
   - apt-get update
   - apt-get install -y software-properties-common wget
+  - apt-get install -y git
 
   - export DEBIAN_FRONTEND=noninteractive
   - apt-get install -y tzdata
@@ -31,9 +32,12 @@ before_script:
   - source activate test_environment
   - pip install --upgrade pip
   - pip install coverage
-  - mkdir -p /builds/ncs/teili/
-  - cd /builds/ncs/teili/
-  - pip install . 
+  - mkdir -p /builds/ncs/
+  - cd /builds/ncs/
+  - git clone https://gitlab.com/neuroinf/teili.git
+  - cd teili/
+  - git checkout dev
+  - pip install .
 
 stages:
   - test
@@ -47,7 +51,6 @@ unit-tests:
     - cd ~/teiliApps/
     - python -m unittest discover unit_tests/
   only:
-    - master
     - dev
     - dev-ci
 
@@ -79,3 +82,4 @@ after_script:
   - rm -r /opt/miniconda3/
   - rm /tmp/miniconda.sh
   - rm -rf ~/teiliApps/
+  - rm -rf /builds/ncs/

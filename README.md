@@ -5,6 +5,8 @@
     <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/build.svg" /></a>
  <a href="https://gitlab.com/neuroinf/teili/commits/dev" alt="coverage report">
     <img src="https://gitlab.com/neuroinf/teili/badges/dev/coverage.svg" /></a>
+ <a href="https://gitlab.com/neuroinf/teili/-/commits/master" alt="pipeline">
+    <img src="https://gitlab.com/neuroinf/teili/badges/master/pipeline.svg" /></a>
 </p>
 
 # teili

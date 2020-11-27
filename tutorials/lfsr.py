@@ -1,8 +1,12 @@
 import numpy as np
 
-def create_lfsr(num_bits):
-    lfsr_num_bits = np.unique(num_bits)
-    lfsr_len = [int(2**n - 1) for n in lfsr_num_bits]
+def create_lfsr(neuron_groups, synapse_groups):
+    lfsr_lengths = []
+    import pdb;pdb.set_trace()
+    for g in (neuron_groups+synapse_groups):
+        lfsr_lengths.extend(list(g.lfsr_num_bits))
+    lfsr_num_bits = np.unique(lfsr_lengths)
+    lfsr_max = [int(2**n - 1) for n in lfsr_num_bits]
 
     mask = {3: 0b1011, 5: 0b100101, 6:0b1000011, 9: 0b1000010001}
 
@@ -21,7 +25,7 @@ def create_lfsr(num_bits):
         # Create LFSR values
         lfsr_val = 1
         lfsr['array'].append(lfsr_val)
-        for _ in range(1, lfsr_len[i]):
+        for _ in range(1, lfsr_max[i]):
             lfsr_val = lfsr_val << 1
             overflow = lfsr_val >> int(n_bits)
             if overflow:
@@ -29,8 +33,10 @@ def create_lfsr(num_bits):
             lfsr['array'].append(lfsr_val)
 
     # Creates values for each element
-    lfsr['seed'] = [np.random.randint(2**x-1) for x in num_bits]
-    lfsr['max_value'] = [2**x-1 for x in num_bits]
-    lfsr['init'] = [init_map[x] for x in num_bits]
+    # TODO assign values for each group
+    # TODO what about when there are synapses with STDP or others?
+    lfsr['seed'] = [np.random.randint(2**x-1) for x in lfsr_lengths]
+    lfsr['max_value'] = [2**x-1 for x in lfsr_lengths]
+    lfsr['init'] = [init_map[x] for x in lfsr_lengths]
 
     return lfsr

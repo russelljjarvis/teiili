@@ -82,7 +82,7 @@ lfsr1 = create_lfsr(test_neurons1.lfsr_num_bits)
 test_neurons1.lfsr_max_value = lfsr1['max_value']*ms
 test_neurons1.lfsr_init = lfsr1['init']*ms
 test_neurons1.seed = lfsr1['seed']*ms
-neuron_timedarray = TimedArray(lfsr1['array']*mV, dt=defaultclock.dt)
+neuron_timedarray = TimedArray(lfsr1['array'], dt=defaultclock.dt)
 test_neurons1.namespace['neuron_timedarray'] = neuron_timedarray 
 test_neurons2.namespace['neuron_timedarray'] = neuron_timedarray 
 #add_lfsr(test_neurons1, seed, defaultclock.dt)
@@ -104,7 +104,7 @@ lfsr2 = create_lfsr(test_synapse.lfsr_num_bits_syn)
 test_synapse.lfsr_max_value_syn = lfsr2['max_value']*ms
 test_synapse.lfsr_init_syn = lfsr2['init']*ms
 test_synapse.seed_syn = lfsr2['seed']*ms
-syn_timedarray = TimedArray(lfsr1['array']*mV, dt=defaultclock.dt)
+syn_timedarray = TimedArray(lfsr1['array'], dt=defaultclock.dt)
 input_synapse.namespace['syn_timedarray'] = syn_timedarray 
 test_synapse.namespace['syn_timedarray'] = syn_timedarray 
 

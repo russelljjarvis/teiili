@@ -58,7 +58,7 @@ unit-tests:
 coverage-tests:
   stage: coverage
   script:
-    - cd /builds/ncs/
+    - cd /builds/ncs/teili/
     - coverage run --source=./teili/ -m unittest discover tests/
     # For coverage to report properly we need to delete  all .pyc files
     - find . -name \*.pyc -delete  

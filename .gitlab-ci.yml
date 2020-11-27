@@ -51,6 +51,7 @@ unit-tests:
     - cd ~/teiliApps/
     - python -m unittest discover unit_tests/
   only:
+    - master
     - dev
     - dev-ci
 

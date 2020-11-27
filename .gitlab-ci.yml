@@ -31,7 +31,7 @@ before_script:
   - source ~/.bashrc
   - source activate test_environment
   - pip install --upgrade pip
-  - pip install coverage
+  - pip install coverage coverage-badge
   - mkdir -p /builds/ncs/
   - cd /builds/ncs/
   - git clone https://gitlab.com/neuroinf/teili.git
@@ -58,11 +58,14 @@ unit-tests:
 coverage-tests:
   stage: coverage
   script:
-    - cd /builds/ncs/teili/
+    - cd /builds/ncs/
     - coverage run --source=./teili/ -m unittest discover tests/
     # For coverage to report properly we need to delete  all .pyc files
     - find . -name \*.pyc -delete  
     - coverage report
+    - coverage xml
+    - coverage-badge
+  coverage: '/TOTAL.+ ([0-9]{1,3}%)/'
   only:
     - master
     - dev

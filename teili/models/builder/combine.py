@@ -6,7 +6,8 @@ Combine_neu_dict is used for combining neuron models
 Combine_syn_dict is used for combining neuron models
 
 Both functions use the var_replacer when the special overwrite character '%'
-is found in the equations
+is found in the equations. If '%' is found in the middle of the equation,
+like a modulo operation, substitutions are not performed.
 
 Example:
     To use combine_neu_dict:
@@ -184,10 +185,12 @@ def var_replacer(first_eq, second_eq, params):
 
     for k, line in enumerate(second_eq.splitlines()):
         if '%' in line:  # if the replace character '%' is found, extract the variable
-            # Only make changes when '%' is in the beginning
+            # Checks if string before '%' is empty or not. If it is, '%' is
+            # the first non-whitespace character and replacement can proceed
             str_before_char = line.split('%', 1)[0].strip()
             if str_before_char:
                 continue
+
             var = line.split('%', 1)[1].split()[0]
             line = line.replace("%", "")
             if '/' in var:

@@ -45,6 +45,7 @@ class SortMatrix():
             a recurrent matrix or not.
         similarity_metric (str, optional): Indicates metric for calculating
             similarity.
+        max_val (float): Maximum value of the provided matrix
     """
 
     def __init__(self, nrows, ncols=None, filename=None, matrix=None,
@@ -95,6 +96,7 @@ class SortMatrix():
                 for i in range(self.nrows):
                     filled_matrix[i, target_ids[i][:]] = matrix[i][:]
                 self.matrix = filled_matrix
+        self.max_val = np.max(self.matrix)
 
         # Compute similarity along specified axis
         self.similarity_matrix = self.get_similarity_matrix(axis=axis)
@@ -134,10 +136,9 @@ class SortMatrix():
         if simi_metric == 'euclidean':
             dist = np.linalg.norm(x - y)
         elif simi_metric == 'jaccard':
-            max_x, max_y = max(x), max(y)
             thres = .8
-            x_elements = np.where(x > max_x*thres)[0]
-            y_elements = np.where(y > max_y*thres)[0]
+            x_elements = np.where(x > self.max_val*thres)[0]
+            y_elements = np.where(y > self.max_val*thres)[0]
             intersection = len(list(set(x_elements).intersection(y_elements)))
             union = (len(x_elements) + len(y_elements)) - intersection
             dist = (1 - float(intersection) / union)

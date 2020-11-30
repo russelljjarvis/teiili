@@ -14,11 +14,7 @@ import copy
 from teili.tools import indexing, converter, misc, synaptic_kernel, sorting
 
 
-class TestTools(unittest.TestCase):
-
-    # def test_printStates(self):
-    #     self.assertRaises(UserWarning, misc.printStates, 5)
-
+class TestToolsMatrix(unittest.TestCase):
     def setUp(self):
         # Definitions
         n_rows = 50
@@ -86,6 +82,52 @@ class TestTools(unittest.TestCase):
         for i_source, i_target in enumerate(self.conn_matrix):
             rec_matrix[i_source] = self.shuffled_matrix[i_source, i_target]
         self.rec_matrix = np.array(rec_matrix, dtype=object)
+
+    def test_matrix_permutation(self):
+        n_rows = np.size(self.shuffled_matrix, 0)
+        n_cols = np.size(self.shuffled_matrix, 1)
+        tmp_matrix = copy.deepcopy(self.shuffled_input_matrix)
+        sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
+                                           matrix=tmp_matrix)
+        permutation_expected = [12, 19, 25, 41, 42, 45, 9, 35, 2, 4, 46,
+                                40, 14, 22, 38, 47, 31, 27, 3, 10, 49, 21,
+                                34, 36, 43, 28, 44, 6, 33, 24, 39, 17, 18,
+                                32, 1, 0, 5, 23, 26, 13, 48, 15, 11, 37, 16,
+                                8, 7, 20, 30, 29]
+        self.assertEqual(sorted_matrix.permutation, permutation_expected)
+
+    def test_rec_matrix_permutation(self):
+        n_rows = np.size(self.shuffled_matrix, 0)
+        n_cols = np.size(self.shuffled_matrix, 1)
+        tmp_matrix = copy.deepcopy(self.shuffled_matrix)
+        sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
+                                           matrix=tmp_matrix, rec_matrix=True)
+        permutation_expected = [12, 19, 25, 41, 42, 45, 9, 35, 2, 4, 46,
+                                40, 14, 22, 38, 47, 31, 27, 3, 10, 49, 21,
+                                34, 36, 43, 28, 44, 6, 33, 24, 39, 17, 18,
+                                32, 1, 0, 5, 23, 26, 13, 48, 15, 11, 37, 16,
+                                8, 7, 20, 30, 29]
+        self.assertEqual(sorted_matrix.permutation, permutation_expected)
+
+    def test_sparse_matrix_permutation(self):
+        n_rows = np.size(self.shuffled_matrix, 0)
+        n_cols = np.size(self.shuffled_matrix, 1)
+        tmp_matrix = copy.deepcopy(self.rec_matrix)
+        sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
+                                           matrix=tmp_matrix, rec_matrix=True,
+                                           target_ids=self.conn_matrix)
+        permutation_expected = [28, 34, 21, 36, 43, 44, 33, 6, 39, 24,
+                                17, 18, 32, 26, 5, 1, 23, 0, 31, 49, 10,
+                                3, 27, 38, 47, 22, 14, 29, 12, 19, 41, 25,
+                                42, 45, 35, 9, 2, 40, 46, 4, 7, 8, 16, 37,
+                                30, 20, 11, 15, 13, 48]
+        self.assertEqual(sorted_matrix.permutation, permutation_expected)
+
+
+class TestTools(unittest.TestCase):
+
+    # def test_printStates(self):
+    #     self.assertRaises(UserWarning, misc.printStates, 5)
 
     def test_return_value_if(self):
         testVal = 3.7
@@ -184,46 +226,6 @@ class TestTools(unittest.TestCase):
         #                   Events=np.zeros((4, 100)),
         #                   event_directory='/tmp/Events.npy')
         # os.command('rm /tmp/Events.npy')
-
-    def test_matrix_permutation(self):
-        n_rows = np.size(self.shuffled_matrix, 0)
-        n_cols = np.size(self.shuffled_matrix, 1)
-        tmp_matrix = copy.deepcopy(self.shuffled_input_matrix)
-        sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-                                           matrix=tmp_matrix)
-        permutation_expected = [12, 19, 25, 41, 42, 45, 9, 35, 2, 4, 46,
-                                40, 14, 22, 38, 47, 31, 27, 3, 10, 49, 21,
-                                34, 36, 43, 28, 44, 6, 33, 24, 39, 17, 18,
-                                32, 1, 0, 5, 23, 26, 13, 48, 15, 11, 37, 16,
-                                8, 7, 20, 30, 29]
-        self.assertEqual(sorted_matrix.permutation, permutation_expected)
-
-    def test_rec_matrix_permutation(self):
-        n_rows = np.size(self.shuffled_matrix, 0)
-        n_cols = np.size(self.shuffled_matrix, 1)
-        tmp_matrix = copy.deepcopy(self.shuffled_matrix)
-        sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-                                           matrix=tmp_matrix, rec_matrix=True)
-        permutation_expected = [12, 19, 25, 41, 42, 45, 9, 35, 2, 4, 46,
-                                40, 14, 22, 38, 47, 31, 27, 3, 10, 49, 21,
-                                34, 36, 43, 28, 44, 6, 33, 24, 39, 17, 18,
-                                32, 1, 0, 5, 23, 26, 13, 48, 15, 11, 37, 16,
-                                8, 7, 20, 30, 29]
-        self.assertEqual(sorted_matrix.permutation, permutation_expected)
-
-    def test_sparse_matrix_permutation(self):
-        n_rows = np.size(self.shuffled_matrix, 0)
-        n_cols = np.size(self.shuffled_matrix, 1)
-        tmp_matrix = copy.deepcopy(self.rec_matrix)
-        sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
-                                           matrix=tmp_matrix, rec_matrix=True,
-                                           target_ids=self.conn_matrix)
-        permutation_expected = [28, 34, 21, 36, 43, 44, 33, 6, 39, 24,
-                                17, 18, 32, 26, 5, 1, 23, 0, 31, 49, 10,
-                                3, 27, 38, 47, 22, 14, 29, 12, 19, 41, 25,
-                                42, 45, 35, 9, 2, 40, 46, 4, 7, 8, 16, 37,
-                                30, 20, 11, 15, 13, 48]
-        self.assertEqual(sorted_matrix.permutation, permutation_expected)
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ def get_parameters(n_elements, lfsr, prev_index):
     max_value = lfsr['max_value'][prev_index:prev_index+n_elements]*ms
     init = lfsr['init'][prev_index:prev_index+n_elements]*ms
     seed = lfsr['seed'][prev_index:prev_index+n_elements]*ms
-    prev_index = n_elements
+    prev_index += n_elements
 
     return max_value, init, seed, prev_index
 
@@ -70,24 +70,28 @@ def create_lfsr(neuron_groups, synapse_groups, time_step):
             # refrac_tau is usually much smaller than tau, so only latter
             # is tested
             if np.any(g.tau >= g.lfsr_max_value):
-                raise ValueError('Time constant too high for LFSR length.')
+                raise ValueError(f'Time constant of group {g} too high for\
+                                   LFSR length.')
         elif isinstance(g, Connections):
             g.lfsr_max_value_syn, g.lfsr_init_syn, g.seed_syn, prev_index = (
                     get_parameters(len(g.lfsr_num_bits_syn), lfsr, prev_index)
             )
             if np.any(g.tau_syn >= g.lfsr_max_value_syn):
-                raise ValueError('Time constant too high for LFSR length.')
+                raise ValueError(f'Time constant of group {g} too high for\
+                                   LFSR length.')
             if hasattr(g, 'decay_probability_Apre'):
                 g.lfsr_max_value_Apre, g.lfsr_init_Apre, g.seed_Apre, prev_index = (
                         get_parameters(len(g.lfsr_num_bits_Apre), lfsr, prev_index)
                 )
                 if np.any(g.taupre >= g.lfsr_max_value_Apre):
-                    raise ValueError('Time constant too high for LFSR length.')
+                    raise ValueError(f'Time constant of group {g} too high\
+                                       for LFSR length.')
                 g.lfsr_max_value_Apost, g.lfsr_init_Apost, g.seed_Apost, prev_index = (
                         get_parameters(len(g.lfsr_num_bits_Apost), lfsr, prev_index)
                 )
                 if np.any(g.taupost >= g.lfsr_max_value_Apost):
-                    raise ValueError('Time constant too high for LFSR length.')
+                    raise ValueError(f'Time constant of group {g} too high\
+                                       for LFSR length.')
 
         g.namespace['lfsr_timedarray'] = lfsr_timedarray
 

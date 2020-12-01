@@ -16,6 +16,7 @@ from teili.models.synapse_models import StochasticSyn_decay_stoch_stdp as stdp_s
 from teili.models.synapse_models import StochasticSyn_decay as static_synapse_model
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.add_run_reg import add_lfsr
+from lfsr import create_lfsr
 from teili.tools.group_tools import add_group_activity_proxy
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.tools.converter import delete_doublets
@@ -179,23 +180,38 @@ exc_inh_conn.delay = np.random.randint(0, 3, size=np.shape(exc_inh_conn.j)[0]) *
 inh_exc_conn.connect(p=ie_p)
 
 # Setting parameters
+# Time constants
 exc_exc_conn.tau_syn = 30*ms
+exc_exc_conn.taupre = 20*ms
+exc_exc_conn.taupost = 30*ms
 exc_inh_conn.tau_syn = 30*ms
 inh_exc_conn.tau_syn = 15*ms
 feedforward_exc.tau_syn = 30*ms
+feedforward_exc.taupre = 5*ms
+feedforward_exc.taupost = 10*ms
 feedforward_inh.tau_syn = 10*ms
+
+# LFSR lengths
+exc_cells.lfsr_num_bits = 5
+inh_cells.lfsr_num_bits = 5
+exc_exc_conn.lfsr_num_bits_syn = 5
+exc_exc_conn.lfsr_num_bits_Apre = 5
+exc_exc_conn.lfsr_num_bits_Apost = 5
+exc_inh_conn.lfsr_num_bits_syn = 5
+inh_exc_conn.lfsr_num_bits_syn = 5
+feedforward_exc.lfsr_num_bits_syn = 5
+feedforward_exc.lfsr_num_bits_Apre = 3
+feedforward_exc.lfsr_num_bits_Apost = 4
+feedforward_inh.lfsr_num_bits_syn = 4
 
 seed = 12
 exc_cells.Vm = 3*mV
-exc_cells.lfsr_num_bits = 9
 inh_cells.Vm = 3*mV
-inh_cells.lfsr_num_bits = 9
 #feedforward_exc.A_gain = learn_factor
 if i_plast:
     inh_exc_conn.weight = 1
     inh_exc_conn.variance_th = 0.80
 mean_ie_w = 13#FIXME 7
-inh_exc_conn.lfsr_num_bits_syn = 9
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
     sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
@@ -207,10 +223,6 @@ for i in range(num_inh):
 if not simple:
     exc_exc_conn.weight = 1
 mean_ee_w = 2
-exc_exc_conn.lfsr_num_bits_syn = 9
-exc_inh_conn.lfsr_num_bits_syn = 9
-exc_exc_conn.taupre = 20*ms
-exc_exc_conn.taupost = 30*ms
 for i in range(num_exc):
     if not simple:
         weight_length = np.shape(exc_exc_conn.w_plast[i,:])
@@ -220,12 +232,8 @@ for i in range(num_exc):
     sampled_weights = np.clip(sampled_weights, 0, 15)
     exc_inh_conn.weight[i,:] = sampled_weights
 feedforward_exc.weight = 1
-feedforward_exc.taupre = 5*ms
-feedforward_exc.taupost = 10*ms
 mean_ffe_w = 4
 mean_ffi_w = 1
-feedforward_exc.lfsr_num_bits_syn = 9
-feedforward_inh.lfsr_num_bits_syn = 9
 for i in range(num_channels):
     weight_length = np.shape(feedforward_exc.w_plast[i,:])
     feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=weight_length).astype(int)
@@ -235,13 +243,17 @@ for i in range(num_channels):
 #x = np.linspace(gamma.ppf(0.01, a, loc=1),gamma.ppf(0.99, a, loc=1), 100)
 #plt.plot(x, gamma.pdf(x, a,loc=1),'r-', lw=5, alpha=0.6, label='gamma pdf')
 #plt.show()
-add_lfsr(exc_cells, seed, defaultclock.dt)
-add_lfsr(inh_cells, seed, defaultclock.dt)
-add_lfsr(exc_exc_conn, seed, defaultclock.dt)
-add_lfsr(exc_inh_conn, seed, defaultclock.dt)
-add_lfsr(inh_exc_conn, seed, defaultclock.dt)
-add_lfsr(feedforward_exc, seed, defaultclock.dt)
-add_lfsr(feedforward_inh, seed, defaultclock.dt)
+ta = create_lfsr([exc_cells, inh_cells],
+                 [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
+                     feedforward_inh],
+                 defaultclock.dt)
+#add_lfsr(exc_cells, seed, defaultclock.dt)
+#add_lfsr(inh_cells, seed, defaultclock.dt)
+#add_lfsr(exc_exc_conn, seed, defaultclock.dt)
+#add_lfsr(exc_inh_conn, seed, defaultclock.dt)
+#add_lfsr(inh_exc_conn, seed, defaultclock.dt)
+#add_lfsr(feedforward_exc, seed, defaultclock.dt)
+#add_lfsr(feedforward_inh, seed, defaultclock.dt)
 
 if i_plast:
     # Add proxy activity group

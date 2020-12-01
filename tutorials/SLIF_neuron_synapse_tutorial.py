@@ -33,27 +33,27 @@ prefs.codegen.target = "numpy"
 input_timestamps = np.asarray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]) * ms
 input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
-                                           times=input_timestamps, 
+                                           times=input_timestamps,
                                            name='input_spikegenerator')
 
 
 Net = TeiliNetwork()
 
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
-test_neurons1 = Neurons(N=2, 
-                        equation_builder=neuron_model(num_inputs=2), 
+test_neurons1 = Neurons(N=2,
+                        equation_builder=neuron_model(num_inputs=2),
                         name="test_neurons1",
                         method=stochastic_decay,
                         verbose=True)
 
-test_neurons2 = Neurons(N=2, 
-                        equation_builder=neuron_model(num_inputs=2), 
+test_neurons2 = Neurons(N=2,
+                        equation_builder=neuron_model(num_inputs=2),
                         name="test_neurons2",
                         method=stochastic_decay,
                         verbose=True)
 
 input_synapse = Connections(input_spikegenerator, test_neurons1,
-                            equation_builder=synapse_model(), 
+                            equation_builder=synapse_model(),
                             name="input_synapse",
                             method=stochastic_decay,
                             verbose=True)
@@ -74,54 +74,28 @@ convinience to switch between voltage- or current-based models.
 Normally, you have one or the other in yur simulation, thus
 you will not need the if condition.
 '''
-num_bits = 6
+num_bits = 4
 seed = 12
-test_neurons1.lfsr_num_bits = num_bits
-test_neurons2.lfsr_num_bits = num_bits
-lfsr1 = create_lfsr([test_neurons1, test_neurons2], [input_synapse, test_synapse])
-test_neurons1.lfsr_max_value = lfsr1['max_value']*ms
-test_neurons1.lfsr_init = lfsr1['init']*ms
-test_neurons1.seed = lfsr1['seed']*ms
-neuron_timedarray = TimedArray(lfsr1['array'], dt=defaultclock.dt)
-test_neurons1.namespace['neuron_timedarray'] = neuron_timedarray 
-test_neurons2.namespace['neuron_timedarray'] = neuron_timedarray 
-#add_lfsr(test_neurons1, seed, defaultclock.dt)
-test_neurons1.Vm = 3*mV
-test_neurons2.lfsr_max_value = lfsr1['max_value']*ms
-test_neurons2.lfsr_init = lfsr1['init']*ms
-test_neurons2.seed = lfsr1['seed']*ms
-#add_lfsr(test_neurons2, seed, defaultclock.dt)
-test_neurons2.Vm = 3*mV
-
-input_synapse.lfsr_num_bits_syn = num_bits
-test_synapse.lfsr_num_bits_syn = num_bits
-#add_lfsr(input_synapse, seed, defaultclock.dt)
-#add_lfsr(test_synapse, seed, defaultclock.dt)
-input_synapse.lfsr_max_value_syn = lfsr1['max_value']*ms
-input_synapse.lfsr_init_syn = lfsr1['init']*ms
-input_synapse.seed_syn = lfsr1['seed']*ms
-lfsr2 = create_lfsr(test_synapse.lfsr_num_bits_syn)
-test_synapse.lfsr_max_value_syn = lfsr2['max_value']*ms
-test_synapse.lfsr_init_syn = lfsr2['init']*ms
-test_synapse.seed_syn = lfsr2['seed']*ms
-syn_timedarray = TimedArray(lfsr1['array'], dt=defaultclock.dt)
-input_synapse.namespace['syn_timedarray'] = syn_timedarray 
-test_synapse.namespace['syn_timedarray'] = syn_timedarray 
-
 # Example of how to set a single parameter
 # Fast neuron to allow more spikes
 test_neurons1.refrac_tau = 1 * ms
 test_neurons2.refrac_tau = 1 * ms
 test_neurons1.tau = 10 * ms
 test_neurons2.tau = 10 * ms
-
 # long EPSC or big weight to allow summations
 input_synapse.tau_syn = 10*ms
 test_synapse.tau_syn = 10*ms
 input_synapse.weight = 2
 test_synapse.weight = 15
 test_neurons1.Iconst = 13.0 * mA
-
+# Setting lfsr
+test_neurons1.lfsr_num_bits = num_bits
+test_neurons2.lfsr_num_bits = num_bits
+input_synapse.lfsr_num_bits_syn = num_bits
+test_synapse.lfsr_num_bits_syn = num_bits
+ta = create_lfsr([test_neurons1, test_neurons2], [input_synapse, test_synapse], defaultclock.dt)
+test_neurons1.Vm = 3*mV
+test_neurons2.Vm = 3*mV
 
 spikemon_input = SpikeMonitor(input_spikegenerator, name='spikemon_input')
 spikemon_test_neurons1 = SpikeMonitor(

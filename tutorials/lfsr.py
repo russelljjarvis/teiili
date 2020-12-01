@@ -26,6 +26,11 @@ def create_lfsr(neuron_groups, synapse_groups, time_step):
             if hasattr(g, 'decay_probability_Apre'):
                 lfsr_lengths.extend(list(g.lfsr_num_bits_Apre))
                 lfsr_lengths.extend(list(g.lfsr_num_bits_Apost))
+            if hasattr(g, 'counter_Apre'):
+                lfsr_lengths.extend(list(g.lfsr_num_bits_condApre1))
+                lfsr_lengths.extend(list(g.lfsr_num_bits_condApre2))
+                lfsr_lengths.extend(list(g.lfsr_num_bits_condApost1))
+                lfsr_lengths.extend(list(g.lfsr_num_bits_condApost2))
     lfsr_num_bits = np.unique(lfsr_lengths)
     lfsr_max = [int(2**n - 1) for n in lfsr_num_bits]
 
@@ -92,6 +97,19 @@ def create_lfsr(neuron_groups, synapse_groups, time_step):
                 if np.any(g.taupost >= g.lfsr_max_value_Apost):
                     raise ValueError(f'Time constant of group {g} too high\
                                        for LFSR length.')
+            if hasattr(g, 'counter_Apre'):
+                g.lfsr_max_value_condApre1, g.lfsr_init_condApre1, g.seed_condApre1, prev_index = (
+                        get_parameters(len(g.lfsr_num_bits_condApre1), lfsr, prev_index)
+                )
+                g.lfsr_max_value_condApre2, g.lfsr_init_condApre2, g.seed_condApre2, prev_index = (
+                        get_parameters(len(g.lfsr_num_bits_condApre2), lfsr, prev_index)
+                )
+                g.lfsr_max_value_condApost1, g.lfsr_init_condApost1, g.seed_condApost1, prev_index = (
+                        get_parameters(len(g.lfsr_num_bits_condApost1), lfsr, prev_index)
+                )
+                g.lfsr_max_value_condApost2, g.lfsr_init_condApost2, g.seed_condApost2, prev_index = (
+                        get_parameters(len(g.lfsr_num_bits_condApost2), lfsr, prev_index)
+                )
 
         g.namespace['lfsr_timedarray'] = lfsr_timedarray
 

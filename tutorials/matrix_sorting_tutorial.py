@@ -73,14 +73,14 @@ input_matrix_1dim = np.array(input_matrix_1dim, dtype=object)
 # Recurrent matrices
 sorted_matrix1 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
                             matrix=copy.deepcopy(rec_matrix_2dims),
-                            rec_matrix=True, target_ids=conn_matrix)
+                            rec_matrix=True, target_indices=conn_matrix)
 sorted_matrix2 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
                             matrix=copy.deepcopy(shuffled_matrix_2dims),
                             rec_matrix=True)
 # Nonrecurrent matrices
 sorted_matrix3 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
                             matrix=copy.deepcopy(input_matrix_1dim),
-                            target_ids=conn_matrix)
+                            target_indices=conn_matrix)
 sorted_matrix4 = SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
                             matrix=copy.deepcopy(shuffled_matrix_1dim))
 

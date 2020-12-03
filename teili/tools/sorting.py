@@ -49,7 +49,7 @@ class SortMatrix():
     """
 
     def __init__(self, nrows, ncols=None, filename=None, matrix=None,
-                 axis=0, target_ids=None, rec_matrix=False,
+                 axis=0, target_indices=None, rec_matrix=False,
                  similarity_metric='euclidean'):
         """Summary
 
@@ -62,7 +62,7 @@ class SortMatrix():
                 to the class.
             axis (int, optional): Axis along which similarity should be
                 computed.
-            target_ids (list of lists, optional): Must be provided only
+            target_indices (list of lists, optional): Must be provided only
                 when connections between neurons are sparse. Each row
                 contains the postsynaptic targets of a neuron whose index
                 is represented by the number of the row.
@@ -88,13 +88,13 @@ class SortMatrix():
         if matrix is None:
             self.matrix = self.load_matrix()
         elif matrix is not None:
-            if target_ids is None:
+            if target_indices is None:
                 self.matrix = np.reshape(matrix, (self.nrows, self.ncols))
-            elif target_ids is not None:
+            elif target_indices is not None:
                 # Fill un-connected inputs with zero
                 filled_matrix = np.zeros((self.nrows, self.ncols))
                 for i in range(self.nrows):
-                    filled_matrix[i, target_ids[i][:]] = matrix[i][:]
+                    filled_matrix[i, target_indices[i][:]] = matrix[i][:]
                 self.matrix = filled_matrix
         self.max_val = np.max(self.matrix)
 
@@ -121,21 +121,21 @@ class SortMatrix():
         self.matrix = matrix.reshape((self.nrows, self.ncols))
         return self.matrix
 
-    def compute_distance(self, x, y, simi_metric):
+    def compute_distance(self, x, y, similarity_metric):
         """This function returns the distance
         of any to vectors x and y
 
         Args:
             x (ndarray, required): 1d vector.
             y (ndarray, required): 1d vector.
-            simi_metric (str, required): Metric used to measure similarity
+            similarity_metric (str, required): Metric used to measure similarity
 
         Returns:
             ndarray: Element-wise distance of two 1d vectors.
         """
-        if simi_metric == 'euclidean':
+        if similarity_metric == 'euclidean':
             dist = np.linalg.norm(x - y)
-        elif simi_metric == 'jaccard':
+        elif similarity_metric == 'jaccard':
             thres = .8
             x_elements = np.where(x > self.max_val*thres)[0]
             y_elements = np.where(y > self.max_val*thres)[0]

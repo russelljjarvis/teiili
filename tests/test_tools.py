@@ -115,7 +115,7 @@ class TestToolsMatrix(unittest.TestCase):
         tmp_matrix = copy.deepcopy(self.rec_matrix)
         sorted_matrix = sorting.SortMatrix(ncols=n_cols, nrows=n_rows, axis=1,
                                            matrix=tmp_matrix, rec_matrix=True,
-                                           target_ids=self.conn_matrix)
+                                           target_indices=self.conn_matrix)
         permutation_expected = [28, 34, 21, 36, 43, 44, 33, 6, 39, 24,
                                 17, 18, 32, 26, 5, 1, 23, 0, 31, 49, 10,
                                 3, 27, 38, 47, 22, 14, 29, 12, 19, 41, 25,

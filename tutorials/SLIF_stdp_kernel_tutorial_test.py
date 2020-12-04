@@ -1,12 +1,6 @@
 """
-Created on 30.11.2017
-
-@author: Moritz Milde
-Email: mmilde@ini.uzh.ch
-
-This script is adapted from https://code.ini.uzh.ch/alpren/gridcells/blob/master/STDP_IE_HaasKernel.py
-
-This script contains a simple event based way to simulate complex STDP kernels
+This script contains a simple event based way to simulate a stochastic
+STDP kernel.
 """
 
 from brian2 import ms, prefs, StateMonitor, SpikeMonitor, run, defaultclock,\
@@ -28,9 +22,9 @@ from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 1 * ms
-visualization_backend = 'pyqtgraph'  # Or set it to 'matplotlib' to use matplotlib.pyplot to plot
+visualization_backend = 'pyqtgraph'
 
-path = os.path.expanduser("/home/pablo/git/teili")
+path = os.path.expanduser("/home/pablo/git/teili_gl/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 StochasticSyn_decay_stoch_stdp = SynapseEquationBuilder.import_eq(
         model_path + 'StochStdpNew.py')
@@ -42,15 +36,12 @@ font = {'family': 'serif',
         }
 
 
-wait_time = 0*ms#TODO
-trials = 100
+trials = 30
 trial_duration = 50
-tmax = trial_duration*trials
+wait_time = 100  # set delay between trials to avoid interferences
+tmax = trial_duration*trials + wait_time*trials
 N = 50
 
-# Presynaptic neurons G spike at times from 0 to tmax
-# Postsynaptic neurons G spike at times from tmax to 0
-# So difference in spike times will vary from -tmax to +tmax
 pre_neurons = Neurons(N, model='v = ta_pre(t, i) : 1',
                       threshold='v == 1', refractory='1*ms')
 pre_neurons.namespace.update({'tmax': tmax})
@@ -60,46 +51,54 @@ post_neurons = Neurons(N, model='''v = ta_post(t, i) : 1
                        threshold='v == 1', refractory='1*ms')
 post_neurons.namespace.update({'tmax': tmax})
 
+# Define matched spike times between pre and post neurons
 post_tspikes = np.arange(1, N*trials + 1).reshape((trials, N))
 pre_tspikes = post_tspikes[:, np.array(range(N-1, -1, -1))]
+
+# Create inputs arrays, which will be 1 when neurons are supposed to spike
 pre_input = np.zeros((tmax, N))
 post_input = np.zeros((tmax, N))
 for ind, spks in enumerate(pre_tspikes.T):
-    pre_input[spks.astype(int)-1, ind] = 1
+    for j, spk in enumerate(spks.astype(int)):
+        pre_input[spk-1 + j*wait_time, ind] = 1
 for ind, spks in enumerate(post_tspikes.T):
-    post_input[spks.astype(int)-1, ind] = 1
+    for j, spk in enumerate(spks.astype(int)):
+        post_input[spk-1 + j*wait_time, ind] = 1
+
 ta_pre = TimedArray(pre_input, dt=defaultclock.dt)
 ta_post = TimedArray(post_input, dt=defaultclock.dt)
-pre_neurons.namespace.update({'ta_pre':ta_pre})
-post_neurons.namespace.update({'ta_post':ta_post})
+pre_neurons.namespace.update({'ta_pre': ta_pre})
+post_neurons.namespace.update({'ta_post': ta_post})
 
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 stdp_synapse = Connections(pre_neurons, post_neurons,
-                method=stochastic_decay,
-                equation_builder=StochasticSyn_decay_stoch_stdp(),
-                name='stdp_synapse')
-
+                           method=stochastic_decay,
+                           equation_builder=StochasticSyn_decay_stoch_stdp(),
+                           name='stdp_synapse')
 stdp_synapse.connect('i==j')
 
 # Setting parameters
 stdp_synapse.w_plast = 7
-stdp_synapse.taupre = 10*ms
-stdp_synapse.taupost = 10*ms
-stdp_synapse.stdp_thres = 2
+stdp_synapse.taupre = 20*ms
+stdp_synapse.taupost = 20*ms
+stdp_synapse.stdp_thres = 1
+stdp_synapse.lfsr_num_bits_Apre = 5
+stdp_synapse.lfsr_num_bits_Apost = 5
 ta = create_lfsr([], [stdp_synapse], defaultclock.dt)
-
 
 spikemon_pre_neurons = SpikeMonitor(pre_neurons, record=True)
 spikemon_post_neurons = SpikeMonitor(post_neurons, record=True)
-statemon_post_synapse = StateMonitor(stdp_synapse, variables=[
-    'Apre', 'Apost'],
-    record=(48,47,46), name='statemon_post_synapse')
-statemon_pre_neurons = StateMonitor(pre_neurons, variables=['v'],
-    record=True, name='statemon_pre_neurons')
-statemon_post_neurons = StateMonitor(post_neurons, variables=['v'],
-    record=True, name='statemon_post_neurons')
+statemon_synapse = StateMonitor(stdp_synapse,
+                                variables=['Apre', 'Apost', 'w_plast',
+                                           'cond_Apost1', 'cond_Apost2',
+                                           'Apre1_lfsr', 'Apre2_lfsr',
+                                           'Apost1_lfsr', 'Apost2_lfsr',
+                                           'decay_probability_Apre',
+                                           'decay_probability_Apost'],
+                                record=True,
+                                name='statemon_synapse')
 
-run(tmax*ms + 1*ms)
+run(tmax*ms)
 
 
 if visualization_backend == 'pyqtgraph':
@@ -109,24 +108,26 @@ if visualization_backend == 'pyqtgraph':
     else:
         print('QApplication instance already exists: %s' % str(app))
 else:
-    app=None
+    app = None
 
-# TODO get w_plast of a given neurons (which corresponds to a single delta t), take average and plot
-#win_1 = pg.GraphicsWindow(title="1")
-#datamodel = StateVariablesModel(state_variable_names=['w_plast'],
-#                                state_variables=[stdp_synapse.w_plast],
-#                                state_variables_times=[np.asarray((post_neurons.tspike - pre_neurons.tspike) / ms)])
-#Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
-#        title="Spike-time dependent plasticity",
-#        xlabel='\u0394 t',  # delta t
-#        ylabel='w',
-#        backend=visualization_backend,
-#        QtApp=app,
-#        mainfig=win_1,
-#        show_immediately=False)
-#
+# TODO get w_plast of a given neurons (which corresponds to a single delta t), take average (and plot?)
+pairs_timing = (spikemon_post_neurons.t[:trial_duration]
+                - spikemon_post_neurons.t[:trial_duration][::-1])/ms
+win_1 = pg.GraphicsWindow(title="1")
+datamodel = StateVariablesModel(state_variable_names=['w_plast'],
+                                state_variables=[stdp_synapse.w_plast],
+                                state_variables_times=[pairs_timing])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
+        title="Spike-time dependent plasticity",
+        xlabel='\u0394 t (ms)',  # delta t
+        ylabel='w',
+        backend=visualization_backend,
+        QtApp=app,
+        mainfig=win_1,
+        show_immediately=False)
+
 win_2 = pg.GraphicsWindow(title="2")
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse[46], ('t', 'Apre')), (statemon_post_synapse[46], ('t', 'Apost'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[0], ('t', 'Apre')), (statemon_synapse[0], ('t', 'Apost'))],
         title="Apre",
         xlabel='time',  # delta t
         ylabel='Apre',
@@ -136,7 +137,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse[46], ('t', 'Apre')), 
         show_immediately=False)
 
 win_3 = pg.GraphicsWindow(title="3")
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse[47], ('t', 'Apre')), (statemon_post_synapse[47], ('t', 'Apost'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[49], ('t', 'Apre')), (statemon_synapse[49], ('t', 'Apost'))],
         title="Apost",
         xlabel='time',  # delta t
         ylabel='Apost',
@@ -146,7 +147,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse[47], ('t', 'Apre')), 
         show_immediately=False)
 
 win_4 = pg.GraphicsWindow(title="4")
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_post_synapse[48], ('t', 'Apre')), (statemon_post_synapse[48], ('t', 'Apost'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[25], ('t', 'Apre')), (statemon_synapse[25], ('t', 'Apost'))],
         title="Apost",
         xlabel='time',  # delta t
         ylabel='Apost',
@@ -165,3 +166,9 @@ Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
             QtApp=app,
             mainfig=win_5,
             show_immediately=True)
+
+from brian2 import *
+import sys
+np.set_printoptions(threshold=sys.maxsize)
+plot(range(tmax), statemon_synapse.w_plast[25])
+show()

@@ -41,6 +41,10 @@ StochStdpNew = {'model':
 
         counter_Apre : second
         counter_Apost : second
+        Apre1_lfsr : 1
+        Apre2_lfsr : 1
+        Apost1_lfsr : 1
+        Apost2_lfsr : 1
         cond_Apre1 : boolean
         cond_Apost1 : boolean
         cond_Apre2 : boolean
@@ -70,8 +74,10 @@ StochStdpNew = {'model':
         
         Apre += dApre
         counter_Apre += 1*ms
-        cond_Apre1 = lfsr_timedarray( ((seed_condApre1+counter_Apre) % lfsr_max_value_condApre1) + lfsr_init_condApre1 ) < Apost
-        cond_Apre2 = lfsr_timedarray( ((seed_condApre2+counter_Apre) % lfsr_max_value_condApre2) + lfsr_init_condApre2 ) < stdp_thres
+        Apre1_lfsr = lfsr_timedarray( ((seed_condApre1+counter_Apre) % lfsr_max_value_condApre1) + lfsr_init_condApre1 )
+        cond_Apre1 = Apre1_lfsr < Apost
+        Apre2_lfsr = lfsr_timedarray( ((seed_condApre2+counter_Apre) % lfsr_max_value_condApre2) + lfsr_init_condApre2 )
+        cond_Apre2 = Apre2_lfsr <= stdp_thres
         Apre = clip(Apre, 0, A_max)
         w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2), 0, w_max)
         ''',
@@ -81,8 +87,10 @@ StochStdpNew = {'model':
         
         Apost += dApre
         counter_Apost += 1*ms
-        cond_Apost1 = lfsr_timedarray( ((seed_condApost1+counter_Apost) % lfsr_max_value_condApost1) + lfsr_init_condApost1 ) < Apre
-        cond_Apost2 = lfsr_timedarray( ((seed_condApost2+counter_Apost) % lfsr_max_value_condApost2) + lfsr_init_condApost2 ) < stdp_thres
+        Apost1_lfsr = lfsr_timedarray( ((seed_condApost1+counter_Apost) % lfsr_max_value_condApost1) + lfsr_init_condApost1 )
+        cond_Apost1 = Apost1_lfsr < Apre
+        Apost2_lfsr = lfsr_timedarray( ((seed_condApost2+counter_Apost) % lfsr_max_value_condApost2) + lfsr_init_condApost2 )
+        cond_Apost2 = Apost2_lfsr <= stdp_thres
         Apost = clip(Apost, 0, A_max)
         w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2), 0, w_max)
         

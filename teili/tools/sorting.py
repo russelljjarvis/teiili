@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""To understand the structure of in the rasterplots but also in the learned weight matrices, we need to sort the weight matrices according to some similarity measure, such as euclidean distance.
+"""To understand the structure of in the rasterplots but also in the learned weight matrices, we need to sort the weight matrices according to some similarity measure, such as euclidean and jaccard distance.
 However, the sorting algorithm is completely agnostic to the similarity measure. It connects each node with maximum two edges and constructs a directed graph.
 This is similar to the travelling salesman problem.
 
@@ -37,37 +37,50 @@ class SortMatrix():
         matrix (ndarray, optional): matrix as provided by load_matrix.
         ncols (int, optional): number of columns of the 2d array.
         nrows (int, required): number of rows of the 2d array.
-        permutation (list): List of indices which are more similar to each other
-            in (euclidean) distance.
+        permutation (list): List of indices which are more similar to
+            each other in (euclidean, jaccard) distance.
         similarity_matrix (ndarray, optional): Matrix containing similarities.
         sorted_matrix (TYPE): Sorted matrix according to permutation.
+        recurrent_matrix (boolean, optional): Indicates whether it is
+            a recurrent matrix or not.
+        similarity_metric (str, optional): Indicates metric for calculating
+            similarity.
+        max_val (float): Maximum value of the provided matrix
     """
 
-    def __init__(self, nrows, ncols=None, filename=None, matrix=None, axis=0, fill_ids=None, rec_matrix=False):
+    def __init__(self, nrows, ncols=None, filename=None, matrix=None,
+                 axis=0, target_indices=None, rec_matrix=False,
+                 similarity_metric='euclidean'):
         """Summary
 
         Args:
             nrows (int, required): number of rows of the 2d array.
             ncols (int, optional): number of columns of the 2d array.
             filename (str, optional): path/to/matrix/name.npy.
-            matrix (ndarray, optional): Instead of providing filename and location
-                one can also pass the matrix to sort directly to the class.
-            axis (int, optional): Axis along which similarity should be computed.
-            fill_ids (ndarray, optional): Postsynaptic target indices of a presynaptic
-                projection. This is an additional information that must be compatible
-                with the argument matrix and can be used to sort neurons according to
-                the similarity of their recurrent weights.
+            matrix (ndarray, optional): Instead of providing filename
+                and location one can also pass the matrix to sort directly
+                to the class.
+            axis (int, optional): Axis along which similarity should be
+                computed.
+            target_indices (list of lists, optional): Must be provided only
+                when connections between neurons are sparse. Each row
+                contains the postsynaptic targets of a neuron whose index
+                is represented by the number of the row.
             rec_matrix (boolean, optional): Informs whether it is the matrix
                 represents recurrent connections or not. If it is a recurrent
-                matrix, both dimensions will be sorted according to permutation.
+                matrix, both dimensions will be sorted according to
+                permutation.
+            similarity_metric (str, optional): Metric used to calculate
+                similarity between arrays.
         """
         self.nrows = nrows
         self.ncols = ncols
         self.axis = axis
         self.recurrent_matrix = rec_matrix
+        self.similarity_metric = similarity_metric
 
         if self.ncols is None:
-            warnings.warn('You did not specify ncols. Matrix is assumed to be squared')
+            warnings.warn('Unspecified ncols. Matrix is assumed to be squared')
             self.ncols = self.nrows
 
         self.filename = filename
@@ -75,14 +88,15 @@ class SortMatrix():
         if matrix is None:
             self.matrix = self.load_matrix()
         elif matrix is not None:
-            if fill_ids is None:
+            if target_indices is None:
                 self.matrix = np.reshape(matrix, (self.nrows, self.ncols))
-            elif fill_ids is not None:
+            elif target_indices is not None:
                 # Fill un-connected inputs with zero
                 filled_matrix = np.zeros((self.nrows, self.ncols))
                 for i in range(self.nrows):
-                    filled_matrix[i, fill_ids[i][:]] = matrix[i][:]
+                    filled_matrix[i, target_indices[i][:]] = matrix[i][:]
                 self.matrix = filled_matrix
+        self.max_val = np.max(self.matrix)
 
         # Compute similarity along specified axis
         self.similarity_matrix = self.get_similarity_matrix(axis=axis)
@@ -107,25 +121,39 @@ class SortMatrix():
         self.matrix = matrix.reshape((self.nrows, self.ncols))
         return self.matrix
 
-    def compute_distance(self, x, y):
-        """This function returns the euclidean distance
+    def compute_distance(self, x, y, similarity_metric):
+        """This function returns the distance
         of any to vectors x and y
 
         Args:
             x (ndarray, required): 1d vector.
             y (ndarray, required): 1d vector.
+            similarity_metric (str, required): Metric used to measure similarity
 
         Returns:
-            ndarray: Element-wise euclidean distance of two 1d vectors.
+            ndarray: Element-wise distance of two 1d vectors.
         """
-        return np.linalg.norm(x - y)
+        if similarity_metric == 'euclidean':
+            dist = np.linalg.norm(x - y)
+        elif similarity_metric == 'jaccard':
+            thres = .8
+            x_elements = np.where(x > self.max_val*thres)[0]
+            y_elements = np.where(y > self.max_val*thres)[0]
+            intersection = len(list(set(x_elements).intersection(y_elements)))
+            union = (len(x_elements) + len(y_elements)) - intersection
+            dist = (1 - float(intersection) / union)
+        else:
+            raise ValueError
+
+        return dist
 
     def get_similarity_matrix(self, axis=0):
         """This function computes a similarity matrix of a given
         matrix.
 
         Args:
-            axis (int, optional): Axis along which similarity should be computed.
+            axis (int, optional): Axis along which similarity should be
+                computed.
 
         Returns:
             ndarray: Matrix containing similarities.
@@ -148,7 +176,8 @@ class SortMatrix():
                     else:
                         comparison_vector = self.matrix[:, index_j]
                     self.similarity_matrix[index_i, index_j] = self.compute_distance(
-                        reference_vector, comparison_vector)
+                        reference_vector, comparison_vector,
+                        self.similarity_metric)
                 else:
                     self.similarity_matrix[index_i, index_j] = np.inf
         return self.similarity_matrix
@@ -163,7 +192,8 @@ class SortMatrix():
         similarity graph to infinity.
 
         Args:
-            axis (int, optional): Axis along which similarity should be computed.
+            axis (int, optional): Axis along which similarity should be
+                computed.
 
         Returns:
             list: Vector of permuted indices.
@@ -177,7 +207,8 @@ class SortMatrix():
             # Get the index (tuple) of the most similar entry in the similarity
             # matrix
             ind_nearest = np.unravel_index(
-                np.argmin(similarity_matrix, axis=None), similarity_matrix.shape)
+                np.argmin(similarity_matrix, axis=None),
+                similarity_matrix.shape)
             # Define the two to be connected nodes
             vertexA = ind_nearest[0]  # we gonna draw an edge between A and B
             vertexB = ind_nearest[1]
@@ -201,8 +232,8 @@ class SortMatrix():
             # Set the distance between the new ends of the graph to infinity
             similarity_matrix[endA, endB] = np.inf
             similarity_matrix[endB, endA] = np.inf
-            # Break condition that stops the construction of the graph as soon as every node
-            # except the two end points are connected twice
+            # Break condition that stops the construction of the graph as soon
+            # as every node except the two end points are connected twice
             if np.sum(degree) >= np.size(similarity_matrix, 0) * 2 - 2:
                 break
 
@@ -239,7 +270,7 @@ class SortMatrix():
         the permutation indices.
 
         Returns:
-            ndarray: Sorted matrix according to similarity in euclidean distance.
+            ndarray: Sorted matrix according to similarity.
         """
         if len(self.permutation) == 0:
             self.permutation = self.get_permutation(axis=self.axis)
@@ -251,7 +282,7 @@ class SortMatrix():
             # Second sort each column
             self.sorted_matrix = tmp_matrix[self.permutation]
         else:
-            if self.axis==0:
+            if self.axis == 0:
                 self.sorted_matrix = tmp_matrix[self.permutation, :]
 
             else:

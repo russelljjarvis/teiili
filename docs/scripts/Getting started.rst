@@ -84,10 +84,10 @@ Install latest development version of `teili`
 
 .. code-block:: bash
 
-    git clone https://code.ini.uzh.ch/ncs/teili.git
+    git clone https://gitlab.com/neuroinf/teili.git
 
 .. note:: If you have set up git properly you can use of course
-   **git clone git@code.ini.uzh.ch:ncs/teili.git**
+   **git clone git@gitlab.com:neuroinf/teili.git**
 
 .. note:: For the **latest development version** of `teili` please checkout the `dev` branch:
    **git checkout dev**.
@@ -151,5 +151,6 @@ Have a look at our tutorials_ to see how to use teili and which features it prov
 .. _tutorials: https://teili.readthedocs.io/en/latest/scripts/Tutorials.html
 .. _instructions: https://teili.readthedocs.io/en/latest/scripts/Getting%20started.html#installation
 .. _CTXCTL: http://ai-ctx.gitlab.io/ctxctl/index.html
-.. _repository: https://code.ini.uzh.ch/ncs/teili
-.. _download: https://code.ini.uzh.ch/ncs/teili/repository/archive.tar.gz?ref=dev
+.. _repository:  https://gitlab.com/neuroinf/teili
+.. _download: https://gitlab.com/neuroinf/teili/-/archive/dev/teili-dev.tar.gz
+

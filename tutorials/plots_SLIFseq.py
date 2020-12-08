@@ -98,13 +98,16 @@ if plot_d1:
     # Prepate matrices
     rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
     sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
-            matrix=rf_matrix, axis=1)
+                           matrix=rf_matrix, axis=1,
+                           similarity_metric='euclidean')
     # recurrent connections are not present in some simulations
     try:
         sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w,
-                  fill_ids=rec_ids)
+                                target_indices=rec_ids, rec_matrix=True,
+                                similarity_metric='euclidean')
     except:
-        sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=np.zeros((num_exc, num_exc)))
+        sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc,
+                                matrix=np.zeros((num_exc, num_exc)))
 
     if sort_type == 'rec_sort':
         permutation = sorted_rec.permutation

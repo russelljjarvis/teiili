@@ -1630,7 +1630,7 @@ If you simply call the classes without a path the equations will be placed in ``
 .. _standalone mode: https://Brian2.readthedocs.io/en/stable/advanced/preferences.html
 .. _Brian2: https://Brian2.readthedocs.io/en/stable/resources/tutorials/index.html
 .. _STDP: https://scholar.google.com/scholar?&q=STDP
-.. _standalone tutorial: https://code.ini.uzh.ch/ncs/teili/tree/dev/tutorials/wta_standalone_tutorial.py
+.. _standalone tutorial: https://gitlab.com/neuroinf/teili/-/tree/dev/tutorials/wta_standalone_tutorial.py
 .. _visualiser tutorial: https://teili.readthedocs.io/en/latest/scripts/Visualizer.html
 .. _stimulus test class: https://teili.readthedocs.io/en/latest/modules/teili.stimuli.html#teili.stimuli.testbench.WTA_Testbench
 .. _STDP testbench: https://teili.readthedocs.io/en/latest/modules/teili.stimuli.html#teili.stimuli.testbench.STDP_Testbench

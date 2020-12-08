@@ -1,10 +1,12 @@
 <p align="center">
  <a href='https://teili.readthedocs.io/en/latest/?badge=latest' alt="Documentation Status">
     <img src='https://readthedocs.org/projects/teili/badge/?version=latest' /></a>
- <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev" alt="build status">
+ <a href="https://gitlab.com/neuroinf/teili/commits/dev" alt="build status">
     <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/build.svg" /></a>
- <a href="https://code.ini.uzh.ch/ncs/teili/commits/dev" alt="coverage report">
-    <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/coverage.svg" /></a>
+ <a href="https://gitlab.com/neuroinf/teili/-/commits/dev" alt="coverage report">
+    <img src="https://gitlab.com/neuroinf/teili/badges/dev/coverage.svg" /></a>
+ <a href="https://gitlab.com/neuroinf/teili/-/commits/master" alt="pipeline">
+    <img src="https://gitlab.com/neuroinf/teili/badges/master/pipeline.svg" /></a>
 </p>
 
 # teili
@@ -12,7 +14,7 @@
 teili, das /taɪli/, Swiss german diminutive for piece. <br />
 
 This toolbox was developed to provide computational neuroscientists and neuromorphic engineers with a playground for implementing neural algorithms which are simulated using **brian2**.<br />
-Please report issues via the gitlab [issue tracker](https://code.ini.uzh.ch/ncs/teili/issues). You can find the documentation [here](https://teili.readthedocs.io/en/latest/).
+Please report issues via the gitlab [issue tracker](https://gitlab.com/neuroinf/teili/-/issues). You can find the documentation [here](https://teili.readthedocs.io/en/latest/).
 
 
 By providing pre-defined neural algorithms, a contributing guide to create novel neural algorithms and an intuitive way to combine different aspects of those neural algorithms, e.g. plasticity, connectivity etc, we try to shorten the development time required to test and implement novel neural algorithms and hierarchically assemble them.

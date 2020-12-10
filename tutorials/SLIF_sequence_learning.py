@@ -41,8 +41,8 @@ learn_factor = 4
 ei_p = 0.50
 ie_p = 0.70
 ee_p = 0.30
-ei_w = 5
-mean_ie_w = 7
+ei_w = 3
+mean_ie_w = 4
 mean_ee_w = 1
 mean_ffe_w = 2
 mean_ffi_w = 1
@@ -267,6 +267,28 @@ if i_plast:
             low=inh_exc_conn.variance_th - 0.1,
             high=inh_exc_conn.variance_th + 0.1,
             size=len(inh_exc_conn))
+
+# Adding mismatch
+#mismatch_neuron_param = {
+#    'tau': 0.05
+#}
+#mismatch_synap_param = {
+#    'tau_syn': 0.05
+#}
+#mismatch_plast_param = {
+#    'taupre': 0.05,
+#    'taupost': 0.05
+#}
+#
+#exc_cells.add_mismatch(std_dict=mismatch_neuron_param, seed=10)
+#inh_cells.add_mismatch(std_dict=mismatch_neuron_param, seed=10)
+#exc_exc_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
+#exc_inh_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
+#inh_exc_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
+#feedforward_exc.add_mismatch(std_dict=mismatch_synap_param, seed=11)
+#feedforward_inh.add_mismatch(std_dict=mismatch_synap_param, seed=11)
+#exc_exc_conn.add_mismatch(std_dict=mismatch_plast_param, seed=11)
+#feedforward_exc.add_mismatch(std_dict=mismatch_plast_param, seed=11)
 
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')

@@ -164,7 +164,7 @@ if plot_d2:
     image_axis.setLabel(axis='left', text='Input channels')
     #image_axis.hideAxis('left')
     m1 = pg.ImageView(view=image_axis)
-    m1.ui.histogram.hide()
+    #m1.ui.histogram.hide()
     m1.ui.roiBtn.hide()
     m1.ui.menuBtn.hide()
     m1.setImage(np.reshape(rf, (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
@@ -184,7 +184,7 @@ if plot_d2:
     image_axis.setLabel(axis='left', text='Input channel')
     #image_axis.hideAxis('left')
     m3 = pg.ImageView(view=image_axis)
-    m3.ui.histogram.hide()
+    #m3.ui.histogram.hide()
     m3.ui.roiBtn.hide()
     m3.ui.menuBtn.hide() 
     

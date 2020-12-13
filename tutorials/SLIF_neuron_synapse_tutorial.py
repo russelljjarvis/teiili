@@ -14,13 +14,14 @@ import sys
 
 from brian2 import ExplicitStateUpdater, ms, mV, ohm, second, mA, prefs,\
     SpikeMonitor, StateMonitor, \
-    SpikeGeneratorGroup, defaultclock
+    SpikeGeneratorGroup, defaultclock, TimedArray
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import StochasticLIF as neuron_model
 from teili.models.synapse_models import StochasticSyn_decay as synapse_model
 from teili.tools.add_run_reg import add_lfsr
+from lfsr import create_lfsr
 
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataControllers import Rasterplot, Lineplot
@@ -32,27 +33,27 @@ prefs.codegen.target = "numpy"
 input_timestamps = np.asarray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]) * ms
 input_indices = np.asarray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
-                                           times=input_timestamps, 
+                                           times=input_timestamps,
                                            name='input_spikegenerator')
 
 
 Net = TeiliNetwork()
 
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
-test_neurons1 = Neurons(N=2, 
-                        equation_builder=neuron_model(num_inputs=2), 
+test_neurons1 = Neurons(N=2,
+                        equation_builder=neuron_model(num_inputs=2),
                         name="test_neurons1",
                         method=stochastic_decay,
                         verbose=True)
 
-test_neurons2 = Neurons(N=2, 
-                        equation_builder=neuron_model(num_inputs=2), 
+test_neurons2 = Neurons(N=2,
+                        equation_builder=neuron_model(num_inputs=2),
                         name="test_neurons2",
                         method=stochastic_decay,
                         verbose=True)
 
 input_synapse = Connections(input_spikegenerator, test_neurons1,
-                            equation_builder=synapse_model(), 
+                            equation_builder=synapse_model(),
                             name="input_synapse",
                             method=stochastic_decay,
                             verbose=True)
@@ -73,34 +74,28 @@ convinience to switch between voltage- or current-based models.
 Normally, you have one or the other in yur simulation, thus
 you will not need the if condition.
 '''
-num_bits = 6
+num_bits = 4
 seed = 12
-test_neurons1.lfsr_num_bits = num_bits
-test_neurons2.lfsr_num_bits = num_bits
-add_lfsr(test_neurons1, seed, defaultclock.dt)
-test_neurons1.Vm = 3*mV
-add_lfsr(test_neurons2, seed, defaultclock.dt)
-test_neurons2.Vm = 3*mV
-
-input_synapse.lfsr_num_bits_syn = num_bits
-test_synapse.lfsr_num_bits_syn = num_bits
-add_lfsr(input_synapse, seed, defaultclock.dt)
-add_lfsr(test_synapse, seed, defaultclock.dt)
-
 # Example of how to set a single parameter
 # Fast neuron to allow more spikes
 test_neurons1.refrac_tau = 1 * ms
 test_neurons2.refrac_tau = 1 * ms
 test_neurons1.tau = 10 * ms
 test_neurons2.tau = 10 * ms
-
 # long EPSC or big weight to allow summations
 input_synapse.tau_syn = 10*ms
 test_synapse.tau_syn = 10*ms
 input_synapse.weight = 2
 test_synapse.weight = 15
 test_neurons1.Iconst = 13.0 * mA
-
+# Setting lfsr
+test_neurons1.lfsr_num_bits = num_bits
+test_neurons2.lfsr_num_bits = num_bits
+input_synapse.lfsr_num_bits_syn = num_bits
+test_synapse.lfsr_num_bits_syn = num_bits
+ta = create_lfsr([test_neurons1, test_neurons2], [input_synapse, test_synapse], defaultclock.dt)
+test_neurons1.Vm = 3*mV
+test_neurons2.Vm = 3*mV
 
 spikemon_input = SpikeMonitor(input_spikegenerator, name='spikemon_input')
 spikemon_test_neurons1 = SpikeMonitor(
@@ -109,10 +104,12 @@ spikemon_test_neurons2 = SpikeMonitor(
     test_neurons2, name='spikemon_test_neurons2')
 
 statemon_input_synapse = StateMonitor(
-    input_synapse, variables='I_syn', record=True, name='statemon_input_synapse')
+    input_synapse, variables=['I_syn', 'decay_probability_syn'], record=True,
+    name='statemon_input_synapse')
 
 statemon_test_synapse = StateMonitor(
-    test_synapse, variables='I_syn', record=True, name='statemon_test_synapse')
+    test_synapse, variables=['I_syn', 'decay_probability_syn'], record=True,
+    name='statemon_test_synapse')
 
 if 'Imem' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
@@ -123,9 +120,9 @@ if 'Imem' in neuron_model().keywords['model']:
 elif 'Vm' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
                                           variables=['Vm'],
-                                          record=0, name='statemon_test_neurons2')
+                                          record=True, name='statemon_test_neurons2')
     statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
-        "Iin", "Vm"], record=[0, 1], name='statemon_test_neurons1')
+        "Iin", "Vm"], record=True, name='statemon_test_neurons1')
 
 
 Net.add(input_spikegenerator, test_neurons1, test_neurons2,
@@ -262,20 +259,19 @@ Lineplot(DataModel_to_x_and_y_attr=MyData_output,
          show_immediately=False)
 
 app.exec()
-from bokeh.plotting import figure, show
-from bokeh.layouts import gridplot
-p1 = figure(y_range=[-.5, .5], x_axis_label='Time (ms)',
-        y_axis_label='Neuron ID', width=650, height=300, x_range=[-5,100])
-p1.circle(np.array(spikemon_input.t/ms), np.array(spikemon_input.i), line_color='black')
-p2 = figure(x_axis_label='Time (ms)',
-        y_axis_label='EPCS (mA)', width=650, height=300, x_range=p1.x_range)
-p2.line(np.array(statemon_input_synapse.t/ms), np.array(statemon_input_synapse[0].I_syn/mA), line_color='black', line_width=2)
-p3 = figure(x_axis_label='Time (ms)',
-        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
-p3.line(np.array(statemon_test_neurons1.t/ms), np.array(statemon_test_neurons1[0].Vm/mV), line_color='black', line_width=2)
-p4 = figure(x_axis_label='Time (ms)',
-        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
-p4.line(np.array(statemon_test_neurons2.t/ms), np.array(statemon_test_neurons2[0].Vm/mV), line_color='black', line_width=2)
-pf = gridplot([[p1, p2], [p3, p4]])
-show(pf)
-
+#from bokeh.plotting import figure, show
+#from bokeh.layouts import gridplot
+#p1 = figure(y_range=[-.5, .5], x_axis_label='Time (ms)',
+#        y_axis_label='Neuron ID', width=650, height=300, x_range=[-5,100])
+#p1.circle(np.array(spikemon_input.t/ms), np.array(spikemon_input.i), line_color='black')
+#p2 = figure(x_axis_label='Time (ms)',
+#        y_axis_label='EPCS (mA)', width=650, height=300, x_range=p1.x_range)
+#p2.line(np.array(statemon_input_synapse.t/ms), np.array(statemon_input_synapse[0].I_syn/mA), line_color='black', line_width=2)
+#p3 = figure(x_axis_label='Time (ms)',
+#        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
+#p3.line(np.array(statemon_test_neurons1.t/ms), np.array(statemon_test_neurons1[0].Vm/mV), line_color='black', line_width=2)
+#p4 = figure(x_axis_label='Time (ms)',
+#        y_axis_label='Vm (mV)', width=650, height=300, x_range=p1.x_range)
+#p4.line(np.array(statemon_test_neurons2.t/ms), np.array(statemon_test_neurons2[0].Vm/mV), line_color='black', line_width=2)
+#pf = gridplot([[p1, p2], [p3, p4]])
+#show(pf)

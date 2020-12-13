@@ -28,6 +28,7 @@ from teili.tools.add_run_reg import add_lfsr
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataControllers import Lineplot
+from lfsr import create_lfsr
 
 
 prefs.codegen.target = "numpy"
@@ -57,8 +58,7 @@ test_neurons1.lfsr_num_bits = num_bits
 test_neurons1.Vm = 3*mV
 syn_stoch.lfsr_num_bits_syn = num_bits
 
-add_lfsr(test_neurons1, seed, defaultclock.dt)
-add_lfsr(syn_stoch, seed, defaultclock.dt)
+ta = create_lfsr([test_neurons1], [syn_stoch], defaultclock.dt)
 
 # Set monitors
 spikemon_inp = SpikeMonitor(input_spikegenerator, name='spikemon_inp')
@@ -132,3 +132,5 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron1, ('t', 'Iin'))],
          mainfig=win,
          subfig=p2,
          QtApp=app)
+
+app.exec()

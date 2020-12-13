@@ -185,13 +185,16 @@ defaultclock.dt = 1*ms in the code using this model.
 quantized_stochastic_decay = {
     'model': '''
         dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
+        decay_probability_syn = lfsr_timedarray( ((seed_syn+t) % lfsr_max_value_syn) + lfsr_init_syn ) / (2**lfsr_num_bits_syn): 1
         Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
 
         decay_syn = tau_syn/(tau_syn + dt) : 1
 
         weight                : 1
         w_plast               : 1
-        decay_probability_syn : 1
+        lfsr_max_value_syn : second
+        seed_syn : second
+        lfsr_init_syn : second
         gain_syn              : amp
         tau_syn               : second (constant)
         lfsr_num_bits_syn : 1 # Number of bits in the LFSR used
@@ -392,13 +395,22 @@ stdp_para_conductance = {
 
 stochastic_decay_stdp = {
     'model': '''
-        dApre/dt = int(Apre * decay_stdp_Apre + decay_probability_stdp)/second : 1 (clock-driven)
-        dApost/dt = int(Apost * decay_stdp_Apost + decay_probability_stdp)/second : 1 (clock-driven)
+        dApre/dt = int(Apre * decay_stdp_Apre + decay_probability_Apre)/second : 1 (clock-driven)
+        dApost/dt = int(Apost * decay_stdp_Apost + decay_probability_Apost)/second : 1 (clock-driven)
+        decay_probability_Apre = lfsr_timedarray( ((seed_Apre+t) % lfsr_max_value_Apre) + lfsr_init_Apre ) / (2**lfsr_num_bits_Apre): 1
+        decay_probability_Apost = lfsr_timedarray( ((seed_Apost+t) % lfsr_max_value_Apost) + lfsr_init_Apost ) / (2**lfsr_num_bits_Apost): 1
 
         decay_stdp_Apre = taupre/(taupre + dt) : 1
         decay_stdp_Apost = taupost/(taupost + dt) : 1
 
-        decay_probability_stdp : 1
+        seed_Apre : second
+        lfsr_max_value_Apre : second
+        lfsr_init_Apre : second
+        lfsr_num_bits_Apre : 1
+        seed_Apost : second
+        lfsr_max_value_Apost : second
+        lfsr_init_Apost : second
+        lfsr_num_bits_Apost : 1
         w_max: 1 (constant)
         A_max: 1 (constant)
         dApre: 1 (constant)
@@ -425,7 +437,9 @@ stochastic_decay_stdp_params = {
     "A_max": 15,
     "A_gain": 4,
     "dApre": 15,
-    "w_plast": 1
+    "w_plast": 1,
+    'lfsr_num_bits_Apre': 6,
+    'lfsr_num_bits_Apost': 6
 }
 
 quantized_standard_stdp_params = {

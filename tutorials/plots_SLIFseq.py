@@ -98,13 +98,16 @@ if plot_d1:
     # Prepate matrices
     rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
     sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
-            matrix=rf_matrix, axis=1)
+                           matrix=rf_matrix, axis=1,
+                           similarity_metric='euclidean')
     # recurrent connections are not present in some simulations
     try:
         sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w,
-                  fill_ids=rec_ids)
+                                target_indices=rec_ids, rec_matrix=True,
+                                similarity_metric='euclidean')
     except:
-        sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=np.zeros((num_exc, num_exc)))
+        sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc,
+                                matrix=np.zeros((num_exc, num_exc)))
 
     if sort_type == 'rec_sort':
         permutation = sorted_rec.permutation
@@ -161,7 +164,7 @@ if plot_d2:
     image_axis.setLabel(axis='left', text='Input channels')
     #image_axis.hideAxis('left')
     m1 = pg.ImageView(view=image_axis)
-    m1.ui.histogram.hide()
+    #m1.ui.histogram.hide()
     m1.ui.roiBtn.hide()
     m1.ui.menuBtn.hide()
     m1.setImage(np.reshape(rf, (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
@@ -181,7 +184,7 @@ if plot_d2:
     image_axis.setLabel(axis='left', text='Input channel')
     #image_axis.hideAxis('left')
     m3 = pg.ImageView(view=image_axis)
-    m3.ui.histogram.hide()
+    #m3.ui.histogram.hide()
     m3.ui.roiBtn.hide()
     m3.ui.menuBtn.hide() 
     

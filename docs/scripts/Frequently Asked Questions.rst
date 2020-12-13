@@ -44,4 +44,4 @@ Why do I need to update the namespace using ``namespace.update``?
 -----------------------------------------------------------------
 TBA
 
-.. _issue tracker: https://code.ini.uzh.ch/ncs/teili/issues
+.. _issue tracker: https://gitlab.com/neuroinf/teili/-/issues

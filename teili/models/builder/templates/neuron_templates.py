@@ -386,15 +386,18 @@ defaultclock.dt = 1*ms in the code using this model.
 q_model_template = {
     'model': '''
         dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*mV/second : volt
-        normal_decay = (decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability : 1
+        normal_decay = clip((decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability, Vrest/mV, Vthres/mV) : 1
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
+        decay_probability = lfsr_timedarray( ((seed+t) % lfsr_max_value) + lfsr_init ) / (2**lfsr_num_bits): 1
 
         I = Iin + Iconst : amp
         decay_rate = tau/(tau + dt)                      : 1
         decay_rate_refrac = refrac_tau/(refrac_tau + dt) : 1
         refrac = Vm<Vrest                                    : boolean
 
-        decay_probability : 1
+        lfsr_max_value : second
+        seed : second
+        lfsr_init : second
         g_psc                : ohm    (constant) # Gain of post synaptic current
         Iconst  : amp                         # constant input current
         Iin = Iin0        : amp

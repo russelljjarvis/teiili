@@ -116,6 +116,9 @@ if plot_d1:
         permutation = permutation_file['ids']
     elif sort_type == 'rf_sort':
         permutation = sorted_rf.permutation
+    elif sort_type == 'no_sort':
+        permutation = [x for x in range(num_exc)]
+    print(f'permutation indices: {permutation}')
     sorted_i = np.asarray([np.where(
                     np.asarray(permutation) == int(i))[0][0] for i in exc_spikes_i])
     p3 = pg.PlotWidget(title='Sorted raster plot (exc. pop.)')

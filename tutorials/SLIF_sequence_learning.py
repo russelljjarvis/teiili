@@ -16,10 +16,13 @@ from teili.models.neuron_models import StochasticLIF as neuron_model
 from teili.models.synapse_models import StochasticSyn_decay as static_synapse_model
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.add_run_reg import add_lfsr
-from lfsr import create_lfsr
 from teili.tools.group_tools import add_group_activity_proxy
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.converter import delete_doublets
+
+from lfsr import create_lfsr
+from run_regularly import re_init_weights, activity_tracer
 
 import sys
 import pickle
@@ -31,10 +34,10 @@ path = os.path.expanduser("/home/pablo/git/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochSynAdp.py')
-path = os.path.expanduser("/home/pablo/git/teili")
-model_path = os.path.join(path, "teili", "models", "equations", "")
 stdp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochStdpNew.py')
+neuron_model_Adapt = NeuronEquationBuilder.import_eq(
+        model_path + 'StochLIFAdapt.py')
 
 # process inputs
 learn_factor = 4
@@ -76,7 +79,7 @@ sequence_duration = 150
 noise_prob = None
 item_rate = 7
 spike_times, spike_indices = [], []
-sequence_repetitions = 450
+sequence_repetitions = 700#FIXME 450
 training_duration = sequence_repetitions*sequence_duration*ms
 test_duration = 1000*ms
 sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
@@ -123,7 +126,7 @@ seq_cells.namespace.update({'converted_input':converted_input})
 num_exc = 36
 num_inh = 20
 exc_cells = Neurons(num_exc,
-                    equation_builder=neuron_model(num_inputs=3),
+                    equation_builder=neuron_model_Adapt(num_inputs=3),
                     method=stochastic_decay,
                     name='exc_cells',
                     verbose=True)
@@ -290,11 +293,23 @@ if i_plast:
 #exc_exc_conn.add_mismatch(std_dict=mismatch_plast_param, seed=11)
 #feedforward_exc.add_mismatch(std_dict=mismatch_plast_param, seed=11)
 
+# Adding run regularly
+exc_cells.namespace.update({'activity_tracer': activity_tracer})
+feedforward_exc.namespace.update({'re_init_weights': re_init_weights})
+exc_cells.run_regularly('''update_counter = activity_tracer(Vthres,\
+                                                            theta,\
+                                                            update_counter)''',
+                                                            dt=defaultclock.dt)
+feedforward_exc.run_regularly('''w_plast = re_init_weights(w_plast, \
+                                                           update_counter_post,\
+                                                           update_time_post)''',
+                                                           dt=defaultclock.dt)
+
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
 spikemon_inh_neurons = SpikeMonitor(inh_cells, name='spikemon_inh_neurons')
 spikemon_seq_neurons = SpikeMonitor(seq_cells, name='spikemon_seq_neurons')
-statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm'], record=True,
+statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm', 'Vthres'], record=True,
                                   name='statemon_exc_cells')
 statemon_inh_cells = StateMonitor(inh_cells, variables=['Vm'], record=True,
                                   name='statemon_inh_cells')
@@ -303,12 +318,12 @@ statemon_ei_conns = StateMonitor(exc_inh_conn, variables=['I_syn'], record=True,
 statemon_ie_conns = StateMonitor(inh_exc_conn, variables=['I_syn'], record=True,
                                   name='statemon_ie_conns')
 if not simple:
-    statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast', 'I_syn', 'Apre', 'Apost'], record=True,
+    statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast'], record=True,
                                       name='statemon_rec_conns')
 if i_plast:
-    statemon_inh_conns = StateMonitor(inh_exc_conn, variables=['w_plast', 'delta_w'], record=True,
+    statemon_inh_conns = StateMonitor(inh_exc_conn, variables=['w_plast'], record=True,
                                       name='statemon_inh_conns')
-statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast', 'I_syn', 'Apre', 'Apost'], record=True,
+statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast'], record=True,
                                   name='statemon_ffe_conns')
 statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
 statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
@@ -390,17 +405,20 @@ np.savez(path+f'rasters.npz',
          exc_spikes_t=np.array(spikemon_exc_neurons.t/ms), exc_spikes_i=np.array(spikemon_exc_neurons.i),
          inh_spikes_t=np.array(spikemon_inh_neurons.t/ms), inh_spikes_i=np.array(spikemon_inh_neurons.i),
         )
+del spikemon_seq_neurons, spikemon_inh_neurons#, spikemon_exc_neurons
 
 np.savez(path+f'traces.npz',
          Vm_e=statemon_exc_cells.Vm, Vm_i=statemon_inh_cells.Vm,
          exc_rate_t=np.array(statemon_pop_rate_e.t/ms), exc_rate=np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz),
          inh_rate_t=np.array(statemon_pop_rate_i.t/ms), inh_rate=np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz),
         )
+del statemon_inh_cells, statemon_pop_rate_e, statemon_pop_rate_i#,statemon_exc_cells
 
 np.savez(path+f'matrices.npz',
          rf=statemon_ffe_conns.w_plast,
          rec_ids=recurrent_ids, rec_w=recurrent_weights
         )
+del statemon_ffe_conns, recurrent_ids, recurrent_weights
 
 np.savez(path+f'permutation.npz',
          ids = permutation_ids
@@ -445,7 +463,12 @@ with open(path+'connections.data', 'wb') as f:
     pickle.dump(Metadata, f)
 
 # Check other variables of the simulation
-#from brian2 import *
+from brian2 import *
+figure()
+plot(statemon_exc_cells.t/ms, statemon_exc_cells.Vthres[15])
+figure()
+plot(spikemon_exc_neurons.t/ms, spikemon_exc_neurons.i, '.')
+show()
 #figure()
 #plot(statemon_ei_conns.I_syn[10])
 #plot(statemon_ei_conns.I_syn[100])

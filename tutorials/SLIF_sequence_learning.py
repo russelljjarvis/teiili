@@ -6,7 +6,7 @@ import numpy as np
 from scipy.stats import gamma
 from scipy.signal import savgol_filter
 
-from brian2 import ms, mV, Hz, prefs, SpikeMonitor, StateMonitor, defaultclock,\
+from brian2 import ms, mA, mV, Hz, prefs, SpikeMonitor, StateMonitor, defaultclock,\
     ExplicitStateUpdater, SpikeGeneratorGroup, TimedArray, PopulationRateMonitor
 
 from teili.core.groups import Neurons, Connections
@@ -79,7 +79,7 @@ sequence_duration = 150
 noise_prob = None
 item_rate = 7
 spike_times, spike_indices = [], []
-sequence_repetitions = 700#FIXME 450
+sequence_repetitions = 700#FIXME 350
 training_duration = sequence_repetitions*sequence_duration*ms
 test_duration = 1000*ms
 sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
@@ -184,6 +184,12 @@ if not simple:
 exc_inh_conn.connect(p=ei_p)
 #exc_inh_conn.delay = np.random.randint(0, 3, size=np.shape(exc_inh_conn.j)[0]) * ms
 inh_exc_conn.connect(p=ie_p)
+# FIXME
+feedforward_exc.gain_syn = 0.5*mA
+feedforward_inh.gain_syn = 0.5*mA
+exc_exc_conn.gain_syn = 0.5*mA
+exc_inh_conn.gain_syn = 0.5*mA
+inh_exc_conn.gain_syn = 0.5*mA
 
 # Setting parameters
 # Time constants
@@ -220,7 +226,7 @@ inh_cells.Vm = 3*mV
 if i_plast:
     inh_exc_conn.weight = 1
     # 1 = no inhibition, 0 = maximum inhibition
-    inh_exc_conn.variance_th = 0.80
+    inh_exc_conn.variance_th = 0.30
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
     sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
@@ -300,10 +306,10 @@ exc_cells.run_regularly('''update_counter = activity_tracer(Vthres,\
                                                             theta,\
                                                             update_counter)''',
                                                             dt=defaultclock.dt)
-feedforward_exc.run_regularly('''w_plast = re_init_weights(w_plast, \
-                                                           update_counter_post,\
-                                                           update_time_post)''',
-                                                           dt=defaultclock.dt)
+#feedforward_exc.run_regularly('''w_plast = re_init_weights(w_plast, \
+#                                                           update_counter_post,\
+#                                                           update_time_post)''',
+#                                                           dt=150*ms)
 
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
@@ -463,12 +469,12 @@ with open(path+'connections.data', 'wb') as f:
     pickle.dump(Metadata, f)
 
 # Check other variables of the simulation
-from brian2 import *
-figure()
-plot(statemon_exc_cells.t/ms, statemon_exc_cells.Vthres[15])
-figure()
-plot(spikemon_exc_neurons.t/ms, spikemon_exc_neurons.i, '.')
-show()
+#from brian2 import *
+#figure()
+#plot(statemon_exc_cells.t/ms, statemon_exc_cells.Vthres[15])
+#figure()
+#plot(spikemon_exc_neurons.t/ms, spikemon_exc_neurons.i, '.')
+#show()
 #figure()
 #plot(statemon_ei_conns.I_syn[10])
 #plot(statemon_ei_conns.I_syn[100])

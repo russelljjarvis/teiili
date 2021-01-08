@@ -15,6 +15,14 @@ def re_init_weights(w_plast, update_counter, update_time):
     return w_plast
 
 @implementation('numpy', discard_units=True)
+#@check_units(w_plast=1, theta=1, update_counter=second, result=second)
+#def activity_tracer(w_plast, theta, update_counter):
+#    add_inds = np.where(w_plast < theta)[0]
+#    update_counter[add_inds] += 1*ms
+#    reset_inds = np.where(w_plast >= theta)[0]
+#    update_counter[reset_inds] = 0
+#
+#    return update_counter
 @check_units(Vthres=volt, theta=volt, update_counter=second, result=second)
 def activity_tracer(Vthres, theta, update_counter):
     add_inds = np.where(Vthres < theta)[0]

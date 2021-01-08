@@ -47,7 +47,7 @@ StochLIFAdapt = {'model':
    Vthres = clip(Vthres+0.1*mV, 0, 16*mV)''',
 'parameters':
 {
-'Vthres' : '16. * mvolt',
+'Vthres' : '10. * mvolt',
 'Vrest' : '3. * mvolt',
 'Vreset' : '0. * volt',
 'Iconst' : '0. * amp',
@@ -58,7 +58,7 @@ StochLIFAdapt = {'model':
 'refP' : '0. * second',
 'lfsr_num_bits' : '6',
 'update_time' : '1000 * msecond',
-'theta' : '10 * mvolt',
+'theta' : '8 * mvolt',
 'update_counter' : '0 * msecond',
 }
 }

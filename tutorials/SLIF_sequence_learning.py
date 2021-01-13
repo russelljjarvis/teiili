@@ -22,14 +22,16 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.converter import delete_doublets
 
 from lfsr import create_lfsr
-from run_regularly import re_init_weights, activity_tracer
+from run_regularly import re_init_weights, activity_tracer, synapse_activity_tracer,\
+        reset_activity_tracer
 
 import sys
 import pickle
 import os
 from datetime import datetime
 
-# Load ADP synapse
+#############
+# Load models
 path = os.path.expanduser("/home/pablo/git/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
@@ -39,7 +41,8 @@ stdp_synapse_model = SynapseEquationBuilder.import_eq(
 neuron_model_Adapt = NeuronEquationBuilder.import_eq(
         model_path + 'StochLIFAdapt.py')
 
-# process inputs
+#############
+# Prepare parameters of the simulation
 learn_factor = 4
 ei_p = 0.50
 ie_p = 0.70
@@ -122,7 +125,8 @@ seq_cells = Neurons(num_channels, model='tspike=converted_input(t, i): second',
         threshold='t==tspike', refractory='tspike < 0*ms')
 seq_cells.namespace.update({'converted_input':converted_input})
 
-# Create neuron groups
+#################
+# Building network
 num_exc = 36
 num_inh = 20
 exc_cells = Neurons(num_exc,
@@ -146,7 +150,6 @@ inh_cells = Neurons(num_inh,
                     name='inh_cells',
                     verbose=True)
 
-# Create synapses
 if not simple:
     exc_exc_conn = Connections(exc_cells, exc_cells,
                                equation_builder=stdp_synapse_model(),
@@ -175,23 +178,27 @@ feedforward_inh = Connections(seq_cells, inh_cells,
                               method=stochastic_decay,
                               name='feedforward_inh')
 
-# Connect synapses
 feedforward_exc.connect()
 feedforward_inh.connect()
+#TODO test with delays
 if not simple:
     exc_exc_conn.connect('i!=j', p=ee_p)
     #exc_exc_conn.delay = np.random.randint(0, 3, size=np.shape(exc_exc_conn.j)[0]) * ms
 exc_inh_conn.connect(p=ei_p)
 #exc_inh_conn.delay = np.random.randint(0, 3, size=np.shape(exc_inh_conn.j)[0]) * ms
+#feedforward_exc.delay = np.random.randint(0, 3, size=np.shape(feedforward_exc.j)[0]) * ms
+#feedforward_inh.delay = np.random.randint(0, 3, size=np.shape(feedforward_inh.j)[0]) * ms
 inh_exc_conn.connect(p=ie_p)
-# FIXME
-feedforward_exc.gain_syn = 0.5*mA
-feedforward_inh.gain_syn = 0.5*mA
-exc_exc_conn.gain_syn = 0.5*mA
-exc_inh_conn.gain_syn = 0.5*mA
-inh_exc_conn.gain_syn = 0.5*mA
 
-# Setting parameters
+###################
+# Set paramters of the network
+# FIXME Worse RFs if values below are used
+#feedforward_exc.gain_syn = 0.5*mA
+#feedforward_inh.gain_syn = 0.5*mA
+#exc_exc_conn.gain_syn = 0.5*mA
+#exc_inh_conn.gain_syn = 0.5*mA
+#inh_exc_conn.gain_syn = 0.5*mA
+
 # Time constants
 exc_exc_conn.tau_syn = 30*ms
 exc_exc_conn.taupre = 20*ms
@@ -256,6 +263,7 @@ for i in range(num_channels):
 #plt.plot(x, gamma.pdf(x, a,loc=1),'r-', lw=5, alpha=0.6, label='gamma pdf')
 #plt.show()
 
+# Set LFSRs for each group
 ta = create_lfsr([exc_cells, inh_cells],
                  [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
                      feedforward_inh],
@@ -277,6 +285,7 @@ if i_plast:
             high=inh_exc_conn.variance_th + 0.1,
             size=len(inh_exc_conn))
 
+# FIXME worse RFs when mismatch is added
 # Adding mismatch
 #mismatch_neuron_param = {
 #    'tau': 0.05
@@ -299,9 +308,12 @@ if i_plast:
 #exc_exc_conn.add_mismatch(std_dict=mismatch_plast_param, seed=11)
 #feedforward_exc.add_mismatch(std_dict=mismatch_plast_param, seed=11)
 
-# Adding run regularly
+###################
+# Adding homeostatic mechanisms
 exc_cells.namespace.update({'activity_tracer': activity_tracer})
-feedforward_exc.namespace.update({'re_init_weights': re_init_weights})
+#TODO reinit weights
+#feedforward_exc.namespace.update({'re_init_weights': re_init_weights})
+#feedforward_exc.namespace.update({'re_init_delays': re_init_delays})
 exc_cells.run_regularly('''update_counter = activity_tracer(Vthres,\
                                                             theta,\
                                                             update_counter)''',
@@ -309,8 +321,24 @@ exc_cells.run_regularly('''update_counter = activity_tracer(Vthres,\
 #feedforward_exc.run_regularly('''w_plast = re_init_weights(w_plast, \
 #                                                           update_counter_post,\
 #                                                           update_time_post)''',
-#                                                           dt=150*ms)
+#                                                           dt=30000*ms)
+#TODO test with delays
+#feedforward_exc.run_regularly('''delay = re_init_delays(delay, \
+#                                                        update_counter_post,\
+#                                                        update_time_post)''',
+#                                                        dt=300*ms)
+## Synaptic homeostasis
+feedforward_exc.namespace.update({'synapse_activity_tracer': synapse_activity_tracer})
+feedforward_exc.run_regularly('''w_plast = synapse_activity_tracer(w_plast,\
+                                                                   re_init_counter)''',
+                                                                   dt=10000*ms,
+                                                                   when='start')
+feedforward_exc.namespace.update({'reset_activity_tracer': reset_activity_tracer})
+feedforward_exc.run_regularly('''re_init_counter = reset_activity_tracer(re_init_counter)''',
+                                                                         dt=10000*ms,
+                                                                         when='end')
 
+##################
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
 spikemon_inh_neurons = SpikeMonitor(inh_cells, name='spikemon_inh_neurons')
@@ -329,7 +357,7 @@ if not simple:
 if i_plast:
     statemon_inh_conns = StateMonitor(inh_exc_conn, variables=['w_plast'], record=True,
                                       name='statemon_inh_conns')
-statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast'], record=True,
+statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast', 're_init_counter'], record=True,
                                   name='statemon_ffe_conns')
 statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
 statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
@@ -360,6 +388,8 @@ if not np.array_equal(spk_t, spikemon_seq_neurons.t):
     print('Proxy activity and generated input do not match.')
     sys.exit()
 
+############
+# Saving results
 # Save targets of recurrent connections as python object
 n_rows = num_exc
 recurrent_ids = []
@@ -420,11 +450,11 @@ np.savez(path+f'traces.npz',
         )
 del statemon_inh_cells, statemon_pop_rate_e, statemon_pop_rate_i#,statemon_exc_cells
 
-np.savez(path+f'matrices.npz',
-         rf=statemon_ffe_conns.w_plast,
+np.savez_compressed(path+f'matrices.npz',
+         rf=statemon_ffe_conns.w_plast.astype(np.uint8),
          rec_ids=recurrent_ids, rec_w=recurrent_weights
         )
-del statemon_ffe_conns, recurrent_ids, recurrent_weights
+del recurrent_ids, recurrent_weights#, statemon_ffe_conns
 
 np.savez(path+f'permutation.npz',
          ids = permutation_ids
@@ -469,12 +499,14 @@ with open(path+'connections.data', 'wb') as f:
     pickle.dump(Metadata, f)
 
 # Check other variables of the simulation
-#from brian2 import *
+from brian2 import *
+figure()
+plot(statemon_ffe_conns.t/ms, statemon_ffe_conns.re_init_counter[15])
 #figure()
 #plot(statemon_exc_cells.t/ms, statemon_exc_cells.Vthres[15])
 #figure()
 #plot(spikemon_exc_neurons.t/ms, spikemon_exc_neurons.i, '.')
-#show()
+show()
 #figure()
 #plot(statemon_ei_conns.I_syn[10])
 #plot(statemon_ei_conns.I_syn[100])

@@ -38,6 +38,7 @@ StochStdpNew = {'model':
         A_gain: 1 (constant)
         taupre : second (constant)
         taupost : second (constant)
+        re_init_counter : 1
 
         counter_Apre : second
         counter_Apost : second
@@ -80,6 +81,7 @@ StochStdpNew = {'model':
         cond_Apre2 = Apre2_lfsr <= stdp_thres
         Apre = clip(Apre, 0, A_max)
         w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2), 0, w_max)
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2)
         ''',
 'on_post':
 '''
@@ -93,6 +95,7 @@ StochStdpNew = {'model':
         cond_Apost2 = Apost2_lfsr <= stdp_thres
         Apost = clip(Apost, 0, A_max)
         w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2), 0, w_max)
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2)
         
 ''',
 'parameters':
@@ -117,5 +120,6 @@ StochStdpNew = {'model':
 'lfsr_num_bits_condApre2': '4',
 'lfsr_num_bits_condApost1': '4',
 'lfsr_num_bits_condApost2': '4',
+'re_init_counter': '0',
 }
 }

@@ -44,7 +44,7 @@ StochLIFAdapt = {'model':
 '''Vm>=Vthres''',
 'reset':
 '''Vm=Vreset
-   Vthres = clip(Vthres+0.1*mV, 0, 16*mV)''',
+   Vthres = clip(Vthres+0.01*mV, 0, 16*mV)''',
 'parameters':
 {
 'Vthres' : '10. * mvolt',

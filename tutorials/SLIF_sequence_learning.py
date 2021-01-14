@@ -43,16 +43,6 @@ neuron_model_Adapt = NeuronEquationBuilder.import_eq(
 
 #############
 # Prepare parameters of the simulation
-learn_factor = 4
-ei_p = 0.50
-ie_p = 0.70
-ee_p = 0.30
-ei_w = 3
-mean_ie_w = 4
-mean_ee_w = 1
-mean_ffe_w = 2
-mean_ffi_w = 1
-
 # Defines if recurrent connections are included
 if sys.argv[1] == 'no_rec':
     simple = True
@@ -128,7 +118,7 @@ seq_cells.namespace.update({'converted_input':converted_input})
 #################
 # Building network
 num_exc = 36
-num_inh = 20
+num_inh = 10
 exc_cells = Neurons(num_exc,
                     equation_builder=neuron_model_Adapt(num_inputs=3),
                     method=stochastic_decay,
@@ -149,6 +139,11 @@ inh_cells = Neurons(num_inh,
                     method=stochastic_decay,
                     name='inh_cells',
                     verbose=True)
+
+# Connections
+ei_p = 0.50#.1
+ie_p = 0.70#.8
+ee_p = 0.30#.8
 
 if not simple:
     exc_exc_conn = Connections(exc_cells, exc_cells,
@@ -200,36 +195,47 @@ inh_exc_conn.connect(p=ie_p)
 #inh_exc_conn.gain_syn = 0.5*mA
 
 # Time constants
-exc_exc_conn.tau_syn = 30*ms
+# Values similar to those in Klampfl&Maass(2013), Joglekar etal(2018), Vogels&Abbott(2009)
+exc_exc_conn.tau_syn = 5*ms
 exc_exc_conn.taupre = 20*ms
-exc_exc_conn.taupost = 30*ms
+exc_exc_conn.taupost = 60*ms
 exc_exc_conn.stdp_thres = 1
-exc_inh_conn.tau_syn = 30*ms
-inh_exc_conn.tau_syn = 15*ms
-feedforward_exc.tau_syn = 30*ms
+exc_inh_conn.tau_syn = 5*ms
+inh_exc_conn.tau_syn = 10*ms
+feedforward_exc.tau_syn = 5*ms
 feedforward_exc.taupre = 20*ms
-feedforward_exc.taupost = 30*ms
+feedforward_exc.taupost = 60*ms
 feedforward_exc.stdp_thres = 1
 feedforward_inh.tau_syn = 10*ms
+exc_cells.tau = 19*ms
+inh_cells.tau = 10*ms
 
 # LFSR lengths
 exc_cells.lfsr_num_bits = 5
 inh_cells.lfsr_num_bits = 5
 exc_exc_conn.lfsr_num_bits_syn = 5
 exc_exc_conn.lfsr_num_bits_Apre = 5
-exc_exc_conn.lfsr_num_bits_Apost = 5
+exc_exc_conn.lfsr_num_bits_Apost = 6
 exc_inh_conn.lfsr_num_bits_syn = 5
 inh_exc_conn.lfsr_num_bits_syn = 5
 feedforward_exc.lfsr_num_bits_syn = 5
 feedforward_exc.lfsr_num_bits_Apre = 5
-feedforward_exc.lfsr_num_bits_Apost = 5
+feedforward_exc.lfsr_num_bits_Apost = 6
 feedforward_inh.lfsr_num_bits_syn = 4
 
 seed = 12
 exc_cells.Vm = 3*mV
 inh_cells.Vm = 3*mV
+learn_factor = 4
 #feedforward_exc.A_gain = learn_factor
+
 # Weight initializations
+ei_w = 3
+mean_ie_w = 4
+mean_ee_w = 1
+mean_ffe_w = 2
+mean_ffi_w = 1
+
 if i_plast:
     inh_exc_conn.weight = 1
     # 1 = no inhibition, 0 = maximum inhibition
@@ -328,15 +334,16 @@ exc_cells.run_regularly('''update_counter = activity_tracer(Vthres,\
 #                                                        update_time_post)''',
 #                                                        dt=300*ms)
 ## Synaptic homeostasis
-feedforward_exc.namespace.update({'synapse_activity_tracer': synapse_activity_tracer})
-feedforward_exc.run_regularly('''w_plast = synapse_activity_tracer(w_plast,\
-                                                                   re_init_counter)''',
-                                                                   dt=10000*ms,
-                                                                   when='start')
-feedforward_exc.namespace.update({'reset_activity_tracer': reset_activity_tracer})
-feedforward_exc.run_regularly('''re_init_counter = reset_activity_tracer(re_init_counter)''',
-                                                                         dt=10000*ms,
-                                                                         when='end')
+# TODO
+#feedforward_exc.namespace.update({'synapse_activity_tracer': synapse_activity_tracer})
+#feedforward_exc.run_regularly('''w_plast = synapse_activity_tracer(w_plast,\
+#                                                                   re_init_counter)''',
+#                                                                   dt=10000*ms,
+#                                                                   when='start')
+#feedforward_exc.namespace.update({'reset_activity_tracer': reset_activity_tracer})
+#feedforward_exc.run_regularly('''re_init_counter = reset_activity_tracer(re_init_counter)''',
+#                                                                         dt=10000*ms,
+#                                                                         when='end')
 
 ##################
 # Setting up monitors
@@ -501,9 +508,9 @@ with open(path+'connections.data', 'wb') as f:
 # Check other variables of the simulation
 from brian2 import *
 figure()
-plot(statemon_ffe_conns.t/ms, statemon_ffe_conns.re_init_counter[15])
+#plot(statemon_ffe_conns.t/ms, statemon_ffe_conns.re_init_counter[15])
 #figure()
-#plot(statemon_exc_cells.t/ms, statemon_exc_cells.Vthres[15])
+plot(statemon_exc_cells.t/ms, statemon_exc_cells.Vthres[15])
 #figure()
 #plot(spikemon_exc_neurons.t/ms, spikemon_exc_neurons.i, '.')
 show()

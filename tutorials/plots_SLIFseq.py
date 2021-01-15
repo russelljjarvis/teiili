@@ -56,10 +56,8 @@ pp.pprint(info_pop)
 data_start, data_end = 0, -1
 input_t = rasters['input_t'][data_start:data_end]
 input_i = rasters['input_i'][data_start:data_end]
-neuron_id_e = np.random.randint(0, num_exc)
-neuron_id_i = np.random.randint(0, num_inh)
-Vm_e = traces['Vm_e'][neuron_id_e][data_start:data_end]
-Vm_i = traces['Vm_i'][neuron_id_i][data_start:data_end]
+Vm_e = traces['Vm_e'][0][data_start:data_end]
+Vm_i = traces['Vm_i'][0][data_start:data_end]
 exc_spikes_t = rasters['exc_spikes_t'][data_start:data_end]
 exc_spikes_i = rasters['exc_spikes_i'][data_start:data_end]
 inh_spikes_t = rasters['inh_spikes_t'][data_start:data_end]
@@ -87,8 +85,8 @@ if plot_d1:
     p1.setLabel('left', 'Input channels')
     p2 = pg.PlotWidget(title='Membrane potential')
     p2.addLegend(offset=(30, 1))
-    p2.plot(Vm_e, pen='r', name=f'exc. id {neuron_id_e}')
-    p2.plot(Vm_i, pen='b', name=f'inh. id {neuron_id_i}')
+    p2.plot(Vm_e, pen='r', name=f'exc. id ')
+    p2.plot(Vm_i, pen='b', name=f'inh. id ')
     p2.setYRange(0, 0.025)
     p2.setLabel('left', 'Membrane potential', units='V')
     p2.setLabel('bottom', 'Time', units='s')

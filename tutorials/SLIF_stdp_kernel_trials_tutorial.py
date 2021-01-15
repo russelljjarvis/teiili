@@ -20,6 +20,8 @@ from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
 
+from run_regularly import synapse_activity_tracer, reset_activity_tracer
+
 prefs.codegen.target = "numpy"
 defaultclock.dt = 1 * ms
 visualization_backend = 'pyqtgraph'
@@ -37,10 +39,10 @@ font = {'family': 'serif',
 
 
 trials = 105
-trial_duration = 50
-wait_time = 100  # set delay between trials to avoid interferences
+trial_duration = 60
+N = trial_duration
+wait_time = 2*trial_duration  # set delay between trials to avoid interferences
 tmax = trial_duration*trials + wait_time*trials
-N = 50
 
 # Define matched spike times between pre and post neurons
 post_tspikes = np.arange(1, N*trials + 1).reshape((trials, N))
@@ -59,8 +61,8 @@ for ind, spks in enumerate(post_tspikes.T):
 ta_pre = TimedArray(pre_input, dt=defaultclock.dt)
 ta_post = TimedArray(post_input, dt=defaultclock.dt)
 
-average_trials = 100
-average_wplast = np.zeros((average_trials, 50))
+average_trials = 1#FIXME 100
+average_wplast = np.zeros((average_trials, trial_duration))
 for avg_trial in range(average_trials):
     pre_neurons = Neurons(N, model='v = ta_pre(t, i) : 1',
                           threshold='v == 1', refractory='1*ms')
@@ -94,6 +96,17 @@ for avg_trial in range(average_trials):
     stdp_synapse.lfsr_max_value_condApost2 = 14*ms
     stdp_synapse.lfsr_max_value_condApre2 = 14*ms
 
+    # Synaptic homeostasis
+    #stdp_synapse.namespace.update({'synapse_activity_tracer': synapse_activity_tracer})
+    #stdp_synapse.run_regularly('''w_plast = synapse_activity_tracer(w_plast,\
+    #                                                                re_init_counter)''',
+    #                                                                dt=10000*ms,
+    #                                                                when='start')
+    #stdp_synapse.namespace.update({'reset_activity_tracer': reset_activity_tracer})
+    #stdp_synapse.run_regularly('''re_init_counter = reset_activity_tracer(re_init_counter)''',
+    #                                                                      dt=10000*ms,
+    #                                                                      when='end')
+
     spikemon_pre_neurons = SpikeMonitor(pre_neurons, record=True)
     spikemon_post_neurons = SpikeMonitor(post_neurons, record=True)
     statemon_synapse = StateMonitor(stdp_synapse,
@@ -102,7 +115,8 @@ for avg_trial in range(average_trials):
                                                'Apre1_lfsr', 'Apre2_lfsr',
                                                'Apost1_lfsr', 'Apost2_lfsr',
                                                'decay_probability_Apre',
-                                               'decay_probability_Apost'],
+                                               'decay_probability_Apost',
+                                               're_init_counter'],
                                     record=True,
                                     name='statemon_synapse')
 
@@ -157,6 +171,19 @@ Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
         backend=visualization_backend,
         QtApp=app,
         mainfig=win_3,
+        show_immediately=False)
+
+win_4 = pg.GraphicsWindow(title="1")
+datamodel = StateVariablesModel(state_variable_names=['re_init_counter'],
+                                state_variables=[stdp_synapse.re_init_counter],
+                                state_variables_times=[pairs_timing])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_re_init_counter', 're_init_counter'))],
+        title="Homeostatic counter",
+        xlabel='\u0394 t (ms)',  # delta t
+        ylabel='w',
+        backend=visualization_backend,
+        QtApp=app,
+        mainfig=win_4,
         show_immediately=False)
     #win_2 = pg.GraphicsWindow(title="2")
     #Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[8], ('t', 'Apre')), (statemon_synapse[0], ('t', 'Apost'))],

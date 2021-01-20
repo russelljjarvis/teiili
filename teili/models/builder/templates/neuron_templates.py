@@ -147,7 +147,7 @@ v_adapt = {
         tauIadapt : second  (constant) # adaptation time constant
         gAdapt    : siemens (constant) # adaptation decay parameter
         wIadapt   : amp     (constant) # adaptation weight
-        %EL        : volt    (constant) # reversal potential
+        EL        : volt    (constant) # reversal potential
         """,
     'threshold': "",
     'reset': """

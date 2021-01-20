@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 from teili.tools.visualizer.DataViewers import PlotSettings, HistogramViewerPyqtgraph
 
@@ -17,6 +18,7 @@ class TestHistogramViewerPyqtgraph(unittest.TestCase):
     @unittest.skipIf(SKIP_PYQTGRAPH_RELATED_UNITTESTS, "Skip unittest TestHistogramViewerPyqtgraph.test___init__ using pyqtgraph"
                                                        "as pyqtgraph could not be imported")
     def test___init__(self):
+        warnings.simplefilter('ignore', category=RuntimeWarning)
         MyPlotSettings = PlotSettings()
 
         # without mainfig/subfig

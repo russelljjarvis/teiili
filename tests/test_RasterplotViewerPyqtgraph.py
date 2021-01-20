@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 import numpy as np
 
@@ -19,6 +20,7 @@ class TestRasterplotViewerPyqtgraph(unittest.TestCase):
                      "Skip unittest TestRasterplotViewerPyqtgraph.test___init__ using pyqtgraph"
                      "as pyqtgraph could not be imported")
     def test___init__(self):
+        warnings.simplefilter('ignore', category=RuntimeWarning)
         MyPlotSettings = PlotSettings()
 
         # without mainfig/subfig

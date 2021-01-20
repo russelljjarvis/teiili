@@ -19,6 +19,9 @@ SHOW_PLOTS_IN_TESTS = False
 
 class TestRasterplot(unittest.TestCase):
 
+    def setUp(self):
+        warnings.simplefilter('ignore', category=RuntimeWarning)
+
     def test_getalldatafromeventmodels(self):
 
         (spikemonN1, spikemonN2) = run_brian_network(statemonitors=False)

@@ -12,6 +12,8 @@ import numpy as np
 import struct
 import itertools
 
+from teili.tools.indexing import xy2ind
+
 
 def delete_doublets(spiketimes, indices, verbose=False):
     """
@@ -133,6 +135,7 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
             - "dat" = V1 (old)
             - "aedat" jAER AEDAT 2.0 = V2
             - "aedat" cAER AEDAT 3.1 = V3.
+            - "aedat" DV AEDAT 4.0 = V4
         debug (int, optional): Flag to provide more detailed report. 0 = silent, 1 (default) = print summary.
             >=2 = print all debug.
         camera (str, optional): Type of event-based camera.
@@ -154,7 +157,35 @@ def aedat2numpy(datafile, length=0, version='V2', debug=0, camera='DVS128', unit
     lt = aerdatafh.readline()
 
     # Check the .aedat format:
-    if (version == 'V3'):
+    if (version == 'V4'):
+        try:
+            from dv import AedatFile
+        except ImportError:
+            raise ImportError("Missing dependency. Please install dv via pip install dv")
+        with AedatFile(datafile) as f:
+            # list all the names of streams in the file
+            if debug:
+                print(f.names)
+
+            # loop through the "events" stream
+            tmp_x = []
+            tmp_y = []
+            tmp_t = []
+            tmp_pol = []
+            for e in f['events']:
+                tmp_x.append(e.x)
+                tmp_y.append(e.y)
+                tmp_t.append(e.timestamp)
+                tmp_pol.append(e.polarity)
+            events = np.zeros((4, len(tmp_t))) * np.nan
+            events[0, :] = np.asarray(tmp_x)
+            events[1, :] = np.asarray(tmp_y)
+            events[2, :] = np.asarray(tmp_t)
+            events[3, :] = np.asarray(tmp_pol)
+
+            return events
+
+    elif (version == 'V3'):
         # cAER AEDAT 3.1
 
         # Check the headerfile:
@@ -374,6 +405,8 @@ def dvs2ind(events=None, event_directory=None, resolution='DAVIS240', scale=True
         # extract the x-resolution (i.e. the resolution along the x-axis of the
         # camera)
         resolution = int(resolution[-3:])
+    elif type(resolution) == tuple:
+        resolution = resolution[0]
 
     # The equation below follows index = x + y*resolution
     # To retrieve the x and y coordinate again from the index see ind2px

@@ -22,8 +22,8 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.converter import delete_doublets
 
 from lfsr import create_lfsr
-from run_regularly import re_init_weights, activity_tracer, synapse_activity_tracer,\
-        reset_activity_tracer
+from run_regularly import re_init_weights, activity_tracer, weight_activity_tracer,\
+        wplast_activity_tracer, reset_activity_tracer
 
 import sys
 import pickle
@@ -70,9 +70,9 @@ num_items = 3
 num_channels = 144
 sequence_duration = 150# 300
 noise_prob = None
-item_rate = 7
+item_rate = 20
 spike_times, spike_indices = [], []
-sequence_repetitions = 10# 350
+sequence_repetitions = 700# 350
 training_duration = sequence_repetitions*sequence_duration*ms
 test_duration = 1000*ms
 sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
@@ -206,7 +206,7 @@ feedforward_exc.tau_syn = 5*ms
 feedforward_exc.taupre = 20*ms
 feedforward_exc.taupost = 60*ms
 feedforward_exc.stdp_thres = 1
-feedforward_inh.tau_syn = 10*ms
+feedforward_inh.tau_syn = 5*ms
 exc_cells.tau = 19*ms
 inh_cells.tau = 10*ms
 
@@ -237,17 +237,17 @@ mean_ffe_w = 2
 mean_ffi_w = 1
 
 if i_plast:
-    inh_exc_conn.weight = 1
+    inh_exc_conn.weight = -1
     # 1 = no inhibition, 0 = maximum inhibition
     inh_exc_conn.variance_th = 0.30
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
     sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
-    sampled_weights = -np.clip(sampled_weights, 0, 15)
+    sampled_weights = np.clip(sampled_weights, 0, 15)
     if i_plast:
         inh_exc_conn.w_plast[i,:] = sampled_weights
     else:
-        inh_exc_conn.weight[i,:] = sampled_weights
+        inh_exc_conn.weight[i,:] = -sampled_weights
 if not simple:
     exc_exc_conn.weight = 2
 for i in range(num_exc):
@@ -262,13 +262,19 @@ feedforward_exc.weight = 1
 num_inh_weight = np.shape(feedforward_inh.weight[i,:])[0]
 for i in range(num_channels):
     wplast_length = np.shape(feedforward_exc.w_plast[i,:])
-    feedforward_exc.w_plast[i,:] = gamma.rvs(a=mean_ffe_w, size=wplast_length).astype(int)
-    feedforward_inh.weight[i,:] = gamma.rvs(a=mean_ffi_w, size=num_inh_weight).astype(int)
+    feedforward_exc.w_plast[i,:] = np.clip(
+            gamma.rvs(a=mean_ffe_w, size=wplast_length).astype(int),
+            0,
+            15)
+    feedforward_inh.weight[i,:] = np.clip(
+            gamma.rvs(a=mean_ffi_w, size=num_inh_weight).astype(int),
+            0,
+            15)
 # Set sparsity for ffe connections
-for i in range(num_exc):
-    ffe_zero_w = np.random.choice(num_channels, int(num_channels*.3), replace=False)
-    feedforward_exc.weight[ffe_zero_w,i] = 0
-    feedforward_exc.w_plast[ffe_zero_w,i] = 0
+#for i in range(num_exc):
+#    ffe_zero_w = np.random.choice(num_channels, int(num_channels*.3), replace=False)
+#    feedforward_exc.weight[ffe_zero_w,i] = 0
+#    feedforward_exc.w_plast[ffe_zero_w,i] = 0
 
 # Set LFSRs for each group
 ta = create_lfsr([exc_cells, inh_cells],
@@ -317,17 +323,18 @@ if i_plast:
 
 ###################
 # Adding homeostatic mechanisms
-exc_cells.namespace.update({'activity_tracer': activity_tracer})
+#exc_cells.namespace.update({'activity_tracer': activity_tracer})
 #TODO reinit weights
 #feedforward_exc.namespace.update({'re_init_weights': re_init_weights})
 #feedforward_exc.namespace.update({'re_init_delays': re_init_delays})
-exc_cells.run_regularly('''update_counter = activity_tracer(Vthres,\
-                                                            theta,\
-                                                            update_counter)''',
-                                                            dt=defaultclock.dt)
+#exc_cells.run_regularly('''update_counter = activity_tracer(Vthres,\
+#                                                            theta,\
+#                                                            update_counter)''',
+#                                                            dt=defaultclock.dt)
 #feedforward_exc.run_regularly('''w_plast = re_init_weights(w_plast, \
 #                                                           update_counter_post,\
-#                                                           update_time_post)''',
+#                                                           update_time_post,\
+#                                                           t)''',
 #                                                           dt=30000*ms)
 #TODO test with delays
 #feedforward_exc.run_regularly('''delay = re_init_delays(delay, \
@@ -335,16 +342,22 @@ exc_cells.run_regularly('''update_counter = activity_tracer(Vthres,\
 #                                                        update_time_post)''',
 #                                                        dt=300*ms)
 ## Synaptic homeostasis
-# TODO
-feedforward_exc.namespace.update({'synapse_activity_tracer': synapse_activity_tracer})
-feedforward_exc.run_regularly('''w_plast = synapse_activity_tracer(w_plast,\
-                                                                   re_init_counter)''',
-                                                                   dt=50000*ms,
-                                                                   when='start')
-feedforward_exc.namespace.update({'reset_activity_tracer': reset_activity_tracer})
-feedforward_exc.run_regularly('''re_init_counter = reset_activity_tracer(re_init_counter)''',
-                                                                         dt=50000*ms,
-                                                                         when='end')
+#feedforward_exc.namespace.update({'wplast_activity_tracer': wplast_activity_tracer})
+#feedforward_exc.run_regularly('''w_plast = wplast_activity_tracer(w_plast,\
+#                                                                  re_init_counter,\
+#                                                                  t)''',
+#                                                                  dt=50000*ms,
+#                                                                  when='start')
+#feedforward_exc.namespace.update({'weight_activity_tracer': weight_activity_tracer})
+#feedforward_exc.run_regularly('''weight = weight_activity_tracer(weight,\
+#                                                                 re_init_counter,\
+#                                                                 t)''',
+#                                                                 dt=50000*ms,
+#                                                                 when='start')
+#feedforward_exc.namespace.update({'reset_activity_tracer': reset_activity_tracer})
+#feedforward_exc.run_regularly('''re_init_counter = reset_activity_tracer(re_init_counter)''',
+#                                                                         dt=50000*ms,
+#                                                                         when='end')
 
 ##################
 # Setting up monitors
@@ -505,58 +518,3 @@ Metadata = {'e->i': exc_inh_conn.get_params(),
             }
 with open(path+'connections.data', 'wb') as f:
     pickle.dump(Metadata, f)
-
-# Check other variables of the simulation
-from brian2 import *
-imshow(np.reshape(statemon_ffe_conns.w_plast, (144, 48, -1))[:,:,0])
-figure()
-imshow(np.reshape(feedforward_exc.weight, (144, 48)))
-show()
-#figure()
-#y = np.mean(statemon_inh_conns.variance_th, axis=0)
-#stdd=np.std(statemon_inh_conns.variance_th, axis=0)
-#plot(statemon_inh_conns.t/ms, y)
-#fill_between(statemon_inh_conns.t/ms, y-stdd, y+stdd, facecolor='lightblue')
-#plot(statemon_ffe_conns.t/ms, statemon_ffe_conns.re_init_counter[15])
-#figure()
-#plot(statemon_exc_cells.t/ms, statemon_exc_cells.Vthres[15])
-#figure()
-#plot(spikemon_exc_neurons.t/ms, spikemon_exc_neurons.i, '.')
-#show()
-#print(exc_cells.Vthres)
-#figure()
-#plot(statemon_ei_conns.I_syn[10])
-#plot(statemon_ei_conns.I_syn[100])
-#title('ei Isyn 10 and 100')
-#xlim([10000, 11000])
-#
-#figure()
-#plot(statemon_ie_conns.I_syn[10])
-#plot(statemon_ie_conns.I_syn[100])
-#title('ie Isyn 10 and 100')
-#xlim([10000, 11000])
-#
-#figure()
-#plot(statemon_rec_conns.I_syn[10])
-#plot(statemon_rec_conns.I_syn[200])
-#title('rec Isyn 10 and 200')
-#xlim([10000, 11000])
-#
-#figure()
-#plot(statemon_rec_conns.Apost[20])
-#plot(statemon_rec_conns.Apre[20])
-#title('rec Apost 20 and Apre 20')
-#xlim([10000, 11000])
-#
-#figure()
-#plot(statemon_ffe_conns.I_syn[10])
-#plot(statemon_ffe_conns.I_syn[200])
-#title('ffe Isyn 10 and 200')
-#xlim([10000, 11000])
-#
-#figure()
-#plot(statemon_ffe_conns.Apost[20])
-#plot(statemon_ffe_conns.Apre[20])
-#title('ffe Apost 20 and Apre 20')
-#xlim([10000, 11000])
-#show()

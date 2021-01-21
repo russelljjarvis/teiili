@@ -20,7 +20,7 @@ from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
 
-from run_regularly import synapse_activity_tracer, reset_activity_tracer
+from run_regularly import wplast_activity_tracer, reset_activity_tracer
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 1 * ms
@@ -61,8 +61,9 @@ for ind, spks in enumerate(post_tspikes.T):
 ta_pre = TimedArray(pre_input, dt=defaultclock.dt)
 ta_post = TimedArray(post_input, dt=defaultclock.dt)
 
-average_trials = 1#FIXME 100
+average_trials = 100
 average_wplast = np.zeros((average_trials, trial_duration))
+average_counter = np.zeros((average_trials, trial_duration))
 for avg_trial in range(average_trials):
     pre_neurons = Neurons(N, model='v = ta_pre(t, i) : 1',
                           threshold='v == 1', refractory='1*ms')
@@ -83,7 +84,8 @@ for avg_trial in range(average_trials):
     stdp_synapse.connect('i==j')
 
     # Setting parameters
-    stdp_synapse.w_plast = 7
+    init_wplast = 7
+    stdp_synapse.w_plast = init_wplast
     stdp_synapse.taupre = 20*ms
     stdp_synapse.taupost = 20*ms
     stdp_synapse.stdp_thres = 1
@@ -95,17 +97,6 @@ for avg_trial in range(average_trials):
     # skips last value of the LFSR (considering it is 4 bits long)
     stdp_synapse.lfsr_max_value_condApost2 = 14*ms
     stdp_synapse.lfsr_max_value_condApre2 = 14*ms
-
-    # Synaptic homeostasis
-    #stdp_synapse.namespace.update({'synapse_activity_tracer': synapse_activity_tracer})
-    #stdp_synapse.run_regularly('''w_plast = synapse_activity_tracer(w_plast,\
-    #                                                                re_init_counter)''',
-    #                                                                dt=10000*ms,
-    #                                                                when='start')
-    #stdp_synapse.namespace.update({'reset_activity_tracer': reset_activity_tracer})
-    #stdp_synapse.run_regularly('''re_init_counter = reset_activity_tracer(re_init_counter)''',
-    #                                                                      dt=10000*ms,
-    #                                                                      when='end')
 
     spikemon_pre_neurons = SpikeMonitor(pre_neurons, record=True)
     spikemon_post_neurons = SpikeMonitor(post_neurons, record=True)
@@ -122,6 +113,7 @@ for avg_trial in range(average_trials):
 
     run(tmax*ms)
     average_wplast[avg_trial, :] = np.array(stdp_synapse.w_plast)
+    average_counter[avg_trial, :] = np.array(stdp_synapse.re_init_counter)
 
     if visualization_backend == 'pyqtgraph':
         app = QtGui.QApplication.instance()
@@ -134,88 +126,57 @@ for avg_trial in range(average_trials):
 
 pairs_timing = (spikemon_post_neurons.t[:trial_duration]
                 - spikemon_post_neurons.t[:trial_duration][::-1])/ms
-win_1 = pg.GraphicsWindow(title="1")
+win_2 = pg.GraphicsWindow(title="trials")
 datamodel = StateVariablesModel(state_variable_names=['w_plast'],
-                                state_variables=[average_wplast[avg_trial, :]],
+                                state_variables=[average_wplast[avg_trial-1, :]-init_wplast],
                                 state_variables_times=[pairs_timing])
 Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
         title="Spike-time dependent plasticity (trial)",
         xlabel='\u0394 t (ms)',  # delta t
-        ylabel='w',
-        backend=visualization_backend,
-        QtApp=app,
-        mainfig=win_1,
-        show_immediately=False)
-
-win_2 = pg.GraphicsWindow(title="1")
-datamodel = StateVariablesModel(state_variable_names=['w_plast'],
-                                state_variables=[average_wplast[avg_trial-1, :]],
-                                state_variables_times=[pairs_timing])
-Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
-        title="Spike-time dependent plasticity (trial)",
-        xlabel='\u0394 t (ms)',  # delta t
-        ylabel='w',
+        ylabel='\u0394 w',
         backend=visualization_backend,
         QtApp=app,
         mainfig=win_2,
         show_immediately=False)
 
-win_3 = pg.GraphicsWindow(title="1")
+datamodel = StateVariablesModel(state_variable_names=['re_init_counter'],
+                                state_variables=[average_counter[avg_trial-1, :]],
+                                state_variables_times=[pairs_timing])
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_re_init_counter', 're_init_counter'))],
+        title="Homeostatic counter (trial)",
+        xlabel='\u0394 t (ms)',  # delta t
+        ylabel='counter value',
+        backend=visualization_backend,
+        QtApp=app,
+        mainfig=win_2,
+        show_immediately=False)
+
+win_5 = pg.GraphicsWindow(title="averages")
 datamodel = StateVariablesModel(state_variable_names=['w_plast'],
-                                state_variables=[np.mean(average_wplast, axis=0)],
+                                state_variables=[np.mean(average_wplast, axis=0)-init_wplast],
                                 state_variables_times=[pairs_timing])
 Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_w_plast', 'w_plast'))],
         title="Spike-time dependent plasticity (average)",
         xlabel='\u0394 t (ms)',  # delta t
-        ylabel='w',
+        ylabel='\u0394 w',
         backend=visualization_backend,
         QtApp=app,
-        mainfig=win_3,
+        mainfig=win_5,
         show_immediately=False)
 
-win_4 = pg.GraphicsWindow(title="1")
 datamodel = StateVariablesModel(state_variable_names=['re_init_counter'],
-                                state_variables=[stdp_synapse.re_init_counter],
+                                state_variables=[np.mean(average_counter, axis=0)],
                                 state_variables_times=[pairs_timing])
 Lineplot(DataModel_to_x_and_y_attr=[(datamodel, ('t_re_init_counter', 're_init_counter'))],
-        title="Homeostatic counter",
+        title="Homeostatic counter (average)",
         xlabel='\u0394 t (ms)',  # delta t
-        ylabel='w',
+        ylabel='\u0394 w',
         backend=visualization_backend,
         QtApp=app,
-        mainfig=win_4,
+        mainfig=win_5,
         show_immediately=False)
-    #win_2 = pg.GraphicsWindow(title="2")
-    #Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[8], ('t', 'Apre')), (statemon_synapse[0], ('t', 'Apost'))],
-    #        title="Apre",
-    #        xlabel='time',  # delta t
-    #        ylabel='Apre',
-    #        backend=visualization_backend,
-    #        QtApp=app,
-    #        mainfig=win_2,
-    #        show_immediately=False)
 
-    #win_3 = pg.GraphicsWindow(title="3")
-    #Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[41], ('t', 'Apre')), (statemon_synapse[49], ('t', 'Apost'))],
-    #        title="Apost",
-    #        xlabel='time',  # delta t
-    #        ylabel='Apost',
-    #        backend=visualization_backend,
-    #        QtApp=app,
-    #        mainfig=win_3,
-    #        show_immediately=False)
-
-    #win_4 = pg.GraphicsWindow(title="4")
-    #Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[25], ('t', 'Apre')), (statemon_synapse[25], ('t', 'Apost'))],
-    #        title="Apost",
-    #        xlabel='time',  # delta t
-    #        ylabel='Apost',
-    #        backend=visualization_backend,
-    #        QtApp=app,
-    #        mainfig=win_4,
-    #        show_immediately=False)
-
-win_5 = pg.GraphicsWindow(title="6")
+win_6 = pg.GraphicsWindow(title="Spikes")
 Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
             MyPlotSettings=PlotSettings(colors=['w', 'r']),
             title='',
@@ -223,5 +184,35 @@ Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
             ylabel='Neuron ID',
             backend=visualization_backend,
             QtApp=app,
-            mainfig=win_5,
-            show_immediately=True)
+            mainfig=win_6,
+            show_immediately=False)
+
+win_7 = pg.GraphicsWindow(title='As weak pot.')
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[8], ('t', 'Apre')), (statemon_synapse[8], ('t', 'Apost'))],
+        title="Apre",
+        xlabel='time',  # delta t
+        ylabel='Apre',
+        backend=visualization_backend,
+        QtApp=app,
+        mainfig=win_7,
+        show_immediately=False)
+
+win_8 = pg.GraphicsWindow(title='As strong pot.')
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[25], ('t', 'Apre')), (statemon_synapse[25], ('t', 'Apost'))],
+        title="Apre",
+        xlabel='time',  # delta t
+        ylabel='Apre',
+        backend=visualization_backend,
+        QtApp=app,
+        mainfig=win_8,
+        show_immediately=False)
+
+win_9 = pg.GraphicsWindow(title='As weak depot.')
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[49], ('t', 'Apre')), (statemon_synapse[49], ('t', 'Apost'))],
+        title="Apre",
+        xlabel='time',  # delta t
+        ylabel='Apre',
+        backend=visualization_backend,
+        QtApp=app,
+        mainfig=win_9,
+        show_immediately=True)

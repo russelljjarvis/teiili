@@ -23,11 +23,10 @@ StochSynAdp = {'model':
 'on_pre':
 '''
 
-        I_syn += gain_syn * weight * w_plast
+        I_syn += gain_syn * abs(weight) * w_plast
         
         delta_w = inh_learning_rate * (normalized_activity_proxy_post - variance_th)
-        delta_w = int(delta_w * 15)
-        w_plast = int(clip(w_plast + delta_w, 0, -15))
+        w_plast = clip(w_plast + delta_w, 0, 15)
          ''',
 'on_post':
 '''
@@ -42,7 +41,7 @@ StochSynAdp = {'model':
 'gain_syn' : '1. * mamp',
 'tau_syn' : '3. * msecond',
 'lfsr_num_bits_syn' : '6',
-'inh_learning_rate' : '1',
+'inh_learning_rate' : '0.1',
 'variance_th' : '0.67',
 }
 }

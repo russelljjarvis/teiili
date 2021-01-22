@@ -135,15 +135,15 @@ if i_plast:
                                    size=exc_cells.N)
 
 inh_cells = Neurons(num_inh,
-                    equation_builder=neuron_model(num_inputs=2),
+                    equation_builder=neuron_model(num_inputs=3),
                     method=stochastic_decay,
                     name='inh_cells',
                     verbose=True)
 
 # Connections
-ei_p = 0.50#.1
-ie_p = 0.70#.8
-ee_p = 0.30#.8
+ei_p = 0.50
+ie_p = 0.70
+ee_p = 0.60
 
 if not simple:
     exc_exc_conn = Connections(exc_cells, exc_cells,
@@ -164,6 +164,10 @@ else:
                                equation_builder=static_synapse_model(),
                                method=stochastic_decay,
                                name='inh_exc_conn')
+inh_inh_conn = Connections(inh_cells, inh_cells,
+                           equation_builder=static_synapse_model(),
+                           method=stochastic_decay,
+                           name='inh_inh_conn')
 feedforward_exc = Connections(seq_cells, exc_cells,
                               equation_builder=stdp_synapse_model(),
                               method=stochastic_decay,
@@ -175,6 +179,7 @@ feedforward_inh = Connections(seq_cells, inh_cells,
 
 feedforward_exc.connect()
 feedforward_inh.connect()
+inh_inh_conn.connect(p=.1)
 #TODO test with delays
 if not simple:
     exc_exc_conn.connect('i!=j', p=ee_p)
@@ -202,6 +207,7 @@ exc_exc_conn.taupost = 60*ms
 exc_exc_conn.stdp_thres = 1
 exc_inh_conn.tau_syn = 5*ms
 inh_exc_conn.tau_syn = 10*ms
+inh_inh_conn.tau_syn = 10*ms
 feedforward_exc.tau_syn = 5*ms
 feedforward_exc.taupre = 20*ms
 feedforward_exc.taupost = 60*ms
@@ -218,6 +224,7 @@ exc_exc_conn.lfsr_num_bits_Apre = 5
 exc_exc_conn.lfsr_num_bits_Apost = 6
 exc_inh_conn.lfsr_num_bits_syn = 5
 inh_exc_conn.lfsr_num_bits_syn = 5
+inh_inh_conn.lfsr_num_bits_syn = 5
 feedforward_exc.lfsr_num_bits_syn = 5
 feedforward_exc.lfsr_num_bits_Apre = 5
 feedforward_exc.lfsr_num_bits_Apost = 6
@@ -236,10 +243,11 @@ mean_ee_w = 1
 mean_ffe_w = 2
 mean_ffi_w = 1
 
+inh_inh_conn.weight = -1
 if i_plast:
     inh_exc_conn.weight = -1
     # 1 = no inhibition, 0 = maximum inhibition
-    inh_exc_conn.variance_th = 0.30
+    variance_th = 0.50
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
     sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
@@ -249,7 +257,7 @@ for i in range(num_inh):
     else:
         inh_exc_conn.weight[i,:] = -sampled_weights
 if not simple:
-    exc_exc_conn.weight = 2
+    exc_exc_conn.weight = 1
 for i in range(num_exc):
     if not simple:
         weight_length = np.shape(exc_exc_conn.w_plast[i,:])
@@ -279,7 +287,7 @@ for i in range(num_channels):
 # Set LFSRs for each group
 ta = create_lfsr([exc_cells, inh_cells],
                  [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
-                     feedforward_inh],
+                     feedforward_inh, inh_inh_conn],
                  defaultclock.dt)
 # Necessary for new stdp equations TODO update when it becomes proper equations
 exc_exc_conn.lfsr_max_value_condApost2 = 14*ms
@@ -291,11 +299,11 @@ if i_plast:
     # Add proxy activity group
     activity_proxy_group = [exc_cells]
     add_group_activity_proxy(activity_proxy_group,
-                             buffer_size=200,
+                             buffer_size=400,
                              decay=150)
     inh_exc_conn.variance_th = np.random.uniform(
-            low=inh_exc_conn.variance_th - 0.1,
-            high=inh_exc_conn.variance_th + 0.1,
+            low=variance_th - 0.1,
+            high=variance_th + 0.1,
             size=len(inh_exc_conn))
 
 # FIXME worse RFs when mismatch is added
@@ -376,7 +384,7 @@ if not simple:
     statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast'], record=True,
                                       name='statemon_rec_conns')
 if i_plast:
-    statemon_inh_conns = StateMonitor(inh_exc_conn, variables=['w_plast', 'variance_th'], record=True,
+    statemon_inh_conns = StateMonitor(inh_exc_conn, variables=['w_plast'], record=True,
                                       name='statemon_inh_conns')
 statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast'], record=True,
                                   name='statemon_ffe_conns')
@@ -390,19 +398,20 @@ if not simple:
                 feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
                 statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
                 spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_inh_conns, statemon_ei_conns, statemon_ie_conns)
+                statemon_pop_rate_i, statemon_inh_conns, statemon_ei_conns, statemon_ie_conns,
+                inh_inh_conn)
     else:
         net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
                 feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh, 
                 statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
                 spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns)
+                statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns, inh_inh_conn)
 else:
     net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
             feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh, 
             spikemon_exc_neurons, spikemon_inh_neurons,
             spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-            statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns)
+            statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns, inh_inh_conn)
 net.run(training_duration + test_duration, report='stdout', report_period=100*ms)
 
 if not np.array_equal(spk_t, spikemon_seq_neurons.t):

@@ -22,8 +22,8 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.converter import delete_doublets
 
 from lfsr import create_lfsr
-from run_regularly import re_init_weights, activity_tracer, weight_activity_tracer,\
-        wplast_activity_tracer, reset_activity_tracer
+from reinit_functions import wplast_re_init, weight_re_init,\
+        reset_re_init_counter
 
 import sys
 import pickle
@@ -87,7 +87,7 @@ net.run(training_duration, report='stdout', report_period=100*ms)
 spike_indices = np.array(input_monitor.i)
 spike_times = np.array(input_monitor.t/ms)
 # Creating and adding noise
-#noise_prob = 0.001
+#noise_prob = 0.002
 #noise_spikes = np.random.rand(num_channels, int(training_duration/ms + test_duration/ms))
 #noise_indices = np.where(noise_spikes < noise_prob)[0]
 #noise_times = np.where(noise_spikes < noise_prob)[1]
@@ -240,7 +240,7 @@ learn_factor = 4
 ei_w = 3
 mean_ie_w = 4
 mean_ee_w = 1
-mean_ffe_w = 2
+mean_ffe_w = 3
 mean_ffi_w = 1
 
 inh_inh_conn.weight = -1
@@ -279,10 +279,10 @@ for i in range(num_channels):
             0,
             15)
 # Set sparsity for ffe connections
-#for i in range(num_exc):
-#    ffe_zero_w = np.random.choice(num_channels, int(num_channels*.3), replace=False)
-#    feedforward_exc.weight[ffe_zero_w,i] = 0
-#    feedforward_exc.w_plast[ffe_zero_w,i] = 0
+for i in range(num_exc):
+    ffe_zero_w = np.random.choice(num_channels, int(num_channels*.3), replace=False)
+    feedforward_exc.weight[ffe_zero_w,i] = 0
+    feedforward_exc.w_plast[ffe_zero_w,i] = 0
 
 # Set LFSRs for each group
 ta = create_lfsr([exc_cells, inh_cells],

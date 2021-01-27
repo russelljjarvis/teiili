@@ -172,6 +172,7 @@ RC = Rasterplot(MyEventsModels=[inh_raster], backend='pyqtgraph', QtApp=QtApp)
 RC = Rasterplot(MyEventsModels=[seq_raster], backend='pyqtgraph', QtApp=QtApp)
 LC = Lineplot(DataModel_to_x_and_y_attr=[(thresh_traces, ('t_Vthres', 'Vthres'))],
               #MyPlotSettings=PlotSettings(colors=['r', 'b', 'g', 'c', 'k', 'm', 'y']),
+              title='threshold decay', xlabel='time (s)', ylabel='Vth (V)',
               backend='pyqtgraph', QtApp=QtApp,
-              subgroup_labels=[str(x) for x in rec_neurons],
+              #subgroup_labels=[str(x) for x in rec_neurons],
               show_immediately=True)

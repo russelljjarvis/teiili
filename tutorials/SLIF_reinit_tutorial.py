@@ -238,8 +238,14 @@ state_variables = [reinit_ratio]
 state_variables_times = [statemon_pruned.t/ms]
 ratio_line = StateVariablesModel(state_variable_names, state_variables, state_variables_times)
 
-line_plot1 = Lineplot(DataModel_to_x_and_y_attr=[(counter_line, ('t_re_init_counter', 're_init_counter'))], backend='pyqtgraph', QtApp=QtApp)
-line_plot2 = Lineplot(DataModel_to_x_and_y_attr=[(ratio_line, ('t_reinit_ratio', 'reinit_ratio'))], backend='pyqtgraph', QtApp=QtApp)
+line_plot1 = Lineplot(DataModel_to_x_and_y_attr=[(counter_line, ('t_re_init_counter', 're_init_counter'))],
+                      title='reinit counters with time', xlabel='time (s)',
+                      ylabel='counter value', backend='pyqtgraph', QtApp=QtApp)
+line_plot2 = Lineplot(DataModel_to_x_and_y_attr=[(ratio_line, ('t_reinit_ratio', 'reinit_ratio'))],
+                      MyPlotSettings = PlotSettings(marker_size=30),
+                      title='Number of pruned/spawned synapses with time',
+                      xlabel='time (s)', ylabel='# pruned/spawned',
+                      backend='pyqtgraph', QtApp=QtApp)
 raster_plot1 = Rasterplot(MyEventsModels=[exc_raster], backend='pyqtgraph', QtApp=QtApp)
 raster_plot2 = Rasterplot(MyEventsModels=[seq_raster], backend='pyqtgraph', QtApp=QtApp,
                 show_immediately=True)

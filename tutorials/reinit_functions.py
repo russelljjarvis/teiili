@@ -1,3 +1,6 @@
+"""These functions are supposed to be used only with STDP, in which case
+the state variable *weight* is zero or one.
+"""
 from brian2 import implementation, check_units
 from brian2.units import *
 import numpy as np
@@ -38,15 +41,20 @@ from scipy.stats import gamma
 @check_units(prune_indices=1, weight=1, re_init_counter=1, sim_time=second, result=1)
 def get_prune_indices(prune_indices, weight, re_init_counter, sim_time):
     if sim_time > 0:
-        import pdb;pdb.set_trace()
-        zero_weights = np.where(weight==0)
-        prune_indices = np.where(re_init_counter < 1)[0]
+        counter_th = 5
+        zero_weights = np.where(weight==0)[0]
+        tmp_indices = np.where(re_init_counter < counter_th)[0]
         # Avoid already inactive weights
-        prune_indices = np.delete(prune_indices, zero_weights)
+        tmp_indices = tmp_indices[~np.isin(tmp_indices,zero_weights)]
 
-        if len(zero_weights) < len(prune_indices):
-            prune_indices = np.random.choice(prune_indices, len(zero_weights),
+        # Pruned/spawned synapses are limited by unused synapses
+        if len(tmp_indices) > len(zero_weights):
+            tmp_indices = np.random.choice(tmp_indices, len(zero_weights),
                                              replace=False)
+
+        # Assign to variable with correct size
+        prune_indices = np.zeros(len(weight))
+        prune_indices[tmp_indices] = 1
 
     return prune_indices
 
@@ -54,42 +62,49 @@ def get_prune_indices(prune_indices, weight, re_init_counter, sim_time):
 def get_spawn_indices(spawn_indices, prune_indices, weight, sim_time):
     if sim_time > 0:
         # Select indices
-        spawn_indices = np.where(weight == 0)[0]
-        spawn_indices = np.random.choice(spawn_indices, len(prune_indices),
-                                         replace=False)
+        tmp_indices = np.where(weight == 0)[0]
+        tmp_indices = np.random.choice(tmp_indices,
+                                       len(np.where(prune_indices==1)[0]),
+                                       replace=False)
 
+        # Assign to variable with correct size
+        spawn_indices = np.zeros(len(weight))
+        spawn_indices[tmp_indices] = 1
     return spawn_indices
 
 @check_units(w_plast=1, spawn_indices=1, sim_time=second, result=1)
 def wplast_re_init(w_plast, spawn_indices, sim_time):
     if sim_time > 0:
-        sampled_weights = gamma.rvs(a=2, size=len(spawn_indices)).astype(int)
-        sampled_weights = np.clip(sampled_weights, 0, 15)
-        w_plast[spawn_indices] = sampled_weights
+        sampled_weights = gamma.rvs(a=2,
+                                    size=len(np.where(spawn_indices==1)[0]))
+        sampled_weights = np.clip(sampled_weights.astype(int), 0, 15)
+        w_plast[spawn_indices==1] = sampled_weights
 
     return w_plast
 
 @check_units(tau_syn=second, spawn_indices=1, sim_time=second, result=second)
 def tau_re_init(tau_syn, spawn_indices, sim_time):
     if sim_time > 0:
-        sampled_taus = np.random.randint(4, 7, size=len(spawn_indices)) * ms
-        tau_syn[spawn_indices] = sampled_taus
+        sampled_taus = np.random.randint(4, 7,
+                                         size=len(np.where(spawn_indices==1)[0])) * ms
+        tau_syn[spawn_indices==1] = sampled_taus
 
     return tau_syn
 
 @check_units(delay=second, spawn_indices=1, sim_time=second, result=second)
 def delay_re_init(delay, spawn_indices, sim_time):
     if sim_time > 0:
-        sampled_delays = np.random.randint(0, 3, size=len(spawn_indices)) * ms
-        delay[spawn_indices] = sampled_delays
+        sampled_delays = np.random.randint(0, 3,
+                                           size=len(np.where(spawn_indices==1)[0])) * ms
+        delay[spawn_indices==1] = sampled_delays
 
     return delay
 
 @check_units(weight=1, spawn_indices=1, prune_indices=1, sim_time=second, result=1)
 def weight_re_init(weight, spawn_indices, prune_indices, sim_time):
     if sim_time > 0:
-        weight[prune_indices] = 0
-        weight[spawn_indices] = 1
+        weight[prune_indices==1] = 0
+        weight[spawn_indices==1] = 1
 
     return weight
 

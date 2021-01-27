@@ -46,7 +46,7 @@ sequence_duration = 50
 noise_prob = None
 item_rate = 30
 spike_times, spike_indices = [], []
-sequence_repetitions = 10
+sequence_repetitions = 200
 sim_time = sequence_duration * sequence_repetitions * ms
 sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
                                      noise_prob, item_rate)
@@ -77,7 +77,7 @@ seq_cells.namespace.update({'converted_input':converted_input})
 #################
 # Building network
 # cells
-num_exc = 20
+num_exc = 5
 exc_cells = Neurons(num_exc,
                     equation_builder=neuron_model_Adapt(num_inputs=3),
                     method=stochastic_decay,
@@ -123,47 +123,46 @@ feedforward_exc.namespace.update({'delay_re_init': delay_re_init})
 feedforward_exc.namespace.update({'weight_re_init': weight_re_init})
 feedforward_exc.namespace.update({'reset_re_init_counter': reset_re_init_counter})
 
-reinit_period = 20*ms
-
+reinit_period = 1000*ms
 feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
                                                     prune_indices,\
                                                     weight,\
                                                     re_init_counter,\
                                                     t)''',
                                                     dt=reinit_period,
-                                                    when='start')
+                                                    order=0)
 feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
                                                     spawn_indices,\
                                                     prune_indices,\
                                                     weight,\
                                                     t)''',
                                                     dt=reinit_period,
-                                                    when='start')
+                                                    order=1)
 
 feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
                                                           spawn_indices,\
                                                           t)''',
                                                           dt=reinit_period,
-                                                          when='end')
+                                                          order=2)
 feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
                                                        spawn_indices,\
                                                        t)''',
                                                        dt=reinit_period,
-                                                       when='end')
+                                                       order=3)
 #feedforward_exc.run_regularly('''delay = delay_re_init(delay,\
 #                                                       spawn_indices,\
 #                                                       t)''',
 #                                                       dt=reinit_period,
-#                                                       when='end')
+#                                                       order=4)
 feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
                                                          spawn_indices,\
                                                          prune_indices,\
                                                          t)''',
                                                          dt=reinit_period,
-                                                         when='end')
+                                                         order=5)
 feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
                                                                          dt=reinit_period,
-                                                                         when='end')
+                                                                         order=6)
 
 ##################
 # Setting up monitors
@@ -173,10 +172,15 @@ statemon_wplast = StateMonitor(feedforward_exc, variables=['w_plast'],
                                record=True, name='statemon_wplast')
 statemon_weight = StateMonitor(feedforward_exc, variables=['weight'],
                                record=True, name='statemon_weight')
+statemon_counter = StateMonitor(feedforward_exc, variables=['re_init_counter'],
+                               record=True, name='statemon_counter')
+statemon_pruned = StateMonitor(feedforward_exc, variables=['prune_indices'],
+                               record=True, name='statemon_pruned')
 
 net = TeiliNetwork()
 net.add(exc_cells, seq_cells, feedforward_exc, spikemon_exc_neurons,
-        spikemon_seq_neurons, statemon_wplast, statemon_weight)
+        spikemon_seq_neurons, statemon_wplast, statemon_weight,
+        statemon_counter, statemon_pruned)
 net.run(sim_time, report='stdout', report_period=100*ms)
 
 # Plots
@@ -187,14 +191,6 @@ import pyqtgraph as pg
 from PyQt5 import QtGui
 
 QtApp = QtGui.QApplication([])
-
-exc_raster = EventsModel.from_brian_spike_monitor(spikemon_exc_neurons)
-seq_raster = EventsModel.from_brian_spike_monitor(spikemon_seq_neurons)
-skip_not_rec_neuron_ids = True
-
-RC = Rasterplot(MyEventsModels=[exc_raster], backend='pyqtgraph', QtApp=QtApp)
-RC = Rasterplot(MyEventsModels=[seq_raster], backend='pyqtgraph', QtApp=QtApp,
-                show_immediately=True)
 
 colors = [
     (0, 0, 0),
@@ -229,3 +225,21 @@ m2.setColorMap(cmap)
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='postsynaptic neuron')
 image_axis.setLabel(axis='left', text='presynaptic neuron')
+
+exc_raster = EventsModel.from_brian_spike_monitor(spikemon_exc_neurons)
+seq_raster = EventsModel.from_brian_spike_monitor(spikemon_seq_neurons)
+skip_not_rec_neuron_ids = True
+counter_line = StateVariablesModel.from_brian_state_monitors([statemon_counter], skip_not_rec_neuron_ids)
+reinit_ratio = []
+for i in range(int(sim_time/ms)):
+    reinit_ratio.append(len(np.where(statemon_pruned.prune_indices[:,i])[0]))
+state_variable_names = ['reinit_ratio']
+state_variables = [reinit_ratio]
+state_variables_times = [statemon_pruned.t/ms]
+ratio_line = StateVariablesModel(state_variable_names, state_variables, state_variables_times)
+
+line_plot1 = Lineplot(DataModel_to_x_and_y_attr=[(counter_line, ('t_re_init_counter', 're_init_counter'))], backend='pyqtgraph', QtApp=QtApp)
+line_plot2 = Lineplot(DataModel_to_x_and_y_attr=[(ratio_line, ('t_reinit_ratio', 'reinit_ratio'))], backend='pyqtgraph', QtApp=QtApp)
+raster_plot1 = Rasterplot(MyEventsModels=[exc_raster], backend='pyqtgraph', QtApp=QtApp)
+raster_plot2 = Rasterplot(MyEventsModels=[seq_raster], backend='pyqtgraph', QtApp=QtApp,
+                show_immediately=True)

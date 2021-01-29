@@ -1,13 +1,13 @@
 """
-This code implements a sequence learning using and Excitatory-Inhibitory 
+This code implements a sequence learning using and Excitatory-Inhibitory
 network with STDP.
 """
 import numpy as np
 from scipy.stats import gamma
-from scipy.signal import savgol_filter
 
-from brian2 import ms, mA, mV, Hz, prefs, SpikeMonitor, StateMonitor, defaultclock,\
-    ExplicitStateUpdater, SpikeGeneratorGroup, TimedArray, PopulationRateMonitor
+from brian2 import ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
+        defaultclock, ExplicitStateUpdater, SpikeGeneratorGroup,\
+        PopulationRateMonitor
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
@@ -22,7 +22,10 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.converter import delete_doublets
 
 from lfsr import create_lfsr
-from reinit_functions import wplast_re_init, weight_re_init,\
+from SLIF_utils import neuron_group_from_spikes, neuron_rate,\
+        rate_correlations, ensemble_convergence
+from reinit_functions import get_prune_indices, get_spawn_indices,\
+        wplast_re_init, weight_re_init, tau_re_init, delay_re_init,\
         reset_re_init_counter
 
 import sys
@@ -68,24 +71,44 @@ net = TeiliNetwork()
 # Initialize input sequence
 num_items = 3
 num_channels = 144
-sequence_duration = 150# 300
+sequence_duration = 150  # 300
 noise_prob = None
-item_rate = 20
+item_rate = 25
 spike_times, spike_indices = [], []
-sequence_repetitions = 700# 350
+sequence_repetitions = 200#700  # 350
 training_duration = sequence_repetitions*sequence_duration*ms
-test_duration = 1000*ms
 sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
-                                     noise_prob, item_rate)
+                             noise_prob, item_rate)
 tmp_i, tmp_t = sequence.stimuli()
+
+# Replicates sequence throughout simulation
 input_spikes = SpikeGeneratorGroup(num_channels, tmp_i, tmp_t,
-                period=sequence_duration*ms)
+                                   period=sequence_duration*ms)
 input_monitor = SpikeMonitor(input_spikes)
 net.add(input_spikes, input_monitor)
 print('Generating input...')
 net.run(training_duration, report='stdout', report_period=100*ms)
 spike_indices = np.array(input_monitor.i)
 spike_times = np.array(input_monitor.t/ms)
+
+# Adding incomplete sequence
+symbols = {}
+symbol_duration = int(sequence_duration/num_items)
+for item in range(num_items):
+    item_interval = (tmp_t>=(symbol_duration*item*ms)) & (tmp_t<(symbol_duration*(item+1)*ms))
+    symbols[item] = {'t':tmp_t[item_interval],
+                     'i':tmp_i[item_interval]}
+
+incomplete_sequences = 5
+test_duration = incomplete_sequences*sequence_duration*ms
+include_symbols = [[1], [0], [0,1], [0,2], [1,2]]
+for incomp_seq in range(incomplete_sequences):
+    for incl_symb in include_symbols[incomp_seq]:
+        tmp_symb = [(x/ms + incomp_seq*sequence_duration + training_duration/ms)
+                        for x in symbols[incl_symb]['t']]
+        spike_times = np.append(spike_times, tmp_symb)
+        spike_indices = np.append(spike_indices, symbols[incl_symb]['i'])
+
 # Creating and adding noise
 #noise_prob = 0.002
 #noise_spikes = np.random.rand(num_channels, int(training_duration/ms + test_duration/ms))
@@ -97,23 +120,14 @@ spike_times = np.array(input_monitor.t/ms)
 #spike_indices = spike_indices[sorting_index]
 #spike_times = spike_times[sorting_index]
 #spike_times, spike_indices = delete_doublets(spike_times, spike_indices)
+
 # Save them for comparison
 spk_i, spk_t = np.array(spike_indices), np.array(spike_times)*ms
 
 # Reproduce activity in a neuron group (necessary for STDP compatibility)
-spike_times = [spike_times[np.where(spike_indices==i)[0]]*ms for i in range(num_channels)]
-# Create matrix where each row (neuron id) is associated with time when there
-# is a spike or -1 when there is not
-converted_input = (np.zeros((num_channels, int((training_duration+test_duration)/defaultclock.dt))) - 1)*ms
-for ind, val in enumerate(spike_times):
-    converted_input[ind, np.around(val/defaultclock.dt).astype(int)] = val
-converted_input = np.transpose(converted_input)
-converted_input = TimedArray(converted_input, dt=defaultclock.dt)
-# t is simulation time, and will be equal to tspike when there is a spike
-# Cell remains refractory when there is no spike, i.e. tspike=-1
-seq_cells = Neurons(num_channels, model='tspike=converted_input(t, i): second',
-        threshold='t==tspike', refractory='tspike < 0*ms')
-seq_cells.namespace.update({'converted_input':converted_input})
+seq_cells = neuron_group_from_spikes(spike_indices, spike_times, num_channels,
+                                     defaultclock.dt,
+                                     int((training_duration+test_duration)/defaultclock.dt))
 
 #################
 # Building network
@@ -127,11 +141,11 @@ exc_cells = Neurons(num_exc,
 # Register proxy arrays
 if i_plast:
     dummy_unit = 1*mV
-    exc_cells.variables.add_array('activity_proxy', 
+    exc_cells.variables.add_array('activity_proxy',
                                    size=exc_cells.N,
                                    dimensions=dummy_unit.dim)
 
-    exc_cells.variables.add_array('normalized_activity_proxy', 
+    exc_cells.variables.add_array('normalized_activity_proxy',
                                    size=exc_cells.N)
 
 inh_cells = Neurons(num_inh,
@@ -183,11 +197,11 @@ inh_inh_conn.connect(p=.1)
 #TODO test with delays
 if not simple:
     exc_exc_conn.connect('i!=j', p=ee_p)
-    #exc_exc_conn.delay = np.random.randint(0, 3, size=np.shape(exc_exc_conn.j)[0]) * ms
+    exc_exc_conn.delay = np.random.randint(0, 15, size=np.shape(exc_exc_conn.j)[0]) * ms
 exc_inh_conn.connect(p=ei_p)
-#exc_inh_conn.delay = np.random.randint(0, 3, size=np.shape(exc_inh_conn.j)[0]) * ms
-#feedforward_exc.delay = np.random.randint(0, 3, size=np.shape(feedforward_exc.j)[0]) * ms
-#feedforward_inh.delay = np.random.randint(0, 3, size=np.shape(feedforward_inh.j)[0]) * ms
+exc_inh_conn.delay = np.random.randint(0, 15, size=np.shape(exc_inh_conn.j)[0]) * ms
+feedforward_exc.delay = np.random.randint(0, 15, size=np.shape(feedforward_exc.j)[0]) * ms
+feedforward_inh.delay = np.random.randint(0, 15, size=np.shape(feedforward_inh.j)[0]) * ms
 inh_exc_conn.connect(p=ie_p)
 
 ###################
@@ -306,7 +320,6 @@ if i_plast:
             high=variance_th + 0.1,
             size=len(inh_exc_conn))
 
-# FIXME worse RFs when mismatch is added
 # Adding mismatch
 #mismatch_neuron_param = {
 #    'tau': 0.05
@@ -331,41 +344,51 @@ if i_plast:
 
 ###################
 # Adding homeostatic mechanisms
-#exc_cells.namespace.update({'activity_tracer': activity_tracer})
-#TODO reinit weights
-#feedforward_exc.namespace.update({'re_init_weights': re_init_weights})
-#feedforward_exc.namespace.update({'re_init_delays': re_init_delays})
-#exc_cells.run_regularly('''update_counter = activity_tracer(Vthres,\
-#                                                            theta,\
-#                                                            update_counter)''',
-#                                                            dt=defaultclock.dt)
-#feedforward_exc.run_regularly('''w_plast = re_init_weights(w_plast, \
-#                                                           update_counter_post,\
-#                                                           update_time_post,\
-#                                                           t)''',
-#                                                           dt=30000*ms)
-#TODO test with delays
-#feedforward_exc.run_regularly('''delay = re_init_delays(delay, \
-#                                                        update_counter_post,\
-#                                                        update_time_post)''',
-#                                                        dt=300*ms)
-## Synaptic homeostasis
-#feedforward_exc.namespace.update({'wplast_activity_tracer': wplast_activity_tracer})
-#feedforward_exc.run_regularly('''w_plast = wplast_activity_tracer(w_plast,\
-#                                                                  re_init_counter,\
-#                                                                  t)''',
-#                                                                  dt=50000*ms,
-#                                                                  when='start')
-#feedforward_exc.namespace.update({'weight_activity_tracer': weight_activity_tracer})
-#feedforward_exc.run_regularly('''weight = weight_activity_tracer(weight,\
-#                                                                 re_init_counter,\
-#                                                                 t)''',
-#                                                                 dt=50000*ms,
-#                                                                 when='start')
-#feedforward_exc.namespace.update({'reset_activity_tracer': reset_activity_tracer})
-#feedforward_exc.run_regularly('''re_init_counter = reset_activity_tracer(re_init_counter)''',
-#                                                                         dt=50000*ms,
-#                                                                         when='end')
+feedforward_exc.variables.add_array('prune_indices', size=len(feedforward_exc.weight))
+feedforward_exc.variables.add_array('spawn_indices', size=len(feedforward_exc.weight))
+feedforward_exc.namespace.update({'get_prune_indices': get_prune_indices})
+feedforward_exc.namespace.update({'get_spawn_indices': get_spawn_indices})
+feedforward_exc.namespace.update({'wplast_re_init': wplast_re_init})
+feedforward_exc.namespace.update({'tau_re_init': tau_re_init})
+feedforward_exc.namespace.update({'delay_re_init': delay_re_init})
+feedforward_exc.namespace.update({'weight_re_init': weight_re_init})
+feedforward_exc.namespace.update({'reset_re_init_counter': reset_re_init_counter})
+
+reinit_period = 50000*ms
+feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
+                                                    prune_indices,\
+                                                    weight,\
+                                                    re_init_counter,\
+                                                    t)''',
+                                                    dt=reinit_period,
+                                                    order=0)
+feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
+                                                    spawn_indices,\
+                                                    prune_indices,\
+                                                    weight,\
+                                                    t)''',
+                                                    dt=reinit_period,
+                                                    order=1)
+
+feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
+                                                          spawn_indices,\
+                                                          t)''',
+                                                          dt=reinit_period,
+                                                          order=2)
+feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
+                                                       spawn_indices,\
+                                                       t)''',
+                                                       dt=reinit_period,
+                                                       order=3)
+feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
+                                                         spawn_indices,\
+                                                         prune_indices,\
+                                                         t)''',
+                                                         dt=reinit_period,
+                                                         order=5)
+feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
+                                                                         dt=reinit_period,
+                                                                         order=6)
 
 ##################
 # Setting up monitors
@@ -402,21 +425,33 @@ if not simple:
                 inh_inh_conn)
     else:
         net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh, 
+                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
                 statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
                 spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
                 statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns, inh_inh_conn)
 else:
     net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
-            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh, 
+            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
             spikemon_exc_neurons, spikemon_inh_neurons,
             spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
             statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns, inh_inh_conn)
 net.run(training_duration + test_duration, report='stdout', report_period=100*ms)
 
+##########
+# Evaluations
 if not np.array_equal(spk_t, spikemon_seq_neurons.t):
     print('Proxy activity and generated input do not match.')
     sys.exit()
+
+neu_rates = neuron_rate(spikemon_exc_neurons, 200, 10, 0.001,
+                        [0, training_duration/ms])
+seq_rates = neuron_rate(spikemon_seq_neurons, 200, 10, 0.001,
+                        [0, sequence_duration])
+foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
+                           sequence_duration, sequence_repetitions)
+
+corrs = rate_correlations(neu_rates, sequence_duration, sequence_repetitions)
+
 
 ############
 # Saving results
@@ -429,7 +464,7 @@ if not simple:
         recurrent_weights.append(list(exc_exc_conn.w_plast[i, :]))
         recurrent_ids.append(list(exc_exc_conn.j[i, :]))
 
-# Getting permutation indices from firing rates
+# Calculating permutation indices from firing rates
 tmp_spike_trains = spikemon_exc_neurons.spike_trains()
 neuron_rate = {}
 peak_instants = {}
@@ -444,14 +479,13 @@ for key, val in tmp_spike_trains.items():
     # Use histogram to get values that will be convolved
     h, b = np.histogram(selected_spikes, bins=interval, range=(min(interval), max(interval)))
     neuron_rate[key] = {'rate': np.convolve(h, kernel, mode='same'), 't': b[:-1]}
-    peak_id = np.where(neuron_rate[key]['rate'] == max(neuron_rate[key]['rate']))[0]
+    peak_index = np.where(neuron_rate[key]['rate'] == max(neuron_rate[key]['rate']))[0]
     if neuron_rate[key]['rate'].any():
-        peak_instants[key] = neuron_rate[key]['t'][peak_id]
-# Remove unspecific cases or choose a single peak
+        peak_instants[key] = neuron_rate[key]['t'][peak_index]
+# Remove unspecific cases or choose a single peak TODO no, just average peaks
 double_peaks = [key for key, val in peak_instants.items() if len(val)>1]
-#triple_peaks = [key for key, val in peak_instants.items() if len(val)>2] TODO
+#triple_peaks = [key for key, val in peak_instants.items() if len(val)>2]
 #if triple_peaks:
-#    import pdb;pdb.set_trace()
 for i in double_peaks:
     h, b = np.histogram(peak_instants[i], bins=num_items, range=(min(interval), max(interval)))
     if any(h==1):
@@ -527,3 +561,7 @@ Metadata = {'e->i': exc_inh_conn.get_params(),
             }
 with open(path+'connections.data', 'wb') as f:
     pickle.dump(Metadata, f)
+
+from brian2 import *
+_ = hist(corrs, bins=20)
+show()

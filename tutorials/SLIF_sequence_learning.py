@@ -452,7 +452,6 @@ foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
 
 corrs = rate_correlations(neu_rates, sequence_duration, sequence_repetitions)
 
-
 ############
 # Saving results
 # Save targets of recurrent connections as python object
@@ -563,5 +562,22 @@ with open(path+'connections.data', 'wb') as f:
     pickle.dump(Metadata, f)
 
 from brian2 import *
+import pandas as pd
+
 _ = hist(corrs, bins=20)
+show()
+
+figure()
+neu=1
+y1 = pd.Series(foo[0,neu,:])
+y1=savgol_filter(y1.interpolate(), 31, 4)
+y2 = pd.Series(foo[1,neu,:])
+y2=savgol_filter(y2.interpolate(), 31, 4)
+y3 = pd.Series(foo[2,neu,:])
+y3=savgol_filter(y3.interpolate(), 31, 4)
+
+plot(y1, label='symbol 1')
+plot(y2, label='symbol 2')
+plot(y3, label='symbol 3')
+legend()
 show()

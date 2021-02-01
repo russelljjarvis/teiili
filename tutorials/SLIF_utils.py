@@ -1,7 +1,7 @@
 from brian2 import ms, TimedArray
 import numpy as np
 from teili.core.groups import Neurons
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 
 def neuron_group_from_spikes(spike_indices, spike_times, num_inputs, time_step,
                              duration):
@@ -70,7 +70,7 @@ def rate_correlations(rates, interval_dur, intervals):
     """This function uses firing rates of neurons to evaluate the overall
     ensemble formation in a sequence learning task. Considering that the
     average activity of neurons in an ensemble is high when the learned
-    symbol is presented, this averege can be correlated to responses to
+    symbol is presented, this average can be correlated to responses to
     each sequence to determine how stable this ensemble is.
 
     Args:
@@ -80,7 +80,7 @@ def rate_correlations(rates, interval_dur, intervals):
         intervals (int): Number of times sequence is presented.
 
     Returns:
-        correlations (list): Spearman correlations over intervals.
+        correlations (list): Pearson correlations over intervals.
     """
     rate_matrix = np.zeros((len(rates.keys()), interval_dur*intervals))
     for neu, rate in rates.items():
@@ -106,20 +106,27 @@ def rate_correlations(rates, interval_dur, intervals):
 
 def ensemble_convergence(input_rates, neuron_rates, input_ensembles,
                          interval_dur, intervals):
+    # Generate ideal case that will be used as a metric
     ideal_rate = []
     for group in input_ensembles:
-        temp_rate = np.zeros((len(group), interval_dur))
-        for i in range(group[0], group[1]):
-            temp_rate[i, :] = input_rates[i]['rate']
-        ideal_rate.append(temp_rate)
+        temp_rate = np.zeros((group[1]-group[0], interval_dur))
+        for j, i in enumerate(range(group[0], group[1])):
+            temp_rate[j, :] = input_rates[i]['rate']
+        ideal_rate.append(np.mean(temp_rate, axis=0))
 
-    # TODO return correlation
-    # TODO corr(ideal_rate[x], rate_neuron[y] for each trial)
-    # TODO make average of above over all neurons
-    # TODO
-    # temp_rate[i, :] = input_rates[i]['rate']
-    # IndexError: index 2 is out of bounds for axis 0 with size 2
+    # Work with numpy array for convenience
+    temp_neu_rates = np.array([list(x['rate']) for x in neuron_rates.values()])
+    convergence_matrix = np.zeros((len(ideal_rate), len(neuron_rates.keys()),
+                                   intervals))
+    # Calculate correlation for all neurons on each symbol presentation
+    for ideal_ind in range(convergence_matrix.shape[0]):
+        for neu_ind, neu_rate in enumerate(temp_neu_rates):
+            for i in range(intervals):
+                corr, _ = spearmanr(ideal_rate[ideal_ind], 
+                          neu_rate[i*interval_dur:(i+1)*interval_dur],
+                          axis=1)
+                convergence_matrix[ideal_ind, neu_ind, i] = corr
 
-    return ideal_rate
+    return convergence_matrix
 
 #TODO def permutation_from_rate()

@@ -75,7 +75,7 @@ sequence_duration = 150  # 300
 noise_prob = None
 item_rate = 25
 spike_times, spike_indices = [], []
-sequence_repetitions = 200#700  # 350
+sequence_repetitions = 700#200  # 350
 training_duration = sequence_repetitions*sequence_duration*ms
 sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
                              noise_prob, item_rate)
@@ -91,7 +91,7 @@ net.run(training_duration, report='stdout', report_period=100*ms)
 spike_indices = np.array(input_monitor.i)
 spike_times = np.array(input_monitor.t/ms)
 
-# Adding incomplete sequence
+# Adding incomplete sequence at the end of simulation
 symbols = {}
 symbol_duration = int(sequence_duration/num_items)
 for item in range(num_items):
@@ -108,6 +108,16 @@ for incomp_seq in range(incomplete_sequences):
                         for x in symbols[incl_symb]['t']]
         spike_times = np.append(spike_times, tmp_symb)
         spike_indices = np.append(spike_indices, symbols[incl_symb]['i'])
+
+# Adding noise at the end of simulation
+#incomplete_sequences = 5
+#test_duration = incomplete_sequences*sequence_duration*ms
+#noise_prob = 0.01
+#noise_spikes = np.random.rand(num_channels, int(test_duration/ms))
+#noise_indices = np.where(noise_spikes < noise_prob)[0]
+#noise_times = np.where(noise_spikes < noise_prob)[1]
+#spike_indices = np.concatenate((spike_indices, noise_indices))
+#spike_times = np.concatenate((spike_times, noise_times+training_duration/ms))
 
 # Creating and adding noise
 #noise_prob = 0.002
@@ -132,6 +142,7 @@ seq_cells = neuron_group_from_spikes(spike_indices, spike_times, num_channels,
 #################
 # Building network
 num_exc = 48
+#num_inh = 12
 num_inh = 30
 exc_cells = Neurons(num_exc,
                     equation_builder=neuron_model_Adapt(num_inputs=3),
@@ -158,6 +169,7 @@ inh_cells = Neurons(num_inh,
 ei_p = 0.50
 ie_p = 0.70
 ee_p = 0.60
+#ee_p = 1.0
 
 if not simple:
     exc_exc_conn = Connections(exc_cells, exc_cells,
@@ -248,6 +260,7 @@ seed = 12
 exc_cells.Vm = 3*mV
 inh_cells.Vm = 3*mV
 learn_factor = 4
+inh_exc_conn.inh_learning_rate = 0.1
 #feedforward_exc.A_gain = learn_factor
 
 # Weight initializations
@@ -261,6 +274,7 @@ inh_inh_conn.weight = -1
 if i_plast:
     inh_exc_conn.weight = -1
     # 1 = no inhibition, 0 = maximum inhibition
+    #variance_th = .1
     variance_th = 0.50
 for i in range(num_inh):
     weight_length = np.shape(inh_exc_conn.weight[i,:])
@@ -397,18 +411,14 @@ spikemon_inh_neurons = SpikeMonitor(inh_cells, name='spikemon_inh_neurons')
 spikemon_seq_neurons = SpikeMonitor(seq_cells, name='spikemon_seq_neurons')
 statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm'], record=np.random.randint(0, num_exc),
                                   name='statemon_exc_cells')
+statemon_proxy = StateMonitor(exc_cells, variables=['normalized_activity_proxy'], record=True,
+                                  name='statemon_proxy')
 statemon_inh_cells = StateMonitor(inh_cells, variables=['Vm'], record=np.random.randint(0, num_inh),
                                   name='statemon_inh_cells')
 statemon_ei_conns = StateMonitor(exc_inh_conn, variables=['I_syn'], record=True,
                                   name='statemon_ei_conns')
 statemon_ie_conns = StateMonitor(inh_exc_conn, variables=['I_syn'], record=True,
                                   name='statemon_ie_conns')
-if not simple:
-    statemon_rec_conns = StateMonitor(exc_exc_conn, variables=['w_plast'], record=True,
-                                      name='statemon_rec_conns')
-if i_plast:
-    statemon_inh_conns = StateMonitor(inh_exc_conn, variables=['w_plast'], record=True,
-                                      name='statemon_inh_conns')
 statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast'], record=True,
                                   name='statemon_ffe_conns')
 statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
@@ -419,23 +429,33 @@ if not simple:
     if i_plast:
         net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
                 feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-                statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
+                spikemon_exc_neurons, spikemon_inh_neurons,
                 spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_inh_conns, statemon_ei_conns, statemon_ie_conns,
-                inh_inh_conn)
+                statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns,
+                inh_inh_conn, statemon_proxy)
     else:
         net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
                 feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-                statemon_rec_conns, spikemon_exc_neurons, spikemon_inh_neurons,
+                spikemon_exc_neurons, spikemon_inh_neurons,
                 spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns, inh_inh_conn)
+                statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns, inh_inh_conn,
+                statemon_proxy)
 else:
     net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
             feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
             spikemon_exc_neurons, spikemon_inh_neurons,
             spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-            statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns, inh_inh_conn)
-net.run(training_duration + test_duration, report='stdout', report_period=100*ms)
+            statemon_pop_rate_i, statemon_ei_conns, statemon_ie_conns, inh_inh_conn,
+            statemon_proxy)
+
+# Training
+statemon_ffe_conns.active = False
+net.run(training_duration, report='stdout', report_period=100*ms)
+
+# Testing
+feedforward_inh.weight = 0
+statemon_ffe_conns.active = True
+net.run(test_duration, report='stdout', report_period=100*ms)
 
 ##########
 # Evaluations
@@ -443,14 +463,14 @@ if not np.array_equal(spk_t, spikemon_seq_neurons.t):
     print('Proxy activity and generated input do not match.')
     sys.exit()
 
-neu_rates = neuron_rate(spikemon_exc_neurons, 200, 10, 0.001,
-                        [0, training_duration/ms])
-seq_rates = neuron_rate(spikemon_seq_neurons, 200, 10, 0.001,
-                        [0, sequence_duration])
-foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
-                           sequence_duration, sequence_repetitions)
-
-corrs = rate_correlations(neu_rates, sequence_duration, sequence_repetitions)
+#neu_rates = neuron_rate(spikemon_exc_neurons, 200, 10, 0.001,
+#                        [0, training_duration/ms])
+#seq_rates = neuron_rate(spikemon_seq_neurons, 200, 10, 0.001,
+#                        [0, sequence_duration])
+#foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
+#                           sequence_duration, sequence_repetitions)
+#
+#corrs = rate_correlations(neu_rates, sequence_duration, sequence_repetitions)
 
 ############
 # Saving results
@@ -504,20 +524,17 @@ np.savez(path+f'rasters.npz',
          exc_spikes_t=np.array(spikemon_exc_neurons.t/ms), exc_spikes_i=np.array(spikemon_exc_neurons.i),
          inh_spikes_t=np.array(spikemon_inh_neurons.t/ms), inh_spikes_i=np.array(spikemon_inh_neurons.i),
         )
-del spikemon_seq_neurons, spikemon_inh_neurons#, spikemon_exc_neurons
 
 np.savez(path+f'traces.npz',
          Vm_e=statemon_exc_cells.Vm, Vm_i=statemon_inh_cells.Vm,
          exc_rate_t=np.array(statemon_pop_rate_e.t/ms), exc_rate=np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz),
          inh_rate_t=np.array(statemon_pop_rate_i.t/ms), inh_rate=np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz),
         )
-del statemon_inh_cells, statemon_pop_rate_e, statemon_pop_rate_i#,statemon_exc_cells
 
 np.savez_compressed(path+f'matrices.npz',
          rf=statemon_ffe_conns.w_plast.astype(np.uint8),
          rec_ids=recurrent_ids, rec_w=recurrent_weights
         )
-del recurrent_ids, recurrent_weights#, statemon_ffe_conns
 
 np.savez(path+f'permutation.npz',
          ids = permutation_ids
@@ -563,21 +580,32 @@ with open(path+'connections.data', 'wb') as f:
 
 from brian2 import *
 import pandas as pd
-
-_ = hist(corrs, bins=20)
-show()
+from scipy.signal import savgol_filter
 
 figure()
-neu=1
-y1 = pd.Series(foo[0,neu,:])
-y1=savgol_filter(y1.interpolate(), 31, 4)
-y2 = pd.Series(foo[1,neu,:])
-y2=savgol_filter(y2.interpolate(), 31, 4)
-y3 = pd.Series(foo[2,neu,:])
-y3=savgol_filter(y3.interpolate(), 31, 4)
+plot(statemon_proxy.normalized_activity_proxy.T)
+xlabel('time (ms)')
+ylabel('normalized activity value')
+title('Normalized activity of all neurons')
 
-plot(y1, label='symbol 1')
-plot(y2, label='symbol 2')
-plot(y3, label='symbol 3')
-legend()
+#_ = hist(corrs, bins=20)
+#xlabel('Correlation values')
+#ylabel('count')
+#title('Correlations of average response to every sequence presentation (all neurons)')
+#
+#figure()
+#neu=1
+#y1 = pd.Series(foo[0,neu,:])
+#y1=savgol_filter(y1.interpolate(), 31, 4)
+#y2 = pd.Series(foo[1,neu,:])
+#y2=savgol_filter(y2.interpolate(), 31, 4)
+#y3 = pd.Series(foo[2,neu,:])
+#y3=savgol_filter(y3.interpolate(), 31, 4)
+#
+#plot(y1, label='symbol 1')
+#plot(y2, label='symbol 2')
+#plot(y3, label='symbol 3')
+#xlabel('# sequence presentation')
+#ylabel('correlation value')
+#legend()
 show()

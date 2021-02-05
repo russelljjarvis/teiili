@@ -94,7 +94,7 @@ if plot_d1:
     d1.addWidget(p2, 1, 1)
 
     # Prepate matrices
-    rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
+    rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,0]
     sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
                            matrix=rf_matrix, axis=1,
                            similarity_metric='euclidean')

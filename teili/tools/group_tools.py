@@ -9,7 +9,9 @@ import time
 import numpy as np
 import os
 from brian2 import ms
+from numpy.linalg.linalg import _raise_linalgerror_eigenvalues_nonconvergence
 
+from teili import Neurons, Connections
 from teili.tools.add_run_reg import add_weight_decay,\
     add_re_init_weights, add_activity_proxy
 """
@@ -94,14 +96,17 @@ def add_group_activity_proxy(groups, buffer_size, decay):
         group._tags.update(dict_append)
 
 
-def add_group_weight_init(groups, dist_param, scale, distribution):
-    """Function to add the weight initialisation to a given
-    `Connections` group.
+def add_group_param_init(groups, variable, dist_param, scale, 
+                         distribution, clip_min=None, clip_max=None):
+    """Function to add the parameter initialisation to a given
+    group to be sampled from a specified distribution.
 
     Args:
-        group (teili object): Connection group whose weights are intialised
-        dist_param (float): Parameter between 0 and 0.5. Threshold which
-            triggers re-initialization.
+        group (teili object): Connection or Neuron group whose specified 
+            parameters are intialised
+        paramter (str): Name of parameter to be initialised.
+        dist_param (float): Mean of the distribution. In case of gamma 
+            this paramter refers to shape paramter. 
         scale (float): Scale for gamma distribution or std of normal
             distribution used.
         distribution (bool): Distribution from which to initialize the
@@ -111,20 +116,30 @@ def add_group_weight_init(groups, dist_param, scale, distribution):
     for group in groups:
         group.namespace.update({'dist_param': dist_param})
         group.namespace.update({'scale': scale})
-        weights = group.w_plast
-        if distribution == 'gamma':
-            weights = np.random.gamma(shape=dist_param,
-                                      scale=scale,
-                                      size=len(group))
-        if distribution == 'normal':
-            weights = np.random.normal(loc=dist_param,
-                                       scale=scale,
-                                       size=len(group))
-        weights = np.clip(weights, 0, 1)
+        params = group.__getattr__(variable)
 
-        group.w_plast = weights
+        if type(group) == Connections:
+            size=len(group)
+        elif type(group) == Neurons:
+            size=group.N
+        
+        if distribution == 'gamma':
+            params = np.random.gamma(shape=dist_param,
+                                         scale=scale,
+                                         size=size)
+                                        
+        elif distribution == 'normal':
+            params = np.random.normal(loc=dist_param,
+                                          scale=scale,
+                                          size=size)
+
+        if clip_min is not None and clip_max is not None:
+            params = np.clip(params, clip_min, clip_max)
+
+        group.__setattr__(variable, params)
+
         if distribution == 0:
-            group._tags.update({'init_weights' : "Normal"})
+            group._tags.update({'{}_distribution'.format(variable): "Normal"})
         elif distribution == 1:
-            group._tags.update({'init_weights' : "Gamma"})
+            group._tags.update({'{}_distribution'.format(variable): "Gamma"})
 

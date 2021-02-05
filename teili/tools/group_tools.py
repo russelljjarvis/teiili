@@ -9,11 +9,12 @@ import time
 import numpy as np
 import os
 from brian2 import ms
+from numpy.core.fromnumeric import var
 from numpy.linalg.linalg import _raise_linalgerror_eigenvalues_nonconvergence
 
 from teili import Neurons, Connections
 from teili.tools.add_run_reg import add_weight_decay,\
-    add_re_init_weights, add_activity_proxy
+    add_re_init_params, add_activity_proxy
 """
 this file contains:
     -wrapper functions for the run regular functions
@@ -42,39 +43,52 @@ def add_group_weight_decay(groups, decay_rate, dt):
         group._tags.update(dict_append)
 
 
-def add_group_weight_re_init(groups,
-                             re_init_index,
+def add_group_params_re_init(groups,
+                             variable,
+                             re_init_variable,
+                             re_init_indices,
                              re_init_threshold,
-                             dist_param_re_init,
-                             scale_re_init,
-                             distribution):
+                             re_init_dt,
+                             dist_param,
+                             scale,
+                             distribution,
+                             unit):
     """This allows adding a weight re-initialization run-regular function
     specifying the distribution parameters from which to sample.
 
     Args:
         group (list): List of groups which are subject to weight
             initialization
-        re_init_threshold (float): Parameter between 0 and 0.5. Threshold
+        re_init_varaiable (str, optional): Name of the variabe to be used to
+            calculate re_init_indices.
+        re_init_indices (ndarray, optional): Array to indicate which parameters
+            need to be re-initialised. re_init_threshold (float): Parameter between 0 and 0.5. Threshold
             which triggers re-initialization.
-        dist_param_re_init (bool): Shape of gamma distribution or mean of
+        re_init_dt (second): Dt of run_regularly.
+        dist_param (float): Shape of gamma distribution or mean of
             normal distribution used.
-        scale_re_init (int): Scale for gamma distribution or std of normal
+        scale (float): Scale for gamma distribution or std of normal
             distribution used.
         distribution (bool): Distribution from which to initialize the
             weights. Gamma (1) or normal (0) distributions.
+        unit (brian.unit, optional): Unit of the parameter.
     """
     for group in groups:
-        add_re_init_weights(group,
-                            re_init_index=re_init_index,
-                            re_init_threshold=re_init_threshold,
-                            dist_param_re_init=dist_param_re_init,
-                            scale_re_init=scale_re_init,
-                            distribution=distribution)
+        add_re_init_params(group,
+                           variable=variable,
+                           re_init_variable=re_init_variable,
+                           re_init_indices=re_init_indices,
+                           re_init_threshold=re_init_threshold,
+                           re_init_dt=re_init_dt,
+                           dist_paramt=dist_param,
+                           scale=scale,
+                           distribution=distribution,
+                           unit=unit)
 
         if distribution == 0:
-            group._tags.update({'re_init_weights' : "Normal"})
+            group._tags.update({'re_init_{}'.format(variable) : "Normal"})
         elif distribution == 1:
-            group._tags.update({'re_init_weights' : "Gamma"})
+            group._tags.update({'re_init_{}'.format(variable) : "Gamma"})
 
 
 def add_group_activity_proxy(groups, buffer_size, decay):

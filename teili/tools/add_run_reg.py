@@ -19,10 +19,16 @@ from teili.tools.run_reg_functions import re_init_param,\
 
 
 
-def add_re_init_params(group, variable, 
-                      re_init_variable, re_init_indices, 
-                      re_init_threshold, re_init_dt,
-                      dist_param, scale, distribution):
+def add_re_init_params(group, 
+                       variable, 
+                       re_init_variable, 
+                       re_init_indices, 
+                       re_init_threshold, 
+                       re_init_dt,
+                       dist_param, 
+                       scale, 
+                       distribution,
+                       unit):
     """Adds a re-initialization run_regularly to a synapse group
 
     Args:
@@ -53,7 +59,7 @@ def add_re_init_params(group, variable,
     if re_init_indices is None:
         group.add_state_variable('re_init_indices')
     else:
-        group.variables.add_array('re_init_indices', size=size)
+        group.variables.add_array('re_init_indices', size=np.int(size))
 
     group.namespace['re_init_threshold'] = re_init_threshold
     group.namespace['dist_param'] = dist_param
@@ -65,7 +71,8 @@ def add_re_init_params(group, variable,
         group.namespace['dist'] = 1
 
     if re_init_indices is not None:
-
+        # pablo this needs double checking from your side so the condition which is used to re initialise
+        # is used
         group.run_regularly('''re_init_indices = get_re_init_indices(group._getattr__(re_init_variable),\
                                                                  N_pre,\
                                                                  N_post,\

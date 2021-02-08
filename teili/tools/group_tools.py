@@ -52,6 +52,8 @@ def add_group_params_re_init(groups,
                              dist_param,
                              scale,
                              distribution,
+                             sparsity,
+                             reference,
                              unit):
     """This allows adding a weight re-initialization run-regular function
     specifying the distribution parameters from which to sample.
@@ -71,6 +73,10 @@ def add_group_params_re_init(groups,
             distribution used.
         distribution (bool): Distribution from which to initialize the
             weights. Gamma (1) or normal (0) distributions.
+        sparsity (float): Ratio of zero elements in a set of parameters.
+        reference (str, required): Specifies which reference metric is used
+            to get indices of parameters to be re-initialised. 'mean_weight', 
+            'spike_time', 'synapse_counter' or 'neuron_threshold'.
         unit (brian.unit, optional): Unit of the parameter.
     """
     for group in groups:
@@ -83,6 +89,8 @@ def add_group_params_re_init(groups,
                            dist_paramt=dist_param,
                            scale=scale,
                            distribution=distribution,
+                           sparsity=sparsity,
+                           reference=reference,
                            unit=unit)
 
         if distribution == 0:

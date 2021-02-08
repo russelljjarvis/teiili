@@ -28,6 +28,8 @@ def add_re_init_params(group,
                        dist_param, 
                        scale, 
                        distribution,
+                       sparsity,
+                       reference,
                        unit):
     """Adds a re-initialization run_regularly to a synapse group
 
@@ -48,6 +50,11 @@ def add_re_init_params(group,
         distribution (str, optional): Parameter to determine the random
             distribution to be used to initialise the weights. Possible
             'gaussian' or 'gamma'.
+        sparsity (float): Ratio of zero elements in a set of parameters.
+        reference (str, required): Specifies which reference metric is used
+            to get indices of parameters to be re-initialised. 'mean_weight', 
+            'spike_time', 'synapse_counter' or 'neuron_threshold'.
+        unit (brian2.unit)
     """
     if type(group) == Connections:
             size=len(group)
@@ -64,6 +71,8 @@ def add_re_init_params(group,
     group.namespace['re_init_threshold'] = re_init_threshold
     group.namespace['dist_param'] = dist_param
     group.namespace['scale'] = scale
+    group.namespace['sparsity'] = sparsity
+    group.namespace['reference'] = reference
 
     if distribution == 'normal':
         group.namespace['dist'] = 0
@@ -76,8 +85,10 @@ def add_re_init_params(group,
         group.run_regularly('''re_init_indices = get_re_init_indices(group._getattr__(re_init_variable),\
                                                                  N_pre,\
                                                                  N_post,\
+                                                                 reference,\
                                                                  re_init_threshold,\
-                                                                 lastspike,
+                                                                 sparsity,\
+                                                                 lastspike,\
                                                                  t)''',
                             dt=re_init_dt)
     group.run_regularly('''group.__setattr(variable, re_init_params(group.__getattr__(variable),\

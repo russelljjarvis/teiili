@@ -61,6 +61,8 @@ def add_re_init_params(group,
     elif type(group) == Neurons:
             size=group.N 
     
+    # TODO This needs double checking. I believe the name in namespace needs
+    # to match the function name itself. So we might need to remove the format.
     group.namespace.update({'re_init_{}'.format(variable): re_init_params})
     group.namespace.update({'get_re_init_indices': get_re_init_indices})
     

@@ -119,7 +119,8 @@ def add_group_activity_proxy(groups, buffer_size, decay):
 
 
 def add_group_param_init(groups, variable, dist_param, scale, 
-                         distribution, clip_min=None, clip_max=None):
+                         distribution, unit=None,
+                         clip_min=None, clip_max=None):
     """Function to add the parameter initialisation to a given
     group to be sampled from a specified distribution.
 
@@ -158,7 +159,10 @@ def add_group_param_init(groups, variable, dist_param, scale,
         if clip_min is not None and clip_max is not None:
             params = np.clip(params, clip_min, clip_max)
 
-        group.__setattr__(variable, params)
+        if unit is not None:
+            group.__setattr__(variable, params*unit)
+        else:
+            group.__setattr__(variable, params)
 
         if distribution == 0:
             group._tags.update({'{}_distribution'.format(variable): "Normal"})

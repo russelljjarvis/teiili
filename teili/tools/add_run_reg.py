@@ -10,7 +10,7 @@ group and add all necessary state_variables and function calls.
 from teili.core.groups import Neurons, Connections
 import numpy as np
 from brian2 import ms, pA, amp, second
-from teili.tools.run_reg_functions import re_init_param,\
+from teili.tools.run_reg_functions import re_init_params,\
     get_activity_proxy_vm, get_activity_proxy_imem,\
     max_value_update_vm, max_value_update_imem,\
     normalize_activity_proxy_vm, normalize_activity_proxy_imem,\
@@ -61,7 +61,9 @@ def add_re_init_params(group,
     elif type(group) == Neurons:
             size=group.N 
     
-    group.namespace.update({'re_init_{}'.format(variable): re_init_param})
+    group.namespace.update({'re_init_{}'.format(variable): re_init_params})
+    group.namespace.update({'get_re_init_indices': get_re_init_indices})
+    
 
     if re_init_indices is None:
         group.add_state_variable('re_init_indices')

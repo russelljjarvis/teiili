@@ -20,7 +20,7 @@ from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataControllers import Lineplot, Rasterplot
 
-from run_regularly import wplast_activity_tracer, reset_activity_tracer
+from SLIF_utils import random_integers
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 1 * ms
@@ -93,10 +93,6 @@ for avg_trial in range(average_trials):
     stdp_synapse.lfsr_num_bits_Apost = 5
 
     ta = create_lfsr([], [stdp_synapse], defaultclock.dt)
-    # Avoids alignment between LFSR numbers. Effectively, it 
-    # skips last value of the LFSR (considering it is 4 bits long)
-    stdp_synapse.lfsr_max_value_condApost2 = 14*ms
-    stdp_synapse.lfsr_max_value_condApre2 = 14*ms
 
     spikemon_pre_neurons = SpikeMonitor(pre_neurons, record=True)
     spikemon_post_neurons = SpikeMonitor(post_neurons, record=True)
@@ -187,7 +183,7 @@ Rasterplot(MyEventsModels=[spikemon_pre_neurons, spikemon_post_neurons],
             mainfig=win_6,
             show_immediately=False)
 
-win_7 = pg.GraphicsWindow(title='As weak pot.')
+win_7 = pg.GraphicsWindow(title='As weak depot.')
 Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[8], ('t', 'Apre')), (statemon_synapse[8], ('t', 'Apost'))],
         title="Apre",
         xlabel='time',  # delta t
@@ -197,7 +193,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[8], ('t', 'Apre')), (state
         mainfig=win_7,
         show_immediately=False)
 
-win_8 = pg.GraphicsWindow(title='As strong pot.')
+win_8 = pg.GraphicsWindow(title='As strong depot.')
 Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[25], ('t', 'Apre')), (statemon_synapse[25], ('t', 'Apost'))],
         title="Apre",
         xlabel='time',  # delta t
@@ -207,7 +203,7 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[25], ('t', 'Apre')), (stat
         mainfig=win_8,
         show_immediately=False)
 
-win_9 = pg.GraphicsWindow(title='As weak depot.')
+win_9 = pg.GraphicsWindow(title='As weak pot.')
 Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[49], ('t', 'Apre')), (statemon_synapse[49], ('t', 'Apost'))],
         title="Apre",
         xlabel='time',  # delta t
@@ -216,3 +212,13 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_synapse[49], ('t', 'Apre')), (stat
         QtApp=app,
         mainfig=win_9,
         show_immediately=True)
+np.savez('stdp.npz',
+          pairs_timing=pairs_timing,
+          kernel_trial=average_wplast[avg_trial-1, :]-init_wplast,
+          counter_trial=average_counter[avg_trial-1, :],
+          kernel_average=np.mean(average_wplast, axis=0)-init_wplast,
+          counter_average=np.mean(average_counter, axis=0),
+          pot_apre=statemon_synapse.Apre[25],
+          pot_apost=statemon_synapse.Apost[25],
+          depot_apre=statemon_synapse.Apre[49],
+          depot_apost=statemon_synapse.Apost[49])

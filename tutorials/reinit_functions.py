@@ -41,10 +41,10 @@ from scipy.stats import gamma
 @check_units(prune_indices=1, weight=1, re_init_counter=1, sim_time=second, result=1)
 def get_prune_indices(prune_indices, weight, re_init_counter, sim_time):
     if sim_time > 0:
-        counter_th = 5
+        counter_th = 1
         zero_weights = np.where(weight==0)[0]
         tmp_indices = np.where(re_init_counter < counter_th)[0]
-        # Avoid already inactive weights
+        # select weights equal 0 only
         tmp_indices = tmp_indices[~np.isin(tmp_indices,zero_weights)]
 
         # Pruned/spawned synapses are limited by unused synapses

@@ -94,7 +94,7 @@ if plot_d1:
     d1.addWidget(p2, 1, 1)
 
     # Prepate matrices
-    rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,0]
+    rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
     sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
                            matrix=rf_matrix, axis=1,
                            similarity_metric='euclidean')
@@ -240,3 +240,6 @@ QtGui.QApplication.instance().exec_()
 #ylabel('Input channel')
 #colorbar()
 #show()
+np.savez('seq.npz', seq_i=input_i, seq_t=input_t, e_raster_i=sorted_i,
+         e_raster_t=exc_spikes_t, ff_matrix=sorted_rf.matrix[:, permutation],
+         rec_matrix=sorted_rec.matrix[:, permutation][permutation, :])

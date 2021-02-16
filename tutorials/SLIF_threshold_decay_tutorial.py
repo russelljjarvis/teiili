@@ -176,3 +176,4 @@ LC = Lineplot(DataModel_to_x_and_y_attr=[(thresh_traces, ('t_Vthres', 'Vthres'))
               backend='pyqtgraph', QtApp=QtApp,
               #subgroup_labels=[str(x) for x in rec_neurons],
               show_immediately=True)
+np.savez('thresh.npz', statemon_thresh.Vthres)

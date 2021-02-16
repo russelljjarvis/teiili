@@ -91,7 +91,7 @@ feedforward_exc = Connections(seq_cells, exc_cells,
 feedforward_exc.connect()
 # Set sparsity
 for i in range(num_exc):
-    ffe_zero_w = np.random.choice(num_channels, int(num_channels*.3), replace=False)
+    ffe_zero_w = np.random.choice(num_channels, int(num_channels*.7), replace=False)
     feedforward_exc.weight[ffe_zero_w,i] = 0
     feedforward_exc.w_plast[ffe_zero_w,i] = 0
 
@@ -232,7 +232,7 @@ skip_not_rec_neuron_ids = True
 counter_line = StateVariablesModel.from_brian_state_monitors([statemon_counter], skip_not_rec_neuron_ids)
 reinit_ratio = []
 for i in range(int(sim_time/ms)):
-    reinit_ratio.append(len(np.where(statemon_pruned.prune_indices[:,i])[0]))
+    reinit_ratio.append(len(np.where(statemon_pruned.prune_indices[:,i]==1)[0]))
 state_variable_names = ['reinit_ratio']
 state_variables = [reinit_ratio]
 state_variables_times = [statemon_pruned.t/ms]
@@ -249,3 +249,4 @@ line_plot2 = Lineplot(DataModel_to_x_and_y_attr=[(ratio_line, ('t_reinit_ratio',
 raster_plot1 = Rasterplot(MyEventsModels=[exc_raster], backend='pyqtgraph', QtApp=QtApp)
 raster_plot2 = Rasterplot(MyEventsModels=[seq_raster], backend='pyqtgraph', QtApp=QtApp,
                 show_immediately=True)
+np.savez('reinit.npz', ratio=reinit_ratio, time=statemon_pruned.t/ms)

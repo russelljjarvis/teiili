@@ -1,7 +1,23 @@
-from brian2 import ms, TimedArray
+from brian2 import ms, TimedArray, check_units, run, SpikeGeneratorGroup,\
+        SpikeMonitor
 import numpy as np
 from teili.core.groups import Neurons
 from scipy.stats import pearsonr, spearmanr
+from random import randint
+
+def replicate_sequence(num_channels, reference_indices, reference_times,
+                       sequence_duration, duration):
+    # Replicates sequence throughout simulation
+    input_spikes = SpikeGeneratorGroup(num_channels, reference_indices,
+                                       reference_times,
+                                       period=sequence_duration*ms)
+    input_monitor = SpikeMonitor(input_spikes)
+    print('Generating input...')
+    run(duration*ms)
+    spike_indices = np.array(input_monitor.i)
+    spike_times = np.array(input_monitor.t/ms)
+
+    return spike_indices, spike_times
 
 def neuron_group_from_spikes(spike_indices, spike_times, num_inputs, time_step,
                              duration):
@@ -129,4 +145,35 @@ def ensemble_convergence(input_rates, neuron_rates, input_ensembles,
 
     return convergence_matrix
 
-#TODO def permutation_from_rate()
+@check_units(a=1, b=1, result=1)
+def random_integers(a, b):
+    return randint(a, b)
+
+def permutation_from_rate(neurons_rate, window_duration, periodicity, num_items):
+    num_neu = len(neurons_rate.keys())
+    peak_instants = {}
+    average_rates = np.zeros((num_neu, window_duration))*np.nan
+    average_rate_neu = []
+    for key in neurons_rate.keys():
+        for trial in range(periodicity):
+            average_rate_neu.append(
+                neurons_rate[key]['rate'][trial*window_duration:(trial+1)*window_duration]
+                )
+        average_rates[key, :] = np.mean(average_rate_neu, axis=0)
+
+        peak_index = np.where(average_rates[key,:] == max(average_rates[key,:]))[0]
+        peak_instants[key] = peak_index
+
+    double_peaks = [key for key, val in peak_instants.items() if len(val)>1]
+    #triple_peaks = [key for key, val in peak_instants.items() if len(val)>2]
+    for peak in double_peaks:
+        h, b = np.histogram(peak_instants[peak], bins=num_items, range=(min(interval), max(interval)))
+        if any(h==1):
+            peak_instants.pop(peak)
+        else:
+            peak_instants[peak] = np.array(peak_instants[peak][0])
+    sorted_peaks = dict(sorted(peak_instants.items(), key=lambda x: x[1]))
+    permutation_ids = [x[0] for x in sorted_peaks.items()]
+    [permutation_ids.append(neu) for neu in range(num_neu) if not neu in permutation_ids]
+
+    return permutation_ids

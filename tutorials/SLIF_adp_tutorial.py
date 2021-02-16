@@ -264,6 +264,8 @@ title('Input spikes')
 #ylabel('V')
 
 show()
+np.savez('adp.npz', proxy=statemon_exc_cells.normalized_activity_proxy.T,
+         e_curr=tot_e_curr/amp, i_curr=tot_i_curr/amp)
 
 #import pyqtgraph as pg
 #from pyqtgraph.Qt import QtCore, QtGui

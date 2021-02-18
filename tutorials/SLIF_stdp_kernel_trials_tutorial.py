@@ -29,7 +29,7 @@ visualization_backend = 'pyqtgraph'
 path = os.path.expanduser("/home/pablo/git/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 StochasticSyn_decay_stoch_stdp = SynapseEquationBuilder.import_eq(
-        model_path + 'StochStdpNew.py')
+        model_path + 'StochStdpNewrand.py')
 
 font = {'family': 'serif',
         'color': 'darkred',
@@ -47,6 +47,9 @@ tmax = trial_duration*trials + wait_time*trials
 # Define matched spike times between pre and post neurons
 post_tspikes = np.arange(1, N*trials + 1).reshape((trials, N))
 pre_tspikes = post_tspikes[:, np.array(range(N-1, -1, -1))]
+# Use the ones below to test simulateneous samples from random_integers function
+#post_tspikes = np.arange(0, trials, 2).reshape(-1, 1) + np.ones(N)
+#pre_tspikes = np.arange(1, trials, 2).reshape(-1, 1) + np.ones(N)
 
 # Create inputs arrays, which will be 1 when neurons are supposed to spike
 pre_input = np.zeros((tmax, N))

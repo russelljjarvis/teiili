@@ -1,5 +1,5 @@
 from brian2 import ms, TimedArray, check_units, run, SpikeGeneratorGroup,\
-        SpikeMonitor
+        SpikeMonitor, Function
 import numpy as np
 from teili.core.groups import Neurons
 from scipy.stats import pearsonr, spearmanr
@@ -145,9 +145,14 @@ def ensemble_convergence(input_rates, neuron_rates, input_ensembles,
 
     return convergence_matrix
 
-@check_units(a=1, b=1, result=1)
-def random_integers(a, b):
-    return randint(a, b)
+def random_integers(a, b, _vectorization_idx):
+    random_samples = []
+    for sample in range(len(_vectorization_idx)):
+        random_samples.append(randint(a, b))
+
+    return np.array(random_samples)
+random_integers = Function(random_integers, arg_units=[1, 1], return_unit=1,
+                           stateless=False, auto_vectorise=True)
 
 def permutation_from_rate(neurons_rate, window_duration, periodicity, num_items):
     num_neu = len(neurons_rate.keys())

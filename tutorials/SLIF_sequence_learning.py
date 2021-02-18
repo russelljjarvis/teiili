@@ -7,11 +7,9 @@ from scipy.stats import gamma, truncnorm
 
 from brian2 import ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
         defaultclock, ExplicitStateUpdater, SpikeGeneratorGroup,\
-        PopulationRateMonitor
+        PopulationRateMonitor, run
 
-from brian2 import DEFAULT_FUNCTIONS, Function
 from SLIF_utils import random_integers
-DEFAULT_FUNCTIONS['random_integers'] = Function(random_integers, stateless=False)
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
@@ -45,7 +43,7 @@ model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochSynAdp.py')
 stdp_synapse_model = SynapseEquationBuilder.import_eq(
-        model_path + 'StochStdpNew.py')
+        model_path + 'StochStdpNewrand.py')
 neuron_model_Adapt = NeuronEquationBuilder.import_eq(
         model_path + 'StochLIFAdapt.py')
 
@@ -79,8 +77,8 @@ sequence_duration = 150  # 300
 noise_prob = None
 item_rate = 25
 spike_times, spike_indices = [], []
-sequence_repetitions = 700# 350
-#sequence_repetitions = 200
+#sequence_repetitions = 700# 350
+sequence_repetitions = 200
 training_duration = sequence_repetitions*sequence_duration*ms
 sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
                              noise_prob, item_rate)
@@ -328,11 +326,11 @@ else:
     syn_groups = [exc_inh_conn, inh_exc_conn, feedforward_exc,
                      feedforward_inh, inh_inh_conn]
 ta = create_lfsr(neu_groups, syn_groups, defaultclock.dt)
-if not simple:
-    exc_exc_conn.lfsr_max_value_condApost2 = 14*ms
-    exc_exc_conn.lfsr_max_value_condApre2 = 14*ms
-feedforward_exc.lfsr_max_value_condApost2 = 14*ms
-feedforward_exc.lfsr_max_value_condApre2 = 14*ms
+#if not simple:
+#    exc_exc_conn.lfsr_max_value_condApost2 = 14*ms
+#    exc_exc_conn.lfsr_max_value_condApre2 = 14*ms
+#feedforward_exc.lfsr_max_value_condApost2 = 14*ms
+#feedforward_exc.lfsr_max_value_condApre2 = 14*ms
 
 if i_plast:
     # Add proxy activity group
@@ -379,41 +377,41 @@ feedforward_exc.namespace.update({'delay_re_init': delay_re_init})
 feedforward_exc.namespace.update({'weight_re_init': weight_re_init})
 feedforward_exc.namespace.update({'reset_re_init_counter': reset_re_init_counter})
 
-reinit_period = 10000*ms
-#feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
-#                                                    prune_indices,\
-#                                                    weight,\
-#                                                    re_init_counter,\
-#                                                    t)''',
-#                                                    dt=reinit_period,
-#                                                    order=0)
-#feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
-#                                                    spawn_indices,\
-#                                                    prune_indices,\
-#                                                    weight,\
-#                                                    t)''',
-#                                                    dt=reinit_period,
-#                                                    order=1)
-#
-#feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
-#                                                          spawn_indices,\
-#                                                          t)''',
-#                                                          dt=reinit_period,
-#                                                          order=2)
-#feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
-#                                                       spawn_indices,\
-#                                                       t)''',
-#                                                       dt=reinit_period,
-#                                                       order=3)
-#feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
-#                                                         spawn_indices,\
-#                                                         prune_indices,\
-#                                                         t)''',
-#                                                         dt=reinit_period,
-#                                                         order=5)
-#feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
-#                                                                         dt=reinit_period,
-#                                                                         order=6)
+reinit_period = 16000*ms
+feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
+                                                    prune_indices,\
+                                                    weight,\
+                                                    re_init_counter,\
+                                                    t)''',
+                                                    dt=reinit_period,
+                                                    order=0)
+feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
+                                                    spawn_indices,\
+                                                    prune_indices,\
+                                                    weight,\
+                                                    t)''',
+                                                    dt=reinit_period,
+                                                    order=1)
+
+feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
+                                                          spawn_indices,\
+                                                          t)''',
+                                                          dt=reinit_period,
+                                                          order=2)
+feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
+                                                       spawn_indices,\
+                                                       t)''',
+                                                       dt=reinit_period,
+                                                       order=3)
+feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
+                                                         spawn_indices,\
+                                                         prune_indices,\
+                                                         t)''',
+                                                         dt=reinit_period,
+                                                         order=5)
+feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
+                                                                         dt=reinit_period,
+                                                                         order=6)
 
 ##################
 # Setting up monitors
@@ -441,38 +439,38 @@ statemon_pruned = StateMonitor(feedforward_exc, variables=['prune_indices'],
 statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
 statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
 
-net = TeiliNetwork()
-if not simple:
-    if i_plast:
-        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-                spikemon_exc_neurons, spikemon_inh_neurons,
-                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_net_current, statemon_ie_conns,
-                inh_inh_conn, statemon_proxy, statemon_ee_conns, statemon_pruned)
-    else:
-        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-                spikemon_exc_neurons, spikemon_inh_neurons,
-                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_net_current, statemon_ie_conns, inh_inh_conn,
-                statemon_ee_conns, statemon_pruned)
-else:
-    net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
-            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-            spikemon_exc_neurons, spikemon_inh_neurons,
-            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-            statemon_pop_rate_i, statemon_net_current, statemon_ie_conns, inh_inh_conn,
-            statemon_proxy, statemon_pruned)
+#net = TeiliNetwork()
+#if not simple:
+#    if i_plast:
+#        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
+#                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
+#                spikemon_exc_neurons, spikemon_inh_neurons,
+#                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+#                statemon_pop_rate_i, statemon_net_current, statemon_ie_conns,
+#                inh_inh_conn, statemon_proxy, statemon_ee_conns, statemon_pruned)
+#    else:
+#        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
+#                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
+#                spikemon_exc_neurons, spikemon_inh_neurons,
+#                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+#                statemon_pop_rate_i, statemon_net_current, statemon_ie_conns, inh_inh_conn,
+#                statemon_ee_conns, statemon_pruned)
+#else:
+#    net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
+#            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
+#            spikemon_exc_neurons, spikemon_inh_neurons,
+#            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+#            statemon_pop_rate_i, statemon_net_current, statemon_ie_conns, inh_inh_conn,
+#            statemon_proxy, statemon_pruned)
 
 # Training
 statemon_ffe_conns.active = True
-net.run(training_duration, report='stdout', report_period=100*ms)
+run(training_duration, report='stdout', report_period=100*ms)
 
 # Testing
 #feedforward_inh.weight = 0
 statemon_ffe_conns.active = True
-net.run(test_duration, report='stdout', report_period=100*ms)
+run(test_duration, report='stdout', report_period=100*ms)
 
 ##########
 # Evaluations

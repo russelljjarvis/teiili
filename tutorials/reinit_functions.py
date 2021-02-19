@@ -42,12 +42,13 @@ from scipy.stats import gamma
 def get_prune_indices(prune_indices, weight, re_init_counter, sim_time):
     if sim_time > 0:
         counter_th = 1
-        zero_weights = np.where(weight==0)[0]
+        connected_weights = np.where(weight==1)[0]
         tmp_indices = np.where(re_init_counter < counter_th)[0]
-        # select weights equal 0 only
-        tmp_indices = tmp_indices[~np.isin(tmp_indices,zero_weights)]
+        # Select weights with low counter values that are connected
+        tmp_indices = tmp_indices[np.isin(tmp_indices, connected_weights)]
 
         # Pruned/spawned synapses are limited by unused synapses
+        zero_weights = np.where(weight==0)[0]
         if len(tmp_indices) > len(zero_weights):
             tmp_indices = np.random.choice(tmp_indices, len(zero_weights),
                                              replace=False)
@@ -75,7 +76,7 @@ def get_spawn_indices(spawn_indices, prune_indices, weight, sim_time):
 @check_units(w_plast=1, spawn_indices=1, sim_time=second, result=1)
 def wplast_re_init(w_plast, spawn_indices, sim_time):
     if sim_time > 0:
-        sampled_weights = gamma.rvs(a=2,
+        sampled_weights = gamma.rvs(a=3,
                                     size=len(np.where(spawn_indices==1)[0]))
         sampled_weights = np.clip(sampled_weights.astype(int), 0, 15)
         w_plast[spawn_indices==1] = sampled_weights

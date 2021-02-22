@@ -9,9 +9,12 @@ import time
 import numpy as np
 import os
 from brian2 import ms
+from numpy.core.fromnumeric import var
+from numpy.linalg.linalg import _raise_linalgerror_eigenvalues_nonconvergence
 
+from teili import Neurons, Connections
 from teili.tools.add_run_reg import add_weight_decay,\
-    add_re_init_weights, add_activity_proxy
+    add_re_init_params, add_activity_proxy
 """
 this file contains:
     -wrapper functions for the run regular functions
@@ -40,39 +43,60 @@ def add_group_weight_decay(groups, decay_rate, dt):
         group._tags.update(dict_append)
 
 
-def add_group_weight_re_init(groups,
-                             re_init_index,
+def add_group_params_re_init(groups,
+                             variable,
+                             re_init_variable,
+                             re_init_indices,
                              re_init_threshold,
-                             dist_param_re_init,
-                             scale_re_init,
-                             distribution):
+                             re_init_dt,
+                             dist_param,
+                             scale,
+                             distribution,
+                             sparsity,
+                             reference,
+                             unit):
     """This allows adding a weight re-initialization run-regular function
     specifying the distribution parameters from which to sample.
 
     Args:
         group (list): List of groups which are subject to weight
             initialization
-        re_init_threshold (float): Parameter between 0 and 0.5. Threshold
+        re_init_varaiable (str, optional): Name of the variabe to be used to
+            calculate re_init_indices.
+        re_init_indices (ndarray, optional): Array to indicate which parameters
+            need to be re-initialised. re_init_threshold (float): Parameter between 0 and 0.5. Threshold
             which triggers re-initialization.
-        dist_param_re_init (bool): Shape of gamma distribution or mean of
+        re_init_dt (second): Dt of run_regularly.
+        dist_param (float): Shape of gamma distribution or mean of
             normal distribution used.
-        scale_re_init (int): Scale for gamma distribution or std of normal
+        scale (float): Scale for gamma distribution or std of normal
             distribution used.
         distribution (bool): Distribution from which to initialize the
             weights. Gamma (1) or normal (0) distributions.
+        sparsity (float): Ratio of zero elements in a set of parameters.
+        reference (str, required): Specifies which reference metric is used
+            to get indices of parameters to be re-initialised. 'mean_weight', 
+            'spike_time', 'synapse_counter' or 'neuron_threshold'.
+        unit (brian.unit, optional): Unit of the parameter.
     """
     for group in groups:
-        add_re_init_weights(group,
-                            re_init_index=re_init_index,
-                            re_init_threshold=re_init_threshold,
-                            dist_param_re_init=dist_param_re_init,
-                            scale_re_init=scale_re_init,
-                            distribution=distribution)
+        add_re_init_params(group,
+                           variable=variable,
+                           re_init_variable=re_init_variable,
+                           re_init_indices=re_init_indices,
+                           re_init_threshold=re_init_threshold,
+                           re_init_dt=re_init_dt,
+                           dist_paramt=dist_param,
+                           scale=scale,
+                           distribution=distribution,
+                           sparsity=sparsity,
+                           reference=reference,
+                           unit=unit)
 
         if distribution == 0:
-            group._tags.update({'re_init_weights' : "Normal"})
+            group._tags.update({'re_init_{}'.format(variable) : "Normal"})
         elif distribution == 1:
-            group._tags.update({'re_init_weights' : "Gamma"})
+            group._tags.update({'re_init_{}'.format(variable) : "Gamma"})
 
 
 def add_group_activity_proxy(groups, buffer_size, decay):
@@ -94,14 +118,18 @@ def add_group_activity_proxy(groups, buffer_size, decay):
         group._tags.update(dict_append)
 
 
-def add_group_weight_init(groups, dist_param, scale, distribution):
-    """Function to add the weight initialisation to a given
-    `Connections` group.
+def add_group_param_init(groups, variable, dist_param, scale, 
+                         distribution, unit=None,
+                         clip_min=None, clip_max=None):
+    """Function to add the parameter initialisation to a given
+    group to be sampled from a specified distribution.
 
     Args:
-        group (teili object): Connection group whose weights are intialised
-        dist_param (float): Parameter between 0 and 0.5. Threshold which
-            triggers re-initialization.
+        group (teili object): Connection or Neuron group whose specified 
+            parameters are intialised
+        paramter (str): Name of parameter to be initialised.
+        dist_param (float): Mean of the distribution. In case of gamma 
+            this paramter refers to shape paramter. 
         scale (float): Scale for gamma distribution or std of normal
             distribution used.
         distribution (bool): Distribution from which to initialize the
@@ -111,20 +139,33 @@ def add_group_weight_init(groups, dist_param, scale, distribution):
     for group in groups:
         group.namespace.update({'dist_param': dist_param})
         group.namespace.update({'scale': scale})
-        weights = group.w_plast
-        if distribution == 'gamma':
-            weights = np.random.gamma(shape=dist_param,
-                                      scale=scale,
-                                      size=len(group))
-        if distribution == 'normal':
-            weights = np.random.normal(loc=dist_param,
-                                       scale=scale,
-                                       size=len(group))
-        weights = np.clip(weights, 0, 1)
+        params = group.__getattr__(variable)
 
-        group.w_plast = weights
+        if type(group) == Connections:
+            size=len(group)
+        elif type(group) == Neurons:
+            size=group.N
+        
+        if distribution == 'gamma':
+            params = np.random.gamma(shape=dist_param,
+                                         scale=scale,
+                                         size=size)
+                                        
+        elif distribution == 'normal':
+            params = np.random.normal(loc=dist_param,
+                                          scale=scale,
+                                          size=size)
+
+        if clip_min is not None and clip_max is not None:
+            params = np.clip(params, clip_min, clip_max)
+
+        if unit is not None:
+            group.__setattr__(variable, params*unit)
+        else:
+            group.__setattr__(variable, params)
+
         if distribution == 0:
-            group._tags.update({'init_weights' : "Normal"})
+            group._tags.update({'{}_distribution'.format(variable): "Normal"})
         elif distribution == 1:
-            group._tags.update({'init_weights' : "Gamma"})
+            group._tags.update({'{}_distribution'.format(variable): "Gamma"})
 

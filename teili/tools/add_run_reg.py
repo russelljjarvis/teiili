@@ -7,65 +7,104 @@ group and add all necessary state_variables and function calls.
 # @Author: mmilde
 # @Date:   2018-07-30 14:19:44
 
+from teili.core.groups import Neurons, Connections
 import numpy as np
 from brian2 import ms, pA, amp, second
-from teili.core.groups import Neurons, Connections
-from teili.tools.run_reg_functions import re_init_weights,\
+from teili.tools.run_reg_functions import re_init_params,\
     get_activity_proxy_vm, get_activity_proxy_imem,\
     max_value_update_vm, max_value_update_imem,\
     normalize_activity_proxy_vm, normalize_activity_proxy_imem,\
-    get_re_init_index, lfsr
+    get_re_init_indices, lfsr
 
 
 
 
-def add_re_init_weights(group, re_init_index, re_init_threshold, dist_param_re_init,
-                        scale_re_init, distribution):
+def add_re_init_params(group, 
+                       variable, 
+                       re_init_variable, 
+                       re_init_indices, 
+                       re_init_threshold, 
+                       re_init_dt,
+                       dist_param, 
+                       scale, 
+                       distribution,
+                       sparsity,
+                       reference,
+                       unit):
     """Adds a re-initialization run_regularly to a synapse group
 
     Args:
-        group (Connection group): Synapse group
-        re_init_threshold (float, required): Average post-synaptic weight
-            which triggers a re-initialisation if below or above
-            1 - re_init_threshold.
-        dist_param_re_init (float, required): Mean of distribution in case.
+        group (teiligroup, required): Connections or Neurons group
+        variable (str, required): Name of the variable to be re-initialised
+        re_init_varaiable (str, optional): Name of the variabe to be used to
+            calculate re_init_indices.
+        re_init_indices (ndarray, optional): Array to indicate which parameters
+            need to be re-initialised.
+        re_init_threshold (float, required): Threshold value below which
+            index is added to re_init_indices.
+        re_init_dt (second): Dt of run_regularly.
+        dist_param (float, required): Mean of distribution in case.
             of 'gaussian' or shape parameter k for 'gamma' distribution.
-        scale_re_init (float, required): Scale parameter sigma for
+        scale (float, required): Scale parameter sigma for
             distribution.
         distribution (str, optional): Parameter to determine the random
             distribution to be used to initialise the weights. Possible
             'gaussian' or 'gamma'.
+        sparsity (float): Ratio of zero elements in a set of parameters.
+        reference (str, required): Specifies which reference metric is used
+            to get indices of parameters to be re-initialised. 'mean_weight', 
+            'spike_time', 'synapse_counter' or 'neuron_threshold'.
+        unit (brian2.unit)
     """
-    group.namespace.update({'re_init_weights': re_init_weights})
-    if re_init_index is None:
-        group.add_state_variable('re_init_index')
-        group.namespace['re_init_index'] = re_init_index
+    if type(group) == Connections:
+            size=len(group)
+    elif type(group) == Neurons:
+            size=group.N 
+    
+    # TODO This needs double checking. I believe the name in namespace needs
+    # to match the function name itself. So we might need to remove the format.
+    group.namespace.update({'re_init_{}'.format(variable): re_init_params})
+    group.namespace.update({'get_re_init_indices': get_re_init_indices})
+    
+
+    if re_init_indices is None:
+        group.add_state_variable('re_init_indices')
     else:
-        group.variables.add_array('re_init_index', size=(len(group)))
+        group.variables.add_array('re_init_indices', size=np.int(size))
+
     group.namespace['re_init_threshold'] = re_init_threshold
-    group.namespace['dist_param'] = dist_param_re_init
-    group.namespace['scale'] = scale_re_init
+    group.namespace['dist_param'] = dist_param
+    group.namespace['scale'] = scale
+    group.namespace['sparsity'] = sparsity
+    group.namespace['reference'] = reference
+
     if distribution == 'normal':
         group.namespace['dist'] = 0
     if distribution == 'gamma':
         group.namespace['dist'] = 1
-    if re_init_index is not None:
-        group.run_regularly('''re_init_index = get_re_init_index(w_plast,\
+
+    if re_init_indices is not None:
+        # pablo this needs double checking from your side so the condition which is used to re initialise
+        # is used
+        group.run_regularly('''re_init_indices = get_re_init_indices(group._getattr__(re_init_variable),\
                                                                  N_pre,\
                                                                  N_post,\
+                                                                 reference,\
                                                                  re_init_threshold,\
-                                                                 lastspike,
+                                                                 sparsity,\
+                                                                 lastspike,\
                                                                  t)''',
-                            dt=10 * ms)
-    group.run_regularly('''w_plast = re_init_weights(w_plast,\
-                                                     N_pre,\
-                                                     N_post,\
-                                                     re_init_index,\
+                            dt=re_init_dt)
+    group.run_regularly('''group.__setattr(variable, re_init_params(group.__getattr__(variable),\
+                                                     clip_min,\
+                                                     clip_max,\
+                                                     re_init_indices,\
                                                      re_init_threshold,\
                                                      dist_param,\
                                                      scale,\
-                                                     dist)''',
-                        dt=50 * ms)
+                                                     dist,\
+                                                     unit))''',
+                        dt=re_init_dt)
 
 
 def add_activity_proxy(group, buffer_size, decay):

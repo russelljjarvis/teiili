@@ -55,9 +55,9 @@ Please look at the examples here: `~/teiliApps/tutorials/` after successfully in
     python -m teili.tools.generate_teiliApps
     ```
 
-*  If you want to work with the latest version of **teili** clone the [repository](https://code.ini.uzh.ch/ncs/teili) or [download](https://code.ini.uzh.ch/ncs/teili) the tar.gz file<br />
+*  If you want to work with the latest version of **teili** clone the [repository](https://gitlab.com/neuroinf/teili.git) or [download](https://gitlab.com/neuroinf/teili/-/archive/master/teili-master.tar.gz) the tar.gz file<br />
     ``` bash
-    git clone https://code.ini.uzh.ch/ncs/teili.git
+    git clone https://gitlab.com/neuroinf/teili.git
     ```
 *  Navigate to the parent folder containing the cloned repository or the downloaded `tar.gz` file
     ```

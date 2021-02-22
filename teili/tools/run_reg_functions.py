@@ -13,31 +13,34 @@ from brian2 import implementation, check_units,\
 
 
 @implementation('numpy', discard_units=True)
-@check_units(weights=1,
-             source_N=1,
-             target_N=1,
-             re_init_index=1,
+@check_units(params=1,
+             clip_min=1,
+             clip_max=1,
+             re_init_indices=1,
              re_init_threshold=1,
              dist_param=1,
              scale=1,
              dist=1,
+             unit=1,
              result=1)
-def re_init_weights(weights,
-                    source_N,
-                    target_N,
-                    re_init_index=None,
-                    re_init_threshold=0.2,
-                    dist_param=0.4,
-                    scale=0.2,
-                    dist=0):
-    """Re-initializes a given weight matrix using a normal distribution with
-    a specified mean and standard deviation if the mean is below a user
-    defined threshold.
+def re_init_params(params,
+                   clip_min=None,
+                   clip_max=None,
+                   re_init_indices=None,
+                   re_init_threshold=None,
+                   dist_param=0.4,
+                   scale=0.2,
+                   dist=0,
+                   unit=None):
+    """Re-initializes a given parameter, e.g. weights or time constants,
+    using a normal or gamma distribution with a specified mean and standard 
+    deviation re-initilaisation indices.
 
     Example:
         >>> from teili.core.groups import Neurons, Connections
         >>> from teili.models.neuron_models import DPI as neuron_model
         >>> from teili.models.synapse_models import DPISyn as syn_model
+        >>> from teili.tools.run_regfunctions import re_init_params
 
         >>> neuron_obj = Neurons(2, equation_builder=neuron_model(num_inputs=2),
                                  name="neuron_obj")
@@ -53,122 +56,84 @@ def re_init_weights(weights,
         >>> sdist_param_re_init = 0.5
         >>> scale_re_init = 1.0
         >>> re_init_threshold = 0.2
-        >>> re_init_index = None
+        >>> re_init_indices = None
+        >>> clip_min = 0
+        >>> clip_max = 1
+        >>> variable = "w_plast"
+        >>> re_init_dt= 2000 * ms
 
         >>> # Now we can connect and initialize the weight matrix
         >>> syn_obj.connect('True')
         >>> syn_obj.weight = wtaParams['weInpWTA']
         >>> syn_obj.namespace.update({'dist_param': dist_param})
         >>> syn_obj.namespace.update({'scale': scale_init})
-        >>> syn_obj.namespace.update({'re_init_index: re_init_index})
+        >>> syn_obj.namespace.update({'clip_min': clip_min})
+        >>> syn_obj.namespace.update({'clip_max': clip_max})
+        >>> syn_obj.namespace.update({'re_init_indices: re_init_indices})
 
         >>> # Now we can add the run_regularly function
-        >>> syn_obj.namespace.update({'re_init_weights': re_init_weights})
+        >>> syn_obj.namespace.update({'re_init_weights': re_init_params})
         >>> syn_obj.namespace.update({'re_init_threshold': re_init_threshold})
         >>> syn_obj.namespace['dist_param'] = dist_param_re_init
         >>> syn_obj.namespace['scale'] = scale_re_init
-        >>> syn_obj.run_regularly('''w_plast = re_init_weights(w_plast,\
-                                                               N_pre,\
-                                                               N_post,\
-                                                               re_init_index,\
+        >>> syn_obj.run_regularly('''syn_obj.__setattr__(variable, re_init_params(syn_obj.__getattr__(variable),\
+                                                               clip_min,\
+                                                               clip_max,\
+                                                               re_init_indices,\
                                                                re_init_threshold,\
                                                                dist_param,\
-                                                               scale)''',
-                                                               dt=2000*ms)
+                                                               scale,
+                                                               dist)''',
+                                                               dt=re_init_dt)
 
     Args:
-        weights (np.ndarray. required): Flattened weight matrix.
-        source_N (int, required): Number of units in the source population.
-        target_N (int, required): Number of units in the target population.
-        re_init_index (array, bool, optional): Boolean index array
-            indicating which weights need to be re-initilized. If None
-            weights are updated based on average post-synaptic weight.
-            re_init_index can be obtained using get_re_init_index
+        params (np.ndarray. required): Flattened parameter vector.
+        clip_min (float, optional): Value to clip distrubtion at lower bound.
+        clip_max (float, optional): Value to clip distribution at upper bound.
+        re_init_indices (vector, bool, optional): Boolean index array
+            indicating which parameters need to be re-initilised. If None
+            parameters are updated based on average lower and upper 20 %.
+            re_init_indices can be obtained using get_re_init_indices
             run_regularly.
-        re_init_threshold (float, optional): Re-initialization threshold.
+        re_init_threshold (float, optional): Re-initialisation threshold. 
+            Default is 0.2, i.e. 20 %
         dist_param (float, optional): Shape factor of gamma, or mean of
             normal distribution from which weights are sampled.
         scale (float, optional): Scale factor of gamma distribution from
             which weights are sampled.
+        dist (int, required): Flag to use either normal distribution (0)
+            or gamma distribution (1).
+        unit (brain2.unit, optional): Unit of parameter to re-initialise
 
     Returns:
         ndarray: Flatten re-initialized weight matrix
     """
-    data = np.zeros((source_N, target_N)) * np.nan
-    data = np.reshape(weights, (source_N, target_N))
-    # Thresholding post-synaptic weights
-    if re_init_index is None or len(re_init_index) != target_N:
-        re_init_index = np.logical_or(np.mean(data, 0) < re_init_threshold,
-                                      np.mean(data, 0) > (1 - re_init_threshold),
-                                      dtype=bool)
-    # Re-initializing weights with normal distribution
+    data = np.zeros(len(re_init_indices)) * np.nan
+
+    if re_init_indices is None:
+        re_init_indices = np.logical_or(np.mean(params, 0) < re_init_threshold,
+                                        np.mean(params, 0) > (1 - re_init_threshold),
+                                        dtype=bool)
+
+
     if dist == 1:
-        data[:, re_init_index.astype(bool)] = np.reshape(np.random.gamma(
+        data[re_init_indices.astype(bool)] = np.random.gamma(
             shape=dist_param,
             scale=scale,
-            size=np.int(source_N * np.sum(re_init_index))),
-            (np.int(source_N), np.sum(re_init_index).astype(int)))
-    if dist == 0:
-        data[:, re_init_index.astype(bool)] = np.reshape(np.random.normal(
+            size=np.int(len(re_init_indices)))
+    elif dist == 0:
+        data[re_init_indices.astype(bool)] = np.random.normal(
             loc=dist_param,
             scale=scale,
-            size=int(source_N * np.sum(re_init_index))),
-            (np.int(source_N), np.sum(re_init_index).astype(int)))
-    data = np.clip(data, 0, 1)
-    return data.flatten()
+            size=np.int(len(re_init_indices)))
 
+    if clip_min is not None and clip_max is not None:
+        data = np.clip(data, clip_min, clip_max)
 
-@implementation('numpy', discard_units=True)
-@check_units(taus=second,
-             re_init_index=1,
-             source_N=1,
-             target_N=1,
-             dist_param=1,
-             scale=1,
-             dist=1,
-             result=second)
-def re_init_taus(taus,
-                 re_init_index,
-                 source_N, target_N,
-                 dist_param=0.4,
-                 scale=0.2,
-                 dist=0):
-    """Re-initializes a given synaptic time constants matrix using a normal
-    distribution with a specified mean and standard deviation given
-    a re_init_index vector.
-
-    Args:
-        taus (np.ndarray. required): Flattened synaptic time constant
-            matrix.
-        re_init_index (np.ndarray, required): Boolean array of rows to be
-            updated in matrix
-        source_N (int, required): Number of units in the source population.
-        target_N (int, required): Number of units in the target population.
-        dist_param (float, optional): Shape factor of gamma, or mean of
-            normal distribution from which weights are sampled.
-        scale (float, optional): Scale factor of gamma distribution from
-            which weights are sampled.
-
-    Returns:
-        ndarray: Flatten re-initialized tau matrix
-    """
-    data = np.zeros((source_N, target_N)) * np.nan
-    data = np.reshape(taus / ms, (source_N, target_N))
-    # Re-initializing weights with normal distribution
-    if dist == 1:
-        data[:, re_init_index] = np.reshape(np.random.gamma(
-            shape=dist_param,
-            scale=scale,
-            size=source_N * np.sum(re_init_index)),
-            (source_N, np.sum(re_init_index)))
-    if dist == 0:
-        data[:, re_init_index] = np.reshape(np.random.normal(
-            loc=dist_param,
-            scale=scale,
-            size=source_N * np.sum(re_init_index)),
-            (source_N, np.sum(re_init_index)))
-    data = np.clip(data, 0.05, 200)
-    return data.flatten() * ms
+    if unit is None:
+        return data.flatten()
+    else:
+        return data.flatten() * unit
 
 
 @implementation('numpy', discard_units=True)
@@ -440,19 +405,21 @@ def weight_normalization(weights,
 
 
 @implementation('numpy', discard_units=True)
-@check_units(weights=1,
+@check_units(params=1,
              source_N=1,
              target_N=1,
+             reference=1,
              re_init_threshold=1,
              lastspike=second,
              t=second,
              result=1)
-def get_re_init_index(weights,
-                      source_N,
-                      target_N,
-                      re_init_threshold,
-                      lastspike,
-                      t):
+def get_re_init_indices(params,
+                       source_N,
+                       target_N,
+                       reference,
+                       re_init_threshold,
+                       lastspike,
+                       t):
     """ This function provides a boolean vector to indicate if the parameters
     of a given neuron need to be updated. This is required if two or more
     variables of a neuron needs to be updated according to the same condition
@@ -463,7 +430,7 @@ def get_re_init_index(weights,
     run_regularly function.
 
     Args:
-        weights (numpy.ndarray):
+        params (numpy.ndarray):
         source_N (int, required):
         target_N (in_requiredm):
         re_init_threshold (float, required):
@@ -476,16 +443,26 @@ def get_re_init_index(weights,
             parameters.
 
     """
-    data = np.zeros((source_N, target_N))
-    data = np.reshape(weights, (source_N, target_N))
-    re_init_index = np.mean(data, 0) < re_init_threshold
-    lastspike_tmp = np.reshape(lastspike, (source_N, target_N))
-    if (lastspike < 0*second).any() and (np.sum(lastspike_tmp[0, :] < 0 * second) > 2):
-        re_init_index = np.any(lastspike_tmp < 0 * second, axis=0)
-    elif ((t - np.abs(lastspike_tmp[0, :])) > (1 * second)).any():
-        re_init_index = np.any((t - lastspike_tmp) > (1 * second), axis=0)
+    data = params
+    re_init_indices = np.zeros(len(params))
 
-    return re_init_index
+
+    if reference == 'mean_weight':
+        re_init_indices[np.mean(data, 0) < re_init_threshold] = 1
+    elif reference == 'spike_time':
+        lastspike_tmp = np.reshape(lastspike, (source_N, target_N))
+        if (lastspike < 0*second).any() and (np.sum(lastspike_tmp[0, :] < 0 * second) > 2):
+            re_init_indices[np.any(lastspike_tmp < 0 * second, axis=0)] = 1
+        elif ((t - np.abs(lastspike_tmp[0, :])) > (1 * second)).any():
+            re_init_indices[np.any((t - lastspike_tmp) > (1 * second), axis=0)] = 1
+    elif reference == 'synapse_counter':
+        # @pablo, please add your code here
+        pass
+    elif reference == 'neuron_threshold':
+        # @pablo add your code here
+        pass
+
+    return re_init_indices
 
 
 @implementation('numpy', discard_units=True)

@@ -121,7 +121,7 @@ class SortMatrix():
         self.matrix = matrix.reshape((self.nrows, self.ncols))
         return self.matrix
 
-    def compute_distance(self, x, y, similarity_metric):
+    def compute_distance(self, x, y, similarity_metric, threshold=.8):
         """This function returns the distance
         of any to vectors x and y
 
@@ -136,9 +136,8 @@ class SortMatrix():
         if similarity_metric == 'euclidean':
             dist = np.linalg.norm(x - y)
         elif similarity_metric == 'jaccard':
-            thres = .8
-            x_elements = np.where(x > self.max_val*thres)[0]
-            y_elements = np.where(y > self.max_val*thres)[0]
+            x_elements = np.where(x > self.max_val*threshold)[0]
+            y_elements = np.where(y > self.max_val*threshold)[0]
             intersection = len(list(set(x_elements).intersection(y_elements)))
             union = (len(x_elements) + len(y_elements)) - intersection
             dist = (1 - float(intersection) / union)

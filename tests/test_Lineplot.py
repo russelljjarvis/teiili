@@ -19,6 +19,9 @@ SHOW_PLOTS_IN_TESTS = False
 
 class TestLineplot(unittest.TestCase):
 
+    def setUp(self):
+        warnings.simplefilter('ignore', category=RuntimeWarning)
+
     def test_getdata(self):
         (statemonN1, statemonN2) = run_brian_network(statemonitors=True, spikemonitors=False)
 

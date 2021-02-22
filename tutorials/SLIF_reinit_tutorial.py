@@ -123,16 +123,21 @@ feedforward_exc.namespace.update({'delay_re_init': delay_re_init})
 feedforward_exc.namespace.update({'weight_re_init': weight_re_init})
 feedforward_exc.namespace.update({'reset_re_init_counter': reset_re_init_counter})
 
+# if variable == counter, set it to np.nan where there is not connection,
+# set run regs with order for all state variables. The idea is that counter
+# is reinit and other ones just go together
+
+# I have same reinit array for all variables. In add_re_init_params I would
+# have to the same operation multiple times? not ideal
+
 reinit_period = 1000*ms
 feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
-                                                    prune_indices,\
                                                     weight,\
                                                     re_init_counter,\
                                                     t)''',
                                                     dt=reinit_period,
                                                     order=0)
 feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
-                                                    spawn_indices,\
                                                     prune_indices,\
                                                     weight,\
                                                     t)''',

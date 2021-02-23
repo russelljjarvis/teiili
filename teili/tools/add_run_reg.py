@@ -30,13 +30,15 @@ def add_re_init_params(group,
                        distribution,
                        sparsity,
                        reference,
-                       unit):
+                       unit,
+                       clip_min,
+                       clip_max):
     """Adds a re-initialization run_regularly to a synapse group
 
     Args:
         group (teiligroup, required): Connections or Neurons group
         variable (str, required): Name of the variable to be re-initialised
-        re_init_varaiable (str, optional): Name of the variabe to be used to
+        re_init_variable (str, optional): Name of the variable to be used to
             calculate re_init_indices.
         re_init_indices (ndarray, optional): Array to indicate which parameters
             need to be re-initialised.
@@ -47,14 +49,16 @@ def add_re_init_params(group,
             of 'gaussian' or shape parameter k for 'gamma' distribution.
         scale (float, required): Scale parameter sigma for
             distribution.
-        distribution (str, optional): Parameter to determine the random
+        distribution (str): Parameter to determine the random
             distribution to be used to initialise the weights. Possible
             'gaussian' or 'gamma'.
         sparsity (float): Ratio of zero elements in a set of parameters.
         reference (str, required): Specifies which reference metric is used
             to get indices of parameters to be re-initialised. 'mean_weight', 
             'spike_time', 'synapse_counter' or 'neuron_threshold'.
-        unit (brian2.unit)
+        unit (brian2.unit):
+        clip_min (float, optional): Value to clip distribution at lower bound.
+        clip_max (float, optional): Value to clip distribution at upper bound.
     """
     if type(group) == Connections:
             size=len(group)
@@ -83,28 +87,27 @@ def add_re_init_params(group,
     if distribution == 'gamma':
         group.namespace['dist'] = 1
 
-    if re_init_indices is not None:
-        # pablo this needs double checking from your side so the condition which is used to re initialise
-        # is used
-        group.run_regularly('''re_init_indices = get_re_init_indices(group._getattr__(re_init_variable),\
-                                                                 N_pre,\
-                                                                 N_post,\
-                                                                 reference,\
-                                                                 re_init_threshold,\
-                                                                 sparsity,\
-                                                                 lastspike,\
-                                                                 t)''',
+    if reference == 'synapse_counter':
+        group.run_regularly('''re_init_indices = get_re_init_indices(group.__getattr__('weight'),\
+                                   group.__getattr__(re_init_variable),\
+                                   None,\
+                                   None,\
+                                   reference,\
+                                   re_init_threshold,\
+                                   None,\
+                                   group.__getattr__('t'))''',
                             dt=re_init_dt)
-    group.run_regularly('''group.__setattr(variable, re_init_params(group.__getattr__(variable),\
-                                                     clip_min,\
-                                                     clip_max,\
-                                                     re_init_indices,\
-                                                     re_init_threshold,\
-                                                     dist_param,\
-                                                     scale,\
-                                                     dist,\
-                                                     unit))''',
-                        dt=re_init_dt)
+    #group.run_regularly('''group.__setattr__(variable,\
+    #                                         re_init_params(group.__getattr__(variable),\
+    #                                                        clip_min,\
+    #                                                        clip_max,\
+    #                                                        re_init_indices,\
+    #                                                        re_init_threshold,\
+    #                                                        dist_param,\
+    #                                                        scale,\
+    #                                                        dist,\
+    #                                                        unit))''',
+    #                    dt=re_init_dt)
 
 
 def add_activity_proxy(group, buffer_size, decay):

@@ -46,7 +46,6 @@ def add_group_weight_decay(groups, decay_rate, dt):
 def add_group_params_re_init(groups,
                              variable,
                              re_init_variable,
-                             re_init_indices,
                              re_init_threshold,
                              re_init_dt,
                              dist_param,
@@ -54,48 +53,58 @@ def add_group_params_re_init(groups,
                              distribution,
                              sparsity,
                              reference,
-                             unit):
+                             unit=None,
+                             re_init_indices=None,
+                             clip_min=None,
+                             clip_max=None):
     """This allows adding a weight re-initialization run-regular function
     specifying the distribution parameters from which to sample.
 
     Args:
         group (list): List of groups which are subject to weight
             initialization
-        re_init_varaiable (str, optional): Name of the variabe to be used to
+        variable (str, required): Name of the variable to be re-initialised
+        re_init_variable (str, required): Name of the variable to be used to
             calculate re_init_indices.
-        re_init_indices (ndarray, optional): Array to indicate which parameters
-            need to be re-initialised. re_init_threshold (float): Parameter between 0 and 0.5. Threshold
+        re_init_threshold (float): Parameter between 0 and 0.5. Threshold
             which triggers re-initialization.
         re_init_dt (second): Dt of run_regularly.
         dist_param (float): Shape of gamma distribution or mean of
             normal distribution used.
         scale (float): Scale for gamma distribution or std of normal
             distribution used.
-        distribution (bool): Distribution from which to initialize the
-            weights. Gamma (1) or normal (0) distributions.
+        distribution (str): Parameter to determine the random
+            distribution to be used to initialise the weights. Possible
+            'gaussian' or 'gamma'.
         sparsity (float): Ratio of zero elements in a set of parameters.
         reference (str, required): Specifies which reference metric is used
             to get indices of parameters to be re-initialised. 'mean_weight', 
             'spike_time', 'synapse_counter' or 'neuron_threshold'.
         unit (brian.unit, optional): Unit of the parameter.
+        re_init_indices (ndarray, optional): Array to indicate which parameters
+            need to be re-initialised.
+        clip_min (float, optional): Value to clip distribution at lower bound.
+        clip_max (float, optional): Value to clip distribution at upper bound.
     """
     for group in groups:
         add_re_init_params(group,
                            variable=variable,
                            re_init_variable=re_init_variable,
-                           re_init_indices=re_init_indices,
                            re_init_threshold=re_init_threshold,
                            re_init_dt=re_init_dt,
-                           dist_paramt=dist_param,
+                           dist_param=dist_param,
                            scale=scale,
                            distribution=distribution,
                            sparsity=sparsity,
                            reference=reference,
-                           unit=unit)
+                           unit=unit,
+                           re_init_indices=re_init_indices,
+                           clip_min=clip_min,
+                           clip_max=clip_max)
 
-        if distribution == 0:
+        if distribution == 'gaussian':
             group._tags.update({'re_init_{}'.format(variable) : "Normal"})
-        elif distribution == 1:
+        elif distribution == 'gamma':
             group._tags.update({'re_init_{}'.format(variable) : "Gamma"})
 
 

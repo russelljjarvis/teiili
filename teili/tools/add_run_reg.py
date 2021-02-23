@@ -139,6 +139,7 @@ def add_activity_proxy(group, buffer_size, decay):
     group.variables.add_array('membrane_buffer', size=(group.N, buffer_size))
     group.variables.add_array('kernel', size=(group.N, buffer_size))
     group.variables.add_array('old_max', size=1)
+    group.membrane_buffer = np.nan
 
     mask = np.zeros(np.shape(group.kernel)[1]) * np.nan
     for jj in range(np.shape(group.kernel)[1]):

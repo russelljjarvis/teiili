@@ -34,7 +34,7 @@ def re_init_params(params,
                    unit=None):
     """Re-initializes a given parameter, e.g. weights or time constants,
     using a normal or gamma distribution with a specified mean and standard 
-    deviation re-initilaisation indices.
+    deviation re-initialisation indices.
 
     Example:
         >>> from teili.core.groups import Neurons, Connections
@@ -88,7 +88,7 @@ def re_init_params(params,
 
     Args:
         params (np.ndarray. required): Flattened parameter vector.
-        clip_min (float, optional): Value to clip distrubtion at lower bound.
+        clip_min (float, optional): Value to clip distribution at lower bound.
         clip_max (float, optional): Value to clip distribution at upper bound.
         re_init_indices (vector, bool, optional): Boolean index array
             indicating which parameters need to be re-initilised. If None
@@ -406,6 +406,7 @@ def weight_normalization(weights,
 
 @implementation('numpy', discard_units=True)
 @check_units(params=1,
+             re_init_variable=1,
              source_N=1,
              target_N=1,
              reference=1,
@@ -414,6 +415,7 @@ def weight_normalization(weights,
              t=second,
              result=1)
 def get_re_init_indices(params,
+                       re_init_variable,
                        source_N,
                        target_N,
                        reference,
@@ -431,6 +433,7 @@ def get_re_init_indices(params,
 
     Args:
         params (numpy.ndarray):
+        re_init_variable (numpy.ndarray):
         source_N (int, required):
         target_N (in_requiredm):
         re_init_threshold (float, required):
@@ -456,8 +459,29 @@ def get_re_init_indices(params,
         elif ((t - np.abs(lastspike_tmp[0, :])) > (1 * second)).any():
             re_init_indices[np.any((t - lastspike_tmp) > (1 * second), axis=0)] = 1
     elif reference == 'synapse_counter':
-        # @pablo, please add your code here
-        pass
+        if t > 0:
+            # Get pruned indices
+            connected_weights = np.where(params==1)[0]
+            prune_indices = np.where(re_init_variable < re_init_threshold)[0]
+            # Select low counter values that are also connected
+            prune_indices = prune_indices[np.isin(prune_indices, connected_weights)]
+
+            # Pruned/spawned synapses are limited by unused synapses
+            zero_weights = np.where(params==0)[0]
+            if len(prune_indices) > len(zero_weights):
+                prune_indices = np.random.choice(prune_indices, len(zero_weights),
+                                                 replace=False)
+
+            re_init_indices[prune_indices] = 1
+
+            # Get spawned indices
+            spawn_indices = np.random.choice(zero_weights,
+                                             len(np.where(re_init_indices==1)[0]),
+                                             replace=False)
+
+            re_init_indices[spawn_indices] = 1
+        else:
+            re_init_indices = 0
     elif reference == 'neuron_threshold':
         # @pablo add your code here
         pass

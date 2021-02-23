@@ -8,8 +8,8 @@ from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.models.neuron_models import StochasticLIF as neuron_model
 from teili.stimuli.testbench import SequenceTestbench
-from teili.tools.add_run_reg import add_lfsr
-from teili.tools.group_tools import add_group_activity_proxy
+from teili.tools.group_tools import add_group_activity_proxy,\
+        add_group_params_re_init
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.converter import delete_doublets
@@ -123,51 +123,58 @@ feedforward_exc.namespace.update({'delay_re_init': delay_re_init})
 feedforward_exc.namespace.update({'weight_re_init': weight_re_init})
 feedforward_exc.namespace.update({'reset_re_init_counter': reset_re_init_counter})
 
-# if variable == counter, set it to np.nan where there is not connection,
-# set run regs with order for all state variables. The idea is that counter
-# is reinit and other ones just go together
-
-# I have same reinit array for all variables. In add_re_init_params I would
-# have to the same operation multiple times? not ideal
-
+cnt_thresh = 1
 reinit_period = 1000*ms
-feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
-                                                    weight,\
-                                                    re_init_counter,\
-                                                    t)''',
-                                                    dt=reinit_period,
-                                                    order=0)
-feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
-                                                    prune_indices,\
-                                                    weight,\
-                                                    t)''',
-                                                    dt=reinit_period,
-                                                    order=1)
+add_group_params_re_init(groups=[feedforward_exc],
+                         variable='w_plast',
+                         re_init_variable='re_init_counter',
+                         re_init_threshold=cnt_thresh,
+                         re_init_dt=reinit_period,
+                         dist_param=3,#TODO
+                         scale=1,#TODO
+                         distribution='gamma',
+                         sparsity=.7,#TODO
+                         clip_min=0,
+                         clip_max=15,
+                         reference='synapse_counter')
 
-feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
-                                                          spawn_indices,\
-                                                          t)''',
-                                                          dt=reinit_period,
-                                                          order=2)
-feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
-                                                       spawn_indices,\
-                                                       t)''',
-                                                       dt=reinit_period,
-                                                       order=3)
-#feedforward_exc.run_regularly('''delay = delay_re_init(delay,\
+#feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
+#                                                    weight,\
+#                                                    re_init_counter,\
+#                                                    t)''',
+#                                                    dt=reinit_period,
+#                                                    order=0)
+#feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
+#                                                    prune_indices,\
+#                                                    weight,\
+#                                                    t)''',
+#                                                    dt=reinit_period,
+#                                                    order=1)
+#
+#feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
+#                                                          spawn_indices,\
+#                                                          t)''',
+#                                                          dt=reinit_period,
+#                                                          order=2)
+#feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
 #                                                       spawn_indices,\
 #                                                       t)''',
 #                                                       dt=reinit_period,
-#                                                       order=4)
-feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
-                                                         spawn_indices,\
-                                                         prune_indices,\
-                                                         t)''',
-                                                         dt=reinit_period,
-                                                         order=5)
-feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
-                                                                         dt=reinit_period,
-                                                                         order=6)
+#                                                       order=3)
+##feedforward_exc.run_regularly('''delay = delay_re_init(delay,\
+##                                                       spawn_indices,\
+##                                                       t)''',
+##                                                       dt=reinit_period,
+##                                                       order=4)
+#feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
+#                                                         spawn_indices,\
+#                                                         prune_indices,\
+#                                                         t)''',
+#                                                         dt=reinit_period,
+#                                                         order=5)
+#feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
+#                                                                         dt=reinit_period,
+#                                                                         order=6)
 
 ##################
 # Setting up monitors

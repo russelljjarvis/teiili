@@ -120,7 +120,7 @@ setup(
         'numpy>=1.15.1',
         'seaborn>=0.8.1',
         'sparse>=0.3.0',
-        'Brian2==2.2.2.1',
+        'Brian2>=2.4.2',
         'scipy>=1.1.0',
         'pyqtgraph>=0.10.0',
         'pandas>=0.23.1',

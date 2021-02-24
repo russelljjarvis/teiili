@@ -242,7 +242,7 @@ def get_activity_proxy_vm(Vm,
             activity_proxy over the N time steps of the
     """
     buffer_pointer = int(buffer_pointer)
-    if np.sum(membrane_buffer == 0) > 0:
+    if np.sum(membrane_buffer == np.nan) > 0:
         membrane_buffer[:, buffer_pointer] = Vm
         # kernel = np.zeros(np.shape(membrane_buffer)) * np.nan
     else:
@@ -255,6 +255,7 @@ def get_activity_proxy_vm(Vm,
     the Ispkthr variable.
     '''
     exp_weighted_membrane_buffer = np.array(membrane_buffer, copy=True)
+    exp_weighted_membrane_buffer[np.isnan(exp_weighted_membrane_buffer)] = 0
     exp_weighted_membrane_buffer *= kernel[:, :np.shape(exp_weighted_membrane_buffer)[1]]
 
     activity_proxy = np.sum(exp_weighted_membrane_buffer, axis=1)

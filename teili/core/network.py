@@ -185,6 +185,11 @@ class TeiliNetwork(Network):
         # kwargs are if you want to use the StandaloneNetwork as a simple brian2
         # network with numpy code generation
 
+        try:
+            kwargs['level'] = kwargs['level'] + 1
+        except:
+            kwargs['level'] = 1
+
         if get_device() == all_devices['cpp_standalone']:
 
             if all_devices['cpp_standalone'].build_on_run:

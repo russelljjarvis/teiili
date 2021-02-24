@@ -5,7 +5,7 @@ network with STDP.
 import numpy as np
 from scipy.stats import gamma, truncnorm
 
-from brian2 import ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
+from brian2 import second, ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
         defaultclock, ExplicitStateUpdater, SpikeGeneratorGroup,\
         PopulationRateMonitor, run
 
@@ -21,12 +21,10 @@ from teili.tools.add_run_reg import add_lfsr
 from teili.tools.group_tools import add_group_activity_proxy
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-from teili.tools.converter import delete_doublets
 
 from lfsr import create_lfsr
 from SLIF_utils import neuron_group_from_spikes, neuron_rate,\
-        rate_correlations, ensemble_convergence, replicate_sequence,\
-        permutation_from_rate
+        rate_correlations, ensemble_convergence, permutation_from_rate
 from reinit_functions import get_prune_indices, get_spawn_indices,\
         wplast_re_init, weight_re_init, tau_re_init, delay_re_init,\
         reset_re_init_counter
@@ -72,39 +70,39 @@ stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
 # Initialize input sequence
 num_items = 3
+item_duration = 100
+item_superposition = 20
 num_channels = 144
-sequence_duration = 150  # 300
-noise_prob = None
+noise_prob = 0.005
 item_rate = 25
-spike_times, spike_indices = [], []
 #sequence_repetitions = 700# 350
 sequence_repetitions = 200
+
+sequence = SequenceTestbench(num_channels, num_items, item_duration,
+                             item_superposition, noise_prob, item_rate,
+                             sequence_repetitions)
+spike_indices, spike_times = sequence.stimuli()
+
+sequence_duration = sequence.cycle_length
 training_duration = sequence_repetitions*sequence_duration*ms
-sequence = SequenceTestbench(num_channels, num_items, sequence_duration,
-                             noise_prob, item_rate)
-tmp_i, tmp_t = sequence.stimuli()
 
-spike_indices, spike_times = replicate_sequence(num_channels, tmp_i, tmp_t,
-                                                sequence_duration,
-                                                training_duration/ms)
-
-# Adding incomplete sequence at the end of simulation
-symbols = {}
-symbol_duration = int(sequence_duration/num_items)
-for item in range(num_items):
-    item_interval = (tmp_t>=(symbol_duration*item*ms)) & (tmp_t<(symbol_duration*(item+1)*ms))
-    symbols[item] = {'t':tmp_t[item_interval],
-                     'i':tmp_i[item_interval]}
-
-incomplete_sequences = 3
-test_duration = incomplete_sequences*sequence_duration*ms
-include_symbols = [[0], [1], [2]]
-for incomp_seq in range(incomplete_sequences):
-    for incl_symb in include_symbols[incomp_seq]:
-        tmp_symb = [(x/ms + incomp_seq*sequence_duration + training_duration/ms)
-                        for x in symbols[incl_symb]['t']]
-        spike_times = np.append(spike_times, tmp_symb)
-        spike_indices = np.append(spike_indices, symbols[incl_symb]['i'])
+## Adding incomplete sequence at the end of simulation
+#symbols = {}
+#item_duration = int(sequence_duration/num_items)
+#for item in range(num_items):
+#    item_interval = (tmp_t>=((item_duration-item_superposition)*item*ms)) & (tmp_t<(item_duration*(item+1)*ms))
+#    symbols[item] = {'t':tmp_t[item_interval],
+#                     'i':tmp_i[item_interval]}
+#
+#incomplete_sequences = 3
+test_duration = 0*ms#incomplete_sequences*sequence_duration*ms
+#include_symbols = [[0], [1], [2]]
+#for incomp_seq in range(incomplete_sequences):
+#    for incl_symb in include_symbols[incomp_seq]:
+#        tmp_symb = [(x/ms + incomp_seq*sequence_duration + training_duration/ms)
+#                        for x in symbols[incl_symb]['t']]
+#        spike_times = np.append(spike_times, tmp_symb)
+#        spike_indices = np.append(spike_indices, symbols[incl_symb]['i'])
 
 # Adding noise at the end of simulation
 #incomplete_sequences = 5
@@ -116,23 +114,11 @@ for incomp_seq in range(incomplete_sequences):
 #spike_indices = np.concatenate((spike_indices, noise_indices))
 #spike_times = np.concatenate((spike_times, noise_times+training_duration/ms))
 
-# Creating and adding noise
-#noise_prob = 0.002
-#noise_spikes = np.random.rand(num_channels, int(training_duration/ms + test_duration/ms))
-#noise_indices = np.where(noise_spikes < noise_prob)[0]
-#noise_times = np.where(noise_spikes < noise_prob)[1]
-#spike_indices = np.concatenate((spike_indices, noise_indices))
-#spike_times = np.concatenate((spike_times, noise_times))
-#sorting_index = np.argsort(spike_times)
-#spike_indices = spike_indices[sorting_index]
-#spike_times = spike_times[sorting_index]
-#spike_times, spike_indices = delete_doublets(spike_times, spike_indices)
-
 # Save them for comparison
-spk_i, spk_t = np.array(spike_indices), np.array(spike_times)*ms
+spk_i, spk_t = np.array(spike_indices), np.array(spike_times)*second
 
 # Reproduce activity in a neuron group (necessary for STDP compatibility)
-seq_cells = neuron_group_from_spikes(spike_indices, spike_times, num_channels,
+seq_cells = neuron_group_from_spikes(spike_indices, spike_times/ms, num_channels,
                                      defaultclock.dt,
                                      int((training_duration+test_duration)/defaultclock.dt))
 
@@ -378,40 +364,40 @@ feedforward_exc.namespace.update({'weight_re_init': weight_re_init})
 feedforward_exc.namespace.update({'reset_re_init_counter': reset_re_init_counter})
 
 reinit_period = 16000*ms
-feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
-                                                    prune_indices,\
-                                                    weight,\
-                                                    re_init_counter,\
-                                                    t)''',
-                                                    dt=reinit_period,
-                                                    order=0)
-feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
-                                                    spawn_indices,\
-                                                    prune_indices,\
-                                                    weight,\
-                                                    t)''',
-                                                    dt=reinit_period,
-                                                    order=1)
-
-feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
-                                                          spawn_indices,\
-                                                          t)''',
-                                                          dt=reinit_period,
-                                                          order=2)
-feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
-                                                       spawn_indices,\
-                                                       t)''',
-                                                       dt=reinit_period,
-                                                       order=3)
-feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
-                                                         spawn_indices,\
-                                                         prune_indices,\
-                                                         t)''',
-                                                         dt=reinit_period,
-                                                         order=5)
-feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
-                                                                         dt=reinit_period,
-                                                                         order=6)
+#feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
+#                                                    prune_indices,\
+#                                                    weight,\
+#                                                    re_init_counter,\
+#                                                    t)''',
+#                                                    dt=reinit_period,
+#                                                    order=0)
+#feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
+#                                                    spawn_indices,\
+#                                                    prune_indices,\
+#                                                    weight,\
+#                                                    t)''',
+#                                                    dt=reinit_period,
+#                                                    order=1)
+#
+#feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
+#                                                          spawn_indices,\
+#                                                          t)''',
+#                                                          dt=reinit_period,
+#                                                          order=2)
+#feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
+#                                                       spawn_indices,\
+#                                                       t)''',
+#                                                       dt=reinit_period,
+#                                                       order=3)
+#feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
+#                                                         spawn_indices,\
+#                                                         prune_indices,\
+#                                                         t)''',
+#                                                         dt=reinit_period,
+#                                                         order=5)
+#feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
+#                                                                         dt=reinit_period,
+#                                                                         order=6)
 
 ##################
 # Setting up monitors

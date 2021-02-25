@@ -87,7 +87,7 @@ def add_group_params_re_init(groups,
         clip_max (float, optional): Value to clip distribution at upper bound.
     """
     for group in groups:
-        add_re_init_params(group,
+        add_re_init_params(group=group,
                            variable=variable,
                            re_init_variable=re_init_variable,
                            re_init_threshold=re_init_threshold,

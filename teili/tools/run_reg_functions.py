@@ -120,12 +120,12 @@ def re_init_params(params,
         data[re_init_indices.astype(bool)] = np.random.gamma(
             shape=dist_param,
             scale=scale,
-            size=np.int(len(re_init_indices)))
+            size=np.int(len(np.where(re_init_indices==1))))
     elif dist == 0:
         data[re_init_indices.astype(bool)] = np.random.normal(
             loc=dist_param,
             scale=scale,
-            size=np.int(len(re_init_indices)))
+            size=np.int(len(np.where(re_init_indices==1))))
 
     if clip_min is not None and clip_max is not None:
         data = np.clip(data, clip_min, clip_max)
@@ -450,16 +450,15 @@ def get_re_init_indices(params,
     data = params
     re_init_indices = np.zeros(len(params))
 
-
-    if reference == 'mean_weight':
+    if reference == 0:
         re_init_indices[np.mean(data, 0) < re_init_threshold] = 1
-    elif reference == 'spike_time':
+    elif reference == 1:
         lastspike_tmp = np.reshape(lastspike, (source_N, target_N))
         if (lastspike < 0*second).any() and (np.sum(lastspike_tmp[0, :] < 0 * second) > 2):
             re_init_indices[np.any(lastspike_tmp < 0 * second, axis=0)] = 1
         elif ((t - np.abs(lastspike_tmp[0, :])) > (1 * second)).any():
             re_init_indices[np.any((t - lastspike_tmp) > (1 * second), axis=0)] = 1
-    elif reference == 'synapse_counter':
+    elif reference == 2:
         if t > 0:
             # Get pruned indices
             connected_weights = np.where(params==1)[0]
@@ -473,11 +472,8 @@ def get_re_init_indices(params,
                 prune_indices = np.random.choice(prune_indices, len(zero_weights),
                                                  replace=False)
 
-            re_init_indices[prune_indices] = 1
-
-            # Get spawned indices
             spawn_indices = np.random.choice(zero_weights,
-                                             len(np.where(re_init_indices==1)[0]),
+                                             len(prune_indices),
                                              replace=False)
 
             re_init_indices[spawn_indices] = 1

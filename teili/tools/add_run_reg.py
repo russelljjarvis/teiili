@@ -67,7 +67,7 @@ def add_re_init_params(group,
     
     # TODO This needs double checking. I believe the name in namespace needs
     # to match the function name itself. So we might need to remove the format.
-    group.namespace.update({'re_init_{}'.format(variable): re_init_params})
+    group.namespace.update({f're_init_{variable}': re_init_params})
     group.namespace.update({'get_re_init_indices': get_re_init_indices})
     
 
@@ -80,7 +80,14 @@ def add_re_init_params(group,
     group.namespace['dist_param'] = dist_param
     group.namespace['scale'] = scale
     group.namespace['sparsity'] = sparsity
-    group.namespace['reference'] = reference
+
+    # Mapping between keywords to avoid passing strings
+    if reference == 'mean_weight':
+        group.namespace['reference'] = 0
+    elif reference == 'spike_time':
+        group.namespace['reference'] = 1
+    elif reference == 'synapse_counter':
+        group.namespace['reference'] = 2
 
     if distribution == 'normal':
         group.namespace['dist'] = 0
@@ -88,26 +95,25 @@ def add_re_init_params(group,
         group.namespace['dist'] = 1
 
     if reference == 'synapse_counter':
-        group.run_regularly('''re_init_indices = get_re_init_indices(group.__getattr__('weight'),\
-                                   group.__getattr__(re_init_variable),\
-                                   None,\
-                                   None,\
+        group.run_regularly(f'''re_init_indices = get_re_init_indices(weight,\
+                                   {re_init_variable},\
+                                   1,\
+                                   1,\
                                    reference,\
                                    re_init_threshold,\
-                                   None,\
-                                   group.__getattr__('t'))''',
+                                   1*ms,\
+                                   t)''',
                             dt=re_init_dt)
-    #group.run_regularly('''group.__setattr__(variable,\
-    #                                         re_init_params(group.__getattr__(variable),\
-    #                                                        clip_min,\
-    #                                                        clip_max,\
-    #                                                        re_init_indices,\
-    #                                                        re_init_threshold,\
-    #                                                        dist_param,\
-    #                                                        scale,\
-    #                                                        dist,\
-    #                                                        unit))''',
-    #                    dt=re_init_dt)
+    group.run_regularly(f'''{variable} = re_init_{variable}({variable},\
+                                                        {clip_min},\
+                                                        {clip_max},\
+                                                        re_init_indices,\
+                                                        re_init_threshold,\
+                                                        dist_param,\
+                                                        scale,\
+                                                        dist,\
+                                                        1)''',
+                        dt=re_init_dt)
 
 
 def add_activity_proxy(group, buffer_size, decay):

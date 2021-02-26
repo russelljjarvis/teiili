@@ -108,7 +108,7 @@ def re_init_params(params,
     Returns:
         ndarray: Flatten re-initialized weight matrix
     """
-    data = np.zeros(len(re_init_indices)) * np.nan
+    data = np.zeros(len(re_init_indices))
 
     if re_init_indices is None:
         re_init_indices = np.logical_or(np.mean(params, 0) < re_init_threshold,
@@ -120,12 +120,12 @@ def re_init_params(params,
         data[re_init_indices.astype(bool)] = np.random.gamma(
             shape=dist_param,
             scale=scale,
-            size=np.int(len(np.where(re_init_indices==1))))
+            size=np.int(len(np.where(re_init_indices==1)[0])))
     elif dist == 0:
         data[re_init_indices.astype(bool)] = np.random.normal(
             loc=dist_param,
             scale=scale,
-            size=np.int(len(np.where(re_init_indices==1))))
+            size=np.int(len(np.where(re_init_indices==1)[0])))
 
     if clip_min is not None and clip_max is not None:
         data = np.clip(data, clip_min, clip_max)
@@ -447,11 +447,10 @@ def get_re_init_indices(params,
             parameters.
 
     """
-    data = params
-    re_init_indices = np.zeros(len(params))
+    re_init_indices = np.zeros(len(re_init_variable))
 
     if reference == 0:
-        re_init_indices[np.mean(data, 0) < re_init_threshold] = 1
+        re_init_indices[np.mean(params, 0) < re_init_threshold] = 1
     elif reference == 1:
         lastspike_tmp = np.reshape(lastspike, (source_N, target_N))
         if (lastspike < 0*second).any() and (np.sum(lastspike_tmp[0, :] < 0 * second) > 2):
@@ -461,19 +460,11 @@ def get_re_init_indices(params,
     elif reference == 2:
         if t > 0:
             # Get pruned indices
-            connected_weights = np.where(params==1)[0]
             prune_indices = np.where(re_init_variable < re_init_threshold)[0]
-            # Select low counter values that are also connected
-            prune_indices = prune_indices[np.isin(prune_indices, connected_weights)]
+            disconnected_syn = np.where(np.isnan(re_init_variable))[0]
+            num_spawned = np.clip(len(prune_indices), 0, len(disconnected_syn))
 
-            # Pruned/spawned synapses are limited by unused synapses
-            zero_weights = np.where(params==0)[0]
-            if len(prune_indices) > len(zero_weights):
-                prune_indices = np.random.choice(prune_indices, len(zero_weights),
-                                                 replace=False)
-
-            spawn_indices = np.random.choice(zero_weights,
-                                             len(prune_indices),
+            spawn_indices = np.random.choice(disconnected_syn, num_spawned,
                                              replace=False)
 
             re_init_indices[spawn_indices] = 1
@@ -484,6 +475,27 @@ def get_re_init_indices(params,
         pass
 
     return re_init_indices
+
+
+@implementation('numpy', discard_units=True)
+@check_units(params=1, reset_variable=1, re_init_indices=1,
+             re_init_threshold=1, t=second, result=1)
+def reset_param(params, reset_variable, re_init_indices, re_init_threshold, t):
+    if t>0:
+        if np.any(reset_variable):
+            prune_indices = np.where(reset_variable < re_init_threshold)[0]
+            disconnected_syn = np.where(np.isnan(reset_variable))[0]
+            num_pruned = np.clip(len(prune_indices), 0, len(disconnected_syn))
+
+            prune_indices = np.random.choice(prune_indices, num_pruned,
+                                             replace=False)
+
+            params[prune_indices] = 0
+            params[re_init_indices==1] = 1
+        else:
+            params[~np.isnan(params)] = 0
+
+    return params
 
 
 @implementation('numpy', discard_units=True)

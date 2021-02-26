@@ -14,7 +14,7 @@ from teili.tools.run_reg_functions import re_init_params,\
     get_activity_proxy_vm, get_activity_proxy_imem,\
     max_value_update_vm, max_value_update_imem,\
     normalize_activity_proxy_vm, normalize_activity_proxy_imem,\
-    get_re_init_indices
+    get_re_init_indices, reset_param
 
 
 
@@ -95,14 +95,35 @@ def add_re_init_params(group,
         group.namespace['dist'] = 1
 
     if reference == 'synapse_counter':
-        group.run_regularly(f'''re_init_indices = get_re_init_indices(weight,\
+        temp_var = np.array(group.__getattr__(re_init_variable))
+        temp_var[np.where(group.weight==0)[0]] = np.nan
+        group.__setattr__(re_init_variable, temp_var)
+
+        group.run_regularly(f'''re_init_indices = get_re_init_indices(0,\
                                    {re_init_variable},\
-                                   1,\
-                                   1,\
+                                   0,\
+                                   0,\
                                    reference,\
                                    re_init_threshold,\
-                                   1*ms,\
+                                   0*ms,\
                                    t)''',
+                            order=0,
+                            dt=re_init_dt)
+        group.namespace.update({'reset_weight': reset_param})
+        group.namespace.update({f'reset_{re_init_variable}': reset_param})
+        group.run_regularly(f'''weight = reset_weight(weight,\
+                                   {re_init_variable},\
+                                   re_init_indices,\
+                                   re_init_threshold,\
+                                   t)''',
+                            when='end',
+                            dt=re_init_dt)
+        group.run_regularly(f'''{re_init_variable} = reset_{re_init_variable}({re_init_variable},\
+                                   0,\
+                                   0,\
+                                   0,\
+                                   t)''',
+                            when='end',
                             dt=re_init_dt)
     group.run_regularly(f'''{variable} = re_init_{variable}({variable},\
                                                         {clip_min},\
@@ -113,6 +134,7 @@ def add_re_init_params(group,
                                                         scale,\
                                                         dist,\
                                                         1)''',
+                        order=1,
                         dt=re_init_dt)
 
 

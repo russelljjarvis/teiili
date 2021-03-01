@@ -748,7 +748,7 @@ class SequenceTestbench():
         net.add(P, monitor)
         net.run(duration=(self.cycle_length) * ms)
         # Use integer values to avoid floating point errors
-        self.monitor_t = (monitor.t/ms).astype(int)
+        self.monitor_t = np.around(monitor.t/ms).astype(int)
         self.monitor_i = monitor.i
 
     def add_noise(self):
@@ -792,6 +792,7 @@ class SequenceTestbench():
 
         t_start = 0
         i_start = 0
+        self.items = {}
         for item in range(self.n_items):
             t_stop = t_start + self.item_length
             i_stop = i_start + self.channels_per_item
@@ -802,12 +803,15 @@ class SequenceTestbench():
 
             t_start += self.item_length - self.superposition_length
             i_start += self.channels_per_item
+            item_indices = np.asarray(self.monitor_i[cInd])
+            item_times = np.asarray(self.monitor_t[cInd])
+            self.items[item] = {'t': item_times, 'i': item_indices}
             try:
-                self.indices = np.concatenate((self.indices, np.asarray(self.monitor_i[cInd])))
-                self.times = np.concatenate((self.times, np.asarray(self.monitor_t[cInd])))
+                self.indices = np.concatenate((self.indices, item_indices))
+                self.times = np.concatenate((self.times, item_times))
             except AttributeError:
-                self.indices = np.asarray(self.monitor_i[cInd])
-                self.times = np.asarray(self.monitor_t[cInd])
+                self.indices = item_indices
+                self.times = item_times
 
         if self.cycle_repetitions is not None:
             self.repeate_cycle()

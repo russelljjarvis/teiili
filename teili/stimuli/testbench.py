@@ -723,7 +723,7 @@ class SequenceTestbench():
 
         Returns:
             indices (1darray, int): An array of neuron indices.
-            times (1darray, int): An array of spike times in ms.
+            times (1darray, int): An array of spike times in seconds.
         """
         self.n_channels = n_channels
         self.n_items = n_items
@@ -743,10 +743,13 @@ class SequenceTestbench():
             self.rate = 30
 
         P = PoissonGroup(N=self.n_channels, rates=self.rate*Hz)
-        self.monitor = SpikeMonitor(P, record=True)
+        monitor = SpikeMonitor(P, record=True)
         net = Network()
-        net.add(P, self.monitor)
+        net.add(P, monitor)
         net.run(duration=(self.cycle_length) * ms)
+        # Use integer values to avoid floating point errors
+        self.monitor_t = (monitor.t/ms).astype(int)
+        self.monitor_i = monitor.i
 
     def add_noise(self):
         """
@@ -759,7 +762,7 @@ class SequenceTestbench():
                           )
 
         self.noise_indices = np.where(noise_spikes < self.noise_probability)[0]
-        self.noise_times = np.where(noise_spikes < self.noise_probability)[1] * ms
+        self.noise_times = np.where(noise_spikes < self.noise_probability)[1]
 
     def repeate_cycle(self):
         """
@@ -769,10 +772,16 @@ class SequenceTestbench():
         init_time = self.cycle_length - self.superposition_length
         for rep in range(self.cycle_repetitions):
             spike_indices.extend(self.indices)
-            aux_t = [(x*second + rep*init_time*ms) for x in self.times]
+            aux_t = [(x + rep*init_time) for x in self.times]
             spike_times.extend(aux_t)
         self.indices = np.array(spike_indices)
         self.times = np.array(spike_times)
+
+    def sort_spikes(self):
+        """ Sort spike indices according to spike times."""
+        sorting_index = np.argsort(self.times)
+        self.indices = self.indices[sorting_index]
+        self.times = self.times[sorting_index]
 
     def stimuli(self):
         """ This function creates the stimuli and returns neuron indices and
@@ -788,17 +797,17 @@ class SequenceTestbench():
             i_stop = i_start + self.channels_per_item
 
             cInd = np.logical_and(np.logical_and(np.logical_and(
-                self.monitor.t > t_start*ms, self.monitor.i>i_start),
-                self.monitor.t < t_stop*ms), self.monitor.i<=i_stop)
+                self.monitor_t >= t_start, self.monitor_i >= i_start),
+                self.monitor_t < t_stop), self.monitor_i < i_stop)
 
             t_start += self.item_length - self.superposition_length
             i_start += self.channels_per_item
             try:
-                self.indices = np.concatenate((self.indices, np.asarray(self.monitor.i[cInd])))
-                self.times = np.concatenate((self.times, np.asarray(self.monitor.t[cInd])))
+                self.indices = np.concatenate((self.indices, np.asarray(self.monitor_i[cInd])))
+                self.times = np.concatenate((self.times, np.asarray(self.monitor_t[cInd])))
             except AttributeError:
-                self.indices = np.asarray(self.monitor.i[cInd])
-                self.times = np.asarray(self.monitor.t[cInd])
+                self.indices = np.asarray(self.monitor_i[cInd])
+                self.times = np.asarray(self.monitor_t[cInd])
 
         if self.cycle_repetitions is not None:
             self.repeate_cycle()
@@ -807,9 +816,7 @@ class SequenceTestbench():
             self.add_noise()
             self.indices = np.concatenate((self.indices, self.noise_indices))
             self.times = np.concatenate((self.times, self.noise_times))
-            sorting_index = np.argsort(self.times)
-            self.indices = self.indices[sorting_index]
-            self.times = self.times[sorting_index]
+        self.sort_spikes()
 
-        self.times, self.indices = delete_doublets(self.times / ms, self.indices)
+        self.times, self.indices = delete_doublets(self.times, self.indices)
         return self.indices, self.times*ms

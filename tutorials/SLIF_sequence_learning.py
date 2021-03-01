@@ -70,10 +70,10 @@ stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
 # Initialize input sequence
 num_items = 3
-item_duration = 100
-item_superposition = 20
+item_duration = 50
+item_superposition = 10
 num_channels = 144
-noise_prob = 0.005
+noise_prob = None#0.005
 item_rate = 25
 #sequence_repetitions = 700# 350
 sequence_repetitions = 200
@@ -83,26 +83,22 @@ sequence = SequenceTestbench(num_channels, num_items, item_duration,
                              sequence_repetitions)
 spike_indices, spike_times = sequence.stimuli()
 
-sequence_duration = sequence.cycle_length
-training_duration = sequence_repetitions*sequence_duration*ms
 
-## Adding incomplete sequence at the end of simulation
-#symbols = {}
-#item_duration = int(sequence_duration/num_items)
-#for item in range(num_items):
-#    item_interval = (tmp_t>=((item_duration-item_superposition)*item*ms)) & (tmp_t<(item_duration*(item+1)*ms))
-#    symbols[item] = {'t':tmp_t[item_interval],
-#                     'i':tmp_i[item_interval]}
-#
-#incomplete_sequences = 3
-test_duration = 0*ms#incomplete_sequences*sequence_duration*ms
-#include_symbols = [[0], [1], [2]]
-#for incomp_seq in range(incomplete_sequences):
-#    for incl_symb in include_symbols[incomp_seq]:
-#        tmp_symb = [(x/ms + incomp_seq*sequence_duration + training_duration/ms)
-#                        for x in symbols[incl_symb]['t']]
-#        spike_times = np.append(spike_times, tmp_symb)
-#        spike_indices = np.append(spike_indices, symbols[incl_symb]['i'])
+# Adding incomplete sequence at the end of simulation
+training_duration = np.max(spike_times)
+sequence_duration = sequence.cycle_length * ms
+incomplete_sequences = 3
+include_symbols = [[2], [1], [0]]
+test_duration = incomplete_sequences * sequence_duration
+symbols = sequence.items
+for incomp_seq in range(incomplete_sequences):
+    for incl_symb in include_symbols[incomp_seq]:
+        tmp_symb = [(x*ms + incomp_seq*sequence_duration + training_duration)
+                        for x in symbols[incl_symb]['t']]
+        spike_times = np.append(spike_times, tmp_symb)
+        spike_indices = np.append(spike_indices, symbols[incl_symb]['i'])
+# Get back unit that was remove by append operation
+spike_times = spike_times*second
 
 # Adding noise at the end of simulation
 #incomplete_sequences = 5
@@ -115,10 +111,10 @@ test_duration = 0*ms#incomplete_sequences*sequence_duration*ms
 #spike_times = np.concatenate((spike_times, noise_times+training_duration/ms))
 
 # Save them for comparison
-spk_i, spk_t = np.array(spike_indices), np.array(spike_times)*second
+spk_i, spk_t = np.array(spike_indices), np.around(spike_times/ms).astype(int)*ms
 
 # Reproduce activity in a neuron group (necessary for STDP compatibility)
-seq_cells = neuron_group_from_spikes(spike_indices, spike_times/ms, num_channels,
+seq_cells = neuron_group_from_spikes(spike_indices, spike_times, num_channels,
                                      defaultclock.dt,
                                      int((training_duration+test_duration)/defaultclock.dt))
 
@@ -462,6 +458,10 @@ run(test_duration, report='stdout', report_period=100*ms)
 # Evaluations
 if not np.array_equal(spk_t, spikemon_seq_neurons.t):
     print('Proxy activity and generated input do not match.')
+    from brian2 import *
+    plot(spk_t, spk_i, 'k.')
+    plot(spikemon_seq_neurons.t, spikemon_seq_neurons.i, 'r+')
+    show()
     sys.exit()
 
 #neu_rates = neuron_rate(spikemon_exc_neurons, 200, 10, 0.001,
@@ -488,7 +488,7 @@ if not simple:
 tmp_spike_trains = spikemon_exc_neurons.spike_trains()
 neuron_rate = {}
 peak_instants = {}
-last_sequence_t = training_duration/ms-sequence_duration
+last_sequence_t = (training_duration-sequence_duration)/ms
 interval = range(int(last_sequence_t), int(training_duration/ms)+1)
 # Create normalized and truncated gaussian time window
 kernel = np.exp(-(np.arange(-100, 100)) ** 2 / (2 * 10 ** 2))

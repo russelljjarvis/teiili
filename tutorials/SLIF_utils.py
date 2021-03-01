@@ -33,12 +33,15 @@ def neuron_group_from_spikes(spike_indices, spike_times, num_inputs, time_step,
     Returns:
         neu_group (brian2 object): Neuron group with mimicked activity.
     """
-    spike_times = [spike_times[np.where(spike_indices==i)[0]]*ms for i in range(num_inputs)]
+    spike_times = [spike_times[np.where(spike_indices==i)[0]] for i in range(num_inputs)]
     # Create matrix where each row (neuron id) is associated with time when there
     # is a spike or -1 when there is not
     converted_input = (np.zeros((num_inputs, duration)) - 1)*ms
     for ind, val in enumerate(spike_times):
-        converted_input[ind, np.around(val/time_step).astype(int)] = val
+        # Prevents floating point errors
+        int_values = np.around(val/time_step).astype(int)
+
+        converted_input[ind, int_values] = int_values * ms
     converted_input = np.transpose(converted_input)
     converted_input = TimedArray(converted_input, dt=time_step)
     # t is simulation time, and will be equal to tspike when there is a spike

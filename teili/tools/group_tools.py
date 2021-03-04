@@ -48,15 +48,17 @@ def add_group_params_re_init(groups,
                              re_init_variable,
                              re_init_threshold,
                              re_init_dt,
-                             dist_param,
-                             scale,
                              distribution,
                              sparsity,
                              reference,
+                             dist_param=None,
+                             scale=None,
                              unit=None,
                              re_init_indices=None,
                              clip_min=None,
-                             clip_max=None):
+                             clip_max=None,
+                             const_min=None,
+                             const_max=None):
     """This allows adding a weight re-initialization run-regular function
     specifying the distribution parameters from which to sample.
 
@@ -69,13 +71,14 @@ def add_group_params_re_init(groups,
         re_init_threshold (float): Parameter between 0 and 0.5. Threshold
             which triggers re-initialization.
         re_init_dt (second): Dt of run_regularly.
-        dist_param (float): Shape of gamma distribution or mean of
+        dist_param (float, optional): Shape of gamma distribution or mean of
             normal distribution used.
-        scale (float): Scale for gamma distribution or std of normal
+        scale (float, optional): Scale for gamma distribution or std of normal
             distribution used.
-        distribution (str): Parameter to determine the random
-            distribution to be used to initialise the weights. Possible
-            'gaussian' or 'gamma'.
+        distribution (str): Parameter to determine the strategy to be used
+            to initialise the weights. Random distributions available are
+            'normal' or 'gamma', but a 'deterministic' reinitialization
+            with constant values can also be done.
         sparsity (float): Ratio of zero elements in a set of parameters.
         reference (str, required): Specifies which reference metric is used
             to get indices of parameters to be re-initialised. 'mean_weight', 
@@ -85,6 +88,10 @@ def add_group_params_re_init(groups,
             need to be re-initialised.
         clip_min (float, optional): Value to clip distribution at lower bound.
         clip_max (float, optional): Value to clip distribution at upper bound.
+        const_min (float, optional): Lower constant value used for
+            reinitialization.
+        const_min (float, optional): Upper constant value used for
+            reinitialization.
     """
     for group in groups:
         add_re_init_params(group=group,
@@ -100,7 +107,9 @@ def add_group_params_re_init(groups,
                            unit=unit,
                            re_init_indices=re_init_indices,
                            clip_min=clip_min,
-                           clip_max=clip_max)
+                           clip_max=clip_max,
+                           const_min=const_min,
+                           const_max=const_max)
 
         if distribution == 'gaussian':
             group._tags.update({'re_init_{}'.format(variable) : "Normal"})

@@ -14,7 +14,7 @@ from teili.tools.run_reg_functions import re_init_params,\
     get_activity_proxy_vm, get_activity_proxy_imem,\
     max_value_update_vm, max_value_update_imem,\
     normalize_activity_proxy_vm, normalize_activity_proxy_imem,\
-    get_re_init_indices, reset_param, lfsr
+    get_re_init_indices, reset_counter, lfsr
 
 
 
@@ -32,7 +32,9 @@ def add_re_init_params(group,
                        reference,
                        unit,
                        clip_min,
-                       clip_max):
+                       clip_max,
+                       const_min,
+                       const_max):
     """Adds a re-initialization run_regularly to a synapse group
 
     Args:
@@ -49,9 +51,10 @@ def add_re_init_params(group,
             of 'gaussian' or shape parameter k for 'gamma' distribution.
         scale (float, required): Scale parameter sigma for
             distribution.
-        distribution (str): Parameter to determine the random
-            distribution to be used to initialise the weights. Possible
-            'gaussian' or 'gamma'.
+        distribution (str): Parameter to determine the strategy to be used
+            to initialise the weights. Random distributions available are
+            'gaussian' or 'gamma', but a 'deterministic' reinitialization
+            with constant values can also be done.
         sparsity (float): Ratio of zero elements in a set of parameters.
         reference (str, required): Specifies which reference metric is used
             to get indices of parameters to be re-initialised. 'mean_weight', 
@@ -59,6 +62,10 @@ def add_re_init_params(group,
         unit (brian2.unit):
         clip_min (float, optional): Value to clip distribution at lower bound.
         clip_max (float, optional): Value to clip distribution at upper bound.
+        const_min (float, optional): Lower constant value used for
+            reinitialization.
+        const_min (float, optional): Upper constant value used for
+            reinitialization.
     """
     if type(group) == Connections:
             size=len(group)
@@ -70,70 +77,71 @@ def add_re_init_params(group,
     group.namespace.update({f're_init_{variable}': re_init_params})
     group.namespace.update({'get_re_init_indices': get_re_init_indices})
     
-
     if re_init_indices is None:
-        group.add_state_variable('re_init_indices')
+        if 're_init_indices' not in group.variables.keys():
+            group.add_state_variable('re_init_indices')
     else:
         group.variables.add_array('re_init_indices', size=np.int(size))
 
-    group.namespace['re_init_threshold'] = re_init_threshold
-    group.namespace['dist_param'] = dist_param
-    group.namespace['scale'] = scale
-    group.namespace['sparsity'] = sparsity
-
     # Mapping between keywords to avoid passing strings
     if reference == 'mean_weight':
-        group.namespace['reference'] = 0
+        reference = 0
     elif reference == 'spike_time':
-        group.namespace['reference'] = 1
+        reference = 1
     elif reference == 'synapse_counter':
-        group.namespace['reference'] = 2
+        reference = 2
 
     if distribution == 'normal':
-        group.namespace['dist'] = 0
+        dist = 0
+        const_min, const_max = 0, 0
     if distribution == 'gamma':
-        group.namespace['dist'] = 1
+        dist = 1
+        const_min, const_max = 0, 0
+    if distribution == 'deterministic':
+        dist = 2
+        dist_param = 0
+        scale = 0
+        clip_min, clip_max = 0, 0
 
-    if reference == 'synapse_counter':
-        temp_var = np.array(group.__getattr__(re_init_variable))
-        temp_var[np.where(group.weight==0)[0]] = np.nan
-        group.__setattr__(re_init_variable, temp_var)
+    if unit is None:
+        unit = 1
 
-        group.run_regularly(f'''re_init_indices = get_re_init_indices(0,\
-                                   {re_init_variable},\
-                                   0,\
-                                   0,\
-                                   reference,\
-                                   re_init_threshold,\
-                                   0*ms,\
-                                   t)''',
-                            order=0,
-                            dt=re_init_dt)
-        group.namespace.update({'reset_weight': reset_param})
-        group.namespace.update({f'reset_{re_init_variable}': reset_param})
-        group.run_regularly(f'''weight = reset_weight(weight,\
-                                   {re_init_variable},\
-                                   re_init_indices,\
-                                   re_init_threshold,\
-                                   t)''',
-                            when='end',
-                            dt=re_init_dt)
-        group.run_regularly(f'''{re_init_variable} = reset_{re_init_variable}({re_init_variable},\
-                                   0,\
-                                   0,\
-                                   0,\
-                                   t)''',
-                            when='end',
-                            dt=re_init_dt)
+    if reference == 2:
+        if f'{re_init_variable}_flag' not in group.namespace.keys():
+            group.namespace[f'{re_init_variable}_flag'] = 1
+            temp_var = np.array(group.__getattr__(re_init_variable))
+            temp_var[np.where(group.weight==0)[0]] = np.nan
+            group.__setattr__(re_init_variable, temp_var)
+
+            source_N = group.source._N
+            target_N = group.target._N
+
+            group.run_regularly(f'''re_init_indices = get_re_init_indices({variable},\
+                                       {re_init_variable},\
+                                       {source_N},\
+                                       {target_N},\
+                                       {reference},\
+                                       {re_init_threshold},\
+                                       lastspike,\
+                                       t)''',
+                                order=0,
+                                dt=re_init_dt)
+            group.namespace.update({'reset_counter': reset_counter})
+            group.run_regularly(f'''{re_init_variable} = reset_counter({re_init_variable},\
+                                       re_init_indices)''',
+                                when='end',
+                                dt=re_init_dt)
     group.run_regularly(f'''{variable} = re_init_{variable}({variable},\
                                                         {clip_min},\
                                                         {clip_max},\
+                                                        {const_min},\
+                                                        {const_max},\
                                                         re_init_indices,\
-                                                        re_init_threshold,\
-                                                        dist_param,\
-                                                        scale,\
-                                                        dist,\
-                                                        1)''',
+                                                        {re_init_threshold},\
+                                                        {dist_param},\
+                                                        {scale},\
+                                                        {dist},\
+                                                        {unit})''',
                         order=1,
                         dt=re_init_dt)
 

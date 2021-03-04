@@ -16,6 +16,8 @@ from brian2 import implementation, check_units,\
 @check_units(params=1,
              clip_min=1,
              clip_max=1,
+             const_min=1,
+             const_max=1,
              re_init_indices=1,
              re_init_threshold=1,
              dist_param=1,
@@ -26,6 +28,8 @@ from brian2 import implementation, check_units,\
 def re_init_params(params,
                    clip_min=None,
                    clip_max=None,
+                   const_min=None,
+                   const_max=None,
                    re_init_indices=None,
                    re_init_threshold=None,
                    dist_param=0.4,
@@ -59,6 +63,8 @@ def re_init_params(params,
         >>> re_init_indices = None
         >>> clip_min = 0
         >>> clip_max = 1
+        >>> const_min = None
+        >>> const_max =None
         >>> variable = "w_plast"
         >>> re_init_dt= 2000 * ms
 
@@ -69,7 +75,9 @@ def re_init_params(params,
         >>> syn_obj.namespace.update({'scale': scale_init})
         >>> syn_obj.namespace.update({'clip_min': clip_min})
         >>> syn_obj.namespace.update({'clip_max': clip_max})
-        >>> syn_obj.namespace.update({'re_init_indices: re_init_indices})
+        >>> syn_obj.namespace.update({'const_min': const_min})
+        >>> syn_obj.namespace.update({'const_max': const_max})
+        >>> syn_obj.namespace.update({'re_init_indices': re_init_indices})
 
         >>> # Now we can add the run_regularly function
         >>> syn_obj.namespace.update({'re_init_weights': re_init_params})
@@ -79,6 +87,8 @@ def re_init_params(params,
         >>> syn_obj.run_regularly('''syn_obj.__setattr__(variable, re_init_params(syn_obj.__getattr__(variable),\
                                                                clip_min,\
                                                                clip_max,\
+                                                               const_min,\
+                                                               const_max,\
                                                                re_init_indices,\
                                                                re_init_threshold,\
                                                                dist_param,\
@@ -89,7 +99,17 @@ def re_init_params(params,
     Args:
         params (np.ndarray. required): Flattened parameter vector.
         clip_min (float, optional): Value to clip distribution at lower bound.
+            If this parameter is not to be used, it should be equal to
+            clip_max (passing None to run_regularly at the moment causes
+            errors)
         clip_max (float, optional): Value to clip distribution at upper bound.
+            If this parameter is not to be used, it should be equal to
+            clip_min (passing None to run_regularly at the moment causes
+            errors)
+        const_min (float, optional): Lower constant to which params will be set
+            if dist is 2.
+        const_max (float, optional): Upper constant to which params will be set
+            if dist is 2.
         re_init_indices (vector, bool, optional): Boolean index array
             indicating which parameters need to be re-initilised. If None
             parameters are updated based on average lower and upper 20 %.
@@ -102,14 +122,14 @@ def re_init_params(params,
         scale (float, optional): Scale factor of gamma distribution from
             which weights are sampled.
         dist (int, required): Flag to use either normal distribution (0)
-            or gamma distribution (1).
+            or gamma distribution (1). The value 2 can be used to indicate
+            that some indices will be deterministically re-initialised to
+            lower and upper bounds.
         unit (brain2.unit, optional): Unit of parameter to re-initialise
 
     Returns:
         ndarray: Flatten re-initialized weight matrix
     """
-    data = np.zeros(len(re_init_indices))
-
     if re_init_indices is None:
         re_init_indices = np.logical_or(np.mean(params, 0) < re_init_threshold,
                                         np.mean(params, 0) > (1 - re_init_threshold),
@@ -117,23 +137,26 @@ def re_init_params(params,
 
 
     if dist == 1:
-        data[re_init_indices.astype(bool)] = np.random.gamma(
+        params[re_init_indices==1] = np.random.gamma(
             shape=dist_param,
             scale=scale,
             size=np.int(len(np.where(re_init_indices==1)[0])))
     elif dist == 0:
-        data[re_init_indices.astype(bool)] = np.random.normal(
+        params[re_init_indices==1] = np.random.normal(
             loc=dist_param,
             scale=scale,
             size=np.int(len(np.where(re_init_indices==1)[0])))
+    elif dist == 2:
+        params[re_init_indices==1] = const_max
+        params[re_init_indices==-1] = const_min
 
-    if clip_min is not None and clip_max is not None:
-        data = np.clip(data, clip_min, clip_max)
+    if clip_min != clip_max:
+        params = np.clip(params, clip_min, clip_max)
 
-    if unit is None:
-        return data.flatten()
+    if unit == 1:
+        return params.flatten()
     else:
-        return data.flatten() * unit
+        return params.flatten() * unit
 
 
 @implementation('numpy', discard_units=True)
@@ -436,7 +459,10 @@ def get_re_init_indices(params,
         params (numpy.ndarray):
         re_init_variable (numpy.ndarray):
         source_N (int, required):
-        target_N (in_requiredm):
+        target_N (in_required):
+        reference (int): Flag representing the type of indices retrieval.
+            Supported types are weight mean (0), spike time (1), synapse
+            counter (2), or neuron threshold (3).
         re_init_threshold (float, required):
         lastspike (float, second, required):
         t (float, second, required):
@@ -446,6 +472,8 @@ def get_re_init_indices(params,
             synaptic neuron will be subject to re-sampling of its free
             parameters.
 
+    Notes:
+        Not all parameters received are being used.
     """
     re_init_indices = np.zeros(len(re_init_variable))
 
@@ -459,18 +487,22 @@ def get_re_init_indices(params,
             re_init_indices[np.any((t - lastspike_tmp) > (1 * second), axis=0)] = 1
     elif reference == 2:
         if t > 0:
-            # Get pruned indices
+            # Get pruned and spawned indices
             prune_indices = np.where(re_init_variable < re_init_threshold)[0]
             disconnected_syn = np.where(np.isnan(re_init_variable))[0]
             num_spawned = np.clip(len(prune_indices), 0, len(disconnected_syn))
 
             spawn_indices = np.random.choice(disconnected_syn, num_spawned,
                                              replace=False)
+            prune_indices = np.random.choice(prune_indices, num_spawned,
+                                             replace=False)
 
+            # indices with 1 will represent spawn whereas -1 represent prune
             re_init_indices[spawn_indices] = 1
+            re_init_indices[prune_indices] = -1
         else:
             re_init_indices = 0
-    elif reference == 'neuron_threshold':
+    elif reference == 3:
         # @pablo add your code here
         pass
 
@@ -478,22 +510,26 @@ def get_re_init_indices(params,
 
 
 @implementation('numpy', discard_units=True)
-@check_units(params=1, reset_variable=1, re_init_indices=1,
-             re_init_threshold=1, t=second, result=1)
-def reset_param(params, reset_variable, re_init_indices, re_init_threshold, t):
-    if t>0:
-        if np.any(reset_variable):
-            prune_indices = np.where(reset_variable < re_init_threshold)[0]
-            disconnected_syn = np.where(np.isnan(reset_variable))[0]
-            num_pruned = np.clip(len(prune_indices), 0, len(disconnected_syn))
+@check_units(params=1,
+             re_init_indices=1,
+             result=1)
+def reset_counter(params, re_init_indices):
+    """ This function can be used to reset synapse counter according to
+    previous reinitialization. This could be necessary in structural
+    plasticity, when some connections are associated re_init_variables need to
+    be reset to zero or other values.
 
-            prune_indices = np.random.choice(prune_indices, num_pruned,
-                                             replace=False)
+    Args:
+        params (np.ndarray): Flattened parameter vector.
+        re_init_indices (vector): Index array
+            indicating which parameters need to be re-initilised.
 
-            params[prune_indices] = 0
-            params[re_init_indices==1] = 1
-        else:
-            params[~np.isnan(params)] = 0
+    Returns:
+        params (nd.array): Flatten re-initialized array
+    """
+    params[~np.isnan(params)] = 0
+    params[re_init_indices==-1] = np.nan
+    params[re_init_indices==1] = 0
 
     return params
 
@@ -507,7 +543,7 @@ def reset_param(params, reset_variable, re_init_indices, re_init_threshold, t):
              not_refractory=1,
              result=volt)
 def update_threshold(Vthr, Vm, EL, VT, sigma_membrane, not_refractory):
-    """ A function whoch based on the deviation of the membrane potential
+    """ A function which based on the deviation of the membrane potential
     from its equilibrium potential adjusts the firing threshold.
     The idea behind this run_regular function was published by
     Afshar et al. (2019): Event-based Feature Extraction Using Adaptive

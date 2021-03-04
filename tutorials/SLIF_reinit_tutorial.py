@@ -55,7 +55,7 @@ spike_indices, spike_times = repeated_input.stimuli()
 sim_time = pattern_duration * pattern_repetitions
 
 # Reproduce activity in a neuron group (necessary for STDP compatibility)
-seq_cells = neuron_group_from_spikes(spike_indices, spike_times/ms, num_inputs,
+seq_cells = neuron_group_from_spikes(spike_indices, spike_times, num_inputs,
                                      defaultclock.dt,
                                      sim_time)
 
@@ -121,8 +121,18 @@ add_group_params_re_init(groups=[feedforward_exc],
                          clip_min=0,
                          clip_max=15,
                          reference='synapse_counter')
+add_group_params_re_init(groups=[feedforward_exc],
+                         variable='weight',
+                         re_init_variable='re_init_counter',
+                         re_init_threshold=1,
+                         re_init_dt=1000*ms,
+                         distribution='deterministic',
+                         sparsity=.7,#TODO
+                         const_min=0,
+                         const_max=1,
+                         reference='synapse_counter')
 
-################################
+##################################
 #feedforward_exc.namespace['reference'] = 2
 #feedforward_exc.namespace['re_init_threshold'] = 1
 #feedforward_exc.namespace.update({'get_re_init_indices': get_re_init_indices})

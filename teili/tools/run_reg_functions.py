@@ -477,14 +477,19 @@ def get_re_init_indices(params,
     """
     re_init_indices = np.zeros(len(re_init_variable))
 
+    # Using mean of the weight to determine which synapse to reinitilise
     if reference == 0:
         re_init_indices[np.mean(params, 0) < re_init_threshold] = 1
+
+    # Using the time since last spike to determine which synapse to reinitilise
     elif reference == 1:
         lastspike_tmp = np.reshape(lastspike, (source_N, target_N))
         if (lastspike < 0*second).any() and (np.sum(lastspike_tmp[0, :] < 0 * second) > 2):
             re_init_indices[np.any(lastspike_tmp < 0 * second, axis=0)] = 1
         elif ((t - np.abs(lastspike_tmp[0, :])) > (1 * second)).any():
             re_init_indices[np.any((t - lastspike_tmp) > (1 * second), axis=0)] = 1
+
+    # Using synapse counter to determine which synapse to reinitilise
     elif reference == 2:
         if t > 0:
             # Get pruned and spawned indices
@@ -502,6 +507,8 @@ def get_re_init_indices(params,
             re_init_indices[prune_indices] = -1
         else:
             re_init_indices = 0
+
+    # Using the neurons threshold to determine which synapse to reinitilise
     elif reference == 3:
         # @pablo add your code here
         pass

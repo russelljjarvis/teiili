@@ -59,7 +59,7 @@ def add_re_init_params(group,
         reference (str, required): Specifies which reference metric is used
             to get indices of parameters to be re-initialised. 'mean_weight', 
             'spike_time', 'synapse_counter' or 'neuron_threshold'.
-        unit (brian2.unit):
+        unit (str, optional): Unit of variable according to brian2.units.
         clip_min (float, optional): Value to clip distribution at lower bound.
         clip_max (float, optional): Value to clip distribution at upper bound.
         const_min (float, optional): Lower constant value used for
@@ -109,6 +109,8 @@ def add_re_init_params(group,
     if reference == 2:
         if f'{re_init_variable}_flag' not in group.namespace.keys():
             group.namespace[f'{re_init_variable}_flag'] = 1
+
+            # Assign NaN to disconnected synapses
             temp_var = np.array(group.__getattr__(re_init_variable))
             temp_var[np.where(group.weight==0)[0]] = np.nan
             group.__setattr__(re_init_variable, temp_var)
@@ -131,7 +133,7 @@ def add_re_init_params(group,
                                        re_init_indices)''',
                                 when='end',
                                 dt=re_init_dt)
-    group.run_regularly(f'''{variable} = re_init_{variable}({variable},\
+    group.run_regularly(f'''{variable} = re_init_{variable}({variable}/{unit},\
                                                         {clip_min},\
                                                         {clip_max},\
                                                         {const_min},\
@@ -140,8 +142,7 @@ def add_re_init_params(group,
                                                         {re_init_threshold},\
                                                         {dist_param},\
                                                         {scale},\
-                                                        {dist},\
-                                                        {unit})''',
+                                                        {dist})*{unit}''',
                         order=1,
                         dt=re_init_dt)
 

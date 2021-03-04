@@ -23,7 +23,6 @@ from brian2 import implementation, check_units,\
              dist_param=1,
              scale=1,
              dist=1,
-             unit=1,
              result=1)
 def re_init_params(params,
                    clip_min=None,
@@ -34,8 +33,7 @@ def re_init_params(params,
                    re_init_threshold=None,
                    dist_param=0.4,
                    scale=0.2,
-                   dist=0,
-                   unit=None):
+                   dist=0):
     """Re-initializes a given parameter, e.g. weights or time constants,
     using a normal or gamma distribution with a specified mean and standard 
     deviation re-initialisation indices.
@@ -125,7 +123,6 @@ def re_init_params(params,
             or gamma distribution (1). The value 2 can be used to indicate
             that some indices will be deterministically re-initialised to
             lower and upper bounds.
-        unit (brain2.unit, optional): Unit of parameter to re-initialise
 
     Returns:
         ndarray: Flatten re-initialized weight matrix
@@ -153,10 +150,7 @@ def re_init_params(params,
     if clip_min != clip_max:
         params = np.clip(params, clip_min, clip_max)
 
-    if unit == 1:
-        return params.flatten()
-    else:
-        return params.flatten() * unit
+    return params.flatten()
 
 
 @implementation('numpy', discard_units=True)

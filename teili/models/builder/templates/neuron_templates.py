@@ -162,6 +162,41 @@ v_adapt_params = {
     "EL": -70.6 * mV
     }
 
+thresh_adapt = {
+    'model': """
+        dVthr/dt = -Vthr/tau_thres : volt
+
+        tau_thres : second (constant) # Threshold decay time constant
+        dVthr     : volt (constant)   # Increment of threshold
+        thr_min   : volt (constant)   # Threshold minimum value
+        thr_max   : volt (constant)   # Threshold maximum value
+        """,
+    'reset': """
+        Vthr = clip(Vthr+dVthr, thr_min, thr_max),
+        """
+    }
+
+quantized_thresh_adapt = {
+    'model': """
+        dVthr/dt = Vthr*decay_thresh/second : volt
+        decay_thresh = tau_thres/(tau_thres + dt) : 1
+
+        tau_thres : second (constant)
+        dVthr     : volt (constant)   # Increment of threshold
+        thr_min   : volt (constant)   # Threshold minimum value
+        thr_max   : volt (constant)   # Threshold maximum value
+        """,
+    'reset': """
+        Vthr = clip(Vthr+dVthr, thr_min, thr_max),
+        """
+    }
+
+thresh_adapt_params = {
+    "thr_min": 4*mV,
+    "thr_max": 16*mV,
+    "dVthr": 0.01*mV
+    }
+
 # noise
 v_noise = {
     'model': """
@@ -386,7 +421,7 @@ defaultclock.dt = 1*ms in the code using this model.
 q_model_template = {
     'model': '''
         dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*mV/second : volt
-        normal_decay = clip((decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability, Vrest/mV, Vthres/mV) : 1
+        normal_decay = clip((decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability, Vrest/mV, Vthr/mV) : 1
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
         decay_probability = lfsr_timedarray( ((seed+t) % lfsr_max_value) + lfsr_init ) / (2**lfsr_num_bits): 1
 
@@ -405,19 +440,19 @@ q_model_template = {
         tau               : second (constant)
         refrac_tau        : second (constant)
         refP              : second
-        Vthres            : volt   (constant)
+        Vthr              : volt   (constant)
         Vrest             : volt   (constant)
         Vreset            : volt   (constant)
 
         lfsr_num_bits : 1 # Number of bits in the LFSR used
 
     ''',
-    'threshold': '''Vm>=Vthres''',
+    'threshold': '''Vm>=Vthr''',
     'reset': '''Vm=Vreset''',
 }
 
 q_model_template_params = {
-    'Vthres': 16*mV,
+    'Vthr': 16*mV,
     'Vrest': 3*mV,
     'Vreset': 0*mV,
     'Iconst': 0*pA,
@@ -456,12 +491,15 @@ voltage_equation_sets = {
     'spatial': spatial,
     'gaussian': v_noise,
     'none': none_model,
-    'linear': none_model
+    'linear': none_model,
+    'threshold_adaptation': thresh_adapt
     }
 
 quantized_equation_sets = {
     'none': none_model,
-    'spatial': spatial}
+    'spatial': spatial,
+    'threshold_adaptation': quantized_thresh_adapt
+    }
 
 current_parameters = {
     'current': i_model_template_params,
@@ -488,11 +526,13 @@ voltage_parameters = {
     'spatial': none_params,
     'gaussian': none_params,
     'none': none_params,
-    'linear': none_params
+    'linear': none_params,
+    'threshold_adaptation': thresh_adapt_params
     }
 
 quantized_parameters = {
     'quantized': q_model_template_params,
     'none': none_params,
     'spatial': none_params,
+    'threshold_adaptation': thresh_adapt_params
     }

@@ -526,6 +526,46 @@ unit_less = {
          """
 }
 
+""" Homeostatic mehacanisms blocks:
+You need to declare two set of parameters for every block:
+*   current based models
+*   conductance based models
+"""
+stochastic_homeostatic_counter = {
+    'model': """
+        re_init_counter : 1
+        """,
+    'on_pre': """
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2)
+        """,
+    'on_post': """
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2)
+        """
+}
+
+stochastic_counter_params = {
+    "re_init_counter": 0
+}
+
+homeostatic_counter = {
+    'model': """
+        re_init_counter : 1
+        """,
+    'on_pre': """
+        re_init_counter = re_init_counter + 1
+        """,
+    'on_post': """
+        re_init_counter = re_init_counter + 1
+        """
+}
+
+counter_params_current = {
+    "re_init_counter": 0
+}
+counter_params_conductance = {
+    "re_init_counter": 0
+}
+
 """Dictionary of keywords:
 
 These dictionaries contains keyword and models and parameters names useful for the __init__ subroutine
@@ -556,7 +596,9 @@ plasticity_models = {
 
 synaptic_equations = {
     'activity': activity,
-    'stdgm': stdgm
+    'stdgm': stdgm,
+    'homeostatic_counter': homeostatic_counter,
+    'stochastic_homeostatic_counter': stochastic_homeostatic_counter
 }
 
 synaptic_equations.update(kernels)
@@ -572,7 +614,9 @@ current_parameters = {
     'alpha': alpha_params_current,
     'resonant': resonant_params_current,
     'activity': none_params,
-    'stdgm': none_params}
+    'stdgm': none_params,
+    'homeostatic_counter': counter_params_current
+    }
 
 conductance_parameters = {
     'conductance': conductance_params,
@@ -583,7 +627,9 @@ conductance_parameters = {
     'alpha': alpha_params_conductance,
     'resonant': resonant_params_conductance,
     'activity': none_params,
-    'stdgm': none_params}
+    'stdgm': none_params,
+    'homeostatic_counter': counter_params_conductance
+}
 
 DPI_parameters = {
     'DPI': dpi_params,
@@ -611,7 +657,8 @@ quantized_stochastic_decay_parameters = {
     'QuantizedStochasticDecay': quantized_stochastic_decay_params,
     'non_plastic': none_params,
     'stdp': quantized_standard_stdp_params,
-    'stochastic_decay_stdp': stochastic_decay_stdp_params}
+    'stochastic_decay_stdp': stochastic_decay_stdp_params,
+    'stochastic_homeostatic_counter': stochastic_counter_params}
 
 unit_less_parameters = {
     'unit_less': none_params,

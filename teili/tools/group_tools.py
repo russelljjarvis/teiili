@@ -49,7 +49,6 @@ def add_group_params_re_init(groups,
                              re_init_threshold,
                              re_init_dt,
                              distribution,
-                             sparsity,
                              reference,
                              dist_param=None,
                              scale=None,
@@ -79,7 +78,6 @@ def add_group_params_re_init(groups,
             to initialise the weights. Random distributions available are
             'normal' or 'gamma', but a 'deterministic' reinitialization
             with constant values can also be done.
-        sparsity (float): Ratio of zero elements in a set of parameters.
         reference (str, required): Specifies which reference metric is used
             to get indices of parameters to be re-initialised. 'mean_weight', 
             'spike_time', 'synapse_counter' or 'neuron_threshold'.
@@ -102,7 +100,6 @@ def add_group_params_re_init(groups,
                            dist_param=dist_param,
                            scale=scale,
                            distribution=distribution,
-                           sparsity=sparsity,
                            reference=reference,
                            unit=unit,
                            re_init_indices=re_init_indices,

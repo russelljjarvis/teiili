@@ -14,7 +14,7 @@ from teili.tools.run_reg_functions import re_init_params,\
     get_activity_proxy_vm, get_activity_proxy_imem,\
     max_value_update_vm, max_value_update_imem,\
     normalize_activity_proxy_vm, normalize_activity_proxy_imem,\
-    get_re_init_indices, reset_counter, lfsr
+    get_re_init_indices, reset_re_init_variable, lfsr
 
 
 
@@ -28,7 +28,6 @@ def add_re_init_params(group,
                        dist_param, 
                        scale, 
                        distribution,
-                       sparsity,
                        reference,
                        unit,
                        clip_min,
@@ -55,7 +54,6 @@ def add_re_init_params(group,
             to initialise the weights. Random distributions available are
             'gaussian' or 'gamma', but a 'deterministic' reinitialization
             with constant values can also be done.
-        sparsity (float): Ratio of zero elements in a set of parameters.
         reference (str, required): Specifies which reference metric is used
             to get indices of parameters to be re-initialised. 'mean_weight', 
             'spike_time', 'synapse_counter' or 'neuron_threshold'.
@@ -77,13 +75,7 @@ def add_re_init_params(group,
     group.namespace.update({f're_init_{variable}': re_init_params})
     group.namespace.update({'get_re_init_indices': get_re_init_indices})
     
-    if re_init_indices is None:
-        if 're_init_indices' not in group.variables.keys():
-            group.add_state_variable('re_init_indices')
-    else:
-        group.variables.add_array('re_init_indices', size=np.int(size))
-
-    # Mapping between keywords to avoid passing strings
+    # Assignments and mapping between keywords to avoid passing strings
     if reference == 'mean_weight':
         reference = 0
     elif reference == 'spike_time':
@@ -91,6 +83,7 @@ def add_re_init_params(group,
     elif reference == 'synapse_counter':
         reference = 2
 
+    # Mappings related to reinitialization type
     if distribution == 'normal':
         dist = 0
         const_min, const_max = 0, 0
@@ -106,8 +99,15 @@ def add_re_init_params(group,
     if unit is None:
         unit = 1
 
-    if reference == 2:
-        if f'{re_init_variable}_flag' not in group.namespace.keys():
+    if re_init_indices is None:
+        if 're_init_indices' not in group.variables.keys():
+            group.add_state_variable('re_init_indices')
+    else:
+        group.variables.add_array('re_init_indices', size=np.int(size))
+
+    # Ensures that multiple state variables can use the same re_init_variable
+    if f'{re_init_variable}_flag' not in group.namespace.keys():
+        if reference == 2:
             group.namespace[f'{re_init_variable}_flag'] = 1
 
             # Assign NaN to disconnected synapses
@@ -115,24 +115,26 @@ def add_re_init_params(group,
             temp_var[np.where(group.weight==0)[0]] = np.nan
             group.__setattr__(re_init_variable, temp_var)
 
-            source_N = group.source._N
-            target_N = group.target._N
+        source_N = group.source._N
+        target_N = group.target._N
 
-            group.run_regularly(f'''re_init_indices = get_re_init_indices({variable},\
-                                       {re_init_variable},\
-                                       {source_N},\
-                                       {target_N},\
-                                       {reference},\
-                                       {re_init_threshold},\
-                                       lastspike,\
-                                       t)''',
-                                order=0,
-                                dt=re_init_dt)
-            group.namespace.update({'reset_counter': reset_counter})
-            group.run_regularly(f'''{re_init_variable} = reset_counter({re_init_variable},\
-                                       re_init_indices)''',
-                                when='end',
-                                dt=re_init_dt)
+        group.run_regularly(f'''re_init_indices = get_re_init_indices({variable},\
+                                   {re_init_variable},\
+                                   {source_N},\
+                                   {target_N},\
+                                   {reference},\
+                                   {re_init_threshold},\
+                                   lastspike,\
+                                   t)''',
+                            order=0,
+                            dt=re_init_dt)
+        group.namespace.update({'reset_re_init_variable': reset_re_init_variable})
+        group.run_regularly(f'''{re_init_variable} = reset_re_init_variable({re_init_variable},\
+                                   {reference},\
+                                   re_init_indices)''',
+                            when='end',
+                            dt=re_init_dt)
+
     group.run_regularly(f'''{variable} = re_init_{variable}({variable}/{unit},\
                                                         {clip_min},\
                                                         {clip_max},\

@@ -506,8 +506,9 @@ def get_re_init_indices(params,
 @implementation('numpy', discard_units=True)
 @check_units(params=1,
              re_init_indices=1,
+             reference=1,
              result=1)
-def reset_counter(params, re_init_indices):
+def reset_re_init_variable(params, reference, re_init_indices):
     """ This function can be used to reset synapse counter according to
     previous reinitialization. This could be necessary in structural
     plasticity, when some connections are associated re_init_variables need to
@@ -521,9 +522,10 @@ def reset_counter(params, re_init_indices):
     Returns:
         params (nd.array): Flatten re-initialized array
     """
-    params[~np.isnan(params)] = 0
-    params[re_init_indices==-1] = np.nan
-    params[re_init_indices==1] = 0
+    if reference == 2:
+        params[~np.isnan(params)] = 0
+        params[re_init_indices==-1] = np.nan
+        params[re_init_indices==1] = 0
 
     return params
 

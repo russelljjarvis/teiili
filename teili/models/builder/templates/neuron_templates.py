@@ -164,37 +164,40 @@ v_adapt_params = {
 
 thresh_adapt = {
     'model': """
-        dVthr/dt = -Vthr/tau_thres : volt
+        %dVthr/dt = -Vthr/tau_thres : volt
 
         tau_thres : second (constant) # Threshold decay time constant
-        dVthr     : volt (constant)   # Increment of threshold
+        thr_inc     : volt (constant)   # Increment of threshold
         thr_min   : volt (constant)   # Threshold minimum value
         thr_max   : volt (constant)   # Threshold maximum value
         """,
+    'threshold': "",
     'reset': """
-        Vthr = clip(Vthr+dVthr, thr_min, thr_max),
+        Vthr = clip(Vthr+thr_inc, thr_min, thr_max)
         """
     }
 
 quantized_thresh_adapt = {
     'model': """
-        dVthr/dt = Vthr*decay_thresh/second : volt
+        %dVthr/dt = Vthr*decay_thresh/second : volt
         decay_thresh = tau_thres/(tau_thres + dt) : 1
 
         tau_thres : second (constant)
-        dVthr     : volt (constant)   # Increment of threshold
+        thr_inc     : volt (constant)   # Increment of threshold
         thr_min   : volt (constant)   # Threshold minimum value
         thr_max   : volt (constant)   # Threshold maximum value
         """,
+    'threshold': "",
     'reset': """
-        Vthr = clip(Vthr+dVthr, thr_min, thr_max),
+        Vthr = clip(Vthr+thr_inc, thr_min, thr_max)
         """
     }
 
 thresh_adapt_params = {
+    "tau_thres": 60000*ms,
     "thr_min": 4*mV,
     "thr_max": 16*mV,
-    "dVthr": 0.01*mV
+    "thr_inc": 0.01*mV
     }
 
 # noise

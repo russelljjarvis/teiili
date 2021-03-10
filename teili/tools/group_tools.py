@@ -56,8 +56,8 @@ def add_group_params_re_init(groups,
                              re_init_indices=None,
                              clip_min=None,
                              clip_max=None,
-                             const_min=None,
-                             const_max=None):
+                             const_value=None,
+                             variable_type=None):
     """This allows adding a weight re-initialization run-regular function
     specifying the distribution parameters from which to sample.
 
@@ -83,30 +83,35 @@ def add_group_params_re_init(groups,
             'spike_time', 'synapse_counter' or 'neuron_threshold'.
         unit (brian.unit, optional): Unit of the parameter.
         re_init_indices (ndarray, optional): Array to indicate which parameters
-            need to be re-initialised.
+            need to be re-initialised. One group can only have one
+            re_init_indices.
         clip_min (float, optional): Value to clip distribution at lower bound.
         clip_max (float, optional): Value to clip distribution at upper bound.
-        const_min (float, optional): Lower constant value used for
+        const_value (int or float, optional): Constant value used for
             reinitialization.
-        const_min (float, optional): Upper constant value used for
-            reinitialization.
+        variable_type (str, optional): Data type of variable. Can be 'int' or
+            'float'.
     """
     for group in groups:
-        add_re_init_params(group=group,
-                           variable=variable,
-                           re_init_variable=re_init_variable,
-                           re_init_threshold=re_init_threshold,
-                           re_init_dt=re_init_dt,
-                           dist_param=dist_param,
-                           scale=scale,
-                           distribution=distribution,
-                           reference=reference,
-                           unit=unit,
-                           re_init_indices=re_init_indices,
-                           clip_min=clip_min,
-                           clip_max=clip_max,
-                           const_min=const_min,
-                           const_max=const_max)
+        try:
+            add_re_init_params(group=group,
+                               variable=variable,
+                               re_init_variable=re_init_variable,
+                               re_init_threshold=re_init_threshold,
+                               re_init_dt=re_init_dt,
+                               dist_param=dist_param,
+                               scale=scale,
+                               distribution=distribution,
+                               reference=reference,
+                               unit=unit,
+                               re_init_indices=re_init_indices,
+                               clip_min=clip_min,
+                               clip_max=clip_max,
+                               const_value=const_value,
+                               params_type=variable_type)
+        except:
+            raise
+            import sys;sys.exit(1)
 
         if distribution == 'gaussian':
             group._tags.update({'re_init_{}'.format(variable) : "Normal"})

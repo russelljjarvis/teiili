@@ -16,24 +16,24 @@ from brian2 import implementation, check_units,\
 @check_units(params=1,
              clip_min=1,
              clip_max=1,
-             const_min=1,
-             const_max=1,
+             const_value=1,
              re_init_indices=1,
              re_init_threshold=1,
              dist_param=1,
              scale=1,
              dist=1,
+             params_type=1,
              result=1)
 def re_init_params(params,
                    clip_min=None,
                    clip_max=None,
-                   const_min=None,
-                   const_max=None,
+                   const_value=None,
                    re_init_indices=None,
                    re_init_threshold=None,
                    dist_param=0.4,
                    scale=0.2,
-                   dist=0):
+                   dist=0,
+                   params_type=0):
     """Re-initializes a given parameter, e.g. weights or time constants,
     using a normal or gamma distribution with a specified mean and standard 
     deviation re-initialisation indices.
@@ -61,8 +61,8 @@ def re_init_params(params,
         >>> re_init_indices = None
         >>> clip_min = 0
         >>> clip_max = 1
-        >>> const_min = None
-        >>> const_max =None
+        >>> const_value = None
+        >>> params_type = None
         >>> variable = "w_plast"
         >>> re_init_dt= 2000 * ms
 
@@ -73,8 +73,7 @@ def re_init_params(params,
         >>> syn_obj.namespace.update({'scale': scale_init})
         >>> syn_obj.namespace.update({'clip_min': clip_min})
         >>> syn_obj.namespace.update({'clip_max': clip_max})
-        >>> syn_obj.namespace.update({'const_min': const_min})
-        >>> syn_obj.namespace.update({'const_max': const_max})
+        >>> syn_obj.namespace.update({'const_value': const_value})
         >>> syn_obj.namespace.update({'re_init_indices': re_init_indices})
 
         >>> # Now we can add the run_regularly function
@@ -82,16 +81,17 @@ def re_init_params(params,
         >>> syn_obj.namespace.update({'re_init_threshold': re_init_threshold})
         >>> syn_obj.namespace['dist_param'] = dist_param_re_init
         >>> syn_obj.namespace['scale'] = scale_re_init
+        >>> syn_obj.namespace['params_type'] = params_type
         >>> syn_obj.run_regularly('''syn_obj.__setattr__(variable, re_init_params(syn_obj.__getattr__(variable),\
                                                                clip_min,\
                                                                clip_max,\
-                                                               const_min,\
-                                                               const_max,\
+                                                               const_value,\
                                                                re_init_indices,\
                                                                re_init_threshold,\
                                                                dist_param,\
                                                                scale,
-                                                               dist)''',
+                                                               dist,
+                                                               params_type)''',
                                                                dt=re_init_dt)
 
     Args:
@@ -104,9 +104,7 @@ def re_init_params(params,
             If this parameter is not to be used, it should be equal to
             clip_min (passing None to run_regularly at the moment causes
             errors)
-        const_min (float, optional): Lower constant to which params will be set
-            if dist is 2.
-        const_max (float, optional): Upper constant to which params will be set
+        const_value (int or float, optional): Constant to which params will be set
             if dist is 2.
         re_init_indices (vector, bool, optional): Boolean index array
             indicating which parameters need to be re-initilised. If None
@@ -123,6 +121,8 @@ def re_init_params(params,
             or gamma distribution (1). The value 2 can be used to indicate
             that some indices will be deterministically re-initialised to
             lower and upper bounds.
+        params_type (int, optional): Indicates data type of params, which
+            could be float (0) or integer (1).
 
     Returns:
         ndarray: Flatten re-initialized weight matrix
@@ -138,14 +138,18 @@ def re_init_params(params,
             shape=dist_param,
             scale=scale,
             size=np.int(len(np.where(re_init_indices==1)[0])))
+        if params_type:
+            params = params.astype(int)
     elif dist == 0:
         params[re_init_indices==1] = np.random.normal(
             loc=dist_param,
             scale=scale,
             size=np.int(len(np.where(re_init_indices==1)[0])))
+        if params_type:
+            params = params.astype(int)
     elif dist == 2:
-        params[re_init_indices==1] = const_max
-        params[re_init_indices==-1] = const_min
+        params[re_init_indices==1] = const_value
+        params[re_init_indices==-1] = 0
 
     if clip_min != clip_max:
         params = np.clip(params, clip_min, clip_max)
@@ -423,19 +427,13 @@ def weight_normalization(weights,
 
 
 @implementation('numpy', discard_units=True)
-@check_units(params=1,
-             re_init_variable=1,
-             source_N=1,
-             target_N=1,
+@check_units(re_init_variable=1,
              reference=1,
              re_init_threshold=1,
              lastspike=second,
              t=second,
              result=1)
-def get_re_init_indices(params,
-                       re_init_variable,
-                       source_N,
-                       target_N,
+def get_re_init_indices(re_init_variable,
                        reference,
                        re_init_threshold,
                        lastspike,
@@ -450,10 +448,7 @@ def get_re_init_indices(params,
     run_regularly function.
 
     Args:
-        params (numpy.ndarray):
         re_init_variable (numpy.ndarray):
-        source_N (int, required):
-        target_N (in_required):
         reference (int): Flag representing the type of indices retrieval.
             Supported types are weight mean (0), spike time (1), synapse
             counter (2), or neuron threshold (3).
@@ -472,8 +467,9 @@ def get_re_init_indices(params,
     re_init_indices = np.zeros(len(re_init_variable))
 
     if reference == 0:
-        re_init_indices[np.mean(params, 0) < re_init_threshold] = 1
+        re_init_indices[np.mean(re_init_variable, 0) < re_init_threshold] = 1
     elif reference == 1:
+        source_N, target_N = len(lastspike[:,0]), len(lastspike[0,:])
         lastspike_tmp = np.reshape(lastspike, (source_N, target_N))
         if (lastspike < 0*second).any() and (np.sum(lastspike_tmp[0, :] < 0 * second) > 2):
             re_init_indices[np.any(lastspike_tmp < 0 * second, axis=0)] = 1

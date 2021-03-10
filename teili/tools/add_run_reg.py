@@ -30,10 +30,10 @@ def add_re_init_params(group,
                        distribution,
                        reference,
                        unit,
-                       clip_min,
-                       clip_max,
-                       const_min,
-                       const_max):
+                       clip_min=None,
+                       clip_max=None,
+                       const_value=None,
+                       params_type=None):
     """Adds a re-initialization run_regularly to a synapse group
 
     Args:
@@ -60,22 +60,27 @@ def add_re_init_params(group,
         unit (str, optional): Unit of variable according to brian2.units.
         clip_min (float, optional): Value to clip distribution at lower bound.
         clip_max (float, optional): Value to clip distribution at upper bound.
-        const_min (float, optional): Lower constant value used for
-            reinitialization.
-        const_min (float, optional): Upper constant value used for
-            reinitialization.
+        const_value (int or float, optional): Constant used as reinitialization
+            value when argument distribution is "deterministic".
+        params_type (str, optional): Data type of variable. Can be 'int' or
+            'float'.
     """
     if type(group) == Connections:
-            size=len(group)
+        size=len(group)
+        if reference == 'spike_time':
+            raise TypeError(f'Reference \'{reference}\' incompatible with '
+                            f'{type(group)}.')
     elif type(group) == Neurons:
-            size=group.N 
+        if reference != 'spike_time':
+            raise TypeError(f'Reference \'{reference}\' incompatible with '
+                            f'{type(group)}.')
+        size=group.N 
     
-    # TODO This needs double checking. I believe the name in namespace needs
-    # to match the function name itself. So we might need to remove the format.
-    group.namespace.update({f're_init_{variable}': re_init_params})
-    group.namespace.update({'get_re_init_indices': get_re_init_indices})
-    
-    # Assignments and mapping between keywords to avoid passing strings
+    if any((variable in key) for key in group.namespace.keys()):
+        raise AssertionError(f'{type(group)} already has {variable} in '
+                              'namespace.')
+
+    # Assignments and mappings between keywords to avoid passing strings
     if reference == 'mean_weight':
         reference = 0
     elif reference == 'spike_time':
@@ -83,45 +88,52 @@ def add_re_init_params(group,
     elif reference == 'synapse_counter':
         reference = 2
 
-    # Mappings related to reinitialization type
     if distribution == 'normal':
         dist = 0
-        const_min, const_max = 0, 0
-    if distribution == 'gamma':
+        const_value = 0
+    elif distribution == 'gamma':
         dist = 1
-        const_min, const_max = 0, 0
-    if distribution == 'deterministic':
+        const_value = 0
+    elif distribution == 'deterministic':
         dist = 2
         dist_param = 0
         scale = 0
         clip_min, clip_max = 0, 0
+        if not isinstance(const_value, (int, float)):
+            raise TypeError(f'Constant value {const_value} incompatible '
+                             'with parameter \'{distribution}\'')
 
     if unit is None:
         unit = 1
 
-    if re_init_indices is None:
-        if 're_init_indices' not in group.variables.keys():
-            group.add_state_variable('re_init_indices')
+    if params_type == 'int':
+        params_type = 1
     else:
-        group.variables.add_array('re_init_indices', size=np.int(size))
+        params_type = 0
 
     # Ensures that multiple state variables can use the same re_init_variable
     if f'{re_init_variable}_flag' not in group.namespace.keys():
-        if reference == 2:
-            group.namespace[f'{re_init_variable}_flag'] = 1
+        group.namespace[f'{re_init_variable}_flag'] = 1
+        # re_init_indices is only added once per group re_init_variable, so it
+        # can be used to check if one re_init_variable is used
+        if 're_init_indices' in group.variables.keys():
+            raise AssertionError(f'{type(group)} must be associated with '
+                                  'single re_init_variable.')
 
+        if reference == 2:
             # Assign NaN to disconnected synapses
             temp_var = np.array(group.__getattr__(re_init_variable))
             temp_var[np.where(group.weight==0)[0]] = np.nan
             group.__setattr__(re_init_variable, temp_var)
 
-        source_N = group.source._N
-        target_N = group.target._N
+        if re_init_indices is None:
+            group.add_state_variable('re_init_indices')
+        else:
+            group.variables.add_array('re_init_indices', size=np.int(size))
 
-        group.run_regularly(f'''re_init_indices = get_re_init_indices({variable},\
+        group.namespace.update({'get_re_init_indices': get_re_init_indices})
+        group.run_regularly(f'''re_init_indices = get_re_init_indices(\
                                    {re_init_variable},\
-                                   {source_N},\
-                                   {target_N},\
                                    {reference},\
                                    {re_init_threshold},\
                                    lastspike,\
@@ -129,22 +141,26 @@ def add_re_init_params(group,
                             order=0,
                             dt=re_init_dt)
         group.namespace.update({'reset_re_init_variable': reset_re_init_variable})
-        group.run_regularly(f'''{re_init_variable} = reset_re_init_variable({re_init_variable},\
+        group.run_regularly(f'''{re_init_variable} = reset_re_init_variable(\
+                                   {re_init_variable},\
                                    {reference},\
                                    re_init_indices)''',
                             when='end',
                             dt=re_init_dt)
 
+    # TODO This needs double checking. I believe the name in namespace needs
+    # to match the function name itself. So we might need to remove the format.
+    group.namespace.update({f're_init_{variable}': re_init_params})
     group.run_regularly(f'''{variable} = re_init_{variable}({variable}/{unit},\
                                                         {clip_min},\
                                                         {clip_max},\
-                                                        {const_min},\
-                                                        {const_max},\
+                                                        {const_value},\
                                                         re_init_indices,\
                                                         {re_init_threshold},\
                                                         {dist_param},\
                                                         {scale},\
-                                                        {dist})*{unit}''',
+                                                        {dist},\
+                                                        {params_type})*{unit}''',
                         order=1,
                         dt=re_init_dt)
 

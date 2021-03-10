@@ -430,6 +430,50 @@ unit_less = {
          """
 }
 
+""" Structural plasticity blocks:
+You need to declare two set of parameters for every block:
+*   current based models
+*   conductance based models
+
+Note that stochastic structural plasticity should only be used in conjunction
+with synaptic plasticity.
+"""
+stochastic_counter = {
+    'model': """
+        re_init_counter : 1
+        """,
+    'on_pre': """
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2)
+        """,
+    'on_post': """
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2)
+        """
+}
+
+stochastic_counter_params = {
+    "re_init_counter": 0
+}
+
+deterministic_counter = {
+    'model': """
+        re_init_counter : 1
+        cond_Apre  : boolean # Verify weight change due to depotentiation
+        cond_Apost : boolean # Verify weight change due to potentiation
+        """,
+    'on_pre': """
+        cond_Apre = Apost > 0
+        re_init_counter = re_init_counter + 1*int(cond_Apre)
+        """,
+    'on_post': """
+        cond_Apost = Apre > 0
+        re_init_counter = re_init_counter + 1*int(cond_Apost)
+        """
+}
+
+deterministic_counter_params = {
+    "re_init_counter": 0
+}
+
 """Dictionary of keywords:
 
 These dictionaries contains keyword and models and parameters names useful for the __init__ subroutine
@@ -456,6 +500,11 @@ plasticity_models = {
     'stdp': stdp
 }
 
+structural_plasticity = {
+    'deterministic_counter': deterministic_counter,
+    'stochastic_counter': stochastic_counter
+}
+
 synaptic_equations = {
     'activity': activity,
     'stdgm': stdgm
@@ -463,6 +512,7 @@ synaptic_equations = {
 
 synaptic_equations.update(kernels)
 synaptic_equations.update(plasticity_models)
+synaptic_equations.update(structural_plasticity)
 
 # parameters dictionaries
 current_parameters = {
@@ -474,7 +524,10 @@ current_parameters = {
     'alpha': alpha_params_current,
     'resonant': resonant_params_current,
     'activity': none_params,
-    'stdgm': none_params}
+    'stdgm': none_params,
+    'deterministic_counter': deterministic_counter_params,
+    'stochastic_counter': stochastic_counter_params
+    }
 
 conductance_parameters = {
     'conductance': conductance_params,
@@ -485,7 +538,10 @@ conductance_parameters = {
     'alpha': alpha_params_conductance,
     'resonant': resonant_params_conductance,
     'activity': none_params,
-    'stdgm': none_params}
+    'stdgm': none_params,
+    'deterministic_counter': deterministic_counter_params,
+    'stochastic_counter': stochastic_counter_params
+}
 
 DPI_parameters = {
     'DPI': dpi_params,
@@ -508,6 +564,13 @@ DPI_shunt_parameters = {
     'alpha': none_params,
     'activity': none_params,
     'stdgm': none_params}
+
+quantized_stochastic_decay_parameters = {
+    'QuantizedStochasticDecay': quantized_stochastic_decay_params,
+    'non_plastic': none_params,
+    'stdp': quantized_standard_stdp_params,
+    'stochastic_decay_stdp': stochastic_decay_stdp_params,
+    'stochastic_counter': stochastic_counter_params}
 
 unit_less_parameters = {
     'unit_less': none_params,

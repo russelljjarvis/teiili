@@ -430,12 +430,15 @@ unit_less = {
          """
 }
 
-""" Homeostatic mehacanisms blocks:
+""" Structural plasticity blocks:
 You need to declare two set of parameters for every block:
 *   current based models
 *   conductance based models
+
+Note that stochastic structural plasticity should only be used in conjunction
+with synaptic plasticity.
 """
-stochastic_homeostatic_counter = {
+stochastic_counter = {
     'model': """
         re_init_counter : 1
         """,
@@ -451,22 +454,23 @@ stochastic_counter_params = {
     "re_init_counter": 0
 }
 
-homeostatic_counter = {
+deterministic_counter = {
     'model': """
         re_init_counter : 1
+        cond_Apre  : boolean # Verify weight change due to depotentiation
+        cond_Apost : boolean # Verify weight change due to potentiation
         """,
     'on_pre': """
-        re_init_counter = re_init_counter + 1
+        cond_Apre = Apost > 0
+        re_init_counter = re_init_counter + 1*int(cond_Apre)
         """,
     'on_post': """
-        re_init_counter = re_init_counter + 1
+        cond_Apost = Apre > 0
+        re_init_counter = re_init_counter + 1*int(cond_Apost)
         """
 }
 
-counter_params_current = {
-    "re_init_counter": 0
-}
-counter_params_conductance = {
+deterministic_counter_params = {
     "re_init_counter": 0
 }
 
@@ -496,15 +500,19 @@ plasticity_models = {
     'stdp': stdp
 }
 
+structural_plasticity = {
+    'deterministic_counter': deterministic_counter,
+    'stochastic_counter': stochastic_counter
+}
+
 synaptic_equations = {
     'activity': activity,
-    'stdgm': stdgm,
-    'homeostatic_counter': homeostatic_counter,
-    'stochastic_homeostatic_counter': stochastic_homeostatic_counter
+    'stdgm': stdgm
 }
 
 synaptic_equations.update(kernels)
 synaptic_equations.update(plasticity_models)
+synaptic_equations.update(structural_plasticity)
 
 # parameters dictionaries
 current_parameters = {
@@ -517,7 +525,8 @@ current_parameters = {
     'resonant': resonant_params_current,
     'activity': none_params,
     'stdgm': none_params,
-    'homeostatic_counter': counter_params_current
+    'deterministic_counter': deterministic_counter_params,
+    'stochastic_counter': stochastic_counter_params
     }
 
 conductance_parameters = {
@@ -530,7 +539,8 @@ conductance_parameters = {
     'resonant': resonant_params_conductance,
     'activity': none_params,
     'stdgm': none_params,
-    'homeostatic_counter': counter_params_conductance
+    'deterministic_counter': deterministic_counter_params,
+    'stochastic_counter': stochastic_counter_params
 }
 
 DPI_parameters = {
@@ -560,7 +570,7 @@ quantized_stochastic_decay_parameters = {
     'non_plastic': none_params,
     'stdp': quantized_standard_stdp_params,
     'stochastic_decay_stdp': stochastic_decay_stdp_params,
-    'stochastic_homeostatic_counter': stochastic_counter_params}
+    'stochastic_counter': stochastic_counter_params}
 
 unit_less_parameters = {
     'unit_less': none_params,

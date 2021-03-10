@@ -664,7 +664,6 @@ DPI_shunt_parameters = {
     'stdgm': none_params}
 
 quantized_stochastic_decay_parameters = {
-    'QuantizedStochasticDecay': quantized_stochastic_decay_params,
     'non_plastic': none_params,
     'stdp': quantized_standard_stdp_params,
     'stochastic_decay_stdp': stochastic_decay_stdp_params,

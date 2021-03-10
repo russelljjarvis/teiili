@@ -18,7 +18,7 @@ TBA: How to add dictionaries to Model dictionaries (see bottom)
 """
 
 from teili import constants
-from brian2 import pF, nS, mV, ms, pA, nA, psiemens
+from brian2 import pF, nS, mV, ms, pA, nA, psiemens, ohm
 pS = psiemens
 
 # voltage based equation building blocks

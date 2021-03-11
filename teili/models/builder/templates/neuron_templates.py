@@ -468,7 +468,8 @@ q_model_template_params = {
 
 modes = {
     'current': i_model_template,
-    'voltage': v_model_template
+    'voltage': v_model_template,
+    'quantized': q_model_template
     }
 
 current_equation_sets = {

@@ -468,7 +468,7 @@ def get_re_init_indices(re_init_variable,
 
     # Using mean of the weight to determine which synapse to reinitilise
     if reference == 0:
-        re_init_indices[np.mean(params, 0) < re_init_threshold] = 1
+        re_init_indices[np.mean(re_init_variable, 0) < re_init_threshold] = 1
     # Using the time since last spike to determine which synapse to reinitilise
     elif reference == 1:
         source_N, target_N = len(lastspike[:,0]), len(lastspike[0,:])
@@ -477,7 +477,6 @@ def get_re_init_indices(re_init_variable,
             re_init_indices[np.any(lastspike_tmp < 0 * second, axis=0)] = 1
         elif ((t - np.abs(lastspike_tmp[0, :])) > (1 * second)).any():
             re_init_indices[np.any((t - lastspike_tmp) > (1 * second), axis=0)] = 1
-
     # Using synapse counter to determine which synapse to reinitilise
     elif reference == 2:
         if t > 0:
@@ -496,7 +495,6 @@ def get_re_init_indices(re_init_variable,
             re_init_indices[prune_indices] = -1
         else:
             re_init_indices = 0
-
     # Using the neurons threshold to determine which synapse to reinitilise
     elif reference == 3:
         # @pablo add your code here
@@ -569,3 +567,68 @@ def update_threshold(Vthr, Vm, EL, VT, sigma_membrane, not_refractory):
              ((sigma_membrane / mV)* 5 * (Vm < (EL-1*mV))) * not_refractory)
 
     return data * mV
+
+@implementation('numpy', discard_units=True)
+@check_units(decay_probability=1, num_elements=1, lfsr_num_bits=1, mask=1, result=1)
+def lfsr(decay_probability, num_elements, lfsr_num_bits, mask):
+    """
+    Generate a pseudorandom number between 0 and 1 with a Linear
+    Feedback Shift Register (LFSR), which is equivalent to generating random
+    numbers from an uniform distribution. This is a Galois or many-to-one
+    implementation.
+
+    This function receives a given number and performs num_elements iterations
+    of the LFSR. This is done when a given neuron needs another random number.
+    The LFSR does a circular shift (i.e. all the values are shifted left while
+    the previous MSB becomes the new LSB) and ensures the variable is no bigger
+    than the specified number of bits. Note that, for convenience,
+    the input and outputs are normalized, i.e. value/2**lfsr_num_bits.
+
+    In practice, when there is not overflow, the operation is a normal shift.
+    Otherwise, a XOR operation between the mask and the shifted value is
+    necessary to send MSB to LSB and update relative taps.
+
+    Parameters
+    ----------
+    decay_probability : float
+        Value between 0 and 1 that will be the input to the LFSR
+    num_elements : int
+        Number of neurons in the group
+    lfsr_num_bits : int
+        Number of bits of the LFSR
+    mask : int
+        Value to be used in XOR operation, depending on number of bits used
+
+    Returns
+    -------
+    float
+        A random number between 0 and 1
+
+    Examples
+    --------
+    >>> from teili.tools.run_reg_functions import lfsr
+    >>> number = 2**4 + 2**3 + 2**1
+    >>> n_bits = 5
+    >>> bin(number)
+    '0b11010'
+    >>> bin(int(lfsr([number/2**n_bits], 1, [n_bits], 0b100101)*2**n_bits))
+    '0b10001'
+    """
+    try:
+        lfsr_num_bits = int(lfsr_num_bits[0])
+        seed = int(decay_probability[-1]*2**lfsr_num_bits)
+    except:
+        print('Please use numpy target')
+        quit()
+
+    updated_probabilities = [0 for _ in range(num_elements)]
+    mask = int(mask)
+
+    for i in range(num_elements):
+        seed = seed << 1
+        overflow = seed >> lfsr_num_bits
+        if overflow:
+            seed ^= mask
+        updated_probabilities[i] = seed
+
+    return np.array(updated_probabilities)/2**lfsr_num_bits

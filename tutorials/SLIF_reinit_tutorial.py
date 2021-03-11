@@ -6,6 +6,7 @@ from brian2 import Hz, ms, mV, prefs, SpikeMonitor, StateMonitor, defaultclock,\
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
+from teili.models.neuron_models import StochasticLIF as neuron_model
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.group_tools import add_group_activity_proxy,\
         add_group_params_re_init
@@ -13,7 +14,11 @@ from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.converter import delete_doublets
 
-from teili.tools.lfsr import create_lfsr
+from lfsr import create_lfsr
+from reinit_functions import get_prune_indices, get_spawn_indices,\
+        wplast_re_init, weight_re_init, tau_re_init, delay_re_init
+        #reset_re_init_counter#, get_re_init_indices
+
 from SLIF_utils import neuron_group_from_spikes
 
 import sys
@@ -93,6 +98,17 @@ ta = create_lfsr([exc_cells],
 
 ##################
 # Synaptic homeostasis
+#feedforward_exc.variables.add_array('prune_indices', size=len(feedforward_exc.weight))
+#feedforward_exc.variables.add_array('spawn_indices', size=len(feedforward_exc.weight))
+#feedforward_exc.namespace.update({'get_prune_indices': get_prune_indices})
+#feedforward_exc.namespace.update({'get_spawn_indices': get_spawn_indices})
+#feedforward_exc.namespace.update({'wplast_re_init': wplast_re_init})
+#feedforward_exc.namespace.update({'tau_re_init': tau_re_init})
+#feedforward_exc.namespace.update({'delay_re_init': delay_re_init})
+#feedforward_exc.namespace.update({'weight_re_init': weight_re_init})
+#feedforward_exc.namespace.update({'reset_re_init_counter': reset_re_init_counter})
+
+################################
 add_group_params_re_init(groups=[feedforward_exc],
                          variable='w_plast',
                          re_init_variable='re_init_counter',

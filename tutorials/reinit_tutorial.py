@@ -10,8 +10,6 @@ from teili.tools.group_tools import add_group_params_re_init
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 
-from SLIF_utils import neuron_group_from_spikes
-
 #############
 # Load models
 syn_model=SynapseEquationBuilder(base_unit='current',

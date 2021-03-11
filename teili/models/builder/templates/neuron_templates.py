@@ -164,7 +164,7 @@ v_adapt_params = {
 
 thresh_adapt = {
     'model': """
-        %dVthr/dt = -(abs(thr_min)+Vthr)/tau_thres : volt
+        %dVthr/dt = -(Vthr-thr_min)/tau_thres : volt
 
         tau_thres : second (constant) # Threshold decay time constant
         thr_inc     : volt (constant)   # Increment of threshold
@@ -179,7 +179,7 @@ thresh_adapt = {
 
 quantized_thresh_adapt = {
     'model': """
-        %dVthr/dt = Vthr*decay_thresh/second - (thr_min*dt*decay_thresh/tau_thres)/second: volt
+        %dVthr/dt = Vthr*decay_thresh/second + (thr_min*dt*decay_thresh/tau_thres)/second: volt
         decay_thresh = tau_thres/(tau_thres + dt) : 1
 
         tau_thres : second (constant)

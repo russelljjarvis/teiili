@@ -6,22 +6,27 @@ from brian2 import ms, mV, prefs, SpikeMonitor, StateMonitor, defaultclock,\
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.stimuli.testbench import SequenceTestbench
-from teili.tools.group_tools import add_group_params_re_init
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 
+from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
+from teili.tools.visualizer.DataControllers import Rasterplot, Lineplot
+from teili.tools.visualizer.DataViewers import PlotSettings
+import pyqtgraph as pg
+from PyQt5 import QtGui
+
 #############
 # Load models
-syn_model=SynapseEquationBuilder(base_unit='current',
-                                 kernel='exponential',
-                                 plasticity='non_plastic')
-adapt_neu_model=NeuronEquationBuilder(base_unit='voltage',
-                                      leak='leaky',
-                                      position='spatial',
-                                      intrinsic_excitability='threshold_adaptation')
-neu_model=NeuronEquationBuilder(base_unit='voltage',
-                                leak='leaky',
-                                position='spatial')
+syn_model = SynapseEquationBuilder(base_unit='current',
+                                   kernel='exponential',
+                                   plasticity='non_plastic')
+adapt_neu_model = NeuronEquationBuilder(base_unit='voltage',
+                                        leak='leaky',
+                                        position='spatial',
+                                        intrinsic_excitability='threshold_adaptation')
+neu_model = NeuronEquationBuilder(base_unit='voltage',
+                                  leak='leaky',
+                                  position='spatial')
 
 # Initialize simulation preferences
 prefs.codegen.target = "numpy"
@@ -38,7 +43,7 @@ repeated_input = SequenceTestbench(num_inputs, num_items, item_duration,
                                    rate=input_rate)
 spike_indices, spike_times = repeated_input.stimuli()
 poisson_spikes = SpikeGeneratorGroup(num_inputs, spike_indices, spike_times,
-                period=50*ms)
+                                     period=50*ms)
 
 sim_time = item_duration * pattern_repetitions
 
@@ -97,27 +102,20 @@ exc_cells.thr_max = -40*mV
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
 spikemon_inh_neurons = SpikeMonitor(inh_cells, name='spikemon_inh_neurons')
-spikemon_seq_neurons = SpikeMonitor(poisson_spikes, name='spikemon_seq_neurons')
+spikemon_seq_neurons = SpikeMonitor(poisson_spikes,
+                                    name='spikemon_seq_neurons')
 rec_neurons = np.random.choice(num_exc, 7, replace=False)
 statemon_thresh = StateMonitor(exc_cells, variables=['Vthr'],
                                record=True,
                                name='statemon_thresh')
-maoi = StateMonitor(exc_cells, variables=['Iin','Vm'], record=True, name='maoi')
 
 net = TeiliNetwork()
 net.add(poisson_spikes, exc_cells, inh_cells, inh_exc_conn, feedforward_exc,
-        spikemon_exc_neurons, spikemon_inh_neurons, exc_inh_conn, 
-        spikemon_seq_neurons, inh_inh_conn, exc_exc_conn, statemon_thresh,
-        maoi)
-net.run(10000*ms, report='stdout', report_period=100*ms)
+        spikemon_exc_neurons, spikemon_inh_neurons, exc_inh_conn,
+        spikemon_seq_neurons, inh_inh_conn, exc_exc_conn, statemon_thresh)
+net.run(50000*ms, report='stdout', report_period=100*ms)
 
 # Plots
-from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
-from teili.tools.visualizer.DataControllers import Rasterplot, Lineplot
-from teili.tools.visualizer.DataViewers import PlotSettings
-import pyqtgraph as pg
-from PyQt5 import QtGui
-
 QtApp = QtGui.QApplication([])
 
 exc_raster = EventsModel.from_brian_spike_monitor(spikemon_exc_neurons)
@@ -125,7 +123,7 @@ inh_raster = EventsModel.from_brian_spike_monitor(spikemon_inh_neurons)
 seq_raster = EventsModel.from_brian_spike_monitor(spikemon_seq_neurons)
 skip_not_rec_neuron_ids = True
 thresh_traces = StateVariablesModel.from_brian_state_monitors([statemon_thresh],
-        skip_not_rec_neuron_ids)
+                                                              skip_not_rec_neuron_ids)
 
 win1 = pg.GraphicsWindow()
 RC = Rasterplot(MyEventsModels=[exc_raster],

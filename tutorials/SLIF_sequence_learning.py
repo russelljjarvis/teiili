@@ -22,7 +22,7 @@ from teili.tools.group_tools import add_group_activity_proxy
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 
-from lfsr import create_lfsr
+from teili.tools.lfsr import create_lfsr
 from SLIF_utils import neuron_group_from_spikes, neuron_rate,\
         rate_correlations, ensemble_convergence, permutation_from_rate
 from reinit_functions import get_prune_indices, get_spawn_indices,\

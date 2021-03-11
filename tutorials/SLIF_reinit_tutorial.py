@@ -6,7 +6,6 @@ from brian2 import Hz, ms, mV, prefs, SpikeMonitor, StateMonitor, defaultclock,\
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
-from teili.models.neuron_models import StochasticLIF as neuron_model
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.group_tools import add_group_activity_proxy,\
         add_group_params_re_init
@@ -14,11 +13,7 @@ from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.converter import delete_doublets
 
-from lfsr import create_lfsr
-from reinit_functions import get_prune_indices, get_spawn_indices,\
-        wplast_re_init, weight_re_init, tau_re_init, delay_re_init
-        #reset_re_init_counter#, get_re_init_indices
-
+from teili.tools.lfsr import create_lfsr
 from SLIF_utils import neuron_group_from_spikes
 
 import sys
@@ -98,17 +93,6 @@ ta = create_lfsr([exc_cells],
 
 ##################
 # Synaptic homeostasis
-#feedforward_exc.variables.add_array('prune_indices', size=len(feedforward_exc.weight))
-#feedforward_exc.variables.add_array('spawn_indices', size=len(feedforward_exc.weight))
-#feedforward_exc.namespace.update({'get_prune_indices': get_prune_indices})
-#feedforward_exc.namespace.update({'get_spawn_indices': get_spawn_indices})
-#feedforward_exc.namespace.update({'wplast_re_init': wplast_re_init})
-#feedforward_exc.namespace.update({'tau_re_init': tau_re_init})
-#feedforward_exc.namespace.update({'delay_re_init': delay_re_init})
-#feedforward_exc.namespace.update({'weight_re_init': weight_re_init})
-#feedforward_exc.namespace.update({'reset_re_init_counter': reset_re_init_counter})
-
-################################
 add_group_params_re_init(groups=[feedforward_exc],
                          variable='w_plast',
                          re_init_variable='re_init_counter',
@@ -117,9 +101,9 @@ add_group_params_re_init(groups=[feedforward_exc],
                          dist_param=3,#TODO
                          scale=1,#TODO
                          distribution='gamma',
-                         sparsity=.7,#TODO
                          clip_min=0,
                          clip_max=15,
+                         variable_type='int',
                          reference='synapse_counter')
 add_group_params_re_init(groups=[feedforward_exc],
                          variable='weight',
@@ -127,63 +111,21 @@ add_group_params_re_init(groups=[feedforward_exc],
                          re_init_threshold=1,
                          re_init_dt=1000*ms,
                          distribution='deterministic',
-                         sparsity=.7,#TODO
-                         const_min=0,
-                         const_max=1,
+                         const_value=1,
                          reference='synapse_counter')
-
-##################################
-#feedforward_exc.namespace['reference'] = 2
-#feedforward_exc.namespace['re_init_threshold'] = 1
-#feedforward_exc.namespace.update({'get_re_init_indices': get_re_init_indices})
-#feedforward_exc.variables.add_array('re_init_indices', size=np.int(len(feedforward_exc)))
-#feedforward_exc.run_regularly('''re_init_indices = get_re_init_indices(w_plast,\
-#                                                                       re_init_counter,\
-#                                                                       1,\
-#                                                                       1,\
-#                                                                       reference,\
-#                                                                       re_init_threshold,\
-#                                                                       1*ms,\
-#                                                                       t)''',
-#                              dt=1000*ms)
-
-#feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
-#                                                    weight,\
-#                                                    re_init_counter,\
-#                                                    t)''',
-#                                                    dt=re_init_dt,
-#                                                    order=0)
-#feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
-#                                                    prune_indices,\
-#                                                    weight,\
-#                                                    t)''',
-#                                                    dt=re_init_dt,
-#                                                    order=1)
-#
-#feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
-#                                                          spawn_indices,\
-#                                                          t)''',
-#                                                          dt=re_init_dt,
-#                                                          order=2)
-#feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
-#                                                       spawn_indices,\
-#                                                       t)''',
-#                                                       dt=re_init_dt,
-#                                                       order=3)
-##feedforward_exc.run_regularly('''delay = delay_re_init(delay,\
-##                                                       spawn_indices,\
-##                                                       t)''',
-##                                                       dt=re_init_dt,
-##                                                       order=4)
-#feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
-#                                                         spawn_indices,\
-#                                                         prune_indices,\
-#                                                         t)''',
-#                                                         dt=re_init_dt,
-#                                                         order=5)
-#feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
-#                                                                         dt=re_init_dt,
-#                                                                         order=6)
+add_group_params_re_init(groups=[feedforward_exc],
+                         variable='tau_syn',
+                         re_init_variable='re_init_counter',
+                         re_init_threshold=1,
+                         re_init_dt=1000*ms,
+                         dist_param=3,#TODO
+                         scale=1,#TODO
+                         distribution='gamma',
+                         clip_min=4,
+                         clip_max=7,
+                         variable_type='int',
+                         unit='ms',
+                         reference='synapse_counter')
 
 ##################
 # Setting up monitors
@@ -195,13 +137,11 @@ statemon_weight = StateMonitor(feedforward_exc, variables=['weight'],
                                record=True, name='statemon_weight')
 statemon_counter = StateMonitor(feedforward_exc, variables=['re_init_counter'],
                                record=True, name='statemon_counter')
-#statemon_pruned = StateMonitor(feedforward_exc, variables=['prune_indices'],
-#                               record=True, name='statemon_pruned')
 
 net = TeiliNetwork()
 net.add(exc_cells, seq_cells, feedforward_exc, spikemon_exc_neurons,
         spikemon_seq_neurons, statemon_wplast, statemon_weight,
-        statemon_counter)#, statemon_pruned)
+        statemon_counter)
 net.run(sim_time*ms, report='stdout', report_period=100*ms)
 
 # Plots
@@ -256,26 +196,13 @@ counter_copy[np.isnan(counter_copy)] = 0
 state_variables = [counter_copy]
 state_variables_times = [statemon_counter.t/ms]
 counter_line = StateVariablesModel(state_variable_names, state_variables, state_variables_times)
-#reinit_ratio = []
-#for i in range(int(sim_time)):
-#    reinit_ratio.append(len(np.where(statemon_pruned.prune_indices[:,i]==1)[0]))
-#state_variable_names = ['reinit_ratio']
-#state_variables = [reinit_ratio]
-#state_variables_times = [statemon_pruned.t/ms]
-#ratio_line = StateVariablesModel(state_variable_names, state_variables, state_variables_times)
 
 #line_plot1 = Lineplot(DataModel_to_x_and_y_attr=[(counter_line, ('t_re_init_counter', 're_init_counter'))],
 #                      title='reinit counters with time', xlabel='time (s)',
 #                      ylabel='counter value', backend='pyqtgraph', QtApp=QtApp)
-#line_plot2 = Lineplot(DataModel_to_x_and_y_attr=[(ratio_line, ('t_reinit_ratio', 'reinit_ratio'))],
-#                      MyPlotSettings = PlotSettings(marker_size=30),
-#                      title='Number of pruned/spawned synapses with time',
-#                      xlabel='time (s)', ylabel='# pruned/spawned',
-#                      backend='pyqtgraph', QtApp=QtApp)
 raster_plot1 = Rasterplot(MyEventsModels=[exc_raster], backend='pyqtgraph', QtApp=QtApp)
 raster_plot2 = Rasterplot(MyEventsModels=[seq_raster], backend='pyqtgraph', QtApp=QtApp,
                 show_immediately=True)
-#np.savez('reinit.npz', ratio=reinit_ratio, time=statemon_pruned.t/ms)
 from brian2 import *
 plot(counter_line.re_init_counter.T)
 show()

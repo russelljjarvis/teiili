@@ -236,6 +236,30 @@ class DPIstdgm(SynapseEquationBuilder):
         SynapseEquationBuilder.__init__(self, base_unit='unit_less', 
                                         SynSTDGM='stdgm')
 
+class QuantStochSyn(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate a synapse with
+    quantized stochastic decay as published by Wang et al. (2018).
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate a synapse with
+        stochastic decay as published in Wang et al. (2018).
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochastic',
+                                        plasticity='non_plastic')
+
+class QuantStochSynStdp(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate a synapse
+    with stochastic decay with STDP as published by Wang et al. (2018)
+    """
+
+    def __init__(self):
+        """This class provides you with all the equations to simulate a
+        synapse with stochastic decay with STDP as published by Wang et al.
+        (2018).
+        """
+        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochastic',
+                                        plasticity='quantized_stochastic_stdp')
 
 def main(path=None):
     if path is None:
@@ -269,6 +293,12 @@ def main(path=None):
 
     dpiSyn = DPISyn()
     dpiSyn.export_eq(os.path.join(path, "DPISyn"))
+
+    quantStochSyn = QuantStochSyn()
+    quantStochSyn.export_eq(os.path.join(path, "QuantStochSyn"))
+
+    quantStochSynStdp = QuantStochSynStdp()
+    quantStochSynStdp.export_eq(os.path.join(path, "QuantStochSynStdp"))
 
     dpiShunt = DPIShunt()
     dpiShunt.export_eq(os.path.join(path, "DPIShunt"))

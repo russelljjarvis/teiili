@@ -182,13 +182,13 @@ conceptualized in discrete time with backward euler scheme and an integer
 operation. An state updader with x_new = f(x,t) and
 defaultclock.dt = 1*ms in the code using this model.
 """
-quantized_stochastic_decay = {
+quantized_stochastic = {
     'model': '''
         dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
         decay_probability_syn = lfsr_timedarray( ((seed_syn+t) % lfsr_max_value_syn) + lfsr_init_syn ) / (2**lfsr_num_bits_syn): 1
         Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
 
-        decay_syn = tau_syn/(tau_syn + dt) : 1
+        decay_syn = tausyn/(tausyn + dt) : 1
 
         weight                : 1
         w_plast               : 1
@@ -196,7 +196,7 @@ quantized_stochastic_decay = {
         seed_syn : second
         lfsr_init_syn : second
         gain_syn              : amp
-        tau_syn               : second (constant)
+        tausyn               : second (constant)
         lfsr_num_bits_syn : 1 # Number of bits in the LFSR used
         ''',
         'on_pre': '''
@@ -206,11 +206,11 @@ quantized_stochastic_decay = {
         '''
 }
 
-quantized_stochastic_decay_params = {
+quantized_stochastic_params = {
     'weight' : 1,
     'w_plast' : 1,
     'gain_syn' : 1*mA,
-    'tau_syn': 3*ms,
+    'tausyn': 3*ms,
     'lfsr_num_bits_syn': 6
 }
 
@@ -393,7 +393,7 @@ stdp_para_conductance = {
     "w_plast": 0
 }
 
-stochastic_decay_stdp = {
+quantized_stochastic_stdp = {
     'model': '''
         dApre/dt = int(Apre * decay_stdp_Apre + decay_probability_Apre)/second : 1 (clock-driven)
         dApost/dt = int(Apost * decay_stdp_Apost + decay_probability_Apost)/second : 1 (clock-driven)
@@ -430,7 +430,7 @@ stochastic_decay_stdp = {
         '''
 }
 
-stochastic_decay_stdp_params = {
+quantized_stochastic_stdp_params = {
     "taupre": 3 * ms,
     "taupost": 3 * ms,
     "w_max": 15,
@@ -582,7 +582,7 @@ modes = {
     'DPI': dpi,
     'DPIShunting': dpi_shunt,
     'unit_less': unit_less,
-    'QuantizedStochasticDecay': quantized_stochastic_decay
+    'QuantizedStochastic': quantized_stochastic
 }
 
 kernels = {
@@ -595,7 +595,7 @@ plasticity_models = {
     'non_plastic': none_model,
     'fusi': fusi,
     'stdp': stdp,
-    'stochastic_decay_stdp': stochastic_decay_stdp
+    'quantized_stochastic_stdp': quantized_stochastic_stdp
 }
 
 structural_plasticity = {
@@ -663,11 +663,11 @@ DPI_shunt_parameters = {
     'activity': none_params,
     'stdgm': none_params}
 
-quantized_stochastic_decay_parameters = {
-    'QuantizedStochasticDecay': quantized_stochastic_decay_params,
+quantized_stochastic_parameters = {
+    'QuantizedStochastic': quantized_stochastic_params,
     'non_plastic': none_params,
     'stdp': quantized_standard_stdp_params,
-    'stochastic_decay_stdp': stochastic_decay_stdp_params,
+    'quantized_stochastic_stdp': quantized_stochastic_stdp_params,
     'stochastic_counter': stochastic_counter_params}
 
 unit_less_parameters = {

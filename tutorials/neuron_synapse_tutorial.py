@@ -12,18 +12,18 @@ import pyqtgraph as pg
 import numpy as np
 import sys
 
-from brian2 import ms, second, pA, nA, prefs,\
-    SpikeMonitor, StateMonitor, \
-    SpikeGeneratorGroup
+from brian2 import mV, mA, ms, second, pA, nA, prefs,\
+    SpikeMonitor, StateMonitor, SpikeGeneratorGroup, defaultclock
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
-from teili.models.neuron_models import DPI as neuron_model
-from teili.models.synapse_models import DPISyn as synapse_model
+from teili.models.neuron_models import QuantStochLIF as neuron_model
+from teili.models.synapse_models import QuantStochSyn as synapse_model
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataControllers import Rasterplot, Lineplot
+from teili.tools.lfsr import create_lfsr
 
 prefs.codegen.target = "numpy"
 
@@ -35,23 +35,37 @@ input_spikegenerator = SpikeGeneratorGroup(1, indices=input_indices,
 
 
 Net = TeiliNetwork()
+if 'decay_probability' in neuron_model().keywords['model']:
+    from brian2 import ExplicitStateUpdater
+    method = ExplicitStateUpdater('''x_new = f(x,t)''')
+else:
+    method = 'euler'
 
 test_neurons1 = Neurons(N=2, 
                         equation_builder=neuron_model(num_inputs=2), 
                         name="test_neurons1",
+                        method=method,
                         verbose=True)
 
 test_neurons2 = Neurons(N=2, 
                         equation_builder=neuron_model(num_inputs=2), 
                         name="test_neurons2",
+                        method=method,
                         verbose=True)
 
+if 'decay_probability_syn' in synapse_model().keywords['model']:
+    from brian2 import ExplicitStateUpdater
+    method = ExplicitStateUpdater('''x_new = f(x,t)''')
+else:
+    method = 'euler'
 input_synapse = Connections(input_spikegenerator, test_neurons1,
-                            equation_builder=synapse_model(), 
+                            equation_builder=synapse_model(),
+                            method=method,
                             name="input_synapse", verbose=True)
 input_synapse.connect(True)
 
 test_synapse = Connections(test_neurons1, test_neurons2,
+                           method=method,
                            equation_builder=synapse_model(), name="test_synapse")
 test_synapse.connect(True)
 
@@ -63,21 +77,45 @@ convinience to switch between voltage- or current-based models.
 Normally, you have one or the other in yur simulation, thus
 you will not need the if condition.
 '''
+if 'decay_probability' not in neuron_model().keywords['model']:
+    # Example of how to set parameters, saved as a dictionary
+    test_neurons1.set_params(neuron_model_param)
+    # Example of how to set a single parameter
+    test_neurons1.refP = 1 * ms
+    test_neurons2.set_params(neuron_model_param)
+    test_neurons2.refP = 1 * ms
 
-# Example of how to set parameters, saved as a dictionary
-test_neurons1.set_params(neuron_model_param)
-# Example of how to set a single parameter
-test_neurons1.refP = 1 * ms
-test_neurons2.set_params(neuron_model_param)
-test_neurons2.refP = 1 * ms
 if 'Imem' in neuron_model().keywords['model']:
     input_synapse.weight = 5000
     test_synapse.weight = 800
     test_neurons1.Iconst = 10 * nA
 elif 'Vm' in neuron_model().keywords['model']:
-    input_synapse.weight = 1.5
-    test_synapse.weight = 8.0
-    test_neurons1.Iconst = 3 * nA
+    if 'decay_probability' in neuron_model().keywords['model']:
+        num_bits = 4
+        # Example of how to set a single parameter
+        # Fast neuron to allow more spikes
+        test_neurons1.refrac_tau = 1 * ms
+        test_neurons2.refrac_tau = 1 * ms
+        test_neurons1.tau = 10 * ms
+        test_neurons2.tau = 10 * ms
+        # long EPSC or big weight to allow summations
+        input_synapse.tausyn = 10*ms
+        test_synapse.tausyn = 7*ms
+        input_synapse.weight = 8
+        test_synapse.weight = 15
+        test_neurons1.Iconst = 13.0 * mA
+        # Setting lfsr
+        test_neurons1.lfsr_num_bits = num_bits
+        test_neurons2.lfsr_num_bits = num_bits
+        input_synapse.lfsr_num_bits_syn = num_bits
+        test_synapse.lfsr_num_bits_syn = num_bits
+        ta = create_lfsr([test_neurons1, test_neurons2], [input_synapse, test_synapse], defaultclock.dt)
+        test_neurons1.Vm = 3*mV
+        test_neurons2.Vm = 3*mV
+    else:
+        input_synapse.weight = 1.5
+        test_synapse.weight = 8.0
+        test_neurons1.Iconst = 3 * nA
 
 spikemon_input = SpikeMonitor(input_spikegenerator, name='spikemon_input')
 spikemon_test_neurons1 = SpikeMonitor(
@@ -102,7 +140,7 @@ elif 'Vm' in neuron_model().keywords['model']:
                                           variables=['Vm'],
                                           record=0, name='statemon_test_neurons2')
     statemon_test_neurons1 = StateMonitor(test_neurons1, variables=[
-        "Iin", "Vm", "Iadapt"], record=[0, 1], name='statemon_test_neurons1')
+        "Iin", "Vm"], record=[0, 1], name='statemon_test_neurons1')
 
 
 Net.add(input_spikegenerator, test_neurons1, test_neurons2,

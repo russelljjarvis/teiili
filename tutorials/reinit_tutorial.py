@@ -1,14 +1,21 @@
 import numpy as np
 
-from brian2 import ms, mV, prefs, SpikeMonitor, StateMonitor, defaultclock,\
-    SpikeGeneratorGroup
+from brian2 import Hz, ms, mV, prefs, SpikeMonitor, StateMonitor, defaultclock,\
+    PoissonGroup
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
 from teili.stimuli.testbench import SequenceTestbench
-from teili.tools.group_tools import add_group_params_re_init
+from teili.tools.group_tools import add_group_params_re_init,\
+        add_group_param_init
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+
+from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
+from teili.tools.visualizer.DataControllers import Rasterplot, Lineplot
+from teili.tools.visualizer.DataViewers import PlotSettings
+import pyqtgraph as pg
+from PyQt5 import QtGui
 
 #############
 # Load models
@@ -26,65 +33,94 @@ neu_model=NeuronEquationBuilder(base_unit='voltage',
 prefs.codegen.target = "numpy"
 defaultclock.dt = 1 * ms
 
-# Initialize input sequence: Poisson pattern presented many times
-num_inputs = 50
-num_items = 1
-input_rate = 5
-item_duration = 50
-pattern_repetitions = 200
-period = 50*ms
-
-repeated_input = SequenceTestbench(num_inputs, num_items, item_duration,
-                                   rate=input_rate)
-spike_indices, spike_times = repeated_input.stimuli()
-poisson_spikes = SpikeGeneratorGroup(num_inputs, spike_indices, spike_times,
-                period=period)
-
-sim_time = item_duration * pattern_repetitions
+# Initialize input sequence: Poisson rates shaped like a gaussian
+num_inputs = 20
+input_base_rate = 5*Hz
+input_space = np.array([x for x in range(num_inputs)])
+rate_distribution = 500 * np.exp(-(input_space - 5)**2 / (2 * (1)**2)) * Hz
+poisson_spikes = PoissonGroup(num_inputs, rate_distribution + input_base_rate)
 
 #################
 # Building network
 # cells
-num_exc = 5
+num_exc = num_inputs
+if 'Vm' in neu_model.keywords['model']:
+    method = 'euler'
+elif 'decay_probability' in neu_model.keywords['model']:
+    from brian2 import ExplicitStateUpdater
+    method = ExplicitStateUpdater('''x_new = f(x,t)''')
 exc_cells = Neurons(num_exc,
-                    equation_builder=neu_model(num_inputs=3),
+                    equation_builder=neu_model(num_inputs=1),
                     name='exc_cells',
+                    method=method,
                     verbose=True)
 
 # Connections
 feedforward_exc = Connections(poisson_spikes, exc_cells,
                               equation_builder=syn_model(),
                               name='feedforward_exc')
+#feedforward_exc.connect(j='i')
 feedforward_exc.connect()
-# Set sparsity
+
 feedforward_exc.weight = 1
-for neu in range(num_exc):
-    ffe_zero_w = np.random.choice(num_inputs, int(num_inputs*.7), replace=False)
-    feedforward_exc.weight[ffe_zero_w, neu] = 0
-    feedforward_exc.w_plast[ffe_zero_w, neu] = 0
+n_conns = len(feedforward_exc.weight)
+sparsity = .9
+ffe_zero_w = np.random.choice(n_conns,
+                              int(n_conns*sparsity),
+                              replace=False)
+feedforward_exc.weight[ffe_zero_w] = 0
+feedforward_exc.w_plast[ffe_zero_w] = 0
 
 # Initializations
 feedforward_exc.tausyn = 5*ms
-exc_cells.Vm = exc_cells.EL
-
-##################
-# Synaptic homeostasis
-re_init_dt = 1000*ms
-add_group_params_re_init(groups=[feedforward_exc],
+if 'Vm' in neu_model.keywords['model']:
+    exc_cells.Vm = exc_cells.EL
+    feedforward_exc.dApre = 0.001
+    add_group_param_init(groups=[feedforward_exc],
                          variable='w_plast',
-                         re_init_variable='re_init_counter',
-                         re_init_threshold=10,
-                         re_init_dt=re_init_dt,
                          dist_param=1,
                          scale=.05,
                          distribution='gamma',
                          clip_min=0,
-                         clip_max=1,
+                         clip_max=1)
+elif 'decay_probability' in neu_model.keywords['model']:
+    exc_cells.tau = 20*ms
+    exc_cells.Vm = exc_cells.Vrest
+    # LFSR
+    feedforward_exc.lfsr_num_bits_syn = 5
+    exc_cells.lfsr_num_bits = 5
+    seed = 12
+    ta = create_lfsr([exc_cells],
+                     [feedforward_exc],
+                     defaultclock.dt)
+
+##################
+# Synaptic homeostasis
+re_init_dt = 1000*ms
+if 'Vm' in neu_model.keywords['model']:
+    variable_type = 'float'
+    wplast_min = 0
+    wplast_max = 1
+elif 'decay_probability' in neu_model.keywords['model']:
+    variable_type = 'int'
+    wplast_min = 0
+    wplast_max = 15
+add_group_params_re_init(groups=[feedforward_exc],
+                         variable='w_plast',
+                         re_init_variable='re_init_counter',
+                         re_init_threshold=1,
+                         re_init_dt=re_init_dt,
+                         dist_param=1,
+                         scale=.05,
+                         distribution='gamma',
+                         clip_min=wplast_min,
+                         clip_max=wplast_max,
+                         variable_type=variable_type,
                          reference='synapse_counter')
 add_group_params_re_init(groups=[feedforward_exc],
                          variable='weight',
                          re_init_variable='re_init_counter',
-                         re_init_threshold=10,
+                         re_init_threshold=1,
                          re_init_dt=re_init_dt,
                          distribution='deterministic',
                          const_value=1,
@@ -92,13 +128,14 @@ add_group_params_re_init(groups=[feedforward_exc],
 add_group_params_re_init(groups=[feedforward_exc],
                          variable='tausyn',
                          re_init_variable='re_init_counter',
-                         re_init_threshold=10,
+                         re_init_threshold=1,
                          re_init_dt=re_init_dt,
                          dist_param=5.5,
                          scale=1,
                          distribution='normal',
                          clip_min=4,
                          clip_max=7,
+                         variable_type=variable_type,
                          unit='ms',
                          reference='synapse_counter')
 
@@ -118,15 +155,19 @@ net = TeiliNetwork()
 net.add(exc_cells, poisson_spikes, feedforward_exc, spikemon_exc_neurons,
         spikemon_seq_neurons, statemon_wplast, statemon_weight,
         statemon_counter, cell_mon)
-net.run(sim_time*ms, report='stdout', report_period=100*ms)
+net.run(10000*ms, report='stdout', report_period=100*ms)
+
+# Change pattern
+rate_distribution = 500 * np.exp(-(input_space - 15)**2 / (2 * (1)**2)) * Hz
+poisson_spikes.rates = rate_distribution + input_base_rate
+net.run(10000*ms, report='stdout', report_period=100*ms)
 
 # Plots
-from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
-from teili.tools.visualizer.DataControllers import Rasterplot, Lineplot
-from teili.tools.visualizer.DataViewers import PlotSettings
-import pyqtgraph as pg
-from PyQt5 import QtGui
-
+app = QtGui.QApplication.instance()
+if app is None:
+    app = QtGui.QApplication(sys.argv)
+else:
+    print('QApplication instance already exists: %s' % str(app))
 QtApp = QtGui.QApplication([])
 
 colors = [
@@ -144,7 +185,11 @@ image_axis.setLabel(axis='left', text='Input channels')
 m1 = pg.ImageView(view=image_axis)
 win1.setCentralWidget(m1)
 win1.show()
-m1.setImage(np.reshape(statemon_wplast.w_plast, (num_inputs, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
+m1.setImage(np.reshape(statemon_wplast.w_plast*(statemon_weight.weight>0),
+                       (int(n_conns/num_inputs),
+                       num_exc,
+                       -1)),
+            axes={'t':2, 'y':0, 'x':1})
 m1.setColorMap(cmap)
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='postsynaptic neuron')
@@ -157,7 +202,7 @@ image_axis.setLabel(axis='left', text='Input channels')
 m2 = pg.ImageView(view=image_axis)
 win2.setCentralWidget(m2)
 win2.show()
-m2.setImage(np.reshape(statemon_weight.weight, (num_inputs, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
+m2.setImage(np.reshape(statemon_weight.weight, (int(n_conns/num_inputs), num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
 m2.setColorMap(cmap)
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='postsynaptic neuron')
@@ -169,16 +214,26 @@ seq_raster = EventsModel.from_brian_spike_monitor(spikemon_seq_neurons)
 state_variable_names = ['re_init_counter']
 counter_copy = np.array(statemon_counter.re_init_counter)
 counter_copy[np.isnan(counter_copy)] = 0
-state_variables = [counter_copy]
+state_variables = [counter_copy.T]
 state_variables_times = [statemon_counter.t/ms]
 counter_line = StateVariablesModel(state_variable_names, state_variables, state_variables_times)
 
-#line_plot1 = Lineplot(DataModel_to_x_and_y_attr=[(counter_line, ('t_re_init_counter', 're_init_counter'))],
-#                      title='reinit counters with time', xlabel='time (s)',
-#                      ylabel='counter value', backend='pyqtgraph', QtApp=QtApp)
-raster_plot1 = Rasterplot(MyEventsModels=[exc_raster], backend='pyqtgraph', QtApp=QtApp)
-raster_plot2 = Rasterplot(MyEventsModels=[seq_raster], backend='pyqtgraph', QtApp=QtApp,
-                show_immediately=True)
-from brian2 import *
-plot(counter_line.re_init_counter.T)
-show()
+line_plot1 = Lineplot(DataModel_to_x_and_y_attr=[(counter_line, ('t_re_init_counter', 're_init_counter'))],
+                      title='Reinit counters with time',
+                      xlabel='time (s)',
+                      ylabel='counter value',
+                      backend='pyqtgraph',
+                      QtApp=QtApp)
+raster_plot1 = Rasterplot(MyEventsModels=[exc_raster],
+                          title='Raster plot of neurons',
+                          xlabel='time (s)',
+                          ylabel='Indices',
+                          backend='pyqtgraph',
+                          QtApp=QtApp)
+raster_plot2 = Rasterplot(MyEventsModels=[seq_raster],
+                          title='Raster plot of input',
+                          xlabel='time (s)',
+                          ylabel='Indices',
+                          backend='pyqtgraph',
+                          QtApp=QtApp,
+                          show_immediately=True)

@@ -455,7 +455,7 @@ q_model_template = {
 }
 
 q_model_template_params = {
-    'Vthr': 16*mV,
+    'Vthr': 15*mV,
     'Vrest': 3*mV,
     'Vreset': 0*mV,
     'Iconst': 0*pA,

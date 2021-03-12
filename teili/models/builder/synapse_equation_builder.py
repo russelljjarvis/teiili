@@ -42,7 +42,7 @@ from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_syn_dict
 from teili.models.builder.templates.synapse_templates import modes, kernels, plasticity_models,\
     current_parameters, conductance_parameters, DPI_parameters, DPI_shunt_parameters, synaptic_equations,\
-    unit_less_parameters
+    unit_less_parameters, quantized_stochastic_parameters
 import copy
 
 
@@ -85,8 +85,9 @@ class SynapseEquationBuilder():
                     This class constructor builds a model for a synapse using pre-existing blocks.
 
                     The first entry is the type of model;
-                    choose between : 'current', 'conductance' or 'DPI'.
-                    See this paper for reference #(add DPI paper here) TODO
+                    choose between : 'current', 'conductance',
+                    'QuantizedStochastic' (see Wang, Thakur, and Van Schaik,
+                    2018), or 'DPI' (see Bartolozzi, Mitra, and Indiveri, 2006).
 
                     The second entry is the kernel of the synapse.
                     This can be one of 'exponential', 'alpha' or 'resonant'.
@@ -186,6 +187,29 @@ class SynapseEquationBuilder():
                         [DPI_shunt_parameters[value]]
                 param_templ = [
                     DPI_shunt_parameters[base_unit]] + param_templ_dummy
+
+                keywords = combine_syn_dict(eq_templ, param_templ)
+
+                keywords['model'] = keywords['model'].format(
+                    input_number="{input_number}", unit='amp')
+                keywords['on_pre'] = keywords['on_pre'].format(
+                    input_number="{input_number}", unit='amp')
+                keywords['on_post'] = keywords['on_post'].format(
+                    input_number="{input_number}", unit='amp')
+
+            if base_unit == 'QuantizedStochastic':
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [synaptic_equations[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
+
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [quantized_stochastic_parameters[value]]
+                param_templ = [
+                    quantized_stochastic_parameters[base_unit]] + param_templ_dummy
 
                 keywords = combine_syn_dict(eq_templ, param_templ)
 

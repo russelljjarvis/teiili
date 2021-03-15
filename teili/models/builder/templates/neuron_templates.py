@@ -426,16 +426,13 @@ q_model_template = {
         dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*mV/second : volt
         normal_decay = clip((decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability, Vrest/mV, Vthr/mV) : 1
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
-        decay_probability = lfsr_timedarray( ((seed+t) % lfsr_max_value) + lfsr_init ) / (2**lfsr_num_bits): 1
+        decay_probability = rand() : 1 (constant over dt)
 
         I = Iin + Iconst : amp
         decay_rate = tau/(tau + dt)                      : 1
         decay_rate_refrac = refrac_tau/(refrac_tau + dt) : 1
         refrac = Vm<Vrest                                    : boolean
 
-        lfsr_max_value : second
-        seed : second
-        lfsr_init : second
         g_psc                : ohm    (constant) # Gain of post synaptic current
         Iconst  : amp                         # constant input current
         Iin = Iin0        : amp
@@ -447,7 +444,6 @@ q_model_template = {
         Vrest             : volt   (constant)
         Vreset            : volt   (constant)
 
-        lfsr_num_bits : 1 # Number of bits in the LFSR used
 
     ''',
     'threshold': '''Vm>=Vthr''',
@@ -462,8 +458,25 @@ q_model_template_params = {
     'g_psc' : 1*ohm,
     'tau': 19*ms,
     'refrac_tau': 2*ms,
-    'refP': 0.*ms,
-    'lfsr_num_bits': 6
+    'refP': 0.*ms
+    }
+
+# Use lfsr to generate random numbers. Function must be added to namespace
+lfsr = {
+    'model': """
+        %decay_probability = lfsr_timedarray( ((seed+t) % lfsr_max_value) + lfsr_init ) / (2**rand_num_bits) : 1
+
+        lfsr_max_value : second
+        seed : second
+        lfsr_init : second
+        rand_num_bits : 1 # Number of bits in the LFSR used
+         """,
+    'threshold': "",
+    'reset': """
+         """
+    }
+lfsr_params = {
+    'rand_num_bits': 6
     }
 
 modes = {
@@ -501,6 +514,7 @@ voltage_equation_sets = {
 quantized_equation_sets = {
     'none': none_model,
     'spatial': spatial,
+    'lfsr': lfsr,
     'threshold_adaptation': quantized_thresh_adapt
     }
 
@@ -537,5 +551,6 @@ quantized_parameters = {
     'quantized': q_model_template_params,
     'none': none_params,
     'spatial': none_params,
+    'lfsr': lfsr_params,
     'threshold_adaptation': thresh_adapt_params
     }

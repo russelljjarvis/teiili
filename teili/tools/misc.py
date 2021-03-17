@@ -5,7 +5,8 @@
 # @Author: mmilde, alpren
 # @Date:   2017-12-27 11:54:09
 
-from brian2 import implementation, check_units, ms, declare_types
+from brian2 import implementation, check_units, ms, declare_types,\
+        SpikeMonitor, Network, NeuronGroup, TimedArray
 import numpy as np
 
 
@@ -89,3 +90,47 @@ def spikemon2firing_rate(spikemon, start_time=0 * ms, end_time="max"):
     if len(spiketimes) == 0:
         return 0
     return (np.mean(1 / np.diff(spiketimes)))
+
+def neuron_group_from_spikes(num_inputs, time_step, duration, group=None,
+                             spike_indices=None, spike_times=None):
+    """Converts spike activity in a neuron group with the same activity.
+    
+    Args:
+        num_inputs (int): Number of input channels from source.
+        time_step (brian2.unit.ms): Time step of simulation.
+        duration (int): Duration of simulation in brian2.ms.
+        group (brian2.poissonGroup): Poisson group that is passed instead
+            of spike times and indices.
+        spike_indices (numpy.array): Indices of the original source.
+        spike_times (numpy.array): Time stamps with unit of original spikes.
+
+    Returns:
+        neu_group (brian2 object): Neuron group with mimicked activity.
+    """
+    if spike_indices is None and spike_indices is None:
+        net = Network()
+        try:
+            monitor = SpikeMonitor(group)
+        except:
+            raise
+        net.add(group, monitor)
+        net.run(duration)
+        spike_times, spike_indices = monitor.t, monitor.i
+    spike_times = [spike_times[np.where(spike_indices==i)[0]] for i in range(num_inputs)]
+    # Create matrix where each row (neuron id) is associated with time when there
+    # is a spike or -1 when there is not
+    converted_input = (np.zeros((num_inputs, int(duration/time_step))) - 1)*ms
+    for ind, val in enumerate(spike_times):
+        # Prevents floating point errors
+        int_values = np.around(val/time_step).astype(int)
+
+        converted_input[ind, int_values] = int_values * ms
+    converted_input = np.transpose(converted_input)
+    converted_input = TimedArray(converted_input, dt=time_step)
+    # t is simulation time, and will be equal to tspike when there is a spike
+    # Cell remains refractory when there is no spike, i.e. tspike=-1
+    neu_group = NeuronGroup(num_inputs, model='tspike=converted_input(t, i): second',
+            threshold='t==tspike', refractory='tspike < 0*ms')
+    neu_group.namespace.update({'converted_input':converted_input})
+
+    return neu_group

@@ -1,7 +1,7 @@
 import numpy as np
 
-from brian2 import Hz, ms, mV, prefs, SpikeMonitor, StateMonitor, defaultclock,\
-    PoissonGroup
+from brian2 import Hz, second, ms, mV, prefs, SpikeMonitor, StateMonitor,\
+        defaultclock, PoissonGroup
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
@@ -14,41 +14,69 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.visualizer.DataModels import EventsModel, StateVariablesModel
 from teili.tools.visualizer.DataControllers import Rasterplot, Lineplot
 from teili.tools.visualizer.DataViewers import PlotSettings
+from teili.tools.lfsr import create_lfsr
+from teili.tools.misc import neuron_group_from_spikes
 import pyqtgraph as pg
 from PyQt5 import QtGui
 
 #############
 # Load models
-syn_model=SynapseEquationBuilder(base_unit='current',
-                                 kernel='exponential',
-                                 plasticity='stdp',
-                                 structural_plasticity='deterministic_counter',
-                                 verbose=True)
-neu_model=NeuronEquationBuilder(base_unit='voltage',
-                                leak='leaky',
-                                position='spatial',
-                                verbose=True)
+#syn_model=SynapseEquationBuilder(base_unit='current',
+#                                 kernel='exponential',
+#                                 plasticity='stdp',
+#                                 structural_plasticity='deterministic_counter')
+#neu_model=NeuronEquationBuilder(base_unit='voltage',
+#                                leak='leaky',
+#                                position='spatial')
+# Alternatively, use the stochastic quantized model
+syn_model=SynapseEquationBuilder(base_unit='QuantizedStochastic',
+                                 plasticity='quantized_stochastic_stdp',
+                                 #rand_gen='lfsr_syn',
+                                 structural_plasticity='stochastic_counter')
+neu_model=NeuronEquationBuilder(base_unit='quantized',
+                                #rand_gen='lfsr',
+                                position='spatial')
 
 # Initialize simulation preferences
 prefs.codegen.target = "numpy"
 defaultclock.dt = 1 * ms
+sim_duration = 10000 * defaultclock.dt
+total_sim_duration = 2*sim_duration
 
 # Initialize input sequence: Poisson rates shaped like a gaussian
 num_inputs = 20
-input_base_rate = 5*Hz
+input_base_rate = 0*Hz
 input_space = np.array([x for x in range(num_inputs)])
 rate_distribution = 500 * np.exp(-(input_space - 5)**2 / (2 * (1)**2)) * Hz
 poisson_spikes = PoissonGroup(num_inputs, rate_distribution + input_base_rate)
+
+net = TeiliNetwork()
+temp_monitor = SpikeMonitor(poisson_spikes, name='temp_monitor')
+net.add(poisson_spikes, temp_monitor)
+net.run(sim_duration)
+
+# Change pattern
+rate_distribution = 500 * np.exp(-(input_space - 15)**2 / (2 * (1)**2)) * Hz
+poisson_spikes.rates = rate_distribution + input_base_rate
+net.run(sim_duration)
+temp_monitor.active = False
+
+# Convert Poisson group activity to a neuron group activity. This is required
+# for quantized stochastic models
+poisson_spikes = neuron_group_from_spikes(num_inputs, defaultclock.dt,
+                                          total_sim_duration,
+                                          spike_indices=np.array(temp_monitor.i),
+                                          spike_times=np.array(temp_monitor.t)*second)
 
 #################
 # Building network
 # cells
 num_exc = num_inputs
-if 'Vm' in neu_model.keywords['model']:
-    method = 'euler'
-elif 'decay_probability' in neu_model.keywords['model']:
+if 'decay_probability' in neu_model.keywords['model']:
     from brian2 import ExplicitStateUpdater
     method = ExplicitStateUpdater('''x_new = f(x,t)''')
+elif 'Vm' in neu_model.keywords['model']:
+    method = 'euler'
 exc_cells = Neurons(num_exc,
                     equation_builder=neu_model(num_inputs=1),
                     name='exc_cells',
@@ -56,62 +84,71 @@ exc_cells = Neurons(num_exc,
                     verbose=True)
 
 # Connections
-feedforward_exc = Connections(poisson_spikes, exc_cells,
+feedforward_exc = Connections(poisson_spikes,
+                              exc_cells,
                               equation_builder=syn_model(),
+                              method=method,
                               name='feedforward_exc')
 #feedforward_exc.connect(j='i')
 feedforward_exc.connect()
 
 feedforward_exc.weight = 1
-n_conns = len(feedforward_exc.weight)
+num_connections = len(feedforward_exc.weight)
 sparsity = .9
-ffe_zero_w = np.random.choice(n_conns,
-                              int(n_conns*sparsity),
+ffe_zero_w = np.random.choice(num_connections,
+                              int(num_connections*sparsity),
                               replace=False)
 feedforward_exc.weight[ffe_zero_w] = 0
 feedforward_exc.w_plast[ffe_zero_w] = 0
 
 # Initializations
 feedforward_exc.tausyn = 5*ms
-if 'Vm' in neu_model.keywords['model']:
-    exc_cells.Vm = exc_cells.EL
-    feedforward_exc.dApre = 0.001
-    add_group_param_init(groups=[feedforward_exc],
-                         variable='w_plast',
-                         dist_param=1,
-                         scale=.05,
-                         distribution='gamma',
-                         clip_min=0,
-                         clip_max=1)
-elif 'decay_probability' in neu_model.keywords['model']:
+if 'decay_probability' in neu_model.keywords['model']:
+    variable_type = 'int'
+    wplast_min = 0
+    wplast_max = 15
+    wplast_scale = 1
     exc_cells.tau = 20*ms
     exc_cells.Vm = exc_cells.Vrest
+    feedforward_exc.rand_num_bits_Apre = 4
+    feedforward_exc.rand_num_bits_Apost = 4
+    feedforward_exc.taupre = 20*ms
+    feedforward_exc.taupost = 20*ms
     # LFSR
-    feedforward_exc.lfsr_num_bits_syn = 5
-    exc_cells.lfsr_num_bits = 5
-    seed = 12
-    ta = create_lfsr([exc_cells],
-                     [feedforward_exc],
-                     defaultclock.dt)
+    if 'lfsr' in neu_model.keywords['model'] and 'lfsr' in syn_model.keywords['model']:
+        feedforward_exc.lfsr_num_bits_syn = 3
+        feedforward_exc.lfsr_num_bits_Apre = 5
+        feedforward_exc.lfsr_num_bits_Apost = 5
+        exc_cells.lfsr_num_bits = 5
+        ta = create_lfsr([exc_cells],
+                         [feedforward_exc],
+                         defaultclock.dt)
+elif 'Vm' in neu_model.keywords['model']:
+    variable_type = 'float'
+    wplast_min = 0
+    wplast_max = 1
+    wplast_scale = .05
+    exc_cells.Vm = exc_cells.EL
+    feedforward_exc.dApre = 0.001
+
+add_group_param_init(groups=[feedforward_exc],
+                     variable='w_plast',
+                     dist_param=1,
+                     scale=.05,
+                     distribution='gamma',
+                     clip_min=wplast_min,
+                     clip_max=wplast_max)
 
 ##################
 # Synaptic homeostasis
 re_init_dt = 1000*ms
-if 'Vm' in neu_model.keywords['model']:
-    variable_type = 'float'
-    wplast_min = 0
-    wplast_max = 1
-elif 'decay_probability' in neu_model.keywords['model']:
-    variable_type = 'int'
-    wplast_min = 0
-    wplast_max = 15
 add_group_params_re_init(groups=[feedforward_exc],
                          variable='w_plast',
                          re_init_variable='re_init_counter',
                          re_init_threshold=1,
                          re_init_dt=re_init_dt,
                          dist_param=1,
-                         scale=.05,
+                         scale=wplast_scale,
                          distribution='gamma',
                          clip_min=wplast_min,
                          clip_max=wplast_max,
@@ -143,24 +180,15 @@ add_group_params_re_init(groups=[feedforward_exc],
 # Setting up monitors
 spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
 spikemon_seq_neurons = SpikeMonitor(poisson_spikes, name='spikemon_seq_neurons')
-statemon_wplast = StateMonitor(feedforward_exc, variables=['w_plast'],
-                               record=True, name='statemon_wplast')
-statemon_weight = StateMonitor(feedforward_exc, variables=['weight'],
-                               record=True, name='statemon_weight')
-statemon_counter = StateMonitor(feedforward_exc, variables=['re_init_counter'],
-                               record=True, name='statemon_counter')
+statemon_ffe = StateMonitor(feedforward_exc,
+                            variables=['w_plast', 'weight', 're_init_counter', 'Apre'],
+                            record=True, name='statemon_ffe')
 cell_mon = StateMonitor(exc_cells, variables=['Vm'], record=True, name='exc')
 
 net = TeiliNetwork()
 net.add(exc_cells, poisson_spikes, feedforward_exc, spikemon_exc_neurons,
-        spikemon_seq_neurons, statemon_wplast, statemon_weight,
-        statemon_counter, cell_mon)
-net.run(10000*ms, report='stdout', report_period=100*ms)
-
-# Change pattern
-rate_distribution = 500 * np.exp(-(input_space - 15)**2 / (2 * (1)**2)) * Hz
-poisson_spikes.rates = rate_distribution + input_base_rate
-net.run(10000*ms, report='stdout', report_period=100*ms)
+        spikemon_seq_neurons, statemon_ffe, cell_mon)
+net.run(total_sim_duration, report='stdout', report_period=100*ms)
 
 # Plots
 app = QtGui.QApplication.instance()
@@ -185,8 +213,8 @@ image_axis.setLabel(axis='left', text='Input channels')
 m1 = pg.ImageView(view=image_axis)
 win1.setCentralWidget(m1)
 win1.show()
-m1.setImage(np.reshape(statemon_wplast.w_plast*(statemon_weight.weight>0),
-                       (int(n_conns/num_inputs),
+m1.setImage(np.reshape(statemon_ffe.w_plast*(statemon_ffe.weight>0),
+                       (int(num_connections/num_inputs),
                        num_exc,
                        -1)),
             axes={'t':2, 'y':0, 'x':1})
@@ -202,7 +230,9 @@ image_axis.setLabel(axis='left', text='Input channels')
 m2 = pg.ImageView(view=image_axis)
 win2.setCentralWidget(m2)
 win2.show()
-m2.setImage(np.reshape(statemon_weight.weight, (int(n_conns/num_inputs), num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
+m2.setImage(np.reshape(statemon_ffe.weight,
+                       (int(num_connections/num_inputs), num_exc, -1)),
+            axes={'t':2, 'y':0, 'x':1})
 m2.setColorMap(cmap)
 image_axis = pg.PlotItem()
 image_axis.setLabel(axis='bottom', text='postsynaptic neuron')
@@ -212,10 +242,10 @@ exc_raster = EventsModel.from_brian_spike_monitor(spikemon_exc_neurons)
 seq_raster = EventsModel.from_brian_spike_monitor(spikemon_seq_neurons)
 
 state_variable_names = ['re_init_counter']
-counter_copy = np.array(statemon_counter.re_init_counter)
+counter_copy = np.array(statemon_ffe.re_init_counter)
 counter_copy[np.isnan(counter_copy)] = 0
 state_variables = [counter_copy.T]
-state_variables_times = [statemon_counter.t/ms]
+state_variables_times = [statemon_ffe.t/ms]
 counter_line = StateVariablesModel(state_variable_names, state_variables, state_variables_times)
 
 line_plot1 = Lineplot(DataModel_to_x_and_y_attr=[(counter_line, ('t_re_init_counter', 're_init_counter'))],

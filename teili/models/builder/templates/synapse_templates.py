@@ -349,28 +349,49 @@ activity_params = {
     'variance_th': '0.67',
 }
 
-# Use lfsr to generate random numbers. Function must be added to namespace
+# Use lfsr to generate random numbers (only works when dt=1*ms). Function must
+# be added to namespace via teili.tools.lfsr
 lfsr_syn = {
     'model': """
-        %decay_probability_syn = lfsr_timedarray( ((seed_syn+t) % lfsr_max_value_syn) + lfsr_init_syn ) / (2**rand_num_bits_syn) : 1
-        %decay_probability_Apost = lfsr_timedarray( ((seed_Apost+t) % lfsr_max_value_Apost) + lfsr_init_Apost ) / (2**rand_num_bits_Apost) : 1
-        %decay_probability_Apre = lfsr_timedarray( ((seed_Apre+t) % lfsr_max_value_Apre) + lfsr_init_Apre ) / (2**rand_num_bits_Apre) : 1
+        %decay_probability_syn = lfsr_timedarray( ((seed_syn+t) % lfsr_max_value_syn) + lfsr_init_syn ) / (2**lfsr_num_bits_syn) : 1
+        %decay_probability_Apost = lfsr_timedarray( ((seed_Apost+t) % lfsr_max_value_Apost) + lfsr_init_Apost ) / (2**lfsr_num_bits_Apost) : 1
+        %decay_probability_Apre = lfsr_timedarray( ((seed_Apre+t) % lfsr_max_value_Apre) + lfsr_init_Apre ) / (2**lfsr_num_bits_Apre) : 1
 
         seed_Apre : second
         lfsr_max_value_Apre : second
         lfsr_init_Apre : second
+        lfsr_num_bits_Apre : 1 # Number of bits in the LFSR used
 
         seed_Apost : second
         lfsr_max_value_Apost : second
         lfsr_init_Apost : second
+        lfsr_num_bits_Apost : 1 # Number of bits in the LFSR used
 
         seed_syn : second
         lfsr_max_value_syn : second
         lfsr_init_syn : second
-        rand_num_bits_syn : 1 # Number of bits in the LFSR used
+        lfsr_num_bits_syn : 1 # Number of bits in the LFSR used
 
         counter_Apre : second
         counter_Apost : second
+
+        seed_condApre1 : second
+        seed_condApre2 : second
+        seed_condApost1 : second
+        seed_condApost2 : second
+        lfsr_max_value_condApre1 : second
+        lfsr_max_value_condApre2 : second
+        lfsr_max_value_condApost1 : second
+        lfsr_max_value_condApost2 : second
+        lfsr_init_condApre1 : second
+        lfsr_init_condApre2 : second
+        lfsr_init_condApost1 : second
+        lfsr_init_condApost2 : second
+
+        lfsr_num_bits_condApre1 : 1 # Variables used for initialization only
+        lfsr_num_bits_condApre2 : 1
+        lfsr_num_bits_condApost1 : 1
+        lfsr_num_bits_condApost2 : 1
          """,
     'on_pre': """
         counter_Apre += dt
@@ -387,7 +408,13 @@ lfsr_syn = {
 lfsr_syn_params = {
     'counter_Apre': '0 * msecond',
     'counter_Apost': '0 * msecond',
-    'rand_num_bits_syn' : '6'
+    'lfsr_num_bits_Apre' : '6',
+    'lfsr_num_bits_Apost' : '6',
+    'lfsr_num_bits_syn' : '6',
+    'lfsr_num_bits_condApre1': '4',
+    'lfsr_num_bits_condApre2': '4',
+    'lfsr_num_bits_condApost1': '4',
+    'lfsr_num_bits_condApost2': '4'
     }
 
 # STDP learning rule ##
@@ -446,10 +473,10 @@ quantized_stochastic_stdp = {
         taupre : second (constant)
         taupost : second (constant)
 
-        rand_int_Apre1 : 1 (constant over dt)
-        rand_int_Apre2 : 1 (constant over dt)
-        rand_int_Apost1 : 1 (constant over dt)
-        rand_int_Apost2 : 1 (constant over dt)
+        rand_int_Apre1 : 1
+        rand_int_Apre2 : 1
+        rand_int_Apost1 : 1
+        rand_int_Apost2 : 1
         cond_Apre1 : boolean
         cond_Apre2 : boolean
         cond_Apost1 : boolean
@@ -460,20 +487,20 @@ quantized_stochastic_stdp = {
         ''',
     'on_pre': '''
         Apre += dApre
+        Apre = clip(Apre, 0, A_max)
         rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
         cond_Apre1 = rand_int_Apre1 < Apost
         rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))
         cond_Apre2 = rand_int_Apre2 <= stdp_thres
-        Apre = clip(Apre, 0, A_max)
         w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2), 0, w_max)
         ''',
     'on_post': '''
         Apost += dApre
+        Apost = clip(Apost, 0, A_max)
         rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_Apost-1))
         cond_Apost1 = rand_int_Apost1 < Apre
         rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_Apost-1))
         cond_Apost2 = rand_int_Apost2 <= stdp_thres
-        Apost = clip(Apost, 0, A_max)
         w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2), 0, w_max)
         '''
 }
@@ -707,7 +734,7 @@ DPI_shunt_parameters = {
 quantized_stochastic_parameters = {
     'QuantizedStochastic': quantized_stochastic_params,
     'non_plastic': none_params,
-    'stdp': quantized_stochastic_stdp_params,
+    'quantized_stochastic_stdp': quantized_stochastic_stdp_params,
     'lfsr_syn': lfsr_syn_params,
     'stochastic_counter': stochastic_counter_params}
 

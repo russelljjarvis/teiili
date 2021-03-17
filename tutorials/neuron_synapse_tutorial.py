@@ -17,8 +17,8 @@ from brian2 import mV, mA, ms, second, pA, nA, prefs,\
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
-from teili.models.neuron_models import QuantStochLIF as neuron_model
-from teili.models.synapse_models import QuantStochSyn as synapse_model
+from teili.models.neuron_models import DPI as neuron_model
+from teili.models.synapse_models import DPISyn as synapse_model
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param
 
 from teili.tools.visualizer.DataViewers import PlotSettings
@@ -91,7 +91,6 @@ if 'Imem' in neuron_model().keywords['model']:
     test_neurons1.Iconst = 10 * nA
 elif 'Vm' in neuron_model().keywords['model']:
     if 'decay_probability' in neuron_model().keywords['model']:
-        num_bits = 4
         # Example of how to set a single parameter
         # Fast neuron to allow more spikes
         test_neurons1.refrac_tau = 1 * ms
@@ -104,18 +103,21 @@ elif 'Vm' in neuron_model().keywords['model']:
         input_synapse.weight = 8
         test_synapse.weight = 15
         test_neurons1.Iconst = 13.0 * mA
-        # Setting lfsr
-        test_neurons1.lfsr_num_bits = num_bits
-        test_neurons2.lfsr_num_bits = num_bits
-        input_synapse.lfsr_num_bits_syn = num_bits
-        test_synapse.lfsr_num_bits_syn = num_bits
-        ta = create_lfsr([test_neurons1, test_neurons2], [input_synapse, test_synapse], defaultclock.dt)
         test_neurons1.Vm = 3*mV
         test_neurons2.Vm = 3*mV
     else:
         input_synapse.weight = 1.5
         test_synapse.weight = 8.0
         test_neurons1.Iconst = 3 * nA
+if 'lfsr' in neuron_model().keywords['model']:
+        num_bits = 4
+        test_neurons1.rand_num_bits = num_bits
+        test_neurons2.rand_num_bits = num_bits
+if 'lfsr' in synapse_model().keywords['model']:
+        num_bits = 4
+        input_synapse.rand_num_bits_syn = num_bits
+        test_synapse.rand_num_bits_syn = num_bits
+        ta = create_lfsr([test_neurons1, test_neurons2], [input_synapse, test_synapse], defaultclock.dt)
 
 spikemon_input = SpikeMonitor(input_spikegenerator, name='spikemon_input')
 spikemon_test_neurons1 = SpikeMonitor(

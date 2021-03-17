@@ -259,7 +259,7 @@ class QuantStochSynStdp(SynapseEquationBuilder):
         (2018).
         """
         SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochastic',
-                                        plasticity='stdp')
+                                        plasticity='quantized_stochastic_stdp')
 
 def main(path=None):
     if path is None:

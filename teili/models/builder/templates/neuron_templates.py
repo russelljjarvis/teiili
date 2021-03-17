@@ -464,19 +464,19 @@ q_model_template_params = {
 # Use lfsr to generate random numbers. Function must be added to namespace
 lfsr = {
     'model': """
-        %decay_probability = lfsr_timedarray( ((seed+t) % lfsr_max_value) + lfsr_init ) / (2**rand_num_bits) : 1
+        %decay_probability = lfsr_timedarray( ((seed+t) % lfsr_max_value) + lfsr_init ) / (2**lfsr_num_bits) : 1
 
         lfsr_max_value : second
         seed : second
         lfsr_init : second
-        rand_num_bits : 1 # Number of bits in the LFSR used
+        lfsr_num_bits : 1 # Number of bits in the LFSR used
          """,
     'threshold': "",
     'reset': """
          """
     }
 lfsr_params = {
-    'rand_num_bits': 6
+    'lfsr_num_bits': 6
     }
 
 modes = {

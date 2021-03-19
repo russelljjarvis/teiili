@@ -424,7 +424,7 @@ defaultclock.dt = 1*ms in the code using this model.
 q_model_template = {
     'model': '''
         dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*mV/second : volt
-        normal_decay = clip((decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability, Vrest/mV, Vthr/mV) : 1
+        normal_decay = clip((decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability, Vm_min, Vm_max) : 1
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
         decay_probability = rand() : 1 (constant over dt)
 
@@ -441,6 +441,8 @@ q_model_template = {
         refrac_tau        : second (constant)
         refP              : second
         Vthr              : volt   (constant)
+        Vm_min            : 1      (constant)
+        Vm_max            : 1      (constant)
         Vrest             : volt   (constant)
         Vreset            : volt   (constant)
 
@@ -452,6 +454,8 @@ q_model_template = {
 
 q_model_template_params = {
     'Vthr': 15*mV,
+    'Vm_min': 3,
+    'Vm_max': 15,
     'Vrest': 3*mV,
     'Vreset': 0*mV,
     'Iconst': 0*pA,

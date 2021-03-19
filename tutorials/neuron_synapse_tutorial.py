@@ -17,6 +17,11 @@ from brian2 import mV, mA, ms, second, pA, nA, prefs,\
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
+
+""" You can import other models from neuron_models and synapse_models intead
+if DPI, such as Izhikevich, ExpLIF, QuantStochLIF, and Alpha, Resonant,
+QuantStochSyn.
+"""
 from teili.models.neuron_models import DPI as neuron_model
 from teili.models.synapse_models import DPISyn as synapse_model
 from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_param

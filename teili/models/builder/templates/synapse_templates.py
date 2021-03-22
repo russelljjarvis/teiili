@@ -176,28 +176,24 @@ dpi_shunt_params = {
     'I_syn': constants.I0
 }
 
-"""LIF neuron model with stochastic decay taken from Wang et al. (2018).
+"""LIF synapse model with stochastic decay taken from Wang et al. (2018).
 Please refer to this paper for more information. Note that this model was
 conceptualized in discrete time with backward euler scheme and an integer
 operation. An state updader with x_new = f(x,t) and
 defaultclock.dt = 1*ms in the code using this model.
 """
-quantized_stochastic_decay = {
+quantized_stochastic = {
     'model': '''
         dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
-        decay_probability_syn = lfsr_timedarray( ((seed_syn+t) % lfsr_max_value_syn) + lfsr_init_syn ) / (2**lfsr_num_bits_syn): 1
+        decay_probability_syn = rand() : 1 (constant over dt)
         Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
 
-        decay_syn = tau_syn/(tau_syn + dt) : 1
+        decay_syn = tausyn/(tausyn + dt) : 1
 
         weight                : 1
         w_plast               : 1
-        lfsr_max_value_syn : second
-        seed_syn : second
-        lfsr_init_syn : second
         gain_syn              : amp
-        tau_syn               : second (constant)
-        lfsr_num_bits_syn : 1 # Number of bits in the LFSR used
+        tausyn               : second (constant)
         ''',
         'on_pre': '''
         I_syn += gain_syn * abs(weight) * w_plast
@@ -206,12 +202,11 @@ quantized_stochastic_decay = {
         '''
 }
 
-quantized_stochastic_decay_params = {
+quantized_stochastic_params = {
     'weight' : 1,
     'w_plast' : 1,
     'gain_syn' : 1*mA,
-    'tau_syn': 3*ms,
-    'lfsr_num_bits_syn': 6
+    'tausyn': 3*ms
 }
 
 """ **Plasticity blocks**
@@ -354,6 +349,74 @@ activity_params = {
     'variance_th': '0.67',
 }
 
+# Use lfsr to generate random numbers (only works when dt=1*ms). Function must
+# be added to namespace via teili.tools.lfsr
+lfsr_syn = {
+    'model': """
+        %decay_probability_syn = lfsr_timedarray( ((seed_syn+t) % lfsr_max_value_syn) + lfsr_init_syn ) / (2**lfsr_num_bits_syn) : 1
+        %decay_probability_Apost = lfsr_timedarray( ((seed_Apost+t) % lfsr_max_value_Apost) + lfsr_init_Apost ) / (2**lfsr_num_bits_Apost) : 1
+        %decay_probability_Apre = lfsr_timedarray( ((seed_Apre+t) % lfsr_max_value_Apre) + lfsr_init_Apre ) / (2**lfsr_num_bits_Apre) : 1
+
+        seed_Apre : second
+        lfsr_max_value_Apre : second
+        lfsr_init_Apre : second
+        lfsr_num_bits_Apre : 1 # Number of bits in the LFSR used
+
+        seed_Apost : second
+        lfsr_max_value_Apost : second
+        lfsr_init_Apost : second
+        lfsr_num_bits_Apost : 1 # Number of bits in the LFSR used
+
+        seed_syn : second
+        lfsr_max_value_syn : second
+        lfsr_init_syn : second
+        lfsr_num_bits_syn : 1 # Number of bits in the LFSR used
+
+        counter_Apre : second
+        counter_Apost : second
+
+        seed_condApre1 : second
+        seed_condApre2 : second
+        seed_condApost1 : second
+        seed_condApost2 : second
+        lfsr_max_value_condApre1 : second
+        lfsr_max_value_condApre2 : second
+        lfsr_max_value_condApost1 : second
+        lfsr_max_value_condApost2 : second
+        lfsr_init_condApre1 : second
+        lfsr_init_condApre2 : second
+        lfsr_init_condApost1 : second
+        lfsr_init_condApost2 : second
+
+        lfsr_num_bits_condApre1 : 1 # Variables used for initialization only
+        lfsr_num_bits_condApre2 : 1
+        lfsr_num_bits_condApost1 : 1
+        lfsr_num_bits_condApost2 : 1
+         """,
+    'on_pre': """
+        counter_Apre += dt
+        %rand_int_Apre1 = lfsr_timedarray( ((seed_condApre1+counter_Apre) % lfsr_max_value_condApre1) + lfsr_init_condApre1 )
+        %rand_int_Apre2 = lfsr_timedarray( ((seed_condApre2+counter_Apre) % lfsr_max_value_condApre2) + lfsr_init_condApre2 )
+         """,
+    'on_post': """
+        counter_Apost += dt
+        %rand_int_Apost1 = lfsr_timedarray( ((seed_condApost1+counter_Apost) % lfsr_max_value_condApost1) + lfsr_init_condApost1 )
+        %rand_int_Apost2 = lfsr_timedarray( ((seed_condApost2+counter_Apost) % lfsr_max_value_condApost2) + lfsr_init_condApost2 )
+         """
+}
+
+lfsr_syn_params = {
+    'counter_Apre': '0 * msecond',
+    'counter_Apost': '0 * msecond',
+    'lfsr_num_bits_Apre' : '6',
+    'lfsr_num_bits_Apost' : '6',
+    'lfsr_num_bits_syn' : '6',
+    'lfsr_num_bits_condApre1': '4',
+    'lfsr_num_bits_condApre2': '4',
+    'lfsr_num_bits_condApost1': '4',
+    'lfsr_num_bits_condApost2': '4'
+    }
+
 # STDP learning rule ##
 stdp = {
     'model': '''
@@ -393,44 +456,56 @@ stdp_para_conductance = {
     "w_plast": 0
 }
 
-stochastic_decay_stdp = {
+quantized_stochastic_stdp = {
     'model': '''
         dApre/dt = int(Apre * decay_stdp_Apre + decay_probability_Apre)/second : 1 (clock-driven)
         dApost/dt = int(Apost * decay_stdp_Apost + decay_probability_Apost)/second : 1 (clock-driven)
-        decay_probability_Apre = lfsr_timedarray( ((seed_Apre+t) % lfsr_max_value_Apre) + lfsr_init_Apre ) / (2**lfsr_num_bits_Apre): 1
-        decay_probability_Apost = lfsr_timedarray( ((seed_Apost+t) % lfsr_max_value_Apost) + lfsr_init_Apost ) / (2**lfsr_num_bits_Apost): 1
+        decay_probability_Apre = rand() : 1 (constant over dt)
+        decay_probability_Apost = rand() : 1 (constant over dt)
 
         decay_stdp_Apre = taupre/(taupre + dt) : 1
         decay_stdp_Apost = taupost/(taupost + dt) : 1
 
-        seed_Apre : second
-        lfsr_max_value_Apre : second
-        lfsr_init_Apre : second
-        lfsr_num_bits_Apre : 1
-        seed_Apost : second
-        lfsr_max_value_Apost : second
-        lfsr_init_Apost : second
-        lfsr_num_bits_Apost : 1
         w_max: 1 (constant)
         A_max: 1 (constant)
         dApre: 1 (constant)
         A_gain: 1 (constant)
         taupre : second (constant)
         taupost : second (constant)
+
+        rand_int_Apre1 : 1
+        rand_int_Apre2 : 1
+        rand_int_Apost1 : 1
+        rand_int_Apost2 : 1
+        cond_Apre1 : boolean
+        cond_Apre2 : boolean
+        cond_Apost1 : boolean
+        cond_Apost2 : boolean
+        rand_num_bits_Apre : 1 # Number of bits of random number generated for Apre
+        rand_num_bits_Apost : 1 # Number of bits of random number generated for Apost
+        stdp_thres : 1 (constant)
         ''',
     'on_pre': '''
         Apre += dApre
         Apre = clip(Apre, 0, A_max)
-        w_plast = int(clip(w_plast - Apost/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max))
+        rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
+        cond_Apre1 = rand_int_Apre1 < Apost
+        rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))
+        cond_Apre2 = rand_int_Apre2 <= stdp_thres
+        w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2), 0, w_max)
         ''',
     'on_post': '''
         Apost += dApre
         Apost = clip(Apost, 0, A_max)
-        w_plast = int(clip(w_plast + Apre/A_gain*int(lastspike_post!=lastspike_pre), 0, w_max))
+        rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_Apost-1))
+        cond_Apost1 = rand_int_Apost1 < Apre
+        rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_Apost-1))
+        cond_Apost2 = rand_int_Apost2 <= stdp_thres
+        w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2), 0, w_max)
         '''
 }
 
-stochastic_decay_stdp_params = {
+quantized_stochastic_stdp_params = {
     "taupre": 3 * ms,
     "taupost": 3 * ms,
     "w_max": 15,
@@ -438,17 +513,9 @@ stochastic_decay_stdp_params = {
     "A_gain": 4,
     "dApre": 15,
     "w_plast": 1,
-    'lfsr_num_bits_Apre': 6,
-    'lfsr_num_bits_Apost': 6
-}
-
-quantized_standard_stdp_params = {
-    "taupre": 10 * ms,
-    "taupost": 10 * ms,
-    "w_max": 15,
-    "dApre": 1,
-    "Q_diffAPrePost": 1.05,
-    "w_plast": 1
+    "rand_num_bits_Apre": 6,
+    "rand_num_bits_Apost": 6,
+    "stdp_thres": 2
 }
 
 """Kernels Blocks:
@@ -582,7 +649,7 @@ modes = {
     'DPI': dpi,
     'DPIShunting': dpi_shunt,
     'unit_less': unit_less,
-    'QuantizedStochasticDecay': quantized_stochastic_decay
+    'QuantizedStochastic': quantized_stochastic
 }
 
 kernels = {
@@ -595,7 +662,7 @@ plasticity_models = {
     'non_plastic': none_model,
     'fusi': fusi,
     'stdp': stdp,
-    'stochastic_decay_stdp': stochastic_decay_stdp
+    'quantized_stochastic_stdp': quantized_stochastic_stdp
 }
 
 structural_plasticity = {
@@ -605,7 +672,8 @@ structural_plasticity = {
 
 synaptic_equations = {
     'activity': activity,
-    'stdgm': stdgm
+    'stdgm': stdgm,
+    'lfsr_syn': lfsr_syn
 }
 
 synaptic_equations.update(kernels)
@@ -663,11 +731,11 @@ DPI_shunt_parameters = {
     'activity': none_params,
     'stdgm': none_params}
 
-quantized_stochastic_decay_parameters = {
-    'QuantizedStochasticDecay': quantized_stochastic_decay_params,
+quantized_stochastic_parameters = {
+    'QuantizedStochastic': quantized_stochastic_params,
     'non_plastic': none_params,
-    'stdp': quantized_standard_stdp_params,
-    'stochastic_decay_stdp': stochastic_decay_stdp_params,
+    'quantized_stochastic_stdp': quantized_stochastic_stdp_params,
+    'lfsr_syn': lfsr_syn_params,
     'stochastic_counter': stochastic_counter_params}
 
 unit_less_parameters = {

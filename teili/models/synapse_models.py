@@ -236,41 +236,30 @@ class DPIstdgm(SynapseEquationBuilder):
         SynapseEquationBuilder.__init__(self, base_unit='unit_less', 
                                         SynSTDGM='stdgm')
 
-class StochasticSyn_decay(SynapseEquationBuilder):
+class QuantStochSyn(SynapseEquationBuilder):
     """This class provides you with all the equations to simulate a synapse with
-    stochastic decay as published in Wang et al. (2018).
+    quantized stochastic decay as published by Wang et al. (2018).
     """
 
     def __init__(self):
         """This class provides you with all the equations to simulate a synapse with
         stochastic decay as published in Wang et al. (2018).
         """
-        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochasticDecay',
+        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochastic',
                                         plasticity='non_plastic')
 
-class StochasticSyn_decay_stdp(SynapseEquationBuilder):
-    """This class provides you with all the equations to simulate a synapse with
-    stochastic decay as published in Wang et al. (2018), but with standard STDP
+class QuantStochSynStdp(SynapseEquationBuilder):
+    """This class provides you with all the equations to simulate a synapse
+    with stochastic decay with STDP as published by Wang et al. (2018)
     """
 
     def __init__(self):
-        """This class provides you with all the equations to simulate a synapse with
-        stochastic decay as published in Wang et al. (2018).
+        """This class provides you with all the equations to simulate a
+        synapse with stochastic decay with STDP as published by Wang et al.
+        (2018).
         """
-        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochasticDecay',
-                                        plasticity='stdp')
-
-class StochasticSyn_decay_stoch_stdp(SynapseEquationBuilder):
-    """This class provides you with all the equations to simulate a synapse with
-    stochastic decay as published in Wang et al. (2018).
-    """
-
-    def __init__(self):
-        """This class provides you with all the equations to simulate a synapse with
-        stochastic decay as published in Wang et al. (2018).
-        """
-        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochasticDecay',
-                                        plasticity='stochastic_decay_stdp')
+        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochastic',
+                                        plasticity='quantized_stochastic_stdp')
 
 def main(path=None):
     if path is None:
@@ -305,11 +294,11 @@ def main(path=None):
     dpiSyn = DPISyn()
     dpiSyn.export_eq(os.path.join(path, "DPISyn"))
 
-    slifSyn = StochasticSyn_decay()
-    slifSyn.export_eq(os.path.join(path, "StochasticSyn_decay"))
+    quantStochSyn = QuantStochSyn()
+    quantStochSyn.export_eq(os.path.join(path, "QuantStochSyn"))
 
-    slifSynStochstdp = StochasticSyn_decay_stoch_stdp()
-    slifSynStochstdp.export_eq(os.path.join(path, "StochasticSyn_decay_stoch_stdp"))
+    quantStochSynStdp = QuantStochSynStdp()
+    quantStochSynStdp.export_eq(os.path.join(path, "QuantStochSynStdp"))
 
     dpiShunt = DPIShunt()
     dpiShunt.export_eq(os.path.join(path, "DPIShunt"))

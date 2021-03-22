@@ -65,7 +65,8 @@ class NeuronEquationBuilder():
 
         Args:
             keywords (dict, optional): Brian2 like model.
-            base_unit (str, optional): Indicates if neuron is current-based or conductance-based.
+            base_unit (str, optional): Indicates if neuron is current-based,
+                conductance-based, or quantized.
             num_inputs (int, optional): Number specifying how many distinct neuron population
                 project to the target neuron population.
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
@@ -94,7 +95,7 @@ class NeuronEquationBuilder():
                     This class constructor builds a model for a neuron using pre-existing blocks.
 
                     The first entry is the model type,
-                    choose between 'current' or 'voltage'.
+                    choose between 'current', 'voltage', or 'quantized'.
 
                     You can choose then what module to load for your neuron,
                     the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussian'.

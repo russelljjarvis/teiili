@@ -87,10 +87,10 @@ class LinearLIF(NeuronEquationBuilder):
                                        position='spatial', noise='none')
         self.add_input_currents(num_inputs)
 
-class StochasticLIF(NeuronEquationBuilder):
+class QuantStochLIF(NeuronEquationBuilder):
     """This class provides you with all equations to simulate an integrate and
-    fire neuron with stochastic decay as implemented by the ICNS group. The neuron
-    model is the same as the one published in 2018 (Wang et al., 2018)
+    fire neuron with quantized stochastic decay as implemented in Wang et al.
+    (2018)
     """
 
     def __init__(self, num_inputs=1):
@@ -167,8 +167,8 @@ def main(path=None):
     octa_neuron = OCTA_Neuron()
     octa_neuron.export_eq(os.path.join(path, "OCTA_neuron"))
 
-    stochastic_lif = StochasticLIF()
-    stochastic_lif.export_eq(os.path.join(path, "StochasticLIF"))
+    quantStochLIF = QuantStochLIF()
+    quantStochLIF.export_eq(os.path.join(path, "QuantStochLIF"))
 
 if __name__ == '__main__':
     main()

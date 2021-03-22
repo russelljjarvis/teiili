@@ -19,39 +19,6 @@ def replicate_sequence(num_channels, reference_indices, reference_times,
 
     return spike_indices, spike_times
 
-def neuron_group_from_spikes(spike_indices, spike_times, num_inputs, time_step,
-                             duration):
-    """Converts spike activity in a neuron group with the same activity.
-    
-    Args:
-        spike_indices (list): Indices of the original source.
-        spike_times (list): Time stamps of the original spikes.
-        num_inputs (int): Number of input channels from source.
-        time_step (brian2.unit.ms): Time step of simulation.
-        duration (int): Duration of simulation in samples.
-
-    Returns:
-        neu_group (brian2 object): Neuron group with mimicked activity.
-    """
-    spike_times = [spike_times[np.where(spike_indices==i)[0]] for i in range(num_inputs)]
-    # Create matrix where each row (neuron id) is associated with time when there
-    # is a spike or -1 when there is not
-    converted_input = (np.zeros((num_inputs, duration)) - 1)*ms
-    for ind, val in enumerate(spike_times):
-        # Prevents floating point errors
-        int_values = np.around(val/time_step).astype(int)
-
-        converted_input[ind, int_values] = int_values * ms
-    converted_input = np.transpose(converted_input)
-    converted_input = TimedArray(converted_input, dt=time_step)
-    # t is simulation time, and will be equal to tspike when there is a spike
-    # Cell remains refractory when there is no spike, i.e. tspike=-1
-    neu_group = Neurons(num_inputs, model='tspike=converted_input(t, i): second',
-            threshold='t==tspike', refractory='tspike < 0*ms')
-    neu_group.namespace.update({'converted_input':converted_input})
-
-    return neu_group
-
 def neuron_rate(spike_monitor, kernel_len, kernel_var, kernel_min, interval):
     """Computes firing rates of neurons in a SpikeMonitor.
 

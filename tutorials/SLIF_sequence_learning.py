@@ -13,9 +13,9 @@ from SLIF_utils import random_integers
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
-from teili.models.neuron_models import StochasticLIF as neuron_model
-#from teili.models.synapse_models import StochasticSyn_decay_stoch_stdp as stdp_synapse_model
-from teili.models.synapse_models import StochasticSyn_decay as static_synapse_model
+from teili.models.neuron_models import QuantStochLIF as static_neuron_model
+from teili.models.synapse_models import QuantStochSyn as static_synapse_model
+from teili.models.synapse_models import QuantStochSynStdp as stdp_synapse_model
 from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.add_run_reg import add_lfsr
 from teili.tools.group_tools import add_group_activity_proxy
@@ -23,11 +23,9 @@ from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 
 from teili.tools.lfsr import create_lfsr
-from SLIF_utils import neuron_group_from_spikes, neuron_rate,\
+from teili.tools.misc import neuron_group_from_spikes
+from SLIF_utils import neuron_rate,\
         rate_correlations, ensemble_convergence, permutation_from_rate
-from reinit_functions import get_prune_indices, get_spawn_indices,\
-        wplast_re_init, weight_re_init, tau_re_init, delay_re_init,\
-        reset_re_init_counter
 
 import sys
 import pickle
@@ -40,10 +38,12 @@ path = os.path.expanduser("/home/pablo/git/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochSynAdp.py')
-stdp_synapse_model = SynapseEquationBuilder.import_eq(
-        model_path + 'StochStdpNewrand.py')
-neuron_model_Adapt = NeuronEquationBuilder.import_eq(
-        model_path + 'StochLIFAdapt.py')
+adapt_neuron_model = NeuronEquationBuilder(base_unit='quantized',
+        intrinsic_excitability='threshold_adaptation',
+        position='spatial')
+reinit_synapse_model = SynapseEquationBuilder(base_unit='QuantizedStochastic',
+        plasticity='quantized_stochastic_stdp',
+        structural_plasticity='stochastic_counter')
 
 #############
 # Prepare parameters of the simulation
@@ -68,10 +68,12 @@ prefs.codegen.target = "numpy"
 defaultclock.dt = 1 * ms
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
+################################################
+"""
 # Initialize input sequence
 num_items = 3
 item_duration = 50
-item_superposition = 10
+item_superposition = 0#10
 num_channels = 144
 noise_prob = None#0.005
 item_rate = 25
@@ -109,14 +111,36 @@ spike_times = spike_times*second
 #noise_times = np.where(noise_spikes < noise_prob)[1]
 #spike_indices = np.concatenate((spike_indices, noise_indices))
 #spike_times = np.concatenate((spike_times, noise_times+training_duration/ms))
+"""
+# Initialize rotating bar
+from teili.stimuli.testbench import OCTA_Testbench
+testbench_stim = OCTA_Testbench()
+num_channels = 100
+num_items = None
+noise_prob = None
+item_rate = None
+sequence_repetitions = None
+testbench_stim.rotating_bar(length=10, nrows=10,
+                            direction='cw',
+                            ts_offset=3, angle_step=10,
+                            noise_probability=0.2,
+                            repetitions=200,
+                            debug=False)
+training_duration = np.max(testbench_stim.times)*ms
+test_duration = 0*ms
+spike_indices = testbench_stim.indices
+spike_times = testbench_stim.times * ms
+sequence_duration = 60*ms
+permutation_ids = [0]
 
 # Save them for comparison
 spk_i, spk_t = np.array(spike_indices), np.around(spike_times/ms).astype(int)*ms
 
 # Reproduce activity in a neuron group (necessary for STDP compatibility)
-seq_cells = neuron_group_from_spikes(spike_indices, spike_times, num_channels,
-                                     defaultclock.dt,
-                                     int((training_duration+test_duration)/defaultclock.dt))
+seq_cells = neuron_group_from_spikes(num_channels, defaultclock.dt,
+    (training_duration+test_duration),
+    spike_indices=np.array(spike_indices),
+    spike_times=np.array(spike_times)*second)
 
 #################
 # Building network
@@ -124,7 +148,7 @@ num_exc = 48
 num_inh = 12
 #num_inh = 30
 exc_cells = Neurons(num_exc,
-                    equation_builder=neuron_model_Adapt(num_inputs=3),
+                    equation_builder=adapt_neuron_model(num_inputs=3),
                     method=stochastic_decay,
                     name='exc_cells',
                     verbose=True)
@@ -139,7 +163,7 @@ if i_plast:
                                    size=exc_cells.N)
 
 inh_cells = Neurons(num_inh,
-                    equation_builder=neuron_model(num_inputs=3),
+                    equation_builder=static_neuron_model(num_inputs=3),
                     method=stochastic_decay,
                     name='inh_cells',
                     verbose=True)
@@ -199,7 +223,9 @@ inh_inh_conn.delay = np.random.randint(0, 15, size=np.shape(inh_inh_conn.j)[0]) 
 ###################
 # Set paramters of the network
 # FIXME Worse RFs if values below are used
-#feedforward_exc.gain_syn = 0.5*mA
+# TODO decide if this gain should be used
+from brian2 import mA
+feedforward_exc.gain_syn = 4*mA
 #feedforward_inh.gain_syn = 0.5*mA
 #exc_exc_conn.gain_syn = 0.5*mA
 #exc_inh_conn.gain_syn = 0.5*mA
@@ -208,35 +234,27 @@ inh_inh_conn.delay = np.random.randint(0, 15, size=np.shape(inh_inh_conn.j)[0]) 
 # Time constants
 # Values similar to those in Klampfl&Maass(2013), Joglekar etal(2018), Vogels&Abbott(2009)
 if not simple:
-    exc_exc_conn.tau_syn = 5*ms
+    exc_exc_conn.tausyn = 5*ms
     exc_exc_conn.taupre = 20*ms
     exc_exc_conn.taupost = 60*ms
     exc_exc_conn.stdp_thres = 1
-exc_inh_conn.tau_syn = 5*ms
-inh_exc_conn.tau_syn = 10*ms
-inh_inh_conn.tau_syn = 10*ms
-feedforward_exc.tau_syn = 5*ms
+exc_inh_conn.tausyn = 5*ms
+inh_exc_conn.tausyn = 10*ms
+inh_inh_conn.tausyn = 10*ms
+feedforward_exc.tausyn = 5*ms
 feedforward_exc.taupre = 20*ms
 feedforward_exc.taupost = 60*ms
 feedforward_exc.stdp_thres = 1
-feedforward_inh.tau_syn = 5*ms
-exc_cells.tau = 19*ms
+feedforward_inh.tausyn = 5*ms
+exc_cells.tau = 20*ms
 inh_cells.tau = 10*ms
 
 # LFSR lengths
-exc_cells.lfsr_num_bits = 5
-inh_cells.lfsr_num_bits = 5
 if not simple:
-    exc_exc_conn.lfsr_num_bits_syn = 5
-    exc_exc_conn.lfsr_num_bits_Apre = 5
-    exc_exc_conn.lfsr_num_bits_Apost = 6
-exc_inh_conn.lfsr_num_bits_syn = 5
-inh_exc_conn.lfsr_num_bits_syn = 5
-inh_inh_conn.lfsr_num_bits_syn = 5
-feedforward_exc.lfsr_num_bits_syn = 5
-feedforward_exc.lfsr_num_bits_Apre = 5
-feedforward_exc.lfsr_num_bits_Apost = 6
-feedforward_inh.lfsr_num_bits_syn = 4
+    exc_exc_conn.rand_num_bits_Apre = 4
+    exc_exc_conn.rand_num_bits_Apost = 4
+feedforward_exc.rand_num_bits_Apre = 4
+feedforward_exc.rand_num_bits_Apost = 4
 
 exc_cells.Vm = 3*mV
 inh_cells.Vm = 3*mV
@@ -300,19 +318,14 @@ for neu in range(num_exc):
     feedforward_exc.w_plast[ffe_zero_w,neu] = 0
 
 # Set LFSRs for each group
-neu_groups = [exc_cells, inh_cells]
-if not simple:
-    syn_groups = [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
-                     feedforward_inh, inh_inh_conn]
-else:
-    syn_groups = [exc_inh_conn, inh_exc_conn, feedforward_exc,
-                     feedforward_inh, inh_inh_conn]
-ta = create_lfsr(neu_groups, syn_groups, defaultclock.dt)
+#neu_groups = [exc_cells, inh_cells]
 #if not simple:
-#    exc_exc_conn.lfsr_max_value_condApost2 = 14*ms
-#    exc_exc_conn.lfsr_max_value_condApre2 = 14*ms
-#feedforward_exc.lfsr_max_value_condApost2 = 14*ms
-#feedforward_exc.lfsr_max_value_condApre2 = 14*ms
+#    syn_groups = [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
+#                     feedforward_inh, inh_inh_conn]
+#else:
+#    syn_groups = [exc_inh_conn, inh_exc_conn, feedforward_exc,
+#                     feedforward_inh, inh_inh_conn]
+#ta = create_lfsr(neu_groups, syn_groups, defaultclock.dt)
 
 if i_plast:
     # Add proxy activity group
@@ -330,7 +343,7 @@ if i_plast:
 #    'tau': 0.05
 #}
 #mismatch_synap_param = {
-#    'tau_syn': 0.05
+#    'tausyn': 0.05
 #}
 #mismatch_plast_param = {
 #    'taupre': 0.05,
@@ -349,51 +362,6 @@ if i_plast:
 
 ###################
 # Adding homeostatic mechanisms
-feedforward_exc.variables.add_array('prune_indices', size=len(feedforward_exc.weight))
-feedforward_exc.variables.add_array('spawn_indices', size=len(feedforward_exc.weight))
-feedforward_exc.namespace.update({'get_prune_indices': get_prune_indices})
-feedforward_exc.namespace.update({'get_spawn_indices': get_spawn_indices})
-feedforward_exc.namespace.update({'wplast_re_init': wplast_re_init})
-feedforward_exc.namespace.update({'tau_re_init': tau_re_init})
-feedforward_exc.namespace.update({'delay_re_init': delay_re_init})
-feedforward_exc.namespace.update({'weight_re_init': weight_re_init})
-feedforward_exc.namespace.update({'reset_re_init_counter': reset_re_init_counter})
-
-reinit_period = 16000*ms
-#feedforward_exc.run_regularly('''prune_indices = get_prune_indices(\
-#                                                    prune_indices,\
-#                                                    weight,\
-#                                                    re_init_counter,\
-#                                                    t)''',
-#                                                    dt=reinit_period,
-#                                                    order=0)
-#feedforward_exc.run_regularly('''spawn_indices = get_spawn_indices(\
-#                                                    spawn_indices,\
-#                                                    prune_indices,\
-#                                                    weight,\
-#                                                    t)''',
-#                                                    dt=reinit_period,
-#                                                    order=1)
-#
-#feedforward_exc.run_regularly('''w_plast = wplast_re_init(w_plast,\
-#                                                          spawn_indices,\
-#                                                          t)''',
-#                                                          dt=reinit_period,
-#                                                          order=2)
-#feedforward_exc.run_regularly('''tau_syn = tau_re_init(tau_syn,\
-#                                                       spawn_indices,\
-#                                                       t)''',
-#                                                       dt=reinit_period,
-#                                                       order=3)
-#feedforward_exc.run_regularly('''weight = weight_re_init(weight,\
-#                                                         spawn_indices,\
-#                                                         prune_indices,\
-#                                                         t)''',
-#                                                         dt=reinit_period,
-#                                                         order=5)
-#feedforward_exc.run_regularly('''re_init_counter = reset_re_init_counter(re_init_counter)''',
-#                                                                         dt=reinit_period,
-#                                                                         order=6)
 
 ##################
 # Setting up monitors
@@ -416,53 +384,52 @@ statemon_ie_conns = StateMonitor(inh_exc_conn, variables=['I_syn'], record=True,
                                   name='statemon_ie_conns')
 statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast', 'I_syn'], record=True,
                                   name='statemon_ffe_conns')
-statemon_pruned = StateMonitor(feedforward_exc, variables=['prune_indices'],
-                               record=True, name='statemon_pruned')
 statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
 statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
 
-#net = TeiliNetwork()
-#if not simple:
-#    if i_plast:
-#        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-#                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-#                spikemon_exc_neurons, spikemon_inh_neurons,
-#                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-#                statemon_pop_rate_i, statemon_net_current, statemon_ie_conns,
-#                inh_inh_conn, statemon_proxy, statemon_ee_conns, statemon_pruned)
-#    else:
-#        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-#                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-#                spikemon_exc_neurons, spikemon_inh_neurons,
-#                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-#                statemon_pop_rate_i, statemon_net_current, statemon_ie_conns, inh_inh_conn,
-#                statemon_ee_conns, statemon_pruned)
-#else:
-#    net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
-#            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-#            spikemon_exc_neurons, spikemon_inh_neurons,
-#            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-#            statemon_pop_rate_i, statemon_net_current, statemon_ie_conns, inh_inh_conn,
-#            statemon_proxy, statemon_pruned)
+net = TeiliNetwork()
+if not simple:
+    if i_plast:
+        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
+                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
+                spikemon_exc_neurons, spikemon_inh_neurons,
+                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+                statemon_pop_rate_i, statemon_net_current, statemon_ie_conns,
+                inh_inh_conn, statemon_proxy, statemon_ee_conns)
+    else:
+        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
+                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
+                spikemon_exc_neurons, spikemon_inh_neurons,
+                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+                statemon_pop_rate_i, statemon_net_current, statemon_ie_conns, inh_inh_conn,
+                statemon_ee_conns)
+else:
+    net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
+            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
+            spikemon_exc_neurons, spikemon_inh_neurons,
+            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+            statemon_pop_rate_i, statemon_net_current, statemon_ie_conns, inh_inh_conn,
+            statemon_proxy)
 
 # Training
 statemon_ffe_conns.active = True
-run(training_duration, report='stdout', report_period=100*ms)
+net.run(training_duration, report='stdout', report_period=100*ms)
 
 # Testing
 #feedforward_inh.weight = 0
 statemon_ffe_conns.active = True
-run(test_duration, report='stdout', report_period=100*ms)
+net.run(test_duration, report='stdout', report_period=100*ms)
 
 ##########
+# TODO below does not work with rotating bar
 # Evaluations
-if not np.array_equal(spk_t, spikemon_seq_neurons.t):
-    print('Proxy activity and generated input do not match.')
-    from brian2 import *
-    plot(spk_t, spk_i, 'k.')
-    plot(spikemon_seq_neurons.t, spikemon_seq_neurons.i, 'r+')
-    show()
-    sys.exit()
+#if not np.array_equal(spk_t, spikemon_seq_neurons.t):
+#    print('Proxy activity and generated input do not match.')
+#    from brian2 import *
+#    plot(spk_t, spk_i, 'k.')
+#    plot(spikemon_seq_neurons.t, spikemon_seq_neurons.i, 'r+')
+#    show()
+#    sys.exit()
 
 #neu_rates = neuron_rate(spikemon_exc_neurons, 200, 10, 0.001,
 #                        [0, training_duration/ms])
@@ -484,38 +451,39 @@ if not simple:
         recurrent_weights.append(list(exc_exc_conn.w_plast[row, :]))
         recurrent_ids.append(list(exc_exc_conn.j[row, :]))
 
+# TODO below does not work with rotating bar
 # Calculating permutation indices from firing rates
-tmp_spike_trains = spikemon_exc_neurons.spike_trains()
-neuron_rate = {}
-peak_instants = {}
-last_sequence_t = (training_duration-sequence_duration)/ms
-interval = range(int(last_sequence_t), int(training_duration/ms)+1)
-# Create normalized and truncated gaussian time window
-kernel = np.exp(-(np.arange(-100, 100)) ** 2 / (2 * 10 ** 2))
-kernel = kernel[np.where(kernel>0.001)]
-kernel = kernel / kernel.sum()
-for key, val in tmp_spike_trains.items():
-    selected_spikes = [x for x in val/ms if x>last_sequence_t]
-    # Use histogram to get values that will be convolved
-    h, b = np.histogram(selected_spikes, bins=interval, range=(min(interval), max(interval)))
-    neuron_rate[key] = {'rate': np.convolve(h, kernel, mode='same'), 't': b[:-1]}
-    peak_index = np.where(neuron_rate[key]['rate'] == max(neuron_rate[key]['rate']))[0]
-    if neuron_rate[key]['rate'].any():
-        peak_instants[key] = neuron_rate[key]['t'][peak_index]
-double_peaks = [key for key, val in peak_instants.items() if len(val)>1]
-#triple_peaks = [key for key, val in peak_instants.items() if len(val)>2]
-#if triple_peaks:
-for peak in double_peaks:
-    h, b = np.histogram(peak_instants[peak], bins=num_items, range=(min(interval), max(interval)))
-    if any(h==1):
-        peak_instants.pop(peak)
-    else:
-        peak_instants[peak] = np.array(peak_instants[peak][0])
-sorted_peaks = dict(sorted(peak_instants.items(), key=lambda x: x[1]))
-permutation_ids = [x[0] for x in sorted_peaks.items()]
-[permutation_ids.append(neu) for neu in range(num_exc) if not neu in permutation_ids]
-#permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
-#                                        sequence_repetitions, num_items)
+#tmp_spike_trains = spikemon_exc_neurons.spike_trains()
+#neuron_rate = {}
+#peak_instants = {}
+#last_sequence_t = (training_duration-sequence_duration)/ms
+#interval = range(int(last_sequence_t), int(training_duration/ms)+1)
+## Create normalized and truncated gaussian time window
+#kernel = np.exp(-(np.arange(-100, 100)) ** 2 / (2 * 10 ** 2))
+#kernel = kernel[np.where(kernel>0.001)]
+#kernel = kernel / kernel.sum()
+#for key, val in tmp_spike_trains.items():
+#    selected_spikes = [x for x in val/ms if x>last_sequence_t]
+#    # Use histogram to get values that will be convolved
+#    h, b = np.histogram(selected_spikes, bins=interval, range=(min(interval), max(interval)))
+#    neuron_rate[key] = {'rate': np.convolve(h, kernel, mode='same'), 't': b[:-1]}
+#    peak_index = np.where(neuron_rate[key]['rate'] == max(neuron_rate[key]['rate']))[0]
+#    if neuron_rate[key]['rate'].any():
+#        peak_instants[key] = neuron_rate[key]['t'][peak_index]
+#double_peaks = [key for key, val in peak_instants.items() if len(val)>1]
+##triple_peaks = [key for key, val in peak_instants.items() if len(val)>2]
+##if triple_peaks:
+#for peak in double_peaks:
+#    h, b = np.histogram(peak_instants[peak], bins=num_items, range=(min(interval), max(interval)))
+#    if any(h==1):
+#        peak_instants.pop(peak)
+#    else:
+#        peak_instants[peak] = np.array(peak_instants[peak][0])
+#sorted_peaks = dict(sorted(peak_instants.items(), key=lambda x: x[1]))
+#permutation_ids = [x[0] for x in sorted_peaks.items()]
+#[permutation_ids.append(neu) for neu in range(num_exc) if not neu in permutation_ids]
+##permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
+##                                        sequence_repetitions, num_items)
 
 # Save data
 date_time = datetime.now()
@@ -630,6 +598,3 @@ figure()
 _ = hist(inh_exc_conn.w_plast)
 
 show()
-#reinit_ratio = np.zeros(int(training_duration/ms))*np.nan
-#for sim_t in range(int(training_duration/ms)):
-#    reinit_ratio[sim_t] = len(np.where(statemon_pruned.prune_indices[:,sim_t]==1)[0])

@@ -192,7 +192,7 @@ def var_replacer(first_eq, second_eq, params):
                 continue
 
             var = line.split('%', 1)[1].split()[0]
-            line = line.replace("%", "")
+            line = line.replace("%", "", 1)
             if '/' in var:
                 var = var.split('/', 1)[0][1:]
                 remove_flag = False

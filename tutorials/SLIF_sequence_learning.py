@@ -4,6 +4,7 @@ network with STDP.
 """
 import numpy as np
 from scipy.stats import gamma, truncnorm
+from scipy.signal import find_peaks
 
 from brian2 import second, ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
         defaultclock, ExplicitStateUpdater, SpikeGeneratorGroup,\
@@ -16,9 +17,10 @@ from teili import TeiliNetwork
 from teili.models.neuron_models import QuantStochLIF as static_neuron_model
 from teili.models.synapse_models import QuantStochSyn as static_synapse_model
 from teili.models.synapse_models import QuantStochSynStdp as stdp_synapse_model
-from teili.stimuli.testbench import SequenceTestbench
+from teili.stimuli.testbench import SequenceTestbench, OCTA_Testbench
 from teili.tools.add_run_reg import add_lfsr
-from teili.tools.group_tools import add_group_activity_proxy
+from teili.tools.group_tools import add_group_activity_proxy,\
+    add_group_params_re_init
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 
@@ -69,11 +71,10 @@ defaultclock.dt = 1 * ms
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
 ################################################
-"""
 # Initialize input sequence
 num_items = 3
 item_duration = 50
-item_superposition = 0#10
+item_superposition = 0
 num_channels = 144
 noise_prob = None#0.005
 item_rate = 25
@@ -113,25 +114,24 @@ spike_times = spike_times*second
 #spike_times = np.concatenate((spike_times, noise_times+training_duration/ms))
 """
 # Initialize rotating bar
-from teili.stimuli.testbench import OCTA_Testbench
 testbench_stim = OCTA_Testbench()
 num_channels = 100
 num_items = None
 noise_prob = None
 item_rate = None
-sequence_repetitions = None
+sequence_repetitions = 200
 testbench_stim.rotating_bar(length=10, nrows=10,
                             direction='cw',
                             ts_offset=3, angle_step=10,
                             noise_probability=0.2,
-                            repetitions=200,
+                            repetitions=sequence_repetitions,
                             debug=False)
 training_duration = np.max(testbench_stim.times)*ms
-test_duration = 0*ms
+test_duration = 200*ms
 spike_indices = testbench_stim.indices
 spike_times = testbench_stim.times * ms
-sequence_duration = 60*ms
-permutation_ids = [0]
+sequence_duration = 105*ms
+"""
 
 # Save them for comparison
 spk_i, spk_t = np.array(spike_indices), np.around(spike_times/ms).astype(int)*ms
@@ -198,7 +198,7 @@ inh_inh_conn = Connections(inh_cells, inh_cells,
                            method=stochastic_decay,
                            name='inh_inh_conn')
 feedforward_exc = Connections(seq_cells, exc_cells,
-                              equation_builder=stdp_synapse_model(),
+                              equation_builder=reinit_synapse_model(),
                               method=stochastic_decay,
                               name='feedforward_exc')
 feedforward_inh = Connections(seq_cells, inh_cells,
@@ -220,30 +220,19 @@ exc_inh_conn.delay = np.random.randint(0, 15, size=np.shape(exc_inh_conn.j)[0]) 
 inh_inh_conn.delay = np.random.randint(0, 15, size=np.shape(inh_inh_conn.j)[0]) * ms
 #inh_exc_conn.delay = np.random.randint(0, 15, size=np.shape(inh_exc_conn.j)[0]) * ms
 
-###################
-# Set paramters of the network
-# FIXME Worse RFs if values below are used
-# TODO decide if this gain should be used
-from brian2 import mA
-feedforward_exc.gain_syn = 4*mA
-#feedforward_inh.gain_syn = 0.5*mA
-#exc_exc_conn.gain_syn = 0.5*mA
-#exc_inh_conn.gain_syn = 0.5*mA
-#inh_exc_conn.gain_syn = 0.5*mA
-
 # Time constants
 # Values similar to those in Klampfl&Maass(2013), Joglekar etal(2018), Vogels&Abbott(2009)
 if not simple:
     exc_exc_conn.tausyn = 5*ms
     exc_exc_conn.taupre = 20*ms
-    exc_exc_conn.taupost = 60*ms
+    exc_exc_conn.taupost = 60*ms # 20 for rotating bar
     exc_exc_conn.stdp_thres = 1
 exc_inh_conn.tausyn = 5*ms
 inh_exc_conn.tausyn = 10*ms
 inh_inh_conn.tausyn = 10*ms
 feedforward_exc.tausyn = 5*ms
 feedforward_exc.taupre = 20*ms
-feedforward_exc.taupost = 60*ms
+feedforward_exc.taupost = 60*ms # 20
 feedforward_exc.stdp_thres = 1
 feedforward_inh.tausyn = 5*ms
 exc_cells.tau = 20*ms
@@ -362,6 +351,40 @@ if i_plast:
 
 ###################
 # Adding homeostatic mechanisms
+re_init_dt = 15000*ms
+add_group_params_re_init(groups=[feedforward_exc],
+                         variable='w_plast',
+                         re_init_variable='re_init_counter',
+                         re_init_threshold=1,
+                         re_init_dt=re_init_dt,
+                         dist_param=3,
+                         scale=1,
+                         distribution='gamma',
+                         clip_min=0,
+                         clip_max=15,
+                         variable_type='int',
+                         reference='synapse_counter')
+add_group_params_re_init(groups=[feedforward_exc],
+                         variable='weight',
+                         re_init_variable='re_init_counter',
+                         re_init_threshold=1,
+                         re_init_dt=re_init_dt,
+                         distribution='deterministic',
+                         const_value=1,
+                         reference='synapse_counter')
+add_group_params_re_init(groups=[feedforward_exc],
+                         variable='tausyn',
+                         re_init_variable='re_init_counter',
+                         re_init_threshold=1,
+                         re_init_dt=re_init_dt,
+                         dist_param=5.5,
+                         scale=1,
+                         distribution='normal',
+                         clip_min=4,
+                         clip_max=7,
+                         variable_type='int',
+                         unit='ms',
+                         reference='synapse_counter')
 
 ##################
 # Setting up monitors
@@ -421,20 +444,21 @@ statemon_ffe_conns.active = True
 net.run(test_duration, report='stdout', report_period=100*ms)
 
 ##########
-# TODO below does not work with rotating bar
 # Evaluations
-#if not np.array_equal(spk_t, spikemon_seq_neurons.t):
-#    print('Proxy activity and generated input do not match.')
-#    from brian2 import *
-#    plot(spk_t, spk_i, 'k.')
-#    plot(spikemon_seq_neurons.t, spikemon_seq_neurons.i, 'r+')
-#    show()
-#    sys.exit()
+if not np.array_equal(spk_t, spikemon_seq_neurons.t):
+    print('Proxy activity and generated input do not match.')
+    from brian2 import *
+    plot(spk_t, spk_i, 'k.')
+    plot(spikemon_seq_neurons.t, spikemon_seq_neurons.i, 'r+')
+    show()
+    sys.exit()
 
-#neu_rates = neuron_rate(spikemon_exc_neurons, 200, 10, 0.001,
-#                        [0, training_duration/ms])
-#seq_rates = neuron_rate(spikemon_seq_neurons, 200, 10, 0.001,
-#                        [0, sequence_duration])
+last_sequence_t = (training_duration-sequence_duration)/ms
+neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=200,
+    kernel_var=10, kernel_min=0.001,
+    interval=[0, int(training_duration/ms)])
+    #rotating bar:
+    #interval=[int(last_sequence_t), int(training_duration/ms)])
 #foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
 #                           sequence_duration, sequence_repetitions)
 #
@@ -451,39 +475,9 @@ if not simple:
         recurrent_weights.append(list(exc_exc_conn.w_plast[row, :]))
         recurrent_ids.append(list(exc_exc_conn.j[row, :]))
 
-# TODO below does not work with rotating bar
 # Calculating permutation indices from firing rates
-#tmp_spike_trains = spikemon_exc_neurons.spike_trains()
-#neuron_rate = {}
-#peak_instants = {}
-#last_sequence_t = (training_duration-sequence_duration)/ms
-#interval = range(int(last_sequence_t), int(training_duration/ms)+1)
-## Create normalized and truncated gaussian time window
-#kernel = np.exp(-(np.arange(-100, 100)) ** 2 / (2 * 10 ** 2))
-#kernel = kernel[np.where(kernel>0.001)]
-#kernel = kernel / kernel.sum()
-#for key, val in tmp_spike_trains.items():
-#    selected_spikes = [x for x in val/ms if x>last_sequence_t]
-#    # Use histogram to get values that will be convolved
-#    h, b = np.histogram(selected_spikes, bins=interval, range=(min(interval), max(interval)))
-#    neuron_rate[key] = {'rate': np.convolve(h, kernel, mode='same'), 't': b[:-1]}
-#    peak_index = np.where(neuron_rate[key]['rate'] == max(neuron_rate[key]['rate']))[0]
-#    if neuron_rate[key]['rate'].any():
-#        peak_instants[key] = neuron_rate[key]['t'][peak_index]
-#double_peaks = [key for key, val in peak_instants.items() if len(val)>1]
-##triple_peaks = [key for key, val in peak_instants.items() if len(val)>2]
-##if triple_peaks:
-#for peak in double_peaks:
-#    h, b = np.histogram(peak_instants[peak], bins=num_items, range=(min(interval), max(interval)))
-#    if any(h==1):
-#        peak_instants.pop(peak)
-#    else:
-#        peak_instants[peak] = np.array(peak_instants[peak][0])
-#sorted_peaks = dict(sorted(peak_instants.items(), key=lambda x: x[1]))
-#permutation_ids = [x[0] for x in sorted_peaks.items()]
-#[permutation_ids.append(neu) for neu in range(num_exc) if not neu in permutation_ids]
-##permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
-##                                        sequence_repetitions, num_items)
+permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
+                                        defaultclock.dt)
 
 # Save data
 date_time = datetime.now()
@@ -581,14 +575,17 @@ if i_plast:
 #ylabel('correlation value')
 #legend()
 
+win_len = 100
 tot_e_curr = np.sum(statemon_ffe_conns.I_syn, axis=0)
 if not simple:
     tot_e_curr += np.sum(statemon_ee_conns.I_syn, axis=0)
 tot_i_curr = np.sum(statemon_ie_conns.I_syn, axis=0)
+a=np.convolve(tot_e_curr, np.ones(win_len)/win_len, mode='valid')
+b=np.convolve(tot_i_curr, np.ones(win_len)/win_len, mode='valid')
 figure()
-plot(statemon_ffe_conns.t/ms, tot_e_curr/amp, color='r', label='summed exc. currents')
-plot(statemon_ffe_conns.t/ms, -tot_i_curr/amp, color='b', label='summed inh. current')
-plot(statemon_ffe_conns.t/ms, (tot_e_curr - tot_i_curr)/amp, color='k', label='net. current')
+plot(a/amp, color='r', label='summed exc. currents')
+plot(-b/amp, color='b', label='summed inh. current')
+plot((a - b)/amp, color='k', label='net. current')
 ylabel('Current [amp]')
 xlabel('time [ms]')
 title('EI balance')

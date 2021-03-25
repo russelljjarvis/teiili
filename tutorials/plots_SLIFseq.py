@@ -41,7 +41,7 @@ num_channels = metadata['num_channels']
 rasters = np.load(f'{data_folder}rasters.npz')
 traces = np.load(f'{data_folder}traces.npz')
 matrices = np.load(f'{data_folder}matrices.npz', allow_pickle=True)
-plot_d1, plot_d2, plot_d3 = True, True, False
+plot_d1, plot_d2, plot_d3 = True, True, True
 
 # Print more info
 with open(f'{data_folder}connections.data', 'rb') as f:

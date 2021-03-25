@@ -124,29 +124,44 @@ def random_integers(a, b, _vectorization_idx):
 random_integers = Function(random_integers, arg_units=[1, 1], return_unit=1,
                            stateless=False, auto_vectorise=True)
 
-def permutation_from_rate(neurons_rate, window_duration, periodicity, num_items):
+def permutation_from_rate(neurons_rate, window_duration, simulation_dt):
+    """This functions uses the instant of maximum firing rate to extract
+    permutation indices that can be used to sort a raster plot so that
+    an activity trace (relative to a given task) is observed.
+
+    Args:
+        neurons_rate (dict): Dictionary with firing rate values for each
+            neuron. Keys must be neuron index and 'rate' or 't'.
+        window_duration (int): Duration of the averaging time window, in
+            brian2.units.
+        simulation_dt (int): Time step of the simulation, in brian2.units.
+
+    Returns:
+        permutation_ids (list): Permutation indices.
+    """
     num_neu = len(neurons_rate.keys())
+    window_samples = np.around(window_duration/simulation_dt).astype(int)
+
+    average_rates = np.zeros((num_neu, window_samples))*np.nan
+    trials = int(len(neurons_rate[0]['rate']) / window_samples)
+    temp_t = np.array([x for x in range(window_samples)]) # Proxy time reference
     peak_instants = {}
-    average_rates = np.zeros((num_neu, window_duration))*np.nan
-    average_rate_neu = []
+
     for key in neurons_rate.keys():
-        for trial in range(periodicity):
+        average_rate_neu = []
+        for trial in range(trials):
             average_rate_neu.append(
-                neurons_rate[key]['rate'][trial*window_duration:(trial+1)*window_duration]
+                neurons_rate[key]['rate'][trial*window_samples:(trial+1)*window_samples]
                 )
         average_rates[key, :] = np.mean(average_rate_neu, axis=0)
 
-        peak_index = np.where(average_rates[key,:] == max(average_rates[key,:]))[0]
-        peak_instants[key] = peak_index
+        # Consider only spiking neurons
+        if average_rates[key].any():
+            # Get first peak found on rate
+            peak_index = [np.argmax(average_rates[key])]
+            peak_instants[key] = temp_t[peak_index]
 
-    double_peaks = [key for key, val in peak_instants.items() if len(val)>1]
-    #triple_peaks = [key for key, val in peak_instants.items() if len(val)>2]
-    for peak in double_peaks:
-        h, b = np.histogram(peak_instants[peak], bins=num_items, range=(min(interval), max(interval)))
-        if any(h==1):
-            peak_instants.pop(peak)
-        else:
-            peak_instants[peak] = np.array(peak_instants[peak][0])
+    # Add unresponsive neurons again
     sorted_peaks = dict(sorted(peak_instants.items(), key=lambda x: x[1]))
     permutation_ids = [x[0] for x in sorted_peaks.items()]
     [permutation_ids.append(neu) for neu in range(num_neu) if not neu in permutation_ids]

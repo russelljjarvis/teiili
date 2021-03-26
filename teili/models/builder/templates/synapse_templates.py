@@ -649,7 +649,7 @@ modes = {
     'DPI': dpi,
     'DPIShunting': dpi_shunt,
     'unit_less': unit_less,
-    'QuantizedStochastic': quantized_stochastic
+    'quantized': quantized_stochastic
 }
 
 kernels = {
@@ -732,7 +732,7 @@ DPI_shunt_parameters = {
     'stdgm': none_params}
 
 quantized_stochastic_parameters = {
-    'QuantizedStochastic': quantized_stochastic_params,
+    'quantized': quantized_stochastic_params,
     'non_plastic': none_params,
     'quantized_stochastic_stdp': quantized_stochastic_stdp_params,
     'lfsr_syn': lfsr_syn_params,

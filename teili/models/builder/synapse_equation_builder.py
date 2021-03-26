@@ -86,8 +86,8 @@ class SynapseEquationBuilder():
 
                     The first entry is the type of model;
                     choose between : 'current', 'conductance',
-                    'QuantizedStochastic' (see Wang, Thakur, and Van Schaik,
-                    2018), or 'DPI' (see Bartolozzi, Mitra, and Indiveri, 2006).
+                    'quantized' (see Wang, Thakur, and Van Schaik, 2018),
+                    or 'DPI' (see Bartolozzi, Mitra, and Indiveri, 2006).
 
                     The second entry is the kernel of the synapse.
                     This can be one of 'exponential', 'alpha' or 'resonant'.
@@ -197,7 +197,7 @@ class SynapseEquationBuilder():
                 keywords['on_post'] = keywords['on_post'].format(
                     input_number="{input_number}", unit='amp')
 
-            if base_unit == 'QuantizedStochastic':
+            if base_unit == 'quantized':
                 eq_templ_dummy = []
                 for key, value in kwargs.items():
                     eq_templ_dummy = eq_templ_dummy + \

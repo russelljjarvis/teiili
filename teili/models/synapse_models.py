@@ -245,7 +245,7 @@ class QuantStochSyn(SynapseEquationBuilder):
         """This class provides you with all the equations to simulate a synapse with
         stochastic decay as published in Wang et al. (2018).
         """
-        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochastic',
+        SynapseEquationBuilder.__init__(self, base_unit='quantized',
                                         plasticity='non_plastic')
 
 class QuantStochSynStdp(SynapseEquationBuilder):
@@ -258,7 +258,7 @@ class QuantStochSynStdp(SynapseEquationBuilder):
         synapse with stochastic decay with STDP as published by Wang et al.
         (2018).
         """
-        SynapseEquationBuilder.__init__(self, base_unit='QuantizedStochastic',
+        SynapseEquationBuilder.__init__(self, base_unit='quantized',
                                         plasticity='quantized_stochastic_stdp')
 
 def main(path=None):

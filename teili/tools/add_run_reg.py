@@ -55,7 +55,7 @@ def add_re_init_params(group,
             'gaussian' or 'gamma', but a 'deterministic' reinitialization
             with constant values can also be done.
         reference (str, required): Specifies which reference metric is used
-            to get indices of parameters to be re-initialised. 'mean_weight', 
+            to get indices of parameters to be re-initialised. 'mean', 
             'spike_time', 'synapse_counter' or 'neuron_threshold'.
         unit (str, optional): Unit of variable according to brian2.units.
         clip_min (float, optional): Value to clip distribution at lower bound.
@@ -81,12 +81,14 @@ def add_re_init_params(group,
                               'namespace.')
 
     # Assignments and mappings between keywords to avoid passing strings
-    if reference == 'mean_weight':
+    if reference == 'mean':
         reference = 0
     elif reference == 'spike_time':
         reference = 1
     elif reference == 'synapse_counter':
         reference = 2
+    else:
+        raise AssertionError(f'Unexpected reference {reference}.')
 
     if distribution == 'normal':
         dist = 0

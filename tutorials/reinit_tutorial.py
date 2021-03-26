@@ -25,7 +25,7 @@ syn_model = SynapseEquationBuilder(base_unit='current', kernel='exponential',
 neu_model = NeuronEquationBuilder(base_unit='voltage', leak='leaky',
         position='spatial')
 """ Alternatively, use the stochastic quantized model
-syn_model = SynapseEquationBuilder(base_unit='QuantizedStochastic',
+syn_model = SynapseEquationBuilder(base_unit='quantized',
                                    plasticity='quantized_stochastic_stdp',
                                    #rand_gen='lfsr_syn',
                                    structural_plasticity='stochastic_counter')

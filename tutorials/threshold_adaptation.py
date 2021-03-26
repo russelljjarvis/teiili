@@ -25,7 +25,7 @@ adapt_neu_model = NeuronEquationBuilder(base_unit='voltage',
                                         position='spatial',
                                         intrinsic_excitability='threshold_adaptation')
 """ Alternatively, use the stochastic quantized model
-syn_model = SynapseEquationBuilder(base_unit='QuantizedStochastic',
+syn_model = SynapseEquationBuilder(base_unit='quantized',
                                    #rand_gen='lfsr_syn',
                                    plasticity='non_plastic')
 adapt_neu_model = NeuronEquationBuilder(base_unit='quantized',

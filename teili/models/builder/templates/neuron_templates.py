@@ -162,11 +162,11 @@ v_adapt_params = {
     "EL": -70.6 * mV
     }
 
-thresh_adapt = {
+thr_adapt = {
     'model': """
-        %dVthr/dt = -(Vthr-thr_min)/tau_thres : volt
+        %dVthr/dt = -(Vthr-thr_min)/tau_thr : volt
 
-        tau_thres : second (constant) # Threshold decay time constant
+        tau_thr : second (constant) # Threshold decay time constant
         thr_inc     : volt (constant)   # Increment of threshold
         thr_min   : volt (constant)   # Threshold minimum value
         thr_max   : volt (constant)   # Threshold maximum value
@@ -179,10 +179,10 @@ thresh_adapt = {
 
 quantized_thresh_adapt = {
     'model': """
-        %dVthr/dt = Vthr*decay_thresh/second + (thr_min*dt*decay_thresh/tau_thres)/second: volt
-        decay_thresh = tau_thres/(tau_thres + dt) : 1
+        %dVthr/dt = Vthr*decay_thresh/second + (thr_min*dt*decay_thresh/tau_thr)/second: volt
+        decay_thresh = tau_thr/(tau_thr + dt) : 1
 
-        tau_thres : second (constant)
+        tau_thr : second (constant)
         thr_inc     : volt (constant)   # Increment of threshold
         thr_min   : volt (constant)   # Threshold minimum value
         thr_max   : volt (constant)   # Threshold maximum value
@@ -193,8 +193,8 @@ quantized_thresh_adapt = {
         """
     }
 
-thresh_adapt_params = {
-    "tau_thres": 60000*ms,
+thr_adapt_params = {
+    "tau_thr": 60000*ms,
     "thr_min": 4*mV,
     "thr_max": 16*mV,
     "thr_inc": 0.01*mV
@@ -512,7 +512,7 @@ voltage_equation_sets = {
     'gaussian': v_noise,
     'none': none_model,
     'linear': none_model,
-    'threshold_adaptation': thresh_adapt
+    'threshold_adaptation': thr_adapt
     }
 
 quantized_equation_sets = {
@@ -548,7 +548,7 @@ voltage_parameters = {
     'gaussian': none_params,
     'none': none_params,
     'linear': none_params,
-    'threshold_adaptation': thresh_adapt_params
+    'threshold_adaptation': thr_adapt_params
     }
 
 quantized_parameters = {
@@ -556,5 +556,5 @@ quantized_parameters = {
     'none': none_params,
     'spatial': none_params,
     'lfsr': lfsr_params,
-    'threshold_adaptation': thresh_adapt_params
+    'threshold_adaptation': thr_adapt_params
     }

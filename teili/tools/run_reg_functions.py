@@ -127,6 +127,7 @@ def re_init_params(params,
     Returns:
         ndarray: Flatten re-initialized weight matrix
     """
+    # In case re_init_indices is not provided/necessary, generated on the fly
     if re_init_indices is None:
         re_init_indices = np.logical_or(np.mean(params, 0) < re_init_threshold,
                                         np.mean(params, 0) > (1 - re_init_threshold),

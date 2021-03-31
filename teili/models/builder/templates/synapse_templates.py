@@ -601,10 +601,10 @@ stochastic_counter = {
         re_init_counter : 1
         """,
     'on_pre': """
-        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2)
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres)
         """,
     'on_post': """
-        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2)
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand_int_Apost2 <= stdp_thres)
         """
 }
 

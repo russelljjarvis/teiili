@@ -42,9 +42,9 @@ import copy
 import warnings
 from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_neu_dict
-from teili.models.builder.templates.neuron_templates import modes, current_equation_sets, \
-    voltage_equation_sets, \
-    current_parameters, voltage_parameters
+from teili.models.builder.templates.neuron_templates import modes, \
+    current_equation_sets, voltage_equation_sets, quantized_equation_sets, \
+    current_parameters, voltage_parameters, quantized_parameters
 
 
 class NeuronEquationBuilder():
@@ -65,7 +65,8 @@ class NeuronEquationBuilder():
 
         Args:
             keywords (dict, optional): Brian2 like model.
-            base_unit (str, optional): Indicates if neuron is current-based or conductance-based.
+            base_unit (str, optional): Indicates if neuron is current-based,
+                conductance-based, or quantized.
             num_inputs (int, optional): Number specifying how many distinct neuron population
                 project to the target neuron population.
             verbose (bool, optional): Flag to print more detailed output of neuron equation builder.
@@ -94,7 +95,7 @@ class NeuronEquationBuilder():
                     This class constructor builds a model for a neuron using pre-existing blocks.
 
                     The first entry is the model type,
-                    choose between 'current' or 'voltage'.
+                    choose between 'current', 'voltage', or 'quantized'.
 
                     You can choose then what module to load for your neuron,
                     the entries are 'adaptation', 'exponential', 'leaky', 'spatial', 'gaussian'.
@@ -142,6 +143,25 @@ class NeuronEquationBuilder():
                     param_templ_dummy = param_templ_dummy + \
                         [voltage_parameters[value]]
                 param_templ = [voltage_parameters[base_unit]] + \
+                    param_templ_dummy
+
+                if self.verbose:
+                    print("Equations", eq_templ)
+                    print("Parameters", eq_templ)
+
+                keywords = combine_neu_dict(eq_templ, param_templ)
+
+            if base_unit == 'quantized':
+                eq_templ_dummy = []
+                for key, value in kwargs.items():
+                    eq_templ_dummy = eq_templ_dummy + \
+                        [quantized_equation_sets[value]]
+                eq_templ = [modes[base_unit]] + eq_templ_dummy
+                param_templ_dummy = []
+                for key, value in kwargs.items():
+                    param_templ_dummy = param_templ_dummy + \
+                        [quantized_parameters[value]]
+                param_templ = [quantized_parameters[base_unit]] + \
                     param_templ_dummy
 
                 if self.verbose:

@@ -16,25 +16,27 @@ from brian2 import implementation, check_units,\
 @check_units(params=1,
              clip_min=1,
              clip_max=1,
+             const_value=1,
              re_init_indices=1,
              re_init_threshold=1,
              dist_param=1,
              scale=1,
              dist=1,
-             unit=1,
+             params_type=1,
              result=1)
 def re_init_params(params,
                    clip_min=None,
                    clip_max=None,
+                   const_value=None,
                    re_init_indices=None,
                    re_init_threshold=None,
                    dist_param=0.4,
                    scale=0.2,
                    dist=0,
-                   unit=None):
+                   params_type=0):
     """Re-initializes a given parameter, e.g. weights or time constants,
-    using a normal or gamma distribution with a specified mean and standard 
-    deviation re-initilaisation indices.
+    using a normal or gamma distribution with a specified mean, standard 
+    deviation and re-initialisation indices.
 
     Example:
         >>> from teili.core.groups import Neurons, Connections
@@ -59,6 +61,8 @@ def re_init_params(params,
         >>> re_init_indices = None
         >>> clip_min = 0
         >>> clip_max = 1
+        >>> const_value = None
+        >>> params_type = None
         >>> variable = "w_plast"
         >>> re_init_dt= 2000 * ms
 
@@ -69,27 +73,39 @@ def re_init_params(params,
         >>> syn_obj.namespace.update({'scale': scale_init})
         >>> syn_obj.namespace.update({'clip_min': clip_min})
         >>> syn_obj.namespace.update({'clip_max': clip_max})
-        >>> syn_obj.namespace.update({'re_init_indices: re_init_indices})
+        >>> syn_obj.namespace.update({'const_value': const_value})
+        >>> syn_obj.namespace.update({'re_init_indices': re_init_indices})
 
         >>> # Now we can add the run_regularly function
         >>> syn_obj.namespace.update({'re_init_weights': re_init_params})
         >>> syn_obj.namespace.update({'re_init_threshold': re_init_threshold})
         >>> syn_obj.namespace['dist_param'] = dist_param_re_init
         >>> syn_obj.namespace['scale'] = scale_re_init
+        >>> syn_obj.namespace['params_type'] = params_type
         >>> syn_obj.run_regularly('''syn_obj.__setattr__(variable, re_init_params(syn_obj.__getattr__(variable),\
                                                                clip_min,\
                                                                clip_max,\
+                                                               const_value,\
                                                                re_init_indices,\
                                                                re_init_threshold,\
                                                                dist_param,\
                                                                scale,
-                                                               dist)''',
+                                                               dist,
+                                                               params_type)''',
                                                                dt=re_init_dt)
 
     Args:
         params (np.ndarray. required): Flattened parameter vector.
-        clip_min (float, optional): Value to clip distrubtion at lower bound.
+        clip_min (float, optional): Value to clip distribution at lower bound.
+            If this parameter is not to be used, it should be equal to
+            clip_max (passing None to run_regularly at the moment causes
+            errors)
         clip_max (float, optional): Value to clip distribution at upper bound.
+            If this parameter is not to be used, it should be equal to
+            clip_min (passing None to run_regularly at the moment causes
+            errors)
+        const_value (int or float, optional): Constant to which params will be set
+            if dist is 2.
         re_init_indices (vector, bool, optional): Boolean index array
             indicating which parameters need to be re-initilised. If None
             parameters are updated based on average lower and upper 20 %.
@@ -102,14 +118,16 @@ def re_init_params(params,
         scale (float, optional): Scale factor of gamma distribution from
             which weights are sampled.
         dist (int, required): Flag to use either normal distribution (0)
-            or gamma distribution (1).
-        unit (brain2.unit, optional): Unit of parameter to re-initialise
+            or gamma distribution (1). The value 2 can be used to indicate
+            that some indices will be deterministically re-initialised to
+            lower and upper bounds.
+        params_type (int, optional): Indicates data type of params, which
+            could be float (0) or integer (1).
 
     Returns:
         ndarray: Flatten re-initialized weight matrix
     """
-    data = np.zeros(len(re_init_indices)) * np.nan
-
+    # In case re_init_indices is not provided/necessary, generated on the fly
     if re_init_indices is None:
         re_init_indices = np.logical_or(np.mean(params, 0) < re_init_threshold,
                                         np.mean(params, 0) > (1 - re_init_threshold),
@@ -117,23 +135,27 @@ def re_init_params(params,
 
 
     if dist == 1:
-        data[re_init_indices.astype(bool)] = np.random.gamma(
+        params[re_init_indices==1] = np.random.gamma(
             shape=dist_param,
             scale=scale,
-            size=np.int(len(re_init_indices)))
+            size=np.int(len(np.where(re_init_indices==1)[0])))
+        if params_type:
+            params = params.astype(int)
     elif dist == 0:
-        data[re_init_indices.astype(bool)] = np.random.normal(
+        params[re_init_indices==1] = np.random.normal(
             loc=dist_param,
             scale=scale,
-            size=np.int(len(re_init_indices)))
+            size=np.int(len(np.where(re_init_indices==1)[0])))
+        if params_type:
+            params = params.astype(int)
+    elif dist == 2:
+        params[re_init_indices==1] = const_value
+        params[re_init_indices==-1] = 0
 
-    if clip_min is not None and clip_max is not None:
-        data = np.clip(data, clip_min, clip_max)
+    if clip_min != clip_max:
+        params = np.clip(params, clip_min, clip_max)
 
-    if unit is None:
-        return data.flatten()
-    else:
-        return data.flatten() * unit
+    return params.flatten()
 
 
 @implementation('numpy', discard_units=True)
@@ -406,17 +428,13 @@ def weight_normalization(weights,
 
 
 @implementation('numpy', discard_units=True)
-@check_units(params=1,
-             source_N=1,
-             target_N=1,
+@check_units(re_init_variable=1,
              reference=1,
              re_init_threshold=1,
              lastspike=second,
              t=second,
              result=1)
-def get_re_init_indices(params,
-                       source_N,
-                       target_N,
+def get_re_init_indices(re_init_variable,
                        reference,
                        re_init_threshold,
                        lastspike,
@@ -431,9 +449,10 @@ def get_re_init_indices(params,
     run_regularly function.
 
     Args:
-        params (numpy.ndarray):
-        source_N (int, required):
-        target_N (in_requiredm):
+        re_init_variable (numpy.ndarray):
+        reference (int): Flag representing the type of indices retrieval.
+            Supported types are weight mean (0), spike time (1), synapse
+            counter (2), or neuron threshold (3).
         re_init_threshold (float, required):
         lastspike (float, second, required):
         t (float, second, required):
@@ -443,27 +462,72 @@ def get_re_init_indices(params,
             synaptic neuron will be subject to re-sampling of its free
             parameters.
 
+    Notes:
+        Not all parameters received are being used.
     """
-    data = params
-    re_init_indices = np.zeros(len(params))
+    re_init_indices = np.zeros(len(re_init_variable))
 
-
-    if reference == 'mean_weight':
-        re_init_indices[np.mean(data, 0) < re_init_threshold] = 1
-    elif reference == 'spike_time':
+    # Using mean of the variable to determine re_init_index
+    if reference == 0:
+        re_init_indices[np.mean(re_init_variable, 0) < re_init_threshold] = 1
+    # Using the time since last spike to determine which synapse to reinitilise
+    elif reference == 1:
+        source_N, target_N = len(lastspike[:,0]), len(lastspike[0,:])
         lastspike_tmp = np.reshape(lastspike, (source_N, target_N))
         if (lastspike < 0*second).any() and (np.sum(lastspike_tmp[0, :] < 0 * second) > 2):
             re_init_indices[np.any(lastspike_tmp < 0 * second, axis=0)] = 1
         elif ((t - np.abs(lastspike_tmp[0, :])) > (1 * second)).any():
             re_init_indices[np.any((t - lastspike_tmp) > (1 * second), axis=0)] = 1
-    elif reference == 'synapse_counter':
-        # @pablo, please add your code here
-        pass
-    elif reference == 'neuron_threshold':
-        # @pablo add your code here
-        pass
+    # Using synapse counter to determine which synapse to reinitilise
+    elif reference == 2:
+        if t > 0:
+            # Get pruned and spawned indices
+            prune_indices = np.where(re_init_variable < re_init_threshold)[0]
+            disconnected_syn = np.where(np.isnan(re_init_variable))[0]
+            num_spawned = np.clip(len(prune_indices), 0, len(disconnected_syn))
+
+            spawn_indices = np.random.choice(disconnected_syn, num_spawned,
+                                             replace=False)
+            prune_indices = np.random.choice(prune_indices, num_spawned,
+                                             replace=False)
+
+            # indices with 1 will represent spawn whereas -1 represent prune
+            re_init_indices[spawn_indices] = 1
+            re_init_indices[prune_indices] = -1
+        else:
+            re_init_indices = 0
+    # Using the neurons threshold to determine which synapse to reinitilise
+    elif reference == 3:
+        re_init_indices[re_init_variable < re_init_threshold] = 1
 
     return re_init_indices
+
+
+@implementation('numpy', discard_units=True)
+@check_units(params=1,
+             re_init_indices=1,
+             reference=1,
+             result=1)
+def reset_re_init_variable(params, reference, re_init_indices):
+    """ This function can be used to reset synapse counter according to
+    previous reinitialization. This could be necessary in structural
+    plasticity, when some connections are associated re_init_variables need to
+    be reset to zero or other values.
+
+    Args:
+        params (np.ndarray): Flattened parameter vector.
+        re_init_indices (vector): Index array
+            indicating which parameters need to be re-initilised.
+
+    Returns:
+        params (nd.array): Flatten re-initialized array
+    """
+    if reference == 2:
+        params[~np.isnan(params)] = 0
+        params[re_init_indices==-1] = np.nan
+        params[re_init_indices==1] = 0
+
+    return params
 
 
 @implementation('numpy', discard_units=True)
@@ -475,7 +539,7 @@ def get_re_init_indices(params,
              not_refractory=1,
              result=volt)
 def update_threshold(Vthr, Vm, EL, VT, sigma_membrane, not_refractory):
-    """ A function whoch based on the deviation of the membrane potential
+    """ A function which based on the deviation of the membrane potential
     from its equilibrium potential adjusts the firing threshold.
     The idea behind this run_regular function was published by
     Afshar et al. (2019): Event-based Feature Extraction Using Adaptive
@@ -503,3 +567,68 @@ def update_threshold(Vthr, Vm, EL, VT, sigma_membrane, not_refractory):
              ((sigma_membrane / mV)* 5 * (Vm < (EL-1*mV))) * not_refractory)
 
     return data * mV
+
+@implementation('numpy', discard_units=True)
+@check_units(decay_probability=1, num_elements=1, lfsr_num_bits=1, mask=1, result=1)
+def lfsr(decay_probability, num_elements, lfsr_num_bits, mask):
+    """
+    Generate a pseudorandom number between 0 and 1 with a Linear
+    Feedback Shift Register (LFSR), which is equivalent to generating random
+    numbers from an uniform distribution. This is a Galois or many-to-one
+    implementation.
+
+    This function receives a given number and performs num_elements iterations
+    of the LFSR. This is done when a given neuron needs another random number.
+    The LFSR does a circular shift (i.e. all the values are shifted left while
+    the previous MSB becomes the new LSB) and ensures the variable is no bigger
+    than the specified number of bits. Note that, for convenience,
+    the input and outputs are normalized, i.e. value/2**lfsr_num_bits.
+
+    In practice, when there is not overflow, the operation is a normal shift.
+    Otherwise, a XOR operation between the mask and the shifted value is
+    necessary to send MSB to LSB and update relative taps.
+
+    Parameters
+    ----------
+    decay_probability : float
+        Value between 0 and 1 that will be the input to the LFSR
+    num_elements : int
+        Number of neurons in the group
+    lfsr_num_bits : int
+        Number of bits of the LFSR
+    mask : int
+        Value to be used in XOR operation, depending on number of bits used
+
+    Returns
+    -------
+    float
+        A random number between 0 and 1
+
+    Examples
+    --------
+    >>> from teili.tools.run_reg_functions import lfsr
+    >>> number = 2**4 + 2**3 + 2**1
+    >>> n_bits = 5
+    >>> bin(number)
+    '0b11010'
+    >>> bin(int(lfsr([number/2**n_bits], 1, [n_bits], 0b100101)*2**n_bits))
+    '0b10001'
+    """
+    try:
+        lfsr_num_bits = int(lfsr_num_bits[0])
+        seed = int(decay_probability[-1]*2**lfsr_num_bits)
+    except:
+        print('Please use numpy target')
+        quit()
+
+    updated_probabilities = [0 for _ in range(num_elements)]
+    mask = int(mask)
+
+    for i in range(num_elements):
+        seed = seed << 1
+        overflow = seed >> lfsr_num_bits
+        if overflow:
+            seed ^= mask
+        updated_probabilities[i] = seed
+
+    return np.array(updated_probabilities)/2**lfsr_num_bits

@@ -18,7 +18,7 @@ TBA: How to add dictionaries to Model dictionaries (see bottom)
 """
 
 from teili import constants
-from brian2 import pF, nS, mV, ms, pA, nA, psiemens
+from brian2 import pF, nS, mV, ms, pA, nA, psiemens, ohm
 pS = psiemens
 
 # voltage based equation building blocks
@@ -160,6 +160,44 @@ v_adapt_params = {
     "wIadapt": 0.0805 * nA,
     "tauIadapt": 144 * ms,
     "EL": -70.6 * mV
+    }
+
+thr_adapt = {
+    'model': """
+        %dVthr/dt = -(Vthr-thr_min)/tau_thr : volt
+
+        tau_thr : second (constant) # Threshold decay time constant
+        thr_inc     : volt (constant)   # Increment of threshold
+        thr_min   : volt (constant)   # Threshold minimum value
+        thr_max   : volt (constant)   # Threshold maximum value
+        """,
+    'threshold': "",
+    'reset': """
+        Vthr = clip(Vthr+thr_inc, thr_min, thr_max)
+        """
+    }
+
+quantized_thresh_adapt = {
+    'model': """
+        %dVthr/dt = Vthr*decay_thresh/second + (thr_min*dt*decay_thresh/tau_thr)/second: volt
+        decay_thresh = tau_thr/(tau_thr + dt) : 1
+
+        tau_thr : second (constant)
+        thr_inc     : volt (constant)   # Increment of threshold
+        thr_min   : volt (constant)   # Threshold minimum value
+        thr_max   : volt (constant)   # Threshold maximum value
+        """,
+    'threshold': "",
+    'reset': """
+        Vthr = clip(Vthr+thr_inc, thr_min, thr_max)
+        """
+    }
+
+thr_adapt_params = {
+    "tau_thr": 60000*ms,
+    "thr_min": 4*mV,
+    "thr_max": 16*mV,
+    "thr_inc": 0.01*mV
     }
 
 # noise
@@ -377,9 +415,78 @@ none_model = {
 
 none_params = {}
 
+"""LIF neuron model with stochastic decay taken from Wang et al. (2018).
+Please refer to this paper for more information. Note that this model was
+conceptualized in discrete time with backward euler scheme and an integer
+operation. An state updader with x_new = f(x,t) and
+defaultclock.dt = 1*ms in the code using this model.
+"""
+q_model_template = {
+    'model': '''
+        dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*mV/second : volt
+        normal_decay = clip((decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability, Vm_min, Vm_max) : 1
+        refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
+        decay_probability = rand() : 1 (constant over dt)
+
+        I = Iin + Iconst : amp
+        decay_rate = tau/(tau + dt)                      : 1
+        decay_rate_refrac = refrac_tau/(refrac_tau + dt) : 1
+        refrac = Vm<Vrest                                    : boolean
+
+        g_psc                : ohm    (constant) # Gain of post synaptic current
+        Iconst  : amp                         # constant input current
+        Iin = Iin0        : amp
+        Iin0 : amp
+        tau               : second (constant)
+        refrac_tau        : second (constant)
+        refP              : second
+        Vthr              : volt   (constant)
+        Vm_min            : 1      (constant)
+        Vm_max            : 1      (constant)
+        Vrest             : volt   (constant)
+        Vreset            : volt   (constant)
+
+
+    ''',
+    'threshold': '''Vm>=Vthr''',
+    'reset': '''Vm=Vreset''',
+}
+
+q_model_template_params = {
+    'Vthr': 15*mV,
+    'Vm_min': 3,
+    'Vm_max': 15,
+    'Vrest': 3*mV,
+    'Vreset': 0*mV,
+    'Iconst': 0*pA,
+    'g_psc' : 1*ohm,
+    'tau': 19*ms,
+    'refrac_tau': 2*ms,
+    'refP': 0.*ms
+    }
+
+# Use lfsr to generate random numbers. Function must be added to namespace
+lfsr = {
+    'model': """
+        %decay_probability = lfsr_timedarray( ((seed+t) % lfsr_max_value) + lfsr_init ) / (2**lfsr_num_bits) : 1
+
+        lfsr_max_value : second
+        seed : second
+        lfsr_init : second
+        lfsr_num_bits : 1 # Number of bits in the LFSR used
+         """,
+    'threshold': "",
+    'reset': """
+         """
+    }
+lfsr_params = {
+    'lfsr_num_bits': 6
+    }
+
 modes = {
     'current': i_model_template,
-    'voltage': v_model_template
+    'voltage': v_model_template,
+    'quantized': q_model_template
     }
 
 current_equation_sets = {
@@ -404,7 +511,15 @@ voltage_equation_sets = {
     'spatial': spatial,
     'gaussian': v_noise,
     'none': none_model,
-    'linear': none_model
+    'linear': none_model,
+    'threshold_adaptation': thr_adapt
+    }
+
+quantized_equation_sets = {
+    'none': none_model,
+    'spatial': spatial,
+    'lfsr': lfsr,
+    'threshold_adaptation': quantized_thresh_adapt
     }
 
 current_parameters = {
@@ -432,5 +547,14 @@ voltage_parameters = {
     'spatial': none_params,
     'gaussian': none_params,
     'none': none_params,
-    'linear': none_params
+    'linear': none_params,
+    'threshold_adaptation': thr_adapt_params
+    }
+
+quantized_parameters = {
+    'quantized': q_model_template_params,
+    'none': none_params,
+    'spatial': none_params,
+    'lfsr': lfsr_params,
+    'threshold_adaptation': thr_adapt_params
     }

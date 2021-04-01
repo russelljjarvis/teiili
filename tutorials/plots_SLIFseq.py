@@ -156,7 +156,7 @@ colors = [
     (0, 0, 0),
     (0, 0, 255),
     (255, 255, 0),
-    (255, 255, 255)
+    (200, 0, 0)
 ]
 cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 4), color=colors)
 if plot_d2:

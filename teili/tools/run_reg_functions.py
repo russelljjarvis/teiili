@@ -35,8 +35,8 @@ def re_init_params(params,
                    dist=0,
                    params_type=0):
     """Re-initializes a given parameter, e.g. weights or time constants,
-    using a normal or gamma distribution with a specified mean and standard 
-    deviation re-initialisation indices.
+    using a normal or gamma distribution with a specified mean, standard 
+    deviation and re-initialisation indices.
 
     Example:
         >>> from teili.core.groups import Neurons, Connections
@@ -127,6 +127,7 @@ def re_init_params(params,
     Returns:
         ndarray: Flatten re-initialized weight matrix
     """
+    # In case re_init_indices is not provided/necessary, generated on the fly
     if re_init_indices is None:
         re_init_indices = np.logical_or(np.mean(params, 0) < re_init_threshold,
                                         np.mean(params, 0) > (1 - re_init_threshold),
@@ -466,7 +467,7 @@ def get_re_init_indices(re_init_variable,
     """
     re_init_indices = np.zeros(len(re_init_variable))
 
-    # Using mean of the weight to determine which synapse to reinitilise
+    # Using mean of the variable to determine re_init_index
     if reference == 0:
         re_init_indices[np.mean(re_init_variable, 0) < re_init_threshold] = 1
     # Using the time since last spike to determine which synapse to reinitilise
@@ -497,8 +498,7 @@ def get_re_init_indices(re_init_variable,
             re_init_indices = 0
     # Using the neurons threshold to determine which synapse to reinitilise
     elif reference == 3:
-        # @pablo add your code here
-        pass
+        re_init_indices[re_init_variable < re_init_threshold] = 1
 
     return re_init_indices
 

@@ -109,7 +109,7 @@ def add_group_params_re_init(groups,
                                clip_max=clip_max,
                                const_value=const_value,
                                params_type=variable_type)
-        except:
+        except (TypeError, AssertionError):
             raise
             import sys;sys.exit(1)
 

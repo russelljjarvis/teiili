@@ -176,11 +176,12 @@ dpi_shunt_params = {
     'I_syn': constants.I0
 }
 
-"""LIF synapse model with stochastic decay taken from Wang et al. (2018).
-Please refer to this paper for more information. Note that this model was
-conceptualized in discrete time with backward euler scheme and an integer
+"""Exponentially decaying synapse model using quantized stochastic
+decay taken from Wang et al. (2018). Please refer to this paper
+for more information. Note that this model was conceptualized in
+discrete time with backward euler scheme and an integer
 operation. An state updader with x_new = f(x,t) and
-defaultclock.dt = 1*ms in the code using this model.
+defaultclock.dt = 1*ms in the code using this model is necessary.
 """
 quantized_stochastic = {
     'model': '''
@@ -477,10 +478,6 @@ quantized_stochastic_stdp = {
         rand_int_Apre2 : 1
         rand_int_Apost1 : 1
         rand_int_Apost2 : 1
-        cond_Apre1 : boolean
-        cond_Apre2 : boolean
-        cond_Apost1 : boolean
-        cond_Apost2 : boolean
         rand_num_bits_Apre : 1 # Number of bits of random number generated for Apre
         rand_num_bits_Apost : 1 # Number of bits of random number generated for Apost
         stdp_thres : 1 (constant)
@@ -489,19 +486,15 @@ quantized_stochastic_stdp = {
         Apre += dApre
         Apre = clip(Apre, 0, A_max)
         rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
-        cond_Apre1 = rand_int_Apre1 < Apost
         rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))
-        cond_Apre2 = rand_int_Apre2 <= stdp_thres
-        w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2), 0, w_max)
+        w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres), 0, w_max)
         ''',
     'on_post': '''
         Apost += dApre
         Apost = clip(Apost, 0, A_max)
         rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_Apost-1))
-        cond_Apost1 = rand_int_Apost1 < Apre
         rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_Apost-1))
-        cond_Apost2 = rand_int_Apost2 <= stdp_thres
-        w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2), 0, w_max)
+        w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand_int_Apost2 <= stdp_thres), 0, w_max)
         '''
 }
 
@@ -598,18 +591,20 @@ You need to declare two set of parameters for every block:
 *   current based models
 *   conductance based models
 
-Note that stochastic structural plasticity should only be used in conjunction
-with synaptic plasticity.
+These blocks add a counter that keep track of weight updates so that
+we can measure how active a synapse is. Note that stochastic structural
+plasticity should only be used in conjunction with synaptic plasticity
+and Teili's run_regularly functions.
 """
 stochastic_counter = {
     'model': """
         re_init_counter : 1
         """,
     'on_pre': """
-        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2)
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres)
         """,
     'on_post': """
-        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2)
+        re_init_counter = re_init_counter + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand_int_Apost2 <= stdp_thres)
         """
 }
 
@@ -620,16 +615,12 @@ stochastic_counter_params = {
 deterministic_counter = {
     'model': """
         re_init_counter : 1
-        cond_Apre  : boolean # Verify weight change due to depotentiation
-        cond_Apost : boolean # Verify weight change due to potentiation
         """,
     'on_pre': """
-        cond_Apre = Apost > 0
-        re_init_counter = re_init_counter + 1*int(cond_Apre)
+        re_init_counter = re_init_counter + 1*int(Apost > 0)
         """,
     'on_post': """
-        cond_Apost = Apre > 0
-        re_init_counter = re_init_counter + 1*int(cond_Apost)
+        re_init_counter = re_init_counter + 1*int(Apre > 0)
         """
 }
 
@@ -649,7 +640,7 @@ modes = {
     'DPI': dpi,
     'DPIShunting': dpi_shunt,
     'unit_less': unit_less,
-    'QuantizedStochastic': quantized_stochastic
+    'quantized': quantized_stochastic
 }
 
 kernels = {
@@ -662,10 +653,7 @@ plasticity_models = {
     'non_plastic': none_model,
     'fusi': fusi,
     'stdp': stdp,
-    'quantized_stochastic_stdp': quantized_stochastic_stdp
-}
-
-structural_plasticity = {
+    'quantized_stochastic_stdp': quantized_stochastic_stdp,
     'deterministic_counter': deterministic_counter,
     'stochastic_counter': stochastic_counter
 }
@@ -678,7 +666,6 @@ synaptic_equations = {
 
 synaptic_equations.update(kernels)
 synaptic_equations.update(plasticity_models)
-synaptic_equations.update(structural_plasticity)
 
 # parameters dictionaries
 current_parameters = {
@@ -732,7 +719,7 @@ DPI_shunt_parameters = {
     'stdgm': none_params}
 
 quantized_stochastic_parameters = {
-    'QuantizedStochastic': quantized_stochastic_params,
+    'quantized': quantized_stochastic_params,
     'non_plastic': none_params,
     'quantized_stochastic_stdp': quantized_stochastic_stdp_params,
     'lfsr_syn': lfsr_syn_params,

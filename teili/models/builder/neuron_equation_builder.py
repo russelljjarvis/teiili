@@ -42,8 +42,8 @@ import copy
 import warnings
 from brian2 import pF, nS, mV, ms, pA, nA
 from teili.models.builder.combine import combine_neu_dict
-from teili.models.builder.templates.neuron_templates import modes, current_equation_sets, \
-    voltage_equation_sets, quantized_equation_sets, \
+from teili.models.builder.templates.neuron_templates import modes, \
+    current_equation_sets, voltage_equation_sets, quantized_equation_sets, \
     current_parameters, voltage_parameters, quantized_parameters
 
 

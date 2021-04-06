@@ -104,7 +104,6 @@ for avg_trial in range(average_trials):
     spikemon_post_neurons = SpikeMonitor(post_neurons, record=True)
     statemon_synapse = StateMonitor(stdp_synapse,
                                     variables=['Apre', 'Apost', 'w_plast',
-                                               'cond_Apost1', 'cond_Apost2',
                                                'decay_probability_Apre',
                                                'decay_probability_Apost',
                                                're_init_counter'],

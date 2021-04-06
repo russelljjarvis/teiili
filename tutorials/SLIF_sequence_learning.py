@@ -43,7 +43,7 @@ adp_synapse_model = SynapseEquationBuilder.import_eq(
 adapt_neuron_model = NeuronEquationBuilder(base_unit='quantized',
         intrinsic_excitability='threshold_adaptation',
         position='spatial')
-reinit_synapse_model = SynapseEquationBuilder(base_unit='QuantizedStochastic',
+reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
         plasticity='quantized_stochastic_stdp',
         structural_plasticity='stochastic_counter')
 

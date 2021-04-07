@@ -287,7 +287,7 @@ for neu in range(num_exc):
     #sampled_weights = truncnorm.rvs(-2, 4, loc=ei_w, size=weight_length).astype(int)
     exc_inh_conn.weight[neu,:] = sampled_weights
 feedforward_exc.weight = 1
-num_inh_weight = np.shape(feedforward_inh.weight[neu,:])[0]
+num_inh_weight = np.shape(feedforward_inh.weight[0,:])[0]
 for ch in range(num_channels):
     wplast_length = np.shape(feedforward_exc.w_plast[ch,:])
     feedforward_exc.w_plast[ch,:] = np.clip(

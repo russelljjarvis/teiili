@@ -83,13 +83,16 @@ if plot_d1:
     p1.plot(input_t*1e-3, input_i, pen=None, symbolSize=3, symbol='o')
     p1.setLabel('bottom', 'Time', units='s')
     p1.setLabel('left', 'Input channels')
+
     p2 = pg.PlotWidget(title='Membrane potential')
     p2.addLegend(offset=(30, 1))
-    p2.plot(Vm_e, pen='r', name=f'exc. id ')
-    p2.plot(Vm_i, pen='b', name=f'inh. id ')
+    p2.plot(np.array(range(np.shape(Vm_e)[0]))*1e-3, Vm_e, pen='r', name=f'randomly chosen exc. neuron')
+    p2.plot(np.array(range(np.shape(Vm_e)[0]))*1e-3, Vm_i, pen='b', name=f'randomly chosen inh. neuron')
     p2.setYRange(0, 0.025)
     p2.setLabel('left', 'Membrane potential', units='V')
     p2.setLabel('bottom', 'Time', units='s')
+    p2.setXLink(p1)
+
     d1.addWidget(p1, 1, 0)
     d1.addWidget(p2, 1, 1)
 
@@ -152,24 +155,23 @@ if plot_d1:
     d1.addWidget(p6, 3, 1)
 
 # Plot matrices
+# Inferno colormap
 colors = [
-    (0, 0, 0),
-    (0, 0, 255),
-    (255, 255, 0),
-    (200, 0, 0)
+    (0, 0, 4),
+    (40, 11, 84),
+    (101, 21, 110),
+    (159, 42, 99),
+    (212, 72, 66),
+    (245, 125, 21),
+    (250, 193, 39),
+    (252, 255, 16)
 ]
-cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 4), color=colors)
+cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 8), color=colors)
 if plot_d2:
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='Neuron index')
     image_axis.setLabel(axis='left', text='Input channels')
     #image_axis.hideAxis('left')
-    m1 = pg.ImageView(view=image_axis)
-    #m1.ui.histogram.hide()
-    m1.ui.roiBtn.hide()
-    m1.ui.menuBtn.hide()
-    m1.setImage(np.reshape(rf, (num_channels, num_exc, -1)), axes={'t':2, 'y':0, 'x':1})
-    m1.setColorMap(cmap)
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='postsynaptic neuron')
     image_axis.setLabel(axis='left', text='presynaptic neuron')
@@ -200,31 +202,39 @@ if plot_d2:
     #        pen='b')
     #m4.setLabel('bottom', 'Time', units='s')
     #m4.setLabel('left', 'Rate', units='Hz')
-    d2.addWidget(m1, 0, 0)
-    d2.addWidget(m2, 0, 1)
-    d2.addWidget(m3, 0, 2)
+    d2.addWidget(m2, 0, 0)
+    d2.addWidget(m3, 0, 1)
     #d2.addWidget(m4, 1, colspan=3)
 
 # Plot receptive fields for each neuron
+def play_receptive_fields():
+    for i in rfs:
+        i.play(800)
 if plot_d3:
-    last_frame = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
+    last_frame = np.reshape(rf, (num_channels, num_exc, -1))
     dims = np.sqrt(num_channels).astype(int)
     rfs = []
     j = 0
     k = 0
-    for i in range(num_exc):
+    for i in permutation:
         rfs.append(pg.ImageView())
         rfs[-1].ui.histogram.hide()
         rfs[-1].ui.roiBtn.hide()
         rfs[-1].ui.menuBtn.hide() 
-        rfs[-1].setImage(np.reshape(last_frame[:, i], (dims, dims)), axes={'y':0, 'x':1})
+        rfs[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
         rfs[-1].setColorMap(cmap)
+
         d3.addWidget(rfs[-1], j, k)
         if j < np.sqrt(num_exc)-1:
             j += 1
         else:
             j = 0
             k += 1
+
+    btn = QtGui.QPushButton("play")
+    btn.clicked.connect(play_receptive_fields)
+    d3.addWidget(btn, j, k)
+
 win.show()
 QtGui.QApplication.instance().exec_()
 # Generate plots with matplotlib

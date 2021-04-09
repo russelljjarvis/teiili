@@ -71,47 +71,24 @@ defaultclock.dt = 1 * ms
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
 ################################################
-# Initialize input sequence
-num_items = 3
-item_duration = 50
-item_superposition = 0
-num_channels = 144
-noise_prob = None#0.005
-item_rate = 25
-#sequence_repetitions = 700# 350
+# Initialize rotating bar
+testbench_stim = OCTA_Testbench()
+num_channels = 100
+num_items = None
+noise_prob = None
+item_rate = None
 sequence_repetitions = 200
-
-sequence = SequenceTestbench(num_channels, num_items, item_duration,
-                             item_superposition, noise_prob, item_rate,
-                             sequence_repetitions)
-spike_indices, spike_times = sequence.stimuli()
-
-
-# Adding incomplete sequence at the end of simulation
-training_duration = np.max(spike_times)
-sequence_duration = sequence.cycle_length * ms
-incomplete_sequences = 3
-include_symbols = [[2], [1], [0]]
-test_duration = incomplete_sequences * sequence_duration
-symbols = sequence.items
-for incomp_seq in range(incomplete_sequences):
-    for incl_symb in include_symbols[incomp_seq]:
-        tmp_symb = [(x*ms + incomp_seq*sequence_duration + training_duration)
-                        for x in symbols[incl_symb]['t']]
-        spike_times = np.append(spike_times, tmp_symb)
-        spike_indices = np.append(spike_indices, symbols[incl_symb]['i'])
-# Get back unit that was remove by append operation
-spike_times = spike_times*second
-
-# Adding noise at the end of simulation
-#incomplete_sequences = 5
-#test_duration = incomplete_sequences*sequence_duration*ms
-#noise_prob = 0.01
-#noise_spikes = np.random.rand(num_channels, int(test_duration/ms))
-#noise_indices = np.where(noise_spikes < noise_prob)[0]
-#noise_times = np.where(noise_spikes < noise_prob)[1]
-#spike_indices = np.concatenate((spike_indices, noise_indices))
-#spike_times = np.concatenate((spike_times, noise_times+training_duration/ms))
+testbench_stim.rotating_bar(length=10, nrows=10,
+                            direction='cw',
+                            ts_offset=3, angle_step=10,
+                            noise_probability=0.2,
+                            repetitions=sequence_repetitions,
+                            debug=False)
+training_duration = np.max(testbench_stim.times)*ms
+test_duration = 200*ms
+spike_indices = testbench_stim.indices
+spike_times = testbench_stim.times * ms
+sequence_duration = 105*ms
 
 # Save them for comparison
 spk_i, spk_t = np.array(spike_indices), np.around(spike_times/ms).astype(int)*ms
@@ -205,14 +182,14 @@ inh_inh_conn.delay = np.random.randint(0, 15, size=np.shape(inh_inh_conn.j)[0]) 
 if not simple:
     exc_exc_conn.tausyn = 5*ms
     exc_exc_conn.taupre = 20*ms
-    exc_exc_conn.taupost = 60*ms
+    exc_exc_conn.taupost = 20*ms
     exc_exc_conn.stdp_thres = 1
 exc_inh_conn.tausyn = 5*ms
 inh_exc_conn.tausyn = 10*ms
 inh_inh_conn.tausyn = 10*ms
 feedforward_exc.tausyn = 5*ms
 feedforward_exc.taupre = 20*ms
-feedforward_exc.taupost = 60*ms
+feedforward_exc.taupost = 20*ms
 feedforward_exc.stdp_thres = 1
 feedforward_inh.tausyn = 5*ms
 exc_cells.tau = 20*ms
@@ -436,7 +413,7 @@ if not np.array_equal(spk_t, spikemon_seq_neurons.t):
 last_sequence_t = (training_duration-sequence_duration)/ms
 neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=200,
     kernel_var=10, kernel_min=0.001,
-    interval=[0, int(training_duration/ms)])
+    interval=[int(last_sequence_t), int(training_duration/ms)])
 #foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
 #                           sequence_duration, sequence_repetitions)
 #
@@ -520,7 +497,6 @@ if not simple:
     Metadata['e->e'] = exc_exc_conn.get_params()
 with open(path+'connections.data', 'wb') as f:
     pickle.dump(Metadata, f)
-
 
 #from brian2 import *
 #import pandas as pd

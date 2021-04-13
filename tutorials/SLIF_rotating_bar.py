@@ -8,7 +8,7 @@ from scipy.signal import find_peaks
 
 from brian2 import second, mA, ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
         defaultclock, ExplicitStateUpdater, SpikeGeneratorGroup,\
-        PopulationRateMonitor, run
+        PopulationRateMonitor, run, PoissonGroup
 
 from SLIF_utils import random_integers
 
@@ -49,17 +49,9 @@ reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
 
 #############
 # Prepare parameters of the simulation
-# Defines if recurrent connections are included
-if sys.argv[1] == 'no_rec':
-    simple = True
-elif sys.argv[1] == 'rec':
-    simple = False
-else:
-    print('Provide correct argument')
-    sys.exit(0)
-if sys.argv[2] == 'plastic_inh':
+if sys.argv[1] == 'plastic_inh':
     i_plast = True
-elif sys.argv[2] == 'static_inh':
+elif sys.argv[1] == 'static_inh':
     i_plast = False
 else:
     print('Provide correct argument')
@@ -85,7 +77,7 @@ testbench_stim.rotating_bar(length=10, nrows=10,
                             repetitions=sequence_repetitions,
                             debug=False)
 training_duration = np.max(testbench_stim.times)*ms
-test_duration = 200*ms
+test_duration = 1000*ms
 spike_indices = testbench_stim.indices
 spike_times = testbench_stim.times * ms
 sequence_duration = 105*ms
@@ -105,10 +97,14 @@ num_exc = 48
 num_inh = 12
 #num_inh = 30
 exc_cells = Neurons(num_exc,
-                    equation_builder=adapt_neuron_model(num_inputs=3),
+                    equation_builder=adapt_neuron_model(num_inputs=4),
                     method=stochastic_decay,
                     name='exc_cells',
                     verbose=True)
+
+rate_distribution = np.random.randint(1, 15, size=num_exc) * Hz
+poisson_activity = PoissonGroup(num_exc, rate_distribution)
+
 # Register proxy arrays
 if i_plast:
     dummy_unit = 1*mV
@@ -131,11 +127,10 @@ ie_p = 0.70
 ee_p = 0.60
 #ee_p = 1.0
 
-if not simple:
-    exc_exc_conn = Connections(exc_cells, exc_cells,
-                               equation_builder=stdp_synapse_model(),
-                               method=stochastic_decay,
-                               name='exc_exc_conn')
+exc_exc_conn = Connections(exc_cells, exc_cells,
+                           equation_builder=stdp_synapse_model(),
+                           method=stochastic_decay,
+                           name='exc_exc_conn')
 exc_inh_conn = Connections(exc_cells, inh_cells,
                            equation_builder=static_synapse_model(),
                            method=stochastic_decay,
@@ -162,29 +157,34 @@ feedforward_inh = Connections(seq_cells, inh_cells,
                               equation_builder=static_synapse_model(),
                               method=stochastic_decay,
                               name='feedforward_inh')
+background_activity = Connections(poisson_activity, exc_cells,
+                                  equation_builder=static_synapse_model(),
+                                  method=stochastic_decay,
+                                  name='background_activity')
 
 feedforward_exc.connect()
 feedforward_inh.connect()
 inh_inh_conn.connect(p=.1)
 inh_exc_conn.connect(p=ie_p)
-if not simple:
-    exc_exc_conn.connect('i!=j', p=ee_p)
-    exc_exc_conn.delay = np.random.randint(0, 15, size=np.shape(exc_exc_conn.j)[0]) * ms
+exc_exc_conn.connect('i!=j', p=ee_p)
+background_activity.connect('i==j')
 exc_inh_conn.connect(p=ei_p)
-exc_inh_conn.delay = np.random.randint(0, 15, size=np.shape(exc_inh_conn.j)[0]) * ms
-#feedforward_exc.delay = np.random.randint(0, 15, size=np.shape(feedforward_exc.j)[0]) * ms
-#feedforward_inh.delay = np.random.randint(0, 15, size=np.shape(feedforward_inh.j)[0]) * ms
-inh_inh_conn.delay = np.random.randint(0, 15, size=np.shape(inh_inh_conn.j)[0]) * ms
-#inh_exc_conn.delay = np.random.randint(0, 15, size=np.shape(inh_exc_conn.j)[0]) * ms
+
+exc_exc_conn.delay = np.random.randint(0, 8, size=np.shape(exc_exc_conn.j)[0]) * ms
+exc_inh_conn.delay = np.random.randint(0, 8, size=np.shape(exc_inh_conn.j)[0]) * ms
+feedforward_exc.delay = np.random.randint(0, 8, size=np.shape(feedforward_exc.j)[0]) * ms
+feedforward_inh.delay = np.random.randint(0, 8, size=np.shape(feedforward_inh.j)[0]) * ms
+inh_inh_conn.delay = np.random.randint(0, 8, size=np.shape(inh_inh_conn.j)[0]) * ms
+inh_exc_conn.delay = np.random.randint(0, 8, size=np.shape(inh_exc_conn.j)[0]) * ms
 
 # Time constants
 # Values similar to those in Klampfl&Maass(2013), Joglekar etal(2018), Vogels&Abbott(2009)
-if not simple:
-    exc_exc_conn.tausyn = 5*ms
-    exc_exc_conn.taupre = 20*ms
-    exc_exc_conn.taupost = 20*ms
-    exc_exc_conn.stdp_thres = 1
+exc_exc_conn.tausyn = 5*ms
+exc_exc_conn.taupre = 20*ms
+exc_exc_conn.taupost = 20*ms
+exc_exc_conn.stdp_thres = 1
 exc_inh_conn.tausyn = 5*ms
+background_activity.tausyn = 3*ms
 inh_exc_conn.tausyn = 10*ms
 inh_inh_conn.tausyn = 10*ms
 feedforward_exc.tausyn = 5*ms
@@ -194,12 +194,10 @@ feedforward_exc.stdp_thres = 1
 feedforward_inh.tausyn = 5*ms
 exc_cells.tau = 20*ms
 inh_cells.tau = 10*ms
-exc_cells.thr_max = 31*mV
 
 # LFSR lengths
-if not simple:
-    exc_exc_conn.rand_num_bits_Apre = 4
-    exc_exc_conn.rand_num_bits_Apost = 4
+exc_exc_conn.rand_num_bits_Apre = 4
+exc_exc_conn.rand_num_bits_Apost = 4
 feedforward_exc.rand_num_bits_Apre = 4
 feedforward_exc.rand_num_bits_Apost = 4
 
@@ -211,11 +209,13 @@ if i_plast:
 #feedforward_exc.A_gain = learn_factor
 
 # Weight initializations
-ei_w = 1  # 3
-mean_ie_w = 1  # 4
+# TODO different insteresting parameters
+#exc_cells.thr_max = 31*mV
+ei_w = 3  # 1
+mean_ie_w = 4  # 1
 mean_ee_w = 1
 mean_ffe_w = 3
-mean_ffi_w = 2  # 1
+mean_ffi_w = 1  # 2
 mean_ii_w = 1
 
 if i_plast:
@@ -235,13 +235,12 @@ for neu in range(num_inh):
     weight_length = np.shape(inh_inh_conn.weight[neu, :])
     sampled_weights = gamma.rvs(a=mean_ii_w, loc=1, size=weight_length).astype(int)
     inh_inh_conn.weight[neu, :] = -np.clip(sampled_weights, 0, 15)
-if not simple:
-    exc_exc_conn.weight = 1
+
+exc_exc_conn.weight = 1
 for neu in range(num_exc):
-    if not simple:
-        weight_length = np.shape(exc_exc_conn.w_plast[neu,:])
-        exc_exc_conn.w_plast[neu,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
-        #exc_exc_conn.w_plast[neu,:] = truncnorm.rvs(-1, 4, loc=mean_ee_w, size=weight_length).astype(int)
+    weight_length = np.shape(exc_exc_conn.w_plast[neu,:])
+    exc_exc_conn.w_plast[neu,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
+    #exc_exc_conn.w_plast[neu,:] = truncnorm.rvs(-1, 4, loc=mean_ee_w, size=weight_length).astype(int)
     weight_length = np.shape(exc_inh_conn.weight[neu,:])
     sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
     sampled_weights = np.clip(sampled_weights, 0, 15)
@@ -261,6 +260,7 @@ for ch in range(num_channels):
             0,
             15)
     #feedforward_inh.weight[ch,:] = truncnorm.rvs(-1, 7, loc=mean_ffi_w, size=num_inh_weight).astype(int)
+background_activity.weight = 50
 # Set sparsity for ffe connections
 for neu in range(num_exc):
     ffe_zero_w = np.random.choice(num_channels, int(num_channels*.3), replace=False)
@@ -269,12 +269,8 @@ for neu in range(num_exc):
 
 # Set LFSRs for each group
 #neu_groups = [exc_cells, inh_cells]
-#if not simple:
-#    syn_groups = [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
-#                     feedforward_inh, inh_inh_conn]
-#else:
-#    syn_groups = [exc_inh_conn, inh_exc_conn, feedforward_exc,
-#                     feedforward_inh, inh_inh_conn]
+# syn_groups = [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
+#                 feedforward_inh, inh_inh_conn]
 #ta = create_lfsr(neu_groups, syn_groups, defaultclock.dt)
 
 if i_plast:
@@ -289,31 +285,41 @@ if i_plast:
             size=len(inh_exc_conn))
 
 # Adding mismatch
-#mismatch_neuron_param = {
-#    'tau': 0.1
-#}
-#
-#mismatch_synap_param = {
-#    'tausyn': 0.1
-#}
-#
-#exc_cells.add_mismatch(std_dict=mismatch_neuron_param, seed=11)
-#exc_cells.__setattr__('tau', np.array(exc_cells.tau/ms).astype(int)*ms)
-#inh_cells.add_mismatch(std_dict=mismatch_neuron_param, seed=11)
-#inh_cells.__setattr__('tau', np.array(inh_cells.tau/ms).astype(int)*ms)
-#
-#exc_exc_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#exc_exc_conn.__setattr__('tausyn', np.array(exc_exc_conn.tausyn/ms).astype(int)*ms)
-#exc_inh_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#exc_inh_conn.__setattr__('tausyn', np.array(exc_inh_conn.tausyn/ms).astype(int)*ms)
-#inh_exc_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#inh_exc_conn.__setattr__('tausyn', np.array(inh_exc_conn.tausyn/ms).astype(int)*ms)
-#inh_inh_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#inh_inh_conn.__setattr__('tausyn', np.array(inh_inh_conn.tausyn/ms).astype(int)*ms)
-#feedforward_exc.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#feedforward_exc.__setattr__('tausyn', np.array(feedforward_exc.tausyn/ms).astype(int)*ms)
-#feedforward_inh.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#feedforward_inh.__setattr__('tausyn', np.array(feedforward_inh.tausyn/ms).astype(int)*ms)
+mismatch_neuron_param = {
+    'tau': 0.1
+}
+
+mismatch_synap_param = {
+    'tausyn': 0.1
+}
+mismatch_plastic_param = {
+    'taupre': 0.1,
+    'taupost': 0.1
+}
+
+exc_cells.add_mismatch(std_dict=mismatch_neuron_param)
+exc_cells.__setattr__('tau', np.array(exc_cells.tau/ms).astype(int)*ms)
+inh_cells.add_mismatch(std_dict=mismatch_neuron_param)
+inh_cells.__setattr__('tau', np.array(inh_cells.tau/ms).astype(int)*ms)
+
+exc_exc_conn.add_mismatch(std_dict=mismatch_synap_param)
+exc_exc_conn.__setattr__('tausyn', np.array(exc_exc_conn.tausyn/ms).astype(int)*ms)
+exc_exc_conn.add_mismatch(std_dict=mismatch_plastic_param)
+exc_exc_conn.__setattr__('taupre', np.array(exc_exc_conn.taupre/ms).astype(int)*ms)
+exc_exc_conn.__setattr__('taupost', np.array(exc_exc_conn.taupost/ms).astype(int)*ms)
+exc_inh_conn.add_mismatch(std_dict=mismatch_synap_param)
+exc_inh_conn.__setattr__('tausyn', np.array(exc_inh_conn.tausyn/ms).astype(int)*ms)
+inh_exc_conn.add_mismatch(std_dict=mismatch_synap_param)
+inh_exc_conn.__setattr__('tausyn', np.array(inh_exc_conn.tausyn/ms).astype(int)*ms)
+inh_inh_conn.add_mismatch(std_dict=mismatch_synap_param)
+inh_inh_conn.__setattr__('tausyn', np.array(inh_inh_conn.tausyn/ms).astype(int)*ms)
+feedforward_exc.add_mismatch(std_dict=mismatch_synap_param)
+feedforward_exc.__setattr__('tausyn', np.array(feedforward_exc.tausyn/ms).astype(int)*ms)
+feedforward_exc.add_mismatch(std_dict=mismatch_plastic_param)
+feedforward_exc.__setattr__('taupre', np.array(feedforward_exc.taupre/ms).astype(int)*ms)
+feedforward_exc.__setattr__('taupost', np.array(feedforward_exc.taupost/ms).astype(int)*ms)
+feedforward_inh.add_mismatch(std_dict=mismatch_synap_param)
+feedforward_inh.__setattr__('tausyn', np.array(feedforward_inh.tausyn/ms).astype(int)*ms)
 
 ###################
 # Adding homeostatic mechanisms
@@ -364,7 +370,7 @@ if i_plast:
                                       name='statemon_proxy')
 statemon_inh_cells = StateMonitor(inh_cells, variables=['Vm'], record=np.random.randint(0, num_inh),
                                   name='statemon_inh_cells')
-statemon_net_current = StateMonitor(exc_cells, variables=['Iin', 'Iin0', 'Iin1', 'Iin2'], record=True,
+statemon_net_current = StateMonitor(exc_cells, variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3'], record=True,
                                   name='statemon_net_current')
 statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast', 'I_syn'], record=True,
                                   name='statemon_ffe_conns')
@@ -372,27 +378,20 @@ statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
 statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
 
 net = TeiliNetwork()
-if not simple:
-    if i_plast:
-        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-                spikemon_exc_neurons, spikemon_inh_neurons,
-                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_net_current,
-                inh_inh_conn, statemon_proxy)
-    else:
-        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-                spikemon_exc_neurons, spikemon_inh_neurons,
-                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_net_current, inh_inh_conn)
-else:
-    net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
+if i_plast:
+    net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
             feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-            spikemon_exc_neurons, spikemon_inh_neurons,
+            spikemon_exc_neurons, spikemon_inh_neurons, background_activity,
+            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
+            statemon_pop_rate_i, statemon_net_current, poisson_activity,
+            inh_inh_conn, statemon_proxy)
+else:
+    net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
+            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
+            spikemon_exc_neurons, spikemon_inh_neurons, background_activity,
             spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
             statemon_pop_rate_i, statemon_net_current, inh_inh_conn,
-            statemon_proxy)
+            poisson_activity)
 
 # Training
 statemon_ffe_conns.active = True
@@ -428,10 +427,9 @@ neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=200,
 n_rows = num_exc
 recurrent_ids = []
 recurrent_weights = []
-if not simple:
-    for row in range(n_rows):
-        recurrent_weights.append(list(exc_exc_conn.w_plast[row, :]))
-        recurrent_ids.append(list(exc_exc_conn.j[row, :]))
+for row in range(n_rows):
+    recurrent_weights.append(list(exc_exc_conn.w_plast[row, :]))
+    recurrent_ids.append(list(exc_exc_conn.j[row, :]))
 
 # Calculating permutation indices from firing rates
 permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
@@ -480,8 +478,7 @@ Metadata = {'time_step': defaultclock.dt,
             'learn_factor': learn_factor,
             'mean ffe w': mean_ffe_w,
             'mean ffi w': mean_ffi_w,
-            'i_plast': i_plast,
-            'simple': simple
+            'i_plast': i_plast
         }
 with open(path+'general.data', 'wb') as f:
     pickle.dump(Metadata, f)
@@ -494,10 +491,9 @@ with open(path+'population.data', 'wb') as f:
 Metadata = {'e->i': exc_inh_conn.get_params(),
             'i->e': inh_exc_conn.get_params(),
             'ffe': feedforward_exc.get_params(),
-            'ffi': feedforward_inh.get_params()
+            'ffi': feedforward_inh.get_params(),
+            'e->e': exc_exc_conn.get_params()
             }
-if not simple:
-    Metadata['e->e'] = exc_exc_conn.get_params()
 with open(path+'connections.data', 'wb') as f:
     pickle.dump(Metadata, f)
 
@@ -545,11 +541,13 @@ def plot_EI_balance(idx):
     rec_Iin = np.convolve(statemon_net_current.Iin0[idx], np.ones(win_len)/win_len, mode='valid')
     inh_Iin = np.convolve(statemon_net_current.Iin1[idx], np.ones(win_len)/win_len, mode='valid')
     ffe_Iin = np.convolve(statemon_net_current.Iin2[idx], np.ones(win_len)/win_len, mode='valid')
+    noise_Iin = np.convolve(statemon_net_current.Iin3[idx], np.ones(win_len)/win_len, mode='valid')
     total_Iin = np.convolve(statemon_net_current.Iin[idx], np.ones(win_len)/win_len, mode='valid')
     plt.plot(rec_Iin, 'r', label='rec. current')
     plt.plot(inh_Iin, 'g', label='inh. current')
     plt.plot(ffe_Iin, 'b', label='input current')
     plt.plot(total_Iin, 'k', label='net current')
+    plt.plot(noise_Iin, 'k--', label='spont. activity')
     plt.legend()
     plt.ylabel('Current [amp]')
     plt.xlabel('time [ms]')

@@ -6,7 +6,7 @@ import numpy as np
 from scipy.stats import gamma, truncnorm
 from scipy.signal import find_peaks
 
-from brian2 import second, ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
+from brian2 import second, mA, ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
         defaultclock, ExplicitStateUpdater, SpikeGeneratorGroup,\
         PopulationRateMonitor, run
 
@@ -77,11 +77,11 @@ num_channels = 100
 num_items = None
 noise_prob = None
 item_rate = None
-sequence_repetitions = 200
+sequence_repetitions = 600
 testbench_stim.rotating_bar(length=10, nrows=10,
                             direction='cw',
                             ts_offset=3, angle_step=10,
-                            noise_probability=0.2,
+                            #noise_probability=0.2,
                             repetitions=sequence_repetitions,
                             debug=False)
 training_duration = np.max(testbench_stim.times)*ms
@@ -194,7 +194,7 @@ feedforward_exc.stdp_thres = 1
 feedforward_inh.tausyn = 5*ms
 exc_cells.tau = 20*ms
 inh_cells.tau = 10*ms
-#exc_cells.thr_max = 15*mV
+exc_cells.thr_max = 31*mV
 
 # LFSR lengths
 if not simple:
@@ -211,27 +211,30 @@ if i_plast:
 #feedforward_exc.A_gain = learn_factor
 
 # Weight initializations
-ei_w = 3
-mean_ie_w = 4
+ei_w = 1  # 3
+mean_ie_w = 1  # 4
 mean_ee_w = 1
 mean_ffe_w = 3
-mean_ffi_w = 1
+mean_ffi_w = 2  # 1
+mean_ii_w = 1
 
-inh_inh_conn.weight = -1
 if i_plast:
     inh_exc_conn.weight = -1
     # 1 = no inhibition, 0 = maximum inhibition
     #var_th = .1
     var_th = 0.50
 for neu in range(num_inh):
-    weight_length = np.shape(inh_exc_conn.weight[neu,:])
+    weight_length = np.shape(inh_exc_conn.weight[neu, :])
     sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
     sampled_weights = np.clip(sampled_weights, 0, 15)
     #sampled_weights = truncnorm.rvs(-3, 4, loc=mean_ie_w, size=weight_length).astype(int)
     if i_plast:
-        inh_exc_conn.w_plast[neu,:] = sampled_weights
+        inh_exc_conn.w_plast[neu, :] = sampled_weights
     else:
-        inh_exc_conn.weight[neu,:] = -sampled_weights
+        inh_exc_conn.weight[neu, :] = -sampled_weights
+    weight_length = np.shape(inh_inh_conn.weight[neu, :])
+    sampled_weights = gamma.rvs(a=mean_ii_w, loc=1, size=weight_length).astype(int)
+    inh_inh_conn.weight[neu, :] = -np.clip(sampled_weights, 0, 15)
 if not simple:
     exc_exc_conn.weight = 1
 for neu in range(num_exc):

@@ -209,7 +209,7 @@ if plot_d2:
 # Plot receptive fields for each neuron
 def play_receptive_fields():
     for i in rfs:
-        i.play(800)
+        i.play(1000)
 if plot_d3:
     last_frame = np.reshape(rf, (num_channels, num_exc, -1))
     dims = np.sqrt(num_channels).astype(int)

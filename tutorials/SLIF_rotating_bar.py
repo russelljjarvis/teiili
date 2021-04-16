@@ -8,12 +8,9 @@ from scipy.signal import find_peaks
 
 from brian2 import second, mA, ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
         defaultclock, ExplicitStateUpdater, SpikeGeneratorGroup,\
-        PopulationRateMonitor, run, PoissonGroup
-
-from SLIF_utils import random_integers
+        PopulationRateMonitor, run, PoissonGroup, collect
 
 from teili.core.groups import Neurons, Connections
-from teili import TeiliNetwork
 from teili.models.neuron_models import QuantStochLIF as static_neuron_model
 from teili.models.synapse_models import QuantStochSyn as static_synapse_model
 from teili.models.synapse_models import QuantStochSynStdp as stdp_synapse_model
@@ -26,13 +23,66 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 
 from teili.tools.lfsr import create_lfsr
 from teili.tools.misc import neuron_group_from_spikes
-from SLIF_utils import neuron_rate,\
-        rate_correlations, ensemble_convergence, permutation_from_rate
+from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
+        permutation_from_rate
 
 import sys
 import pickle
 import os
 from datetime import datetime
+from pathlib import Path
+
+#############
+# Utils functions
+def save_data():
+    np.savez(path + f'rasters{block}.npz',
+             input_t=np.array(spikemon_seq_neurons.t/ms), input_i=np.array(spikemon_seq_neurons.i),
+             exc_spikes_t=np.array(spikemon_exc_neurons.t/ms), exc_spikes_i=np.array(spikemon_exc_neurons.i),
+             inh_spikes_t=np.array(spikemon_inh_neurons.t/ms), inh_spikes_i=np.array(spikemon_inh_neurons.i),
+            )
+
+    np.savez(path + f'traces{block}.npz',
+             Vm_e=statemon_exc_cells.Vm, Vm_i=statemon_inh_cells.Vm,
+             exc_rate_t=np.array(statemon_pop_rate_e.t/ms), exc_rate=np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz),
+             inh_rate_t=np.array(statemon_pop_rate_i.t/ms), inh_rate=np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz),
+            )
+
+    # Save targets of recurrent connections as python object
+    recurrent_ids = []
+    recurrent_weights = []
+    for row in range(num_exc):
+        recurrent_weights.append(list(exc_exc_conn.w_plast[row, :]))
+        recurrent_ids.append(list(exc_exc_conn.j[row, :]))
+    np.savez_compressed(path + f'matrices{block}.npz',
+             rf=statemon_ffe_conns.w_plast.astype(np.uint8),
+             rec_ids=recurrent_ids, rec_w=recurrent_weights
+            )
+    pickled_monitor = spikemon_exc_neurons.get_states()
+    with open(path + f'pickled{block}', 'wb') as f:
+        pickle.dump(pickled_monitor, f)
+
+def delete_monitors(monitors):
+    for mon in monitors:
+        del mon
+
+def create_monitors():
+    global spikemon_exc_neurons, spikemon_inh_neurons, spikemon_seq_neurons,\
+        statemon_exc_cells, statemon_inh_cells, statemon_ffe_conns,\
+        statemon_pop_rate_e, statemon_pop_rate_i
+
+    spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
+    spikemon_inh_neurons = SpikeMonitor(inh_cells, name='spikemon_inh_neurons')
+    spikemon_seq_neurons = SpikeMonitor(seq_cells, name='spikemon_seq_neurons')
+    statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm'], record=True,
+                                      name='statemon_exc_cells')
+    statemon_inh_cells = StateMonitor(inh_cells, variables=['Vm'], record=True,
+                                      name='statemon_inh_cells')
+    statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast'],
+                                      record=True, name='statemon_ffe_conns')
+    statemon_pop_rate_e = PopulationRateMonitor(exc_cells,
+                                                name='rate_exc_neurons')
+    statemon_pop_rate_i = PopulationRateMonitor(inh_cells,
+                                                name='rate_inh_neurons')
 
 #############
 # Load models
@@ -83,19 +133,20 @@ spike_times = testbench_stim.times * ms
 sequence_duration = 105*ms
 
 # Save them for comparison
-spk_i, spk_t = np.array(spike_indices), np.around(spike_times/ms).astype(int)*ms
+# TODO remove
+#spk_i, spk_t = np.array(spike_indices), np.around(spike_times/ms).astype(int)*ms
 
 # Reproduce activity in a neuron group (necessary for STDP compatibility)
 seq_cells = neuron_group_from_spikes(num_channels, defaultclock.dt,
     (training_duration+test_duration),
-    spike_indices=np.array(spike_indices),
-    spike_times=np.array(spike_times)*second)
+    spike_indices=spike_indices,
+    spike_times=spike_times)
 
 #################
 # Building network
-num_exc = 48
-num_inh = 12
-#num_inh = 30
+num_exc = 200  # 48
+num_inh = int(num_exc/4)
+#num_inh = int(num_exc/1.6) 
 exc_cells = Neurons(num_exc,
                     equation_builder=adapt_neuron_model(num_inputs=4),
                     method=stochastic_decay,
@@ -209,7 +260,6 @@ if i_plast:
 #feedforward_exc.A_gain = learn_factor
 
 # Weight initializations
-# TODO different insteresting parameters
 #exc_cells.thr_max = 31*mV
 ei_w = 3  # 1
 mean_ie_w = 4  # 1
@@ -286,15 +336,15 @@ if i_plast:
 
 # Adding mismatch
 mismatch_neuron_param = {
-    'tau': 0.1
+    'tau': 0.1  # 0.2
 }
 
 mismatch_synap_param = {
-    'tausyn': 0.1
+    'tausyn': 0.1  # 0.2
 }
 mismatch_plastic_param = {
-    'taupre': 0.1,
-    'taupost': 0.1
+    'taupre': 0.1,  # 0.2
+    'taupost': 0.1  # 0.2
 }
 
 exc_cells.add_mismatch(std_dict=mismatch_neuron_param)
@@ -360,57 +410,59 @@ add_group_params_re_init(groups=[feedforward_exc],
 
 ##################
 # Setting up monitors
-spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
-spikemon_inh_neurons = SpikeMonitor(inh_cells, name='spikemon_inh_neurons')
-spikemon_seq_neurons = SpikeMonitor(seq_cells, name='spikemon_seq_neurons')
-statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm'], record=np.random.randint(0, num_exc),
-                                  name='statemon_exc_cells')
+create_monitors()
+monitors = [statemon_ffe_conns, statemon_exc_cells, statemon_inh_cells,
+            statemon_pop_rate_e, statemon_pop_rate_i, spikemon_seq_neurons,
+            spikemon_exc_neurons, spikemon_inh_neurons]
+
+# Temporary monitors
 if i_plast:
     statemon_proxy = StateMonitor(exc_cells, variables=['normalized_activity_proxy'], record=True,
                                       name='statemon_proxy')
-statemon_inh_cells = StateMonitor(inh_cells, variables=['Vm'], record=np.random.randint(0, num_inh),
-                                  name='statemon_inh_cells')
 statemon_net_current = StateMonitor(exc_cells, variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3'], record=True,
                                   name='statemon_net_current')
-statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast', 'I_syn'], record=True,
-                                  name='statemon_ffe_conns')
-statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
-statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
-
-net = TeiliNetwork()
-if i_plast:
-    net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-            spikemon_exc_neurons, spikemon_inh_neurons, background_activity,
-            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-            statemon_pop_rate_i, statemon_net_current, poisson_activity,
-            inh_inh_conn, statemon_proxy)
-else:
-    net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-            spikemon_exc_neurons, spikemon_inh_neurons, background_activity,
-            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-            statemon_pop_rate_i, statemon_net_current, inh_inh_conn,
-            poisson_activity)
 
 # Training
-statemon_ffe_conns.active = True
-net.run(training_duration, report='stdout', report_period=100*ms)
+date_time = datetime.now()
+path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
+os.mkdir(path)
+
+training_blocks = 10
+for block in range(training_blocks):
+    block_duration = int(np.around(training_duration/defaultclock.dt)
+                         / training_blocks) * defaultclock.dt
+    run(block_duration, report='stdout', report_period=100*ms)
+    # Free up memory
+    save_data()
+
+    # Reinitialization
+    delete_monitors(monitors)
+    create_monitors()
+
+remainder_time = int(np.around(training_duration/defaultclock.dt)
+                     % training_blocks) * defaultclock.dt
+run(remainder_time, report='stdout', report_period=100*ms)
+save_data()
+delete_monitors(monitors)
 
 # Testing
-#feedforward_inh.weight = 0
-statemon_ffe_conns.active = True
-net.run(test_duration, report='stdout', report_period=100*ms)
+run(test_duration, report='stdout', report_period=100*ms)
 
 ##########
 # Evaluations
-if not np.array_equal(spk_t, spikemon_seq_neurons.t):
-    print('Proxy activity and generated input do not match.')
-    from brian2 import *
-    plot(spk_t, spk_i, 'k.')
-    plot(spikemon_seq_neurons.t, spikemon_seq_neurons.i, 'r+')
-    show()
-    sys.exit()
+# TODO remove
+#if not np.array_equal(spk_t, spikemon_seq_neurons.t):
+#    print('Proxy activity and generated input do not match.')
+#    from brian2 import *
+#    plot(spk_t, spk_i, 'k.')
+#    plot(spikemon_seq_neurons.t, spikemon_seq_neurons.i, 'r+')
+#    show()
+#    sys.exit()
+
+spikemon_exc_neurons = {}
+for pickled_file in Path(path).glob('pickled*'):
+    with open(pickled_file, 'rb') as f:
+        spikemon_exc_neurons.update(pickle.load(f))
 
 last_sequence_t = (training_duration-sequence_duration)/ms
 neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=200,
@@ -423,39 +475,11 @@ neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=200,
 
 ############
 # Saving results
-# Save targets of recurrent connections as python object
-n_rows = num_exc
-recurrent_ids = []
-recurrent_weights = []
-for row in range(n_rows):
-    recurrent_weights.append(list(exc_exc_conn.w_plast[row, :]))
-    recurrent_ids.append(list(exc_exc_conn.j[row, :]))
-
 # Calculating permutation indices from firing rates
 permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
                                         defaultclock.dt)
 
 # Save data
-date_time = datetime.now()
-path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
-os.mkdir(path)
-np.savez(path+f'rasters.npz',
-         input_t=np.array(spikemon_seq_neurons.t/ms), input_i=np.array(spikemon_seq_neurons.i),
-         exc_spikes_t=np.array(spikemon_exc_neurons.t/ms), exc_spikes_i=np.array(spikemon_exc_neurons.i),
-         inh_spikes_t=np.array(spikemon_inh_neurons.t/ms), inh_spikes_i=np.array(spikemon_inh_neurons.i),
-        )
-
-np.savez(path+f'traces.npz',
-         Vm_e=statemon_exc_cells.Vm, Vm_i=statemon_inh_cells.Vm,
-         exc_rate_t=np.array(statemon_pop_rate_e.t/ms), exc_rate=np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz),
-         inh_rate_t=np.array(statemon_pop_rate_i.t/ms), inh_rate=np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz),
-        )
-
-np.savez_compressed(path+f'matrices.npz',
-         rf=statemon_ffe_conns.w_plast.astype(np.uint8),
-         rec_ids=recurrent_ids, rec_w=recurrent_weights
-        )
-
 np.savez(path+f'permutation.npz',
          ids = permutation_ids
         )

@@ -24,27 +24,36 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.lfsr import create_lfsr
 from teili.tools.misc import neuron_group_from_spikes
 from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
-        permutation_from_rate
+        permutation_from_rate, load_merge_multiple
 
 import sys
 import pickle
 import os
 from datetime import datetime
-from pathlib import Path
 
 #############
 # Utils functions
 def save_data():
-    np.savez(path + f'rasters{block}.npz',
+    np.savez(path + f'rasters_{block}.npz',
              input_t=np.array(spikemon_seq_neurons.t/ms), input_i=np.array(spikemon_seq_neurons.i),
              exc_spikes_t=np.array(spikemon_exc_neurons.t/ms), exc_spikes_i=np.array(spikemon_exc_neurons.i),
              inh_spikes_t=np.array(spikemon_inh_neurons.t/ms), inh_spikes_i=np.array(spikemon_inh_neurons.i),
             )
 
-    np.savez(path + f'traces{block}.npz',
+    # If there are only a few samples, smoothing operation can create an array
+    # with is incompatible with array with spike times. This is then addressed
+    # before saving to disk
+    exc_rate_t = np.array(statemon_pop_rate_e.t/ms)
+    exc_rate = np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz)
+    inh_rate_t = np.array(statemon_pop_rate_i.t/ms)
+    inh_rate = np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz)
+    if len(exc_rate_t) != len(exc_rate):
+        exc_rate = np.array(statemon_pop_rate_e.rate/Hz)
+        inh_rate = np.array(statemon_pop_rate_i.rate/Hz)
+    np.savez(path + f'traces_{block}.npz',
              Vm_e=statemon_exc_cells.Vm, Vm_i=statemon_inh_cells.Vm,
-             exc_rate_t=np.array(statemon_pop_rate_e.t/ms), exc_rate=np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz),
-             inh_rate_t=np.array(statemon_pop_rate_i.t/ms), inh_rate=np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz),
+             exc_rate_t=exc_rate_t, exc_rate=exc_rate,
+             inh_rate_t=inh_rate_t, inh_rate=inh_rate,
             )
 
     # Save targets of recurrent connections as python object
@@ -53,12 +62,12 @@ def save_data():
     for row in range(num_exc):
         recurrent_weights.append(list(exc_exc_conn.w_plast[row, :]))
         recurrent_ids.append(list(exc_exc_conn.j[row, :]))
-    np.savez_compressed(path + f'matrices{block}.npz',
+    np.savez_compressed(path + f'matrices_{block}.npz',
              rf=statemon_ffe_conns.w_plast.astype(np.uint8),
              rec_ids=recurrent_ids, rec_w=recurrent_weights
             )
     pickled_monitor = spikemon_exc_neurons.get_states()
-    with open(path + f'pickled{block}', 'wb') as f:
+    with open(path + f'pickled_{block}', 'wb') as f:
         pickle.dump(pickled_monitor, f)
 
 def delete_monitors(monitors):
@@ -254,13 +263,11 @@ feedforward_exc.rand_num_bits_Apost = 4
 
 exc_cells.Vm = 3*mV
 inh_cells.Vm = 3*mV
-learn_factor = 4
 if i_plast:
     inh_exc_conn.inh_learning_rate = 0.01
-#feedforward_exc.A_gain = learn_factor
 
 # Weight initializations
-#exc_cells.thr_max = 31*mV
+exc_cells.thr_max = 15*mV
 ei_w = 3  # 1
 mean_ie_w = 4  # 1
 mean_ee_w = 1
@@ -428,6 +435,8 @@ path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/
 os.mkdir(path)
 
 training_blocks = 10
+remainder_time = int(np.around(training_duration/defaultclock.dt)
+                     % training_blocks) * defaultclock.dt
 for block in range(training_blocks):
     block_duration = int(np.around(training_duration/defaultclock.dt)
                          / training_blocks) * defaultclock.dt
@@ -439,14 +448,17 @@ for block in range(training_blocks):
     delete_monitors(monitors)
     create_monitors()
 
-remainder_time = int(np.around(training_duration/defaultclock.dt)
-                     % training_blocks) * defaultclock.dt
-run(remainder_time, report='stdout', report_period=100*ms)
-save_data()
-delete_monitors(monitors)
+if remainder_time != 0:
+    block += 1
+    run(remainder_time, report='stdout', report_period=100*ms)
+    save_data()
+    delete_monitors(monitors)
+    create_monitors()
 
 # Testing
 run(test_duration, report='stdout', report_period=100*ms)
+block += 1
+save_data()
 
 ##########
 # Evaluations
@@ -459,10 +471,8 @@ run(test_duration, report='stdout', report_period=100*ms)
 #    show()
 #    sys.exit()
 
-spikemon_exc_neurons = {}
-for pickled_file in Path(path).glob('pickled*'):
-    with open(pickled_file, 'rb') as f:
-        spikemon_exc_neurons.update(pickle.load(f))
+# Recover data pickled from monitor
+spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')
 
 last_sequence_t = (training_duration-sequence_duration)/ms
 neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=200,
@@ -499,7 +509,6 @@ Metadata = {'time_step': defaultclock.dt,
             'mean e->i w': ei_w,
             'mean i->e w': mean_ie_w,
             'mean e->e w': mean_ee_w,
-            'learn_factor': learn_factor,
             'mean ffe w': mean_ffe_w,
             'mean ffi w': mean_ffi_w,
             'i_plast': i_plast

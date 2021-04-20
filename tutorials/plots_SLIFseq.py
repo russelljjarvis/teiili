@@ -7,10 +7,10 @@ from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
 from pyqtgraph.dockarea import *
 
-from pathlib import Path
 import sys
 
 from teili.tools.sorting import SortMatrix
+from SLIF_utils import load_merge_multiple
 
 sort_type = sys.argv[2]
 
@@ -38,9 +38,10 @@ ei_conn = metadata['e->i p']
 #ffi_weight = metadata['']
 num_exc = metadata['num_exc']
 num_channels = metadata['num_channels']
-rasters = np.load(f'{data_folder}rasters.npz')
-traces = np.load(f'{data_folder}traces.npz')
-matrices = np.load(f'{data_folder}matrices.npz', allow_pickle=True)
+rasters = load_merge_multiple(data_folder, 'rasters*', mode='numpy')
+traces = load_merge_multiple(data_folder, 'traces*', mode='numpy')
+matrices = load_merge_multiple(data_folder, 'matrices*', mode='numpy',
+    allow_pickle=True)
 plot_d1, plot_d2, plot_d3 = True, True, True
 
 # Print more info
@@ -53,19 +54,18 @@ pp.pprint(info_conn)
 pp.pprint(info_pop)
 
 # Avoid storing too much data on memory
-data_start, data_end = 0, -1
-input_t = rasters['input_t'][data_start:data_end]
-input_i = rasters['input_i'][data_start:data_end]
-Vm_e = traces['Vm_e'][0][data_start:data_end]
-Vm_i = traces['Vm_i'][0][data_start:data_end]
-exc_spikes_t = rasters['exc_spikes_t'][data_start:data_end]
-exc_spikes_i = rasters['exc_spikes_i'][data_start:data_end]
-inh_spikes_t = rasters['inh_spikes_t'][data_start:data_end]
-inh_spikes_i = rasters['inh_spikes_i'][data_start:data_end]
-exc_rate_t = traces['exc_rate_t'][data_start:data_end]
-exc_rate = traces['exc_rate'][data_start:data_end]
-inh_rate_t = traces['inh_rate_t'][data_start:data_end]
-inh_rate = traces['inh_rate'][data_start:data_end]
+input_t = rasters['input_t']
+input_i = rasters['input_i']
+Vm_e = traces['Vm_e'][0]
+Vm_i = traces['Vm_i'][0]
+exc_spikes_t = rasters['exc_spikes_t']
+exc_spikes_i = rasters['exc_spikes_i']
+inh_spikes_t = rasters['inh_spikes_t']
+inh_spikes_i = rasters['inh_spikes_i']
+exc_rate_t = traces['exc_rate_t']
+exc_rate = traces['exc_rate']
+inh_rate_t = traces['inh_rate_t']
+inh_rate = traces['inh_rate']
 rf = matrices['rf']
 rec_ids = matrices['rec_ids']
 rec_w = matrices['rec_w']

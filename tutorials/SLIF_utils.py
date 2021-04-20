@@ -4,6 +4,8 @@ import numpy as np
 from teili.core.groups import Neurons
 from scipy.stats import pearsonr, spearmanr
 from random import randint
+from pathlib import Path
+import pickle
 
 def replicate_sequence(num_channels, reference_indices, reference_times,
                        sequence_duration, duration):
@@ -19,11 +21,13 @@ def replicate_sequence(num_channels, reference_indices, reference_times,
 
     return spike_indices, spike_times
 
-def neuron_rate(spike_monitor, kernel_len, kernel_var, kernel_min, interval):
+def neuron_rate(spike_source, kernel_len, kernel_var, kernel_min, interval):
     """Computes firing rates of neurons in a SpikeMonitor.
 
     Args:
-        spike_monitor (brian2.SpikeMonitor): Monitor with spikes and times.
+        spike_source (brian2.SpikeMonitor): Source with spikes and times. It
+            can be a monitor or a dictionary with {'i': [i1, i2, ...],
+            't': [t1, t2, ...]}
         kernel_len (int): Number of samples in the kernel.
         kernel_var (int): Variance of the kernel window.
         interval (list of int): lower and upper values of the interval, in
@@ -32,7 +36,20 @@ def neuron_rate(spike_monitor, kernel_len, kernel_var, kernel_min, interval):
     Returns:
         neuron_rates (dict): Rates and corresponding instants of each neuron.
     """
-    spike_trains = spike_monitor.spike_trains()
+    if isinstance(spike_source, SpikeMonitor):
+        spike_trains = spike_source.spike_trains()
+    elif isinstance(spike_source, dict):
+        # Convert to monitor so spike_trains() can be called
+        num_indices = max(spike_source['i']) + 1
+        spike_gen = SpikeGeneratorGroup(num_indices,
+                                           spike_source['i'],
+                                           spike_source['t'])
+        spike_mon = SpikeMonitor(spike_gen)
+        run(max(spike_source['t']))
+        spike_trains = spike_mon.spike_trains()
+    else:
+        import sys
+        sys.exit()
     neuron_rates = {}
     interval = range(int(interval[0]), int(interval[1])+1)
 
@@ -167,3 +184,30 @@ def permutation_from_rate(neurons_rate, window_duration, simulation_dt):
     [permutation_ids.append(neu) for neu in range(num_neu) if not neu in permutation_ids]
 
     return permutation_ids
+
+def load_merge_multiple(path_name, file_name, mode='pickle', allow_pickle=False):
+    merged_dict = {}
+    if mode == 'pickle':
+        for pickled_file in Path(path_name).glob(file_name):
+            with open(pickled_file, 'rb') as f:
+                for key, val in pickle.load(f).items():
+                    try:
+                        merged_dict.setdefault(key, []).extend(val)
+                    except TypeError:
+                        merged_dict.setdefault(key, []).append(val)
+    elif mode == 'numpy':
+        for saved_file in sorted(Path(path_name).glob(file_name),
+                                 key=lambda path: int(path.stem.split('_')[1])):
+            data = np.load(saved_file, allow_pickle=allow_pickle)
+            for key, val in data.items():
+                if key == 'rec_w' or key == 'rec_ids':
+                    # These are supposed to be always the same. There could be
+                    # an if conditional here but that would slow things down
+                    merged_dict[key] = val
+                else:
+                    try:
+                        merged_dict[key] = np.hstack((merged_dict[key], val))
+                    except KeyError:
+                        merged_dict[key] = val
+
+    return merged_dict

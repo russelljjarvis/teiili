@@ -99,6 +99,8 @@ path = os.path.expanduser("/home/pablo/git/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochSynAdp.py')
+adp_synapse_model0 = SynapseEquationBuilder.import_eq(
+        model_path + 'StochSynAdp0.py')
 adapt_neuron_model = NeuronEquationBuilder(base_unit='quantized',
         intrinsic_excitability='threshold_adaptation',
         position='spatial')
@@ -108,13 +110,7 @@ reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
 
 #############
 # Prepare parameters of the simulation
-if sys.argv[1] == 'plastic_inh':
-    i_plast = True
-elif sys.argv[1] == 'static_inh':
-    i_plast = False
-else:
-    print('Provide correct argument')
-    sys.exit(0)
+i_plast = sys.argv[1]
 
 # Initialize simulation preferences
 prefs.codegen.target = "numpy"
@@ -166,7 +162,7 @@ rate_distribution = np.random.randint(1, 15, size=num_exc) * Hz
 poisson_activity = PoissonGroup(num_exc, rate_distribution)
 
 # Register proxy arrays
-if i_plast:
+if i_plast == 'plastic_inh':
     dummy_unit = 1*mV
     exc_cells.variables.add_array('activity_proxy',
                                    size=exc_cells.N,
@@ -195,9 +191,14 @@ exc_inh_conn = Connections(exc_cells, inh_cells,
                            equation_builder=static_synapse_model(),
                            method=stochastic_decay,
                            name='exc_inh_conn')
-if i_plast:
+if i_plast == 'plastic_inh':
     inh_exc_conn = Connections(inh_cells, exc_cells,
                                equation_builder=adp_synapse_model,
+                               method=stochastic_decay,
+                               name='inh_exc_conn')
+elif i_plast == 'plastic_inh0':
+    inh_exc_conn = Connections(inh_cells, exc_cells,
+                               equation_builder=adp_synapse_model0,
                                method=stochastic_decay,
                                name='inh_exc_conn')
 else:
@@ -263,7 +264,7 @@ feedforward_exc.rand_num_bits_Apost = 4
 
 exc_cells.Vm = 3*mV
 inh_cells.Vm = 3*mV
-if i_plast:
+if i_plast == 'plastic_inh' or i_plast == 'plastic_inh0':
     inh_exc_conn.inh_learning_rate = 0.01
 
 # Weight initializations
@@ -275,7 +276,7 @@ mean_ffe_w = 3
 mean_ffi_w = 1  # 2
 mean_ii_w = 1
 
-if i_plast:
+if i_plast == 'plastic_inh' or i_plast == 'plastic_inh0':
     inh_exc_conn.weight = -1
     # 1 = no inhibition, 0 = maximum inhibition
     #var_th = .1
@@ -285,7 +286,7 @@ for neu in range(num_inh):
     sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
     sampled_weights = np.clip(sampled_weights, 0, 15)
     #sampled_weights = truncnorm.rvs(-3, 4, loc=mean_ie_w, size=weight_length).astype(int)
-    if i_plast:
+    if i_plast == 'plastic_inh' or i_plast == 'plastic_inh0':
         inh_exc_conn.w_plast[neu, :] = sampled_weights
     else:
         inh_exc_conn.weight[neu, :] = -sampled_weights
@@ -330,7 +331,7 @@ for neu in range(num_exc):
 #                 feedforward_inh, inh_inh_conn]
 #ta = create_lfsr(neu_groups, syn_groups, defaultclock.dt)
 
-if i_plast:
+if i_plast == 'plastic_inh':
     # Add proxy activity group
     activity_proxy_group = [exc_cells]
     add_group_activity_proxy(activity_proxy_group,
@@ -423,7 +424,7 @@ monitors = [statemon_ffe_conns, statemon_exc_cells, statemon_inh_cells,
             spikemon_exc_neurons, spikemon_inh_neurons]
 
 # Temporary monitors
-if i_plast:
+if i_plast == 'plastic_inh':
     statemon_proxy = StateMonitor(exc_cells, variables=['normalized_activity_proxy'], record=True,
                                       name='statemon_proxy')
 statemon_net_current = StateMonitor(exc_cells, variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3'], record=True,

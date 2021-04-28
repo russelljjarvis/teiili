@@ -179,9 +179,9 @@ inh_cells = Neurons(num_inh,
 
 # Connections
 ei_p = 0.50
-ie_p = 0.70
-ee_p = 0.60
-#ee_p = 1.0
+ie_p = 0.60
+#ee_p = 0.6
+ee_p = 1.0
 
 exc_exc_conn = Connections(exc_cells, exc_cells,
                            equation_builder=stdp_synapse_model(),
@@ -231,12 +231,11 @@ exc_exc_conn.connect('i!=j', p=ee_p)
 background_activity.connect('i==j')
 exc_inh_conn.connect(p=ei_p)
 
+# Delays
 exc_exc_conn.delay = np.random.randint(0, 8, size=np.shape(exc_exc_conn.j)[0]) * ms
-exc_inh_conn.delay = np.random.randint(0, 8, size=np.shape(exc_inh_conn.j)[0]) * ms
-feedforward_exc.delay = np.random.randint(0, 8, size=np.shape(feedforward_exc.j)[0]) * ms
-feedforward_inh.delay = np.random.randint(0, 8, size=np.shape(feedforward_inh.j)[0]) * ms
-inh_inh_conn.delay = np.random.randint(0, 8, size=np.shape(inh_inh_conn.j)[0]) * ms
-inh_exc_conn.delay = np.random.randint(0, 8, size=np.shape(inh_exc_conn.j)[0]) * ms
+#feedforward_exc.delay = np.random.randint(0, 8, size=np.shape(feedforward_exc.j)[0]) * ms
+#feedforward_inh.delay = np.random.randint(0, 8, size=np.shape(feedforward_inh.j)[0]) * ms
+#inh_inh_conn.delay = np.random.randint(0, 8, size=np.shape(inh_inh_conn.j)[0]) * ms
 
 # Time constants
 # Values similar to those in Klampfl&Maass(2013), Joglekar etal(2018), Vogels&Abbott(2009)

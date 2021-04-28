@@ -38,15 +38,15 @@ StochSynAdp0 = {'model':
 
         I_syn += gain_syn * abs(weight) * w_plast
         
-        Apre += 1
-        delta_w  = (Apost - variance_th) * inh_learning_rate
-        w_plast = clip(w_plast + delta_w, 0, 15)
+        Apre += 15
+        delta_w  = (Apost/15 - variance_th) * inh_learning_rate
+        w_plast = clip(w_plast + delta_w, 0, 31)
          ''',
 'on_post':
 '''
-        Apost += 1
-        delta_w  = Apre * inh_learning_rate
-        w_plast = clip(w_plast + delta_w, 0, 15)
+        Apost += 15
+        delta_w  = Apre/15 * inh_learning_rate
+        w_plast = clip(w_plast + delta_w, 0, 31)
 
         
          
@@ -57,7 +57,7 @@ StochSynAdp0 = {'model':
 'w_plast' : '1',
 'gain_syn' : '1. * mamp',
 'tausyn' : '3. * msecond',
-'inh_learning_rate' : '0.01',
+'inh_learning_rate' : '0.1',
 'variance_th' : '0.12',
 'taupre': '20 * msecond',
 'taupost': '20 * msecond'

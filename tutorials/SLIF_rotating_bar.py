@@ -26,6 +26,8 @@ from teili.tools.misc import neuron_group_from_spikes
 from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
         permutation_from_rate, load_merge_multiple
 
+from orca_wta import ORCA_WTA
+
 import sys
 import pickle
 import os
@@ -93,31 +95,12 @@ def create_monitors():
     statemon_pop_rate_i = PopulationRateMonitor(inh_cells,
                                                 name='rate_inh_neurons')
 
-#############
-# Load models
-path = os.path.expanduser("/home/pablo/git/teili")
-model_path = os.path.join(path, "teili", "models", "equations", "")
-adp_synapse_model = SynapseEquationBuilder.import_eq(
-        model_path + 'StochSynAdp.py')
-adp_synapse_model0 = SynapseEquationBuilder.import_eq(
-        model_path + 'StochSynAdp0.py')
-adapt_neuron_model = NeuronEquationBuilder(base_unit='quantized',
-        intrinsic_excitability='threshold_adaptation',
-        position='spatial')
-reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
-        plasticity='quantized_stochastic_stdp',
-        structural_plasticity='stochastic_counter')
-
-#############
 # Prepare parameters of the simulation
 i_plast = sys.argv[1]
 
 # Initialize simulation preferences
 prefs.codegen.target = "numpy"
-defaultclock.dt = 1 * ms
-stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
-################################################
 # Initialize rotating bar
 testbench_stim = OCTA_Testbench()
 num_channels = 100
@@ -133,141 +116,13 @@ testbench_stim.rotating_bar(length=10, nrows=10,
                             debug=False)
 training_duration = np.max(testbench_stim.times)*ms
 test_duration = 1000*ms
-spike_indices = testbench_stim.indices
-spike_times = testbench_stim.times * ms
+input_indices = testbench_stim.indices
+input_times = testbench_stim.times * ms
 sequence_duration = 105*ms
 
-# Save them for comparison
-# TODO remove
-#spk_i, spk_t = np.array(spike_indices), np.around(spike_times/ms).astype(int)*ms
-
-# Reproduce activity in a neuron group (necessary for STDP compatibility)
-seq_cells = neuron_group_from_spikes(num_channels, defaultclock.dt,
-    (training_duration+test_duration),
-    spike_indices=spike_indices,
-    spike_times=spike_times)
-
-#################
-# Building network
-num_exc = 200  # 48
-num_inh = int(num_exc/4)
-#num_inh = int(num_exc/1.6) 
-exc_cells = Neurons(num_exc,
-                    equation_builder=adapt_neuron_model(num_inputs=4),
-                    method=stochastic_decay,
-                    name='exc_cells',
-                    verbose=True)
-
-rate_distribution = np.random.randint(1, 15, size=num_exc) * Hz
-poisson_activity = PoissonGroup(num_exc, rate_distribution)
-
-# Register proxy arrays
-if i_plast == 'plastic_inh':
-    dummy_unit = 1*mV
-    exc_cells.variables.add_array('activity_proxy',
-                                   size=exc_cells.N,
-                                   dimensions=dummy_unit.dim)
-
-    exc_cells.variables.add_array('normalized_activity_proxy',
-                                   size=exc_cells.N)
-
-inh_cells = Neurons(num_inh,
-                    equation_builder=static_neuron_model(num_inputs=3),
-                    method=stochastic_decay,
-                    name='inh_cells',
-                    verbose=True)
-
-# Connections
-ei_p = 0.50
-ie_p = 0.60
-#ee_p = 0.6
-ee_p = 1.0
-
-exc_exc_conn = Connections(exc_cells, exc_cells,
-                           equation_builder=stdp_synapse_model(),
-                           method=stochastic_decay,
-                           name='exc_exc_conn')
-exc_inh_conn = Connections(exc_cells, inh_cells,
-                           equation_builder=static_synapse_model(),
-                           method=stochastic_decay,
-                           name='exc_inh_conn')
-if i_plast == 'plastic_inh':
-    inh_exc_conn = Connections(inh_cells, exc_cells,
-                               equation_builder=adp_synapse_model,
-                               method=stochastic_decay,
-                               name='inh_exc_conn')
-elif i_plast == 'plastic_inh0':
-    inh_exc_conn = Connections(inh_cells, exc_cells,
-                               equation_builder=adp_synapse_model0,
-                               method=stochastic_decay,
-                               name='inh_exc_conn')
-else:
-    inh_exc_conn = Connections(inh_cells, exc_cells,
-                               equation_builder=static_synapse_model(),
-                               method=stochastic_decay,
-                               name='inh_exc_conn')
-inh_inh_conn = Connections(inh_cells, inh_cells,
-                           equation_builder=static_synapse_model(),
-                           method=stochastic_decay,
-                           name='inh_inh_conn')
-feedforward_exc = Connections(seq_cells, exc_cells,
-                              equation_builder=reinit_synapse_model(),
-                              method=stochastic_decay,
-                              name='feedforward_exc')
-feedforward_inh = Connections(seq_cells, inh_cells,
-                              equation_builder=static_synapse_model(),
-                              method=stochastic_decay,
-                              name='feedforward_inh')
-background_activity = Connections(poisson_activity, exc_cells,
-                                  equation_builder=static_synapse_model(),
-                                  method=stochastic_decay,
-                                  name='background_activity')
-
-feedforward_exc.connect()
-feedforward_inh.connect()
-inh_inh_conn.connect(p=.1)
-inh_exc_conn.connect(p=ie_p)
-exc_exc_conn.connect('i!=j', p=ee_p)
-background_activity.connect('i==j')
-exc_inh_conn.connect(p=ei_p)
-
-# Delays
-exc_exc_conn.delay = np.random.randint(0, 8, size=np.shape(exc_exc_conn.j)[0]) * ms
-#feedforward_exc.delay = np.random.randint(0, 8, size=np.shape(feedforward_exc.j)[0]) * ms
-#feedforward_inh.delay = np.random.randint(0, 8, size=np.shape(feedforward_inh.j)[0]) * ms
-#inh_inh_conn.delay = np.random.randint(0, 8, size=np.shape(inh_inh_conn.j)[0]) * ms
-
-# Time constants
-# Values similar to those in Klampfl&Maass(2013), Joglekar etal(2018), Vogels&Abbott(2009)
-exc_exc_conn.tausyn = 5*ms
-exc_exc_conn.taupre = 20*ms
-exc_exc_conn.taupost = 20*ms
-exc_exc_conn.stdp_thres = 1
-exc_inh_conn.tausyn = 5*ms
-background_activity.tausyn = 3*ms
-inh_exc_conn.tausyn = 10*ms
-inh_inh_conn.tausyn = 10*ms
-feedforward_exc.tausyn = 5*ms
-feedforward_exc.taupre = 20*ms
-feedforward_exc.taupost = 20*ms
-feedforward_exc.stdp_thres = 1
-feedforward_inh.tausyn = 5*ms
-exc_cells.tau = 20*ms
-inh_cells.tau = 10*ms
-
-# LFSR lengths
-exc_exc_conn.rand_num_bits_Apre = 4
-exc_exc_conn.rand_num_bits_Apost = 4
-feedforward_exc.rand_num_bits_Apre = 4
-feedforward_exc.rand_num_bits_Apost = 4
-
-exc_cells.Vm = 3*mV
-inh_cells.Vm = 3*mV
-if i_plast == 'plastic_inh' or i_plast == 'plastic_inh0':
-    inh_exc_conn.inh_learning_rate = 0.01
+orca = ORCA_WTA(input_indices, input_times, ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
 
 # Weight initializations
-exc_cells.thr_max = 15*mV
 ei_w = 3  # 1
 mean_ie_w = 4  # 1
 mean_ee_w = 1
@@ -318,11 +173,6 @@ for ch in range(num_channels):
             15)
     #feedforward_inh.weight[ch,:] = truncnorm.rvs(-1, 7, loc=mean_ffi_w, size=num_inh_weight).astype(int)
 background_activity.weight = 50
-# Set sparsity for ffe connections
-for neu in range(num_exc):
-    ffe_zero_w = np.random.choice(num_channels, int(num_channels*.3), replace=False)
-    feedforward_exc.weight[ffe_zero_w,neu] = 0
-    feedforward_exc.w_plast[ffe_zero_w,neu] = 0
 
 # Set LFSRs for each group
 #neu_groups = [exc_cells, inh_cells]
@@ -459,17 +309,6 @@ if remainder_time != 0:
 run(test_duration, report='stdout', report_period=100*ms)
 block += 1
 save_data()
-
-##########
-# Evaluations
-# TODO remove
-#if not np.array_equal(spk_t, spikemon_seq_neurons.t):
-#    print('Proxy activity and generated input do not match.')
-#    from brian2 import *
-#    plot(spk_t, spk_i, 'k.')
-#    plot(spikemon_seq_neurons.t, spikemon_seq_neurons.i, 'r+')
-#    show()
-#    sys.exit()
 
 # Recover data pickled from monitor
 spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')

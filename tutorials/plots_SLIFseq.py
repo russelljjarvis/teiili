@@ -32,9 +32,6 @@ area.moveDock(d1, 'above', d2)
 data_folder = sys.argv[1]
 with open(f'{data_folder}general.data', 'rb') as f:
     metadata = pickle.load(f)
-num_inh = metadata['num_inh']
-input_rate = metadata['input_rate']
-ei_conn = metadata['e->i p']
 #ffi_weight = metadata['']
 num_exc = metadata['num_exc']
 num_channels = metadata['num_channels']

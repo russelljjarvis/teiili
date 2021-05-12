@@ -67,13 +67,30 @@ inhibitory_neurons = {'tau': 10*ms,
                       'Vm': 3*mV
                      }
 
-excitatory_plastic_syn = {'tausyn': 5*ms,
-                          'taupre': 20*ms,
-                          'taupost': 20*ms,
-                          'rand_num_bits_Apre': 4,
-                          'rand_num_bits_Apost': 4,
-                          'stdp_thres': 1
-                          }
+excitatory_plastic_synapse = {'tausyn': 5*ms,
+                              'taupre': 20*ms,
+                              'taupost': 20*ms,
+                              'rand_num_bits_Apre': 4,
+                              'rand_num_bits_Apost': 4,
+                              'stdp_thres': 1
+                              }
 
-inhibitory_syn = {'tausyn': 10*ms
-                 }
+inhibitory_synapse = {'tausyn': 10*ms
+                     }
+
+synapse_mean_weight = {'e_i': 3, # 1
+                       'i_e': 4, # 1
+                       'e_e': 1,
+                       'i_i': 1,
+                       'inp_e': 3,
+                       'inp_i': 1 # 2
+                       }
+
+mismatch_neuron_param = {'tau': 0.1  # 0.2
+                         }
+
+mismatch_synapse_param = {'tausyn': 0.1  # 0.2
+                        }
+mismatch_plastic_param = {'taupre': 0.1,  # 0.2
+                          'taupost': 0.1  # 0.2
+                          }

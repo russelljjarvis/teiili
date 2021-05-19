@@ -16,7 +16,7 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.group_tools import add_group_activity_proxy,\
     add_group_params_re_init, add_group_param_init
 
-from orca_params import connection_probability_old, excitatory_neurons,\
+from orca_params import connection_probability_HS19, excitatory_neurons,\
     inhibitory_neurons, excitatory_plastic_synapse, inhibitory_synapse,\
     synapse_mean_weight, mismatch_neuron_param, mismatch_synapse_param,\
     mismatch_plastic_param
@@ -52,8 +52,8 @@ class ORCA_WTA(BuildingBlock):
                  num_input,
                  input_indices,
                  input_times,
-                 name='orca_wta*',
-                 connectivity_params=connection_probability_old,
+                 name='orca_wta_',
+                 connectivity_params=connection_probability_HS19,
                  exc_neu_params=excitatory_neurons,
                  inh_neu_params=inhibitory_neurons,
                  exc_plastic_params=excitatory_plastic_synapse,
@@ -102,7 +102,8 @@ class ORCA_WTA(BuildingBlock):
                                None,
                                verbose,
                                monitor)
-        self._groups = gen_orca(num_exc_neurons=num_exc_neurons,
+        self._groups = gen_orca(groupname=name,
+                                num_exc_neurons=num_exc_neurons,
                                 num_input=num_input,
                                 input_indices=input_indices,
                                 input_times=input_times,
@@ -118,7 +119,8 @@ class ORCA_WTA(BuildingBlock):
                                 inh_params=inh_params,
                                 noise=noise)
 
-def gen_orca(num_exc_neurons,
+def gen_orca(groupname,
+             num_exc_neurons,
              num_input,
              input_indices,
              input_times,
@@ -137,12 +139,12 @@ def gen_orca(num_exc_neurons,
     by Wang et al. (2018).
 
     Args:
+        groupname (str, required): Name of the building_block population
         num_exc_neurons (int, optional): Size of excitatory population.
         num_input (int): Number of input channels.
         input_indices (numpy.array): Indices of the original source.
         input_times (numpy.array): Time stamps with unit of original spikes
             in ms.
-        name (str, required): Name of the building_block population
         connectivity_params (dict): Dictionary which holds building_block
             specific parameters
         exc_neu_params (dict): Dictionary which holds parameters of
@@ -165,7 +167,7 @@ def gen_orca(num_exc_neurons,
         noise (bool, optional): Flag to determine if background noise is to
             be added to neurons. This is generated with a poisson process.
     """
-    # TODO remove when no longer testing, as well as if'
+    # TODO remove when no longer testing, as well as if's
     i_plast = 'plastic_inh0'
     # Convert input into neuron group (necessary for STDP compatibility)
     sim_duration = input_times[-1]
@@ -183,9 +185,9 @@ def gen_orca(num_exc_neurons,
     num_vip = int(num_inh * ratio_vip)
 
     pyr_cells = Neurons(num_exc_neurons,
-                        equation_builder=adapt_neuron_model(num_inputs=4),
+                        equation_builder=adapt_neuron_model(num_inputs=5), #TODO 4 when I fix input?
                         method=stochastic_decay,
-                        name='pyr_cells',
+                        name=groupname+'pyr_cells',
                         verbose=True)
 
     if i_plast == 'plastic_inh':
@@ -199,17 +201,17 @@ def gen_orca(num_exc_neurons,
     pv_cells = Neurons(num_pv,
                        equation_builder=static_neuron_model(num_inputs=4),
                        method=stochastic_decay,
-                       name='pv_cells',
+                       name=groupname+'pv_cells',
                        verbose=True)
     sst_cells = Neurons(num_sst,
                         equation_builder=static_neuron_model(num_inputs=3),
                         method=stochastic_decay,
-                        name='sst_cells',
+                        name=groupname+'sst_cells',
                         verbose=True)
     vip_cells = Neurons(num_vip,
-                        equation_builder=static_neuron_model(num_inputs=3),
+                        equation_builder=static_neuron_model(num_inputs=4), #TODO 3 when I fix input?
                         method=stochastic_decay,
-                        name='vip_cells',
+                        name=groupname+'vip_cells',
                         verbose=True)
 
     # Creating connections
@@ -217,84 +219,84 @@ def gen_orca(num_exc_neurons,
     input_pyr_conn = Connections(seq_cells, pyr_cells,
             equation_builder=reinit_synapse_model(),
             method=stochastic_decay,
-            name='input_pyr_conn')
+            name=groupname+'input_pyr_conn')
     input_pv_conn = Connections(seq_cells, pv_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='input_pv_conn')
+            name=groupname+'input_pv_conn')
     input_sst_conn = Connections(seq_cells, sst_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='input_sst_conn')
+            name=groupname+'input_sst_conn')
     input_vip_conn = Connections(seq_cells, vip_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='input_vip_conn')
+            name=groupname+'input_vip_conn')
 
-    # Pyramidal to interneurons
+    # From Pyramidal neurons
     pyr_pyr_conn = Connections(pyr_cells, pyr_cells,
             equation_builder=stdp_synapse_model(),
             method=stochastic_decay,
-            name='pyr_pyr_conn')
+            name=groupname+'pyr_pyr_conn')
     pyr_pv_conn = Connections(pyr_cells, pv_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='pyr_pv_conn')
+            name=groupname+'pyr_pv_conn')
     pyr_sst_conn = Connections(pyr_cells, sst_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='pyr_sst_conn')
+            name=groupname+'pyr_sst_conn')
     pyr_vip_conn = Connections(pyr_cells, vip_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='pyr_vip_conn')
+            name=groupname+'pyr_vip_conn')
 
     # Interneurons to pyramidal
     if i_plast == 'plastic_inh':
         pv_pyr_conn = Connections(pv_cells, pyr_cells,
                 equation_builder=adp_synapse_model,
                 method=stochastic_decay,
-                name='pv_pyr_conn')
+                name=groupname+'pv_pyr_conn')
         sst_pyr_conn = Connections(sst_cells, pyr_cells,
                                    equation_builder=adp_synapse_model,
                                    method=stochastic_decay,
-                                   name='sst_pyr_conn')
+                                   name=groupname+'sst_pyr_conn')
     elif i_plast == 'plastic_inh0':
         pv_pyr_conn = Connections(pv_cells, pyr_cells,
                                   equation_builder=adp_synapse_model0,
                                   method=stochastic_decay,
-                                  name='pv_pyr_conn')
+                                  name=groupname+'pv_pyr_conn')
         sst_pyr_conn = Connections(sst_cells, pyr_cells,
                                    equation_builder=adp_synapse_model0,
                                    method=stochastic_decay,
-                                   name='sst_pyr_conn')
+                                   name=groupname+'sst_pyr_conn')
     else:
         pv_pyr_conn = Connections(pv_cells, pyr_cells,
                                   equation_builder=static_synapse_model(),
                                   method=stochastic_decay,
-                                  name='pv_pyr_conn')
+                                  name=groupname+'pv_pyr_conn')
         sst_pyr_conn = Connections(sst_cells, pyr_cells,
                                   equation_builder=static_synapse_model(),
                                   method=stochastic_decay,
-                                  name='sst_pyr_conn')
+                                  name=groupname+'sst_pyr_conn')
 
     # Between interneurons
     pv_pv_conn = Connections(pv_cells, pv_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='pv_pv_conn')
+            name=groupname+'pv_pv_conn')
     sst_pv_conn = Connections(sst_cells, pv_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='sst_pv_conn')
+            name=groupname+'sst_pv_conn')
     sst_vip_conn = Connections(sst_cells, vip_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='sst_vip_conn')
+            name=groupname+'sst_vip_conn')
     vip_sst_conn = Connections(vip_cells, sst_cells,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name='vip_sst_conn')
+            name=groupname+'vip_sst_conn')
 
     if noise:
         rate_distribution = np.random.randint(1, 15, size=num_exc_neurons) * Hz
@@ -302,7 +304,7 @@ def gen_orca(num_exc_neurons,
         background_activity = Connections(poisson_activity, pyr_cells,
                                           equation_builder=static_synapse_model(),
                                           method=stochastic_decay,
-                                          name='background_activity')
+                                          name=groupname+'background_activity')
 
     _groups = {'seq_cells': seq_cells,
                'pyr_cells': pyr_cells,
@@ -325,7 +327,7 @@ def gen_orca(num_exc_neurons,
                'vip_sst': vip_sst_conn
                }
 
-    # Make connections and set sparsity (required for structural plasticity)
+    # Make connections
     syn_objects = {key: val for key, val in _groups.items() if 'cells' not in key}
     for key, val in syn_objects.items():
         if key == 'pyr_pyr':
@@ -338,7 +340,7 @@ def gen_orca(num_exc_neurons,
         background_activity.tausyn = 3*ms
         background_activity.weight = 50
 
-    # Introduce sparsity on input channels
+    # Introduce sparsity on input channels (required for structural plasticity)
     for neu in range(num_exc_neurons):
         ffe_zero_w = np.random.choice(num_input, int(num_input*.3), replace=False)
         input_pyr_conn.weight[ffe_zero_w, neu] = 0

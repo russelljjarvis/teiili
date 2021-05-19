@@ -17,7 +17,6 @@ from teili.models.synapse_models import QuantStochSyn as static_synapse_model
 from teili.models.synapse_models import QuantStochSynStdp as stdp_synapse_model
 from teili.stimuli.testbench import SequenceTestbench, OCTA_Testbench
 from teili.tools.add_run_reg import add_lfsr
-from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 
 from teili.tools.lfsr import create_lfsr
@@ -131,15 +130,55 @@ testbench_stim.rotating_bar(length=10, nrows=10,
                             repetitions=sequence_repetitions,
                             debug=False)
 training_duration = np.max(testbench_stim.times)*ms
-test_duration = 1000*ms
 input_indices = testbench_stim.indices
 input_times = testbench_stim.times * ms
 sequence_duration = 105*ms
 
 num_exc = 200
 Net = TeiliNetwork()
-orca = ORCA_WTA(num_channels, input_indices, input_times, num_exc_neurons=num_exc,
-    ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+orca = ORCA_WTA(num_channels, input_indices, input_times, num_exc_neurons=num_exc)#,
+    #ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+
+# TODO this on a separate file
+from teili.core.groups import Connections
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+from orca_params import excitatory_plastic_synapse
+from teili.tools.group_tools import add_group_param_init
+reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
+        plasticity='quantized_stochastic_stdp',
+        structural_plasticity='stochastic_counter')
+orca2 = ORCA_WTA(num_channels, input_indices, input_times, num_exc_neurons=num_exc, name='top_down_')#,
+    #ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+fb_pyr = Connections(orca2._groups['pyr_cells'], orca._groups['pyr_cells'],
+    equation_builder=reinit_synapse_model(),
+    method=ExplicitStateUpdater('''x_new = f(x,t)'''),
+    name='input_pyr_conn')
+fb_vip = Connections(orca2._groups['pyr_cells'], orca._groups['vip_cells'],
+    equation_builder=static_synapse_model(),
+    method=ExplicitStateUpdater('''x_new = f(x,t)'''),
+    name='input_pyr_conn')
+fb_pyr.connect(p=.8)
+fb_vip.connect(p=.8)
+fb_pyr.set_params(excitatory_plastic_synapse)
+fb_pyr.tausyn = 3*ms
+fb_vip.set_params(excitatory_plastic_synapse)
+fb_pyr.weight = 1
+add_group_param_init([fb_pyr],
+                     variable='w_plast',
+                     dist_param=1,
+                     scale=1,
+                     distribution='gamma',
+                     clip_min=0,
+                     clip_max=15)
+fb_pyr.__setattr__('w_plast', np.array(fb_pyr.w_plast).astype(int))
+add_group_param_init([fb_vip],
+                     variable='weight',
+                     dist_param=1,
+                     scale=1,
+                     distribution='gamma',
+                     clip_min=0,
+                     clip_max=15)
+fb_vip.__setattr__('weight', np.array(fb_vip.w_plast).astype(int))
 
 ##################
 # Setting up monitors
@@ -159,7 +198,7 @@ date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
 os.mkdir(path)
 
-Net.add(orca, [x['monitor'] for x in monitors.values()])
+Net.add(orca, orca2, [x['monitor'] for x in monitors.values()])
 if i_plast == 'plastic_inh':
     Net.add(statemon_proxy)
 Net.add(statemon_net_current)
@@ -170,6 +209,8 @@ remainder_time = int(np.around(training_duration/defaultclock.dt)
 for block in range(training_blocks):
     block_duration = int(np.around(training_duration/defaultclock.dt)
                          / training_blocks) * defaultclock.dt
+    if block == training_blocks-1:
+        orca._groups['input_pyr'].active = False
     Net.run(block_duration, report='stdout', report_period=100*ms)
     # Free up memory
     save_data()
@@ -184,15 +225,6 @@ if remainder_time != 0:
     block += 1
     Net.run(remainder_time, report='stdout', report_period=100*ms)
     save_data()
-    Net.remove([x['monitor'] for x in monitors.values()])
-    del monitors
-    monitors = create_monitors()
-    Net.add([x['monitor'] for x in monitors.values()])
-
-# Testing
-Net.run(test_duration, report='stdout', report_period=100*ms)
-block += 1
-save_data()
 
 # Recover data pickled from monitor
 spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')

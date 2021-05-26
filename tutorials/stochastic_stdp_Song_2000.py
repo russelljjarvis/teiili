@@ -6,7 +6,7 @@ from teili.tools.misc import neuron_group_from_spikes
 from teili.models.neuron_models import QuantStochLIF as teili_neu
 from teili.models.synapse_models import QuantStochSynStdp as teili_syn
 
-from brian2 import Hz, mV, second, ms, prefs, SpikeMonitor, StateMonitor,\
+from brian2 import Hz, mV, mA, second, ms, prefs, SpikeMonitor, StateMonitor,\
         defaultclock, PoissonGroup, ExplicitStateUpdater
 
 import os
@@ -15,13 +15,13 @@ import numpy as np
 
 mode = 't' # Quantized, Teili, Floating
 
-sim_duration = 100*second
+sim_duration = 100*second#300*second
 if mode == 'q' or mode == 't':
     defaultclock.dt = 1 * ms
 
 # Preparing input
-N = 1000
-F = 15*Hz
+N = 1000#300
+F = 15*Hz#1*Hz
 input_group = PoissonGroup(N, rates=F)
 
 net = TeiliNetwork()
@@ -59,6 +59,9 @@ mon = StateMonitor(S, ['w_plast', 'Apre', 'Apost'], record=[0, 1])
 in_mon = SpikeMonitor(input_group)
 neu_mon = StateMonitor(neurons, ['Vm'], record=True)
 
+# TODO inject timed array to force firing rate
+#
+
 if mode == 'q':
     S.taupre = 20*ms
     S.taupost = 20*ms
@@ -71,12 +74,14 @@ if mode == 'q':
     S.stdp_thres = 1
 elif mode == 't':
     S.taupre = 20*ms
-    S.taupost = 20*ms
+    S.taupost = 20*ms#60*ms
     S.w_max = 15
     S.dApre = 15
     S.rand_num_bits_Apre = 4
     S.rand_num_bits_Apost = 4
     S.stdp_thres = 1
+    S.weight = 1
+    S.gain_syn = 1*mA
 
 net = TeiliNetwork()
 net.add(neurons, input_group, S, mon, in_mon, neu_mon)

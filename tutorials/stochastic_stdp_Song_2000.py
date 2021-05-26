@@ -13,8 +13,11 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+mode = 't' # Quantized, Teili, Floating
+
 sim_duration = 100*second
-#defaultclock.dt = 1 * ms
+if mode == 'q' or mode == 't':
+    defaultclock.dt = 1 * ms
 
 # Preparing input
 N = 1000
@@ -38,11 +41,16 @@ song_neu = NeuronEquationBuilder.import_eq(model_path+'/song_neu.py')
 song_syn = SynapseEquationBuilder.import_eq(model_path+'/song_syn.py')
 quant_stdp = SynapseEquationBuilder.import_eq(model_path+'/quant_stdp.py')
 
-#neurons = Neurons(N=1, method = ExplicitStateUpdater('''x_new = f(x,t)'''), equation_builder=teili_neu)
-neurons = Neurons(N=1, equation_builder=song_neu)
-#S = Connections(input_group, neurons, method=ExplicitStateUpdater('''x_new = f(x,t)'''), equation_builder=teili_syn)
-S = Connections(input_group, neurons, equation_builder=song_syn)
-#S = Connections(input_group, neurons, method=ExplicitStateUpdater('''x_new = f(x,t)'''), equation_builder=quant_stdp)
+if mode == 'q':
+    #neurons = Neurons(N=1, method = ExplicitStateUpdater('''x_new = f(x,t)'''), equation_builder=teili_neu)
+    neurons = Neurons(N=1, equation_builder=song_neu)
+    S = Connections(input_group, neurons, method=ExplicitStateUpdater('''x_new = f(x,t)'''), equation_builder=quant_stdp)
+elif mode == 't':
+    neurons = Neurons(N=1, method = ExplicitStateUpdater('''x_new = f(x,t)'''), equation_builder=teili_neu)
+    S = Connections(input_group, neurons, method=ExplicitStateUpdater('''x_new = f(x,t)'''), equation_builder=teili_syn)
+else:
+    neurons = Neurons(N=1, equation_builder=song_neu)
+    S = Connections(input_group, neurons, equation_builder=song_syn)
 
 # Initializations
 S.connect()
@@ -50,37 +58,34 @@ S.w_plast = np.random.rand(len(S.w_plast)) * S.w_max
 mon = StateMonitor(S, ['w_plast', 'Apre', 'Apost'], record=[0, 1])
 in_mon = SpikeMonitor(input_group)
 neu_mon = StateMonitor(neurons, ['Vm'], record=True)
-# For local quant syn file
-#S.taupre = 20*ms
-#S.taupost = 20*ms
-#S.w_max = .01
-#S.lr = .0001
-#S.deltaApre = 15
-#S.deltaApost = 15
-#S.rand_num_bits_pre1 = 4
-#S.rand_num_bits_post1 = 4
-#S.stdp_thres = 1
-# For teili syn
-#S.taupre = 20*ms
-#S.taupost = 20*ms
-#S.w_max = 15
-#S.dApre = 15
-#S.rand_num_bits_Apre = 4
-#S.rand_num_bits_Apost = 4
-#S.stdp_thres = 1
+
+if mode == 'q':
+    S.taupre = 20*ms
+    S.taupost = 20*ms
+    S.w_max = .01
+    S.lr = .0001
+    S.deltaApre = 15
+    S.deltaApost = 15
+    S.rand_num_bits_pre1 = 4
+    S.rand_num_bits_post1 = 4#5
+    S.stdp_thres = 1
+elif mode == 't':
+    S.taupre = 20*ms
+    S.taupost = 20*ms
+    S.w_max = 15
+    S.dApre = 15
+    S.rand_num_bits_Apre = 4
+    S.rand_num_bits_Apost = 4
+    S.stdp_thres = 1
 
 net = TeiliNetwork()
 net.add(neurons, input_group, S, mon, in_mon, neu_mon)
 net.run(sim_duration, report='text')
 
-plt.subplot(311)
-plt.plot(S.w_plast / S.w_max, '.k')
-plt.ylabel('Weight / w_max')
-plt.xlabel('Synapse index')
-plt.subplot(312)
+plt.subplot(211)
 plt.hist(S.w_plast / S.w_max, 20)
 plt.xlabel('Weight / w_max')
-plt.subplot(313)
+plt.subplot(212)
 plt.plot(mon.t/second, mon.w_plast.T/S.w_max[0])
 plt.xlabel('Time (s)')
 plt.ylabel('Weight / w_max')
@@ -89,5 +94,10 @@ plt.tight_layout()
 plt.figure()
 plt.plot(mon.Apre[0], 'r')
 plt.plot(mon.Apost[0], 'b')
+
+plt.figure()
+plt.plot(mon.Apost[0], 'b')
+plt.plot(mon.Apost[1], 'b')
+plt.title('post- time windows')
 
 plt.show()

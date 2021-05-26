@@ -34,13 +34,29 @@ from datetime import datetime
 #############
 # Utils functions
 def save_data():
+    # Concatenate data from inhibitory population
+    pv_times = np.array(monitors['spikemon_pv_neurons']['monitor'].t/ms)
+    pv_indices = np.array(monitors['spikemon_pv_neurons']['monitor'].i)
+    sst_times = np.array(monitors['spikemon_sst_neurons']['monitor'].t/ms)
+    sst_indices = np.array(monitors['spikemon_sst_neurons']['monitor'].i)
+    sst_indices += orca._groups['pv_cells'].N
+    vip_times = np.array(monitors['spikemon_vip_neurons']['monitor'].t/ms)
+    vip_indices = np.array(monitors['spikemon_vip_neurons']['monitor'].i)
+    vip_indices += (orca._groups['pv_cells'].N + orca._groups['sst_cells'].N)
+
+    inh_spikes_t = np.concatenate((pv_times, sst_times, vip_times))
+    inh_spikes_i = np.concatenate((pv_indices, sst_indices, vip_indices))
+    sorting_index = np.argsort(inh_spikes_t)
+    inh_spikes_t = inh_spikes_t[sorting_index]
+    inh_spikes_i = inh_spikes_i[sorting_index]
+
     np.savez(path + f'rasters_{block}.npz',
              input_t=np.array(monitors['spikemon_seq_neurons']['monitor'].t/ms),
              input_i=np.array(monitors['spikemon_seq_neurons']['monitor'].i),
              exc_spikes_t=np.array(monitors['spikemon_exc_neurons']['monitor'].t/ms),
              exc_spikes_i=np.array(monitors['spikemon_exc_neurons']['monitor'].i),
-             inh_spikes_t=np.array(monitors['spikemon_inh_neurons']['monitor'].t/ms),
-             inh_spikes_i=np.array(monitors['spikemon_inh_neurons']['monitor'].i),
+             inh_spikes_t=inh_spikes_t,
+             inh_spikes_i=inh_spikes_i,
             )
 
     # If there are only a few samples, smoothing operation can create an array
@@ -77,7 +93,11 @@ def save_data():
 def create_monitors():
     monitors = {'spikemon_exc_neurons': {'group': 'pyr_cells',
                                          'monitor': None},
-                'spikemon_inh_neurons': {'group': 'pv_cells',
+                'spikemon_pv_neurons': {'group': 'pv_cells',
+                                         'monitor': None},
+                'spikemon_sst_neurons': {'group': 'sst_cells',
+                                         'monitor': None},
+                'spikemon_vip_neurons': {'group': 'vip_cells',
                                          'monitor': None},
                 'spikemon_seq_neurons': {'group': 'seq_cells',
                                          'monitor': None},

@@ -17,9 +17,9 @@ from teili.tools.group_tools import add_group_activity_proxy,\
     add_group_params_re_init, add_group_param_init
 
 from orca_params import connection_probability_HS19, excitatory_neurons,\
-    inhibitory_neurons, excitatory_plastic_synapse, inhibitory_synapse,\
-    synapse_mean_weight, mismatch_neuron_param, mismatch_synapse_param,\
-    mismatch_plastic_param
+    inhibitory_neurons, excitatory_synapse_soma, excitatory_synapse_dend,\
+    inhibitory_synapse_soma, inhibitory_synapse_dend, synapse_mean_weight,\
+    mismatch_neuron_param, mismatch_synapse_param, mismatch_plastic_param
 from teili.tools.misc import neuron_group_from_spikes
 
 # Load other models
@@ -56,8 +56,10 @@ class ORCA_WTA(BuildingBlock):
                  connectivity_params=connection_probability_HS19,
                  exc_neu_params=excitatory_neurons,
                  inh_neu_params=inhibitory_neurons,
-                 exc_plastic_params=excitatory_plastic_synapse,
-                 inh_params=inhibitory_synapse,
+                 exc_soma_params=excitatory_synapse_soma,
+                 exc_dend_params=excitatory_synapse_dend,
+                 inh_soma_params=inhibitory_synapse_soma,
+                 inh_dend_params=inhibitory_synapse_dend,
                  verbose=False,
                  monitor=False,
                  num_exc_neurons=200,
@@ -78,10 +80,14 @@ class ORCA_WTA(BuildingBlock):
                 excitatory neurons
             inh_neu_params (dict): Dictionary which holds parameters of
                 inhibitory neurons 
-            exc_plastic_params (dict): Dictionary which holds parameters
-                of excitatory plastic connections
-            inh_params (dict): Dictionary which holds parameters
-                of inhibitory static connections
+            exc_soma_params (dict): Dictionary which holds parameters
+                of excitatory connections to somatic compartments.
+            exc_dend_params (dict): Dictionary which holds parameters
+                of excitatory connections to dendritic compartments.
+            inh_soma_params (dict): Dictionary which holds parameters
+                of inhibitory connections to somatic compartments
+            inh_dend_params (dict): Dictionary which holds parameters
+                of inhibitory connections to dendritic compartments
             verbose (bool, optional): Flag to gain additional information
             monitor (bool, optional): Flag to auto-generate spike and state
                 monitors
@@ -115,8 +121,10 @@ class ORCA_WTA(BuildingBlock):
                                 connectivity_params=connectivity_params,
                                 exc_neu_params=exc_neu_params,
                                 inh_neu_params=inh_neu_params,
-                                exc_plastic_params=exc_plastic_params,
-                                inh_params=inh_params,
+                                exc_soma_params=exc_soma_params,
+                                exc_dend_params=exc_dend_params,
+                                inh_soma_params=inh_soma_params,
+                                inh_dend_params=inh_dend_params,
                                 noise=noise)
 
 def gen_orca(groupname,
@@ -130,8 +138,10 @@ def gen_orca(groupname,
              connectivity_params,
              exc_neu_params,
              inh_neu_params,
-             exc_plastic_params,
-             inh_params,
+             exc_soma_params,
+             exc_dend_params,
+             inh_soma_params,
+             inh_dend_params,
              monitor,
              verbose,
              noise):
@@ -151,10 +161,14 @@ def gen_orca(groupname,
             excitatory neurons
         inh_neu_params (dict): Dictionary which holds parameters of
             inhibitory neurons 
-        exc_plastic_params (dict): Dictionary which holds parameters
-            of excitatory plastic connections
-        inh_params (dict): Dictionary which holds parameters
-            of inhibitory static connections
+        exc_soma_params (dict): Dictionary which holds parameters
+            of excitatory connections to somatic compartments.
+        exc_dend_params (dict): Dictionary which holds parameters
+            of excitatory connections to dendritic compartments.
+        inh_soma_params (dict): Dictionary which holds parameters
+            of inhibitory connections to somatic compartments.
+        inh_dend_params (dict): Dictionary which holds parameters
+            of inhibitory connections to dendritic compartments.
         verbose (bool, optional): Flag to gain additional information
         monitor (bool, optional): Flag to auto-generate spike and state
             monitors
@@ -352,20 +366,27 @@ def gen_orca(groupname,
     sst_cells.set_params(inh_neu_params)
     vip_cells.set_params(inh_neu_params)
 
-    input_pyr_conn.set_params(exc_plastic_params)
-    input_pv_conn.set_params(exc_plastic_params)
-    input_sst_conn.set_params(exc_plastic_params)
-    input_vip_conn.set_params(exc_plastic_params)
-    pyr_pyr_conn.set_params(exc_plastic_params)
-    pyr_pv_conn.set_params(exc_plastic_params)
-    pyr_sst_conn.set_params(exc_plastic_params)
-    pyr_vip_conn.set_params(exc_plastic_params)
-    pv_pv_conn.set_params(inh_params)
-    pv_pyr_conn.set_params(inh_params)
-    sst_pyr_conn.set_params(inh_params)
-    sst_pv_conn.set_params(inh_params)
-    sst_vip_conn.set_params(inh_params)
-    vip_sst_conn.set_params(inh_params)
+    # Excitatory connections onto somatic compartment
+    input_pyr_conn.set_params(exc_soma_params)
+    input_pv_conn.set_params(exc_soma_params)
+    input_sst_conn.set_params(exc_soma_params)
+    input_vip_conn.set_params(exc_soma_params)
+    pyr_pv_conn.set_params(exc_soma_params)
+    pyr_sst_conn.set_params(exc_soma_params)
+    pyr_vip_conn.set_params(exc_soma_params)
+
+    # Excitatory connections onto dendritic compartment
+    pyr_pyr_conn.set_params(exc_dend_params)
+
+    # Inhibitory connections onto somatic compartment
+    pv_pv_conn.set_params(inh_soma_params)
+    pv_pyr_conn.set_params(inh_soma_params)
+    sst_pv_conn.set_params(inh_soma_params)
+    sst_vip_conn.set_params(inh_soma_params)
+    vip_sst_conn.set_params(inh_soma_params)
+
+    # Inhibitory connections onto dendritic compartment
+    sst_pyr_conn.set_params(inh_dend_params)
 
     if i_plast == 'plastic_inh' or i_plast == 'plastic_inh0':
         pv_pyr_conn.inh_learning_rate = 0.01

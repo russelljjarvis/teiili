@@ -162,7 +162,7 @@ orca = ORCA_WTA(num_channels, input_indices, input_times, num_exc_neurons=num_ex
 # TODO this on a separate file
 from teili.core.groups import Connections
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
-from orca_params import excitatory_plastic_synapse
+from orca_params import excitatory_synapse_soma, excitatory_synapse_dend
 from teili.tools.group_tools import add_group_param_init
 reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
         plasticity='quantized_stochastic_stdp',
@@ -179,9 +179,9 @@ fb_vip = Connections(orca2._groups['pyr_cells'], orca._groups['vip_cells'],
     name='input_pyr_conn')
 fb_pyr.connect(p=.8)
 fb_vip.connect(p=.8)
-fb_pyr.set_params(excitatory_plastic_synapse)
+fb_pyr.set_params(excitatory_synapse_dend)
 fb_pyr.tausyn = 3*ms
-fb_vip.set_params(excitatory_plastic_synapse)
+fb_vip.set_params(excitatory_synapse_soma)
 fb_pyr.weight = 1
 add_group_param_init([fb_pyr],
                      variable='w_plast',
@@ -231,6 +231,9 @@ for block in range(training_blocks):
                          / training_blocks) * defaultclock.dt
     if block == training_blocks-1:
         orca._groups['input_pyr'].active = False
+        orca._groups['input_pv'].active = False
+        orca._groups['input_sst'].active = False
+        orca._groups['input_vip'].active = False
     Net.run(block_duration, report='stdout', report_period=100*ms)
     # Free up memory
     save_data()

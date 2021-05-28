@@ -7,7 +7,7 @@ This file contains parameters of the building block related to quantized
 stochastic models described by Wang et al. (2018).
 
 """
-from brian2 import ms, mV
+from brian2 import ms, mV, mA
 
 connection_probability_HS19 = {'pyr_pyr': 0.10,
                                'pyr_pv': 0.45,
@@ -67,16 +67,35 @@ inhibitory_neurons = {'tau': 10*ms,
                       'Vm': 3*mV
                      }
 
-excitatory_plastic_synapse = {'tausyn': 5*ms,
-                              'taupre': 20*ms,
-                              'taupost': 20*ms,
-                              'rand_num_bits_Apre': 4,
-                              'rand_num_bits_Apost': 4,
-                              'stdp_thres': 1
-                              }
+excitatory_synapse_soma = {'tausyn': 5*ms,
+                           'gain_syn': 1*mA,
+                           'delay': 0*ms,
+                           'taupre': 20*ms,
+                           'taupost': 20*ms,
+                           'rand_num_bits_Apre': 4,
+                           'rand_num_bits_Apost': 4,
+                           'stdp_thres': 1
+                           }
 
-inhibitory_synapse = {'tausyn': 10*ms
-                     }
+excitatory_synapse_dend = {'tausyn': 3*ms,
+                           'gain_syn': 0.5*mA,
+                           'delay': 1*ms,
+                           'taupre': 20*ms,
+                           'taupost': 20*ms,
+                           'rand_num_bits_Apre': 4,
+                           'rand_num_bits_Apost': 4,
+                           'stdp_thres': 1
+                           }
+
+inhibitory_synapse_soma = {'tausyn': 10*ms,
+                           'gain_syn': 1*mA,
+                           'delay': 0*ms
+                          }
+
+inhibitory_synapse_dend = {'tausyn': 7*ms,
+                           'gain_syn': 0.5*mA,
+                           'delay': 1*ms
+                          }
 
 synapse_mean_weight = {'e_i': 3, # 1
                        'i_e': 4, # 1

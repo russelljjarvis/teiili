@@ -30,9 +30,8 @@ area.moveDock(d1, 'above', d2)
 
 # Load metadata of given simulation
 data_folder = sys.argv[1]
-with open(f'{data_folder}general.data', 'rb') as f:
+with open(f'{data_folder}metadata', 'rb') as f:
     metadata = pickle.load(f)
-#ffi_weight = metadata['']
 num_exc = metadata['num_exc']
 num_channels = metadata['num_channels']
 rasters = load_merge_multiple(data_folder, 'rasters*', mode='numpy')
@@ -40,15 +39,6 @@ traces = load_merge_multiple(data_folder, 'traces*', mode='numpy')
 matrices = load_merge_multiple(data_folder, 'matrices*', mode='numpy',
     allow_pickle=True)
 plot_d1, plot_d2, plot_d3 = True, True, True
-
-# Print more info
-with open(f'{data_folder}connections.data', 'rb') as f:
-    info_conn = pickle.load(f)
-with open(f'{data_folder}population.data', 'rb') as f:
-    info_pop = pickle.load(f)
-pp = pprint.PrettyPrinter()
-pp.pprint(info_conn)
-pp.pprint(info_pop)
 
 # Avoid storing too much data on memory
 input_t = rasters['input_t']

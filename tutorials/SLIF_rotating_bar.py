@@ -3,24 +3,14 @@ This code implements a sequence learning using and Excitatory-Inhibitory
 network with STDP.
 """
 import numpy as np
-from scipy.stats import gamma, truncnorm
-from scipy.signal import find_peaks
 
-from brian2 import second, mA, ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
-        defaultclock, ExplicitStateUpdater, SpikeGeneratorGroup,\
-        PopulationRateMonitor, run, PoissonGroup, collect
+from brian2 import ms, Hz, prefs, SpikeMonitor, StateMonitor,\
+        defaultclock, ExplicitStateUpdater,\
+        PopulationRateMonitor
 
 from teili import TeiliNetwork
-from teili.core.groups import Neurons, Connections
-from teili.models.neuron_models import QuantStochLIF as static_neuron_model
-from teili.models.synapse_models import QuantStochSyn as static_synapse_model
-from teili.models.synapse_models import QuantStochSynStdp as stdp_synapse_model
-from teili.stimuli.testbench import SequenceTestbench, OCTA_Testbench
-from teili.tools.add_run_reg import add_lfsr
-from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
+from teili.stimuli.testbench import OCTA_Testbench
 
-from teili.tools.lfsr import create_lfsr
-from teili.tools.misc import neuron_group_from_spikes
 from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
         permutation_from_rate, load_merge_multiple
 
@@ -30,6 +20,7 @@ import sys
 import pickle
 import os
 from datetime import datetime
+
 
 #############
 # Utils functions
@@ -57,7 +48,7 @@ def save_data():
              exc_spikes_i=np.array(monitors['spikemon_exc_neurons']['monitor'].i),
              inh_spikes_t=inh_spikes_t,
              inh_spikes_i=inh_spikes_i,
-            )
+             )
 
     # If there are only a few samples, smoothing operation can create an array
     # with is incompatible with array with spike times. This is then addressed
@@ -74,7 +65,7 @@ def save_data():
              Vm_i=monitors['statemon_inh_cells']['monitor'].Vm,
              exc_rate_t=exc_rate_t, exc_rate=exc_rate,
              inh_rate_t=inh_rate_t, inh_rate=inh_rate,
-            )
+             )
 
     # Save targets of recurrent connections as python object
     recurrent_ids = []
@@ -83,18 +74,19 @@ def save_data():
         recurrent_weights.append(list(orca._groups['pyr_pyr'].w_plast[row, :]))
         recurrent_ids.append(list(orca._groups['pyr_pyr'].j[row, :]))
     np.savez_compressed(path + f'matrices_{block}.npz',
-             rf=monitors['statemon_ffe']['monitor'].w_plast.astype(np.uint8),
-             rec_ids=recurrent_ids, rec_w=recurrent_weights
-            )
+        rf=monitors['statemon_ffe']['monitor'].w_plast.astype(np.uint8),
+        rec_ids=recurrent_ids, rec_w=recurrent_weights
+        )
     pickled_monitor = monitors['spikemon_exc_neurons']['monitor'].get_states()
     with open(path + f'pickled_{block}', 'wb') as f:
         pickle.dump(pickled_monitor, f)
+
 
 def create_monitors():
     monitors = {'spikemon_exc_neurons': {'group': 'pyr_cells',
                                          'monitor': None},
                 'spikemon_pv_neurons': {'group': 'pv_cells',
-                                         'monitor': None},
+                                        'monitor': None},
                 'spikemon_sst_neurons': {'group': 'sst_cells',
                                          'monitor': None},
                 'spikemon_vip_neurons': {'group': 'vip_cells',
@@ -130,6 +122,7 @@ def create_monitors():
 
     return monitors
 
+
 # Prepare parameters of the simulation
 i_plast = sys.argv[1]
 
@@ -139,9 +132,6 @@ prefs.codegen.target = "numpy"
 # Initialize rotating bar
 testbench_stim = OCTA_Testbench()
 num_channels = 100
-num_items = None
-noise_prob = None
-item_rate = None
 sequence_repetitions = 600
 testbench_stim.rotating_bar(length=10, nrows=10,
                             direction='cw',
@@ -161,22 +151,23 @@ orca = ORCA_WTA(num_channels, input_indices, input_times, num_exc_neurons=num_ex
 
 # TODO this on a separate file
 from teili.core.groups import Connections
+from teili.models.synapse_models import QuantStochSyn as static_synapse_model
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from orca_params import excitatory_synapse_soma, excitatory_synapse_dend
 from teili.tools.group_tools import add_group_param_init
 reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
-        plasticity='quantized_stochastic_stdp',
-        structural_plasticity='stochastic_counter')
+    plasticity='quantized_stochastic_stdp',
+    structural_plasticity='stochastic_counter')
 orca2 = ORCA_WTA(num_channels, input_indices, input_times, num_exc_neurons=num_exc, name='top_down_')#,
     #ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
 fb_pyr = Connections(orca2._groups['pyr_cells'], orca._groups['pyr_cells'],
     equation_builder=reinit_synapse_model(),
     method=ExplicitStateUpdater('''x_new = f(x,t)'''),
-    name='input_pyr_conn')
+    name='feedback_pyr_conn')
 fb_vip = Connections(orca2._groups['pyr_cells'], orca._groups['vip_cells'],
     equation_builder=static_synapse_model(),
     method=ExplicitStateUpdater('''x_new = f(x,t)'''),
-    name='input_pyr_conn')
+    name='feedback_vip_conn')
 fb_pyr.connect(p=.8)
 fb_vip.connect(p=.8)
 fb_pyr.set_params(excitatory_synapse_dend)
@@ -218,7 +209,7 @@ date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
 os.mkdir(path)
 
-Net.add(orca, orca2, [x['monitor'] for x in monitors.values()])
+Net.add(orca, orca2, fb_pyr, fb_vip, [x['monitor'] for x in monitors.values()])
 if i_plast == 'plastic_inh':
     Net.add(statemon_proxy)
 Net.add(statemon_net_current)
@@ -229,11 +220,6 @@ remainder_time = int(np.around(training_duration/defaultclock.dt)
 for block in range(training_blocks):
     block_duration = int(np.around(training_duration/defaultclock.dt)
                          / training_blocks) * defaultclock.dt
-    if block == training_blocks-1:
-        orca._groups['input_pyr'].active = False
-        orca._groups['input_pv'].active = False
-        orca._groups['input_sst'].active = False
-        orca._groups['input_vip'].active = False
     Net.run(block_duration, report='stdout', report_period=100*ms)
     # Free up memory
     save_data()
@@ -248,6 +234,9 @@ if remainder_time != 0:
     block += 1
     Net.run(remainder_time, report='stdout', report_period=100*ms)
     save_data()
+    Net.remove([x['monitor'] for x in monitors.values()])
+    del monitors
+Net.remove(statemon_net_current)
 
 # Recover data pickled from monitor
 spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')
@@ -273,31 +262,17 @@ np.savez(path+f'permutation.npz',
         )
   
 Metadata = {'time_step': defaultclock.dt,
-            'num_symbols': num_items,
             'num_exc': num_exc,
             'num_channels': num_channels,
             'sequence_duration': sequence_duration,
-            'input_noise': noise_prob,
-            'input_rate': item_rate,
             'sequence_repetitions': sequence_repetitions,
+            'training_duration': Net.t
         }
-with open(path+'general.data', 'wb') as f:
+
+with open(path+'metadata', 'wb') as f:
     pickle.dump(Metadata, f)
 
-Metadata = {'exc': orca._groups['pyr_cells'].get_params(),
-            'inh': orca._groups['pv_cells'].get_params()}
-with open(path+'population.data', 'wb') as f:
-    pickle.dump(Metadata, f)
-
-Metadata = {'e->i': orca._groups['pyr_pv'].get_params(),
-            'i->e': orca._groups['pv_pyr'].get_params(),
-            'ffe': orca._groups['input_pyr'].get_params(),
-            'ffi': orca._groups['input_pv'].get_params(),
-            'e->e': orca._groups['pyr_pyr'].get_params()
-            }
-with open(path+'connections.data', 'wb') as f:
-    pickle.dump(Metadata, f)
-
+Net.store(filename=f'{path}network')
 #from brian2 import *
 #import pandas as pd
 #from scipy.signal import savgol_filter
@@ -321,36 +296,3 @@ with open(path+'connections.data', 'wb') as f:
 #xlabel('# sequence presentation')
 #ylabel('correlation value')
 #legend()
-
-def plot_norm_act():
-    import matplotlib.pyplot as plt 
-    plt.figure()
-    plt.plot(statemon_proxy.normalized_activity_proxy.T)
-    plt.xlabel('time (ms)')
-    plt.ylabel('normalized activity value')
-    plt.title('Normalized activity of all neurons')
-    plt.show()
-
-def plot_inh_w():
-    import matplotlib.pyplot as plt 
-    _ = plt.hist(orca._groups['pv_pyr'].w_plast)
-    plt.show()
-
-def plot_EI_balance(idx):
-    import matplotlib.pyplot as plt
-    win_len = 100
-    rec_Iin = np.convolve(statemon_net_current.Iin0[idx], np.ones(win_len)/win_len, mode='valid')
-    inh_Iin = np.convolve(statemon_net_current.Iin1[idx], np.ones(win_len)/win_len, mode='valid')
-    ffe_Iin = np.convolve(statemon_net_current.Iin2[idx], np.ones(win_len)/win_len, mode='valid')
-    noise_Iin = np.convolve(statemon_net_current.Iin3[idx], np.ones(win_len)/win_len, mode='valid')
-    total_Iin = np.convolve(statemon_net_current.Iin[idx], np.ones(win_len)/win_len, mode='valid')
-    plt.plot(rec_Iin, 'r', label='rec. current')
-    plt.plot(inh_Iin, 'g', label='inh. current')
-    plt.plot(ffe_Iin, 'b', label='input current')
-    plt.plot(total_Iin, 'k', label='net current')
-    plt.plot(noise_Iin, 'k--', label='spont. activity')
-    plt.legend()
-    plt.ylabel('Current [amp]')
-    plt.xlabel('time [ms]')
-    plt.title('EI balance')
-    plt.show()

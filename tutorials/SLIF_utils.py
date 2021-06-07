@@ -21,17 +21,19 @@ def replicate_sequence(num_channels, reference_indices, reference_times,
 
     return spike_indices, spike_times
 
-def neuron_rate(spike_source, kernel_len, kernel_var, kernel_min, interval):
+def neuron_rate(spike_source, kernel_len, kernel_var, kernel_min, simulation_dt, interval=None):
     """Computes firing rates of neurons in a SpikeMonitor.
 
     Args:
         spike_source (brian2.SpikeMonitor): Source with spikes and times. It
             can be a monitor or a dictionary with {'i': [i1, i2, ...],
             't': [t1, t2, ...]}
-        kernel_len (int): Number of samples in the kernel.
-        kernel_var (int): Variance of the kernel window.
+        kernel_len (int): Number of samples in the averaging kernel.
+        kernel_var (int): Variance of the averaging kernel.
+        simulation_dt (Brian2.unit): Time scale of simulation's time step
         interval (list of int): lower and upper values of the interval, in
-            samples, over which the rate will be calculated.
+            Brian2 units of time, over which the rate will be calculated.
+            If None, the whole recording provided is used.
 
     Returns:
         neuron_rates (dict): Rates and corresponding instants of each neuron.
@@ -51,7 +53,13 @@ def neuron_rate(spike_source, kernel_len, kernel_var, kernel_min, interval):
         import sys
         sys.exit()
     neuron_rates = {}
-    interval = range(int(interval[0]), int(interval[1])+1)
+    if interval:
+        min_time = np.around(interval[0]/simulation_dt).astype(int)
+        max_time = np.around(interval[1]/simulation_dt).astype(int)
+    else:
+        min_time = np.around(min(spike_source.t)/simulation_dt).astype(int)
+        max_time = np.around(max(spike_source.t)/simulation_dt).astype(int)
+    interval = range(min_time, max_time+1)
 
     # Create normalized and truncated gaussian time window
     kernel_limit = np.floor(kernel_len/2)
@@ -65,8 +73,7 @@ def neuron_rate(spike_source, kernel_len, kernel_var, kernel_min, interval):
         h, b = np.histogram(neu_spike_times/ms, bins=interval,
                             range=interval)
         neuron_rates[key] = {'rate': np.convolve(h, kernel, mode='same'),
-                             't': b[:-1]}
-
+                             't': b[:-1]} 
     return neuron_rates
 
 def rate_correlations(rates, interval_dur, intervals):

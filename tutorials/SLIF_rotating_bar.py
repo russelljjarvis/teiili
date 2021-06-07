@@ -241,10 +241,10 @@ Net.remove(statemon_net_current)
 # Recover data pickled from monitor
 spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')
 
-last_sequence_t = (training_duration-sequence_duration)/ms
+last_sequence_t = training_duration - sequence_duration
 neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=200,
-    kernel_var=10, kernel_min=0.001,
-    interval=[int(last_sequence_t), int(training_duration/ms)])
+    kernel_var=10, kernel_min=0.001, simulation_dt=defaultclock.dt,
+    interval=[last_sequence_t, training_duration])
 #foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
 #                           sequence_duration, sequence_repetitions)
 #

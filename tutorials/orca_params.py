@@ -20,10 +20,14 @@ connection_probability_HS19 = {'pyr_pyr': 0.10,
                                'sst_vip': 0.45,
                                'vip_sst': 0.50,
                                # I made up values below
-                               'input_pyr': 1.0,
-                               'input_pv': 1.0,
-                               'input_sst': 1.0,
-                               'input_vip': 0.0
+                               'ff_pyr': 1.0,
+                               'ff_pv': 1.0,
+                               'ff_sst': 1.0,
+                               'ff_vip': 0.0,
+                               'fb_pyr': 0.8,
+                               'fb_pv': 0.0,
+                               'fb_sst': 0.0,
+                               'fb_vip': 0.8
                                }
 
 connection_probability_old = {'pyr_pyr': 1.,
@@ -36,10 +40,14 @@ connection_probability_old = {'pyr_pyr': 1.,
                               'sst_pyr': 0.,
                               'sst_vip': 0.,
                               'vip_sst': 0.,
-                              'input_pyr': 1.0,
-                              'input_pv': 1.0,
-                              'input_sst': 0.0,
-                              'input_vip': 0.0
+                              'ff_pyr': 1.0,
+                              'ff_pv': 1.0,
+                              'ff_sst': 0.0,
+                              'ff_vip': 0.0,
+                              'fb_pyr': 0.8,
+                              'fb_pv': 0.0,
+                              'fb_sst': 0.0,
+                              'fb_vip': 0.8
                               }
 
 connection_probability = {'pyr_pyr': 1.,
@@ -52,10 +60,10 @@ connection_probability = {'pyr_pyr': 1.,
                           'sst_pyr': 1.0,
                           'sst_vip': 0.9,
                           'vip_sst': 0.65,
-                          'input_pyr': 1.0,
-                          'input_pv': 1.0,
-                          'input_sst': 1.0,
-                          'input_vip': 0.0 # or 1.0 if pPE 
+                          'ff_pyr': 1.0,
+                          'ff_pv': 1.0,
+                          'ff_sst': 1.0,
+                          'ff_vip': 0.0 # or 1.0 if pPE 
                           }
 
 excitatory_neurons = {'tau': 20*ms,

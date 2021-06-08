@@ -10,11 +10,13 @@ from brian2 import ms, Hz, prefs, SpikeMonitor, StateMonitor,\
 
 from teili import TeiliNetwork
 from teili.stimuli.testbench import OCTA_Testbench
+from teili.tools.misc import neuron_group_from_spikes
 
 from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
         permutation_from_rate, load_merge_multiple
 
 from orca_wta import ORCA_WTA
+from orca_params import excitatory_synapse_dend, excitatory_synapse_soma
 
 import sys
 import pickle
@@ -91,7 +93,7 @@ def create_monitors():
                                          'monitor': None},
                 'spikemon_vip_neurons': {'group': 'vip_cells',
                                          'monitor': None},
-                'spikemon_seq_neurons': {'group': 'seq_cells',
+                'spikemon_seq_neurons': {'group': 'relay_cells',
                                          'monitor': None},
                 'statemon_exc_cells': {'group': 'pyr_cells',
                                        'variable': ['Vm'],
@@ -99,7 +101,7 @@ def create_monitors():
                 'statemon_inh_cells': {'group': 'pv_cells',
                                        'variable': ['Vm'],
                                        'monitor': None},
-                'statemon_ffe': {'group': 'input_pyr',
+                'statemon_ffe': {'group': 'ff_pyr',
                                  'variable': ['w_plast'],
                                  'monitor': None},
                 'rate_exc_neurons': {'group': 'pyr_cells',
@@ -109,8 +111,13 @@ def create_monitors():
 
     for key, val in monitors.items():
         if 'spike' in key:
-            monitors[key]['monitor'] = SpikeMonitor(orca._groups[val['group']],
-                                                    name=key)
+            try:
+                monitors[key]['monitor'] = SpikeMonitor(orca._groups[val['group']],
+                                                        name=key)
+            except KeyError:
+                print(val['group'] + 'added after exception')
+                monitors[key]['monitor'] = SpikeMonitor(eval(val['group']),
+                                                        name=key)
         elif 'state' in key:
             monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
                                                     variables=val['variable'],
@@ -144,52 +151,33 @@ input_indices = testbench_stim.indices
 input_times = testbench_stim.times * ms
 sequence_duration = 105*ms
 
+# Convert input into neuron group (necessary for STDP compatibility)
+sim_duration = input_times[-1]
+relay_cells = neuron_group_from_spikes(num_channels,
+                                       defaultclock.dt,
+                                       sim_duration,
+                                       spike_indices=input_indices,
+                                       spike_times=input_times)
+
 num_exc = 200
 Net = TeiliNetwork()
-orca = ORCA_WTA(num_channels, input_indices, input_times, num_exc_neurons=num_exc)#,
+orca = ORCA_WTA(num_exc_neurons=num_exc)#,
     #ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+orca.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
+    sparsity=.3)
+orca.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells', 'vip_cells'],
+    'static', 'inhibitory')
 
-# TODO this on a separate file
-from teili.core.groups import Connections
-from teili.models.synapse_models import QuantStochSyn as static_synapse_model
-from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
-from orca_params import excitatory_synapse_soma, excitatory_synapse_dend
-from teili.tools.group_tools import add_group_param_init
-reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
-    plasticity='quantized_stochastic_stdp',
-    structural_plasticity='stochastic_counter')
-orca2 = ORCA_WTA(num_channels, input_indices, input_times, num_exc_neurons=num_exc, name='top_down_')#,
+orca2 = ORCA_WTA(num_exc_neurons=num_exc, name='top_down_')#,
     #ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
-fb_pyr = Connections(orca2._groups['pyr_cells'], orca._groups['pyr_cells'],
-    equation_builder=reinit_synapse_model(),
-    method=ExplicitStateUpdater('''x_new = f(x,t)'''),
-    name='feedback_pyr_conn')
-fb_vip = Connections(orca2._groups['pyr_cells'], orca._groups['vip_cells'],
-    equation_builder=static_synapse_model(),
-    method=ExplicitStateUpdater('''x_new = f(x,t)'''),
-    name='feedback_vip_conn')
-fb_pyr.connect(p=.8)
-fb_vip.connect(p=.8)
-fb_pyr.set_params(excitatory_synapse_dend)
-fb_pyr.tausyn = 3*ms
-fb_vip.set_params(excitatory_synapse_soma)
-fb_pyr.weight = 1
-add_group_param_init([fb_pyr],
-                     variable='w_plast',
-                     dist_param=1,
-                     scale=1,
-                     distribution='gamma',
-                     clip_min=0,
-                     clip_max=15)
-fb_pyr.__setattr__('w_plast', np.array(fb_pyr.w_plast).astype(int))
-add_group_param_init([fb_vip],
-                     variable='weight',
-                     dist_param=1,
-                     scale=1,
-                     distribution='gamma',
-                     clip_min=0,
-                     clip_max=15)
-fb_vip.__setattr__('weight', np.array(fb_vip.w_plast).astype(int))
+orca2.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
+    sparsity=.3)
+orca2.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells', 'vip_cells'],
+    'static', 'inhibitory')
+orca.add_input(orca2._groups['pyr_cells'], 'fb', ['pyr_cells'], 'reinit',
+    'excitatory', exc_params=excitatory_synapse_dend, sparsity=.3)
+orca.add_input(orca2._groups['pyr_cells'], 'fb', ['vip_cells'], 'static',
+    'inhibitory', exc_params=excitatory_synapse_soma)
 
 ##################
 # Setting up monitors
@@ -209,7 +197,7 @@ date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
 os.mkdir(path)
 
-Net.add(orca, orca2, fb_pyr, fb_vip, [x['monitor'] for x in monitors.values()])
+Net.add(orca, orca2, relay_cells, [x['monitor'] for x in monitors.values()])
 if i_plast == 'plastic_inh':
     Net.add(statemon_proxy)
 Net.add(statemon_net_current)
@@ -236,7 +224,7 @@ if remainder_time != 0:
     save_data()
     Net.remove([x['monitor'] for x in monitors.values()])
     del monitors
-Net.remove(statemon_net_current)
+Net.remove(statemon_net_current, relay_cells)
 
 # Recover data pickled from monitor
 spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')
@@ -265,8 +253,7 @@ Metadata = {'time_step': defaultclock.dt,
             'num_exc': num_exc,
             'num_channels': num_channels,
             'sequence_duration': sequence_duration,
-            'sequence_repetitions': sequence_repetitions,
-            'training_duration': Net.t
+            'sequence_repetitions': sequence_repetitions
         }
 
 with open(path+'metadata', 'wb') as f:

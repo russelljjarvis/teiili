@@ -20,15 +20,14 @@ from orca_params import connection_probability_HS19, excitatory_neurons,\
     inhibitory_neurons, excitatory_synapse_soma, excitatory_synapse_dend,\
     inhibitory_synapse_soma, inhibitory_synapse_dend, synapse_mean_weight,\
     mismatch_neuron_param, mismatch_synapse_param, mismatch_plastic_param
-from teili.tools.misc import neuron_group_from_spikes
 
 # Load other models
 path = os.path.expanduser("/home/pablo/git/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochSynAdp.py')
-adp_synapse_model0 = SynapseEquationBuilder.import_eq(
-        model_path + 'StochSynAdp0.py')
+istdp_synapse_model = SynapseEquationBuilder.import_eq(
+        model_path + 'StochInhStdp.py')
 adapt_neuron_model = NeuronEquationBuilder(base_unit='quantized',
         intrinsic_excitability='threshold_adaptation',
         position='spatial')
@@ -44,42 +43,38 @@ class ORCA_WTA(BuildingBlock):
        layer in a cortical sheet.
 
     Attributes:
-        
-
+        _groups (dict): Contains all synapses and neurons of the building
+            block. For convenience, keys identifying a neuronal population 'x'
+            should be 'x_cells', whereas keys identifying a synapse between
+            population 'x' and 'y' should be 'x_y'.
     """
 
     def __init__(self,
-                 num_input,
-                 input_indices,
-                 input_times,
                  name='orca_wta_',
                  connectivity_params=connection_probability_HS19,
-                 exc_neu_params=excitatory_neurons,
-                 inh_neu_params=inhibitory_neurons,
+                 exc_cells_params=excitatory_neurons,
+                 inh_cells_params=inhibitory_neurons,
                  exc_soma_params=excitatory_synapse_soma,
                  exc_dend_params=excitatory_synapse_dend,
                  inh_soma_params=inhibitory_synapse_soma,
                  inh_dend_params=inhibitory_synapse_dend,
                  verbose=False,
-                 monitor=False,
                  num_exc_neurons=200,
                  ratio_pv=.46,
                  ratio_sst=.36,
                  ratio_vip=.18,
                  noise=False):
-        """Initializes ORCA WTA building block
+        """ Generates building block with specified characteristics and
+                elements described by Wang et al. (2018).
 
         Args:
-            input_indices (numpy.array): Indices of the original source.
-            input_times (numpy.array): Time stamps with unit of original spikes
-                in ms.
             name (str, required): Name of the building_block population
             connectivity_params (dict): Dictionary which holds connectivity
                 parameters
-            exc_neu_params (dict): Dictionary which holds parameters of
+            exc_cells_params (dict): Dictionary which holds parameters of
                 excitatory neurons
-            inh_neu_params (dict): Dictionary which holds parameters of
-                inhibitory neurons 
+            inh_cells_params (dict): Dictionary which holds parameters of
+                inhibitory neurons
             exc_soma_params (dict): Dictionary which holds parameters
                 of excitatory connections to somatic compartments.
             exc_dend_params (dict): Dictionary which holds parameters
@@ -89,8 +84,6 @@ class ORCA_WTA(BuildingBlock):
             inh_dend_params (dict): Dictionary which holds parameters
                 of inhibitory connections to dendritic compartments
             verbose (bool, optional): Flag to gain additional information
-            monitor (bool, optional): Flag to auto-generate spike and state
-                monitors
             num_exc_neurons (int, optional): Size of excitatory population.
             ratio_pv (float, optional): Fraction of inhibitory neurons that
                 are PV cells.
@@ -106,94 +99,194 @@ class ORCA_WTA(BuildingBlock):
                                None,
                                None,
                                None,
-                               verbose,
-                               monitor)
-        self._groups = gen_orca(groupname=name,
-                                num_exc_neurons=num_exc_neurons,
-                                num_input=num_input,
-                                input_indices=input_indices,
-                                input_times=input_times,
-                                ratio_pv=ratio_pv,
-                                ratio_sst=ratio_sst,
-                                ratio_vip=ratio_vip,
-                                monitor=monitor,
-                                verbose=verbose,
-                                connectivity_params=connectivity_params,
-                                exc_neu_params=exc_neu_params,
-                                inh_neu_params=inh_neu_params,
-                                exc_soma_params=exc_soma_params,
-                                exc_dend_params=exc_dend_params,
-                                inh_soma_params=inh_soma_params,
-                                inh_dend_params=inh_dend_params,
-                                noise=noise)
+                               verbose)
 
-def gen_orca(groupname,
-             num_exc_neurons,
-             num_input,
-             input_indices,
-             input_times,
-             ratio_pv,
-             ratio_sst,
-             ratio_vip,
-             connectivity_params,
-             exc_neu_params,
-             inh_neu_params,
-             exc_soma_params,
-             exc_dend_params,
-             inh_soma_params,
-             inh_dend_params,
-             monitor,
-             verbose,
-             noise):
-    """Generates network with specified characteristics and elements described
-    by Wang et al. (2018).
+        self._groups = {}
+        add_populations(self._groups,
+                        group_name=name,
+                        num_exc_neurons=num_exc_neurons,
+                        ratio_pv=ratio_pv,
+                        ratio_sst=ratio_sst,
+                        ratio_vip=ratio_vip,
+                        verbose=verbose,
+                        exc_cells_params=exc_cells_params,
+                        inh_cells_params=inh_cells_params
+                        )
+        add_connections(self._groups,
+                        group_name=name,
+                        verbose=verbose,
+                        connectivity_params=connectivity_params,
+                        exc_soma_params=exc_soma_params,
+                        exc_dend_params=exc_dend_params,
+                        inh_soma_params=inh_soma_params,
+                        inh_dend_params=inh_dend_params,
+                        noise=noise)
+
+    def add_input(self,
+                  input_group,
+                  input_name,
+                  targets,
+                  plasticity,
+                  target_type,
+                  connectivity_params=connection_probability_HS19,
+                  exc_params=excitatory_synapse_soma,
+                  sparsity=None):
+        """ This functions add an input group and connections to the building
+            block.
+
+        Args:
+            input_group (brian2.NeuronGroup): Input to
+                building block.
+            input_name (str): Name of the input to be registered.
+            targets (list of str): Name of the postsynaptic groups as
+                stored in _groups.
+            plasticity (str): Type of plasticity. It can be 'reinit',
+                'stdp', or 'static'.
+            target_type (str): Define if targets are excitatory or inhibitory.
+            connectivity_params (dict): Dictionary which holds building_block
+                specific parameters
+            exc_params (dict): Dictionary which holds parameters
+                of excitatory connections to compartments.
+            sparsity (float): Average percentage of connections from input
+                that will be initially disconnected. Structural plasticity
+                will change those connections according to activity.
+        """
+        temp_groups = {}
+        if plasticity == 'static':
+            syn_model = static_synapse_model
+        elif plasticity == 'stdp':
+            syn_model = stdp_synapse_model
+        elif plasticity == 'reinit':
+            syn_model = reinit_synapse_model
+
+        for target in targets:
+            target_name = target.split('_')[0]
+            temp_groups[f'{input_name}_{target_name}'] = Connections(
+                input_group, self._groups[target],
+                equation_builder=syn_model(),
+                method=stochastic_decay,
+                name=self.name+f'{input_name}_{target_name}_conn')
+
+        # Make connections and set params
+        syn_objects = {key: val for key, val in temp_groups.items()}
+        for key, val in syn_objects.items():
+            val.connect(p=connectivity_params[key])
+            val.set_params(exc_params)
+
+            # If you want to have sparsity without structural plasticity,
+            # just set the desired connection probability
+            if sparsity is not None:
+                for neu in range(self._groups[target].N):
+                    ffe_zero_w = np.random.choice(input_group.N,
+                                                  int(input_group.N*sparsity),
+                                                  replace=False)
+                    val.weight[ffe_zero_w, neu] = 0
+                    val.w_plast[ffe_zero_w, neu] = 0
+
+                re_init_dt = 15000*ms
+                add_group_params_re_init(groups=[val],
+                                         variable='w_plast',
+                                         re_init_variable='re_init_counter',
+                                         re_init_threshold=1,
+                                         re_init_dt=re_init_dt,
+                                         dist_param=3,
+                                         scale=1,
+                                         distribution='gamma',
+                                         clip_min=0,
+                                         clip_max=15,
+                                         variable_type='int',
+                                         reference='synapse_counter')
+                add_group_params_re_init(groups=[val],
+                                         variable='weight',
+                                         re_init_variable='re_init_counter',
+                                         re_init_threshold=1,
+                                         re_init_dt=re_init_dt,
+                                         distribution='deterministic',
+                                         const_value=1,
+                                         reference='synapse_counter')
+                add_group_params_re_init(groups=[val],
+                                         variable='tausyn',
+                                         re_init_variable='re_init_counter',
+                                         re_init_threshold=1,
+                                         re_init_dt=re_init_dt,
+                                         dist_param=5.5,
+                                         scale=1,
+                                         distribution='normal',
+                                         clip_min=4,
+                                         clip_max=7,
+                                         variable_type='int',
+                                         unit='ms',
+                                         reference='synapse_counter')
+
+        w_init_group = list(temp_groups.values())
+        if target_type=='inhibitory':
+            dist_param = synapse_mean_weight['inp_i']
+        else:
+            dist_param = synapse_mean_weight['inp_e']
+
+        if plasticity == 'static':
+            add_group_param_init(w_init_group,
+                                 variable='weight',
+                                 dist_param=dist_param,
+                                 scale=1,
+                                 distribution='gamma',
+                                 clip_min=0,
+                                 clip_max=15)
+            for g in w_init_group:
+                g.__setattr__('weight', np.array(g.weight).astype(int))
+        else:
+            add_group_param_init(w_init_group,
+                                 variable='w_plast',
+                                 dist_param=dist_param,
+                                 scale=1,
+                                 distribution='gamma',
+                                 clip_min=0,
+                                 clip_max=15)
+            for g in w_init_group:
+                g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
+                # Zero weights untouched so they can be used for reinitializations
+                g.weight[np.where(g.weight!=0)[0]] = 1
+
+        generate_mismatch(list(temp_groups.values()),
+                          mismatch_synapse_param)
+        if plasticity != 'static':
+            generate_mismatch(list(temp_groups.values()),
+                              mismatch_plastic_param)
+
+        self._groups.update(temp_groups)
+
+def add_populations(_groups,
+                    group_name,
+                    num_exc_neurons,
+                    ratio_pv,
+                    ratio_sst,
+                    ratio_vip,
+                    verbose,
+                    exc_cells_params,
+                    inh_cells_params
+                    ):
+    """ This functions add populations of the building block.
 
     Args:
-        groupname (str, required): Name of the building_block population
+        _groups (dict): Keys to all neuron and synapse groups.
+        group_name (str, required): Name of the building_block population
         num_exc_neurons (int, optional): Size of excitatory population.
-        num_input (int): Number of input channels.
-        input_indices (numpy.array): Indices of the original source.
-        input_times (numpy.array): Time stamps with unit of original spikes
-            in ms.
-        connectivity_params (dict): Dictionary which holds building_block
-            specific parameters
-        exc_neu_params (dict): Dictionary which holds parameters of
-            excitatory neurons
-        inh_neu_params (dict): Dictionary which holds parameters of
-            inhibitory neurons 
-        exc_soma_params (dict): Dictionary which holds parameters
-            of excitatory connections to somatic compartments.
-        exc_dend_params (dict): Dictionary which holds parameters
-            of excitatory connections to dendritic compartments.
-        inh_soma_params (dict): Dictionary which holds parameters
-            of inhibitory connections to somatic compartments.
-        inh_dend_params (dict): Dictionary which holds parameters
-            of inhibitory connections to dendritic compartments.
-        verbose (bool, optional): Flag to gain additional information
-        monitor (bool, optional): Flag to auto-generate spike and state
-            monitors
         ratio_pv (float, optional): Fraction of inhibitory neurons that
             are PV cells.
         ratio_sst (float, optional): Fraction of inhibitory neurons that
             are SST cells.
         ratio_vip (float, optional): Fraction of inhibitory neurons that
             are VIP cells.
-        noise (bool, optional): Flag to determine if background noise is to
-            be added to neurons. This is generated with a poisson process.
+        verbose (bool, optional): Flag to gain additional information
+        exc_cells_params (dict): Dictionary which holds parameters of
+            excitatory neurons
+        inh_cells_params (dict): Dictionary which holds parameters of
+            inhibitory neurons
     """
     # TODO remove when no longer testing, as well as if's
     i_plast = 'plastic_inh0'
-    # Convert input into neuron group (necessary for STDP compatibility)
-    sim_duration = input_times[-1]
-    seq_cells = neuron_group_from_spikes(num_input,
-                                         defaultclock.dt,
-                                         sim_duration,
-                                         spike_indices=input_indices,
-                                         spike_times=input_times)
-
-    # Creating populations
     num_inh = int(num_exc_neurons/4)
-    #num_inh = int(num_exc_neurons/1.6) 
+    #num_inh = int(num_exc_neurons/1.6)
     num_pv = int(num_inh * ratio_pv)
     num_sst = int(num_inh * ratio_sst)
     num_vip = int(num_inh * ratio_vip)
@@ -201,8 +294,8 @@ def gen_orca(groupname,
     pyr_cells = Neurons(num_exc_neurons,
                         equation_builder=adapt_neuron_model(num_inputs=5), #TODO 4 when I fix input?
                         method=stochastic_decay,
-                        name=groupname+'pyr_cells',
-                        verbose=True)
+                        name=group_name+'pyr_cells',
+                        verbose=verbose)
 
     if i_plast == 'plastic_inh':
         dummy_unit = 1*mV
@@ -215,131 +308,152 @@ def gen_orca(groupname,
     pv_cells = Neurons(num_pv,
                        equation_builder=static_neuron_model(num_inputs=4),
                        method=stochastic_decay,
-                       name=groupname+'pv_cells',
-                       verbose=True)
+                       name=group_name+'pv_cells',
+                       verbose=verbose)
     sst_cells = Neurons(num_sst,
                         equation_builder=static_neuron_model(num_inputs=3),
                         method=stochastic_decay,
-                        name=groupname+'sst_cells',
-                        verbose=True)
+                        name=group_name+'sst_cells',
+                        verbose=verbose)
     vip_cells = Neurons(num_vip,
                         equation_builder=static_neuron_model(num_inputs=4), #TODO 3 when I fix input?
                         method=stochastic_decay,
-                        name=groupname+'vip_cells',
-                        verbose=True)
+                        name=group_name+'vip_cells',
+                        verbose=verbose)
+
+    pyr_cells.set_params(exc_cells_params)
+    pv_cells.set_params(inh_cells_params)
+    sst_cells.set_params(inh_cells_params)
+    vip_cells.set_params(inh_cells_params)
+
+    generate_mismatch([pyr_cells, pv_cells, sst_cells, vip_cells],
+                      mismatch_neuron_param)
+
+    temp_groups = {'pyr_cells': pyr_cells,
+                   'pv_cells': pv_cells,
+                   'sst_cells': sst_cells,
+                   'vip_cells': vip_cells}
+    _groups.update(temp_groups)
+
+def add_connections(_groups,
+                    group_name,
+                    connectivity_params,
+                    exc_soma_params,
+                    exc_dend_params,
+                    inh_soma_params,
+                    inh_dend_params,
+                    verbose,
+                    noise):
+    """ This function adds the connections of the building block.
+
+    Args:
+        _groups (dict): Keys to all neuron and synapse groups.
+        group_name (str, required): Name of the building_block population
+        connectivity_params (dict): Dictionary which holds building_block
+            specific parameters
+        exc_soma_params (dict): Dictionary which holds parameters
+            of excitatory connections to somatic compartments.
+        exc_dend_params (dict): Dictionary which holds parameters
+            of excitatory connections to dendritic compartments.
+        inh_soma_params (dict): Dictionary which holds parameters
+            of inhibitory connections to somatic compartments.
+        inh_dend_params (dict): Dictionary which holds parameters
+            of inhibitory connections to dendritic compartments.
+        verbose (bool, optional): Flag to gain additional information
+        noise (bool, optional): Flag to determine if background noise is to
+            be added to neurons. This is generated with a poisson process.
+    """
+    # TODO remove when no longer testing, as well as if's
+    i_plast = 'plastic_inh0'
 
     # Creating connections
-    # Connecting inputs
-    input_pyr_conn = Connections(seq_cells, pyr_cells,
-            equation_builder=reinit_synapse_model(),
-            method=stochastic_decay,
-            name=groupname+'input_pyr_conn')
-    input_pv_conn = Connections(seq_cells, pv_cells,
-            equation_builder=static_synapse_model(),
-            method=stochastic_decay,
-            name=groupname+'input_pv_conn')
-    input_sst_conn = Connections(seq_cells, sst_cells,
-            equation_builder=static_synapse_model(),
-            method=stochastic_decay,
-            name=groupname+'input_sst_conn')
-    input_vip_conn = Connections(seq_cells, vip_cells,
-            equation_builder=static_synapse_model(),
-            method=stochastic_decay,
-            name=groupname+'input_vip_conn')
-
     # From Pyramidal neurons
-    pyr_pyr_conn = Connections(pyr_cells, pyr_cells,
+    pyr_pyr_conn = Connections(_groups['pyr_cells'], _groups['pyr_cells'],
             equation_builder=stdp_synapse_model(),
             method=stochastic_decay,
-            name=groupname+'pyr_pyr_conn')
-    pyr_pv_conn = Connections(pyr_cells, pv_cells,
+            name=group_name+'pyr_pyr_conn')
+    pyr_pv_conn = Connections(_groups['pyr_cells'], _groups['pv_cells'],
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name=groupname+'pyr_pv_conn')
-    pyr_sst_conn = Connections(pyr_cells, sst_cells,
+            name=group_name+'pyr_pv_conn')
+    pyr_sst_conn = Connections(_groups['pyr_cells'], _groups['sst_cells'],
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name=groupname+'pyr_sst_conn')
-    pyr_vip_conn = Connections(pyr_cells, vip_cells,
+            name=group_name+'pyr_sst_conn')
+    pyr_vip_conn = Connections(_groups['pyr_cells'], _groups['vip_cells'],
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name=groupname+'pyr_vip_conn')
+            name=group_name+'pyr_vip_conn')
 
     # Interneurons to pyramidal
     if i_plast == 'plastic_inh':
-        pv_pyr_conn = Connections(pv_cells, pyr_cells,
+        pv_pyr_conn = Connections(_groups['pv_cells'], _groups['pyr_cells'],
                 equation_builder=adp_synapse_model,
                 method=stochastic_decay,
-                name=groupname+'pv_pyr_conn')
-        sst_pyr_conn = Connections(sst_cells, pyr_cells,
+                name=group_name+'pv_pyr_conn')
+        sst_pyr_conn = Connections(_groups['sst_cells'], _groups['pyr_cells'],
                                    equation_builder=adp_synapse_model,
                                    method=stochastic_decay,
-                                   name=groupname+'sst_pyr_conn')
+                                   name=group_name+'sst_pyr_conn')
     elif i_plast == 'plastic_inh0':
-        pv_pyr_conn = Connections(pv_cells, pyr_cells,
-                                  equation_builder=adp_synapse_model0,
+        pv_pyr_conn = Connections(_groups['pv_cells'], _groups['pyr_cells'],
+                                  equation_builder=istdp_synapse_model,
                                   method=stochastic_decay,
-                                  name=groupname+'pv_pyr_conn')
-        sst_pyr_conn = Connections(sst_cells, pyr_cells,
-                                   equation_builder=adp_synapse_model0,
+                                  name=group_name+'pv_pyr_conn')
+        sst_pyr_conn = Connections(_groups['sst_cells'], _groups['pyr_cells'],
+                                   equation_builder=istdp_synapse_model,
                                    method=stochastic_decay,
-                                   name=groupname+'sst_pyr_conn')
+                                   name=group_name+'sst_pyr_conn')
     else:
-        pv_pyr_conn = Connections(pv_cells, pyr_cells,
+        pv_pyr_conn = Connections(_groups['pv_cells'], _groups['pyr_cells'],
                                   equation_builder=static_synapse_model(),
                                   method=stochastic_decay,
-                                  name=groupname+'pv_pyr_conn')
-        sst_pyr_conn = Connections(sst_cells, pyr_cells,
+                                  name=group_name+'pv_pyr_conn')
+        sst_pyr_conn = Connections(_groups['sst_cells'], _groups['pyr_cells'],
                                   equation_builder=static_synapse_model(),
                                   method=stochastic_decay,
-                                  name=groupname+'sst_pyr_conn')
+                                  name=group_name+'sst_pyr_conn')
 
     # Between interneurons
-    pv_pv_conn = Connections(pv_cells, pv_cells,
+    pv_pv_conn = Connections(_groups['pv_cells'], _groups['pv_cells'],
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name=groupname+'pv_pv_conn')
-    sst_pv_conn = Connections(sst_cells, pv_cells,
+            name=group_name+'pv_pv_conn')
+    sst_pv_conn = Connections(_groups['sst_cells'], _groups['pv_cells'],
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name=groupname+'sst_pv_conn')
-    sst_vip_conn = Connections(sst_cells, vip_cells,
+            name=group_name+'sst_pv_conn')
+    sst_vip_conn = Connections(_groups['sst_cells'], _groups['vip_cells'],
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name=groupname+'sst_vip_conn')
-    vip_sst_conn = Connections(vip_cells, sst_cells,
+            name=group_name+'sst_vip_conn')
+    vip_sst_conn = Connections(_groups['vip_cells'], _groups['sst_cells'],
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
-            name=groupname+'vip_sst_conn')
+            name=group_name+'vip_sst_conn')
 
     if noise:
-        rate_distribution = np.random.randint(1, 15, size=num_exc_neurons) * Hz
-        poisson_activity = PoissonGroup(num_exc_neurons, rate_distribution)
-        background_activity = Connections(poisson_activity, pyr_cells,
+        rate_distribution = np.random.randint(1, 15,
+            size=_groups['pyr_cells'].N) * Hz
+        poisson_activity = PoissonGroup(_groups['pyr_cells'].N, rate_distribution)
+        background_activity = Connections(poisson_activity,
+                                          _groups['pyr_cells'],
                                           equation_builder=static_synapse_model(),
                                           method=stochastic_decay,
-                                          name=groupname+'background_activity')
+                                          name=group_name+'background_activity')
 
-    _groups = {'seq_cells': seq_cells,
-               'pyr_cells': pyr_cells,
-               'pv_cells': pv_cells,
-               'sst_cells': sst_cells,
-               'vip_cells': vip_cells,
-               'input_pyr': input_pyr_conn,
-               'input_pv': input_pv_conn,
-               'input_sst': input_sst_conn,
-               'input_vip': input_vip_conn,
-               'pyr_pyr': pyr_pyr_conn,
-               'pyr_pv': pyr_pv_conn,
-               'pyr_sst': pyr_sst_conn,
-               'pyr_vip': pyr_vip_conn,
-               'pv_pyr': pv_pyr_conn,
-               'sst_pyr': sst_pyr_conn,
-               'pv_pv': pv_pv_conn,
-               'sst_pv': sst_pv_conn,
-               'sst_vip': sst_vip_conn,
-               'vip_sst': vip_sst_conn
-               }
+    temp_groups = {'pyr_pyr': pyr_pyr_conn,
+                   'pyr_pv': pyr_pv_conn,
+                   'pyr_sst': pyr_sst_conn,
+                   'pyr_vip': pyr_vip_conn,
+                   'pv_pyr': pv_pyr_conn,
+                   'sst_pyr': sst_pyr_conn,
+                   'pv_pv': pv_pv_conn,
+                   'sst_pv': sst_pv_conn,
+                   'sst_vip': sst_vip_conn,
+                   'vip_sst': vip_sst_conn
+                   }
+    _groups.update(temp_groups)
 
     # Make connections
     syn_objects = {key: val for key, val in _groups.items() if 'cells' not in key}
@@ -354,23 +468,7 @@ def gen_orca(groupname,
         background_activity.tausyn = 3*ms
         background_activity.weight = 50
 
-    # Introduce sparsity on input channels (required for structural plasticity)
-    for neu in range(num_exc_neurons):
-        ffe_zero_w = np.random.choice(num_input, int(num_input*.3), replace=False)
-        input_pyr_conn.weight[ffe_zero_w, neu] = 0
-        input_pyr_conn.w_plast[ffe_zero_w, neu] = 0
-
-    # Set general parameters
-    pyr_cells.set_params(exc_neu_params)
-    pv_cells.set_params(inh_neu_params)
-    sst_cells.set_params(inh_neu_params)
-    vip_cells.set_params(inh_neu_params)
-
     # Excitatory connections onto somatic compartment
-    input_pyr_conn.set_params(exc_soma_params)
-    input_pv_conn.set_params(exc_soma_params)
-    input_sst_conn.set_params(exc_soma_params)
-    input_vip_conn.set_params(exc_soma_params)
     pyr_pv_conn.set_params(exc_soma_params)
     pyr_sst_conn.set_params(exc_soma_params)
     pyr_vip_conn.set_params(exc_soma_params)
@@ -399,7 +497,6 @@ def gen_orca(groupname,
     #inh_inh_conn.delay = np.random.randint(0, 8, size=np.shape(inh_inh_conn.j)[0]) * ms
 
     # Random weights initialization
-    # TODO use zip
     w_init_group = [pv_pyr_conn, sst_pyr_conn]
 
     if i_plast == 'plastic_inh' or i_plast == 'plastic_inh0':
@@ -451,29 +548,6 @@ def gen_orca(groupname,
     for g in w_init_group:
         g.__setattr__('weight', np.array(g.weight).astype(int))
 
-    w_init_group = [input_pv_conn, input_sst_conn, input_vip_conn]
-    add_group_param_init(w_init_group,
-                         variable='weight',
-                         dist_param=synapse_mean_weight['inp_i'],
-                         scale=1,
-                         distribution='gamma',
-                         clip_min=0,
-                         clip_max=15)
-    for g in w_init_group:
-        g.__setattr__('weight', np.array(g.weight).astype(int))
-
-    w_init_group = [input_pyr_conn]
-    input_pyr_conn.weight = 1
-    add_group_param_init(w_init_group,
-                         variable='w_plast',
-                         dist_param=synapse_mean_weight['inp_e'],
-                         scale=1,
-                         distribution='gamma',
-                         clip_min=0,
-                         clip_max=15)
-    for g in w_init_group:
-        g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
-
     w_init_group = [pyr_pyr_conn]
     pyr_pyr_conn.weight = 1
     add_group_param_init(w_init_group,
@@ -486,35 +560,19 @@ def gen_orca(groupname,
     for g in w_init_group:
         g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
 
-    # Set LFSRs for each group
-    #neu_groups = [exc_cells, inh_cells]
-    # syn_groups = [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
-    #                 feedforward_inh, inh_inh_conn]
-    #ta = create_lfsr(neu_groups, syn_groups, defaultclock.dt)
-
-    # Adding mismatch
-    mismatch_add_group = [[pyr_cells, pv_cells, sst_cells, vip_cells],
-                          [input_pyr_conn, input_pv_conn, input_sst_conn,
-                            input_vip_conn, pyr_pv_conn, pyr_sst_conn, 
-                            pyr_vip_conn, pyr_pyr_conn, pv_pyr_conn,
-                            sst_pyr_conn, pv_pv_conn, sst_pv_conn,
-                            sst_vip_conn, vip_sst_conn],
-                          [input_pyr_conn, pyr_pyr_conn]
-                         ]
-    mismatch_dicts = [mismatch_neuron_param, mismatch_synapse_param,
-                      mismatch_plastic_param]
-
-    for groups, mismatch_dict in zip(mismatch_add_group, mismatch_dicts):
-        for g in groups:
-            g.add_mismatch(std_dict=mismatch_dict)
-            # Convert values to integer
-            for key in mismatch_dict.keys():
-                g.__setattr__(key, np.array(g.__getattr__(key)/ms).astype(int)*ms)
+    generate_mismatch([_groups['pyr_pv'], _groups['pyr_sst'],
+                       _groups['pyr_vip'], _groups['pyr_pyr'],
+                       _groups['pv_pyr'], _groups['sst_pyr'],
+                       _groups['pv_pv'], _groups['sst_pv'],
+                       _groups['sst_vip'], _groups['vip_sst']],
+                      mismatch_synapse_param)
+    generate_mismatch([_groups['pyr_pyr']],
+                      mismatch_plastic_param)
 
     # In case adp is used
     if i_plast == 'plastic_inh':
         # Add proxy activity group
-        activity_proxy_group = [pyr_cells]
+        activity_proxy_group = [_groups['pyr_cells']]
         add_group_activity_proxy(activity_proxy_group,
                                  buffer_size=400,
                                  decay=150)
@@ -527,40 +585,25 @@ def gen_orca(groupname,
             high=var_th + 0.1,
             size=len(sst_pyr_conn))
 
-    # Adding homeostatic mechanisms
-    re_init_dt = 15000*ms
-    add_group_params_re_init(groups=[input_pyr_conn],
-                             variable='w_plast',
-                             re_init_variable='re_init_counter',
-                             re_init_threshold=1,
-                             re_init_dt=re_init_dt,
-                             dist_param=3,
-                             scale=1,
-                             distribution='gamma',
-                             clip_min=0,
-                             clip_max=15,
-                             variable_type='int',
-                             reference='synapse_counter')
-    add_group_params_re_init(groups=[input_pyr_conn],
-                             variable='weight',
-                             re_init_variable='re_init_counter',
-                             re_init_threshold=1,
-                             re_init_dt=re_init_dt,
-                             distribution='deterministic',
-                             const_value=1,
-                             reference='synapse_counter')
-    add_group_params_re_init(groups=[input_pyr_conn],
-                             variable='tausyn',
-                             re_init_variable='re_init_counter',
-                             re_init_threshold=1,
-                             re_init_dt=re_init_dt,
-                             dist_param=5.5,
-                             scale=1,
-                             distribution='normal',
-                             clip_min=4,
-                             clip_max=7,
-                             variable_type='int',
-                             unit='ms',
-                             reference='synapse_counter')
+    # Set LFSRs for each group
+    #neu_groups = [exc_cells, inh_cells]
+    # syn_groups = [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
+    #                 feedforward_inh, inh_inh_conn]
+    #ta = create_lfsr(neu_groups, syn_groups, defaultclock.dt)
 
     return _groups
+
+def generate_mismatch(mismatch_group, mismatch_params):
+    """ This functions adds mismatch according to provided dictionary
+
+    Args:
+        mismatch_group (list of brian2.groups): Groups that will have mismatch
+            added.
+        mismatch_params (dict): Mismatch parameters of all elements in the
+            group.
+    """
+    for g in mismatch_group:
+        g.add_mismatch(std_dict=mismatch_params)
+        # Convert values to integer
+        for key in mismatch_params.keys():
+            g.__setattr__(key, np.array(g.__getattr__(key)/ms).astype(int)*ms)

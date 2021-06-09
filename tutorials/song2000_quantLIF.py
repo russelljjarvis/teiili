@@ -43,29 +43,47 @@ S.rand_num_bits_Apre = 4
 S.rand_num_bits_Apost = 4
 S.stdp_thres = 1
 S.weight = 1
-S.gain_syn = (1/32)*mA #Needed for high N and rate
+S.gain_syn = (1/25)*mA # Needed for high N and rate
+S.simul_thr = 1.0
 S.w_plast = 'rand() * w_max'
+init_w_plast = array(S.w_plast)
 
-mon = StateMonitor(S, 'w_plast', record=[0, 1])
+rec_w = choice(N, 5, replace=False)
+mon = StateMonitor(S, ['w_plast', 'Apre', 'Apost'], record=rec_w)
 s_mon = SpikeMonitor(input)
-monmon = StateMonitor(neurons, 'Vm', record=True)
+r_mon = PopulationRateMonitor(neurons)
 
 run(sim_duration, report='text')
 
-subplot(311)
-plot(S.w_plast / S.w_max, '.k')
+subplot(321)
+plot(S.w_plast / S.w_max[0], '.k')
 ylabel('Weight / w_max')
 xlabel('Synapse index')
-subplot(312)
-hist(S.w_plast / S.w_max, 20)
+subplot(322)
+hist(init_w_plast / S.w_max[0], 20, alpha=0.4, color='r', label='Before')
+hist(S.w_plast / S.w_max[0], 20, alpha=0.4, color='b', label='After')
 xlabel('Weight / w_max')
-subplot(313)
-plot(mon.t/second, mon.w_plast[0].T/S.w_max[0])
-plot(mon.t/second, mon.w_plast[1].T/S.w_max[0])
+legend()
+ax1 = subplot(323)
+for idx, s_idx in enumerate(rec_w):
+    plot(mon.t/second, mon.w_plast[idx].T/S.w_max[0], label=f'Syn. {s_idx}')
 xlabel('Time (s)')
 ylabel('Weight / w_max')
+ylim(0, 1)
+legend()
+subplot(324, sharex=ax1)
+plot(r_mon.t/second, r_mon.smooth_rate(width=50*ms)/Hz)
+xlabel('Time (s)')
+ylabel('Rate (Hz)')
+subplot(325, sharex=ax1)
+for idx, s_idx in enumerate(rec_w):
+    plot(mon.t/second, mon.Apre[idx])
+xlabel('Time (s)')
+ylabel('Pre time window')
+subplot(326, sharex=ax1)
+for idx, s_idx in enumerate(rec_w):
+    plot(mon.t/second, mon.Apost[idx])
+xlabel('Time (s)')
+ylabel('Post time window')
 tight_layout()
-
-figure()
-plot(monmon.Vm[0])
 show()

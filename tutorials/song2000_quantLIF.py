@@ -44,7 +44,6 @@ S.rand_num_bits_Apost = 4
 S.stdp_thres = 1
 S.weight = 1
 S.gain_syn = (1/25)*mA # Needed for high N and rate
-S.simul_thr = 1.0
 S.w_plast = 'rand() * w_max'
 init_w_plast = array(S.w_plast)
 

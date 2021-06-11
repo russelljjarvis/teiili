@@ -7,6 +7,7 @@ from teili.tools.misc import neuron_group_from_spikes
 defaultclock.dt = 1 * ms
 
 sim_duration = 100*second
+#sim_duration = 2000*second
 N = 1000
 F = 15*Hz
 input = PoissonGroup(N, rates=F)
@@ -28,22 +29,27 @@ neurons.refP = 0*ms
 neurons.Vm_min = -12
 neurons.Vm_max = 15
 neurons.refrac_tau = 0*ms
-#neurons.Iconst = 8.0*mA # 8.1 already changes mean to 1
+neurons.Iconst = 16.5*mA
 #Ee = 0*mV N.A. I_syn already does it.
 
 S = Connections(input, neurons, method=ExplicitStateUpdater('''x_new = f(x,t)'''),
     equation_builder=teili_syn)
 S.connect()
 S.tausyn = 5*ms
-S.taupre = 20*ms
-S.taupost = 30*ms # Change rand nums seems to cause too much inhibition
+#random_array = 3*( (2*rand(N)-1)/10 )
+random_array = .5*randn(N)
+random_array = clip(1 + random_array, 0.5, 3)
+S.taupre = 20*ms*random_array#20*ms
+S.taupost = 20*ms # Change rand nums seems to cause too much inhibition
 S.w_max = 15
 S.dApre = 15
 S.rand_num_bits_Apre = 4
 S.rand_num_bits_Apost = 4
 S.stdp_thres = 1
 S.weight = 1
-S.gain_syn = (1/25)*mA # Needed for high N and rate
+#S.gain_syn = (1/26.5)*mA # Needed for high N and rate
+# Below for when Iconst is not zero
+S.gain_syn = (1/64)*mA # Needed for high N and rate
 S.w_plast = 'rand() * w_max'
 init_w_plast = array(S.w_plast)
 

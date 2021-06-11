@@ -26,6 +26,8 @@ path = os.path.expanduser("/home/pablo/git/teili")
 model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochSynAdp.py')
+altadp_synapse_model = SynapseEquationBuilder.import_eq(
+        model_path + 'StochAdpIin.py')
 istdp_synapse_model = SynapseEquationBuilder.import_eq(
         model_path + 'StochInhStdp.py')
 adapt_neuron_model = NeuronEquationBuilder(base_unit='quantized',
@@ -419,8 +421,9 @@ def add_connections(_groups,
             equation_builder=static_synapse_model(),
             method=stochastic_decay,
             name=group_name+'pv_pv_conn')
+    # TODO organize alt adp below
     sst_pv_conn = Connections(_groups['sst_cells'], _groups['pv_cells'],
-            equation_builder=static_synapse_model(),
+            equation_builder=altadp_synapse_model(),#static_synapse_model(),
             method=stochastic_decay,
             name=group_name+'sst_pv_conn')
     sst_vip_conn = Connections(_groups['sst_cells'], _groups['vip_cells'],
@@ -489,6 +492,8 @@ def add_connections(_groups,
     if i_plast == 'plastic_inh' or i_plast == 'plastic_inh0':
         pv_pyr_conn.inh_learning_rate = 0.01
         sst_pyr_conn.inh_learning_rate = 0.01
+    # TODO organize alt adp below
+    sst_pyr_conn.inh_learning_rate = 0.01
 
     # Delays
     pyr_pyr_conn.delay = np.random.randint(0, 8, size=np.shape(pyr_pyr_conn.j)[0]) * ms

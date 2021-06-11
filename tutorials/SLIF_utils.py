@@ -1,11 +1,14 @@
 from brian2 import ms, TimedArray, check_units, run, SpikeGeneratorGroup,\
         SpikeMonitor, Function
 import numpy as np
+import sys
 from teili.core.groups import Neurons
 from scipy.stats import pearsonr, spearmanr
 from random import randint
 from pathlib import Path
 import pickle
+from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph as pg
 
 def replicate_sequence(num_channels, reference_indices, reference_times,
                        sequence_duration, duration):
@@ -57,8 +60,10 @@ def neuron_rate(spike_source, kernel_len, kernel_var, kernel_min, simulation_dt,
         min_time = np.around(interval[0]/simulation_dt).astype(int)
         max_time = np.around(interval[1]/simulation_dt).astype(int)
     else:
-        min_time = np.around(min(spike_source.t)/simulation_dt).astype(int)
-        max_time = np.around(max(spike_source.t)/simulation_dt).astype(int)
+        neu_min_times = min([min(x) for x in spike_trains.values()])
+        min_time = np.around(neu_min_times/simulation_dt).astype(int)
+        neu_max_times = max([max(x) for x in spike_trains.values()])
+        max_time = np.around(neu_max_times/simulation_dt).astype(int)
     interval = range(min_time, max_time+1)
 
     # Create normalized and truncated gaussian time window
@@ -218,3 +223,36 @@ def load_merge_multiple(path_name, file_name, mode='pickle', allow_pickle=False)
                         merged_dict[key] = val
 
     return merged_dict
+
+def plot_weight_matrix(weight_matrix, title, xlabel, ylabel):
+    # Plot matrices
+    # Inferno colormap
+    colors = [
+        (0, 0, 4),
+        (40, 11, 84),
+        (101, 21, 110),
+        (159, 42, 99),
+        (212, 72, 66),
+        (245, 125, 21),
+        (250, 193, 39),
+        (252, 255, 16)
+    ]
+    cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 8), color=colors)
+
+    app = QtGui.QApplication([])
+    win = QtGui.QMainWindow()
+    win.setWindowTitle(title)
+    image_axis = pg.PlotItem()
+    image_axis.setLabel(axis='bottom', text=xlabel)
+    image_axis.setLabel(axis='left', text=ylabel)
+    #image_axis.hideAxis('left')
+    imv = pg.ImageView(view=image_axis)
+    win.setCentralWidget(imv)
+    win.show()
+    #imv.ui.histogram.hide()
+    imv.ui.roiBtn.hide()
+    imv.ui.menuBtn.hide() 
+    imv.setImage(weight_matrix, axes={'y':0, 'x':1})
+    imv.setColorMap(cmap)
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

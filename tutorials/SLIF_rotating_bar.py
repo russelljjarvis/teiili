@@ -146,10 +146,11 @@ testbench_stim.rotating_bar(length=10, nrows=10,
                             #noise_probability=0.2,
                             repetitions=sequence_repetitions,
                             debug=False)
-training_duration = np.max(testbench_stim.times)*ms
 input_indices = testbench_stim.indices
 input_times = testbench_stim.times * ms
 sequence_duration = 105*ms
+testing_duration = 300*ms
+training_duration = np.max(testbench_stim.times)*ms - testing_duration
 
 # Convert input into neuron group (necessary for STDP compatibility)
 sim_duration = input_times[-1]
@@ -191,16 +192,17 @@ if i_plast == 'plastic_inh':
 statemon_net_current = StateMonitor(orca._groups['pyr_cells'],
     variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3'], record=True,
     name='statemon_net_current')
+orca2_mon = SpikeMonitor(orca2._groups['pyr_cells'], name='orca2_mon')
 
 # Training
 date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
 os.mkdir(path)
 
-Net.add(orca, orca2, relay_cells, [x['monitor'] for x in monitors.values()])
+Net.add(orca, relay_cells, [x['monitor'] for x in monitors.values()], orca2)
 if i_plast == 'plastic_inh':
     Net.add(statemon_proxy)
-Net.add(statemon_net_current)
+Net.add(statemon_net_current, orca2_mon)
 
 training_blocks = 10
 remainder_time = int(np.around(training_duration/defaultclock.dt)
@@ -224,7 +226,46 @@ if remainder_time != 0:
     save_data()
     Net.remove([x['monitor'] for x in monitors.values()])
     del monitors
-Net.remove(statemon_net_current, relay_cells)
+    monitors = create_monitors()
+    Net.add([x['monitor'] for x in monitors.values()])
+
+# Use line below to try testing script
+#Net.remove(statemon_net_current, relay_cells)
+
+# Testing network
+test_trial = 3
+block += 1
+orca._groups['ff_pyr'].stdp_thres = 0
+orca._groups['fb_pyr'].stdp_thres = 0
+orca._groups['pyr_pyr'].stdp_thres = 0
+orca._groups['sst_pyr'].inh_learning_rate = 0
+orca._groups['pv_pyr'].inh_learning_rate = 0
+orca2._groups['ff_pyr'].stdp_thres = 0
+orca2._groups['pyr_pyr'].stdp_thres = 0
+orca2._groups['sst_pyr'].inh_learning_rate = 0
+orca2._groups['pv_pyr'].inh_learning_rate = 0
+
+# deactivate top-down only
+orca._groups['fb_pyr'].weight = 0
+orca._groups['fb_vip'].weight = 0
+Net.run(testing_duration/test_trial, report='stdout', report_period=100*ms)
+save_data()
+
+# deactivate bottom-up only
+orca._groups['fb_pyr'].weight = 1
+orca._groups['fb_vip'].weight = 1
+orca._groups['ff_pyr'].weight = 0
+orca._groups['ff_pv'].weight = 0
+orca._groups['ff_sst'].weight = 0
+orca._groups['ff_vip'].weight = 0
+Net.run(testing_duration/test_trial, report='stdout', report_period=100*ms)
+save_data()
+
+# No input
+orca._groups['fb_pyr'].weight = 0
+orca._groups['fb_vip'].weight = 0
+Net.run(testing_duration/test_trial, report='stdout', report_period=100*ms)
+save_data()
 
 # Recover data pickled from monitor
 spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')
@@ -260,6 +301,36 @@ with open(path+'metadata', 'wb') as f:
     pickle.dump(Metadata, f)
 
 Net.store(filename=f'{path}network')
+
+############ Extra analysis of orca2
+last_sequence_t = training_duration - sequence_duration
+neu_rates = neuron_rate(orca2_mon, kernel_len=200,
+    kernel_var=10, kernel_min=0.001, simulation_dt=defaultclock.dt,
+    interval=[last_sequence_t, training_duration])
+permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
+                                        defaultclock.dt)
+
+#G = orca2._groups['pyr_pyr']
+G = orca._groups['fb_pyr']
+fb_ids = []
+for row in range(num_exc):
+    fb_ids.append(list(G.j[row, :]))
+matrix = [None for _ in range(num_exc)]
+interval1 = 0
+interval2 = 0
+for source_neu, values in enumerate(fb_ids):
+    interval2 += len(values)
+    matrix[source_neu] = G.w_plast[interval1:interval2]
+    interval1 += len(values)
+matrix = np.array(matrix, dtype=object)
+
+#sorted_rf.matrix[:, permutation_ids][permutation_ids, :]
+
+from SLIF_utils import plot_weight_matrix
+from teili.tools.sorting import SortMatrix
+sorted_rf = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=matrix, axis=1,similarity_metric='euclidean', target_indices=fb_ids)#, rec_matrix=True)
+#plot_weight_matrix(sorted_rf.sorted_matrix, title='asd', xlabel='x', ylabel='y')
+
 #from brian2 import *
 #import pandas as pd
 #from scipy.signal import savgol_filter

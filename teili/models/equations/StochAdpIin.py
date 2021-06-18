@@ -24,7 +24,7 @@ StochAdpIin = {'model':
 
         I_syn += gain_syn * abs(weight) * w_plast
         
-        delta_w = inh_learning_rate * (Iin0_post/amp - 0)
+        delta_w = inh_learning_rate * (0.01 - Iin0_post/amp)
         w_plast = clip(w_plast + delta_w, 0, 15)
          ''',
 'on_post':

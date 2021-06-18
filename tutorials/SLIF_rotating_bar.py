@@ -189,7 +189,7 @@ if i_plast == 'plastic_inh':
     statemon_proxy = StateMonitor(orca._groups['pyr_cells'],
         variables=['normalized_activity_proxy'], record=True,
         name='statemon_proxy')
-statemon_net_current = StateMonitor(orca._groups['pyr_cells'],
+statemon_net_current = StateMonitor(orca._groups['pv_cells'],
     variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3'], record=True,
     name='statemon_net_current')
 orca2_mon = SpikeMonitor(orca2._groups['pyr_cells'], name='orca2_mon')
@@ -330,6 +330,12 @@ from SLIF_utils import plot_weight_matrix
 from teili.tools.sorting import SortMatrix
 sorted_rf = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=matrix, axis=1,similarity_metric='euclidean', target_indices=fb_ids)#, rec_matrix=True)
 #plot_weight_matrix(sorted_rf.sorted_matrix, title='asd', xlabel='x', ylabel='y')
+# raster
+#import matplotlib.pyplot as plt
+#sorted_i = np.asarray([np.where(
+#                np.asarray(permutation_ids) == int(i))[0][0] for i in orca2_mon.i])
+#plt.plot(orca2_mon.t/ms, sorted_i, '.k')
+#plt.show()
 
 #from brian2 import *
 #import pandas as pd

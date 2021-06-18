@@ -185,40 +185,40 @@ class ORCA_WTA(BuildingBlock):
                     val.weight[ffe_zero_w, neu] = 0
                     val.w_plast[ffe_zero_w, neu] = 0
 
-                re_init_dt = 15000*ms
-                add_group_params_re_init(groups=[val],
-                                         variable='w_plast',
-                                         re_init_variable='re_init_counter',
-                                         re_init_threshold=1,
-                                         re_init_dt=re_init_dt,
-                                         dist_param=3,
-                                         scale=1,
-                                         distribution='gamma',
-                                         clip_min=0,
-                                         clip_max=15,
-                                         variable_type='int',
-                                         reference='synapse_counter')
-                add_group_params_re_init(groups=[val],
-                                         variable='weight',
-                                         re_init_variable='re_init_counter',
-                                         re_init_threshold=1,
-                                         re_init_dt=re_init_dt,
-                                         distribution='deterministic',
-                                         const_value=1,
-                                         reference='synapse_counter')
-                add_group_params_re_init(groups=[val],
-                                         variable='tausyn',
-                                         re_init_variable='re_init_counter',
-                                         re_init_threshold=1,
-                                         re_init_dt=re_init_dt,
-                                         dist_param=5.5,
-                                         scale=1,
-                                         distribution='normal',
-                                         clip_min=4,
-                                         clip_max=7,
-                                         variable_type='int',
-                                         unit='ms',
-                                         reference='synapse_counter')
+                #re_init_dt = 15000*ms
+                #add_group_params_re_init(groups=[val],
+                #                         variable='w_plast',
+                #                         re_init_variable='re_init_counter',
+                #                         re_init_threshold=1,
+                #                         re_init_dt=re_init_dt,
+                #                         dist_param=3,
+                #                         scale=1,
+                #                         distribution='gamma',
+                #                         clip_min=0,
+                #                         clip_max=15,
+                #                         variable_type='int',
+                #                         reference='synapse_counter')
+                #add_group_params_re_init(groups=[val],
+                #                         variable='weight',
+                #                         re_init_variable='re_init_counter',
+                #                         re_init_threshold=1,
+                #                         re_init_dt=re_init_dt,
+                #                         distribution='deterministic',
+                #                         const_value=1,
+                #                         reference='synapse_counter')
+                #add_group_params_re_init(groups=[val],
+                #                         variable='tausyn',
+                #                         re_init_variable='re_init_counter',
+                #                         re_init_threshold=1,
+                #                         re_init_dt=re_init_dt,
+                #                         dist_param=5.5,
+                #                         scale=1,
+                #                         distribution='normal',
+                #                         clip_min=4,
+                #                         clip_max=7,
+                #                         variable_type='int',
+                #                         unit='ms',
+                #                         reference='synapse_counter')
 
         w_init_group = list(temp_groups.values())
         if target_type=='inhibitory':
@@ -493,7 +493,7 @@ def add_connections(_groups,
         pv_pyr_conn.inh_learning_rate = 0.01
         sst_pyr_conn.inh_learning_rate = 0.01
     # TODO organize alt adp below
-    sst_pyr_conn.inh_learning_rate = 0.01
+    sst_pv_conn.inh_learning_rate = 0.01
 
     # Delays
     pyr_pyr_conn.delay = np.random.randint(0, 8, size=np.shape(pyr_pyr_conn.j)[0]) * ms
@@ -530,7 +530,19 @@ def add_connections(_groups,
         for g in w_init_group:
             g.__setattr__('weight', np.array(g.weight).astype(int))
 
-    w_init_group = [pv_pv_conn, sst_pv_conn, sst_vip_conn, vip_sst_conn]
+    # TODO organize alt adp below
+    w_init_group = [sst_pv_conn]
+    sst_pv_conn.weight = -1
+    add_group_param_init(w_init_group,
+                         variable='w_plast',
+                         dist_param=synapse_mean_weight['i_e'],
+                         scale=1,
+                         distribution='gamma',
+                         clip_min=0,
+                         clip_max=15)
+    for g in w_init_group:
+        g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
+    w_init_group = [pv_pv_conn, sst_vip_conn, vip_sst_conn]#sst_pv_conn, sst_vip_conn, vip_sst_conn]
     add_group_param_init(w_init_group,
                          variable='weight',
                          dist_param=synapse_mean_weight['i_i'],
@@ -589,6 +601,11 @@ def add_connections(_groups,
             low=var_th - 0.1,
             high=var_th + 0.1,
             size=len(sst_pyr_conn))
+    # TODO organize alt adp below
+    from SLIF_run_regs import add_alt_activity_proxy
+    add_alt_activity_proxy([_groups['sst_cells']],
+                             buffer_size=400,
+                             decay=150)
 
     # Set LFSRs for each group
     #neu_groups = [exc_cells, inh_cells]

@@ -24,7 +24,7 @@ connection_probability_HS19 = {'pyr_pyr': 0.10,
                                'ff_pv': 1.0,
                                'ff_sst': 1.0,
                                'ff_vip': 0.0,
-                               'fb_pyr': 0.8,
+                               'fb_pyr': 0.1,
                                'fb_pv': 0.0,
                                'fb_sst': 0.0,
                                'fb_vip': 0.8

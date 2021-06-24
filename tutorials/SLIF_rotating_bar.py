@@ -139,7 +139,7 @@ prefs.codegen.target = "numpy"
 # Initialize rotating bar
 testbench_stim = OCTA_Testbench()
 num_channels = 100
-sequence_repetitions = 600
+sequence_repetitions = 100
 testbench_stim.rotating_bar(length=10, nrows=10,
                             direction='cw',
                             ts_offset=3, angle_step=10,
@@ -162,18 +162,18 @@ relay_cells = neuron_group_from_spikes(num_channels,
 
 num_exc = 200
 Net = TeiliNetwork()
-orca = ORCA_WTA(num_exc_neurons=num_exc)#,
+orca = ORCA_WTA(num_exc_neurons=num_exc, noise=True)#,
     #ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
 orca.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
     sparsity=.3)
-orca.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells', 'vip_cells'],
+orca.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells'],
     'static', 'inhibitory')
 
-orca2 = ORCA_WTA(num_exc_neurons=num_exc, name='top_down_')#,
+orca2 = ORCA_WTA(num_exc_neurons=num_exc, name='top_down_', noise=True)#,
     #ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
 orca2.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
     sparsity=.3)
-orca2.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells', 'vip_cells'],
+orca2.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells'],
     'static', 'inhibitory')
 orca.add_input(orca2._groups['pyr_cells'], 'fb', ['pyr_cells'], 'reinit',
     'excitatory', exc_params=excitatory_synapse_dend, sparsity=.3)
@@ -190,7 +190,7 @@ if i_plast == 'plastic_inh':
         variables=['normalized_activity_proxy'], record=True,
         name='statemon_proxy')
 statemon_net_current = StateMonitor(orca._groups['pv_cells'],
-    variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3'], record=True,
+    variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3', 'I', 'Vm', 'normalized_activity_proxy'], record=True,
     name='statemon_net_current')
 orca2_mon = SpikeMonitor(orca2._groups['pyr_cells'], name='orca2_mon')
 
@@ -253,18 +253,25 @@ save_data()
 
 # deactivate bottom-up only
 orca._groups['fb_pyr'].weight = 1
-orca._groups['fb_vip'].weight = 1
 orca._groups['ff_pyr'].weight = 0
 orca._groups['ff_pv'].weight = 0
 orca._groups['ff_sst'].weight = 0
-orca._groups['ff_vip'].weight = 0
 Net.run(testing_duration/test_trial, report='stdout', report_period=100*ms)
 save_data()
 
 # No input
 orca._groups['fb_pyr'].weight = 0
-orca._groups['fb_vip'].weight = 0
-Net.run(testing_duration/test_trial, report='stdout', report_period=100*ms)
+orca._groups['pv_pyr'].weight = 0
+orca._groups['pv_pv'].weight = 0
+orca._groups['sst_pyr'].weight = 0
+orca._groups['sst_pv'].weight = 0
+orca._groups['sst_vip'].weight = 0
+orca._groups['vip_sst'].weight = 0
+orca._groups['pyr_pyr'].weight = 0
+orca._groups['pyr_pv'].weight = 0
+orca._groups['pyr_sst'].weight = 0
+orca._groups['pyr_vip'].weight = 0
+Net.run(1000*ms, report='stdout', report_period=100*ms)
 save_data()
 
 # Recover data pickled from monitor

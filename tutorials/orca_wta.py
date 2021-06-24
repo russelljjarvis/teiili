@@ -4,7 +4,8 @@
 import os
 import numpy as np
 
-from brian2 import ms, Hz, mV, defaultclock, ExplicitStateUpdater, PoissonGroup
+from brian2 import ms, Hz, mV, ohm, defaultclock, ExplicitStateUpdater,\
+        PoissonGroup
 
 from teili.building_blocks.building_block import BuildingBlock
 from teili.core.groups import Neurons, Connections
@@ -112,7 +113,8 @@ class ORCA_WTA(BuildingBlock):
                         ratio_vip=ratio_vip,
                         verbose=verbose,
                         exc_cells_params=exc_cells_params,
-                        inh_cells_params=inh_cells_params
+                        inh_cells_params=inh_cells_params,
+                        noise=noise
                         )
         add_connections(self._groups,
                         group_name=name,
@@ -265,7 +267,8 @@ def add_populations(_groups,
                     ratio_vip,
                     verbose,
                     exc_cells_params,
-                    inh_cells_params
+                    inh_cells_params,
+                    noise
                     ):
     """ This functions add populations of the building block.
 
@@ -284,6 +287,8 @@ def add_populations(_groups,
             excitatory neurons
         inh_cells_params (dict): Dictionary which holds parameters of
             inhibitory neurons
+        noise (bool, optional): Flag to determine if background noise is to
+            be added to neurons. This is generated with a poisson process.
     """
     # TODO remove when no longer testing, as well as if's
     i_plast = 'plastic_inh0'
@@ -294,7 +299,7 @@ def add_populations(_groups,
     num_vip = int(num_inh * ratio_vip)
 
     pyr_cells = Neurons(num_exc_neurons,
-                        equation_builder=adapt_neuron_model(num_inputs=5), #TODO 4 when I fix input?
+                        equation_builder=adapt_neuron_model(num_inputs=6), #TODO 4 when I fix input?
                         method=stochastic_decay,
                         name=group_name+'pyr_cells',
                         verbose=verbose)
@@ -308,12 +313,20 @@ def add_populations(_groups,
                                        size=pyr_cells.N)
 
     pv_cells = Neurons(num_pv,
-                       equation_builder=static_neuron_model(num_inputs=4),
+                       equation_builder=static_neuron_model(num_inputs=5),
                        method=stochastic_decay,
                        name=group_name+'pv_cells',
                        verbose=verbose)
+    # TODO organize alt adp below
+    from brian2 import amp
+    dummy_unit = 1*amp
+    pv_cells.variables.add_array('activity_proxy',
+                                  size=pv_cells.N,
+                                  dimensions=dummy_unit.dim)
+    pv_cells.variables.add_array('normalized_activity_proxy',
+                                  size=pv_cells.N)
     sst_cells = Neurons(num_sst,
-                        equation_builder=static_neuron_model(num_inputs=3),
+                        equation_builder=static_neuron_model(num_inputs=4),
                         method=stochastic_decay,
                         name=group_name+'sst_cells',
                         verbose=verbose)
@@ -322,6 +335,13 @@ def add_populations(_groups,
                         method=stochastic_decay,
                         name=group_name+'vip_cells',
                         verbose=verbose)
+    if noise:
+        num_noise_cells = 30
+        pyr_noise_cells = PoissonGroup(num_noise_cells, rates=28*Hz)
+        vip_noise_cells = PoissonGroup(num_noise_cells, rates=10*Hz)
+        num_noise_cells = 10
+        pv_noise_cells = PoissonGroup(num_noise_cells, rates=1*Hz)
+        sst_noise_cells = PoissonGroup(num_noise_cells, rates=1*Hz)
 
     pyr_cells.set_params(exc_cells_params)
     pv_cells.set_params(inh_cells_params)
@@ -335,6 +355,11 @@ def add_populations(_groups,
                    'pv_cells': pv_cells,
                    'sst_cells': sst_cells,
                    'vip_cells': vip_cells}
+    if noise:
+        temp_groups.update({'pyr_noise_cells': pyr_noise_cells,
+                            'pv_noise_cells': pv_noise_cells,
+                            'sst_noise_cells': sst_noise_cells,
+                            'vip_noise_cells': vip_noise_cells})
     _groups.update(temp_groups)
 
 def add_connections(_groups,
@@ -417,33 +442,49 @@ def add_connections(_groups,
                                   name=group_name+'sst_pyr_conn')
 
     # Between interneurons
-    pv_pv_conn = Connections(_groups['pv_cells'], _groups['pv_cells'],
-            equation_builder=static_synapse_model(),
-            method=stochastic_decay,
-            name=group_name+'pv_pv_conn')
+    pv_pv_conn = Connections(_groups['pv_cells'],
+                             _groups['pv_cells'],
+                             equation_builder=static_synapse_model(),
+                             method=stochastic_decay,
+                             name=group_name+'pv_pv_conn')
     # TODO organize alt adp below
-    sst_pv_conn = Connections(_groups['sst_cells'], _groups['pv_cells'],
-            equation_builder=altadp_synapse_model(),#static_synapse_model(),
-            method=stochastic_decay,
-            name=group_name+'sst_pv_conn')
-    sst_vip_conn = Connections(_groups['sst_cells'], _groups['vip_cells'],
-            equation_builder=static_synapse_model(),
-            method=stochastic_decay,
-            name=group_name+'sst_vip_conn')
-    vip_sst_conn = Connections(_groups['vip_cells'], _groups['sst_cells'],
-            equation_builder=static_synapse_model(),
-            method=stochastic_decay,
-            name=group_name+'vip_sst_conn')
+    sst_pv_conn = Connections(_groups['sst_cells'],
+                              _groups['pv_cells'],
+                              equation_builder=altadp_synapse_model(),#static_synapse_model(),
+                              method=stochastic_decay,
+                              name=group_name+'sst_pv_conn')
+    sst_vip_conn = Connections(_groups['sst_cells'],
+                               _groups['vip_cells'],
+                               equation_builder=static_synapse_model(),
+                               method=stochastic_decay,
+                               name=group_name+'sst_vip_conn')
+    vip_sst_conn = Connections(_groups['vip_cells'],
+                               _groups['sst_cells'],
+                               equation_builder=static_synapse_model(),
+                               method=stochastic_decay,
+                               name=group_name+'vip_sst_conn')
 
     if noise:
-        rate_distribution = np.random.randint(1, 15,
-            size=_groups['pyr_cells'].N) * Hz
-        poisson_activity = PoissonGroup(_groups['pyr_cells'].N, rate_distribution)
-        background_activity = Connections(poisson_activity,
-                                          _groups['pyr_cells'],
-                                          equation_builder=static_synapse_model(),
-                                          method=stochastic_decay,
-                                          name=group_name+'background_activity')
+        noise_pyr_conn = Connections(_groups['pyr_noise_cells'],
+                                     _groups['pyr_cells'],
+                                     equation_builder=static_synapse_model(),
+                                     method=stochastic_decay,
+                                     name=group_name+'noise_pyr_conn')
+        noise_pv_conn = Connections(_groups['pv_noise_cells'],
+                                     _groups['pv_cells'],
+                                     equation_builder=static_synapse_model(),
+                                     method=stochastic_decay,
+                                     name=group_name+'noise_pv_conn')
+        noise_sst_conn = Connections(_groups['sst_noise_cells'],
+                                     _groups['sst_cells'],
+                                     equation_builder=static_synapse_model(),
+                                     method=stochastic_decay,
+                                     name=group_name+'noise_sst_conn')
+        noise_vip_conn = Connections(_groups['vip_noise_cells'],
+                                     _groups['vip_cells'],
+                                     equation_builder=static_synapse_model(),
+                                     method=stochastic_decay,
+                                     name=group_name+'noise_vip_conn')
 
     temp_groups = {'pyr_pyr': pyr_pyr_conn,
                    'pyr_pv': pyr_pv_conn,
@@ -456,20 +497,33 @@ def add_connections(_groups,
                    'sst_vip': sst_vip_conn,
                    'vip_sst': vip_sst_conn
                    }
+    if noise:
+        temp_groups.update({'noise_pyr': noise_pyr_conn,
+                            'noise_pv': noise_pv_conn,
+                            'noise_sst': noise_sst_conn,
+                            'noise_vip': noise_vip_conn})
     _groups.update(temp_groups)
 
     # Make connections
     syn_objects = {key: val for key, val in _groups.items() if 'cells' not in key}
     for key, val in syn_objects.items():
-        if key == 'pyr_pyr':
+        source, target = key.split('_')[0], key.split('_')[1]
+        if source==target:
             val.connect('i!=j', p=connectivity_params[key])
+        elif source=='noise':
+            val.connect()
         else:
             val.connect(p=connectivity_params[key])
 
     if noise:
-        background_activity.connect('i==j')
-        background_activity.tausyn = 3*ms
-        background_activity.weight = 50
+        noise_pyr_conn.tausyn = 3*ms
+        noise_pv_conn.tausyn = 3*ms
+        noise_sst_conn.tausyn = 3*ms
+        noise_vip_conn.tausyn = 3*ms
+        noise_pyr_conn.weight = 4
+        noise_pv_conn.weight = 4
+        noise_sst_conn.weight = 4
+        noise_vip_conn.weight = 4
 
     # Excitatory connections onto somatic compartment
     pyr_pv_conn.set_params(exc_soma_params)
@@ -603,7 +657,7 @@ def add_connections(_groups,
             size=len(sst_pyr_conn))
     # TODO organize alt adp below
     from SLIF_run_regs import add_alt_activity_proxy
-    add_alt_activity_proxy([_groups['sst_cells']],
+    add_alt_activity_proxy([_groups['pv_cells']],
                              buffer_size=400,
                              decay=150)
 

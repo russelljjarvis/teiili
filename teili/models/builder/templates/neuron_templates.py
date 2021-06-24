@@ -428,7 +428,7 @@ q_model_template = {
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
         decay_probability = rand() : 1 (constant over dt)
 
-        I = Iin + Iconst : amp
+        I = clip(Iin + Iconst, -15*mA, 15*mA) : amp
         decay_rate = tau/(tau + dt)                      : 1
         decay_rate_refrac = refrac_tau/(refrac_tau + dt) : 1
         refrac = Vm<Vrest                                    : boolean

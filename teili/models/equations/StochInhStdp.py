@@ -37,14 +37,17 @@ StochInhStdp = {'model':
 '''
 
         I_syn += gain_syn * abs(weight) * w_plast
+        I_syn = clip(I_syn, 0*mA, 15*mA)
         
         Apre += 15
+        Apre = clip(Apre, 0, 15)
         delta_w  = (Apost/15 - variance_th) * inh_learning_rate
         w_plast = clip(w_plast + delta_w, 0, 31)
          ''',
 'on_post':
 '''
         Apost += 15
+        Apost = clip(Apost, 0, 15)
         delta_w  = Apre/15 * inh_learning_rate
         w_plast = clip(w_plast + delta_w, 0, 31)
 

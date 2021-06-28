@@ -424,7 +424,7 @@ defaultclock.dt = 1*ms in the code using this model.
 q_model_template = {
     'model': '''
         dVm/dt = (int(not refrac)*int(normal_decay) + int(refrac)*int(refractory_decay))*mV/second : volt
-        normal_decay = clip((decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I))/mV + decay_probability, Vm_min, Vm_max) : 1
+        normal_decay = clip((decay_rate*Vm + (1-decay_rate)*(Vrest + g_psc*I) + Vm_noise)/mV + decay_probability, Vm_min, Vm_max) : 1
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
         decay_probability = rand() : 1 (constant over dt)
 
@@ -437,6 +437,7 @@ q_model_template = {
         Iconst  : amp                         # constant input current
         Iin = Iin0        : amp
         Iin0 : amp
+        Vm_noise          : volt
         tau               : second (constant)
         refrac_tau        : second (constant)
         refP              : second
@@ -449,7 +450,9 @@ q_model_template = {
 
     ''',
     'threshold': '''Vm>=Vthr''',
-    'reset': '''Vm=Vreset''',
+    'reset': '''
+        Vm=Vreset;
+        Vm_noise = 0*mV''',
 }
 
 q_model_template_params = {
@@ -462,7 +465,8 @@ q_model_template_params = {
     'g_psc' : 1*ohm,
     'tau': 19*ms,
     'refrac_tau': 2*ms,
-    'refP': 0.*ms
+    'refP': 0.*ms,
+    'Vm_noise': 0*mV
     }
 
 # Use lfsr to generate random numbers. Function must be added to namespace

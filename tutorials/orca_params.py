@@ -68,11 +68,13 @@ connection_probability = {'pyr_pyr': 1.,
 
 excitatory_neurons = {'tau': 20*ms,
                       'Vm': 3*mV,
-                      'thr_max': 15*mV
+                      'thr_max': 15*mV,
+                      'Vm_noise': 0*mV
                      }
 
 inhibitory_neurons = {'tau': 10*ms,
-                      'Vm': 3*mV
+                      'Vm': 3*mV,
+                      'Vm_noise': 0*mV
                      }
 
 excitatory_synapse_soma = {'tausyn': 5*ms,
@@ -106,10 +108,10 @@ inhibitory_synapse_dend = {'tausyn': 7*ms,
                           }
 
 synapse_mean_weight = {'e_i': 3, # 1
-                       'i_e': 4, # 1
-                       'e_e': 1,
+                       'i_e': 1, # 1
+                       'e_e': 4,
                        'i_i': 1,
-                       'inp_e': 3,
+                       'inp_e': 4,
                        'inp_i': 1 # 2
                        }
 

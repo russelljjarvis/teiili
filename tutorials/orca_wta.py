@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 from brian2 import ms, Hz, mV, ohm, defaultclock, ExplicitStateUpdater,\
-        PoissonGroup
+        PoissonGroup, PoissonInput
 
 from teili.building_blocks.building_block import BuildingBlock
 from teili.core.groups import Neurons, Connections
@@ -123,8 +123,7 @@ class ORCA_WTA(BuildingBlock):
                         exc_soma_params=exc_soma_params,
                         exc_dend_params=exc_dend_params,
                         inh_soma_params=inh_soma_params,
-                        inh_dend_params=inh_dend_params,
-                        noise=noise)
+                        inh_dend_params=inh_dend_params)
 
     def add_input(self,
                   input_group,
@@ -233,8 +232,8 @@ class ORCA_WTA(BuildingBlock):
                                  variable='weight',
                                  dist_param=dist_param,
                                  scale=1,
-                                 distribution='gamma',
-                                 clip_min=0,
+                                 distribution='normal',
+                                 clip_min=1,
                                  clip_max=15)
             for g in w_init_group:
                 g.__setattr__('weight', np.array(g.weight).astype(int))
@@ -243,8 +242,8 @@ class ORCA_WTA(BuildingBlock):
                                  variable='w_plast',
                                  dist_param=dist_param,
                                  scale=1,
-                                 distribution='gamma',
-                                 clip_min=0,
+                                 distribution='normal',
+                                 clip_min=1,
                                  clip_max=15)
             for g in w_init_group:
                 g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
@@ -336,12 +335,10 @@ def add_populations(_groups,
                         name=group_name+'vip_cells',
                         verbose=verbose)
     if noise:
-        num_noise_cells = 30
-        pyr_noise_cells = PoissonGroup(num_noise_cells, rates=28*Hz)
-        vip_noise_cells = PoissonGroup(num_noise_cells, rates=10*Hz)
-        num_noise_cells = 10
-        pv_noise_cells = PoissonGroup(num_noise_cells, rates=1*Hz)
-        sst_noise_cells = PoissonGroup(num_noise_cells, rates=1*Hz)
+        pyr_noise_cells = PoissonInput(pyr_cells, 'Vm_noise', 1, 3*Hz, 12*mV)
+        pv_noise_cells = PoissonInput(pv_cells, 'Vm_noise', 1, 2*Hz, 12*mV)
+        sst_noise_cells = PoissonInput(sst_cells, 'Vm_noise', 1, 2*Hz, 12*mV)
+        vip_noise_cells = PoissonInput(vip_cells, 'Vm_noise', 1, 2*Hz, 12*mV)
 
     pyr_cells.set_params(exc_cells_params)
     pv_cells.set_params(inh_cells_params)
@@ -369,8 +366,7 @@ def add_connections(_groups,
                     exc_dend_params,
                     inh_soma_params,
                     inh_dend_params,
-                    verbose,
-                    noise):
+                    verbose):
     """ This function adds the connections of the building block.
 
     Args:
@@ -387,8 +383,6 @@ def add_connections(_groups,
         inh_dend_params (dict): Dictionary which holds parameters
             of inhibitory connections to dendritic compartments.
         verbose (bool, optional): Flag to gain additional information
-        noise (bool, optional): Flag to determine if background noise is to
-            be added to neurons. This is generated with a poisson process.
     """
     # TODO remove when no longer testing, as well as if's
     i_plast = 'plastic_inh0'
@@ -464,28 +458,6 @@ def add_connections(_groups,
                                method=stochastic_decay,
                                name=group_name+'vip_sst_conn')
 
-    if noise:
-        noise_pyr_conn = Connections(_groups['pyr_noise_cells'],
-                                     _groups['pyr_cells'],
-                                     equation_builder=static_synapse_model(),
-                                     method=stochastic_decay,
-                                     name=group_name+'noise_pyr_conn')
-        noise_pv_conn = Connections(_groups['pv_noise_cells'],
-                                     _groups['pv_cells'],
-                                     equation_builder=static_synapse_model(),
-                                     method=stochastic_decay,
-                                     name=group_name+'noise_pv_conn')
-        noise_sst_conn = Connections(_groups['sst_noise_cells'],
-                                     _groups['sst_cells'],
-                                     equation_builder=static_synapse_model(),
-                                     method=stochastic_decay,
-                                     name=group_name+'noise_sst_conn')
-        noise_vip_conn = Connections(_groups['vip_noise_cells'],
-                                     _groups['vip_cells'],
-                                     equation_builder=static_synapse_model(),
-                                     method=stochastic_decay,
-                                     name=group_name+'noise_vip_conn')
-
     temp_groups = {'pyr_pyr': pyr_pyr_conn,
                    'pyr_pv': pyr_pv_conn,
                    'pyr_sst': pyr_sst_conn,
@@ -497,11 +469,6 @@ def add_connections(_groups,
                    'sst_vip': sst_vip_conn,
                    'vip_sst': vip_sst_conn
                    }
-    if noise:
-        temp_groups.update({'noise_pyr': noise_pyr_conn,
-                            'noise_pv': noise_pv_conn,
-                            'noise_sst': noise_sst_conn,
-                            'noise_vip': noise_vip_conn})
     _groups.update(temp_groups)
 
     # Make connections
@@ -510,20 +477,8 @@ def add_connections(_groups,
         source, target = key.split('_')[0], key.split('_')[1]
         if source==target:
             val.connect('i!=j', p=connectivity_params[key])
-        elif source=='noise':
-            val.connect()
         else:
             val.connect(p=connectivity_params[key])
-
-    if noise:
-        noise_pyr_conn.tausyn = 3*ms
-        noise_pv_conn.tausyn = 3*ms
-        noise_sst_conn.tausyn = 3*ms
-        noise_vip_conn.tausyn = 3*ms
-        noise_pyr_conn.weight = 4
-        noise_pv_conn.weight = 4
-        noise_sst_conn.weight = 4
-        noise_vip_conn.weight = 4
 
     # Excitatory connections onto somatic compartment
     pyr_pv_conn.set_params(exc_soma_params)
@@ -567,8 +522,8 @@ def add_connections(_groups,
                              variable='w_plast',
                              dist_param=synapse_mean_weight['i_e'],
                              scale=1,
-                             distribution='gamma',
-                             clip_min=0,
+                             distribution='normal',
+                             clip_min=1,
                              clip_max=15)
         for g in w_init_group:
             g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
@@ -577,9 +532,9 @@ def add_connections(_groups,
                              variable='weight',
                              dist_param=synapse_mean_weight['i_e'],
                              scale=1,
-                             distribution='gamma',
+                             distribution='normal',
                              unit=-1,
-                             clip_min=0,
+                             clip_min=1,
                              clip_max=15)
         for g in w_init_group:
             g.__setattr__('weight', np.array(g.weight).astype(int))
@@ -591,8 +546,8 @@ def add_connections(_groups,
                          variable='w_plast',
                          dist_param=synapse_mean_weight['i_e'],
                          scale=1,
-                         distribution='gamma',
-                         clip_min=0,
+                         distribution='normal',
+                         clip_min=1,
                          clip_max=15)
     for g in w_init_group:
         g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
@@ -601,9 +556,9 @@ def add_connections(_groups,
                          variable='weight',
                          dist_param=synapse_mean_weight['i_i'],
                          scale=1,
-                         distribution='gamma',
+                         distribution='normal',
                          unit=-1,
-                         clip_min=0,
+                         clip_min=1,
                          clip_max=15)
     for g in w_init_group:
         g.__setattr__('weight', np.array(g.weight).astype(int))
@@ -613,8 +568,8 @@ def add_connections(_groups,
                          variable='weight',
                          dist_param=synapse_mean_weight['e_i'],
                          scale=1,
-                         distribution='gamma',
-                         clip_min=0,
+                         distribution='normal',
+                         clip_min=1,
                          clip_max=15)
     for g in w_init_group:
         g.__setattr__('weight', np.array(g.weight).astype(int))
@@ -625,8 +580,8 @@ def add_connections(_groups,
                          variable='w_plast',
                          dist_param=synapse_mean_weight['e_e'],
                          scale=1,
-                         distribution='gamma',
-                         clip_min=0,
+                         distribution='normal',
+                         clip_min=1,
                          clip_max=15)
     for g in w_init_group:
         g.__setattr__('w_plast', np.array(g.w_plast).astype(int))

@@ -226,7 +226,7 @@ def random_integers(a, b, _vectorization_idx):
 random_integers = Function(random_integers, arg_units=[1, 1], return_unit=1,
                            stateless=False, auto_vectorise=True)
 
-def permutation_from_rate(neurons_rate, window_duration, simulation_dt):
+def permutation_from_rate(neurons_rate):
     """This functions uses the instant of maximum firing rate to extract
     permutation indices that can be used to sort a raster plot so that
     an activity trace (relative to a given task) is observed.
@@ -234,28 +234,20 @@ def permutation_from_rate(neurons_rate, window_duration, simulation_dt):
     Args:
         neurons_rate (dict): Dictionary with firing rate values for each
             neuron. Keys must be neuron index and 'rate' or 't'.
-        window_duration (int): Duration of the averaging time window, in
-            brian2.units.
-        simulation_dt (int): Time step of the simulation, in brian2.units.
 
     Returns:
         permutation_ids (list): Permutation indices.
     """
-    num_neu = len(neurons_rate.keys())
-    window_samples = np.around(window_duration/simulation_dt).astype(int)
+    num_neu = len(neurons_rate['rate'].keys())
+    num_samples = len(neurons_rate['rate'][0])
 
-    average_rates = np.zeros((num_neu, window_samples))*np.nan
-    trials = int(len(neurons_rate[0]['rate']) / window_samples)
-    temp_t = np.array([x for x in range(window_samples)]) # Proxy time reference
+    average_rates = np.zeros((num_neu, num_samples))*np.nan
+    # Proxy time reference
+    temp_t = np.array([x for x in range(num_samples)])
     peak_instants = {}
 
-    for key in neurons_rate.keys():
-        average_rate_neu = []
-        for trial in range(trials):
-            average_rate_neu.append(
-                neurons_rate[key]['rate'][trial*window_samples:(trial+1)*window_samples]
-                )
-        average_rates[key, :] = np.mean(average_rate_neu, axis=0)
+    for key in neurons_rate['smoothed'].keys():
+        average_rates[key, :] = neurons_rate['smoothed'][key]
 
         # Consider only spiking neurons
         if average_rates[key].any():

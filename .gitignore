@@ -115,7 +115,7 @@ ENV/
 *.gif
 *.svg
 
-teili/models/equations/
+#teili/models/equations/
 .vscode
 core
 

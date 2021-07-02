@@ -137,17 +137,17 @@ prefs.codegen.target = "numpy"
 # Initialize rotating bar
 testbench_stim = OCTA_Testbench()
 num_channels = 100
-sequence_repetitions = 600#200
+sequence_repetitions = 100
 testbench_stim.rotating_bar(length=10, nrows=10,
                             direction='cw',
-                            ts_offset=3, angle_step=10,#3
+                            ts_offset=3, angle_step=10,
                             #noise_probability=0.2,
                             repetitions=sequence_repetitions,
                             debug=False)
 input_indices = testbench_stim.indices
 input_times = testbench_stim.times * ms
-sequence_duration = 105*ms#357*ms
-testing_duration = 0*ms
+sequence_duration = 105*ms
+testing_duration = 3000*ms
 training_duration = np.max(testbench_stim.times)*ms - testing_duration
 
 # Convert input into neuron group (necessary for STDP compatibility)
@@ -167,22 +167,34 @@ orca.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
 orca.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells'],
     'static', 'inhibitory')
 
+orca2 = ORCA_WTA(num_exc_neurons=num_exc, name='top_down_')#,
+    #ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+orca2.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
+    sparsity=.3)
+orca2.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells'],
+    'static', 'inhibitory')
+orca.add_input(orca2._groups['pyr_cells'], 'fb', ['pyr_cells'], 'reinit',
+    'excitatory', exc_params=excitatory_synapse_dend, sparsity=.3)
+orca.add_input(orca2._groups['pyr_cells'], 'fb', ['vip_cells'], 'static',
+    'inhibitory', exc_params=excitatory_synapse_soma)
+
 ##################
 # Setting up monitors
 monitors = create_monitors()
 
 # Temporary monitors
-statemon_net_current = StateMonitor(orca._groups['pyr_cells'],
-    variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3', 'I', 'Vm'], record=True,
+statemon_net_current = StateMonitor(orca._groups['pv_cells'],
+    variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3', 'I', 'Vm', 'normalized_activity_proxy'], record=True,
     name='statemon_net_current')
+orca2_mon = SpikeMonitor(orca2._groups['pyr_cells'], name='orca2_mon')
 
 # Training
 date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
 os.mkdir(path)
 
-Net.add(orca, relay_cells, [x['monitor'] for x in monitors.values()])
-Net.add(statemon_net_current)
+Net.add(orca, relay_cells, [x['monitor'] for x in monitors.values()], orca2)
+Net.add(statemon_net_current, orca2_mon)
 
 training_blocks = 10
 remainder_time = int(np.around(training_duration/defaultclock.dt)
@@ -210,29 +222,44 @@ if remainder_time != 0:
     Net.add([x['monitor'] for x in monitors.values()])
 
 # Testing network
-if testing_duration:
-    block += 1
-    orca._groups['ff_pyr'].stdp_thres = 0
-    orca._groups['pyr_pyr'].stdp_thres = 0
-    orca._groups['sst_pyr'].inh_learning_rate = 0
-    orca._groups['pv_pyr'].inh_learning_rate = 0
+test_trial = 3
+block += 1
+orca._groups['ff_pyr'].stdp_thres = 0
+orca._groups['fb_pyr'].stdp_thres = 0
+orca._groups['pyr_pyr'].stdp_thres = 0
+orca._groups['sst_pyr'].inh_learning_rate = 0
+orca._groups['pv_pyr'].inh_learning_rate = 0
+orca2._groups['ff_pyr'].stdp_thres = 0
+orca2._groups['pyr_pyr'].stdp_thres = 0
+orca2._groups['sst_pyr'].inh_learning_rate = 0
+orca2._groups['pv_pyr'].inh_learning_rate = 0
 
-    # deactivate bottom-up
-    orca._groups['ff_pyr'].weight = 0
-    orca._groups['ff_pv'].weight = 0
-    orca._groups['ff_sst'].weight = 0
-    Net.run(testing_duration, report='stdout', report_period=100*ms)
-    save_data()
+# deactivate top-down only
+orca._groups['fb_pyr'].weight = 0
+orca._groups['fb_vip'].weight = 0
+Net.run(testing_duration/test_trial, report='stdout', report_period=100*ms)
+save_data()
+
+# deactivate bottom-up only
+orca._groups['fb_pyr'].weight = 1
+orca._groups['ff_pyr'].weight = 0
+orca._groups['ff_pv'].weight = 0
+orca._groups['ff_sst'].weight = 0
+Net.run(testing_duration/test_trial, report='stdout', report_period=100*ms)
+save_data()
+
+# No input
+orca._groups['fb_pyr'].weight = 0
+Net.run(testing_duration/test_trial, report='stdout', report_period=100*ms)
+save_data()
 
 # Recover data pickled from monitor
 spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')
 
 last_sequence_t = training_duration - sequence_duration
-neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=10*ms,
-    kernel_var=0.5, simulation_dt=defaultclock.dt,
+neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=50,
+    kernel_var=10, kernel_min=0.001, simulation_dt=defaultclock.dt,
     interval=[last_sequence_t, training_duration], smooth=True)
-    #interval=[0*ms, training_duration], smooth=True,
-    #trials=sequence_repetitions)
 #foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
 #                           sequence_duration, sequence_repetitions)
 #
@@ -241,7 +268,8 @@ neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=10*ms,
 ############
 # Saving results
 # Calculating permutation indices from firing rates
-permutation_ids = permutation_from_rate(neu_rates)
+permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
+                                        defaultclock.dt)
 
 # Save data
 np.savez(path+f'permutation.npz',
@@ -259,6 +287,42 @@ with open(path+'metadata', 'wb') as f:
     pickle.dump(Metadata, f)
 
 Net.store(filename=f'{path}network')
+
+############ Extra analysis of orca2
+import matplotlib.pyplot as plt
+last_sequence_t = training_duration - sequence_duration
+neu_rates = neuron_rate(orca2_mon, kernel_len=200,
+    kernel_var=10, kernel_min=0.001, simulation_dt=defaultclock.dt,
+    interval=[last_sequence_t, training_duration])
+permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
+                                        defaultclock.dt)
+
+#G = orca2._groups['pyr_pyr']
+G = orca._groups['fb_pyr']
+fb_ids = []
+for row in range(num_exc):
+    fb_ids.append(list(G.j[row, :]))
+matrix = [None for _ in range(num_exc)]
+interval1 = 0
+interval2 = 0
+for source_neu, values in enumerate(fb_ids):
+    interval2 += len(values)
+    matrix[source_neu] = G.w_plast[interval1:interval2]
+    interval1 += len(values)
+matrix = np.array(matrix, dtype=object)
+
+#plt.plot(sorted_rf.matrix[:, permutation_ids][permutation_ids, :])
+
+from SLIF_utils import plot_weight_matrix
+from teili.tools.sorting import SortMatrix
+sorted_rf = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=matrix, axis=1,similarity_metric='euclidean', target_indices=fb_ids)#, rec_matrix=True)
+#plot_weight_matrix(sorted_rf.sorted_matrix, title='asd', xlabel='x', ylabel='y')
+# raster
+#import matplotlib.pyplot as plt
+#sorted_i = np.asarray([np.where(
+#                np.asarray(permutation_ids) == int(i))[0][0] for i in orca2_mon.i])
+#plt.plot(orca2_mon.t/ms, sorted_i, '.k')
+#plt.show()
 
 #from brian2 import *
 #import pandas as pd
@@ -301,16 +365,16 @@ def plot_inh_w():
 def plot_EI_balance(idx):
     import matplotlib.pyplot as plt
     win_len = 100
-    iin0 = np.convolve(statemon_net_current.Iin0[idx], np.ones(win_len)/win_len, mode='valid')
-    iin1 = np.convolve(statemon_net_current.Iin1[idx], np.ones(win_len)/win_len, mode='valid')
-    iin2 = np.convolve(statemon_net_current.Iin2[idx], np.ones(win_len)/win_len, mode='valid')
-    iin3 = np.convolve(statemon_net_current.Iin3[idx], np.ones(win_len)/win_len, mode='valid')
+    rec_Iin = np.convolve(statemon_net_current.Iin0[idx], np.ones(win_len)/win_len, mode='valid')
+    inh_Iin = np.convolve(statemon_net_current.Iin1[idx], np.ones(win_len)/win_len, mode='valid')
+    ffe_Iin = np.convolve(statemon_net_current.Iin2[idx], np.ones(win_len)/win_len, mode='valid')
+    noise_Iin = np.convolve(statemon_net_current.Iin3[idx], np.ones(win_len)/win_len, mode='valid')
     total_Iin = np.convolve(statemon_net_current.Iin[idx], np.ones(win_len)/win_len, mode='valid')
-    plt.plot(iin0, 'r', label='Iin0')
-    plt.plot(iin1, 'g', label='Iin1')
-    plt.plot(iin2, 'b', label='Iin2')
-    plt.plot(iin3, 'k--', label='Iin3')
+    plt.plot(rec_Iin, 'r', label='rec. current')
+    plt.plot(inh_Iin, 'g', label='inh. current')
+    plt.plot(ffe_Iin, 'b', label='input current')
     plt.plot(total_Iin, 'k', label='net current')
+    plt.plot(noise_Iin, 'k--', label='spont. activity')
     plt.legend()
     plt.ylabel('Current [amp]')
     plt.xlabel('time [ms]')

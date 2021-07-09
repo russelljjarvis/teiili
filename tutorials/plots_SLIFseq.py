@@ -30,10 +30,14 @@ area.moveDock(d1, 'above', d2)
 
 # Load metadata of given simulation
 data_folder = sys.argv[1]
-with open(f'{data_folder}metadata', 'rb') as f:
-    metadata = pickle.load(f)
-num_exc = metadata['num_exc']
-num_channels = metadata['num_channels']
+try:
+    with open(f'{data_folder}metadata', 'rb') as f:
+        metadata = pickle.load(f)
+    num_exc = metadata['num_exc']
+    num_channels = metadata['num_channels']
+except FileNotFoundError:
+    num_exc = int(input('Number of neurons'))
+    num_channels = int(input('Number of channels'))
 rasters = load_merge_multiple(data_folder, 'rasters*', mode='numpy')
 traces = load_merge_multiple(data_folder, 'traces*', mode='numpy')
 matrices = load_merge_multiple(data_folder, 'matrices*', mode='numpy',
@@ -62,7 +66,7 @@ del traces
 
 if plot_d1:
     l = pg.LayoutWidget()
-    text = f"""{metadata}"""
+    text = f"""no text"""
     l.addLabel(text)
     d1.addWidget(l, 0, 0, colspan=2)
 

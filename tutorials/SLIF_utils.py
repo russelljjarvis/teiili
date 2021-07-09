@@ -1,14 +1,15 @@
 import sys
 import warnings
 
-from brian2 import ms, TimedArray, check_units, run, SpikeGeneratorGroup,\
-        SpikeMonitor, Function
+from brian2 import ms, second, TimedArray, check_units, run,\
+         SpikeGeneratorGroup, SpikeMonitor, Function
 
 from scipy.stats import pearsonr, spearmanr
 from scipy.ndimage import gaussian_filter1d
 
 import numpy as np
 from teili.core.groups import Neurons
+from teili.tools.converter import aedat2numpy, dvs2ind
 from random import randint
 from pathlib import Path
 import pickle
@@ -324,3 +325,36 @@ def plot_weight_matrix(weight_matrix, title, xlabel, ylabel):
     #imv.setColorMap(cmap)
     #if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     #    QtGui.QApplication.instance().exec_()
+
+def bar_from_recording(filename):
+    """ Converts aedat output with events and save arrays to disk
+    
+    Args:
+        filename (str): Name of the file containing events, e.g.
+            'dvSave-7V_normal_fullrec.aedat4'
+    """
+    print('converting events...')
+    ev_npy = aedat2numpy(filename, version='V4')
+
+    print('getting time and indices...')
+    i_on, t_on, i_off, t_off = dvs2ind(ev_npy, resolution=(10, 10))
+
+    print('saving on disk...')
+    np.savez('bar_events', on_indices=i_on, on_times=t_on, off_indices=i_off, off_times=t_off)
+
+def recorded_bar_testbench(filename, repetitions):
+    events = np.load(filename)
+    ref_input_indices = events['off_indices']
+    ref_input_times = events['off_times']*ms
+
+    # Repeat presentation
+    input_times = ref_input_times
+    input_indices = ref_input_indices
+    recording_gap = 1*second
+    for rep in range(repetitions):
+        recording_duration = np.max(input_times)
+        temp_times = ref_input_times + recording_duration + recording_gap
+        input_times = np.concatenate((input_times, temp_times)) * second
+        input_indices = np.concatenate((input_indices, ref_input_indices))
+
+    return input_times, input_indices

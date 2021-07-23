@@ -1,11 +1,12 @@
 import sys
 import warnings
 
-from brian2 import ms, second, TimedArray, check_units, run,\
+from brian2 import ms, second, Hz, TimedArray, check_units, run,\
          SpikeGeneratorGroup, SpikeMonitor, Function
 
 from scipy.stats import pearsonr, spearmanr
 from scipy.ndimage import gaussian_filter1d
+from scipy.interpolate import interp1d
 
 import numpy as np
 from teili.core.groups import Neurons
@@ -40,7 +41,8 @@ def neuron_rate(spike_source, kernel_len, kernel_var, simulation_dt,
             't': [t1, t2, ...]}
         kernel_len (Brian2.unit): Length of the averaging kernel in units of
             time.
-        kernel_var (int): Variance of the averaging kernel.
+        kernel_var (Brian2.unit): Variance of the averaging kernel in units of
+            time.
         simulation_dt (Brian2.unit): Time scale of simulation's time step
         interval (list of int): lower and upper values of the interval, in
             Brian2 units of time, over which the rate will be calculated.
@@ -51,7 +53,8 @@ def neuron_rate(spike_source, kernel_len, kernel_var, simulation_dt,
 
     Returns:
         neuron_rates (dict): Rates (in Hz) and corresponding instants of each
-            neuron.
+            neuron. Rate values are stored in a matrix with each line
+            corresponding to rates of a given neuron over time.
     """
     # Genrate inputs
     if isinstance(spike_source, SpikeMonitor):
@@ -79,13 +82,13 @@ def neuron_rate(spike_source, kernel_len, kernel_var, simulation_dt,
         min_sample = np.around(interval[0]/simulation_dt).astype(int)
         max_sample = np.around(interval[1]/simulation_dt).astype(int)
     else:
-        min_sample = min([min(x) for x in spike_trains])
+        min_sample = np.nanmin([min(x) if x.any() else np.nan for x in spike_trains])
         if min_sample < bin_samples:
             min_sample = 0
         else:
             min_sample -= min_sample%bin_samples
-        max_sample = max([max(x) for x in spike_trains])
-    intervals = range(min_sample, max_sample)
+        max_sample = np.nanmax([max(x) if x.any() else np.nan for x in spike_trains])
+    intervals = range(int(min_sample), int(max_sample))
     if len(intervals) % trials:
         warnings.warn(f'Trials must divide interval in even parts. Using '
                       f' one trial for now...')
@@ -104,10 +107,7 @@ def neuron_rate(spike_source, kernel_len, kernel_var, simulation_dt,
         bins_length.append(last_bin_length)
         n_bins += 1
 
-    spike_count = np.zeros((np.shape(spike_trains)[0],
-                            n_bins,
-                            trials))
-    rate = np.zeros_like(spike_count)
+    rates = np.zeros((np.shape(spike_trains)[0], n_bins, trials))
     spike_times = np.zeros(n_bins)
 
     for trial in range(trials):
@@ -119,40 +119,41 @@ def neuron_rate(spike_source, kernel_len, kernel_var, simulation_dt,
             h, b = np.histogram(neu_spike_times,
                 bins=bins,
                 range=intervals[trial], density=False)
-            spike_count[idx, :, trial] = h
-            rate[idx, :, trial] = h/(bins_length*simulation_dt)
-    spike_count = np.sum(spike_count, axis=2)/trials
-    rate = np.sum(rate, axis=2)/trials
+            rates[idx, :, trial] = h/(bins_length*simulation_dt)
+    rates = np.sum(rates, axis=2)/trials
     if trials > 1:
-        spike_times = (np.array(bins[:-1]) - intervals[trial][0])*simulation_dt
+        # Use last trial to make spike times start at 0
+        spike_times = np.array(bins[:-1]) - bins[0]
     else:
-        spike_times = b[1:]*simulation_dt
+        spike_times = b[1:]
+
+    # Consider values for each simulation dt
+    interp_func = interp1d(spike_times, rates, kind='next')
+    spike_times = np.arange(min(spike_times), max(spike_times), 1)
 
     neuron_rates = {}
-    neuron_rates['spike_count'] = {k: val for k, val in enumerate(spike_count)}
-    neuron_rates['rate'] = {k: val for k, val in enumerate(rate)}
-    neuron_rates['t'] = spike_times.flatten()
+    rates = interp_func(spike_times)
 
     if smooth:
         # Create normalized and truncated gaussian time window
-        smooth_rate = gaussian_filter1d(spike_count,
-                                        kernel_var,
-                                        output=float)
-        smooth_rate /= (bins_length*simulation_dt)
-        neuron_rates['smoothed'] = {k: val for k, val in enumerate(smooth_rate)}
-        ## Alternatively use numpy.convolve with normalized window
+        kernel_var /= simulation_dt
+        neuron_rates['smoothed'] = gaussian_filter1d(rates,
+                                                     kernel_var,
+                                                     output=float)*Hz
+        # Alternatively use numpy.convolve with normalized window
         #kernel_limit = np.floor(bin_samples/2)
         #lower_limit = -kernel_limit
         #upper_limit = kernel_limit + 1 if bin_samples % 2 else kernel_limit
         #kernel = np.exp(-(np.arange(lower_limit, upper_limit)) ** 2 / (2 * kernel_var ** 2))
-        #kernel = kernel[np.where(kernel>kernel_min)]
+        #kernel = kernel[np.where(kernel>.001)]
         #kernel = kernel / kernel.sum()
 
-        #for neu in neuron_rates.keys():
-            #neuron_rates[neu]['smoothed'] = np.convolve(
-            #    neuron_rates[neu]['spike_count'], kernel, mode='same')
-            #neuron_rates[neu]['smoothed'] /= (bins_length*simulation_dt)
+        #neuron_rates['smoothed'] = np.convolve(
+        #    newrate, kernel, mode='same')
         
+    neuron_rates['rate'] = rates*Hz
+    neuron_rates['t'] = spike_times*simulation_dt
+
     return neuron_rates
 
 def rate_correlations(rates, interval_dur, intervals):
@@ -234,27 +235,29 @@ def permutation_from_rate(neurons_rate):
 
     Args:
         neurons_rate (dict): Dictionary with firing rate values for each
-            neuron. Keys must be neuron index and 'rate' or 't'.
+            neuron. Keys must be neuron index and 'rate' or 't'. Rate values
+            is stored in matrix with each line representing rate of a given
+            neuron over time
 
     Returns:
         permutation_ids (list): Permutation indices.
     """
-    num_neu = len(neurons_rate['rate'].keys())
-    num_samples = len(neurons_rate['rate'][0])
+    num_neu = np.shape(neurons_rate['rate'])[0]
+    num_samples = np.shape(neurons_rate['rate'])[1]
 
     average_rates = np.zeros((num_neu, num_samples))*np.nan
     # Proxy time reference
     temp_t = np.array([x for x in range(num_samples)])
     peak_instants = {}
 
-    for key in neurons_rate['smoothed'].keys():
-        average_rates[key, :] = neurons_rate['smoothed'][key]
+    for neu_id, neu_act in enumerate(neurons_rate['smoothed']):
+        average_rates[neu_id, :] = neu_act
 
         # Consider only spiking neurons
-        if average_rates[key].any():
+        if average_rates[neu_id].any():
             # Get first peak found on rate
-            peak_index = [np.argmax(average_rates[key])]
-            peak_instants[key] = temp_t[peak_index]
+            peak_index = [np.argmax(average_rates[neu_id])]
+            peak_instants[neu_id] = temp_t[peak_index]
 
     # Add unresponsive neurons again
     sorted_peaks = dict(sorted(peak_instants.items(), key=lambda x: x[1]))
@@ -340,7 +343,7 @@ def bar_from_recording(filename):
     i_on, t_on, i_off, t_off = dvs2ind(ev_npy, resolution=(10, 10))
 
     print('saving on disk...')
-    np.savez('bar_events', on_indices=i_on, on_times=t_on, off_indices=i_off, off_times=t_off)
+    np.savez(filename+'_events', on_indices=i_on, on_times=t_on, off_indices=i_off, off_times=t_off)
 
 def recorded_bar_testbench(filename, repetitions):
     events = np.load(filename)

@@ -176,9 +176,46 @@ class ORCA_WTA(BuildingBlock):
             val.connect(p=connectivity_params[key])
             val.set_params(exc_params)
 
-            # If you want to have sparsity without structural plasticity,
-            # just set the desired connection probability
-            if sparsity is not None:
+
+        w_init_group = list(temp_groups.values())
+        if target_type=='inhibitory':
+            dist_param = synapse_mean_weight['inp_i']
+        else:
+            dist_param = synapse_mean_weight['inp_e']
+
+        if plasticity == 'static':
+            add_group_param_init(w_init_group,
+                                 variable='weight',
+                                 dist_param=dist_param,
+                                 scale=1,
+                                 distribution='normal',
+                                 clip_min=1,
+                                 clip_max=15)
+            for g in w_init_group:
+                g.__setattr__('weight', np.array(g.weight).astype(int))
+        else:
+            add_group_param_init(w_init_group,
+                                 variable='w_plast',
+                                 dist_param=dist_param,
+                                 scale=1,
+                                 distribution='normal',
+                                 clip_min=1,
+                                 clip_max=15)
+            for g in w_init_group:
+                g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
+                g.weight = 1
+
+        generate_mismatch(list(temp_groups.values()),
+                          mismatch_synapse_param)
+        if plasticity != 'static':
+            generate_mismatch(list(temp_groups.values()),
+                              mismatch_plastic_param)
+
+        # If you want to have sparsity without structural plasticity,
+        # just set the desired connection probability
+        if sparsity is not None:
+            for key, val in syn_objects.items():
+                target = key.split('_')[1] + '_cells'
                 for neu in range(self._groups[target].N):
                     ffe_zero_w = np.random.choice(input_group.N,
                                                   int(input_group.N*sparsity),
@@ -220,41 +257,6 @@ class ORCA_WTA(BuildingBlock):
                 #                         variable_type='int',
                 #                         unit='ms',
                 #                         reference='synapse_counter')
-
-        w_init_group = list(temp_groups.values())
-        if target_type=='inhibitory':
-            dist_param = synapse_mean_weight['inp_i']
-        else:
-            dist_param = synapse_mean_weight['inp_e']
-
-        if plasticity == 'static':
-            add_group_param_init(w_init_group,
-                                 variable='weight',
-                                 dist_param=dist_param,
-                                 scale=1,
-                                 distribution='normal',
-                                 clip_min=1,
-                                 clip_max=15)
-            for g in w_init_group:
-                g.__setattr__('weight', np.array(g.weight).astype(int))
-        else:
-            add_group_param_init(w_init_group,
-                                 variable='w_plast',
-                                 dist_param=dist_param,
-                                 scale=1,
-                                 distribution='normal',
-                                 clip_min=1,
-                                 clip_max=15)
-            for g in w_init_group:
-                g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
-                # Zero weights untouched so they can be used for reinitializations
-                g.weight[np.where(g.weight!=0)[0]] = 1
-
-        generate_mismatch(list(temp_groups.values()),
-                          mismatch_synapse_param)
-        if plasticity != 'static':
-            generate_mismatch(list(temp_groups.values()),
-                              mismatch_plastic_param)
 
         self._groups.update(temp_groups)
 

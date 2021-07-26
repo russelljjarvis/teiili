@@ -198,7 +198,6 @@ quantized_stochastic = {
         ''',
         'on_pre': '''
         I_syn += gain_syn * abs(weight) * w_plast
-        I_syn = clip(I_syn, 0*mA, 15*mA)
         ''',
         'on_post': '''
         '''

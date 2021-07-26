@@ -23,7 +23,6 @@ StochAdpIin = {'model':
 '''
 
         I_syn += gain_syn * abs(weight) * w_plast
-        I_syn = clip(I_syn, 0*mA, 15*mA)
         
         delta_w = inh_learning_rate * (0.5 - normalized_activity_proxy_post)
         w_plast = clip(w_plast + delta_w, 0, 15)

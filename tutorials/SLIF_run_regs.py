@@ -55,7 +55,7 @@ def add_activity_proxy(group, buffer_size, decay):
         group.kernel.set_with_index_array(
             item=ind, value=mask, check_units=False)
 
-    group.run_regularly('''Iin0 = clip(Iin0, 0*mA, 15*mA)''', dt=1 * ms)
+    group.run_regularly('''Iin0 = clip(Iin0, 0*mA, 500*mA)''', dt=1 * ms)
 
     group.run_regularly('''buffer_pointer = (buffer_pointer + 1) % buffer_size;\
     activity_proxy = get_activity_proxy(Iin0, buffer_pointer, membrane_buffer, kernel)''', dt=1 * ms)

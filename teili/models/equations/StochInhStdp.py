@@ -37,7 +37,6 @@ StochInhStdp = {'model':
 '''
 
         I_syn += gain_syn * abs(weight) * w_plast
-        I_syn = clip(I_syn, 0*mA, 15*mA)
         
         Apre += 15
         Apre = clip(Apre, 0, 15)

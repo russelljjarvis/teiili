@@ -14,7 +14,6 @@ StochInhStdp = {'model':
         lfsr_init_syn : second
         gain_syn              : amp
         tausyn               : second (constant)
-        inh_learning_rate: 1 (constant, shared)
         variance_th: 1 (constant)
         delta_w : 1
 
@@ -32,6 +31,13 @@ StochInhStdp = {'model':
         taupre : second (constant)
         taupost : second (constant)
         
+        rand_int_Apre1 : 1
+        rand_int_Apre2 : 1
+        rand_int_Apost1 : 1
+        rand_int_Apost2 : 1
+        rand_num_bits_Apre : 1 # Number of bits of random number generated for Apre
+        rand_num_bits_Apost : 1 # Number of bits of random number generated for Apost
+        stdp_thres : 1 (constant)
          ''',
 'on_pre':
 '''
@@ -40,14 +46,18 @@ StochInhStdp = {'model':
         
         Apre += 15
         Apre = clip(Apre, 0, 15)
-        delta_w  = (Apost/15 - variance_th) * inh_learning_rate
+        rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
+        rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))
+        delta_w  = 1 * sign(Apost - variance_th) * int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < abs(Apost - variance_th))*int(rand_int_Apre2 <= stdp_thres)
         w_plast = clip(w_plast + delta_w, 0, 31)
          ''',
 'on_post':
 '''
         Apost += 15
         Apost = clip(Apost, 0, 15)
-        delta_w  = Apre/15 * inh_learning_rate
+        rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_Apost-1))
+        rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_Apost-1))
+        delta_w  = 1 * int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand_int_Apost2 <= stdp_thres)
         w_plast = clip(w_plast + delta_w, 0, 31)
 
         
@@ -59,9 +69,11 @@ StochInhStdp = {'model':
 'w_plast' : '1',
 'gain_syn' : '1. * mamp',
 'tausyn' : '3. * msecond',
-'inh_learning_rate' : '0.1',
-'variance_th' : '0.12',
+'variance_th' : '2',
 'taupre': '20 * msecond',
-'taupost': '20 * msecond'
+'taupost': '20 * msecond',
+'stdp_thres': '1',
+'rand_num_bits_Apre': '4',
+'rand_num_bits_Apost': '4'
 }
 }

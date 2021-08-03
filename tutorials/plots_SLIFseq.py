@@ -22,33 +22,36 @@ win.setCentralWidget(area)
 d1 = Dock('traces and raster', size=(1, 1))
 d2 = Dock('matrices', size=(1, 1))
 d3 = Dock('receptive fields', size=(1, 1))
+d4 = Dock('inh. receptive fields', size=(1, 1))
 area.addDock(d1, 'left')
 area.addDock(d2, 'left')
 area.addDock(d3, 'left')
+area.addDock(d4, 'left')
+area.moveDock(d3, 'above', d4)
 area.moveDock(d2, 'above', d3)
 area.moveDock(d1, 'above', d2)
 
 # Load metadata of given simulation
 data_folder = sys.argv[1]
-try:
-    with open(f'{data_folder}metadata', 'rb') as f:
-        metadata = pickle.load(f)
-    num_exc = metadata['num_exc']
-    num_channels = metadata['num_channels']
-except FileNotFoundError:
-    num_exc = int(input('Number of neurons'))
-    num_channels = int(input('Number of channels'))
+with open(f'{data_folder}metadata', 'rb') as f:
+    metadata = pickle.load(f)
+num_exc = metadata['num_exc']
+num_pv = metadata['num_pv']
+num_channels = metadata['num_channels']
+selected_cells = metadata['selected_cells']
 rasters = load_merge_multiple(data_folder, 'rasters*', mode='numpy')
 traces = load_merge_multiple(data_folder, 'traces*', mode='numpy')
 matrices = load_merge_multiple(data_folder, 'matrices*', mode='numpy',
     allow_pickle=True)
-plot_d1, plot_d2, plot_d3 = True, True, True
+plot_d1, plot_d2, plot_d3, plot_d4 = True, True, True, True
 
 # Avoid storing too much data on memory
 input_t = rasters['input_t']
 input_i = rasters['input_i']
-Vm_e = traces['Vm_e'][0]
-Vm_i = traces['Vm_i'][0]
+Iin0 = traces['Iin0'][0]
+Iin1 = traces['Iin1'][0]
+Iin2 = traces['Iin2'][0]
+Iin3 = traces['Iin3'][0]
 exc_spikes_t = rasters['exc_spikes_t']
 exc_spikes_i = rasters['exc_spikes_i']
 inh_spikes_t = rasters['inh_spikes_t']
@@ -58,6 +61,7 @@ exc_rate = traces['exc_rate']
 inh_rate_t = traces['inh_rate_t']
 inh_rate = traces['inh_rate']
 rf = matrices['rf']
+rfi = matrices['rfi']
 rec_ids = matrices['rec_ids']
 rec_w = matrices['rec_w']
 del matrices
@@ -66,7 +70,7 @@ del traces
 
 if plot_d1:
     l = pg.LayoutWidget()
-    text = f"""no text"""
+    text = f"""{metadata}"""
     l.addLabel(text)
     d1.addWidget(l, 0, 0, colspan=2)
 
@@ -77,10 +81,12 @@ if plot_d1:
 
     p2 = pg.PlotWidget(title='Membrane potential')
     p2.addLegend(offset=(30, 1))
-    p2.plot(np.array(range(np.shape(Vm_e)[0]))*1e-3, Vm_e, pen='r', name=f'randomly chosen exc. neuron')
-    p2.plot(np.array(range(np.shape(Vm_e)[0]))*1e-3, Vm_i, pen='b', name=f'randomly chosen inh. neuron')
-    p2.setYRange(0, 0.025)
-    p2.setLabel('left', 'Membrane potential', units='V')
+    p2.plot(np.array(range(np.shape(Iin0)[0]))*1e-3, Iin0, pen='r', name='Iin0')
+    p2.plot(np.array(range(np.shape(Iin1)[0]))*1e-3, Iin1, pen='b', name='Iin1')
+    p2.plot(np.array(range(np.shape(Iin2)[0]))*1e-3, Iin2, pen='w', name='Iin2')
+    p2.plot(np.array(range(np.shape(Iin3)[0]))*1e-3, Iin3, pen='g', name='Iin3')
+    #p2.setYRange(0, 0.025)
+    p2.setLabel('left', 'Membrane potential', units='A')
     p2.setLabel('bottom', 'Time', units='s')
     p2.setXLink(p1)
 
@@ -198,24 +204,24 @@ if plot_d2:
     #d2.addWidget(m4, 1, colspan=3)
 
 # Plot receptive fields for each neuron
-def play_receptive_fields():
-    for i in rfs:
+def play_receptive_fields(receptive_fields):
+    for i in receptive_fields:
         i.play(1000)
 if plot_d3:
     last_frame = np.reshape(rf, (num_channels, num_exc, -1))
     dims = np.sqrt(num_channels).astype(int)
-    rfs = []
+    rfe = []
     j = 0
     k = 0
     for i in permutation:
-        rfs.append(pg.ImageView())
-        rfs[-1].ui.histogram.hide()
-        rfs[-1].ui.roiBtn.hide()
-        rfs[-1].ui.menuBtn.hide() 
-        rfs[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
-        rfs[-1].setColorMap(cmap)
+        rfe.append(pg.ImageView())
+        rfe[-1].ui.histogram.hide()
+        rfe[-1].ui.roiBtn.hide()
+        rfe[-1].ui.menuBtn.hide() 
+        rfe[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
+        rfe[-1].setColorMap(cmap)
 
-        d3.addWidget(rfs[-1], j, k)
+        d3.addWidget(rfe[-1], j, k)
         if j < np.sqrt(num_exc)-1:
             j += 1
         else:
@@ -223,8 +229,32 @@ if plot_d3:
             k += 1
 
     btn = QtGui.QPushButton("play")
-    btn.clicked.connect(play_receptive_fields)
+    btn.clicked.connect(lambda: play_receptive_fields(rfe))
     d3.addWidget(btn, j, k)
+if plot_d4:
+    last_frame = np.reshape(rfi, (num_channels, num_pv, -1))
+    dims = np.sqrt(num_channels).astype(int)
+    rfi = []
+    j = 0
+    k = 0
+    for i in range(num_pv):
+        rfi.append(pg.ImageView())
+        rfi[-1].ui.histogram.hide()
+        rfi[-1].ui.roiBtn.hide()
+        rfi[-1].ui.menuBtn.hide() 
+        rfi[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
+        rfi[-1].setColorMap(cmap)
+
+        d4.addWidget(rfi[-1], j, k)
+        if j < np.sqrt(num_pv)-1:
+            j += 1
+        else:
+            j = 0
+            k += 1
+
+    btn = QtGui.QPushButton("play")
+    btn.clicked.connect(lambda: play_receptive_fields(rfi))
+    d4.addWidget(btn, j, k)
 
 win.show()
 QtGui.QApplication.instance().exec_()

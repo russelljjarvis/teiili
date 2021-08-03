@@ -296,8 +296,11 @@ def add_populations(_groups,
     num_inh = int(num_exc_neurons/4)
     #num_inh = int(num_exc_neurons/1.6)
     num_pv = int(num_inh * ratio_pv)
+    num_pv = num_pv if num_pv else 1
     num_sst = int(num_inh * ratio_sst)
+    num_sst = num_sst if num_sst else 1
     num_vip = int(num_inh * ratio_vip)
+    num_vip = num_vip if num_vip else 1
 
     pyr_cells = Neurons(num_exc_neurons,
                         equation_builder=adapt_neuron_model(num_inputs=6), #TODO 4 when I fix input?
@@ -500,9 +503,6 @@ def add_connections(_groups,
     # Inhibitory connections onto dendritic compartment
     sst_pyr_conn.set_params(inh_dend_params)
 
-    if i_plast == 'plastic_inh' or i_plast == 'plastic_inh0':
-        pv_pyr_conn.inh_learning_rate = 0.01
-        sst_pyr_conn.inh_learning_rate = 0.01
     # TODO organize alt adp below
     sst_pv_conn.inh_learning_rate = 0.01
 

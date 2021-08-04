@@ -39,19 +39,19 @@ num_exc = metadata['num_exc']
 num_pv = metadata['num_pv']
 num_channels = metadata['num_channels']
 selected_cells = metadata['selected_cells']
+selected_cell = 0
 rasters = load_merge_multiple(data_folder, 'rasters*', mode='numpy')
 traces = load_merge_multiple(data_folder, 'traces*', mode='numpy')
 matrices = load_merge_multiple(data_folder, 'matrices*', mode='numpy',
     allow_pickle=True)
 plot_d1, plot_d2, plot_d3, plot_d4 = True, True, True, True
 
-# Avoid storing too much data on memory
 input_t = rasters['input_t']
 input_i = rasters['input_i']
-Iin0 = traces['Iin0'][0]
-Iin1 = traces['Iin1'][0]
-Iin2 = traces['Iin2'][0]
-Iin3 = traces['Iin3'][0]
+Iin0 = traces['Iin0']
+Iin1 = traces['Iin1']
+Iin2 = traces['Iin2']
+Iin3 = traces['Iin3']
 exc_spikes_t = rasters['exc_spikes_t']
 exc_spikes_i = rasters['exc_spikes_i']
 inh_spikes_t = rasters['inh_spikes_t']
@@ -61,12 +61,41 @@ exc_rate = traces['exc_rate']
 inh_rate_t = traces['inh_rate_t']
 inh_rate = traces['inh_rate']
 rf = matrices['rf']
+rfw = matrices['rfw']
 rfi = matrices['rfi']
+rfwi = matrices['rfwi']
 rec_ids = matrices['rec_ids']
 rec_w = matrices['rec_w']
 del matrices
 del rasters
 del traces
+
+# Apply mask on w_plast
+weights_duration = int(metadata['re_init_dt']/metadata['time_step'])  # in samples
+temp_ind = 0
+for we, wi in zip(rfw.T, rfwi.T):
+    rf[:, temp_ind:temp_ind+weights_duration] *= we[:, np.newaxis]
+    rfi[:, temp_ind:temp_ind+weights_duration] *= wi[:, np.newaxis]
+    temp_ind += weights_duration
+# Avoid storing too much data on memory
+lower_lim, higher_lim = -10000, -1
+input_t = input_t[lower_lim:higher_lim]
+input_i = input_i[lower_lim:higher_lim]
+Iin0 = Iin0[selected_cell][lower_lim:higher_lim]
+Iin1 = Iin1[selected_cell][lower_lim:higher_lim]
+Iin2 = Iin2[selected_cell][lower_lim:higher_lim]
+Iin3 = Iin3[selected_cell][lower_lim:higher_lim]
+Iin_t = min(input_t)*1e-3 + np.array(range(len(Iin0)))*1e-3
+exc_spikes_t = exc_spikes_t[lower_lim:higher_lim]
+exc_spikes_i = exc_spikes_i[lower_lim:higher_lim]
+inh_spikes_t = inh_spikes_t[lower_lim:higher_lim]
+inh_spikes_i = inh_spikes_i[lower_lim:higher_lim]
+exc_rate_t = exc_rate_t[lower_lim:higher_lim]
+exc_rate = exc_rate[lower_lim:higher_lim]
+inh_rate_t = inh_rate_t[lower_lim:higher_lim]
+inh_rate = inh_rate[lower_lim:higher_lim]
+rf = rf[:, lower_lim:higher_lim]
+rfi = rfi[:, lower_lim:higher_lim]
 
 if plot_d1:
     l = pg.LayoutWidget()
@@ -79,12 +108,12 @@ if plot_d1:
     p1.setLabel('bottom', 'Time', units='s')
     p1.setLabel('left', 'Input channels')
 
-    p2 = pg.PlotWidget(title='Membrane potential')
+    p2 = pg.PlotWidget(title=f'I_syn from neuron {selected_cells[selected_cell]}')
     p2.addLegend(offset=(30, 1))
-    p2.plot(np.array(range(np.shape(Iin0)[0]))*1e-3, Iin0, pen='r', name='Iin0')
-    p2.plot(np.array(range(np.shape(Iin1)[0]))*1e-3, Iin1, pen='b', name='Iin1')
-    p2.plot(np.array(range(np.shape(Iin2)[0]))*1e-3, Iin2, pen='w', name='Iin2')
-    p2.plot(np.array(range(np.shape(Iin3)[0]))*1e-3, Iin3, pen='g', name='Iin3')
+    p2.plot(Iin_t, Iin0, pen='r', name='Iin0')
+    p2.plot(Iin_t, Iin1, pen='b', name='Iin1')
+    p2.plot(Iin_t, Iin2, pen='w', name='Iin2')
+    p2.plot(Iin_t, Iin3, pen='g', name='Iin3')
     #p2.setYRange(0, 0.025)
     p2.setLabel('left', 'Membrane potential', units='A')
     p2.setLabel('bottom', 'Time', units='s')
@@ -125,6 +154,8 @@ if plot_d1:
     p3.setLabel('left', 'Neuron index')
     p3.setLabel('bottom', 'Time', units='s')
     p3.setXLink(p1)
+    ax=p3.getAxis('left')  # autoscale not working for some reason...
+    ax.setTicks([[(idx, val) for idx, val in enumerate(permutation)], []])
     p4 = pg.PlotWidget(title='Raster plot (inh. pop.)')
     p4.plot(inh_spikes_t*1e-3, inh_spikes_i, pen=None, symbolSize=3,
             symbol='o')
@@ -210,18 +241,18 @@ def play_receptive_fields(receptive_fields):
 if plot_d3:
     last_frame = np.reshape(rf, (num_channels, num_exc, -1))
     dims = np.sqrt(num_channels).astype(int)
-    rfe = []
+    temp_rfe = []
     j = 0
     k = 0
     for i in permutation:
-        rfe.append(pg.ImageView())
-        rfe[-1].ui.histogram.hide()
-        rfe[-1].ui.roiBtn.hide()
-        rfe[-1].ui.menuBtn.hide() 
-        rfe[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
-        rfe[-1].setColorMap(cmap)
+        temp_rfe.append(pg.ImageView())
+        temp_rfe[-1].ui.histogram.hide()
+        temp_rfe[-1].ui.roiBtn.hide()
+        temp_rfe[-1].ui.menuBtn.hide() 
+        temp_rfe[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
+        temp_rfe[-1].setColorMap(cmap)
 
-        d3.addWidget(rfe[-1], j, k)
+        d3.addWidget(temp_rfe[-1], j, k)
         if j < np.sqrt(num_exc)-1:
             j += 1
         else:
@@ -229,23 +260,23 @@ if plot_d3:
             k += 1
 
     btn = QtGui.QPushButton("play")
-    btn.clicked.connect(lambda: play_receptive_fields(rfe))
+    btn.clicked.connect(lambda: play_receptive_fields(temp_rfe))
     d3.addWidget(btn, j, k)
 if plot_d4:
     last_frame = np.reshape(rfi, (num_channels, num_pv, -1))
     dims = np.sqrt(num_channels).astype(int)
-    rfi = []
+    temp_rfi = []
     j = 0
     k = 0
     for i in range(num_pv):
-        rfi.append(pg.ImageView())
-        rfi[-1].ui.histogram.hide()
-        rfi[-1].ui.roiBtn.hide()
-        rfi[-1].ui.menuBtn.hide() 
-        rfi[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
-        rfi[-1].setColorMap(cmap)
+        temp_rfi.append(pg.ImageView())
+        temp_rfi[-1].ui.histogram.hide()
+        temp_rfi[-1].ui.roiBtn.hide()
+        temp_rfi[-1].ui.menuBtn.hide() 
+        temp_rfi[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
+        temp_rfi[-1].setColorMap(cmap)
 
-        d4.addWidget(rfi[-1], j, k)
+        d4.addWidget(temp_rfi[-1], j, k)
         if j < np.sqrt(num_pv)-1:
             j += 1
         else:
@@ -253,7 +284,7 @@ if plot_d4:
             k += 1
 
     btn = QtGui.QPushButton("play")
-    btn.clicked.connect(lambda: play_receptive_fields(rfi))
+    btn.clicked.connect(lambda: play_receptive_fields(temp_rfi))
     d4.addWidget(btn, j, k)
 
 win.show()

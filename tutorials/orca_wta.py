@@ -34,6 +34,8 @@ istdp_synapse_model = SynapseEquationBuilder.import_eq(
 adapt_neuron_model = NeuronEquationBuilder(base_unit='quantized',
         intrinsic_excitability='threshold_adaptation',
         position='spatial')
+std_synapse_model = SynapseEquationBuilder.import_eq(
+        model_path + 'StochStdStdp.py')
 reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
         plasticity='quantized_stochastic_stdp',
         structural_plasticity='stochastic_counter')
@@ -133,7 +135,8 @@ class ORCA_WTA(BuildingBlock):
                   target_type,
                   connectivity_params=connection_probability_HS19,
                   exc_params=excitatory_synapse_soma,
-                  sparsity=None):
+                  sparsity=None,
+                  re_init_dt=None):
         """ This functions add an input group and connections to the building
             block.
 
@@ -161,6 +164,8 @@ class ORCA_WTA(BuildingBlock):
             syn_model = stdp_synapse_model
         elif plasticity == 'reinit':
             syn_model = reinit_synapse_model
+        elif plasticity == 'std':
+            syn_model = std_synapse_model
 
         for target in targets:
             target_name = target.split('_')[0]
@@ -223,40 +228,40 @@ class ORCA_WTA(BuildingBlock):
                     val.weight[ffe_zero_w, neu] = 0
                     val.w_plast[ffe_zero_w, neu] = 0
 
-                #re_init_dt = 15000*ms
-                #add_group_params_re_init(groups=[val],
-                #                         variable='w_plast',
-                #                         re_init_variable='re_init_counter',
-                #                         re_init_threshold=1,
-                #                         re_init_dt=re_init_dt,
-                #                         dist_param=3,
-                #                         scale=1,
-                #                         distribution='gamma',
-                #                         clip_min=0,
-                #                         clip_max=15,
-                #                         variable_type='int',
-                #                         reference='synapse_counter')
-                #add_group_params_re_init(groups=[val],
-                #                         variable='weight',
-                #                         re_init_variable='re_init_counter',
-                #                         re_init_threshold=1,
-                #                         re_init_dt=re_init_dt,
-                #                         distribution='deterministic',
-                #                         const_value=1,
-                #                         reference='synapse_counter')
-                #add_group_params_re_init(groups=[val],
-                #                         variable='tausyn',
-                #                         re_init_variable='re_init_counter',
-                #                         re_init_threshold=1,
-                #                         re_init_dt=re_init_dt,
-                #                         dist_param=5.5,
-                #                         scale=1,
-                #                         distribution='normal',
-                #                         clip_min=4,
-                #                         clip_max=7,
-                #                         variable_type='int',
-                #                         unit='ms',
-                #                         reference='synapse_counter')
+                if re_init_dt is not None:
+                    add_group_params_re_init(groups=[val],
+                                             variable='w_plast',
+                                             re_init_variable='re_init_counter',
+                                             re_init_threshold=1,
+                                             re_init_dt=re_init_dt,
+                                             dist_param=3,
+                                             scale=1,
+                                             distribution='gamma',
+                                             clip_min=0,
+                                             clip_max=15,
+                                             variable_type='int',
+                                             reference='synapse_counter')
+                    add_group_params_re_init(groups=[val],
+                                             variable='weight',
+                                             re_init_variable='re_init_counter',
+                                             re_init_threshold=1,
+                                             re_init_dt=re_init_dt,
+                                             distribution='deterministic',
+                                             const_value=1,
+                                             reference='synapse_counter')
+                    add_group_params_re_init(groups=[val],
+                                             variable='tausyn',
+                                             re_init_variable='re_init_counter',
+                                             re_init_threshold=1,
+                                             re_init_dt=re_init_dt,
+                                             dist_param=5.5,
+                                             scale=1,
+                                             distribution='normal',
+                                             clip_min=4,
+                                             clip_max=7,
+                                             variable_type='int',
+                                             unit='ms',
+                                             reference='synapse_counter')
 
         self._groups.update(temp_groups)
 

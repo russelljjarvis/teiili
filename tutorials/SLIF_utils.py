@@ -340,15 +340,37 @@ def bar_from_recording(filename):
     ev_npy = aedat2numpy(filename, version='V4')
 
     print('getting time and indices...')
-    i_on, t_on, i_off, t_off = dvs2ind(ev_npy, resolution=(10, 10))
+    i_on, t_on, i_off, t_off = dvs2ind(ev_npy, resolution=(346, 260))
 
     print('saving on disk...')
     np.savez(filename+'_events', on_indices=i_on, on_times=t_on, off_indices=i_off, off_times=t_off)
 
-def recorded_bar_testbench(filename, repetitions):
+def recorded_bar_testbench(filename, num_samples, repetitions):
     events = np.load(filename)
     ref_input_indices = events['off_indices']
     ref_input_times = events['off_times']*ms
+    ref_input_indices -= min(ref_input_indices)
+
+    # Sampling input space
+    #import matplotlib.pyplot as plt
+    #plt.figure()
+    #plt.plot(ref_input_times/ms, ref_input_indices, '.')
+    rng = np.random.default_rng(12345)
+    sampled_indices = rng.choice(np.unique(ref_input_indices), num_samples, replace=False)
+    sampled_indices = np.in1d(ref_input_indices, sampled_indices)
+    ref_input_times = ref_input_times[sampled_indices]
+    ref_input_indices = ref_input_indices[sampled_indices]
+
+    # Adjusting input size and removing gaps
+    tmp_ind = np.unique(ref_input_indices)
+    indices_mapping = {val: ind for ind, val in enumerate(tmp_ind)}
+    ref_input_indices = np.vectorize(indices_mapping.get)(ref_input_indices)
+    #plt.figure()
+    #plt.plot(ref_input_times/ms, ref_input_indices, '.')
+    #plt.figure()
+    #a=np.unique(ref_input_indices)
+    #plt.plot(np.arange(len(a)), a)
+    #plt.show()
 
     # Repeat presentation
     input_times = ref_input_times

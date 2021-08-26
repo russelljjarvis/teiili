@@ -4,13 +4,13 @@ StochStdStdp = {'model':
         dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
         Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
 
-        decay_syn = tau_syn/(tau_syn + dt) : 1
+        decay_syn = tausyn/(tausyn + dt) : 1
 
         weight                : 1
         w_plast               : 1
         decay_probability_syn : 1
         gain_syn              : amp
-        tau_syn               : second (constant)
+        tausyn               : second (constant)
         
         dApre/dt = (Apre * decay_stdp_Apre)/second : 1 (clock-driven)
         dApost/dt = (Apost * decay_stdp_Apost)/second : 1 (clock-driven)
@@ -44,10 +44,10 @@ StochStdStdp = {'model':
 'weight' : '1',
 'w_plast' : '1',
 'gain_syn' : '1. * mamp',
-'tau_syn' : '3. * msecond',
+'tausyn' : '3. * msecond',
 'taupre' : '3. * msecond',
 'taupost' : '3. * msecond',
 'w_max' : '15',
-'dApre' : '0.5',
+'dApre' : '0.03',
 }
 }

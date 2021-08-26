@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from brian2 import ms, second, Hz, prefs, SpikeMonitor, StateMonitor,\
-        defaultclock, ExplicitStateUpdater,\
+        SpikeGeneratorGroup, defaultclock, ExplicitStateUpdater,\
         PopulationRateMonitor, seed
 
 from teili import TeiliNetwork
@@ -57,9 +57,15 @@ def save_data():
     # with is incompatible with array with spike times. This is then addressed
     # before saving to disk
     exc_rate_t = np.array(monitors['rate_exc_neurons']['monitor'].t/ms)
-    exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].smooth_rate(width=10*ms)/Hz)
+    if monitors['rate_exc_neurons']['monitor'].rate:
+        exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].smooth_rate(width=10*ms)/Hz)
+    else:
+        exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].rate/Hz)
     inh_rate_t = np.array(monitors['rate_inh_neurons']['monitor'].t/ms)
-    inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].smooth_rate(width=10*ms)/Hz)
+    if monitors['rate_inh_neurons']['monitor'].rate:
+        inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].smooth_rate(width=10*ms)/Hz)
+    else:
+        inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].rate/Hz)
     if len(exc_rate_t) != len(exc_rate):
         exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].rate/Hz)
         inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].rate/Hz)
@@ -76,11 +82,15 @@ def save_data():
     recurrent_ids = []
     recurrent_weights = []
     for row in range(num_exc):
+        # TODO no need for weights if now there is monitor (also on load and merge on utils)
         recurrent_weights.append(list(orca._groups['pyr_pyr'].w_plast[row, :]))
         recurrent_ids.append(list(orca._groups['pyr_pyr'].j[row, :]))
     np.savez_compressed(path + f'matrices_{block}.npz',
         rf=monitors['statemon_ffe']['monitor'].w_plast.astype(np.uint8),
+        rfw=monitors['reinit_conn_e']['monitor'].weight.astype(np.uint8),
         rfi=monitors['statemon_ffi']['monitor'].w_plast.astype(np.uint8),
+        rfwi=monitors['reinit_conn_i']['monitor'].weight.astype(np.uint8),
+        rec_mem=monitors['statemon_rec']['monitor'].w_plast.astype(np.uint8),
         rec_ids=recurrent_ids, rec_w=recurrent_weights
         )
     pickled_monitor = monitors['spikemon_exc_neurons']['monitor'].get_states()
@@ -89,6 +99,7 @@ def save_data():
 
 
 def create_monitors():
+    mon_dt = 500*ms
     monitors = {'spikemon_exc_neurons': {'group': 'pyr_cells',
                                          'monitor': None},
                 'spikemon_pv_neurons': {'group': 'pv_cells',
@@ -105,7 +116,16 @@ def create_monitors():
                 'statemon_ffe': {'group': 'ff_pyr',
                                  'variable': ['w_plast'],
                                  'monitor': None},
+                'reinit_conn_e': {'group': 'ff_pyr',
+                                 'variable': ['weight'],
+                                 'monitor': None},
                 'statemon_ffi': {'group': 'ff_pv',
+                                 'variable': ['w_plast'],
+                                 'monitor': None},
+                'reinit_conn_i': {'group': 'ff_pv',
+                                 'variable': ['weight'],
+                                 'monitor': None},
+                'statemon_rec': {'group': 'pyr_pyr',
                                  'variable': ['w_plast'],
                                  'monitor': None},
                 'rate_exc_neurons': {'group': 'pyr_cells',
@@ -128,29 +148,42 @@ def create_monitors():
                                                         variables=val['variable'],
                                                         record=selected_cells,
                                                         name=key)
-            else:
+            else:  # Connections
                 monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
                                                         variables=val['variable'],
                                                         record=True,
+                                                        dt=mon_dt,
                                                         name=key)
         elif 'rate' in key:
             monitors[key]['monitor'] = PopulationRateMonitor(orca._groups[val['group']],
                                                              name=key)
+        elif 'reinit' in key:
+            if re_init_dt is None:
+                temp_dt = sim_duration - 1*ms  # Gets only one sample from end of simulation
+            else:
+                temp_dt = re_init_dt + 1*ms  # Tries to avoid missing update by +1
+            monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
+                                                    variables=val['variable'],
+                                                    record=True,
+                                                    dt=temp_dt,
+                                                    name=key)
 
     return monitors
 
 
 # Initialize simulation preferences
 seed(13)
+rng = np.random.default_rng(12345)
 prefs.codegen.target = "numpy"
 
 # Initialize rotating bar
 sequence_duration = 357*ms#105*ms#
-#sequence_duration = 480*ms
+#sequence_duration = 950*ms#1900*ms#
 testing_duration = 0*ms
-num_channels = 100
-repetitions = 200#80#
-#repetitions = 0#2
+repetitions = 400
+#repetitions = 13#8#10#
+num_samples = 100
+num_channels = num_samples
 # Simulated bar
 testbench_stim = OCTA_Testbench()
 testbench_stim.rotating_bar(length=10, nrows=10,
@@ -162,38 +195,60 @@ testbench_stim.rotating_bar(length=10, nrows=10,
 input_indices = testbench_stim.indices
 input_times = testbench_stim.times * ms
 # Recorded bar
-#input_times, input_indices = recorded_bar_testbench('../downsampled_7p5_normallight_fullbar-2021_07_20_10_36_20.aedat4_events.npz', repetitions)
-training_duration = np.max(input_times) - testing_duration
+#input_times, input_indices = recorded_bar_testbench('../raw_7p5V_normallight_fullbar.aedat4_events.npz', num_samples, repetitions)
 
-# Convert input into neuron group (necessary for STDP compatibility)
+training_duration = np.max(input_times) - testing_duration
 sim_duration = input_times[-1]
+# Convert input into neuron group (necessary for STDP compatibility)
 relay_cells = neuron_group_from_spikes(num_channels,
                                        defaultclock.dt,
                                        sim_duration,
                                        spike_indices=input_indices,
                                        spike_times=input_times)
 
-num_exc = 200
+# Or alternatively send it to an input layer
+# TODO organize it somewhere else
+#from teili.models.neuron_models import QuantStochLIF as static_neuron_model
+#from teili.core.groups import Neurons, Connections
+#from teili.models.synapse_models import QuantStochSyn as static_synapse_model
+#stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
+#input_cells = SpikeGeneratorGroup(num_channels, input_indices, input_times)
+#relay_cells = Neurons(num_channels,
+#                      equation_builder=static_neuron_model(num_inputs=1),
+#                      method=stochastic_decay,
+#                      name='relay_cells',
+#                      verbose=True)
+#s_inp_exc = Connections(input_cells, relay_cells,
+#                        equation_builder=static_synapse_model(),
+#                        method=stochastic_decay,
+#                        name='s_inp_exc')
+#s_inp_exc.connect('i==j')
+#s_inp_exc.weight = 4096
+
+num_exc = 49
 Net = TeiliNetwork()
 orca = ORCA_WTA(num_exc_neurons=num_exc,
     ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+re_init_dt = None#60000*ms#
 orca.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
-    sparsity=.3)
+    sparsity=.3, re_init_dt=re_init_dt)
 orca.add_input(relay_cells, 'ff', ['pv_cells'],#, 'sst_cells'],
-    'stdp', 'inhibitory', sparsity=.3)
+    'static', 'inhibitory', sparsity=.3, re_init_dt=re_init_dt)
 
 # Prepare for saving data
 date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
 os.mkdir(path)
-selected_cells = np.random.choice(range(orca._groups['pv_cells'].N), 20, replace=False)
+selected_cells = rng.choice(range(orca._groups['pv_cells'].N),
+                            int(orca._groups['pv_cells'].N*.4), replace=False)
 Metadata = {'time_step': defaultclock.dt,
             'num_exc': num_exc,
             'num_pv': orca._groups['pv_cells'].N,
             'num_channels': num_channels,
             'full_rotation': sequence_duration,
             'repetitions': repetitions,
-            'selected_cells': selected_cells
+            'selected_cells': selected_cells,
+            're_init_dt': re_init_dt
         }
 
 with open(path+'metadata', 'wb') as f:
@@ -213,10 +268,12 @@ statemon_net_current2 = StateMonitor(orca._groups['pv_cells'],
 statemon_net_current3 = StateMonitor(orca._groups['sst_cells'],
     variables=['Iin'], record=True,
     name='statemon_net_current3')
-statemon_rate4 = SpikeMonitor(relay_cells, name='input_rate')
+statemon_rate4 = SpikeMonitor(relay_cells, name='input_spk')
 
 # Training
-Net.add(orca, relay_cells, [x['monitor'] for x in monitors.values()])
+# TODO remove things here that should go somewhere else
+#statemon_rate2 = SpikeMonitor(input_cells, name='input_cells')
+Net.add(orca, relay_cells, [x['monitor'] for x in monitors.values()])#, input_cells, s_inp_exc)
 Net.add(statemon_net_current, statemon_net_current2, statemon_net_current3, statemon_rate4)
 
 training_blocks = 10

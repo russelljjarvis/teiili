@@ -48,10 +48,10 @@ plot_d1, plot_d2, plot_d3, plot_d4 = True, True, True, True
 
 input_t = rasters['input_t']
 input_i = rasters['input_i']
-Iin0 = traces['Iin0']
-Iin1 = traces['Iin1']
-Iin2 = traces['Iin2']
-Iin3 = traces['Iin3']
+Iin0 = traces['Iin0'][selected_cell]
+Iin1 = traces['Iin1'][selected_cell]
+Iin2 = traces['Iin2'][selected_cell]
+Iin3 = traces['Iin3'][selected_cell]
 exc_spikes_t = rasters['exc_spikes_t']
 exc_spikes_i = rasters['exc_spikes_i']
 inh_spikes_t = rasters['inh_spikes_t']
@@ -64,38 +64,22 @@ rf = matrices['rf']
 rfw = matrices['rfw']
 rfi = matrices['rfi']
 rfwi = matrices['rfwi']
+rec_mem = matrices['rec_mem']
 rec_ids = matrices['rec_ids']
 rec_w = matrices['rec_w']
+Iin_t = min(input_t)*1e-3 + np.array(range(len(Iin0)))*1e-3
 del matrices
 del rasters
 del traces
 
 # Apply mask on w_plast
-weights_duration = int(metadata['re_init_dt']/metadata['time_step'])  # in samples
-temp_ind = 0
-for we, wi in zip(rfw.T, rfwi.T):
-    rf[:, temp_ind:temp_ind+weights_duration] *= we[:, np.newaxis]
-    rfi[:, temp_ind:temp_ind+weights_duration] *= wi[:, np.newaxis]
-    temp_ind += weights_duration
-# Avoid storing too much data on memory
-lower_lim, higher_lim = -10000, -1
-input_t = input_t[lower_lim:higher_lim]
-input_i = input_i[lower_lim:higher_lim]
-Iin0 = Iin0[selected_cell][lower_lim:higher_lim]
-Iin1 = Iin1[selected_cell][lower_lim:higher_lim]
-Iin2 = Iin2[selected_cell][lower_lim:higher_lim]
-Iin3 = Iin3[selected_cell][lower_lim:higher_lim]
-Iin_t = min(input_t)*1e-3 + np.array(range(len(Iin0)))*1e-3
-exc_spikes_t = exc_spikes_t[lower_lim:higher_lim]
-exc_spikes_i = exc_spikes_i[lower_lim:higher_lim]
-inh_spikes_t = inh_spikes_t[lower_lim:higher_lim]
-inh_spikes_i = inh_spikes_i[lower_lim:higher_lim]
-exc_rate_t = exc_rate_t[lower_lim:higher_lim]
-exc_rate = exc_rate[lower_lim:higher_lim]
-inh_rate_t = inh_rate_t[lower_lim:higher_lim]
-inh_rate = inh_rate[lower_lim:higher_lim]
-rf = rf[:, lower_lim:higher_lim]
-rfi = rfi[:, lower_lim:higher_lim]
+# TODO problem when reinit is None
+#weights_duration = int(metadata['re_init_dt']/metadata['time_step'])  # in samples
+#temp_ind = 0
+#for we, wi in zip(rfw.T, rfwi.T):
+#    rf[:, temp_ind:temp_ind+weights_duration] *= we[:, np.newaxis]
+#    rfi[:, temp_ind:temp_ind+weights_duration] *= wi[:, np.newaxis]
+#    temp_ind += weights_duration
 
 if plot_d1:
     l = pg.LayoutWidget()
@@ -154,8 +138,8 @@ if plot_d1:
     p3.setLabel('left', 'Neuron index')
     p3.setLabel('bottom', 'Time', units='s')
     p3.setXLink(p1)
-    ax=p3.getAxis('left')  # autoscale not working for some reason...
-    ax.setTicks([[(idx, val) for idx, val in enumerate(permutation)], []])
+    #ax=p3.getAxis('left')  # autoscale not working for some reason...
+    #ax.setTicks([[(idx, val) for idx, val in enumerate(permutation)], []])
     p4 = pg.PlotWidget(title='Raster plot (inh. pop.)')
     p4.plot(inh_spikes_t*1e-3, inh_spikes_i, pen=None, symbolSize=3,
             symbol='o')
@@ -197,10 +181,6 @@ colors = [
 cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 8), color=colors)
 if plot_d2:
     image_axis = pg.PlotItem()
-    image_axis.setLabel(axis='bottom', text='Neuron index')
-    image_axis.setLabel(axis='left', text='Input channels')
-    #image_axis.hideAxis('left')
-    image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='postsynaptic neuron')
     image_axis.setLabel(axis='left', text='presynaptic neuron')
     #image_axis.hideAxis('left')
@@ -210,6 +190,7 @@ if plot_d2:
     m2.ui.menuBtn.hide() 
     m2.setImage(sorted_rec.matrix[:, permutation][permutation, :], axes={'y':0, 'x':1})
     m2.setColorMap(cmap)
+
     image_axis = pg.PlotItem()
     image_axis.setLabel(axis='bottom', text='sorted RF.')
     image_axis.setLabel(axis='left', text='Input channel')
@@ -218,20 +199,27 @@ if plot_d2:
     #m3.ui.histogram.hide()
     m3.ui.roiBtn.hide()
     m3.ui.menuBtn.hide() 
-    
     m3.setImage(sorted_rf.matrix[:, permutation], axes={'y':0, 'x':1})
     m3.setColorMap(cmap)
-    #m4 = pg.PlotWidget(title='Population rate')
-    #m4.plot(exc_rate_t*1e-3,
-    #        exc_rate,
-    #        pen='r')
-    #m4.plot(inh_rate_t*1e-3,
-    #        inh_rate,
-    #        pen='b')
-    #m4.setLabel('bottom', 'Time', units='s')
-    #m4.setLabel('left', 'Rate', units='Hz')
+
+    image_axis = pg.PlotItem()
+    image_axis.setLabel(axis='bottom', text='postsynaptic neuron')
+    image_axis.setLabel(axis='left', text='presynaptic neuron')
+    #image_axis.hideAxis('left')
+    m4 = pg.ImageView(view=image_axis)
+    m4.ui.roiBtn.hide()
+    m4.ui.menuBtn.hide() 
+    mem_evolution = np.zeros((num_exc, num_exc, np.shape(rec_mem)[-1]))
+    ref_id = 0
+    for neu_id, targets in enumerate(rec_ids):
+        mem_evolution[neu_id, targets, :] = rec_mem[ref_id:ref_id+len(targets), :]
+        ref_id += len(targets)
+    m4.setImage(mem_evolution[:, permutation, :][permutation, :, :], axes={'t':2, 'y':0, 'x':1})
+    m4.setColorMap(cmap)
+
     d2.addWidget(m2, 0, 0)
     d2.addWidget(m3, 0, 1)
+    d2.addWidget(m4, 0, 2)
     #d2.addWidget(m4, 1, colspan=3)
 
 # Plot receptive fields for each neuron

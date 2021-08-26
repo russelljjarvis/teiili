@@ -3,105 +3,205 @@ This code implements a sequence learning using and Excitatory-Inhibitory
 network with STDP.
 """
 import numpy as np
-from scipy.stats import gamma, truncnorm
-from scipy.signal import find_peaks
+import matplotlib.pyplot as plt
 
-from brian2 import second, ms, mV, Hz, prefs, SpikeMonitor, StateMonitor,\
-        defaultclock, ExplicitStateUpdater, SpikeGeneratorGroup,\
-        PopulationRateMonitor, run
+from brian2 import ms, second, Hz, prefs, SpikeMonitor, StateMonitor,\
+        SpikeGeneratorGroup, defaultclock, ExplicitStateUpdater,\
+        PopulationRateMonitor, seed
 
-from SLIF_utils import random_integers
-
-from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
-from teili.models.neuron_models import QuantStochLIF as static_neuron_model
-from teili.models.synapse_models import QuantStochSyn as static_synapse_model
-from teili.models.synapse_models import QuantStochSynStdp as stdp_synapse_model
-from teili.stimuli.testbench import SequenceTestbench, OCTA_Testbench
-from teili.tools.add_run_reg import add_lfsr
-from teili.tools.group_tools import add_group_activity_proxy,\
-    add_group_params_re_init
-from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
-from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-
-from teili.tools.lfsr import create_lfsr
+from teili.stimuli.testbench import SequenceTestbench
 from teili.tools.misc import neuron_group_from_spikes
-from SLIF_utils import neuron_rate,\
-        rate_correlations, ensemble_convergence, permutation_from_rate
+
+from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
+        permutation_from_rate, load_merge_multiple, recorded_bar_testbench
+
+from orca_wta import ORCA_WTA
+from orca_params import excitatory_synapse_dend, excitatory_synapse_soma
 
 import sys
 import pickle
 import os
 from datetime import datetime
 
-#############
-# Load models
-path = os.path.expanduser("/home/pablo/git/teili")
-model_path = os.path.join(path, "teili", "models", "equations", "")
-adp_synapse_model = SynapseEquationBuilder.import_eq(
-        model_path + 'StochSynAdp.py')
-adapt_neuron_model = NeuronEquationBuilder(base_unit='quantized',
-        intrinsic_excitability='threshold_adaptation',
-        position='spatial')
-reinit_synapse_model = SynapseEquationBuilder(base_unit='quantized',
-        plasticity='quantized_stochastic_stdp',
-        structural_plasticity='stochastic_counter')
 
 #############
-# Prepare parameters of the simulation
-# Defines if recurrent connections are included
-if sys.argv[1] == 'no_rec':
-    simple = True
-elif sys.argv[1] == 'rec':
-    simple = False
-else:
-    print('Provide correct argument')
-    sys.exit(0)
-if sys.argv[2] == 'plastic_inh':
-    i_plast = True
-elif sys.argv[2] == 'static_inh':
-    i_plast = False
-else:
-    print('Provide correct argument')
-    sys.exit(0)
+# Utils functions
+def save_data():
+    # Concatenate data from inhibitory population
+    pv_times = np.array(monitors['spikemon_pv_neurons']['monitor'].t/ms)
+    pv_indices = np.array(monitors['spikemon_pv_neurons']['monitor'].i)
+    sst_times = np.array(monitors['spikemon_sst_neurons']['monitor'].t/ms)
+    sst_indices = np.array(monitors['spikemon_sst_neurons']['monitor'].i)
+    sst_indices += orca._groups['pv_cells'].N
+    vip_times = np.array(monitors['spikemon_vip_neurons']['monitor'].t/ms)
+    vip_indices = np.array(monitors['spikemon_vip_neurons']['monitor'].i)
+    vip_indices += (orca._groups['pv_cells'].N + orca._groups['sst_cells'].N)
+
+    inh_spikes_t = np.concatenate((pv_times, sst_times, vip_times))
+    inh_spikes_i = np.concatenate((pv_indices, sst_indices, vip_indices))
+    sorting_index = np.argsort(inh_spikes_t)
+    inh_spikes_t = inh_spikes_t[sorting_index]
+    inh_spikes_i = inh_spikes_i[sorting_index]
+
+    np.savez(path + f'rasters_{block}.npz',
+             input_t=np.array(monitors['spikemon_seq_neurons']['monitor'].t/ms),
+             input_i=np.array(monitors['spikemon_seq_neurons']['monitor'].i),
+             exc_spikes_t=np.array(monitors['spikemon_exc_neurons']['monitor'].t/ms),
+             exc_spikes_i=np.array(monitors['spikemon_exc_neurons']['monitor'].i),
+             inh_spikes_t=inh_spikes_t,
+             inh_spikes_i=inh_spikes_i,
+             )
+
+    # If there are only a few samples, smoothing operation can create an array
+    # with is incompatible with array with spike times. This is then addressed
+    # before saving to disk
+    exc_rate_t = np.array(monitors['rate_exc_neurons']['monitor'].t/ms)
+    if monitors['rate_exc_neurons']['monitor'].rate:
+        exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].smooth_rate(width=10*ms)/Hz)
+    else:
+        exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].rate/Hz)
+    inh_rate_t = np.array(monitors['rate_inh_neurons']['monitor'].t/ms)
+    if monitors['rate_inh_neurons']['monitor'].rate:
+        inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].smooth_rate(width=10*ms)/Hz)
+    else:
+        inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].rate/Hz)
+    if len(exc_rate_t) != len(exc_rate):
+        exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].rate/Hz)
+        inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].rate/Hz)
+    np.savez(path + f'traces_{block}.npz',
+             Iin0=monitors['statemon_cells']['monitor'].Iin0,
+             Iin1=monitors['statemon_cells']['monitor'].Iin1,
+             Iin2=monitors['statemon_cells']['monitor'].Iin2,
+             Iin3=monitors['statemon_cells']['monitor'].Iin3,
+             exc_rate_t=exc_rate_t, exc_rate=exc_rate,
+             inh_rate_t=inh_rate_t, inh_rate=inh_rate,
+             )
+
+    # Save targets of recurrent connections as python object
+    recurrent_ids = []
+    recurrent_weights = []
+    for row in range(num_exc):
+        recurrent_weights.append(list(orca._groups['pyr_pyr'].w_plast[row, :]))
+        recurrent_ids.append(list(orca._groups['pyr_pyr'].j[row, :]))
+    np.savez_compressed(path + f'matrices_{block}.npz',
+        rf=monitors['statemon_ffe']['monitor'].w_plast.astype(np.uint8),
+        rfw=monitors['reinit_conn_e']['monitor'].weight.astype(np.uint8),
+        rfi=monitors['statemon_ffi']['monitor'].w_plast.astype(np.uint8),
+        rfwi=monitors['reinit_conn_i']['monitor'].weight.astype(np.uint8),
+        rec_ids=recurrent_ids, rec_w=recurrent_weights
+        )
+    pickled_monitor = monitors['spikemon_exc_neurons']['monitor'].get_states()
+    with open(path + f'pickled_{block}', 'wb') as f:
+        pickle.dump(pickled_monitor, f)
+
+
+def create_monitors():
+    mon_dt = 500*ms
+    monitors = {'spikemon_exc_neurons': {'group': 'pyr_cells',
+                                         'monitor': None},
+                'spikemon_pv_neurons': {'group': 'pv_cells',
+                                        'monitor': None},
+                'spikemon_sst_neurons': {'group': 'sst_cells',
+                                         'monitor': None},
+                'spikemon_vip_neurons': {'group': 'vip_cells',
+                                         'monitor': None},
+                'spikemon_seq_neurons': {'group': 'relay_cells',
+                                         'monitor': None},
+                'statemon_cells': {'group': 'pyr_cells',
+                                    'variable': ['Iin0', 'Iin1', 'Iin2', 'Iin3'],
+                                    'monitor': None},
+                'statemon_ffe': {'group': 'ff_pyr',
+                                 'variable': ['w_plast'],
+                                 'monitor': None},
+                'reinit_conn_e': {'group': 'ff_pyr',
+                                 'variable': ['weight'],
+                                 'monitor': None},
+                'statemon_ffi': {'group': 'ff_pv',
+                                 'variable': ['w_plast'],
+                                 'monitor': None},
+                'reinit_conn_i': {'group': 'ff_pv',
+                                 'variable': ['weight'],
+                                 'monitor': None},
+                'rate_exc_neurons': {'group': 'pyr_cells',
+                                     'monitor': None},
+                'rate_inh_neurons': {'group': 'pv_cells',
+                                     'monitor': None}}
+
+    for key, val in monitors.items():
+        if 'spike' in key:
+            try:
+                monitors[key]['monitor'] = SpikeMonitor(orca._groups[val['group']],
+                                                        name=key)
+            except KeyError:
+                print(val['group'] + ' added after exception')
+                monitors[key]['monitor'] = SpikeMonitor(eval(val['group']),
+                                                        name=key)
+        elif 'state' in key:
+            if 'cells' in key:
+                monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
+                                                        variables=val['variable'],
+                                                        record=selected_cells,
+                                                        name=key)
+            else:  # Connections
+                monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
+                                                        variables=val['variable'],
+                                                        record=True,
+                                                        dt=mon_dt,
+                                                        name=key)
+        elif 'rate' in key:
+            monitors[key]['monitor'] = PopulationRateMonitor(orca._groups[val['group']],
+                                                             name=key)
+        elif 'reinit' in key:
+            if re_init_dt is None:
+                temp_dt = sim_duration - 1*ms  # Gets only one sample from end of simulation
+            else:
+                temp_dt = re_init_dt + 1*ms  # Tries to avoid missing update by +1
+            monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
+                                                    variables=val['variable'],
+                                                    record=True,
+                                                    dt=temp_dt,
+                                                    name=key)
+
+    return monitors
+
 
 # Initialize simulation preferences
+seed(13)
+rng = np.random.default_rng(12345)
 prefs.codegen.target = "numpy"
-defaultclock.dt = 1 * ms
-stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
-################################################
 # Initialize input sequence
 num_items = 3
-item_duration = 50
+item_duration = 60
 item_superposition = 0
 num_channels = 144
 noise_prob = None#0.005
-item_rate = 25
-#sequence_repetitions = 700# 350
-sequence_repetitions = 200
+item_rate = 100
+#repetitions = 700# 350
+repetitions = 200
 
 sequence = SequenceTestbench(num_channels, num_items, item_duration,
                              item_superposition, noise_prob, item_rate,
-                             sequence_repetitions)
-spike_indices, spike_times = sequence.stimuli()
-
+                             repetitions)
+input_indices, input_times = sequence.stimuli()
+training_duration = np.max(input_times)
+sequence_duration = sequence.cycle_length * ms
+testing_duration = 0*ms
 
 # Adding incomplete sequence at the end of simulation
-training_duration = np.max(spike_times)
-sequence_duration = sequence.cycle_length * ms
-incomplete_sequences = 3
-include_symbols = [[2], [1], [0]]
-test_duration = incomplete_sequences * sequence_duration
-symbols = sequence.items
-for incomp_seq in range(incomplete_sequences):
-    for incl_symb in include_symbols[incomp_seq]:
-        tmp_symb = [(x*ms + incomp_seq*sequence_duration + training_duration)
-                        for x in symbols[incl_symb]['t']]
-        spike_times = np.append(spike_times, tmp_symb)
-        spike_indices = np.append(spike_indices, symbols[incl_symb]['i'])
-# Get back unit that was remove by append operation
-spike_times = spike_times*second
+#incomplete_sequences = 3
+#include_symbols = [[2], [1], [0]]
+#test_duration = incomplete_sequences * sequence_duration
+#symbols = sequence.items
+#for incomp_seq in range(incomplete_sequences):
+#    for incl_symb in include_symbols[incomp_seq]:
+#        tmp_symb = [(x*ms + incomp_seq*sequence_duration + training_duration)
+#                        for x in symbols[incl_symb]['t']]
+#        input_times = np.append(input_times, tmp_symb)
+#        input_indices = np.append(input_indices, symbols[incl_symb]['i'])
+## Get back unit that was remove by append operation
+#input_times = input_times*second
 
 # Adding noise at the end of simulation
 #incomplete_sequences = 5
@@ -110,417 +210,174 @@ spike_times = spike_times*second
 #noise_spikes = np.random.rand(num_channels, int(test_duration/ms))
 #noise_indices = np.where(noise_spikes < noise_prob)[0]
 #noise_times = np.where(noise_spikes < noise_prob)[1]
-#spike_indices = np.concatenate((spike_indices, noise_indices))
-#spike_times = np.concatenate((spike_times, noise_times+training_duration/ms))
+#input_indices = np.concatenate((input_indices, noise_indices))
+#input_times = np.concatenate((input_times, noise_times+training_duration/ms))
 
-# Save them for comparison
-spk_i, spk_t = np.array(spike_indices), np.around(spike_times/ms).astype(int)*ms
+training_duration = np.max(input_times) - testing_duration
+sim_duration = input_times[-1]
+# Convert input into neuron group (necessary for STDP compatibility)
+relay_cells = neuron_group_from_spikes(num_channels,
+                                       defaultclock.dt,
+                                       sim_duration,
+                                       spike_indices=input_indices,
+                                       spike_times=input_times)
 
-# Reproduce activity in a neuron group (necessary for STDP compatibility)
-seq_cells = neuron_group_from_spikes(num_channels, defaultclock.dt,
-    (training_duration+test_duration),
-    spike_indices=np.array(spike_indices),
-    spike_times=np.array(spike_times)*second)
+# Or alternatively send it to an input layer
+# TODO organize it somewhere else
+#from teili.models.neuron_models import QuantStochLIF as static_neuron_model
+#from teili.core.groups import Neurons, Connections
+#from teili.models.synapse_models import QuantStochSyn as static_synapse_model
+#stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
+#input_cells = SpikeGeneratorGroup(num_channels, input_indices, input_times)
+#relay_cells = Neurons(num_channels,
+#                      equation_builder=static_neuron_model(num_inputs=1),
+#                      method=stochastic_decay,
+#                      name='relay_cells',
+#                      verbose=True)
+#s_inp_exc = Connections(input_cells, relay_cells,
+#                        equation_builder=static_synapse_model(),
+#                        method=stochastic_decay,
+#                        name='s_inp_exc')
+#s_inp_exc.connect('i==j')
+#s_inp_exc.weight = 4096
 
-#################
-# Building network
-num_exc = 48
-num_inh = 12
-#num_inh = 30
-exc_cells = Neurons(num_exc,
-                    equation_builder=adapt_neuron_model(num_inputs=3),
-                    method=stochastic_decay,
-                    name='exc_cells',
-                    verbose=True)
-# Register proxy arrays
-if i_plast:
-    dummy_unit = 1*mV
-    exc_cells.variables.add_array('activity_proxy',
-                                   size=exc_cells.N,
-                                   dimensions=dummy_unit.dim)
+num_exc = 49
+Net = TeiliNetwork()
+orca = ORCA_WTA(num_exc_neurons=num_exc,
+    ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+re_init_dt = None#60000*ms#
+orca.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
+    sparsity=.3, re_init_dt=re_init_dt)
+orca.add_input(relay_cells, 'ff', ['pv_cells'],#, 'sst_cells'],
+    'static', 'inhibitory', sparsity=.3, re_init_dt=re_init_dt)
 
-    exc_cells.variables.add_array('normalized_activity_proxy',
-                                   size=exc_cells.N)
-
-inh_cells = Neurons(num_inh,
-                    equation_builder=static_neuron_model(num_inputs=3),
-                    method=stochastic_decay,
-                    name='inh_cells',
-                    verbose=True)
-
-# Connections
-ei_p = 0.50
-ie_p = 0.70
-ee_p = 0.60
-#ee_p = 1.0
-
-if not simple:
-    exc_exc_conn = Connections(exc_cells, exc_cells,
-                               equation_builder=stdp_synapse_model(),
-                               method=stochastic_decay,
-                               name='exc_exc_conn')
-exc_inh_conn = Connections(exc_cells, inh_cells,
-                           equation_builder=static_synapse_model(),
-                           method=stochastic_decay,
-                           name='exc_inh_conn')
-if i_plast:
-    inh_exc_conn = Connections(inh_cells, exc_cells,
-                               equation_builder=adp_synapse_model,
-                               method=stochastic_decay,
-                               name='inh_exc_conn')
-else:
-    inh_exc_conn = Connections(inh_cells, exc_cells,
-                               equation_builder=static_synapse_model(),
-                               method=stochastic_decay,
-                               name='inh_exc_conn')
-inh_inh_conn = Connections(inh_cells, inh_cells,
-                           equation_builder=static_synapse_model(),
-                           method=stochastic_decay,
-                           name='inh_inh_conn')
-feedforward_exc = Connections(seq_cells, exc_cells,
-                              equation_builder=reinit_synapse_model(),
-                              method=stochastic_decay,
-                              name='feedforward_exc')
-feedforward_inh = Connections(seq_cells, inh_cells,
-                              equation_builder=static_synapse_model(),
-                              method=stochastic_decay,
-                              name='feedforward_inh')
-
-feedforward_exc.connect()
-feedforward_inh.connect()
-inh_inh_conn.connect(p=.1)
-inh_exc_conn.connect(p=ie_p)
-if not simple:
-    exc_exc_conn.connect('i!=j', p=ee_p)
-    exc_exc_conn.delay = np.random.randint(0, 15, size=np.shape(exc_exc_conn.j)[0]) * ms
-exc_inh_conn.connect(p=ei_p)
-exc_inh_conn.delay = np.random.randint(0, 15, size=np.shape(exc_inh_conn.j)[0]) * ms
-#feedforward_exc.delay = np.random.randint(0, 15, size=np.shape(feedforward_exc.j)[0]) * ms
-#feedforward_inh.delay = np.random.randint(0, 15, size=np.shape(feedforward_inh.j)[0]) * ms
-inh_inh_conn.delay = np.random.randint(0, 15, size=np.shape(inh_inh_conn.j)[0]) * ms
-#inh_exc_conn.delay = np.random.randint(0, 15, size=np.shape(inh_exc_conn.j)[0]) * ms
-
-# Time constants
-# Values similar to those in Klampfl&Maass(2013), Joglekar etal(2018), Vogels&Abbott(2009)
-if not simple:
-    exc_exc_conn.tausyn = 5*ms
-    exc_exc_conn.taupre = 20*ms
-    exc_exc_conn.taupost = 60*ms
-    exc_exc_conn.stdp_thres = 1
-exc_inh_conn.tausyn = 5*ms
-inh_exc_conn.tausyn = 10*ms
-inh_inh_conn.tausyn = 10*ms
-feedforward_exc.tausyn = 5*ms
-feedforward_exc.taupre = 20*ms
-feedforward_exc.taupost = 60*ms
-feedforward_exc.stdp_thres = 1
-feedforward_inh.tausyn = 5*ms
-exc_cells.tau = 20*ms
-inh_cells.tau = 10*ms
-#exc_cells.thr_max = 15*mV
-
-# LFSR lengths
-if not simple:
-    exc_exc_conn.rand_num_bits_Apre = 4
-    exc_exc_conn.rand_num_bits_Apost = 4
-feedforward_exc.rand_num_bits_Apre = 4
-feedforward_exc.rand_num_bits_Apost = 4
-
-exc_cells.Vm = 3*mV
-inh_cells.Vm = 3*mV
-learn_factor = 4
-if i_plast:
-    inh_exc_conn.inh_learning_rate = 0.01
-#feedforward_exc.A_gain = learn_factor
-
-# Weight initializations
-ei_w = 3
-mean_ie_w = 4
-mean_ee_w = 1
-mean_ffe_w = 3
-mean_ffi_w = 1
-
-inh_inh_conn.weight = -1
-if i_plast:
-    inh_exc_conn.weight = -1
-    # 1 = no inhibition, 0 = maximum inhibition
-    #var_th = .1
-    var_th = 0.50
-for neu in range(num_inh):
-    weight_length = np.shape(inh_exc_conn.weight[neu,:])
-    sampled_weights = gamma.rvs(a=mean_ie_w, loc=1, size=weight_length).astype(int)
-    sampled_weights = np.clip(sampled_weights, 0, 15)
-    #sampled_weights = truncnorm.rvs(-3, 4, loc=mean_ie_w, size=weight_length).astype(int)
-    if i_plast:
-        inh_exc_conn.w_plast[neu,:] = sampled_weights
-    else:
-        inh_exc_conn.weight[neu,:] = -sampled_weights
-if not simple:
-    exc_exc_conn.weight = 1
-for neu in range(num_exc):
-    if not simple:
-        weight_length = np.shape(exc_exc_conn.w_plast[neu,:])
-        exc_exc_conn.w_plast[neu,:] = gamma.rvs(a=mean_ee_w, size=weight_length).astype(int)
-        #exc_exc_conn.w_plast[neu,:] = truncnorm.rvs(-1, 4, loc=mean_ee_w, size=weight_length).astype(int)
-    weight_length = np.shape(exc_inh_conn.weight[neu,:])
-    sampled_weights = gamma.rvs(a=ei_w, loc=1, size=weight_length).astype(int)
-    sampled_weights = np.clip(sampled_weights, 0, 15)
-    #sampled_weights = truncnorm.rvs(-2, 4, loc=ei_w, size=weight_length).astype(int)
-    exc_inh_conn.weight[neu,:] = sampled_weights
-feedforward_exc.weight = 1
-num_inh_weight = np.shape(feedforward_inh.weight[0,:])[0]
-for ch in range(num_channels):
-    wplast_length = np.shape(feedforward_exc.w_plast[ch,:])
-    feedforward_exc.w_plast[ch,:] = np.clip(
-            gamma.rvs(a=mean_ffe_w, size=wplast_length).astype(int),
-            0,
-            15)
-    #feedforward_exc.w_plast[ch,:] = truncnorm.rvs(-3, 7, loc=mean_ffe_w, size=wplast_length).astype(int)
-    feedforward_inh.weight[ch,:] = np.clip(
-            gamma.rvs(a=mean_ffi_w, size=num_inh_weight).astype(int),
-            0,
-            15)
-    #feedforward_inh.weight[ch,:] = truncnorm.rvs(-1, 7, loc=mean_ffi_w, size=num_inh_weight).astype(int)
-# Set sparsity for ffe connections
-for neu in range(num_exc):
-    ffe_zero_w = np.random.choice(num_channels, int(num_channels*.3), replace=False)
-    feedforward_exc.weight[ffe_zero_w,neu] = 0
-    feedforward_exc.w_plast[ffe_zero_w,neu] = 0
-
-# Set LFSRs for each group
-#neu_groups = [exc_cells, inh_cells]
-#if not simple:
-#    syn_groups = [exc_exc_conn, exc_inh_conn, inh_exc_conn, feedforward_exc,
-#                     feedforward_inh, inh_inh_conn]
-#else:
-#    syn_groups = [exc_inh_conn, inh_exc_conn, feedforward_exc,
-#                     feedforward_inh, inh_inh_conn]
-#ta = create_lfsr(neu_groups, syn_groups, defaultclock.dt)
-
-if i_plast:
-    # Add proxy activity group
-    activity_proxy_group = [exc_cells]
-    add_group_activity_proxy(activity_proxy_group,
-                             buffer_size=400,
-                             decay=150)
-    inh_exc_conn.variance_th = np.random.uniform(
-            low=var_th - 0.1,
-            high=var_th + 0.1,
-            size=len(inh_exc_conn))
-
-# Adding mismatch
-#mismatch_neuron_param = {
-#    'tau': 0.1
-#}
-#
-#mismatch_synap_param = {
-#    'tausyn': 0.1
-#}
-#
-#exc_cells.add_mismatch(std_dict=mismatch_neuron_param, seed=11)
-#exc_cells.__setattr__('tau', np.array(exc_cells.tau/ms).astype(int)*ms)
-#inh_cells.add_mismatch(std_dict=mismatch_neuron_param, seed=11)
-#inh_cells.__setattr__('tau', np.array(inh_cells.tau/ms).astype(int)*ms)
-#
-#exc_exc_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#exc_exc_conn.__setattr__('tausyn', np.array(exc_exc_conn.tausyn/ms).astype(int)*ms)
-#exc_inh_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#exc_inh_conn.__setattr__('tausyn', np.array(exc_inh_conn.tausyn/ms).astype(int)*ms)
-#inh_exc_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#inh_exc_conn.__setattr__('tausyn', np.array(inh_exc_conn.tausyn/ms).astype(int)*ms)
-#inh_inh_conn.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#inh_inh_conn.__setattr__('tausyn', np.array(inh_inh_conn.tausyn/ms).astype(int)*ms)
-#feedforward_exc.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#feedforward_exc.__setattr__('tausyn', np.array(feedforward_exc.tausyn/ms).astype(int)*ms)
-#feedforward_inh.add_mismatch(std_dict=mismatch_synap_param, seed=11)
-#feedforward_inh.__setattr__('tausyn', np.array(feedforward_inh.tausyn/ms).astype(int)*ms)
-
-###################
-# Adding homeostatic mechanisms
-re_init_dt = 15000*ms
-add_group_params_re_init(groups=[feedforward_exc],
-                         variable='w_plast',
-                         re_init_variable='re_init_counter',
-                         re_init_threshold=1,
-                         re_init_dt=re_init_dt,
-                         dist_param=3,
-                         scale=1,
-                         distribution='gamma',
-                         clip_min=0,
-                         clip_max=15,
-                         variable_type='int',
-                         reference='synapse_counter')
-add_group_params_re_init(groups=[feedforward_exc],
-                         variable='weight',
-                         re_init_variable='re_init_counter',
-                         re_init_threshold=1,
-                         re_init_dt=re_init_dt,
-                         distribution='deterministic',
-                         const_value=1,
-                         reference='synapse_counter')
-add_group_params_re_init(groups=[feedforward_exc],
-                         variable='tausyn',
-                         re_init_variable='re_init_counter',
-                         re_init_threshold=1,
-                         re_init_dt=re_init_dt,
-                         dist_param=5.5,
-                         scale=1,
-                         distribution='normal',
-                         clip_min=4,
-                         clip_max=7,
-                         variable_type='int',
-                         unit='ms',
-                         reference='synapse_counter')
-
-##################
-# Setting up monitors
-spikemon_exc_neurons = SpikeMonitor(exc_cells, name='spikemon_exc_neurons')
-spikemon_inh_neurons = SpikeMonitor(inh_cells, name='spikemon_inh_neurons')
-spikemon_seq_neurons = SpikeMonitor(seq_cells, name='spikemon_seq_neurons')
-statemon_exc_cells = StateMonitor(exc_cells, variables=['Vm'], record=np.random.randint(0, num_exc),
-                                  name='statemon_exc_cells')
-if i_plast:
-    statemon_proxy = StateMonitor(exc_cells, variables=['normalized_activity_proxy'], record=True,
-                                      name='statemon_proxy')
-statemon_inh_cells = StateMonitor(inh_cells, variables=['Vm'], record=np.random.randint(0, num_inh),
-                                  name='statemon_inh_cells')
-statemon_net_current = StateMonitor(exc_cells, variables=['Iin', 'Iin0', 'Iin1', 'Iin2'], record=True,
-                                  name='statemon_net_current')
-statemon_ffe_conns = StateMonitor(feedforward_exc, variables=['w_plast', 'I_syn'], record=True,
-                                  name='statemon_ffe_conns')
-statemon_pop_rate_e = PopulationRateMonitor(exc_cells)
-statemon_pop_rate_i = PopulationRateMonitor(inh_cells)
-
-net = TeiliNetwork()
-if not simple:
-    if i_plast:
-        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-                spikemon_exc_neurons, spikemon_inh_neurons,
-                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_net_current,
-                inh_inh_conn, statemon_proxy)
-    else:
-        net.add(seq_cells, exc_cells, inh_cells, exc_exc_conn, exc_inh_conn, inh_exc_conn,
-                feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-                spikemon_exc_neurons, spikemon_inh_neurons,
-                spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-                statemon_pop_rate_i, statemon_net_current, inh_inh_conn)
-else:
-    net.add(seq_cells, exc_cells, inh_cells, exc_inh_conn, inh_exc_conn,
-            feedforward_exc, statemon_exc_cells, statemon_inh_cells, feedforward_inh,
-            spikemon_exc_neurons, spikemon_inh_neurons,
-            spikemon_seq_neurons, statemon_ffe_conns, statemon_pop_rate_e,
-            statemon_pop_rate_i, statemon_net_current, inh_inh_conn,
-            statemon_proxy)
-
-# Training
-statemon_ffe_conns.active = True
-net.run(training_duration, report='stdout', report_period=100*ms)
-
-# Testing
-#feedforward_inh.weight = 0
-statemon_ffe_conns.active = True
-net.run(test_duration, report='stdout', report_period=100*ms)
-
-##########
-# Evaluations
-if not np.array_equal(spk_t, spikemon_seq_neurons.t):
-    print('Proxy activity and generated input do not match.')
-    from brian2 import *
-    plot(spk_t, spk_i, 'k.')
-    plot(spikemon_seq_neurons.t, spikemon_seq_neurons.i, 'r+')
-    show()
-    sys.exit()
-
-last_sequence_t = (training_duration-sequence_duration)/ms
-neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=200,
-    kernel_var=10, kernel_min=0.001,
-    interval=[0, int(training_duration/ms)])
-#foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
-#                           sequence_duration, sequence_repetitions)
-#
-#corrs = rate_correlations(neu_rates, sequence_duration, sequence_repetitions)
-
-############
-# Saving results
-# Save targets of recurrent connections as python object
-n_rows = num_exc
-recurrent_ids = []
-recurrent_weights = []
-if not simple:
-    for row in range(n_rows):
-        recurrent_weights.append(list(exc_exc_conn.w_plast[row, :]))
-        recurrent_ids.append(list(exc_exc_conn.j[row, :]))
-
-# Calculating permutation indices from firing rates
-permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
-                                        defaultclock.dt)
-
-# Save data
+# Prepare for saving data
 date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
 os.mkdir(path)
-np.savez(path+f'rasters.npz',
-         input_t=np.array(spikemon_seq_neurons.t/ms), input_i=np.array(spikemon_seq_neurons.i),
-         exc_spikes_t=np.array(spikemon_exc_neurons.t/ms), exc_spikes_i=np.array(spikemon_exc_neurons.i),
-         inh_spikes_t=np.array(spikemon_inh_neurons.t/ms), inh_spikes_i=np.array(spikemon_inh_neurons.i),
-        )
+selected_cells = rng.choice(range(orca._groups['pv_cells'].N),
+                            int(orca._groups['pv_cells'].N*.4), replace=False)
+Metadata = {'time_step': defaultclock.dt,
+            'num_exc': num_exc,
+            'num_pv': orca._groups['pv_cells'].N,
+            'num_channels': num_channels,
+            'full_rotation': sequence_duration,
+            'repetitions': repetitions,
+            'selected_cells': selected_cells,
+            're_init_dt': re_init_dt
+        }
 
-np.savez(path+f'traces.npz',
-         Vm_e=statemon_exc_cells.Vm, Vm_i=statemon_inh_cells.Vm,
-         exc_rate_t=np.array(statemon_pop_rate_e.t/ms), exc_rate=np.array(statemon_pop_rate_e.smooth_rate(width=10*ms)/Hz),
-         inh_rate_t=np.array(statemon_pop_rate_i.t/ms), inh_rate=np.array(statemon_pop_rate_i.smooth_rate(width=10*ms)/Hz),
-        )
+with open(path+'metadata', 'wb') as f:
+    pickle.dump(Metadata, f)
 
-np.savez_compressed(path+f'matrices.npz',
-         rf=statemon_ffe_conns.w_plast.astype(np.uint8),
-         rec_ids=recurrent_ids, rec_w=recurrent_weights
-        )
+##################
+# Setting up monitors
+monitors = create_monitors()
 
+# Temporary monitors
+statemon_net_current = StateMonitor(orca._groups['pyr_cells'],
+    variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3', 'I', 'Vm'], record=True,
+    name='statemon_net_current')
+statemon_net_current2 = StateMonitor(orca._groups['pv_cells'],
+    variables=['normalized_activity_proxy', 'Iin'], record=True,
+    name='statemon_net_current2')
+statemon_net_current3 = StateMonitor(orca._groups['sst_cells'],
+    variables=['Iin'], record=True,
+    name='statemon_net_current3')
+statemon_rate4 = SpikeMonitor(relay_cells, name='input_spk')
+
+# Training
+# TODO remove things here that should go somewhere else
+#statemon_rate2 = SpikeMonitor(input_cells, name='input_cells')
+Net.add(orca, relay_cells, [x['monitor'] for x in monitors.values()])#, input_cells, s_inp_exc)
+Net.add(statemon_net_current, statemon_net_current2, statemon_net_current3, statemon_rate4)
+
+training_blocks = 10
+remainder_time = int(np.around(training_duration/defaultclock.dt)
+                     % training_blocks) * defaultclock.dt
+for block in range(training_blocks):
+    block_duration = int(np.around(training_duration/defaultclock.dt)
+                         / training_blocks) * defaultclock.dt
+    Net.run(block_duration, report='stdout', report_period=100*ms)
+    # Free up memory
+    save_data()
+
+    # Reinitialization. Remove first so obj reference is not lost
+    Net.remove([x['monitor'] for x in monitors.values()])
+    del monitors
+    monitors = create_monitors()
+    Net.add([x['monitor'] for x in monitors.values()])
+
+if remainder_time != 0:
+    block += 1
+    Net.run(remainder_time, report='stdout', report_period=100*ms)
+    save_data()
+    Net.remove([x['monitor'] for x in monitors.values()])
+    del monitors
+    monitors = create_monitors()
+    Net.add([x['monitor'] for x in monitors.values()])
+
+# Testing network
+if testing_duration:
+    block += 1
+    orca._groups['ff_pyr'].stdp_thres = 0
+    orca._groups['pyr_pyr'].stdp_thres = 0
+    orca._groups['sst_pyr'].inh_learning_rate = 0
+    orca._groups['pv_pyr'].inh_learning_rate = 0
+
+    # deactivate bottom-up
+    orca._groups['ff_pyr'].weight = 0
+    orca._groups['ff_pv'].weight = 0
+    orca._groups['ff_sst'].weight = 0
+    Net.run(testing_duration, report='stdout', report_period=100*ms)
+    save_data()
+
+# Recover data pickled from monitor
+spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')
+
+last_sequence_t = training_duration - int(sequence_duration/num_items/defaultclock.dt)*defaultclock.dt*3
+neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=10*ms,
+    kernel_var=1*ms, simulation_dt=defaultclock.dt,
+    interval=[last_sequence_t, training_duration], smooth=True,#)
+    trials=3)
+#foo = ensemble_convergence(seq_rates, neu_rates, [[0, 48], [48, 96], [96, 144]],
+#                           sequence_duration, repetitions)
+#
+#corrs = rate_correlations(neu_rates, sequence_duration, repetitions)
+
+############
+# Saving results
+# Calculating permutation indices from firing rates
+permutation_ids = permutation_from_rate(neu_rates)
+
+# Save data
 np.savez(path+f'permutation.npz',
          ids = permutation_ids
         )
+  
+Net.store(filename=f'{path}network')
 
-Metadata = {'time_step': defaultclock.dt,
-            'num_symbols': num_items,
-            'num_channels': num_channels,
-            'sequence_duration': sequence_duration,
-            'input_noise': noise_prob,
-            'input_rate': item_rate,
-            'sequence_repetitions': sequence_repetitions,
-            'num_exc': num_exc,
-            'num_inh': num_inh,
-            'e->i p': ei_p,
-            'i->e p': ie_p,
-            'e->e p': ee_p,
-            'mean e->i w': ei_w,
-            'mean i->e w': mean_ie_w,
-            'mean e->e w': mean_ee_w,
-            'learn_factor': learn_factor,
-            'mean ffe w': mean_ffe_w,
-            'mean ffi w': mean_ffi_w,
-            'i_plast': i_plast,
-            'simple': simple
-        }
-with open(path+'general.data', 'wb') as f:
-    pickle.dump(Metadata, f)
+#inr = neuron_rate(statemon_rate4, 100*ms, 80*ms, defaultclock.dt, interval=[0*ms, 4000*ms], smooth=True)
+#plt.plot(inr['t']/ms, np.average(inr['smoothed']/Hz,  axis=0), label='avg. smoothed rate')
+#plt.xlabel('second')
+#plt.ylabel('Hz')
+#plt.legend()
+#plt.show()
 
-Metadata = {'exc': exc_cells.get_params(),
-            'inh': inh_cells.get_params()}
-with open(path+'population.data', 'wb') as f:
-    pickle.dump(Metadata, f)
-
-Metadata = {'e->i': exc_inh_conn.get_params(),
-            'i->e': inh_exc_conn.get_params(),
-            'ffe': feedforward_exc.get_params(),
-            'ffi': feedforward_inh.get_params()
-            }
-if not simple:
-    Metadata['e->e'] = exc_exc_conn.get_params()
-with open(path+'connections.data', 'wb') as f:
-    pickle.dump(Metadata, f)
-
+#plt.figure()
+#plt.plot(statemon_rate4.t/second, statemon_rate4.rate/Hz)
+#plt.xlabel('s')
+#plt.ylabel('Hz')
+#plt.title(f'ca. 9Hz, {num_channels} channels')
+#plt.xlim([0, .2])
+#plt.figure()
+#plt.plot(statemon_rate4.t/second, statemon_rate4.smooth_rate(width=10*ms)/Hz)
+#plt.xlabel('s')
+#plt.ylabel('Hz')
+#plt.title(f'ca. 9Hz, {num_channels} channels')
+#plt.xlim([0, .2])
+#plt.show()
+#plt.imshow(np.reshape(orca._groups['ff_pyr'].w_plast[:,162], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
 
 #from brian2 import *
 #import pandas as pd
@@ -546,32 +403,65 @@ with open(path+'connections.data', 'wb') as f:
 #ylabel('correlation value')
 #legend()
 
-def plot_norm_act():
-    import matplotlib.pyplot as plt 
+def plot_norm_act(monitor):
     plt.figure()
-    plt.plot(statemon_proxy.normalized_activity_proxy.T)
+    plt.plot(monitor.normalized_activity_proxy.T)
     plt.xlabel('time (ms)')
     plt.ylabel('normalized activity value')
     plt.title('Normalized activity of all neurons')
     plt.show()
 
-def plot_inh_w():
-    import matplotlib.pyplot as plt 
-    _ = plt.hist(inh_exc_conn.w_plast)
+def plot_w(conn, plast=True, hist=True, idx=0):
+    if hist:
+        if plast:
+            _ = plt.hist(orca._groups[conn].w_plast)
+        else:
+            _ = plt.hist(orca._groups[conn].weight)
+    else:
+        if plast:
+            plt.imshow(np.reshape(orca._groups[conn].w_plast[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
+        else:
+            plt.imshow(np.reshape(orca._groups[conn].weight[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
     plt.show()
 
-def plot_EI_balance(idx):
-    import matplotlib.pyplot as plt
-    win_len = 100
-    rec_Iin = np.convolve(statemon_net_current.Iin0[idx], np.ones(win_len)/win_len, mode='valid')
-    inh_Iin = np.convolve(statemon_net_current.Iin1[idx], np.ones(win_len)/win_len, mode='valid')
-    ffe_Iin = np.convolve(statemon_net_current.Iin2[idx], np.ones(win_len)/win_len, mode='valid')
-    total_Iin = np.convolve(statemon_net_current.Iin[idx], np.ones(win_len)/win_len, mode='valid')
-    plt.plot(rec_Iin, 'r', label='rec. current')
-    plt.plot(inh_Iin, 'g', label='inh. current')
-    plt.plot(ffe_Iin, 'b', label='input current')
+def plot_EI_balance(idx=None, win_len=None, limits=None):
+    if limits is None:
+        limits = [max(statemon_net_current.t)/defaultclock.dt - 500, max(statemon_net_current.t)/defaultclock.dt]
+
+    if idx is not None:
+        if win_len:
+            iin0 = np.convolve(statemon_net_current.Iin0[idx], np.ones(win_len)/win_len, mode='valid')
+            iin1 = np.convolve(statemon_net_current.Iin1[idx], np.ones(win_len)/win_len, mode='valid')
+            iin2 = np.convolve(statemon_net_current.Iin2[idx], np.ones(win_len)/win_len, mode='valid')
+            iin3 = np.convolve(statemon_net_current.Iin3[idx], np.ones(win_len)/win_len, mode='valid')
+            total_Iin = np.convolve(statemon_net_current.Iin[idx], np.ones(win_len)/win_len, mode='valid')
+        else:
+            iin0 = statemon_net_current.Iin0[idx]
+            iin1 = statemon_net_current.Iin1[idx]
+            iin2 = statemon_net_current.Iin2[idx]
+            iin3 = statemon_net_current.Iin3[idx]
+            total_Iin = statemon_net_current.Iin[idx]
+    else:
+        if win_len:
+            iin0 = np.convolve(np.mean(statemon_net_current.Iin0, axis=0), np.ones(win_len)/win_len, mode='valid')
+            iin1 = np.convolve(np.mean(statemon_net_current.Iin1, axis=0), np.ones(win_len)/win_len, mode='valid')
+            iin2 = np.convolve(np.mean(statemon_net_current.Iin2, axis=0), np.ones(win_len)/win_len, mode='valid')
+            iin3 = np.convolve(np.mean(statemon_net_current.Iin3, axis=0), np.ones(win_len)/win_len, mode='valid')
+            total_Iin = np.convolve(np.mean(statemon_net_current.Iin, axis=0), np.ones(win_len)/win_len, mode='valid')
+        else:
+            iin0 = np.mean(statemon_net_current.Iin0, axis=0)
+            iin1 = np.mean(statemon_net_current.Iin1, axis=0)
+            iin2 = np.mean(statemon_net_current.Iin2, axis=0)
+            iin3 = np.mean(statemon_net_current.Iin3, axis=0)
+            total_Iin = np.mean(statemon_net_current.Iin, axis=0)
+    plt.plot(iin0, 'r', label='pyr')
+    plt.plot(iin1, 'g', label='pv')
+    plt.plot(iin2, 'b', label='sst')
+    plt.plot(iin3, 'k--', label='input')
     plt.plot(total_Iin, 'k', label='net current')
     plt.legend()
+    if limits is not None:
+        plt.xlim(limits)
     plt.ylabel('Current [amp]')
     plt.xlabel('time [ms]')
     plt.title('EI balance')

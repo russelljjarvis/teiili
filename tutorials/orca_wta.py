@@ -4,7 +4,7 @@
 import os
 import numpy as np
 
-from brian2 import ms, Hz, mV, ohm, defaultclock, ExplicitStateUpdater,\
+from brian2 import ms, mA, Hz, mV, ohm, defaultclock, ExplicitStateUpdater,\
         PoissonGroup, PoissonInput
 
 from teili.building_blocks.building_block import BuildingBlock
@@ -322,7 +322,7 @@ def add_populations(_groups,
                                        size=pyr_cells.N)
 
     pv_cells = Neurons(num_pv,
-                       equation_builder=static_neuron_model(num_inputs=5),
+                       equation_builder=adapt_neuron_model(num_inputs=5),
                        method=stochastic_decay,
                        name=group_name+'pv_cells',
                        verbose=verbose)
@@ -631,7 +631,7 @@ def add_connections(_groups,
 
     return _groups
 
-def generate_mismatch(mismatch_group, mismatch_params):
+def generate_mismatch(mismatch_group, mismatch_params, params_unit='ms'):
     """ This functions adds mismatch according to provided dictionary
 
     Args:
@@ -639,9 +639,21 @@ def generate_mismatch(mismatch_group, mismatch_params):
             added.
         mismatch_params (dict): Mismatch parameters of all elements in the
             group.
+        params_unit (str): Indicates the unit of variable. It can be 'ms' or
+            'mA'
     """
+    if params_unit == 'ms':
+        temp_var = 1*ms
+    elif params_unit == 'mA':
+        temp_var = 1*mA
+    else:
+        raise('Type unsuported')
+
     for g in mismatch_group:
         g.add_mismatch(std_dict=mismatch_params)
         # Convert values to integer
         for key in mismatch_params.keys():
-            g.__setattr__(key, np.array(g.__getattr__(key)/ms).astype(int)*ms)
+            rounded_values = np.around(g.__getattr__(key)/temp_var)
+            if np.any(rounded_values):
+                rounded_values = np.clip(rounded_values, 0, np.max(rounded_values))
+            g.__setattr__(key, rounded_values*temp_var)

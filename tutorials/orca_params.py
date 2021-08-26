@@ -74,6 +74,7 @@ excitatory_neurons = {'tau': 20*ms,
 
 inhibitory_neurons = {'tau': 20*ms,
                       'Vm': 3*mV,
+                      'thr_max': 15*mV,
                       'Vm_noise': 0*mV
                      }
 
@@ -87,14 +88,14 @@ excitatory_synapse_soma = {'tausyn': 5*ms,
                            'stdp_thres': 1
                            }
 
-excitatory_synapse_dend = {'tausyn': 3*ms,
-                           'gain_syn': 0.5*mA,
+excitatory_synapse_dend = {'tausyn': 5*ms,
+                           'gain_syn': 1*mA,
                            'delay': 1*ms,
                            'taupre': 20*ms,
-                           'taupost': 20*ms,
+                           'taupost': 30*ms,
                            'rand_num_bits_Apre': 4,
                            'rand_num_bits_Apost': 4,
-                           'stdp_thres': 7
+                           'stdp_thres': 1
                            }
 
 inhibitory_synapse_soma = {'tausyn': 10*ms,
@@ -107,19 +108,19 @@ inhibitory_synapse_dend = {'tausyn': 7*ms,
                            'delay': 1*ms
                           }
 
-synapse_mean_weight = {'e_i': 3, # 1
-                       'i_e': 1, # 1
+synapse_mean_weight = {'e_i': 3,
+                       'i_e': 1,
                        'e_e': 4,
                        'i_i': 1,
-                       'inp_e': 4,
-                       'inp_i': 4 # 2
+                       'inp_e': 2,
+                       'inp_i': 2
                        }
 
-mismatch_neuron_param = {'tau': 0.1  # 0.2
+mismatch_neuron_param = {'tau': 0.1
                          }
 
-mismatch_synapse_param = {'tausyn': 0.1  # 0.2
+mismatch_synapse_param = {'tausyn': 0.1
                         }
-mismatch_plastic_param = {'taupre': 0.1,  # 0.2
-                          'taupost': 0.1  # 0.2
+mismatch_plastic_param = {'taupre': 0.1,
+                          'taupost': 0.1
                           }

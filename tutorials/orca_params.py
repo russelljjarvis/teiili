@@ -9,7 +9,7 @@ stochastic models described by Wang et al. (2018).
 """
 from brian2 import ms, mV, mA
 
-connection_probability_HS19 = {'pyr_pyr': 0.10,
+connection_probability_HS19 = {'pyr_pyr': 0.50,
                                'pyr_pv': 0.45,
                                'pyr_sst': 0.35,
                                'pyr_vip': 0.10,

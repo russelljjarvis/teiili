@@ -89,6 +89,7 @@ def save_data():
         rfw=monitors['reinit_conn_e']['monitor'].weight.astype(np.uint8),
         rfi=monitors['statemon_ffi']['monitor'].w_plast.astype(np.uint8),
         rfwi=monitors['reinit_conn_i']['monitor'].weight.astype(np.uint8),
+        rec_mem=monitors['statemon_rec']['monitor'].w_plast.astype(np.uint8),
         rec_ids=recurrent_ids, rec_w=recurrent_weights
         )
     pickled_monitor = monitors['spikemon_exc_neurons']['monitor'].get_states()
@@ -122,6 +123,9 @@ def create_monitors():
                                  'monitor': None},
                 'reinit_conn_i': {'group': 'ff_pv',
                                  'variable': ['weight'],
+                                 'monitor': None},
+                'statemon_rec': {'group': 'pyr_pyr',
+                                 'variable': ['w_plast'],
                                  'monitor': None},
                 'rate_exc_neurons': {'group': 'pyr_cells',
                                      'monitor': None},

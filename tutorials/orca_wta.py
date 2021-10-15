@@ -17,10 +17,11 @@ from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 from teili.tools.group_tools import add_group_activity_proxy,\
     add_group_params_re_init, add_group_param_init
 
-from orca_params import connection_probability_HS19, excitatory_neurons,\
+from orca_params import connection_probability, excitatory_neurons,\
     inhibitory_neurons, excitatory_synapse_soma, excitatory_synapse_dend,\
     inhibitory_synapse_soma, inhibitory_synapse_dend, synapse_mean_weight,\
-    mismatch_neuron_param, mismatch_synapse_param, mismatch_plastic_param
+    mismatch_neuron_param, mismatch_synapse_param, mismatch_plastic_param,\
+    inhibitory_ratio
 
 # Load other models
 path = os.path.expanduser("/home/pablo/git/teili")
@@ -55,8 +56,11 @@ class ORCA_WTA(BuildingBlock):
     """
 
     def __init__(self,
+                 num_exc_neurons,
+                 ei_ratio,
+                 layer,
                  name='orca_wta_',
-                 connectivity_params=connection_probability_HS19,
+                 connectivity_params=connection_probability,
                  exc_cells_params=excitatory_neurons,
                  inh_cells_params=inhibitory_neurons,
                  exc_soma_params=excitatory_synapse_soma,
@@ -64,15 +68,17 @@ class ORCA_WTA(BuildingBlock):
                  inh_soma_params=inhibitory_synapse_soma,
                  inh_dend_params=inhibitory_synapse_dend,
                  verbose=False,
-                 num_exc_neurons=200,
-                 ratio_pv=.46,
-                 ratio_sst=.36,
-                 ratio_vip=.18,
                  noise=False):
         """ Generates building block with specified characteristics and
                 elements described by Wang et al. (2018).
 
         Args:
+            num_exc_neurons (int): Size of excitatory population.
+            ei_ratio (int): Ratio of excitatory versus inhibitory population,
+                that is ei_ratio:1 representing exc:inh
+            layer (str): Indicates cortical layer that is supposed
+                to be mimicked by WTA network. It can be L23, L4, L5,
+                or L6.
             name (str, required): Name of the building_block population
             connectivity_params (dict): Dictionary which holds connectivity
                 parameters
@@ -89,13 +95,6 @@ class ORCA_WTA(BuildingBlock):
             inh_dend_params (dict): Dictionary which holds parameters
                 of inhibitory connections to dendritic compartments
             verbose (bool, optional): Flag to gain additional information
-            num_exc_neurons (int, optional): Size of excitatory population.
-            ratio_pv (float, optional): Fraction of inhibitory neurons that
-                are PV cells.
-            ratio_sst (float, optional): Fraction of inhibitory neurons that
-                are SST cells.
-            ratio_vip (float, optional): Fraction of inhibitory neurons that
-                are VIP cells.
             noise (bool, optional): Flag to determine if background noise is to
                 be added to neurons. This is generated with a poisson process.
         """
@@ -110,9 +109,10 @@ class ORCA_WTA(BuildingBlock):
         add_populations(self._groups,
                         group_name=name,
                         num_exc_neurons=num_exc_neurons,
-                        ratio_pv=ratio_pv,
-                        ratio_sst=ratio_sst,
-                        ratio_vip=ratio_vip,
+                        ei_ratio=ei_ratio,
+                        ratio_pv=inhibitory_ratio[layer]['pv'],
+                        ratio_sst=inhibitory_ratio[layer]['sst'],
+                        ratio_vip=inhibitory_ratio[layer]['vip'],
                         verbose=verbose,
                         exc_cells_params=exc_cells_params,
                         inh_cells_params=inh_cells_params,
@@ -133,7 +133,7 @@ class ORCA_WTA(BuildingBlock):
                   targets,
                   plasticity,
                   target_type,
-                  connectivity_params=connection_probability_HS19,
+                  connectivity_params=connection_probability,
                   exc_params=excitatory_synapse_soma,
                   sparsity=None,
                   re_init_dt=None):
@@ -268,6 +268,7 @@ class ORCA_WTA(BuildingBlock):
 def add_populations(_groups,
                     group_name,
                     num_exc_neurons,
+                    ei_ratio,
                     ratio_pv,
                     ratio_sst,
                     ratio_vip,
@@ -281,7 +282,9 @@ def add_populations(_groups,
     Args:
         _groups (dict): Keys to all neuron and synapse groups.
         group_name (str, required): Name of the building_block population
-        num_exc_neurons (int, optional): Size of excitatory population.
+        num_exc_neurons (int): Size of excitatory population.
+        ei_ratio (int): Ratio of excitatory versus inhibitory population,
+            that is ei_ratio:1 representing exc:inh
         ratio_pv (float, optional): Fraction of inhibitory neurons that
             are PV cells.
         ratio_sst (float, optional): Fraction of inhibitory neurons that
@@ -298,7 +301,7 @@ def add_populations(_groups,
     """
     # TODO remove when no longer testing, as well as if's
     i_plast = 'plastic_inh0'
-    num_inh = int(num_exc_neurons/4)
+    num_inh = int(num_exc_neurons/ei_ratio)
     #num_inh = int(num_exc_neurons/1.6)
     num_pv = int(num_inh * ratio_pv)
     num_pv = num_pv if num_pv else 1

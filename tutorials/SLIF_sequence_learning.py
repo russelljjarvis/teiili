@@ -17,7 +17,8 @@ from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
         permutation_from_rate, load_merge_multiple, recorded_bar_testbench
 
 from orca_wta import ORCA_WTA
-from orca_params import excitatory_synapse_dend, excitatory_synapse_soma
+from orca_params import excitatory_synapse_dend, excitatory_synapse_soma,\
+        ei_ratio, exc_pop_proportion
 
 import sys
 import pickle
@@ -27,16 +28,16 @@ from datetime import datetime
 
 #############
 # Utils functions
-def save_data():
+def save_data(groups):
     # Concatenate data from inhibitory population
     pv_times = np.array(monitors['spikemon_pv_neurons']['monitor'].t/ms)
     pv_indices = np.array(monitors['spikemon_pv_neurons']['monitor'].i)
     sst_times = np.array(monitors['spikemon_sst_neurons']['monitor'].t/ms)
     sst_indices = np.array(monitors['spikemon_sst_neurons']['monitor'].i)
-    sst_indices += orca._groups['pv_cells'].N
+    sst_indices += groups['pv_cells'].N
     vip_times = np.array(monitors['spikemon_vip_neurons']['monitor'].t/ms)
     vip_indices = np.array(monitors['spikemon_vip_neurons']['monitor'].i)
-    vip_indices += (orca._groups['pv_cells'].N + orca._groups['sst_cells'].N)
+    vip_indices += (groups['pv_cells'].N + groups['sst_cells'].N)
 
     inh_spikes_t = np.concatenate((pv_times, sst_times, vip_times))
     inh_spikes_i = np.concatenate((pv_indices, sst_indices, vip_indices))
@@ -82,8 +83,8 @@ def save_data():
     recurrent_ids = []
     recurrent_weights = []
     for row in range(num_exc):
-        recurrent_weights.append(list(orca._groups['pyr_pyr'].w_plast[row, :]))
-        recurrent_ids.append(list(orca._groups['pyr_pyr'].j[row, :]))
+        recurrent_weights.append(list(groups['pyr_pyr'].w_plast[row, :]))
+        recurrent_ids.append(list(groups['pyr_pyr'].j[row, :]))
     np.savez_compressed(path + f'matrices_{block}.npz',
         rf=monitors['statemon_ffe']['monitor'].w_plast.astype(np.uint8),
         rfw=monitors['reinit_conn_e']['monitor'].weight.astype(np.uint8),
@@ -97,7 +98,7 @@ def save_data():
         pickle.dump(pickled_monitor, f)
 
 
-def create_monitors():
+def create_monitors(groups):
     mon_dt = 500*ms
     monitors = {'spikemon_exc_neurons': {'group': 'pyr_cells',
                                          'monitor': None},
@@ -135,7 +136,7 @@ def create_monitors():
     for key, val in monitors.items():
         if 'spike' in key:
             try:
-                monitors[key]['monitor'] = SpikeMonitor(orca._groups[val['group']],
+                monitors[key]['monitor'] = SpikeMonitor(groups[val['group']],
                                                         name=key)
             except KeyError:
                 print(val['group'] + ' added after exception')
@@ -143,25 +144,25 @@ def create_monitors():
                                                         name=key)
         elif 'state' in key:
             if 'cells' in key:
-                monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
+                monitors[key]['monitor'] = StateMonitor(groups[val['group']],
                                                         variables=val['variable'],
                                                         record=selected_cells,
                                                         name=key)
             else:  # Connections
-                monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
+                monitors[key]['monitor'] = StateMonitor(groups[val['group']],
                                                         variables=val['variable'],
                                                         record=True,
                                                         dt=mon_dt,
                                                         name=key)
         elif 'rate' in key:
-            monitors[key]['monitor'] = PopulationRateMonitor(orca._groups[val['group']],
+            monitors[key]['monitor'] = PopulationRateMonitor(groups[val['group']],
                                                              name=key)
         elif 'reinit' in key:
             if re_init_dt is None:
                 temp_dt = sim_duration - 1*ms  # Gets only one sample from end of simulation
             else:
                 temp_dt = re_init_dt + 1*ms  # Tries to avoid missing update by +1
-            monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
+            monitors[key]['monitor'] = StateMonitor(groups[val['group']],
                                                     variables=val['variable'],
                                                     record=True,
                                                     dt=temp_dt,
@@ -176,7 +177,7 @@ rng = np.random.default_rng(12345)
 prefs.codegen.target = "numpy"
 
 # Initialize input sequence
-num_items = 3
+num_items = 4
 item_duration = 60
 item_superposition = 0
 num_channels = 144
@@ -187,29 +188,29 @@ repetitions = 200
 
 sequence = SequenceTestbench(num_channels, num_items, item_duration,
                              item_superposition, noise_prob, item_rate,
-                             repetitions)
+                             repetitions, surprise_item=True)
 input_indices, input_times = sequence.stimuli()
 training_duration = np.max(input_times)
 sequence_duration = sequence.cycle_length * ms
 testing_duration = 0*ms
 
-# Adding incomplete sequence at the end of simulation
-#incomplete_sequences = 3
-#include_symbols = [[2], [1], [0]]
-#test_duration = incomplete_sequences * sequence_duration
-#symbols = sequence.items
-#for incomp_seq in range(incomplete_sequences):
-#    for incl_symb in include_symbols[incomp_seq]:
-#        tmp_symb = [(x*ms + incomp_seq*sequence_duration + training_duration)
-#                        for x in symbols[incl_symb]['t']]
-#        input_times = np.append(input_times, tmp_symb)
-#        input_indices = np.append(input_indices, symbols[incl_symb]['i'])
-## Get back unit that was remove by append operation
-#input_times = input_times*second
+# Adding alternative sequence at the end of simulation
+alternative_sequences = 10
+include_symbols = [[0, 1, 2, 3] for _ in range(alternative_sequences)]
+test_duration = alternative_sequences * sequence_duration
+symbols = sequence.items
+for alt_seq in range(alternative_sequences):
+    for incl_symb in include_symbols[alt_seq]:
+        tmp_symb = [(x*ms + alt_seq*sequence_duration + training_duration)
+                        for x in symbols[incl_symb]['t']]
+        input_times = np.append(input_times, tmp_symb)
+        input_indices = np.append(input_indices, symbols[incl_symb]['i'])
+# Get back unit that was remove by append operation
+input_times = input_times*second
 
 # Adding noise at the end of simulation
-#incomplete_sequences = 5
-#test_duration = incomplete_sequences*sequence_duration*ms
+#alternative_sequences = 5
+#test_duration = alternative_sequences*sequence_duration*ms
 #noise_prob = 0.01
 #noise_spikes = np.random.rand(num_channels, int(test_duration/ms))
 #noise_indices = np.where(noise_spikes < noise_prob)[0]
@@ -247,13 +248,34 @@ relay_cells = neuron_group_from_spikes(num_channels,
 
 num_exc = 49
 Net = TeiliNetwork()
-orca = ORCA_WTA(num_exc_neurons=num_exc,
-    ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+layer='L4'
+orca = ORCA_WTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
+                ei_ratio=ei_ratio[layer],
+                layer=layer)
 re_init_dt = None#60000*ms#
 orca.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
     sparsity=.3, re_init_dt=re_init_dt)
-orca.add_input(relay_cells, 'ff', ['pv_cells'],#, 'sst_cells'],
-    'static', 'inhibitory', sparsity=.3, re_init_dt=re_init_dt)
+orca.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells'],#['pv_cells'],#
+    'reinit', 'inhibitory', sparsity=.3, re_init_dt=re_init_dt)
+# TODO put it in separate file and reproduce this in rotating bar
+orca2 = ORCA_WTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
+                 ei_ratio=ei_ratio[layer],
+                 layer=layer, name='orca2_wta_')
+orca2.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
+    sparsity=.3, re_init_dt=re_init_dt)
+orca2.add_input(relay_cells, 'ff', ['pv_cells', 'sst_cells'],#['pv_cells'],#
+    'reinit', 'inhibitory', sparsity=.3, re_init_dt=re_init_dt)
+orca.add_input(orca2._groups['pyr_cells'], 'fb', ['pyr_cells'], 'reinit', 'excitatory',
+    sparsity=.3, re_init_dt=re_init_dt)
+orca.add_input(orca2._groups['pyr_cells'], 'fb', ['pv_cells', 'sst_cells'],#['pv_cells'],#
+    'reinit', 'inhibitory', sparsity=.6, re_init_dt=re_init_dt)
+# TODO remove this test
+from brian2 import mA
+#orca2._groups['ff_pyr'].gain_syn = 8*mA
+#orca2._groups['ff_pv'].gain_syn = 8*mA
+#orca2._groups['ff_sst'].gain_syn = 8*mA
+#orca2._groups['sst_pyr'].gain_syn = 4*mA
+#orca2._groups['pv_pyr'].gain_syn = 4*mA
 
 # Prepare for saving data
 date_time = datetime.now()
@@ -276,7 +298,7 @@ with open(path+'metadata', 'wb') as f:
 
 ##################
 # Setting up monitors
-monitors = create_monitors()
+monitors = create_monitors(orca2)
 
 # Temporary monitors
 statemon_net_current = StateMonitor(orca._groups['pyr_cells'],
@@ -289,12 +311,14 @@ statemon_net_current3 = StateMonitor(orca._groups['sst_cells'],
     variables=['Iin'], record=True,
     name='statemon_net_current3')
 statemon_rate4 = SpikeMonitor(relay_cells, name='input_spk')
+spikemon_upper = SpikeMonitor(orca2._groups['pyr_cells'], name='upper_spks')
 
 # Training
 # TODO remove things here that should go somewhere else
 #statemon_rate2 = SpikeMonitor(input_cells, name='input_cells')
 Net.add(orca, relay_cells, [x['monitor'] for x in monitors.values()])#, input_cells, s_inp_exc)
 Net.add(statemon_net_current, statemon_net_current2, statemon_net_current3, statemon_rate4)
+Net.add(orca2, spikemon_upper)
 
 training_blocks = 10
 remainder_time = int(np.around(training_duration/defaultclock.dt)
@@ -304,21 +328,21 @@ for block in range(training_blocks):
                          / training_blocks) * defaultclock.dt
     Net.run(block_duration, report='stdout', report_period=100*ms)
     # Free up memory
-    save_data()
+    save_data(orca2)
 
     # Reinitialization. Remove first so obj reference is not lost
     Net.remove([x['monitor'] for x in monitors.values()])
     del monitors
-    monitors = create_monitors()
+    monitors = create_monitors(orca2)
     Net.add([x['monitor'] for x in monitors.values()])
 
 if remainder_time != 0:
     block += 1
     Net.run(remainder_time, report='stdout', report_period=100*ms)
-    save_data()
+    save_data(orca2)
     Net.remove([x['monitor'] for x in monitors.values()])
     del monitors
-    monitors = create_monitors()
+    monitors = create_monitors(orca2)
     Net.add([x['monitor'] for x in monitors.values()])
 
 # Testing network
@@ -334,7 +358,7 @@ if testing_duration:
     orca._groups['ff_pv'].weight = 0
     orca._groups['ff_sst'].weight = 0
     Net.run(testing_duration, report='stdout', report_period=100*ms)
-    save_data()
+    save_data(orca2)
 
 # Recover data pickled from monitor
 spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')
@@ -407,6 +431,15 @@ Net.store(filename=f'{path}network')
 #ylabel('correlation value')
 #legend()
 
+def altsort(mon):
+    neu_rates = neuron_rate(mon, kernel_len=10*ms,kernel_var=1*ms,
+        simulation_dt=defaultclock.dt,interval=[last_sequence_t, training_duration],
+        smooth=True, trials=3)
+    permutation_ids = permutation_from_rate(neu_rates)
+    sorted_i = np.asarray([np.where(np.asarray(permutation_ids) == int(i))[0][0] for i in spikemon_upper.i])
+    plt.plot(spikemon_upper.t, sorted_i, '.')
+    plt.show()
+
 def plot_norm_act(monitor):
     plt.figure()
     plt.plot(monitor.normalized_activity_proxy.T)
@@ -415,17 +448,28 @@ def plot_norm_act(monitor):
     plt.title('Normalized activity of all neurons')
     plt.show()
 
-def plot_w(conn, plast=True, hist=True, idx=0):
+def plot_w(conn, num_channels=num_channels, plast=True, hist=True, idx=0):
     if hist:
         if plast:
-            _ = plt.hist(orca._groups[conn].w_plast)
+            _ = plt.hist(conn.w_plast)
         else:
-            _ = plt.hist(orca._groups[conn].weight)
+            _ = plt.hist(conn.weight)
     else:
         if plast:
-            plt.imshow(np.reshape(orca._groups[conn].w_plast[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
+            plt.imshow(np.reshape(conn.w_plast[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
         else:
-            plt.imshow(np.reshape(orca._groups[conn].weight[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
+            plt.imshow(np.reshape(conn.weight[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
+    plt.show()
+
+def plot_all_w(conn, num, ch):
+    from mpl_toolkits.axes_grid1 import ImageGrid
+    fig = plt.figure()
+    grid = ImageGrid(fig, 111,  # similar to subplot(111)
+                    nrows_ncols=(np.sqrt(num).astype(int), np.sqrt(num).astype(int)),  # creates 2x2 grid of axes
+                    axes_pad=0.1,  # pad between axes in inch.
+                    )
+    for idx in range(num):
+        grid[idx].imshow(np.reshape(conn.w_plast[:, idx], (np.sqrt(ch).astype(int), np.sqrt(ch).astype(int))))
     plt.show()
 
 def plot_EI_balance(idx=None, win_len=None, limits=None):

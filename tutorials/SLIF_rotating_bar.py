@@ -17,7 +17,8 @@ from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
         permutation_from_rate, load_merge_multiple, recorded_bar_testbench
 
 from orca_wta import ORCA_WTA
-from orca_params import excitatory_synapse_dend, excitatory_synapse_soma
+from orca_params import excitatory_synapse_dend, excitatory_synapse_soma,\
+        ei_ratio, exc_pop_proportion
 
 import sys
 import pickle
@@ -227,8 +228,10 @@ relay_cells = neuron_group_from_spikes(num_channels,
 
 num_exc = 49
 Net = TeiliNetwork()
-orca = ORCA_WTA(num_exc_neurons=num_exc,
-    ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+layer='L4'
+orca = ORCA_WTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
+                ei_ratio=ei_ratio[layer],
+                layer=layer)
 re_init_dt = None#60000*ms#
 orca.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
     sparsity=.3, re_init_dt=re_init_dt)

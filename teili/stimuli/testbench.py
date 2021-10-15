@@ -701,7 +701,8 @@ class SequenceTestbench():
 
     def __init__(self, n_channels, n_items,
                  item_length, superposition_length=0,
-                 noise_probability=None, rate=None, cycle_repetitions=None):
+                 noise_probability=None, rate=None, cycle_repetitions=None,
+                 surprise_item=False):
         """ Creates arrays of neuron index and spike times for
         a simple sequence learning benchmark. The sequence consists of
         a number of items which are encoded in spatially distinct input
@@ -720,13 +721,16 @@ class SequenceTestbench():
             rate (int, optional): Frequency of each item. Default is 30.
             cycle_repetitions=(int, optional): Number of times the cycle is
                 repeated.
+            surprise_item (boolean, optional): Determines that last item is
+                not added in the sequence.
 
         Returns:
             indices (1darray, int): An array of neuron indices.
             times (1darray, int): An array of spike times in seconds.
         """
         self.n_channels = n_channels
-        self.n_items = n_items
+        self.surprise_item = surprise_item
+        self.n_items = n_items - 1 if self.surprise_item else n_items
         self.noise_probability = noise_probability
         self.rate = rate
         self.item_length = item_length
@@ -770,6 +774,8 @@ class SequenceTestbench():
         """
         spike_times, spike_indices = [], []
         init_time = self.cycle_length - self.superposition_length
+        if self.surprise_item:
+            init_time -= self.item_length
         for rep in range(self.cycle_repetitions):
             spike_indices.extend(self.indices)
             aux_t = [(x + rep*init_time) for x in self.times]
@@ -812,6 +818,20 @@ class SequenceTestbench():
             except AttributeError:
                 self.indices = item_indices
                 self.times = item_times
+        if self.surprise_item:
+            item += 1
+            t_stop = t_start + self.item_length
+            i_stop = i_start + self.channels_per_item
+
+            cInd = np.logical_and(np.logical_and(np.logical_and(
+                self.monitor_t >= t_start, self.monitor_i >= i_start),
+                self.monitor_t < t_stop), self.monitor_i < i_stop)
+
+            t_start += self.item_length - self.superposition_length
+            i_start += self.channels_per_item
+            item_indices = np.asarray(self.monitor_i[cInd])
+            item_times = np.asarray(self.monitor_t[cInd])
+            self.items[item] = {'t': item_times, 'i': item_indices}
 
         if self.cycle_repetitions is not None:
             self.repeate_cycle()

@@ -188,7 +188,6 @@ quantized_stochastic = {
         dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
         decay_probability_syn = rand() : 1 (constant over dt)
         Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
-        syn_release : 1
 
         decay_syn = tausyn/(tausyn + dt) : 1
 
@@ -198,9 +197,7 @@ quantized_stochastic = {
         tausyn               : second (constant)
         ''',
         'on_pre': '''
-        syn_release = int(rand()<0.5)
-        I_syn += gain_syn * abs(weight) * w_plast * syn_release
-        I_syn = clip(I_syn, 0*mA, 15*mA)
+        I_syn += gain_syn * abs(weight) * w_plast
         ''',
         'on_post': '''
         '''
@@ -421,6 +418,20 @@ lfsr_syn_params = {
     'lfsr_num_bits_condApost2': '4'
     }
 
+stochastic_syn_release = {
+    'model': """
+        syn_release : 1
+        """,
+    'on_pre': """
+        syn_release = int(rand()<0.5)
+        %I_syn += gain_syn * abs(weight) * w_plast * syn_release
+        %Apre += dApre * syn_release
+        %w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres)*syn_release, 0, w_max)
+        """,
+    'on_post': """
+        """
+}
+
 # STDP learning rule ##
 stdp = {
     'model': '''
@@ -486,11 +497,11 @@ quantized_stochastic_stdp = {
         stdp_thres : 1 (constant)
         ''',
     'on_pre': '''
-        Apre += dApre * syn_release
+        Apre += dApre
         Apre = clip(Apre, 0, A_max)
         rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
         rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))
-        w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres)*syn_release, 0, w_max)
+        w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres), 0, w_max)
         ''',
     'on_post': '''
         Apost += dApre
@@ -664,6 +675,7 @@ plasticity_models = {
 synaptic_equations = {
     'activity': activity,
     'stdgm': stdgm,
+    'stochastic_syn_release': stochastic_syn_release,
     'lfsr_syn': lfsr_syn
 }
 
@@ -725,6 +737,7 @@ quantized_stochastic_parameters = {
     'quantized': quantized_stochastic_params,
     'non_plastic': none_params,
     'quantized_stochastic_stdp': quantized_stochastic_stdp_params,
+    'stochastic_syn_release': none_params,
     'lfsr_syn': lfsr_syn_params,
     'stochastic_counter': stochastic_counter_params}
 

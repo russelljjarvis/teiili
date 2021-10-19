@@ -432,6 +432,38 @@ stochastic_syn_release = {
         """
 }
 
+# Heterosynaptic mechanism for stochastic STDP
+stochastic_heterosynaptic = {
+    'model':"""
+        rand_int_heterosyn1 : 1
+        rand_int_heterosyn2 : 1
+        rand_num_bits_heterosyn : 1
+        """,
+    'on_pre': """
+        """,
+    'on_post': """
+        rand_int_heterosyn1 = ceil(rand() * (2**rand_num_bits_heterosyn-1))
+        rand_int_heterosyn2 = ceil(rand() * (2**rand_num_bits_heterosyn-1))
+        w_plast = clip(w_plast - 1*int(rand_int_Apost1<=1)*int(rand_int_Apost2<=1)*int(rand_int_heterosyn1<prev_Apost)*int(rand_int_heterosyn2<prev_wplast), 0, w_max)
+        """
+}
+
+stochastic_heterosynaptic_params = {
+    'rand_num_bits_heterosyn': 4
+}
+
+# Alternative pairing for stochastic STDP
+stochastic_reduced_symmetric = {
+    'model': """
+        """,
+    'on_pre': """
+        %w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost - Apre)*int(rand_int_Apre2 <= stdp_thres), 0, w_max)
+        """,
+    'on_post': """
+        %w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre - Apost)*int(rand_int_Apost2 <= stdp_thres), 0, w_max)
+        """
+}
+
 # STDP learning rule ##
 stdp = {
     'model': '''
@@ -495,20 +527,24 @@ quantized_stochastic_stdp = {
         rand_num_bits_Apre : 1 # Number of bits of random number generated for Apre
         rand_num_bits_Apost : 1 # Number of bits of random number generated for Apost
         stdp_thres : 1 (constant)
+        prev_Apost : 1
+        prev_wplast : 1
         ''',
     'on_pre': '''
-        Apre += dApre
-        Apre = clip(Apre, 0, A_max)
         rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
         rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))
         w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres), 0, w_max)
+        Apre += dApre
+        Apre = clip(Apre, 0, A_max)
         ''',
     'on_post': '''
-        Apost += dApre
-        Apost = clip(Apost, 0, A_max)
+        prev_Apost = Apost
+        prev_wplast = w_plast
         rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_Apost-1))
         rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_Apost-1))
         w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand_int_Apost2 <= stdp_thres), 0, w_max)
+        Apost += dApre
+        Apost = clip(Apost, 0, A_max)
         '''
 }
 
@@ -676,6 +712,8 @@ synaptic_equations = {
     'activity': activity,
     'stdgm': stdgm,
     'stochastic_syn_release': stochastic_syn_release,
+    'stochastic_heterosynaptic': stochastic_heterosynaptic,
+    'stochastic_reduced_symmetric': stochastic_reduced_symmetric,
     'lfsr_syn': lfsr_syn
 }
 
@@ -738,6 +776,8 @@ quantized_stochastic_parameters = {
     'non_plastic': none_params,
     'quantized_stochastic_stdp': quantized_stochastic_stdp_params,
     'stochastic_syn_release': none_params,
+    'stochastic_heterosynaptic': stochastic_heterosynaptic_params,
+    'stochastic_reduced_symmetric': none_params,
     'lfsr_syn': lfsr_syn_params,
     'stochastic_counter': stochastic_counter_params}
 

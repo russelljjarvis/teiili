@@ -423,13 +423,17 @@ stochastic_syn_release = {
         syn_release : 1
         """,
     'on_pre': """
-        syn_release = int(rand()<0.5)
+        syn_release = int(rand()<0.8)
         %I_syn += gain_syn * abs(weight) * w_plast * syn_release
-        %Apre += dApre * syn_release
+        %Apre = clip(Apre + dApre * syn_release, 0, A_max)
         %w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres)*syn_release, 0, w_max)
         """,
     'on_post': """
         """
+}
+
+stochastic_syn_release_params = {
+    'syn_release': 1
 }
 
 # Heterosynaptic mechanism for stochastic STDP
@@ -534,8 +538,7 @@ quantized_stochastic_stdp = {
         rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
         rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))
         w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres), 0, w_max)
-        Apre += dApre
-        Apre = clip(Apre, 0, A_max)
+        Apre = clip(Apre + dApre, 0, A_max)
         ''',
     'on_post': '''
         prev_Apost = Apost
@@ -543,8 +546,7 @@ quantized_stochastic_stdp = {
         rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_Apost-1))
         rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_Apost-1))
         w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand_int_Apost2 <= stdp_thres), 0, w_max)
-        Apost += dApre
-        Apost = clip(Apost, 0, A_max)
+        Apost = clip(Apost + dApre, 0, A_max)
         '''
 }
 
@@ -775,7 +777,7 @@ quantized_stochastic_parameters = {
     'quantized': quantized_stochastic_params,
     'non_plastic': none_params,
     'quantized_stochastic_stdp': quantized_stochastic_stdp_params,
-    'stochastic_syn_release': none_params,
+    'stochastic_syn_release': stochastic_syn_release_params,
     'stochastic_heterosynaptic': stochastic_heterosynaptic_params,
     'stochastic_reduced_symmetric': none_params,
     'lfsr_syn': lfsr_syn_params,

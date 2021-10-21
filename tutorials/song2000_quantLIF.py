@@ -4,6 +4,14 @@ from teili.models.synapse_models import QuantStochSynStdp as teili_syn
 from teili.core.groups import Neurons, Connections
 from teili.tools.misc import neuron_group_from_spikes
 
+from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
+teili_syn = SynapseEquationBuilder(base_unit='quantized',
+          plasticity='quantized_stochastic_stdp')
+          #pairing = 'stochastic_reduced_symmetric',
+          #structural_plasticity='stochastic_counter',
+          #compensatory_process = 'stochastic_heterosynaptic')
+          #prob_release = 'stochastic_syn_release')
+
 defaultclock.dt = 1 * ms
 
 sim_duration = 100*second
@@ -39,7 +47,7 @@ S.tausyn = 5*ms
 #random_array = 3*( (2*rand(N)-1)/10 )
 random_array = .5*randn(N)
 random_array = clip(1 + random_array, 0.5, 3)
-S.taupre = 20*ms*random_array#20*ms
+S.taupre = 20*ms#*random_array
 S.taupost = 20*ms # Change rand nums seems to cause too much inhibition
 S.w_max = 15
 S.dApre = 15

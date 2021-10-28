@@ -281,7 +281,7 @@ def load_merge_multiple(path_name, file_name, mode='pickle', allow_pickle=False)
                                  key=lambda path: int(path.stem.split('_')[1])):
             data = np.load(saved_file, allow_pickle=allow_pickle)
             for key, val in data.items():
-                if key == 'rec_w' or key == 'rec_ids':
+                if key == 'rec_ids':
                     # These are supposed to be always the same. There could be
                     # an if conditional here but that would slow things down
                     merged_dict[key] = val

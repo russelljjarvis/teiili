@@ -40,14 +40,15 @@ num_pv = metadata['num_pv']
 num_channels = metadata['num_channels']
 selected_cells = metadata['selected_cells']
 selected_cell = 0
+input_raster = np.load(data_folder+'input_raster.npz')
 rasters = load_merge_multiple(data_folder, 'rasters*', mode='numpy')
 traces = load_merge_multiple(data_folder, 'traces*', mode='numpy')
 matrices = load_merge_multiple(data_folder, 'matrices*', mode='numpy',
     allow_pickle=True)
 plot_d1, plot_d2, plot_d3, plot_d4 = True, True, True, True
 
-input_t = rasters['input_t']
-input_i = rasters['input_i']
+input_t = input_raster['input_t']
+input_i = input_raster['input_i']
 Iin0 = traces['Iin0'][selected_cell]
 Iin1 = traces['Iin1'][selected_cell]
 Iin2 = traces['Iin2'][selected_cell]
@@ -66,7 +67,6 @@ rfi = matrices['rfi']
 rfwi = matrices['rfwi']
 rec_mem = matrices['rec_mem']
 rec_ids = matrices['rec_ids']
-rec_w = matrices['rec_w']
 Iin_t = min(input_t)*1e-3 + np.array(range(len(Iin0)))*1e-3
 del matrices
 del rasters
@@ -113,10 +113,13 @@ if plot_d1:
                            similarity_metric='euclidean')
     # recurrent connections are not present in some simulations
     try:
+        neu_ids = np.zeros(len(rec_ids)+1, dtype=int)
+        neu_ids[1:] = np.cumsum([len(x) for x in rec_ids])
+        rec_w = [rec_mem[neu_ids[idx] : neu_ids[idx+1], -1] for idx, _ in enumerate(neu_ids[:-1])]
         sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w,
                                 target_indices=rec_ids, rec_matrix=True,
                                 similarity_metric='euclidean')
-    except:
+    except NameError:
         sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc,
                                 matrix=np.zeros((num_exc, num_exc)))
 

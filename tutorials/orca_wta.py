@@ -2,10 +2,11 @@
     """
 
 import os
+import pickle
 import numpy as np
 
 from brian2 import ms, mA, Hz, mV, ohm, defaultclock, ExplicitStateUpdater,\
-        PoissonGroup, PoissonInput
+        PoissonGroup, PoissonInput, SpikeMonitor, StateMonitor, PopulationRateMonitor
 
 from teili.building_blocks.building_block import BuildingBlock
 from teili.core.groups import Neurons, Connections
@@ -22,6 +23,7 @@ from orca_params import connection_probability, excitatory_neurons,\
     inhibitory_synapse_soma, inhibitory_synapse_dend, synapse_mean_weight,\
     mismatch_neuron_param, mismatch_synapse_param, mismatch_plastic_param,\
     inhibitory_ratio
+from monitor_params import monitor_params
 
 # Load other models
 path = os.path.expanduser("/home/pablo/git/teili")
@@ -52,7 +54,8 @@ class ORCA_WTA(BuildingBlock):
         _groups (dict): Contains all synapses and neurons of the building
             block. For convenience, keys identifying a neuronal population 'x'
             should be 'x_cells', whereas keys identifying a synapse between
-            population 'x' and 'y' should be 'x_y'.
+            population 'x' and 'y' should be 'x_y'. At the moment, options
+            available are 'pyr', 'pv', 'sst', and 'vip'.
     """
 
     def __init__(self,
@@ -68,6 +71,7 @@ class ORCA_WTA(BuildingBlock):
                  inh_soma_params=inhibitory_synapse_soma,
                  inh_dend_params=inhibitory_synapse_dend,
                  verbose=False,
+                 monitor=False,
                  noise=False):
         """ Generates building block with specified characteristics and
                 elements described by Wang et al. (2018).
@@ -95,6 +99,7 @@ class ORCA_WTA(BuildingBlock):
             inh_dend_params (dict): Dictionary which holds parameters
                 of inhibitory connections to dendritic compartments
             verbose (bool, optional): Flag to gain additional information
+            monitor (bool, optional): Flag to indicate presence of monitors
             noise (bool, optional): Flag to determine if background noise is to
                 be added to neurons. This is generated with a poisson process.
         """
@@ -103,11 +108,12 @@ class ORCA_WTA(BuildingBlock):
                                None,
                                None,
                                None,
-                               verbose)
+                               verbose,
+                               monitor)
 
         self._groups = {}
         add_populations(self._groups,
-                        group_name=name,
+                        group_name=self.name,
                         num_exc_neurons=num_exc_neurons,
                         ei_ratio=ei_ratio,
                         ratio_pv=inhibitory_ratio[layer]['pv'],
@@ -119,7 +125,7 @@ class ORCA_WTA(BuildingBlock):
                         noise=noise
                         )
         add_connections(self._groups,
-                        group_name=name,
+                        group_name=self.name,
                         verbose=verbose,
                         connectivity_params=connectivity_params,
                         exc_soma_params=exc_soma_params,
@@ -157,7 +163,7 @@ class ORCA_WTA(BuildingBlock):
                 that will be initially disconnected. Structural plasticity
                 will change those connections according to activity.
         """
-        temp_groups = {}
+        temp_conns = {}
         if plasticity == 'static':
             syn_model = static_synapse_model
         elif plasticity == 'stdp':
@@ -169,20 +175,20 @@ class ORCA_WTA(BuildingBlock):
 
         for target in targets:
             target_name = target.split('_')[0]
-            temp_groups[f'{input_name}_{target_name}'] = Connections(
+            temp_conns[f'{input_name}_{target_name}'] = Connections(
                 input_group, self._groups[target],
                 equation_builder=syn_model(),
                 method=stochastic_decay,
                 name=self.name+f'{input_name}_{target_name}_conn')
 
         # Make connections and set params
-        syn_objects = {key: val for key, val in temp_groups.items()}
+        syn_objects = {key: val for key, val in temp_conns.items()}
         for key, val in syn_objects.items():
             val.connect(p=connectivity_params[key])
             val.set_params(exc_params)
 
 
-        w_init_group = list(temp_groups.values())
+        w_init_group = list(temp_conns.values())
         if target_type=='inhibitory':
             dist_param = synapse_mean_weight['inp_i']
         else:
@@ -210,10 +216,10 @@ class ORCA_WTA(BuildingBlock):
                 g.__setattr__('w_plast', np.array(g.w_plast).astype(int))
                 g.weight = 1
 
-        generate_mismatch(list(temp_groups.values()),
+        generate_mismatch(list(temp_conns.values()),
                           mismatch_synapse_param)
         if plasticity != 'static':
-            generate_mismatch(list(temp_groups.values()),
+            generate_mismatch(list(temp_conns.values()),
                               mismatch_plastic_param)
 
         # If you want to have sparsity without structural plasticity,
@@ -263,7 +269,139 @@ class ORCA_WTA(BuildingBlock):
                                              unit='ms',
                                              reference='synapse_counter')
 
-        self._groups.update(temp_groups)
+        self._groups.update(temp_conns)
+
+    def create_monitors(self, monitor_params):
+        """ This creates monitors according to dictionary provided.
+        
+        Args:
+            monitor_params (dict): Contains information about monitors.
+                For convenience, some words MUST be present in the name of the
+                monitored group, according to what the user wants to record.
+                At the moment, for tutorials/orca_wta.py, these are:
+                'spike', 'state' (with 'cells' or 'conn'), and 'rate'.
+                This must be followed by 'x_cell' or 'conn_x_y' accordingly
+                (check class docstring for naming description).
+        """
+        for key, val in monitor_params.items():
+            if 'spike' in key:
+                self.monitors[key] = SpikeMonitor(self._groups[val['group']],
+                                                  name=self.name + key)
+            elif 'state' in key:
+                if 'cells' in key:
+                    self.monitors[key] = StateMonitor(self._groups[val['group']],
+                                                      variables=val['variables'],
+                                                      record=val['record'],
+                                                      dt=val['mon_dt'],
+                                                      name=self.name + key)
+                elif 'conn' in key:
+                    self.monitors[key] = StateMonitor(self._groups[val['group']],
+                                                      variables=val['variables'],
+                                                      record=True,
+                                                      dt=val['mon_dt'],
+                                                      name=self.name + key)
+            elif 'rate' in key:
+                self.monitors[key] = PopulationRateMonitor(self._groups[val['group']],
+                                                           name=self.name + key)
+
+    def save_data(self, monitor_params, path, block=0):
+        """ Saves monitor data to disk.
+        
+        Args:
+            monitor_params (dict): Contains information about monitors.
+                For convenience, some words MUST be present in the key of the
+                monitored group, according to what the user wants to record.
+                At the moment, for tutorials/orca_wta.py, these are:
+                'spike', 'state' (with 'cells' or 'conn'), and 'rate'.
+                This must be followed by 'x_cell' or 'conn_x_y' accordingly
+                (check class docstring for naming description).
+            block (int, optional): If saving in batches, save with batch number.
+        """
+        selected_keys = [x for x in monitor_params.keys() if 'spike' in x]
+        # TODO np.savez(outfile, **{x_name: x, y_name: y}
+        for key in selected_keys:
+            # Concatenate data from inhibitory population
+            if 'pv_cells' in key:
+                pv_times = np.array(self.monitors[key].t/ms)
+                pv_indices = np.array(self.monitors[key].i)
+            elif 'sst_cells' in key:
+                sst_times = np.array(self.monitors[key].t/ms)
+                sst_indices = np.array(self.monitors[key].i)
+                sst_indices += self._groups['pv_cells'].N
+            elif 'vip_cells' in key:
+                vip_times = np.array(self.monitors[key].t/ms)
+                vip_indices = np.array(self.monitors[key].i)
+                vip_indices += (self._groups['pv_cells'].N + self._groups['sst_cells'].N)
+            elif 'pyr_cells' in key:
+                pyr_times = np.array(self.monitors[key].t/ms)
+                pyr_indices = np.array(self.monitors[key].i)
+
+        inh_spikes_t = np.concatenate((pv_times, sst_times, vip_times))
+        inh_spikes_i = np.concatenate((pv_indices, sst_indices, vip_indices))
+        sorting_index = np.argsort(inh_spikes_t)
+        inh_spikes_t = inh_spikes_t[sorting_index]
+        inh_spikes_i = inh_spikes_i[sorting_index]
+
+        np.savez(path + f'rasters_{block}.npz',
+                 exc_spikes_t=pyr_times,
+                 exc_spikes_i=pyr_indices,
+                 inh_spikes_t=inh_spikes_t,
+                 inh_spikes_i=inh_spikes_i
+                 )
+
+        # If there are only a few samples, smoothing operation can create an array
+        # which is incompatible with array with spike times. This is then addressed
+        # before saving to disk
+        selected_keys = [x for x in monitor_params.keys() if 'rate' in x]
+        for key in selected_keys:
+            if 'pyr_cells' in key:
+                exc_rate_t = np.array(self.monitors[key].t/ms)
+                if self.monitors[key].rate:
+                    exc_rate = np.array(self.monitors[key].smooth_rate(width=10*ms)/Hz)
+                else:
+                    exc_rate = np.array(self.monitors[key].rate/Hz)
+            if 'pv_cells' in key:
+                inh_rate_t = np.array(self.monitors[key].t/ms)
+                if self.monitors[key].rate:
+                    inh_rate = np.array(self.monitors[key].smooth_rate(width=10*ms)/Hz)
+                else:
+                    inh_rate = np.array(self.monitors[key].rate/Hz)
+        # Sometimes the smoothed rate calculated on last block is not the
+        # same size as time array. In this cases, raw rate is considered. This
+        # means artifacts at the end of simulation
+        if len(exc_rate_t) != len(exc_rate):
+            exc_rate = np.array(self.monitors['rate_pyr_cells'].rate/Hz)
+            inh_rate = np.array(self.monitors['rate_pv_cells'].rate/Hz)
+        selected_keys = [x for x in monitor_params.keys() if 'state' in x]
+        for key in selected_keys:
+            if 'pyr_cells' in key:
+                Iin0 = self.monitors[key].Iin0
+                Iin1 = self.monitors[key].Iin1
+                Iin2 = self.monitors[key].Iin2
+                Iin3 = self.monitors[key].Iin3
+        np.savez(path + f'traces_{block}.npz',
+                 Iin0=Iin0, Iin1=Iin1, Iin2=Iin2, Iin3=Iin3,
+                 exc_rate_t=exc_rate_t, exc_rate=exc_rate,
+                 inh_rate_t=inh_rate_t, inh_rate=inh_rate,
+                 )
+
+        # Save targets of recurrent connections as python object
+        recurrent_ids = []
+        for row in range(self._groups['pyr_cells'].N):
+            recurrent_ids.append(list(self._groups['pyr_pyr'].j[row, :]))
+        #selected_keys = [x for x in monitor_params.keys() if 'state' in x]
+        #for key in selected_keys:
+        np.savez_compressed(path + f'matrices_{block}.npz',
+            rf=self.monitors['statemon_conn_ff_pyr'].w_plast.astype(np.uint8),
+            rfw=self.monitors['statemon_static_conn_ff_pyr'].weight.astype(np.uint8),
+            rfi=self.monitors['statemon_conn_ff_pv'].w_plast.astype(np.uint8),
+            rfwi=self.monitors['statemon_static_conn_ff_pv'].weight.astype(np.uint8),
+            rec_mem=self.monitors['statemon_conn_pyr_pyr'].w_plast.astype(np.uint8),
+            rec_ids=recurrent_ids
+            )
+        pickled_monitor = self.monitors['spikemon_pyr_cells'].get_states()
+        with open(path + f'pickled_{block}', 'wb') as f:
+            pickle.dump(pickled_monitor, f)
 
 def add_populations(_groups,
                     group_name,

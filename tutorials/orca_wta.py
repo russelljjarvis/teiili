@@ -22,7 +22,7 @@ from orca_params import connection_probability, excitatory_neurons,\
     inhibitory_neurons, excitatory_synapse_soma, excitatory_synapse_dend,\
     inhibitory_synapse_soma, inhibitory_synapse_dend, synapse_mean_weight,\
     mismatch_neuron_param, mismatch_synapse_param, mismatch_plastic_param,\
-    inhibitory_ratio
+    inhibitory_ratio, num_inputs
 from monitor_params import monitor_params
 
 # Load other models
@@ -185,7 +185,7 @@ class ORCA_WTA(BuildingBlock):
         syn_objects = {key: val for key, val in temp_conns.items()}
         for key, val in syn_objects.items():
             val.connect(p=connectivity_params[key])
-            val.set_params(exc_params)
+            val.set_params(exc_params[plasticity])
 
 
         w_init_group = list(temp_conns.values())
@@ -449,7 +449,7 @@ def add_populations(_groups,
     num_vip = num_vip if num_vip else 1
 
     pyr_cells = Neurons(num_exc_neurons,
-                        equation_builder=adapt_neuron_model(num_inputs=6), #TODO 4 when I fix input?
+                        equation_builder=adapt_neuron_model(num_inputs=num_inputs['pyr']),
                         method=stochastic_decay,
                         name=group_name+'pyr_cells',
                         verbose=verbose)
@@ -463,7 +463,7 @@ def add_populations(_groups,
                                        size=pyr_cells.N)
 
     pv_cells = Neurons(num_pv,
-                       equation_builder=adapt_neuron_model(num_inputs=5),
+                       equation_builder=adapt_neuron_model(num_inputs=num_inputs['pv']),
                        method=stochastic_decay,
                        name=group_name+'pv_cells',
                        verbose=verbose)
@@ -476,12 +476,12 @@ def add_populations(_groups,
     pv_cells.variables.add_array('normalized_activity_proxy',
                                   size=pv_cells.N)
     sst_cells = Neurons(num_sst,
-                        equation_builder=static_neuron_model(num_inputs=4),
+                        equation_builder=static_neuron_model(num_inputs=num_inputs['sst']),
                         method=stochastic_decay,
                         name=group_name+'sst_cells',
                         verbose=verbose)
     vip_cells = Neurons(num_vip,
-                        equation_builder=static_neuron_model(num_inputs=4), #TODO 3 when I fix input?
+                        equation_builder=static_neuron_model(num_inputs=num_inputs['vip']),
                         method=stochastic_decay,
                         name=group_name+'vip_cells',
                         verbose=verbose)
@@ -492,9 +492,9 @@ def add_populations(_groups,
         vip_noise_cells = PoissonInput(vip_cells, 'Vm_noise', 1, 2*Hz, 12*mV)
 
     pyr_cells.set_params(exc_cells_params)
-    pv_cells.set_params(inh_cells_params)
-    sst_cells.set_params(inh_cells_params)
-    vip_cells.set_params(inh_cells_params)
+    pv_cells.set_params(inh_cells_params['pv'])
+    sst_cells.set_params(inh_cells_params['sst'])
+    vip_cells.set_params(inh_cells_params['vip'])
 
     generate_mismatch([pyr_cells, pv_cells, sst_cells, vip_cells],
                       mismatch_neuron_param)
@@ -632,9 +632,9 @@ def add_connections(_groups,
             val.connect(p=connectivity_params[key])
 
     # Excitatory connections onto somatic compartment
-    pyr_pv_conn.set_params(exc_soma_params)
-    pyr_sst_conn.set_params(exc_soma_params)
-    pyr_vip_conn.set_params(exc_soma_params)
+    pyr_pv_conn.set_params(exc_soma_params['static'])
+    pyr_sst_conn.set_params(exc_soma_params['static'])
+    pyr_vip_conn.set_params(exc_soma_params['static'])
 
     # Excitatory connections onto dendritic compartment
     pyr_pyr_conn.set_params(exc_dend_params)

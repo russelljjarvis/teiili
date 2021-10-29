@@ -9,7 +9,7 @@ stochastic models described by Wang et al. (2018).
 """
 from brian2 import ms, mV, mA
 
-# Synapses/connections
+###### Synapses/connections
 connection_probability_HS19 = {'pyr_pyr': 0.50,
                                'pyr_pv': 0.45,
                                'pyr_sst': 0.35,
@@ -216,14 +216,25 @@ interlaminar_conn_prob = {'L23_L4': {'pyr_pyr': 0.03,
                                     'vip_sst': 0.65} #TODO
                           }
 
-excitatory_synapse_soma = {'tausyn': 5*ms,
-                           'gain_syn': 1*mA,
-                           'delay': 0*ms,
-                           'taupre': 20*ms,
-                           'taupost': 30*ms,
-                           'rand_num_bits_Apre': 4,
-                           'rand_num_bits_Apost': 4,
-                           'stdp_thres': 1
+excitatory_synapse_soma = {'static': {'tausyn': 5*ms,
+                                      'gain_syn': 1*mA,
+                                      'delay': 0*ms},
+                          'reinit': {'tausyn': 5*ms,
+                                     'gain_syn': 1*mA,
+                                     'delay': 0*ms,
+                                     'taupre': 20*ms,
+                                     'taupost': 30*ms,
+                                     'rand_num_bits_Apre': 4,
+                                     'rand_num_bits_Apost': 4,
+                                     'stdp_thres': 1},
+                           'stdp': {'tausyn': 5*ms,
+                                    'gain_syn': 1*mA,
+                                    'delay': 0*ms,
+                                    'taupre': 20*ms,
+                                    'taupost': 30*ms,
+                                    'rand_num_bits_Apre': 4,
+                                    'rand_num_bits_Apost': 4,
+                                    'stdp_thres': 1}
                            }
 
 excitatory_synapse_dend = {'tausyn': 5*ms,
@@ -254,17 +265,29 @@ synapse_mean_weight = {'e_i': 3,
                        'inp_i': 2
                        }
 
-# Neurons/populations
+###### Neurons/populations
 excitatory_neurons = {'tau': 20*ms,
                       'Vm': 3*mV,
                       'thr_max': 15*mV,
                       'Vm_noise': 0*mV
                      }
 
-inhibitory_neurons = {'tau': 20*ms,
-                      'Vm': 3*mV,
-                      'thr_max': 15*mV,
-                      'Vm_noise': 0*mV
+num_inputs = {'pyr': 4,
+              'pv': 4,
+              'sst': 3,
+              'vip': 2
+              }
+
+inhibitory_neurons = {'pv': {'tau': 20*ms,
+                             'Vm': 3*mV,
+                             'thr_max': 15*mV,
+                             'Vm_noise': 0*mV},
+                      'sst': {'tau': 20*ms,
+                              'Vm': 3*mV,
+                              'Vm_noise': 0*mV},
+                      'vip': {'tau': 20*ms,
+                              'Vm': 3*mV,
+                              'Vm_noise': 0*mV}
                      }
 
 inhibitory_ratio = {'L23': {'pv': .37,
@@ -294,7 +317,7 @@ ei_ratio = {'L23': 4,
             'L6': 6
             }
 
-# Heterogeneity
+###### Heterogeneity
 mismatch_neuron_param = {'tau': 0.1
                          }
 

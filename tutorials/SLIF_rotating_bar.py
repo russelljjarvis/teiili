@@ -31,6 +31,7 @@ from datetime import datetime
 seed(13)
 rng = np.random.default_rng(12345)
 prefs.codegen.target = "numpy"
+defaultclock.dt = 1*ms
 
 # Initialize rotating bar
 sequence_duration = 357*ms#105*ms#

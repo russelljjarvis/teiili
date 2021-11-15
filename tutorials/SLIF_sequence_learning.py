@@ -175,6 +175,7 @@ def create_monitors(groups):
 seed(13)
 rng = np.random.default_rng(12345)
 prefs.codegen.target = "numpy"
+defaultclock.dt = 1*ms
 
 # Initialize input sequence
 num_items = 4

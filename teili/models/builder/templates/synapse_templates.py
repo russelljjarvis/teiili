@@ -192,6 +192,7 @@ quantized_stochastic = {
         decay_syn = tausyn/(tausyn + dt) : 1
 
         weight                : 1
+        w_max                 : 1
         w_plast               : 1
         gain_syn              : amp
         tausyn               : second (constant)
@@ -205,6 +206,7 @@ quantized_stochastic = {
 
 quantized_stochastic_params = {
     'weight' : 1,
+    'w_max' : 15,
     'w_plast' : 1,
     'gain_syn' : 1*mA,
     'tausyn': 3*ms
@@ -499,7 +501,6 @@ quantized_stochastic_stdp = {
         decay_stdp_Apre = taupre/(taupre + dt) : 1
         decay_stdp_Apost = taupost/(taupost + dt) : 1
 
-        w_max: 1 (constant)
         A_max: 1 (constant)
         dApre: 1 (constant)
         A_gain: 1 (constant)
@@ -537,7 +538,6 @@ quantized_stochastic_stdp = {
 quantized_stochastic_stdp_params = {
     "taupre": 3 * ms,
     "taupost": 3 * ms,
-    "w_max": 15,
     "A_max": 15,
     "A_gain": 4,
     "dApre": 15,

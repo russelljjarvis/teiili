@@ -107,8 +107,8 @@ elif 'Vm' in neuron_model().keywords['model']:
         test_neurons1.tau = 10 * ms
         test_neurons2.tau = 10 * ms
         # long EPSC or big weight to allow summations
-        input_synapse.tausyn = 10*ms
-        test_synapse.tausyn = 7*ms
+        test_neurons1.tausyn = 10*ms
+        test_neurons2.tausyn = 10*ms
         input_synapse.weight = 8
         test_synapse.weight = 15
         test_neurons1.Iconst = 13.0 * mA
@@ -135,10 +135,10 @@ spikemon_test_neurons2 = SpikeMonitor(
     test_neurons2, name='spikemon_test_neurons2')
 
 statemon_input_synapse = StateMonitor(
-    input_synapse, variables='I_syn', record=True, name='statemon_input_synapse')
+    test_neurons1, variables='I', record=True, name='statemon_input_synapse')
 
 statemon_test_synapse = StateMonitor(
-    test_synapse, variables='I_syn', record=True, name='statemon_test_synapse')
+    test_neurons2, variables='I', record=True, name='statemon_test_synapse')
 
 if 'Imem' in neuron_model().keywords['model']:
     statemon_test_neurons2 = StateMonitor(test_neurons2,
@@ -206,7 +206,7 @@ Rasterplot(MyEventsModels=[spikemon_input],
            show_immediately=False)
 
 # Input synapses
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'I_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_input_synapse, ('t', 'I'))],
          MyPlotSettings=MyPlotSettings,
          x_range=[0, duration],
          title="Input synapses",
@@ -238,7 +238,7 @@ Lineplot(DataModel_to_x_and_y_attr=MyData_intermed_neurons,
          show_immediately=False)
 
 # Output synapses
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'I_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_synapse, ('t', 'I'))],
          MyPlotSettings=MyPlotSettings,
          x_range=[0, duration],
          title="Test synapses",

@@ -1,5 +1,5 @@
 from brian2.units import * 
-StochInhStdp = {'model':
+StochInhStdpSummed = {'model':
 '''
         dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
         decay_probability_syn = rand() : 1 (constant over dt)

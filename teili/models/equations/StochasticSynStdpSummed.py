@@ -44,8 +44,7 @@ StochasticSynStdpSummed = {'model':
 
         rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
         rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))
-        w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand
-_int_Apre2 <= stdp_thres), 0, w_max)
+        w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand _int_Apre2 <= stdp_thres), 0, w_max)
         Apre += dApre
         Apre = clip(Apre, 0, A_max)
         ''',
@@ -57,8 +56,7 @@ _int_Apre2 <= stdp_thres), 0, w_max)
         prev_wplast = w_plast
         rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_Apost-1))
         rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_Apost-1))
-        w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand
-_int_Apost2 <= stdp_thres), 0, w_max)
+        w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand _int_Apost2 <= stdp_thres), 0, w_max)
         Apost += dApre
         Apost = clip(Apost, 0, A_max)
         

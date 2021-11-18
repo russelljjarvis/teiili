@@ -185,19 +185,12 @@ defaultclock.dt = 1*ms in the code using this model is necessary.
 """
 quantized_stochastic = {
     'model': '''
-        dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
-        decay_probability_syn = rand() : 1 (constant over dt)
-        Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
-
-        decay_syn = tausyn/(tausyn + dt) : 1
-
         weight                : 1
         w_plast               : 1
         gain_syn              : amp
-        tausyn               : second (constant)
         ''',
         'on_pre': '''
-        I_syn += gain_syn * abs(weight) * w_plast
+        I_syn_post += (gain_syn * weight * w_plast)
         ''',
         'on_post': '''
         '''
@@ -207,7 +200,6 @@ quantized_stochastic_params = {
     'weight' : 1,
     'w_plast' : 1,
     'gain_syn' : 1*mA,
-    'tausyn': 3*ms
 }
 
 """ **Plasticity blocks**

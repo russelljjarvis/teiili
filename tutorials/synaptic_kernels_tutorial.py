@@ -28,11 +28,12 @@ from teili.models.parameters.dpi_neuron_param import parameters as neuron_model_
 from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataControllers import Lineplot
-
+from brian2 import defaultclock
 
 prefs.codegen.target = "numpy"
+defaultclock.dt = 1*ms
 
-input_timestamps = np.asarray([1, 1.5, 1.8, 2.0, 2.0, 2.3, 2.5, 3]) * ms
+input_timestamps = np.asarray([1, 2, 3, 4, 5, 6, 7, 8]) * ms
 input_indices = np.asarray([0, 1, 0, 1, 0, 1, 0, 1])
 
 input_spikegenerator1 = SpikeGeneratorGroup(2, indices=input_indices,
@@ -83,9 +84,11 @@ syn_q_stoch = Connections(input_spikegenerator2, test_neurons4,
                           name="test_syn_q_stoch", verbose=False)
 syn_q_stoch.connect(True)
 syn_q_stoch.weight = np.asarray([10, -10])
+test_neurons4.tausyn = 10*ms
 
 # Set monitors
 spikemon_inp = SpikeMonitor(input_spikegenerator1, name='spikemon_inp')
+spikemon_inp2 = SpikeMonitor(input_spikegenerator2, name='spikemon_inp2')
 statemon_syn_alpha = StateMonitor(
     syn_alpha, variables='I_syn', record=True, name='statemon_syn_alpha')
 statemon_syn_resonant = StateMonitor(
@@ -93,7 +96,7 @@ statemon_syn_resonant = StateMonitor(
 statemon_syn_dpi = StateMonitor(
     syn_dpi, variables='I_syn', record=True, name='statemon_syn_dpi')
 statemon_syn_q_stoch = StateMonitor(
-    syn_q_stoch, variables='I_syn', record=True, name='statemon_syn_q_stoch')
+    syn_q_stoch, variables='I', record=True, name='statemon_syn_q_stoch')
 
 statemon_test_neuron1 = StateMonitor(test_neurons1, variables=[
     'Iin'], record=0, name='statemon_test_neuron1')
@@ -102,19 +105,19 @@ statemon_test_neuron2 = StateMonitor(test_neurons2, variables=[
 statemon_test_neuron3 = StateMonitor(test_neurons3, variables=[
     'Iin'], record=0, name='statemon_test_neuron3')
 statemon_test_neuron4 = StateMonitor(test_neurons4, variables=[
-    'Iin'], record=0, name='statemon_test_neuron4')
+    'I'], record=0, name='statemon_test_neuron4')
 
 Net.add(input_spikegenerator1, test_neurons1, test_neurons2, test_neurons3,
         syn_alpha, syn_resonant, syn_dpi, spikemon_inp,
         statemon_syn_alpha, statemon_syn_resonant, statemon_syn_dpi,
         statemon_test_neuron1, statemon_test_neuron2, statemon_test_neuron3)
-duration = 0.010
+duration = 0.015
 Net.run(duration * second)
 
 # Run models that use a different integration method
 Net = TeiliNetwork()
 Net.add(input_spikegenerator2, test_neurons4, syn_q_stoch, statemon_syn_q_stoch,
-        statemon_test_neuron4)
+        statemon_test_neuron4, spikemon_inp2)
 Net.run(duration * second)
 
 # Visualize simulation results
@@ -256,12 +259,12 @@ Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron3, ('t', 'Iin'))],
          QtApp=app)
 
 # Quantized stochastic synapse
-data = statemon_syn_q_stoch.I_syn.T
+data = np.zeros_like(statemon_syn_q_stoch.I.T)
 data[:, 1] *= -1.
-datamodel_syn_q_stoch = StateVariablesModel(state_variable_names=['I_syn'],
+datamodel_syn_q_stoch = StateVariablesModel(state_variable_names=['I'],
                                           state_variables=[data],
                                           state_variables_times=[statemon_syn_q_stoch.t])
-Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_q_stoch, ('t_I_syn', 'I_syn'))],
+Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_q_stoch, ('t_I', 'I'))],
          MyPlotSettings=MyPlotSettings,
          x_range=(0, duration),
          y_range=None,
@@ -272,13 +275,13 @@ Lineplot(DataModel_to_x_and_y_attr=[(datamodel_syn_q_stoch, ('t_I_syn', 'I_syn')
          mainfig=win,
          subfig=p7,
          QtApp=app)
-for i, data in enumerate(np.asarray(spikemon_inp.t)):
+for i, data in enumerate(np.asarray(spikemon_inp2.t)):
     vLine = pg.InfiniteLine(pen=pg.mkPen(color=(200, 200, 255),
                                          style=QtCore.Qt.DotLine), pos=data, angle=90, movable=False,)
     p7.addItem(vLine, ignoreBounds=True)
 
 # Neuron response
-Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron4, ('t', 'Iin'))],
+Lineplot(DataModel_to_x_and_y_attr=[(statemon_test_neuron4, ('t', 'I'))],
          MyPlotSettings=MyPlotSettings,
          x_range=(0, duration),
          y_range=None,

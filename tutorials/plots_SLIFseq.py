@@ -48,10 +48,7 @@ plot_d1, plot_d2, plot_d3, plot_d4 = True, True, True, True
 
 input_t = rasters['input_t']
 input_i = rasters['input_i']
-Iin0 = traces['Iin0'][selected_cell]
-Iin1 = traces['Iin1'][selected_cell]
-Iin2 = traces['Iin2'][selected_cell]
-Iin3 = traces['Iin3'][selected_cell]
+I = traces['I'][selected_cell]
 exc_spikes_t = rasters['exc_spikes_t']
 exc_spikes_i = rasters['exc_spikes_i']
 inh_spikes_t = rasters['inh_spikes_t']
@@ -67,7 +64,7 @@ rfwi = matrices['rfwi']
 rec_mem = matrices['rec_mem']
 rec_ids = matrices['rec_ids']
 rec_w = matrices['rec_w']
-Iin_t = min(input_t)*1e-3 + np.array(range(len(Iin0)))*1e-3
+I_t = min(input_t)*1e-3 + np.array(range(len(I)))*1e-3
 del matrices
 del rasters
 del traces
@@ -92,12 +89,9 @@ if plot_d1:
     p1.setLabel('bottom', 'Time', units='s')
     p1.setLabel('left', 'Input channels')
 
-    p2 = pg.PlotWidget(title=f'I_syn from neuron {selected_cells[selected_cell]}')
+    p2 = pg.PlotWidget(title=f'I from neuron {selected_cells[selected_cell]}')
     p2.addLegend(offset=(30, 1))
-    p2.plot(Iin_t, Iin0, pen='r', name='Iin0')
-    p2.plot(Iin_t, Iin1, pen='b', name='Iin1')
-    p2.plot(Iin_t, Iin2, pen='w', name='Iin2')
-    p2.plot(Iin_t, Iin3, pen='g', name='Iin3')
+    p2.plot(I_t, I, pen='r', name='I')
     #p2.setYRange(0, 0.025)
     p2.setLabel('left', 'Membrane potential', units='A')
     p2.setLabel('bottom', 'Time', units='s')

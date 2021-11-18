@@ -1,19 +1,12 @@
 from brian2.units import * 
 StochInhStdp = {'model':
 '''
-        dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
-        decay_probability_syn = rand() : 1 (constant over dt)
-        Iin{input_number}_post = I_syn * sign(weight)                           : amp (summed)
-
-        decay_syn = tausyn/(tausyn + dt) : 1
-
         weight                : 1
         w_plast               : 1
         lfsr_max_value_syn : second
         seed_syn : second
         lfsr_init_syn : second
         gain_syn              : amp
-        tausyn               : second (constant)
         variance_th: 1 (constant)
         delta_w : 1
 
@@ -42,7 +35,7 @@ StochInhStdp = {'model':
 'on_pre':
 '''
 
-        I_syn += gain_syn * abs(weight) * w_plast
+        I_syn_post += (gain_syn * weight * w_plast)
         
         Apre += 15
         Apre = clip(Apre, 0, 15)
@@ -68,7 +61,6 @@ StochInhStdp = {'model':
 'weight' : '1',
 'w_plast' : '1',
 'gain_syn' : '1. * mamp',
-'tausyn' : '3. * msecond',
 'variance_th' : '2',
 'taupre': '20 * msecond',
 'taupost': '20 * msecond',

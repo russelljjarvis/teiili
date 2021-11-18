@@ -30,7 +30,7 @@ font = {'family': 'serif',
         'size': 16,
         }
 
-plastic_synapse_model=SynapseEquationBuilder(base_unit='QuantizedStochastic',
+plastic_synapse_model=SynapseEquationBuilder(base_unit='quantized',
                                  plasticity='quantized_stochastic_stdp',
                                  #random_generator='lfsr_syn',
                                  structural_plasticity='stochastic_counter')
@@ -58,23 +58,24 @@ for ind, spks in enumerate(post_tspikes.T):
     for j, spk in enumerate(spks.astype(int)):
         post_input[spk-1 + j*wait_time, ind] = 1
 
-ta_pre = TimedArray(pre_input, dt=defaultclock.dt)
-ta_post = TimedArray(post_input, dt=defaultclock.dt)
+tapre = TimedArray(pre_input, dt=defaultclock.dt)
+tapost = TimedArray(post_input, dt=defaultclock.dt)
 
 average_trials = 100
 average_wplast = np.zeros((average_trials, trial_duration))
 average_counter = np.zeros((average_trials, trial_duration))
 for avg_trial in range(average_trials):
-    pre_neurons = Neurons(N, model='v = ta_pre(t, i) : 1',
+    pre_neurons = Neurons(N, model='v = tapre(t, i) : 1',
                           threshold='v == 1', refractory='1*ms')
     pre_neurons.namespace.update({'tmax': tmax})
-    pre_neurons.namespace.update({'ta_pre': ta_pre})
+    pre_neurons.namespace.update({'tapre': tapre})
 
-    post_neurons = Neurons(N, model='''v = ta_post(t, i) : 1
-                                       Iin0 : amp''',
+    post_neurons = Neurons(N, model='''v = tapost(t, i) : 1
+                                       Iin0 : amp
+                                       I_syn : amp''',
                            threshold='v == 1', refractory='1*ms')
     post_neurons.namespace.update({'tmax': tmax})
-    post_neurons.namespace.update({'ta_post': ta_post})
+    post_neurons.namespace.update({'tapost': tapost})
 
     stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
     stdp_synapse = Connections(pre_neurons, post_neurons,

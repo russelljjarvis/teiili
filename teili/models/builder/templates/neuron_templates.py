@@ -428,17 +428,21 @@ q_model_template = {
         refractory_decay = (decay_rate_refrac*Vm + (1-decay_rate_refrac)*Vrest)/mV + decay_probability : 1
         decay_probability = rand() : 1 (constant over dt)
 
-        I = clip(Iin + Iconst, -15*mA, 15*mA) : amp
+        dI_syn/dt = int(clip(I_syn + Iconst, -15*mA, 15*mA)*decay_syn/mA + decay_probability_syn)*mA/second : amp
+        decay_probability_syn = rand() : 1 (constant over dt)
+        decay_syn = tausyn/(tausyn + dt) : 1
+
+        I = clip(I_syn, -15*mA, 15*mA) : amp
         decay_rate = tau/(tau + dt)                      : 1
         decay_rate_refrac = refrac_tau/(refrac_tau + dt) : 1
         refrac = Vm<Vrest                                    : boolean
 
         g_psc                : ohm    (constant) # Gain of post synaptic current
         Iconst  : amp                         # constant input current
-        Iin = Iin0        : amp
         Iin0 : amp
         Vm_noise          : volt
         tau               : second (constant)
+        tausyn               : second (constant)
         refrac_tau        : second (constant)
         refP              : second
         Vthr              : volt   (constant)
@@ -466,7 +470,8 @@ q_model_template_params = {
     'tau': 19*ms,
     'refrac_tau': 2*ms,
     'refP': 0.*ms,
-    'Vm_noise': 0*mV
+    'Vm_noise': 0*mV,
+    'tausyn': 3*ms
     }
 
 # Use lfsr to generate random numbers. Function must be added to namespace

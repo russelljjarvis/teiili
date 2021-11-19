@@ -410,6 +410,24 @@ lfsr_syn_params = {
     'lfsr_num_bits_condApost2': '4'
     }
 
+stochastic_syn_release = {
+    'model': """
+        syn_release : 1
+        """,
+    'on_pre': """
+        syn_release = int(rand()<0.8)
+        %I_syn += gain_syn * abs(weight) * w_plast * syn_release
+        %Apre = clip(Apre + dApre * syn_release, 0, A_max)
+        %w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres)*syn_release, 0, w_max)
+        """,
+    'on_post': """
+        """
+}
+
+stochastic_syn_release_params = {
+    'syn_release': 1
+}
+
 # Heterosynaptic mechanism for stochastic STDP
 stochastic_heterosynaptic = {
     'model':"""
@@ -689,6 +707,7 @@ plasticity_models = {
 synaptic_equations = {
     'activity': activity,
     'stdgm': stdgm,
+    'stochastic_syn_release': stochastic_syn_release,
     'stochastic_heterosynaptic': stochastic_heterosynaptic,
     'stochastic_reduced_symmetric': stochastic_reduced_symmetric,
     'lfsr_syn': lfsr_syn
@@ -752,6 +771,7 @@ quantized_stochastic_parameters = {
     'quantized': quantized_stochastic_params,
     'non_plastic': none_params,
     'quantized_stochastic_stdp': quantized_stochastic_stdp_params,
+    'stochastic_syn_release': stochastic_syn_release_params,
     'stochastic_heterosynaptic': stochastic_heterosynaptic_params,
     'stochastic_reduced_symmetric': none_params,
     'lfsr_syn': lfsr_syn_params,

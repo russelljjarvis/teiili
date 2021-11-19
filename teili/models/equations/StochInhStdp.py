@@ -35,6 +35,7 @@ StochInhStdp = {'model':
 'on_pre':
 '''
 
+<<<<<<< HEAD
         I_syn_post += (gain_syn * weight * w_plast)
         
         Apre += 15

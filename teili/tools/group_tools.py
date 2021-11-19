@@ -113,7 +113,7 @@ def add_group_params_re_init(groups,
             raise
             import sys;sys.exit(1)
 
-        if distribution == 'gaussian':
+        if distribution == 'normal':
             group._tags.update({'re_init_{}'.format(variable) : "Normal"})
         elif distribution == 'gamma':
             group._tags.update({'re_init_{}'.format(variable) : "Gamma"})

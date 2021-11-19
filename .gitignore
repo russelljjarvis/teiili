@@ -117,9 +117,6 @@ ENV/
 *.gif
 *.svg
 
-teili/models/equations/*
-!teili/models/equations/Stoch*.py
-.vscode
 core
 
 #include documentation figures

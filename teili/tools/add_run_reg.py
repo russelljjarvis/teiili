@@ -197,24 +197,24 @@ def add_activity_proxy(group, buffer_size, decay):
     group.buffer_size = buffer_size
     group.buffer_pointer = -1
     group.variables.add_array('membrane_buffer', size=(group.N, buffer_size))
-    group.variables.add_array('kernel', size=(group.N, buffer_size))
+    group.variables.add_array('kernel_adp', size=(group.N, buffer_size))
     group.variables.add_array('old_max', size=1)
     group.membrane_buffer = np.nan
 
-    mask = np.zeros(np.shape(group.kernel)[1]) * np.nan
-    for jj in range(np.shape(group.kernel)[1]):
-        mask[jj] = np.exp((jj - (np.shape(group.kernel)[1] - 1)) / decay)
-    for ii in range(np.shape(group.kernel)[0]):
-        ind = (np.ones(np.shape(group.kernel)[1]) * ii).astype(int)
-        group.kernel.set_with_index_array(
+    mask = np.zeros(np.shape(group.kernel_adp)[1]) * np.nan
+    for jj in range(np.shape(group.kernel_adp)[1]):
+        mask[jj] = np.exp((jj - (np.shape(group.kernel_adp)[1] - 1)) / decay)
+    for ii in range(np.shape(group.kernel_adp)[0]):
+        ind = (np.ones(np.shape(group.kernel_adp)[1]) * ii).astype(int)
+        group.kernel_adp.set_with_index_array(
             item=ind, value=mask, check_units=False)
 
     if 'Imem' in group.equations.names:
         group.run_regularly('''buffer_pointer = (buffer_pointer + 1) % buffer_size;\
-        activity_proxy = get_activity_proxy(Imem, buffer_pointer, membrane_buffer, kernel)''', dt=1 * ms)
+        activity_proxy = get_activity_proxy(Imem, buffer_pointer, membrane_buffer, kernel_adp)''', dt=1 * ms)
     else:
         group.run_regularly('''buffer_pointer = (buffer_pointer + 1) % buffer_size;\
-        activity_proxy = get_activity_proxy(Vm, buffer_pointer, membrane_buffer, kernel)''', dt=1 * ms)
+        activity_proxy = get_activity_proxy(Vm, buffer_pointer, membrane_buffer, kernel_adp)''', dt=1 * ms)
 
     group.run_regularly(
         '''old_max = max_value_update(activity_proxy, old_max)''', dt=5 * ms)

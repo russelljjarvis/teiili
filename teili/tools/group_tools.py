@@ -159,7 +159,6 @@ def add_group_param_init(groups, variable, dist_param, scale,
     for group in groups:
         group.namespace.update({'dist_param': dist_param})
         group.namespace.update({'scale': scale})
-        params = group.__getattr__(variable)
 
         if type(group) == Connections:
             size=len(group)

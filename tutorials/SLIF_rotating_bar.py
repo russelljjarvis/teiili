@@ -17,7 +17,9 @@ from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
         permutation_from_rate, load_merge_multiple, recorded_bar_testbench
 
 from orca_wta import ORCA_WTA
-from orca_params import excitatory_synapse_dend, excitatory_synapse_soma
+from orca_params import excitatory_synapse_dend, excitatory_synapse_soma,\
+        ei_ratio, exc_pop_proportion
+from monitor_params import monitor_params, selected_cells
 
 import sys
 import pickle
@@ -25,156 +27,11 @@ import os
 from datetime import datetime
 
 
-#############
-# Utils functions
-def save_data():
-    # Concatenate data from inhibitory population
-    pv_times = np.array(monitors['spikemon_pv_neurons']['monitor'].t/ms)
-    pv_indices = np.array(monitors['spikemon_pv_neurons']['monitor'].i)
-    sst_times = np.array(monitors['spikemon_sst_neurons']['monitor'].t/ms)
-    sst_indices = np.array(monitors['spikemon_sst_neurons']['monitor'].i)
-    sst_indices += orca._groups['pv_cells'].N
-    vip_times = np.array(monitors['spikemon_vip_neurons']['monitor'].t/ms)
-    vip_indices = np.array(monitors['spikemon_vip_neurons']['monitor'].i)
-    vip_indices += (orca._groups['pv_cells'].N + orca._groups['sst_cells'].N)
-
-    inh_spikes_t = np.concatenate((pv_times, sst_times, vip_times))
-    inh_spikes_i = np.concatenate((pv_indices, sst_indices, vip_indices))
-    sorting_index = np.argsort(inh_spikes_t)
-    inh_spikes_t = inh_spikes_t[sorting_index]
-    inh_spikes_i = inh_spikes_i[sorting_index]
-
-    np.savez(path + f'rasters_{block}.npz',
-             input_t=np.array(monitors['spikemon_seq_neurons']['monitor'].t/ms),
-             input_i=np.array(monitors['spikemon_seq_neurons']['monitor'].i),
-             exc_spikes_t=np.array(monitors['spikemon_exc_neurons']['monitor'].t/ms),
-             exc_spikes_i=np.array(monitors['spikemon_exc_neurons']['monitor'].i),
-             inh_spikes_t=inh_spikes_t,
-             inh_spikes_i=inh_spikes_i,
-             )
-
-    # If there are only a few samples, smoothing operation can create an array
-    # with is incompatible with array with spike times. This is then addressed
-    # before saving to disk
-    exc_rate_t = np.array(monitors['rate_exc_neurons']['monitor'].t/ms)
-    if monitors['rate_exc_neurons']['monitor'].rate:
-        exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].smooth_rate(width=10*ms)/Hz)
-    else:
-        exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].rate/Hz)
-    inh_rate_t = np.array(monitors['rate_inh_neurons']['monitor'].t/ms)
-    if monitors['rate_inh_neurons']['monitor'].rate:
-        inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].smooth_rate(width=10*ms)/Hz)
-    else:
-        inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].rate/Hz)
-    if len(exc_rate_t) != len(exc_rate):
-        exc_rate = np.array(monitors['rate_exc_neurons']['monitor'].rate/Hz)
-        inh_rate = np.array(monitors['rate_inh_neurons']['monitor'].rate/Hz)
-    np.savez(path + f'traces_{block}.npz',
-             Iin0=monitors['statemon_cells']['monitor'].Iin0,
-             Iin1=monitors['statemon_cells']['monitor'].Iin1,
-             Iin2=monitors['statemon_cells']['monitor'].Iin2,
-             Iin3=monitors['statemon_cells']['monitor'].Iin3,
-             exc_rate_t=exc_rate_t, exc_rate=exc_rate,
-             inh_rate_t=inh_rate_t, inh_rate=inh_rate,
-             )
-
-    # Save targets of recurrent connections as python object
-    recurrent_ids = []
-    recurrent_weights = []
-    for row in range(num_exc):
-        # TODO no need for weights if now there is monitor (also on load and merge on utils)
-        recurrent_weights.append(list(orca._groups['pyr_pyr'].w_plast[row, :]))
-        recurrent_ids.append(list(orca._groups['pyr_pyr'].j[row, :]))
-    np.savez_compressed(path + f'matrices_{block}.npz',
-        rf=monitors['statemon_ffe']['monitor'].w_plast.astype(np.uint8),
-        rfw=monitors['reinit_conn_e']['monitor'].weight.astype(np.uint8),
-        rfi=monitors['statemon_ffi']['monitor'].w_plast.astype(np.uint8),
-        rfwi=monitors['reinit_conn_i']['monitor'].weight.astype(np.uint8),
-        rec_mem=monitors['statemon_rec']['monitor'].w_plast.astype(np.uint8),
-        rec_ids=recurrent_ids, rec_w=recurrent_weights
-        )
-    pickled_monitor = monitors['spikemon_exc_neurons']['monitor'].get_states()
-    with open(path + f'pickled_{block}', 'wb') as f:
-        pickle.dump(pickled_monitor, f)
-
-
-def create_monitors():
-    mon_dt = 500*ms
-    monitors = {'spikemon_exc_neurons': {'group': 'pyr_cells',
-                                         'monitor': None},
-                'spikemon_pv_neurons': {'group': 'pv_cells',
-                                        'monitor': None},
-                'spikemon_sst_neurons': {'group': 'sst_cells',
-                                         'monitor': None},
-                'spikemon_vip_neurons': {'group': 'vip_cells',
-                                         'monitor': None},
-                'spikemon_seq_neurons': {'group': 'relay_cells',
-                                         'monitor': None},
-                'statemon_cells': {'group': 'pyr_cells',
-                                    'variable': ['Iin0', 'Iin1', 'Iin2', 'Iin3'],
-                                    'monitor': None},
-                'statemon_ffe': {'group': 'ff_pyr',
-                                 'variable': ['w_plast'],
-                                 'monitor': None},
-                'reinit_conn_e': {'group': 'ff_pyr',
-                                 'variable': ['weight'],
-                                 'monitor': None},
-                'statemon_ffi': {'group': 'ff_pv',
-                                 'variable': ['w_plast'],
-                                 'monitor': None},
-                'reinit_conn_i': {'group': 'ff_pv',
-                                 'variable': ['weight'],
-                                 'monitor': None},
-                'statemon_rec': {'group': 'pyr_pyr',
-                                 'variable': ['w_plast'],
-                                 'monitor': None},
-                'rate_exc_neurons': {'group': 'pyr_cells',
-                                     'monitor': None},
-                'rate_inh_neurons': {'group': 'pv_cells',
-                                     'monitor': None}}
-
-    for key, val in monitors.items():
-        if 'spike' in key:
-            try:
-                monitors[key]['monitor'] = SpikeMonitor(orca._groups[val['group']],
-                                                        name=key)
-            except KeyError:
-                print(val['group'] + ' added after exception')
-                monitors[key]['monitor'] = SpikeMonitor(eval(val['group']),
-                                                        name=key)
-        elif 'state' in key:
-            if 'cells' in key:
-                monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
-                                                        variables=val['variable'],
-                                                        record=selected_cells,
-                                                        name=key)
-            else:  # Connections
-                monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
-                                                        variables=val['variable'],
-                                                        record=True,
-                                                        dt=mon_dt,
-                                                        name=key)
-        elif 'rate' in key:
-            monitors[key]['monitor'] = PopulationRateMonitor(orca._groups[val['group']],
-                                                             name=key)
-        elif 'reinit' in key:
-            if re_init_dt is None:
-                temp_dt = sim_duration - 1*ms  # Gets only one sample from end of simulation
-            else:
-                temp_dt = re_init_dt + 1*ms  # Tries to avoid missing update by +1
-            monitors[key]['monitor'] = StateMonitor(orca._groups[val['group']],
-                                                    variables=val['variable'],
-                                                    record=True,
-                                                    dt=temp_dt,
-                                                    name=key)
-
-    return monitors
-
-
 # Initialize simulation preferences
 seed(13)
 rng = np.random.default_rng(12345)
 prefs.codegen.target = "numpy"
+defaultclock.dt = 1*ms
 
 # Initialize rotating bar
 sequence_duration = 357*ms#105*ms#
@@ -200,11 +57,11 @@ input_times = testbench_stim.times * ms
 training_duration = np.max(input_times) - testing_duration
 sim_duration = input_times[-1]
 # Convert input into neuron group (necessary for STDP compatibility)
-relay_cells = neuron_group_from_spikes(num_channels,
-                                       defaultclock.dt,
-                                       sim_duration,
-                                       spike_indices=input_indices,
-                                       spike_times=input_times)
+ff_cells = neuron_group_from_spikes(num_channels,
+                                    defaultclock.dt,
+                                    sim_duration,
+                                    spike_indices=input_indices,
+                                    spike_times=input_times)
 
 # Or alternatively send it to an input layer
 # TODO organize it somewhere else
@@ -213,12 +70,12 @@ relay_cells = neuron_group_from_spikes(num_channels,
 #from teili.models.synapse_models import QuantStochSyn as static_synapse_model
 #stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 #input_cells = SpikeGeneratorGroup(num_channels, input_indices, input_times)
-#relay_cells = Neurons(num_channels,
+#ff_cells = Neurons(num_channels,
 #                      equation_builder=static_neuron_model(num_inputs=1),
 #                      method=stochastic_decay,
-#                      name='relay_cells',
+#                      name='ff_cells',
 #                      verbose=True)
-#s_inp_exc = Connections(input_cells, relay_cells,
+#s_inp_exc = Connections(input_cells, ff_cells,
 #                        equation_builder=static_synapse_model(),
 #                        method=stochastic_decay,
 #                        name='s_inp_exc')
@@ -227,20 +84,21 @@ relay_cells = neuron_group_from_spikes(num_channels,
 
 num_exc = 49
 Net = TeiliNetwork()
-orca = ORCA_WTA(num_exc_neurons=num_exc,
-    ratio_pv=1, ratio_sst=0.02, ratio_vip=0.02)
+layer='L4'
+orca = ORCA_WTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
+                ei_ratio=ei_ratio[layer],
+                layer=layer,
+                monitor=True)
 re_init_dt = None#60000*ms#
-orca.add_input(relay_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
+orca.add_input(ff_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
     sparsity=.3, re_init_dt=re_init_dt)
-orca.add_input(relay_cells, 'ff', ['pv_cells'],#, 'sst_cells'],
+orca.add_input(ff_cells, 'ff', ['pv_cells'],#, 'sst_cells'],
     'static', 'inhibitory', sparsity=.3, re_init_dt=re_init_dt)
 
 # Prepare for saving data
 date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
 os.mkdir(path)
-selected_cells = rng.choice(range(orca._groups['pv_cells'].N),
-                            int(orca._groups['pv_cells'].N*.4), replace=False)
 Metadata = {'time_step': defaultclock.dt,
             'num_exc': num_exc,
             'num_pv': orca._groups['pv_cells'].N,
@@ -256,7 +114,7 @@ with open(path+'metadata', 'wb') as f:
 
 ##################
 # Setting up monitors
-monitors = create_monitors()
+orca.create_monitors(monitor_params)
 
 # Temporary monitors
 statemon_net_current = StateMonitor(orca._groups['pyr_cells'],
@@ -268,13 +126,12 @@ statemon_net_current2 = StateMonitor(orca._groups['pv_cells'],
 statemon_net_current3 = StateMonitor(orca._groups['sst_cells'],
     variables=['Iin'], record=True,
     name='statemon_net_current3')
-statemon_rate4 = SpikeMonitor(relay_cells, name='input_spk')
+spikemon_input = SpikeMonitor(ff_cells, name='input_spk')
 
 # Training
-# TODO remove things here that should go somewhere else
 #statemon_rate2 = SpikeMonitor(input_cells, name='input_cells')
-Net.add(orca, relay_cells, [x['monitor'] for x in monitors.values()])#, input_cells, s_inp_exc)
-Net.add(statemon_net_current, statemon_net_current2, statemon_net_current3, statemon_rate4)
+Net.add(orca, ff_cells)#, s_inp_exc)
+Net.add(statemon_net_current, statemon_net_current2, statemon_net_current3, spikemon_input)
 
 training_blocks = 10
 remainder_time = int(np.around(training_duration/defaultclock.dt)
@@ -284,22 +141,22 @@ for block in range(training_blocks):
                          / training_blocks) * defaultclock.dt
     Net.run(block_duration, report='stdout', report_period=100*ms)
     # Free up memory
-    save_data()
+    orca.save_data(monitor_params, path, block)
 
     # Reinitialization. Remove first so obj reference is not lost
-    Net.remove([x['monitor'] for x in monitors.values()])
-    del monitors
-    monitors = create_monitors()
-    Net.add([x['monitor'] for x in monitors.values()])
+    Net.remove([x for x in orca.monitors.values()])
+    orca.monitors = {}
+    orca.create_monitors(monitor_params)
+    Net.add([x for x in orca.monitors.values()])
 
 if remainder_time != 0:
     block += 1
     Net.run(remainder_time, report='stdout', report_period=100*ms)
-    save_data()
-    Net.remove([x['monitor'] for x in monitors.values()])
-    del monitors
-    monitors = create_monitors()
-    Net.add([x['monitor'] for x in monitors.values()])
+    orca.save_data(monitor_params, path, block)
+    Net.remove([x for x in orca.monitors.values()])
+    orca.monitors = {}
+    orca.create_monitors(monitor_params)
+    Net.add([x for x in orca.monitors.values()])
 
 # Testing network
 if testing_duration:
@@ -314,7 +171,7 @@ if testing_duration:
     orca._groups['ff_pv'].weight = 0
     orca._groups['ff_sst'].weight = 0
     Net.run(testing_duration, report='stdout', report_period=100*ms)
-    save_data()
+    orca.save_data(monitor_params, path, block)
 
 # Recover data pickled from monitor
 spikemon_exc_neurons = load_merge_multiple(path, 'pickled*')
@@ -335,6 +192,11 @@ neu_rates = neuron_rate(spikemon_exc_neurons, kernel_len=10*ms,
 permutation_ids = permutation_from_rate(neu_rates)
 
 # Save data
+np.savez(path+f'input_raster.npz',
+         input_t=np.array(spikemon_input.t/ms),
+         input_i=np.array(spikemon_input.i)
+        )
+
 np.savez(path+f'permutation.npz',
          ids = permutation_ids
         )

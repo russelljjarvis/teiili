@@ -509,7 +509,6 @@ quantized_stochastic_stdp = {
         decay_stdp_Apre = taupre/(taupre + dt) : 1
         decay_stdp_Apost = taupost/(taupost + dt) : 1
 
-        w_max: 1 (constant)
         A_max: 1 (constant)
         dApre: 1 (constant)
         A_gain: 1 (constant)
@@ -547,7 +546,6 @@ quantized_stochastic_stdp = {
 quantized_stochastic_stdp_params = {
     "taupre": 3 * ms,
     "taupost": 3 * ms,
-    "w_max": 15,
     "A_max": 15,
     "A_gain": 4,
     "dApre": 15,

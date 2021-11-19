@@ -107,7 +107,12 @@ class NeuronEquationBuilder():
             try:
                 modes[base_unit]
                 for key, value in kwargs.items():
-                    current_equation_sets[value]
+                    if base_unit == 'current':
+                        current_equation_sets[value]
+                    if base_unit == 'voltage':
+                        voltage_equation_sets[value]
+                    if base_unit == 'quantized':
+                        quantized_equation_sets[value]
 
             except KeyError as e:
                 print(ERRValue)

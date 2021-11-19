@@ -3,6 +3,7 @@ StochInhStdp = {'model':
 '''
         weight                : 1
         w_plast               : 1
+        w_max                 : 1
         lfsr_max_value_syn : second
         seed_syn : second
         lfsr_init_syn : second
@@ -35,7 +36,6 @@ StochInhStdp = {'model':
 'on_pre':
 '''
 
-<<<<<<< HEAD
         I_syn_post += (gain_syn * weight * w_plast)
         
         Apre += 15
@@ -43,7 +43,7 @@ StochInhStdp = {'model':
         rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
         rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))
         delta_w  = 1 * sign(Apost - variance_th) * int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < abs(Apost - variance_th))*int(rand_int_Apre2 <= stdp_thres)
-        w_plast = clip(w_plast + delta_w, 0, 31)
+        w_plast = clip(w_plast + delta_w, 0, w_max)
          ''',
 'on_post':
 '''
@@ -52,7 +52,7 @@ StochInhStdp = {'model':
         rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_Apost-1))
         rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_Apost-1))
         delta_w  = 1 * int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand_int_Apost2 <= stdp_thres)
-        w_plast = clip(w_plast + delta_w, 0, 31)
+        w_plast = clip(w_plast + delta_w, 0, w_max)
 
         
          

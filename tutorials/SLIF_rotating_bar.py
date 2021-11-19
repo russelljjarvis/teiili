@@ -17,9 +17,8 @@ from SLIF_utils import neuron_rate, rate_correlations, ensemble_convergence,\
         permutation_from_rate, load_merge_multiple, recorded_bar_testbench
 
 from orca_wta import ORCA_WTA
-from orca_params import excitatory_synapse_dend, excitatory_synapse_soma,\
-        ei_ratio, exc_pop_proportion
 from monitor_params import monitor_params, selected_cells
+from orca_params import ConnectionDescriptor
 
 import sys
 import pickle
@@ -85,15 +84,17 @@ ff_cells = neuron_group_from_spikes(num_channels,
 num_exc = 49
 Net = TeiliNetwork()
 layer='L4'
-orca = ORCA_WTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
-                ei_ratio=ei_ratio[layer],
-                layer=layer,
+path = '/Users/Pablo/git/teili/'
+conn_desc = ConnectionDescriptor(layer, path)
+# TODO not working with altadp
+conn_desc.intra_plast['sst_pv'] = 'static'
+conn_desc.update_params()
+orca = ORCA_WTA(layer=layer,
+                conn_params=conn_desc,
                 monitor=True)
 re_init_dt = None#60000*ms#
-orca.add_input(ff_cells, 'ff', ['pyr_cells'], 'reinit', 'excitatory',
-    sparsity=.3, re_init_dt=re_init_dt)
-orca.add_input(ff_cells, 'ff', ['pv_cells'],#, 'sst_cells'],
-    'static', 'inhibitory', sparsity=.3, re_init_dt=re_init_dt)
+orca.add_input(ff_cells, 'ff', ['pyr_cells'])
+orca.add_input(ff_cells, 'ff', ['pv_cells'])
 
 # Prepare for saving data
 date_time = datetime.now()
@@ -121,7 +122,7 @@ statemon_net_current = StateMonitor(orca._groups['pyr_cells'],
     variables=['Iin', 'Iin0', 'Iin1', 'Iin2', 'Iin3', 'I', 'Vm'], record=True,
     name='statemon_net_current')
 statemon_net_current2 = StateMonitor(orca._groups['pv_cells'],
-    variables=['normalized_activity_proxy', 'Iin'], record=True,
+    variables=['Iin'], record=True,
     name='statemon_net_current2')
 statemon_net_current3 = StateMonitor(orca._groups['sst_cells'],
     variables=['Iin'], record=True,

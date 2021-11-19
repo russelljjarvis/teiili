@@ -90,8 +90,8 @@ class ORCA_WTA(BuildingBlock):
                   input_group,
                   source_name,
                   targets,
-                  syn_types,
-                  connectivities,
+                  syn_types=conn_desc.input_plast,
+                  connectivities=conn_desc.input_prob,
                   conn_params=conn_desc):
         """ This functions add an input group and connections to the building
             block.
@@ -220,13 +220,9 @@ class ORCA_WTA(BuildingBlock):
         selected_keys = [x for x in monitor_params.keys() if 'state' in x]
         for key in selected_keys:
             if 'pyr_cells' in key:
-                Iin0 = self.monitors[key].Iin0
-                Iin1 = self.monitors[key].Iin1
-                Iin2 = self.monitors[key].Iin2
-                Iin3 = self.monitors[key].Iin3
+                I = self.monitors[key].I
         np.savez(path + f'traces_{block}.npz',
-                 Iin0=Iin0, Iin1=Iin1, Iin2=Iin2, Iin3=Iin3,
-                 exc_rate_t=exc_rate_t, exc_rate=exc_rate,
+                 I=I, exc_rate_t=exc_rate_t, exc_rate=exc_rate,
                  inh_rate_t=inh_rate_t, inh_rate=inh_rate,
                  )
 
@@ -390,19 +386,20 @@ def add_connections(connection_ids,
         # If you want to have sparsity without structural plasticity,
         # set the desired connection probability only
         if syn_type == 'reinit':
-            for neu in range(self._groups[target_name].N):
+            for neu in range(_groups[target+'_cells'].N):
                 ffe_zero_w = np.random.choice(
-                    input_group.N,
-                    int(input_group.N * conn_params.input_prob[conn_id]),
+                    external_input.N,
+                    int(external_input.N * conn_params.input_prob[conn_id]),
                     replace=False)
                 temp_conns[conn_id].weight[ffe_zero_w, neu] = 0
                 temp_conns[conn_id].w_plast[ffe_zero_w, neu] = 0
 
+            # TODO for reinit_var in conn_params.reinit_vars[conn_id]
             add_group_params_re_init(groups=[temp_conns[conn_id]],
                                      variable='w_plast',
                                      re_init_variable='re_init_counter',
                                      re_init_threshold=1,
-                                     re_init_dt=conn_params.reinit_vars[conn_id],
+                                     re_init_dt=conn_params.reinit_vars[conn_id]['re_init_dt'],
                                      dist_param=3,
                                      scale=1,
                                      distribution='gamma',
@@ -414,22 +411,23 @@ def add_connections(connection_ids,
                                      variable='weight',
                                      re_init_variable='re_init_counter',
                                      re_init_threshold=1,
-                                     re_init_dt=conn_params.reinit_vars[conn_id],
+                                     re_init_dt=conn_params.reinit_vars[conn_id]['re_init_dt'],
                                      distribution='deterministic',
                                      const_value=1,
                                      reference='synapse_counter')
-            add_group_params_re_init(groups=[temp_conns[conn_id]],
-                                     variable='tausyn',
-                                     re_init_variable='re_init_counter',
-                                     re_init_threshold=1,
-                                     re_init_dt=conn_params.reinit_vars[conn_id],
-                                     dist_param=5.5,
-                                     scale=1,
-                                     distribution='normal',
-                                     clip_min=4,
-                                     clip_max=7,
-                                     variable_type='int',
-                                     unit='ms',
-                                     reference='synapse_counter')
+            # TODO error when usinng below. Ditch tausyn reinit?
+            #add_group_params_re_init(groups=[temp_conns[conn_id]],
+            #                         variable='tausyn',
+            #                         re_init_variable='re_init_counter',
+            #                         re_init_threshold=1,
+            #                         re_init_dt=conn_params.reinit_vars[conn_id]['re_init_dt'],
+            #                         dist_param=5.5,
+            #                         scale=1,
+            #                         distribution='normal',
+            #                         clip_min=4,
+            #                         clip_max=7,
+            #                         variable_type='int',
+            #                         unit='ms',
+            #                         reference='synapse_counter')
 
     _groups.update(temp_conns)

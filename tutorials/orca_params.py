@@ -285,97 +285,83 @@ syn_base_vals = {
             'gain_syn': 1*mA,
             'weight': 3,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'ff_pv': {
             'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'ff_sst': {
             'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'ff_vip': {
             'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'pyr_pyr': {
             'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 1,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 4*ms},
         'pyr_pv': {
             'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,# 1,#TODO sharp test
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'pyr_sst': {
             'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,# 1,#TODO sharp test
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'pyr_vip': {
             'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,# 1,#TODO sharp test
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'pv_pyr': {
             'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -2,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'pv_pv': {
             'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -1,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'sst_pyr': {
             'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -2,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'sst_pv': {
             'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -2,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'sst_vip': {
             'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -1,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'delay': 0*ms},
         'vip_sst': {
             'tausyn': 10*ms,
             'weight': -1,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
             'gain_syn': 1*mA,
             'delay': 0*ms},
         },
@@ -404,7 +390,7 @@ syn_base_vals = {
             'rand_num_bits_Apost': 4,
             'weight': -1,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
+            'w_max': 15,
             'stdp_thres': 1},
         'sst_pyr': {
             'tausyn': 10*ms,
@@ -416,7 +402,7 @@ syn_base_vals = {
             'rand_num_bits_Apost': 4,
             'weight': -1,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
+            'w_max': 15,
             'stdp_thres': 1},
         },
     'adp': {
@@ -510,60 +496,60 @@ syn_base_vals = {
 syn_sample_vars = {
     'static': {
         'ff_pyr': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'ff_pv': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'ff_sst': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'ff_vip': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'pyr_pyr': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'delay', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': 8},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'pyr_pv': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'pyr_sst': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'pyr_vip': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'pv_pyr': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'pv_pv': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'sst_pv': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'sst_pyr': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'sst_vip': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'vip_sst': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': 'w_max'},
+            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
             {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         },
@@ -592,9 +578,6 @@ syn_sample_vars = {
     'altadp': {
         'sst_pv': [
             {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1, 'max': 'w_max'},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ]
         },
     'stdp': {

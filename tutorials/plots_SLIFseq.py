@@ -47,8 +47,8 @@ matrices = load_merge_multiple(data_folder, 'matrices*', mode='numpy',
     allow_pickle=True)
 plot_d1, plot_d2, plot_d3, plot_d4 = True, True, True, True
 
-input_t = rasters['input_t']
-input_i = rasters['input_i']
+input_t = input_raster['input_t']
+input_i = input_raster['input_i']
 I = traces['I'][selected_cell]
 exc_spikes_t = rasters['exc_spikes_t']
 exc_spikes_i = rasters['exc_spikes_i']
@@ -64,7 +64,6 @@ rfi = matrices['rfi']
 rfwi = matrices['rfwi']
 rec_mem = matrices['rec_mem']
 rec_ids = matrices['rec_ids']
-rec_w = matrices['rec_w']
 I_t = min(input_t)*1e-3 + np.array(range(len(I)))*1e-3
 del matrices
 del rasters

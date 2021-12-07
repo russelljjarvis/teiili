@@ -29,6 +29,7 @@ from teili.tools.visualizer.DataViewers import PlotSettings
 from teili.tools.visualizer.DataModels import StateVariablesModel
 from teili.tools.visualizer.DataControllers import Lineplot
 from brian2 import defaultclock
+from teili.tools.misc import DEFAULT_FUNCTIONS
 
 prefs.codegen.target = "numpy"
 defaultclock.dt = 1*ms

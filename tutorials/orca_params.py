@@ -18,7 +18,6 @@ import os
 import copy
 
 from brian2 import ms, mV, mA
-from brian2 import DEFAULT_FUNCTIONS
 import numpy as np
 
 from teili.models.neuron_models import QuantStochLIF as static_neuron_model
@@ -26,8 +25,6 @@ from teili.models.synapse_models import QuantStochSyn as static_synapse_model
 from teili.models.synapse_models import QuantStochSynStdp as stdp_synapse_model
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-
-from SLIF_utils import stochastic_decay, deterministic_decay
 
 # Dictionaries used as Lookup table to construct descriptor
 syn_input_prob = {
@@ -1042,5 +1039,3 @@ conn_desc = ConnectionDescriptor(layer, path)
 pop_desc = PopulationDescriptor(layer, path)
 pop_desc.filter_params()
 conn_desc.filter_params()
-DEFAULT_FUNCTIONS.update({'stochastic_decay': stochastic_decay,
-                          'deterministic_decay': deterministic_decay})

@@ -12,7 +12,8 @@ from teili.core.groups import Neurons, Connections
 from teili.tools.group_tools import add_group_activity_proxy,\
     add_group_params_re_init, add_group_param_init
 
-from orca_params import conn_desc, pop_desc, DEFAULT_FUNCTIONS
+from orca_params import conn_desc, pop_desc
+from teili.tools.misc import DEFAULT_FUNCTIONS
 from SLIF_run_regs import add_alt_activity_proxy
 from monitor_params import monitor_params
 

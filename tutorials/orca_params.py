@@ -3,19 +3,22 @@ Created on Mon May 03 2021
 
 @author=pabloabur
 
-This file contains parameters of the building block related to quantized
-stochastic models described by Wang et al. (2018). The dictionaries provided
-below are the usual values for all connections and groups used. The final
-descriptor will filter values according to layer and plasticity rules, so
+This file contains main parameters and definitions of the building block
+related to quantized stochastic models described by Wang et al. (2018).
+The dictionaries provided below represent motifs for connections and groups.
+The descriptor will filter values according to layer and plasticity rules, so
 that scaling up is more modular and (hopefully) more organized. Therefore,
-change dictionaries below if you want a different motif and let the class
-build the descriptor. Note that we chose to be explicit, so there is a lot
-of variables.
-
+global dictionaries below represent motifs that will be selected according to
+laminar and plasticity options provided. Parameters that require fine
+tunning can be used with filter_params methods of classes below.
+Note that we chose to be explicit, so there are a lot of variables. The final
+descriptor however contains only the desired parameters from motifs.
 """
 import os
+import copy
 
 from brian2 import ms, mV, mA
+from brian2 import DEFAULT_FUNCTIONS
 import numpy as np
 
 from teili.models.neuron_models import QuantStochLIF as static_neuron_model
@@ -24,8 +27,7 @@ from teili.models.synapse_models import QuantStochSynStdp as stdp_synapse_model
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
 
-MAX_WEIGHT = 2**4 - 1
-MAX_TAU = 2**5 - 1
+from SLIF_utils import stochastic_decay, deterministic_decay
 
 # Dictionaries used as Lookup table to construct descriptor
 syn_input_prob = {
@@ -281,85 +283,72 @@ interlaminar_conn_prob = {
 syn_base_vals = {
     'static': {
         'ff_pyr': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,
             'w_plast': 1,
             'delay': 0*ms},
         'ff_pv': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,
             'w_plast': 1,
             'delay': 0*ms},
         'ff_sst': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,
             'w_plast': 1,
             'delay': 0*ms},
         'ff_vip': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 3,
             'w_plast': 1,
             'delay': 0*ms},
         'pyr_pyr': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'weight': 1,
             'w_plast': 1,
             'delay': 4*ms},
         'pyr_pv': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
-            'weight': 3,# 1,#TODO sharp test
+            'weight': 3,
             'w_plast': 1,
             'delay': 0*ms},
         'pyr_sst': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
-            'weight': 3,# 1,#TODO sharp test
+            'weight': 3,
             'w_plast': 1,
             'delay': 0*ms},
         'pyr_vip': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
-            'weight': 3,# 1,#TODO sharp test
+            'weight': 3,
             'w_plast': 1,
             'delay': 0*ms},
         'pv_pyr': {
-            'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -2,
             'w_plast': 1,
             'delay': 0*ms},
         'pv_pv': {
-            'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -1,
             'w_plast': 1,
             'delay': 0*ms},
         'sst_pyr': {
-            'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -2,
             'w_plast': 1,
             'delay': 0*ms},
         'sst_pv': {
-            'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -2,
             'w_plast': 1,
             'delay': 0*ms},
         'sst_vip': {
-            'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'weight': -1,
             'w_plast': 1,
             'delay': 0*ms},
         'vip_sst': {
-            'tausyn': 10*ms,
+            'gain_syn': 1*mA,
             'weight': -1,
             'w_plast': 1,
             'gain_syn': 1*mA,
@@ -367,126 +356,112 @@ syn_base_vals = {
         },
     'reinit': {
         'ff_pyr': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'delay': 0*ms,
             'taupre': 20*ms,
             'taupost': 30*ms,
-            'rand_num_bits_Apre': 4,
-            'rand_num_bits_Apost': 4,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
             'weight': 1,
             'w_plast': 2,
-            'w_max': MAX_WEIGHT,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
             'stdp_thres': 1}
         },
     'istdp': {
         'pv_pyr': {
-            'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'delay': 0*ms,
             'taupre': 20*ms,
             'taupost': 30*ms,
-            'rand_num_bits_Apre': 4,
-            'rand_num_bits_Apost': 4,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
             'weight': -1,
             'w_plast': 1,
-            'w_max': 15,
+            'w_max': lambda n_bits: 2**(n_bits - 1),
             'stdp_thres': 1},
         'sst_pyr': {
-            'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'delay': 0*ms,
             'taupre': 20*ms,
             'taupost': 30*ms,
-            'rand_num_bits_Apre': 4,
-            'rand_num_bits_Apost': 4,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
             'weight': -1,
             'w_plast': 1,
-            'w_max': 15,
+            'w_max': lambda n_bits: 2**(n_bits - 1),
             'stdp_thres': 1},
         },
     'adp': {
         'pv_pyr': {
-            'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'delay': 0*ms,
             'taupre': 20*ms,
             'taupost': 30*ms,
-            'rand_num_bits_Apre': 4,
-            'rand_num_bits_Apost': 4,
             'weight': -1,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
+            'w_max': lambda n_bits: 2**(n_bits - 1),
             'variance_th': 0.50,
             'stdp_thres': 1},
         'sst_pyr': {
-            'tausyn': 10*ms,
             'gain_syn': 1*mA,
             'delay': 0*ms,
             'taupre': 20*ms,
             'taupost': 30*ms,
-            'rand_num_bits_Apre': 4,
-            'rand_num_bits_Apost': 4,
+            'rand_num_bits': lambda n_bits: n_bits,
             'weight': -1,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
+            'w_max': lambda n_bits: 2**(n_bits - 1),
             'variance_th': 0.50,
             'stdp_thres': 1},
         },
     'altadp': {
         'sst_pv': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'delay': 0*ms,
             'taupre': 20*ms,
             'taupost': 30*ms,
-            'rand_num_bits_Apre': 4,
-            'rand_num_bits_Apost': 4,
             'weight': -1,
             'w_plast': 1,
-            'w_max': MAX_WEIGHT,
+            'w_max': lambda n_bits: 2**(n_bits - 1),
             'inh_learning_rate': 0.01,
             'stdp_thres': 1
             }
         },
     'stdp': {
         'ff_pyr': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'delay': 0*ms,
             'taupre': 20*ms,
             'taupost': 30*ms,
-            'rand_num_bits_Apre': 4,
-            'rand_num_bits_Apost': 4,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
             'weight': 1,
             'w_plast': 2,
-            'w_max': MAX_WEIGHT,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
             'stdp_thres': 1
             },
         'ff_pv': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'delay': 0*ms,
             'taupre': 20*ms,
             'taupost': 30*ms,
-            'rand_num_bits_Apre': 4,
-            'rand_num_bits_Apost': 4,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
             'weight': 1,
             'w_plast': 2,
-            'w_max': MAX_WEIGHT,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
             'stdp_thres': 1
             },
         'pyr_pyr': {
-            'tausyn': 5*ms,
             'gain_syn': 1*mA,
             'delay': 4*ms,
             'taupre': 20*ms,
             'taupost': 30*ms,
-            'rand_num_bits_Apre': 4,
-            'rand_num_bits_Apost': 4,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
             'weight': 1,
             'w_plast': 4,
-            'w_max': MAX_WEIGHT,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
             'stdp_thres': 1
             },
         }
@@ -496,109 +471,136 @@ syn_base_vals = {
 syn_sample_vars = {
     'static': {
         'ff_pyr': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
             ],
         'ff_pv': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
             ],
         'ff_sst': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
             ],
         'ff_vip': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
             ],
         'pyr_pyr': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
             {'variable': 'delay', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': 8},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
             ],
         'pyr_pv': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
             ],
         'pyr_sst': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
             ],
         'pyr_vip': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
             ],
         'pv_pyr': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1)},
             ],
         'pv_pv': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1)},
             ],
         'sst_pv': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+                {'variable': 'weight', 'unit': 1,
+                    'sign': lambda weight: np.sign(weight), 'min': 1,
+                    'max': lambda n_bits: 2**(n_bits - 1)},
             ],
         'sst_pyr': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+                {'variable': 'weight', 'unit': 1,
+                    'sign': lambda weight: np.sign(weight), 'min': 1,
+                    'max': lambda n_bits: 2**(n_bits - 1)},
             ],
         'sst_vip': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+                {'variable': 'weight', 'unit': 1,
+                    'sign': lambda weight: np.sign(weight), 'min': 1,
+                    'max': lambda n_bits: 2**(n_bits - 1)},
             ],
         'vip_sst': [
-            {'variable': 'weight', 'unit': 1, 'sign': 'weight', 'min': 1, 'max': MAX_TAU},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+                {'variable': 'weight', 'unit': 1,
+                    'sign': lambda weight: np.sign(weight), 'min': 1,
+                    'max': lambda n_bits: 2**(n_bits - 1)},
             ],
         },
     'reinit': {
         'ff_pyr': [
-            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1, 'max': 'w_max'},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
             ]
         },
     'istdp': {
         'pv_pyr': [
-            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1, 'max': 'w_max'},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
             ],
         'sst_pyr': [
-            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1, 'max': 'w_max'},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
             ]
         },
     'altadp': {
         'sst_pv': [
-            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1, 'max': 'w_max'},
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
             ]
         },
     'stdp': {
         'ff_pyr': [
-            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1, 'max': 'w_max'},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
             ],
         'ff_pv': [
-            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1, 'max': 'w_max'},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
             ],
         'pyr_pyr': [
-            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1, 'max': 'w_max'},
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
             {'variable': 'delay', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': 8},
-            {'variable': 'tausyn', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
-            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': MAX_TAU},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
             ]
         }
     }
@@ -685,61 +687,174 @@ neu_base_vals = {
     'static': {
         'pyr_cells': {
             'tau': 20*ms,
-            'Vm': 3*mV,
+            'decay_numerator': 244,
+            'refrac_tau': 2*ms,
+            'refrac_decay_numerator': 154,
+            'tausyn': 5*ms,
+            'syn_decay_numerator': 213,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'Vm': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vrest': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vm_max': lambda n_bits: (2**n_bits - 1),
+            'Vthr': lambda n_bits: (2**n_bits - 1)*mV,
+            'I_min': lambda n_bits: -2**(n_bits-1)*mA,
+            'I_max': lambda n_bits: (2**(n_bits-1) - 1)*mA,
             'Vm_noise': 0*mV
             },
         'pv_cells': {
             'tau': 20*ms,
-            'Vm': 3*mV,
+            'decay_numerator': 244,
+            'refrac_tau': 2*ms,
+            'refrac_decay_numerator': 154,
+            'tausyn': 5*ms,
+            'syn_decay_numerator': 213,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'Vm': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vrest': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vm_max': lambda n_bits: (2**n_bits - 1),
+            'Vthr': lambda n_bits: (2**n_bits - 1)*mV,
+            'I_min': lambda n_bits: -2**(n_bits-1)*mA,
+            'I_max': lambda n_bits: (2**(n_bits-1) - 1)*mA,
             'Vm_noise': 0*mV},
         'sst_cells': {
             'tau': 20*ms,
-            'Vm': 3*mV,
+            'decay_numerator': 244,
+            'refrac_tau': 2*ms,
+            'refrac_decay_numerator': 154,
+            'tausyn': 5*ms,
+            'syn_decay_numerator': 213,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'Vm': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vrest': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vm_max': lambda n_bits: (2**n_bits - 1),
+            'Vthr': lambda n_bits: (2**n_bits - 1)*mV,
+            'I_min': lambda n_bits: -2**(n_bits-1)*mA,
+            'I_max': lambda n_bits: (2**(n_bits-1) - 1)*mA,
             'Vm_noise': 0*mV},
         'vip_cells': {
             'tau': 20*ms,
-            'Vm': 3*mV,
+            'decay_numerator': 244,
+            'refrac_tau': 2*ms,
+            'refrac_decay_numerator': 154,
+            'tausyn': 5*ms,
+            'syn_decay_numerator': 213,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'Vm': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vrest': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vm_max': lambda n_bits: (2**n_bits - 1),
+            'Vthr': lambda n_bits: (2**n_bits - 1)*mV,
+            'I_min': lambda n_bits: -2**(n_bits-1)*mA,
+            'I_max': lambda n_bits: (2**(n_bits-1) - 1)*mA,
             'Vm_noise': 0*mV},
         },
     'adapt': {
         'pyr_cells': {
             'tau': 20*ms,
-            'Vm': 3*mV,
-            'thr_max': 15*mV,
+            'decay_numerator': 244,
+            'refrac_tau': 2*ms,
+            'refrac_decay_numerator': 154,
+            'tausyn': 5*ms,
+            'syn_decay_numerator': 213,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'Vm': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vrest': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vm_max': lambda n_bits: (2**n_bits - 1),
+            'Vthr': lambda n_bits: (2**n_bits - 1)*mV,
+            'I_min': lambda n_bits: -2**(n_bits-1)*mA,
+            'I_max': lambda n_bits: (2**(n_bits-1) - 1)*mA,
+            'thr_min': lambda n_bits: np.ceil(2**n_bits/5)*mV,
+            'thr_max': lambda n_bits: (2**n_bits - 1)*mV,
             'Vm_noise': 0*mV
             },
         'pv_cells': {
             'tau': 20*ms,
-            'Vm': 3*mV,
-            'thr_max': 15*mV,
+            'decay_numerator': 244,
+            'refrac_tau': 2*ms,
+            'refrac_decay_numerator': 154,
+            'tausyn': 5*ms,
+            'syn_decay_numerator': 213,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'Vm': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vrest': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vm_max': lambda n_bits: (2**n_bits - 1),
+            'Vthr': lambda n_bits: (2**n_bits - 1)*mV,
+            'I_min': lambda n_bits: -2**(n_bits-1)*mA,
+            'I_max': lambda n_bits: (2**(n_bits-1) - 1)*mA,
+            'thr_min': lambda n_bits: np.ceil(2**n_bits/5)*mV,
+            'thr_max': lambda n_bits: (2**n_bits - 1)*mV,
             'Vm_noise': 0*mV},
         'sst_cells': {
             'tau': 20*ms,
-            'Vm': 3*mV,
+            'decay_numerator': 244,
+            'refrac_tau': 2*ms,
+            'refrac_decay_numerator': 154,
+            'tausyn': 5*ms,
+            'syn_decay_numerator': 213,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'Vm': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vrest': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vm_max': lambda n_bits: (2**n_bits - 1),
+            'Vthr': lambda n_bits: (2**n_bits - 1)*mV,
+            'I_min': lambda n_bits: -2**(n_bits-1)*mA,
+            'I_max': lambda n_bits: (2**(n_bits-1) - 1)*mA,
+            'thr_min': lambda n_bits: np.ceil(2**n_bits/5)*mV,
+            'thr_max': lambda n_bits: (2**n_bits - 1)*mV,
             'Vm_noise': 0*mV},
         'vip_cells': {
             'tau': 20*ms,
-            'Vm': 3*mV,
+            'decay_numerator': 244,
+            'refrac_tau': 2*ms,
+            'refrac_decay_numerator': 154,
+            'tausyn': 5*ms,
+            'syn_decay_numerator': 213,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'Vm': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vrest': lambda n_bits: (2**n_bits - 1)/5*mV,
+            'Vm_max': lambda n_bits: (2**n_bits - 1),
+            'Vthr': lambda n_bits: (2**n_bits - 1)*mV,
+            'I_min': lambda n_bits: -2**(n_bits-1)*mA,
+            'I_max': lambda n_bits: (2**(n_bits-1) - 1)*mA,
+            'thr_min': lambda n_bits: np.ceil(2**n_bits/5)*mV,
+            'thr_max': lambda n_bits: (2**n_bits - 1)*mV,
             'Vm_noise': 0*mV}
         },
     }
 
 neu_sample_vars = {
     'pyr_cells': [
-        {'variable': 'tau', 'unit': 1*ms, 'sign': 1, 'min': 1, 'max': MAX_TAU}
+        {'variable': 'decay_numerator', 'unit': 1, 'sign': 1, 'min': 1, 'max': 255},
+        {'variable': 'syn_decay_numerator', 'unit': 1, 'sign': 1, 'min': 1, 'max': 255},
         ],
     'pv_cells': [
-        {'variable': 'tau', 'unit': 1*ms, 'sign': 1, 'min': 1, 'max': MAX_TAU}
+        {'variable': 'decay_numerator', 'unit': 1, 'sign': 1, 'min': 1, 'max': 255},
+        {'variable': 'syn_decay_numerator', 'unit': 1, 'sign': 1, 'min': 1, 'max': 255},
         ],
     'sst_cells': [
-        {'variable': 'tau', 'unit': 1*ms, 'sign': 1, 'min': 1, 'max': MAX_TAU}
+        {'variable': 'decay_numerator', 'unit': 1, 'sign': 1, 'min': 1, 'max': 255},
+        {'variable': 'syn_decay_numerator', 'unit': 1, 'sign': 1, 'min': 1, 'max': 255},
         ],
     'vip_cells': [
-        {'variable': 'tau', 'unit': 1*ms, 'sign': 1, 'min': 1, 'max': MAX_TAU}
+        {'variable': 'decay_numerator', 'unit': 1, 'sign': 1, 'min': 1, 'max': 255},
+        {'variable': 'syn_decay_numerator', 'unit': 1, 'sign': 1, 'min': 1, 'max': 255},
         ],
     }
 
-class ConnectionDescriptor:
+class ParameterDescriptor:
+    """ Parent class that contains parameters.
+    Attributes:
+        layer (str): Represent layer.
+        model_path (str): Path to where models are stored.
+        constants (dict): Constants that will be used for all elements.
+        models (dict): Models of the class.
+    """
+    def __init__(self, layer, path):
+        self.layer = layer
+        self.constants = {'n_bits': 4, 'max_tau': 2**5 - 1}
+        path = os.path.expanduser(path)
+        self.model_path = os.path.join(path, "teili", "models", "equations", "")
+        self.models = {}
+
+class ConnectionDescriptor(ParameterDescriptor):
     """ This class describes the standard characterists of the connections. 
 
     Attributes:
@@ -753,49 +868,54 @@ class ConnectionDescriptor:
         reinit_var (dict): Variables used for plasticity of type 'reinit'.
     """
     def __init__(self, layer, path):
-        path = os.path.expanduser(path)
-        model_path = os.path.join(path, "teili", "models", "equations", "")
-
-        self.models = {}
-        self.models['stdp'] = stdp_synapse_model
-        self.models['static'] = static_synapse_model
+        super().__init__(layer, path)
+        self.models['static'] = SynapseEquationBuilder(base_unit='quantized',
+            plasticity='non_plastic')
+        self.models['stdp'] = SynapseEquationBuilder(base_unit='quantized',
+            plasticity='quantized_stochastic_stdp')
         self.models['adp'] = SynapseEquationBuilder.import_eq(
-                model_path + 'StochSynAdp.py')
+                self.model_path + 'StochSynAdp.py')
         self.models['altadp'] = SynapseEquationBuilder.import_eq(
-                model_path + 'StochAdpIin.py')
+                self.model_path + 'StochAdpIin.py')
         self.models['istdp'] = SynapseEquationBuilder.import_eq(
-                model_path + 'StochInhStdp.py')
+                self.model_path + 'StochInhStdp.py')
         self.models['reinit'] = SynapseEquationBuilder(base_unit='quantized',
                 plasticity='quantized_stochastic_stdp',
                 structural_plasticity='stochastic_counter')
 
         self.input_prob = syn_input_prob
         self.input_plast = syn_input_plast
-        self.intra_prob = syn_intra_prob[layer]
-        self.intra_plast = syn_intra_plast[layer]
+        self.intra_prob = syn_intra_prob[self.layer]
+        self.intra_plast = syn_intra_plast[self.layer]
         self.base_vals = {}
-        self.sample_vars = syn_sample_vars
         self.sample = {}
         self.reinit_vars = {}
-        self.update_params()
 
-    def update_params(self):
+    def filter_params(self):
+        """ Update parameters that will be used to build synapse model. This
+            is done by changing the values of attributes base_vals, sample, 
+            and reinit_vars according to what was set in intra_plas,
+            input_plast, and constants.
+        """
         conn_groups = [self.intra_plast, self.input_plast]
         for conn_group in conn_groups:
             for conn, plast in conn_group.items():
-                self.base_vals[conn] = syn_base_vals[plast][conn]
+                self.base_vals[conn] = process_base_vars(
+                    syn_base_vals[plast][conn],
+                    self.constants)
 
         for conn_group in conn_groups:
             for conn, plast in conn_group.items():
                 self.sample[conn] = process_sample_vars(
-                    self.sample_vars[plast][conn],
-                    self.base_vals[conn])
+                    syn_sample_vars[plast][conn],
+                    {**self.base_vals[conn], **self.constants})
 
         for conn, plast in self.input_plast.items():
+            # At the moment only works for reinit connections
             if plast == 'reinit':
                 self.reinit_vars[conn] = reinit_vars[conn]
 
-class PopulationDescriptor:
+class PopulationDescriptor(ParameterDescriptor):
     """ This class describes the standard characterists of the populations.
 
     Attributes:
@@ -804,24 +924,24 @@ class PopulationDescriptor:
         base_vals (dict): General parameters, as defined by layer.
     """
     def __init__(self, layer, path):
-        path = os.path.expanduser(path)
-        model_path = os.path.join(path, "teili", "models", "equations", "")
-
-        self.models = {}
-        self.models['static'] = static_neuron_model
+        super().__init__(layer, path)
+        self.models['static'] = NeuronEquationBuilder(base_unit='quantized',
+            position='spatial')
         self.models['adapt'] = NeuronEquationBuilder(base_unit='quantized',
-                intrinsic_excitability='threshold_adaptation',
-                position='spatial')
+            intrinsic_excitability='threshold_adaptation',
+            position='spatial')
 
-        self.group_vals = neu_pop[layer]
+        self.group_vals = neu_pop[self.layer]
         self.group_plast = neu_pop_plast
         self.base_vals = {}
-        self.sample_vars = neu_sample_vars
         self.sample = {}
         self.groups = {}
-        self.update_params()
         
-    def update_params(self):
+    def filter_params(self):
+        """ Filter parameters that will be used to build neuron model. This
+            is done by changing the values of attributes base_vals, and sample
+            according to what was set in group_vals, group_plast, and constants.
+        """
         temp_pop = {}
         num_inh = int(self.group_vals['n_exc']/self.group_vals['ei_ratio'])
         temp_pop['pyr_cells'] = {'num_neu': self.group_vals['n_exc']}
@@ -832,20 +952,47 @@ class PopulationDescriptor:
             temp_pop[pop].update({'num_inputs': n_inp})
         self.groups = temp_pop
         for conn, plast in self.group_plast.items():
-            self.base_vals[conn] = neu_base_vals[plast][conn]
+            self.base_vals[conn] = process_base_vars(
+                neu_base_vals[plast][conn],
+                self.constants)
 
-        for neu_group, sample_objs in self.sample_vars.items():
+        for neu_group in self.group_plast.keys():
             self.sample[neu_group] = process_sample_vars(
-                sample_objs,
-                self.base_vals[neu_group])
+                neu_sample_vars[neu_group],
+                {**self.base_vals[neu_group], **self.constants})
+
+def process_base_vars(base_objects, reference_vals):
+    ''' This function filter the necessary parameters from provided
+        reference dictionaries to determine base values.
+
+    Args:
+        base_objects (dict of list): Contains keys and values
+            identifying the parameters. If it contains a
+            lambda function, its argument name must be present
+            as a key in reference_vals.
+        reference_vals (dict): Base parameters used on base
+            values.
+    Returns:
+        values_list (list): Contains parameters that will be used
+            as base paramaters.
+    '''
+    processed_objects = copy.deepcopy(base_objects)
+    for var in base_objects:
+        if callable(base_objects[var]):
+            processed_objects[var] = process_dynamic_values(
+                base_objects[var], reference_vals)
+
+    return processed_objects
 
 def process_sample_vars(sample_objects, reference_vals):
     ''' This function filter the necessary parameters from provided
-        dictionaries to determine sampling process.
+        reference dictionaries to determine sampling process.
 
-    Attributes:
+    Args:
         sample_objects (dict of list): Contains keys and values
-            identifying the samplying process.
+            identifying the samplying process. If it contains a
+            lambda function, its argument name must be present
+            as a key in reference_vals.
         reference_vals (dict): Base parameters used on sampling
             process.
     Returns:
@@ -859,16 +1006,16 @@ def process_sample_vars(sample_objects, reference_vals):
         variable_mean = reference_vals[variable]
         unit = sample_var['unit']
         sign = sample_var['sign']
-        if isinstance(sign, str):
-            sign = np.sign(reference_vals[sign])
+        if callable(sign):
+            sign = process_dynamic_values(sign, reference_vals)
         unit *= sign
         variable_mean /= np.abs(unit)
         clip_min = sample_var['min']
-        if isinstance(clip_min, str):
-            clip_min = reference_vals[clip_min]
+        if callable(clip_min):
+            clip_min = process_dynamic_values(clip_min, reference_vals)
         clip_max = sample_var['max']
-        if isinstance(clip_max, str):
-            clip_max = reference_vals[clip_max]
+        if callable(clip_max):
+            clip_max = process_dynamic_values(clip_max, reference_vals)
 
         sample_list.append({'variable': variable,
                              'dist_param': np.abs(variable_mean),
@@ -878,9 +1025,22 @@ def process_sample_vars(sample_objects, reference_vals):
 
     return sample_list
 
+def process_dynamic_values(lambda_func, reference_dict):
+    """ Evaluates parameters defined as lambda functions.
+
+    Args:
+        lambda_func (callable): Function to be evaluated.
+        reference_dict (dict): Contains function's argument
+            as a key.
+    """
+    var_name = lambda_func.__code__.co_varnames[0]
+    return lambda_func(reference_dict[var_name])
+
 layer = 'L4'
 path = '/Users/Pablo/git/teili/'
 conn_desc = ConnectionDescriptor(layer, path)
 pop_desc = PopulationDescriptor(layer, path)
-pop_desc.update_params()
-conn_desc.update_params()
+pop_desc.filter_params()
+conn_desc.filter_params()
+DEFAULT_FUNCTIONS.update({'stochastic_decay': stochastic_decay,
+                          'deterministic_decay': deterministic_decay})

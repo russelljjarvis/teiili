@@ -1,8 +1,8 @@
 import sys
 import warnings
 
-from brian2 import ms, second, Hz, TimedArray, check_units, run,\
-         SpikeGeneratorGroup, SpikeMonitor, Function
+from brian2 import mV, ms, second, Hz, TimedArray, check_units, run,\
+         SpikeGeneratorGroup, SpikeMonitor, Function, DEFAULT_FUNCTIONS
 
 from scipy.stats import pearsonr, spearmanr
 from scipy.ndimage import gaussian_filter1d
@@ -227,6 +227,43 @@ def random_integers(a, b, _vectorization_idx):
     return np.array(random_samples)
 random_integers = Function(random_integers, arg_units=[1, 1], return_unit=1,
                            stateless=False, auto_vectorise=True)
+
+def stochastic_decay(init_value, decay_numerator, rand_num_bits):
+    rand_num_bits = int(rand_num_bits)
+    init_value_sign = np.sign(init_value)
+    init_value =  np.abs(init_value.astype(int))
+    lfsr = np.ceil(np.random.rand(len(init_value))*(2**rand_num_bits-1)).astype(int)
+    # Using + instead of | add lfsr to rand_num_bits, which is not what
+    # we want. If the former is used, parenthesis must indicate order.
+    new_val = init_value<<rand_num_bits | lfsr
+    # Decay is done by dividing by an 8-bit number
+    new_val = (new_val*decay_numerator.astype(int)) >> 8
+    new_val = new_val >> int(rand_num_bits)
+    return new_val * init_value_sign
+stochastic_decay = Function(stochastic_decay, arg_units=[1, 1, 1],
+                            return_unit=1, stateless=False)
+cpp_code = '''
+int stochastic_decay(init_value, decay_numerator, rand_num_bits)
+{
+    lfsr = ceil(rand()*(2**rand_num_bits-1))
+    int new_val;
+    new_val = init_value<<rand_num_bits | lfsr
+    new_val = (new_val*decay_numerator) >> 8
+    new_val = new_val >> rand_num_bits
+    return new_val
+}
+'''
+stochastic_decay.implementations.add_implementation('cpp', cpp_code,
+    dependencies={'rand': DEFAULT_FUNCTIONS['rand'],
+                  'ceil': DEFAULT_FUNCTIONS['ceil']})
+
+def deterministic_decay(init_value, decay_numerator):
+    init_value_sign = np.sign(init_value)
+    init_value =  np.abs(init_value.astype(int))
+    new_val = (init_value*decay_numerator.astype(int)) >> 8
+    return new_val * init_value_sign
+deterministic_decay = Function(deterministic_decay, arg_units=[1, 1],
+                            return_unit=1, stateless=False)
 
 def permutation_from_rate(neurons_rate):
     """This functions uses the instant of maximum firing rate to extract

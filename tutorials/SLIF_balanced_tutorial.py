@@ -1,6 +1,6 @@
 from brian2 import PoissonGroup
 from brian2 import defaultclock, prefs
-from brian2 import second, Hz, ms
+from brian2 import second, Hz, ms, ohm, mA
 
 from teili import TeiliNetwork
 from orca_wta import ORCA_WTA
@@ -8,8 +8,12 @@ from orca_wta import ORCA_WTA
 from SLIF_utils import neuron_rate
 from orca_params import ConnectionDescriptor, PopulationDescriptor
 
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
+import pickle
 
 defaultclock.dt = 1*ms
 prefs.codegen.target = "numpy"
@@ -22,6 +26,25 @@ layer = 'L4'
 path = '/Users/Pablo/git/teili/'
 conn_desc = ConnectionDescriptor(layer, path)
 pop_desc = PopulationDescriptor(layer, path)
+for conn in conn_desc.input_plast.keys():
+    conn_desc.input_plast[conn] = 'static'
+for conn in conn_desc.intra_plast.keys():
+    conn_desc.intra_plast[conn] = 'static'
+for pop in pop_desc.group_plast.keys():
+    pop_desc.group_plast[pop] = 'static'
+pop_desc.group_vals['n_exc'] = 3471
+pop_desc.group_vals['num_inputs']['vip_cells'] = 3
+bit_res = int(sys.argv[1])
+pop_desc.constants['n_bits'] = bit_res
+conn_desc.constants['n_bits'] = bit_res
+pop_desc.filter_params()
+conn_desc.filter_params()
+
+# Change motifs generated
+for conn in conn_desc.sample.keys():
+    conn_desc.sample[conn] = []
+for pop in pop_desc.sample.keys():
+    pop_desc.sample[pop] = []
 conn_desc.intra_prob = {
     'pyr_pyr': 0.1,
     'pyr_pv': 0.1,
@@ -38,32 +61,50 @@ conn_desc.input_prob = {
     'ff_pv': 0.25,
     'ff_sst': 0.25,
     'ff_vip': 0.25}
-for conn in conn_desc.input_plast.keys():
-    conn_desc.input_plast[conn] = 'static'
-for conn in conn_desc.intra_plast.keys():
-    conn_desc.intra_plast[conn] = 'static'
-for plast in conn_desc.sample_vars.keys():
-    for conn in conn_desc.sample_vars[plast]:
-        conn_desc.sample_vars[plast][conn] = []
-for conn in pop_desc.sample_vars.keys():
-    pop_desc.sample_vars[conn] = []
-for pop in pop_desc.group_plast.keys():
-    pop_desc.group_plast[pop] = 'static'
-pop_desc.group_vals['n_exc'] = 3471
-pop_desc.group_vals['num_inputs']['vip_cells'] = 3
 
-pop_desc.update_params()
-conn_desc.update_params()
+max_weight = 2**(conn_desc.constants['n_bits'] - 1) - 1
+wi_perc = float(sys.argv[2])
+weight_vals = {
+    'ff_pyr': np.floor(.42*max_weight),
+    'ff_pv': np.floor(.42*max_weight),
+    'ff_sst': np.floor(.42*max_weight),
+    'ff_vip': np.floor(.42*max_weight),
+    'pyr_pyr': np.floor(.2*max_weight),
+    'pyr_pv': np.floor(.2*max_weight),
+    'pyr_sst': np.floor(.2*max_weight),
+    'pyr_vip': np.floor(.2*max_weight),
+    'pv_pyr': np.floor(-wi_perc*max_weight),
+    'pv_pv': np.floor(-wi_perc*max_weight),
+    'sst_pv': np.floor(-wi_perc*max_weight),
+    'sst_pyr': np.floor(-wi_perc*max_weight),
+    'sst_vip': np.floor(-wi_perc*max_weight),
+    'vip_sst': np.floor(-wi_perc*max_weight),
+    }
+for key, weight_val in weight_vals.items():
+    conn_desc.base_vals[key]['weight'] = weight_val
 
 wta = ORCA_WTA(layer=layer,
                conn_params=conn_desc,
                pop_params=pop_desc,
                verbose=True,
                monitor=True)
+wta._groups['pyr_pyr'].delay = 0*ms
+wta._groups['pyr_cells'].g_psc = 2*ohm
+wta._groups['pv_cells'].g_psc = 2*ohm
+wta._groups['sst_cells'].g_psc = 2*ohm
+wta._groups['vip_cells'].g_psc = 2*ohm
 
 monitor_params = {'spikemon_pyr_cells': {'group': 'pyr_cells'},
                   'spikemon_pv_cells': {'group': 'pv_cells'},
                   'spikemon_sst_cells': {'group': 'sst_cells'},
+                  'statemon_pyr_cells': {'group': 'pyr_cells',
+                                         'variables': ['I', 'Vm'],
+                                         'record': 0,
+                                         'mon_dt': 1*ms},
+                  'statemon_pv_cells': {'group': 'pv_cells',
+                                         'variables': ['I', 'Vm'],
+                                         'record': 0,
+                                         'mon_dt': 1*ms},
                   'spikemon_vip_cells': {'group': 'vip_cells'}}
 wta.create_monitors(monitor_params)
 
@@ -77,19 +118,53 @@ wta.add_input(
     connectivities=conn_desc.input_prob,
     conn_params=conn_desc)
 
+rate_results = []
+plot_pop = 'pyr'
 Net.add(wta, poisson_spikes)
-Net.run(sim_duration, report='stdout', report_period=100*ms)
+Net.store()
+for _ in range(10):
+    Net.restore()
+    Net.run(sim_duration, report='stdout', report_period=100*ms)
+    pop_rates = neuron_rate(wta.monitors[f'spikemon_{plot_pop}_cells'],
+        kernel_len=30*ms, kernel_var=5*ms, simulation_dt=defaultclock.dt,
+        smooth=True)
+    pop_avg_rates = np.mean(pop_rates['smoothed'], axis=0)
+    rate_results.append(np.mean(pop_avg_rates))
+with open(f'res{bit_res}_wi{wi_perc}', 'wb') as f:
+    pickle.dump(rate_results, f)
 
-summed_idx = np.cumsum([wta._groups['pyr_cells'].N, wta._groups['pv_cells'].N, wta._groups['sst_cells'].N])
-plt.plot(wta.monitors['spikemon_pyr_cells'].t, wta.monitors['spikemon_pyr_cells'].i, 'k.')
-plt.plot(wta.monitors['spikemon_pv_cells'].t, wta.monitors['spikemon_pv_cells'].i+summed_idx[0], 'r.')
-plt.plot(wta.monitors['spikemon_sst_cells'].t, wta.monitors['spikemon_sst_cells'].i+summed_idx[1], 'g.')
-plt.plot(wta.monitors['spikemon_vip_cells'].t, wta.monitors['spikemon_vip_cells'].i+summed_idx[2], 'b.')
+pg.mkQApp()
+pw = pg.PlotWidget()
+pw.resize(1536, 768)
+pw.show()
+p1 = pw.plotItem
+p1.setLabels(left='Neuron index')
 
-neu_rates = neuron_rate(wta.monitors['spikemon_pyr_cells'], kernel_len=100*ms,
-    kernel_var=25*ms, simulation_dt=defaultclock.dt, smooth=True)
-avg_rates = np.mean(neu_rates['smoothed'], axis=0)
-plt.figure()
-plt.plot(neu_rates['t'], avg_rates)
-plt.ylim([0, 30])
-plt.show()
+# create a new ViewBox, link the right axis to its coordinate system
+p2 = pg.ViewBox()
+p1.showAxis('right')
+p1.scene().addItem(p2)
+p1.getAxis('right').linkToView(p2)
+p2.setXLink(p1)
+p1.getAxis('right').setLabel('Rate')
+
+def updateViews():
+    ## view has resized; update auxiliary views to match
+    global p1, p2
+    p2.setGeometry(p1.vb.sceneBoundingRect())
+    
+    p2.linkedViewChanged(p1.vb, p2.XAxis)
+
+updateViews()
+p1.vb.sigResized.connect(updateViews)
+
+p1.plot(np.array(wta.monitors[f'spikemon_{plot_pop}_cells'].t),
+        np.array(wta.monitors[f'spikemon_{plot_pop}_cells'].i),
+        pen=None, symbolBrush='w', symbolSize=4, symbol='o')
+p2.addItem(pg.PlotCurveItem(
+    pop_rates['t'],
+    pop_avg_rates, pen=pg.mkPen(color=(200, 0, 100), width=10)))
+
+if __name__ == '__main__':
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

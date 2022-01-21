@@ -20,7 +20,7 @@ from monitor_params import monitor_params
 defaultclock.dt = 1 * ms
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
-class ORCA_WTA(BuildingBlock):
+class orcaWTA(BuildingBlock):
     """A WTA with diverse inhibitory population. This could represent a single
        layer in a cortical sheet.
 
@@ -256,6 +256,7 @@ def add_populations(_groups,
     Args:
         groups (dict): Keys to all neuron and synapse groups.
         group_name (str, required): Name of the building_block population
+        pop_params (dict): Parameters used to build populations.
         verbose (bool, optional): Flag to gain additional information
         noise (bool, optional): Flag to determine if background noise is to
             be added to neurons. This is generated with a poisson process.

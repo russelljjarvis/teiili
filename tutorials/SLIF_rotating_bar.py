@@ -81,6 +81,18 @@ ff_cells = neuron_group_from_spikes(num_channels,
 #s_inp_exc.connect('i==j')
 #s_inp_exc.weight = 4096
 
+# TODO e_ratio=.00224 to get to 49
+# TODO values below were used before. New parameters need testing
+# 'pyr_pyr': 0.5, # this has been standard. Commented is H&S
+# 'pyr_pv': 0.15, # 0.45
+# 'pyr_sst': 0.15, # 0.35
+# 'pyr_vip': 0.10, # 0.10
+# 'pv_pyr': 1.0, # 0.60
+# 'pv_pv': 1.0, # 0.50
+# 'sst_pv': 0.9, # 0.60
+# 'sst_pyr': 1.0, # 0.55
+# 'sst_vip': 0.9, # 0.45
+# 'vip_sst': 0.65}, # 0.50
 num_exc = 49
 Net = TeiliNetwork()
 layer='L4'

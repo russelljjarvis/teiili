@@ -1,32 +1,37 @@
-from orca_wta import ORCA_WTA
-from orca_params import excitatory_population_size, ei_ratio
+from orca_wta import orcaWTA
+from orca_params import conn_desc, pop_desc
 
 
-class orca_sheet:
-    def __init__(self, network):
-        self.network = network
+class orcaColumn:
+    def __init__(self):
         self.layers = []
         self.interlaminar_connections = []
 
-    def create_column(self):
+    # TODO col_desc?
+    # TODO get id (layer) and Nsize from param dict? Stack layers?
+    def create_column(self, pop_params=):
+        temp_wtas  = {}
+        for wta_id, params in pop_params.groups.items():
+            pass
+
         num_exc = 49
         layer = 'L23'
-        self.layer_23 = ORCA_WTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
+        self.layer_23 = orcaWTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
                                  ei_ratio=ei_ratio[layer],
                                  layer=layer)
         self.layers.append(self.layer_23)
         layer = 'L4'
-        self.layer_4 = ORCA_WTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
+        self.layer_4 = orcaWTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
                                 ei_ratio=ei_ratio[layer],
                                 layer=layer)
         self.layers.append(self.layer_4)
         layer = 'L5'
-        self.layer_5 = ORCA_WTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
+        self.layer_5 = orcaWTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
                                 ei_ratio=ei_ratio[layer],
                                 layer=layer)
         self.layers.append(self.layer_5)
         layer = 'L6'
-        self.layer_6 = ORCA_WTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
+        self.layer_6 = orcaWTA(num_exc_neurons=num_exc*exc_pop_proportion[layer],
                                 ei_ratio=ei_ratio[layer],
                                 layer=layer)
         self.layers.append(self.layer_6)

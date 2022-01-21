@@ -49,10 +49,10 @@ syn_input_plast = {
 
 syn_intra_prob = {
     'L23': {
-        'pyr_pyr': 0.5,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.101,
+        'pyr_pv': 0.135,
+        'pyr_sst': 0.135,
+        'pyr_vip': 0.135,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -60,10 +60,10 @@ syn_intra_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L4': {
-        'pyr_pyr': 0.5, # TODO check. this has been standard. Commented is H&S
-        'pyr_pv': 0.15, #TODO 0.45
-        'pyr_sst': 0.15, #TODO 0.35
-        'pyr_vip': 0.10, #TODO 0.10
+        'pyr_pyr': 0.050,
+        'pyr_pv': 0.079,
+        'pyr_sst': 0.079,
+        'pyr_vip': 0.079,
         'pv_pyr': 1.0, #TODO 0.60
         'pv_pv': 1.0, #TODO 0.50
         'sst_pv': 0.9, #TODO 0.60
@@ -71,10 +71,10 @@ syn_intra_prob = {
         'sst_vip': 0.9, #TODO 0.45
         'vip_sst': 0.65}, #TODO 0.50
     'L5': {
-        'pyr_pyr': 0.2,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.083,
+        'pyr_pv': 0.060,
+        'pyr_sst': 0.060,
+        'pyr_vip': 0.060,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -82,10 +82,10 @@ syn_intra_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L6': {
-        'pyr_pyr': 0.2,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.040,
+        'pyr_pv': 0.066,
+        'pyr_sst': 0.066,
+        'pyr_vip': 0.066,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -143,10 +143,10 @@ syn_intra_plast = {
 
 interlaminar_conn_prob = {
     'L23_L4': {
-        'pyr_pyr': 0.03,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.008,
+        'pyr_pv': 0.069,
+        'pyr_sst': 0.069,
+        'pyr_vip': 0.069,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -154,10 +154,10 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L23_L5': {
-        'pyr_pyr': 0.04,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.100,
+        'pyr_pv': 0.055,
+        'pyr_sst': 0.055,
+        'pyr_vip': 0.055,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -165,10 +165,10 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L23_L6': {
-        'pyr_pyr': 0.03,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.016,
+        'pyr_pv': 0.036,
+        'pyr_sst': 0.036,
+        'pyr_vip': 0.036,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -176,10 +176,10 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L4_L23': {
-        'pyr_pyr': 0.05,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.044,
+        'pyr_pv': 0.032,
+        'pyr_sst': 0.032,
+        'pyr_vip': 0.032,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -187,10 +187,10 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L4_L5': {
-        'pyr_pyr': 0.01,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.051,
+        'pyr_pv': 0.026,
+        'pyr_sst': 0.026,
+        'pyr_vip': 0.026,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -198,10 +198,10 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L4_L6': {
-        'pyr_pyr': 0.02,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.021,
+        'pyr_pv': 0.003,
+        'pyr_sst': 0.003,
+        'pyr_vip': 0.003,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -209,10 +209,10 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L5_L23': {
-        'pyr_pyr': 0.03,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.032,
+        'pyr_pv': 0.075,
+        'pyr_sst': 0.075,
+        'pyr_vip': 0.075,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -220,10 +220,10 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L5_L4': {
-        'pyr_pyr': 0.0,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.007,
+        'pyr_pv': 0.003,
+        'pyr_sst': 0.003,
+        'pyr_vip': 0.003,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -231,21 +231,10 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L5_L6': {
-        'pyr_pyr': 0.01,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L6_L4': {
-        'pyr_pyr': 0.1,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.057,
+        'pyr_pv': 0.028,
+        'pyr_sst': 0.028,
+        'pyr_vip': 0.028,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -253,10 +242,21 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L6_L23': {
-        'pyr_pyr': 0.0,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.008,
+        'pyr_pv': 0.004,
+        'pyr_sst': 0.004,
+        'pyr_vip': 0.004,
+        'pv_pyr': 1.0, #TODO
+        'pv_pv': 1.0, #TODO
+        'sst_pv': 0.9, #TODO
+        'sst_pyr': 1.0, #TODO
+        'sst_vip': 0.9, #TODO
+        'vip_sst': 0.65}, #TODO
+    'L6_L4': {
+        'pyr_pyr': 0.045,
+        'pyr_pv': 0.106,
+        'pyr_sst': 0.106,
+        'pyr_vip': 0.106,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -264,10 +264,10 @@ interlaminar_conn_prob = {
         'sst_vip': 0.9, #TODO
         'vip_sst': 0.65}, #TODO
     'L6_L5': {
-        'pyr_pyr': 0.0,
-        'pyr_pv': 0.15, #TODO
-        'pyr_sst': 0.15, #TODO
-        'pyr_vip': 0.10, #TODO
+        'pyr_pyr': 0.020,
+        'pyr_pv': 0.009,
+        'pyr_sst': 0.009,
+        'pyr_vip': 0.009,
         'pv_pyr': 1.0, #TODO
         'pv_pv': 1.0, #TODO
         'sst_pv': 0.9, #TODO
@@ -611,8 +611,8 @@ reinit_vars = {
 # Dictionaries of neuronal populations
 neu_pop = {
     'L23': {
-        'n_exc': 57,
-        'ei_ratio': 4,
+        'n_exc': 20683,
+        'ei_ratio': 3.545,
         'inh_ratio': {
             'pv_cells': .37,
             'sst_cells': .20,
@@ -626,9 +626,9 @@ neu_pop = {
             },
         },
     'L4': {
-        'n_exc': 49,
-        'ei_ratio': 4, # TODO 1.6 in case I need more inhibition?
-        # TODO use previous values if I want only PVs
+        'n_exc': 21915,
+        'ei_ratio': 3.999, # TODO 1.6 in case I need more inhibition?
+        # TODO use commented values if I want only PVs
         'inh_ratio': {
             'pv_cells': .68,#1
             'sst_cells': .20,#.02,
@@ -642,8 +642,8 @@ neu_pop = {
             },
         },
     'L5': {
-        'n_exc': 53,
-        'ei_ratio': 6,
+        'n_exc': 4850,
+        'ei_ratio': 4.55,
         'inh_ratio': {
             'pv_cells': .52,
             'sst_cells': .37,
@@ -657,8 +657,8 @@ neu_pop = {
             },
         },
     'L6': {
-        'n_exc': 98,
-        'ei_ratio': 6,
+        'n_exc': 14395,
+        'ei_ratio': 4.882,
         'inh_ratio': {
             'pv_cells': .49,
             'sst_cells': .38,
@@ -919,6 +919,8 @@ class PopulationDescriptor(ParameterDescriptor):
         models (dict): Neuronal models available.
         pop (dict): Contains general information about the population.
         base_vals (dict): General parameters, as defined by layer.
+        e_ratio (flot): Proportion that will scale total number of
+            excitatory cells in each layer.
     """
     def __init__(self, layer, path):
         super().__init__(layer, path)
@@ -933,6 +935,7 @@ class PopulationDescriptor(ParameterDescriptor):
         self.base_vals = {}
         self.sample = {}
         self.groups = {}
+        self.e_ratio = 1.0
         
     def filter_params(self):
         """ Filter parameters that will be used to build neuron model. This
@@ -940,6 +943,7 @@ class PopulationDescriptor(ParameterDescriptor):
             according to what was set in group_vals, group_plast, and constants.
         """
         temp_pop = {}
+        self.group_vals['n_exc'] = int(self.e_ratio * self.group_vals['n_exc'])
         num_inh = int(self.group_vals['n_exc']/self.group_vals['ei_ratio'])
         temp_pop['pyr_cells'] = {'num_neu': self.group_vals['n_exc']}
         for inh_pop, ratio in self.group_vals['inh_ratio'].items():

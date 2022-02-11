@@ -5,8 +5,8 @@ from pathlib import Path
 import pickle
 
 batch_mean, batch_height = {'4': [], '8': []}, {'4': [], '8': []}
-for file_desc in sorted(Path('./').glob('res*')):
-    res = str(file_desc)[3]
+for file_desc in sorted(Path('../').glob('res*')):
+    res = str(file_desc)[6]
     with open(file_desc, 'rb') as f:
         trials = pickle.load(f)
     batch_mean[res].append(np.mean(trials))

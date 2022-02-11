@@ -9,6 +9,7 @@ from scipy.ndimage import gaussian_filter1d
 from scipy.interpolate import interp1d
 
 import numpy as np
+import pandas as pd
 from teili.core.groups import Neurons
 from teili.tools.converter import aedat2numpy, dvs2ind
 from random import randint
@@ -383,3 +384,18 @@ def recorded_bar_testbench(filename, num_samples, repetitions):
         input_indices = np.concatenate((input_indices, ref_input_indices))
 
     return input_times, input_indices
+
+def get_metrics(spike_monitor):
+    data = pd.DataFrame({'i': np.array(spike_monitor.i),
+                         't': np.array(spike_monitor.t/ms)})
+
+    spike_indices, spike_times = data.sort_values(['i', 't']).values.T
+
+    neu_ids, id_slices = np.unique(spike_indices, True)
+    t_arrays = np.split(spike_times, id_slices[1:])
+    max_id = int(max(neu_ids))
+
+    isi = [np.diff(x) for x in t_arrays]
+    cv = [np.std(x)/np.mean(x) if len(x)>1 else np.nan for x in isi]
+
+    return isi, cv

@@ -3,13 +3,14 @@ from brian2 import defaultclock, prefs
 from brian2 import second, Hz, ms, ohm, mA
 
 from teili import TeiliNetwork
-from orca_wta import ORCA_WTA
+from orca_wta import orcaWTA
 
-from SLIF_utils import neuron_rate
+from SLIF_utils import neuron_rate, get_metrics
 from orca_params import ConnectionDescriptor, PopulationDescriptor
 
 import sys
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
@@ -83,7 +84,7 @@ weight_vals = {
 for key, weight_val in weight_vals.items():
     conn_desc.base_vals[key]['weight'] = weight_val
 
-wta = ORCA_WTA(layer=layer,
+wta = orcaWTA(layer=layer,
                conn_params=conn_desc,
                pop_params=pop_desc,
                verbose=True,
@@ -118,18 +119,26 @@ wta.add_input(
     connectivities=conn_desc.input_prob,
     conn_params=conn_desc)
 
-rate_results = []
+rate_results, isi, cv = [], [], []
 plot_pop = 'pyr'
 Net.add(wta, poisson_spikes)
 Net.store()
 for _ in range(10):
     Net.restore()
     Net.run(sim_duration, report='stdout', report_period=100*ms)
+
     pop_rates = neuron_rate(wta.monitors[f'spikemon_{plot_pop}_cells'],
         kernel_len=30*ms, kernel_var=5*ms, simulation_dt=defaultclock.dt,
         smooth=True)
     pop_avg_rates = np.mean(pop_rates['smoothed'], axis=0)
     rate_results.append(np.mean(pop_avg_rates))
+
+    temp_isi, _ = get_metrics(wta.monitors[f'spikemon_{plot_pop}_cells'])
+    for i, x in enumerate(temp_isi):
+        if not isi:
+            isi = temp_isi
+        else:
+            isi[i] = np.append(isi[i], x)
 with open(f'res{bit_res}_wi{wi_perc}', 'wb') as f:
     pickle.dump(rate_results, f)
 
@@ -164,6 +173,23 @@ p1.plot(np.array(wta.monitors[f'spikemon_{plot_pop}_cells'].t),
 p2.addItem(pg.PlotCurveItem(
     pop_rates['t'],
     pop_avg_rates, pen=pg.mkPen(color=(200, 0, 100), width=10)))
+
+y, x = np.histogram(isi[4], bins=np.linspace(-3, 100, 10))
+win = pg.GraphicsWindow()
+p1 = win.addPlot(title='ISI distribution')
+font = QtGui.QFont()
+font.setPixelSize(18)
+p1.getAxis('bottom').setStyle(tickFont=font)
+p1.getAxis('left').setStyle(tickFont=font)
+p1.getAxis('bottom').setStyle(tickTextOffset = 20)
+p1.getAxis('left').setStyle(tickTextOffset = 20)
+p1.plot(x, y, stepMode=True, fillLevel=0, brush=(0,0,255,150))
+p2 = win.addPlot(title='Coefficient of variation')
+cv = [np.std(x)/np.mean(x) for x in isi]
+cv_mean = np.array([np.mean(cv)])
+cv_err = np.array([np.std(cv)/np.sqrt(len(cv))])
+err = pg.ErrorBarItem(x=np.array([2]), y=cv_mean, height=cv_err, beam=.02)
+p2.addItem(err)
 
 if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):

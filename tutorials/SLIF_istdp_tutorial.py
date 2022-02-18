@@ -1,22 +1,21 @@
 import numpy as np
 from scipy.stats import norm
 
-from brian2 import Hz, ms, mV, prefs, SpikeMonitor, StateMonitor, defaultclock,\
+from brian2 import Hz, mA, ms, mV, prefs, SpikeMonitor, StateMonitor, defaultclock,\
     ExplicitStateUpdater, SpikeGeneratorGroup, TimedArray, PoissonGroup,\
     PopulationRateMonitor
 
 from teili.core.groups import Neurons, Connections
 from teili import TeiliNetwork
-from teili.models.neuron_models import StochasticLIF as neuron_model
-from teili.models.synapse_models import StochasticSyn_decay as static_synapse_model
 from teili.stimuli.testbench import SequenceTestbench
-from teili.tools.add_run_reg import add_lfsr
 from teili.tools.group_tools import add_group_activity_proxy
 from teili.models.builder.synapse_equation_builder import SynapseEquationBuilder
 from teili.models.builder.neuron_equation_builder import NeuronEquationBuilder
-from teili.tools.converter import delete_doublets
 
-from lfsr import create_lfsr
+static_synapse_model = SynapseEquationBuilder(base_unit='quantized',
+    plasticity='non_plastic')
+neuron_model = NeuronEquationBuilder(base_unit='quantized',
+    position='spatial')
 
 import sys
 import pickle
@@ -25,10 +24,10 @@ from datetime import datetime
 
 #############
 # Load models
-path = os.path.expanduser("/home/pablo/git/teili")
+path = os.path.expanduser('/Users/Pablo/git/teili/')
 model_path = os.path.join(path, "teili", "models", "equations", "")
 adp_synapse_model = SynapseEquationBuilder.import_eq(
-        model_path + 'StochSynAdp.py')
+        model_path + 'StochInhStdp.py')
 
 # Initialize simulation preferences
 prefs.codegen.target = "numpy"
@@ -95,51 +94,42 @@ exc_exc_conn.connect()
 inh_inh_conn.connect(p=.1)
 
 # Time constants
-feedforward_exc.tau_syn = 5*ms
-feedforward_inh.tau_syn = 5*ms
-inh_exc_conn.tau_syn = 10*ms
-exc_inh_conn.tau_syn = 5*ms
-exc_exc_conn.tau_syn = 5*ms
-inh_inh_conn.tau_syn = 10*ms
+feedforward_exc.tausyn = 5*ms
+feedforward_inh.tausyn = 5*ms
+inh_exc_conn.tausyn = 10*ms
+exc_inh_conn.tausyn = 5*ms
+exc_exc_conn.tausyn = 5*ms
+inh_inh_conn.tausyn = 10*ms
 exc_cells.tau = 19*ms
 inh_cells.tau = 10*ms
 
-# LFSR lengths
-feedforward_exc.lfsr_num_bits_syn = 5
-feedforward_inh.lfsr_num_bits_syn = 5
-exc_cells.lfsr_num_bits = 5
-inh_cells.lfsr_num_bits = 5
-inh_exc_conn.lfsr_num_bits_syn = 5
-exc_inh_conn.lfsr_num_bits_syn = 4
-exc_exc_conn.lfsr_num_bits_syn = 5
-inh_inh_conn.lfsr_num_bits_syn = 5
-
-seed = 12
 exc_cells.Vm = 3*mV
+exc_cells.I_min = -16*mA
+exc_cells.I_max = 15*mA
 inh_cells.Vm = 3*mV
-inh_exc_conn.inh_learning_rate = 0.01
+inh_cells.I_min = -16*mA
+inh_cells.I_max = 15*mA
 
 inh_exc_conn.weight = -1
 inh_exc_conn.w_plast = 1
+inh_exc_conn.w_max = 15
+inh_exc_conn.A_max = 15
+inh_exc_conn.taupre = 20*ms
+inh_exc_conn.taupost = 20*ms
+inh_exc_conn.rand_num_bits_syn = 4
+inh_exc_conn.stdp_thres = 3
 inh_inh_conn.weight = -1
 feedforward_exc.weight = 4
 feedforward_inh.weight = 4
 exc_inh_conn.weight = 1
 exc_exc_conn.weight = 1
 
-# Set LFSRs for each group
-ta = create_lfsr([exc_cells, inh_cells],
-                 [inh_exc_conn, feedforward_exc,
-                     exc_inh_conn, exc_exc_conn,
-                     inh_inh_conn, feedforward_inh],
-                 defaultclock.dt)
-
 # Add proxy activity group
 activity_proxy_group = [exc_cells]
 add_group_activity_proxy(activity_proxy_group,
                          buffer_size=300,
                          decay=150)
-variance_th = .9
+variance_th = 13
 inh_exc_conn.variance_th = np.random.uniform(
         low=variance_th - 0.1,
         high=variance_th + 0.1,
@@ -173,12 +163,12 @@ net.add(poisson_spikes, exc_cells, inh_cells, inh_exc_conn, feedforward_exc,
         statemon_pop_rate_e, feedforward_inh)
 
 net.run(10000*ms, report='stdout', report_period=100*ms)
-variance_th = .5
+variance_th = 2
 inh_exc_conn.variance_th = np.random.uniform(
         low=variance_th - 0.1,
         high=variance_th + 0.1,
         size=len(inh_exc_conn))
-net.run(30000*ms, report='stdout', report_period=100*ms)
+net.run(10000*ms, report='stdout', report_period=100*ms)
 
 # Plots
 from brian2 import *
@@ -196,8 +186,8 @@ ylabel('normalized activity mean value')
 xlabel('time (ms)')
 ylim([-0.05, 1.05])
 fill_between(statemon_inh_conns.t/ms, y-stdd, y+stdd, facecolor='lightblue')
-annotate(f"""learning rate: {inh_exc_conn.inh_learning_rate}
-           variance threshold: .9 for first 10s, .1 afterwards""", xy = (0, 0.1))
+annotate(f"""Shown for the sake of comparison with ADP
+           variance threshold: 14 for first 10s, 2 afterwards""", xy = (0, 0.1))
 
 figure()
 plot(statemon_exc_cells.normalized_activity_proxy.T)
@@ -266,30 +256,3 @@ title('Input spikes')
 show()
 np.savez('adp.npz', proxy=statemon_exc_cells.normalized_activity_proxy.T,
          e_curr=tot_e_curr/amp, i_curr=tot_i_curr/amp)
-
-#import pyqtgraph as pg
-#from pyqtgraph.Qt import QtCore, QtGui
-#from pyqtgraph.dockarea import *
-#
-#app = QtGui.QApplication([])
-#win = QtGui.QMainWindow()
-#area = DockArea()
-#win.setCentralWidget(area)
-#
-#d1 = Dock('Normalized activity', size=(1, 1))
-#d2 = Dock('Parameters', size=(1, 1))
-#area.addDock(d1, 'left')
-#area.addDock(d2, 'left')
-#area.moveDock(d2, 'above', d1)
-#
-#w1 = pg.LayoutWidget()
-#label = QtGui.QLabel(f"""learning rate: {inh_exc_conn.inh_learning_rate}
-#                         variance threshold: {variance_th}
-#                         e->e weights: """)
-#w1.addWidget(label)
-#d1.addWidget(w1)
-#win.show()
-#if __name__ == '__main__':
-#   import sys
-#   if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-#       QtGui.QApplication.instance().exec_()

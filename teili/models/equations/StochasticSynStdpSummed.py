@@ -40,7 +40,7 @@ StochasticSynStdpSummed = {'model':
 'on_pre':
 '''
 
-        I_syn += gain_syn * abs(weight) * w_plast
+        I_syn += gain_syn * weight * w_plast
 
         rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_Apre-1))
         rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_Apre-1))

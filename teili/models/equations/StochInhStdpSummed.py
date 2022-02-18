@@ -42,7 +42,7 @@ StochInhStdpSummed = {'model':
 'on_pre':
 '''
 
-        I_syn += gain_syn * abs(weight) * w_plast
+        I_syn += gain_syn * weight * w_plast
         
         Apre += 15
         Apre = clip(Apre, 0, 15)

@@ -1,5 +1,5 @@
 from brian2.units import * 
-StochStdpNewrand = {'model':
+StochStdpNew = {'model':
 '''
         dI_syn/dt = int(I_syn*decay_syn/mA + decay_probability_syn)*mA/second : amp (clock-driven)
         decay_probability_syn = lfsr_timedarray( ((seed_syn+t) % lfsr_max_value_syn) + lfsr_init_syn ) / (2**lfsr_num_bits_syn): 1
@@ -71,13 +71,13 @@ StochStdpNewrand = {'model':
 'on_pre':
 '''
 
-        I_syn += gain_syn * abs(weight) * w_plast
+        I_syn += gain_syn * weight * w_plast
         
         Apre += dApre
         counter_Apre += 1*ms
-        Apre1_lfsr = random_integers(1,15)
+        Apre1_lfsr = lfsr_timedarray( ((seed_condApre1+counter_Apre) % lfsr_max_value_condApre1) + lfsr_init_condApre1 )
         cond_Apre1 = Apre1_lfsr < Apost
-        Apre2_lfsr = random_integers(1,15)
+        Apre2_lfsr = lfsr_timedarray( ((seed_condApre2+counter_Apre) % lfsr_max_value_condApre2) + lfsr_init_condApre2 )
         cond_Apre2 = Apre2_lfsr <= stdp_thres
         Apre = clip(Apre, 0, A_max)
         w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(cond_Apre1)*int(cond_Apre2), 0, w_max)
@@ -89,9 +89,9 @@ StochStdpNewrand = {'model':
         
         Apost += dApre
         counter_Apost += 1*ms
-        Apost1_lfsr = random_integers(1, 15)
+        Apost1_lfsr = lfsr_timedarray( ((seed_condApost1+counter_Apost) % lfsr_max_value_condApost1) + lfsr_init_condApost1 )
         cond_Apost1 = Apost1_lfsr < Apre
-        Apost2_lfsr = random_integers(1, 15)
+        Apost2_lfsr = lfsr_timedarray( ((seed_condApost2+counter_Apost) % lfsr_max_value_condApost2) + lfsr_init_condApost2 )
         cond_Apost2 = Apost2_lfsr <= stdp_thres
         Apost = clip(Apost, 0, A_max)
         w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(cond_Apost1)*int(cond_Apost2), 0, w_max)

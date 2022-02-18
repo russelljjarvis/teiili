@@ -416,7 +416,7 @@ stochastic_syn_release = {
         """,
     'on_pre': """
         syn_release = int(rand()<0.8)
-        %I_syn += gain_syn * abs(weight) * w_plast * syn_release
+        %I_syn += gain_syn * weight * w_plast * syn_release
         %Apre = clip(Apre + dApre * syn_release, 0, A_max)
         %w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres)*syn_release, 0, w_max)
         """,
@@ -437,8 +437,8 @@ stochastic_heterosynaptic = {
     'on_pre': """
         """,
     'on_post': """
-        rand_int_heterosyn1 = ceil(rand() * (2**rand_num_bits-1))
-        rand_int_heterosyn2 = ceil(rand() * (2**rand_num_bits-1))
+        rand_int_heterosyn1 = ceil(rand() * (2**rand_num_bits_syn-1))
+        rand_int_heterosyn2 = ceil(rand() * (2**rand_num_bits_syn-1))
         w_plast = clip(w_plast - 1*int(rand_int_Apost1<=1)*int(rand_int_Apost2<=1)*int(rand_int_heterosyn1<prev_Apost)*int(rand_int_heterosyn2<prev_wplast), 0, w_max)
         """
 }
@@ -515,14 +515,14 @@ quantized_stochastic_stdp = {
         rand_int_Apre2 : 1
         rand_int_Apost1 : 1
         rand_int_Apost2 : 1
-        rand_num_bits : 1 # Number of bits of random number generated for As
+        rand_num_bits_syn : 1 # Number of bits of random number generated for As
         stdp_thres : 1 (constant)
         prev_Apost : 1
         prev_wplast : 1
         ''',
     'on_pre': '''
-        rand_int_Apre1 = ceil(rand() * (2**rand_num_bits-1))
-        rand_int_Apre2 = ceil(rand() * (2**rand_num_bits-1))
+        rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_syn-1))
+        rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_syn-1))
         w_plast = clip(w_plast - 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < Apost)*int(rand_int_Apre2 <= stdp_thres), 0, w_max)
         Apre += dApre
         Apre = clip(Apre, 0, A_max)
@@ -530,8 +530,8 @@ quantized_stochastic_stdp = {
     'on_post': '''
         prev_Apost = Apost
         prev_wplast = w_plast
-        rand_int_Apost1 = ceil(rand() * (2**rand_num_bits-1))
-        rand_int_Apost2 = ceil(rand() * (2**rand_num_bits-1))
+        rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_syn-1))
+        rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_syn-1))
         w_plast = clip(w_plast + 1*int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand_int_Apost2 <= stdp_thres), 0, w_max)
         Apost += dApre
         Apost = clip(Apost, 0, A_max)
@@ -546,7 +546,7 @@ quantized_stochastic_stdp_params = {
     "A_gain": 4,
     "dApre": 15,
     "w_plast": 1,
-    "rand_num_bits": 6,
+    "rand_num_bits_syn": 6,
     "stdp_thres": 2
 }
 

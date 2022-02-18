@@ -4,9 +4,6 @@ StochInhStdp = {'model':
         weight                : 1
         w_plast               : 1
         w_max                 : 1
-        lfsr_max_value_syn : second
-        seed_syn : second
-        lfsr_init_syn : second
         gain_syn              : amp
         variance_th: 1 (constant)
         delta_w : 1
@@ -20,7 +17,6 @@ StochInhStdp = {'model':
         decay_stdp_Apost = taupost/(taupost + dt) : 1
 
         A_max: 1 (constant)
-        dApre: 1 (constant)
         A_gain: 1 (constant)
         taupre : second (constant)
         taupost : second (constant)
@@ -29,7 +25,7 @@ StochInhStdp = {'model':
         rand_int_Apre2 : 1
         rand_int_Apost1 : 1
         rand_int_Apost2 : 1
-        rand_num_bits : 1 # Number of bits of random number generated for As
+        rand_num_bits_syn : 1 # Number of bits of random number generated for As
         stdp_thres : 1 (constant)
          ''',
 'on_pre':
@@ -39,8 +35,8 @@ StochInhStdp = {'model':
         
         Apre += 15
         Apre = clip(Apre, 0, A_max)
-        rand_int_Apre1 = ceil(rand() * (2**rand_num_bits-1))
-        rand_int_Apre2 = ceil(rand() * (2**rand_num_bits-1))
+        rand_int_Apre1 = ceil(rand() * (2**rand_num_bits_syn-1))
+        rand_int_Apre2 = ceil(rand() * (2**rand_num_bits_syn-1))
         delta_w  = 1 * sign(Apost - variance_th) * int(lastspike_post!=lastspike_pre)*int(rand_int_Apre1 < abs(Apost - variance_th))*int(rand_int_Apre2 <= stdp_thres)
         w_plast = clip(w_plast + delta_w, 0, w_max)
          ''',
@@ -48,8 +44,8 @@ StochInhStdp = {'model':
 '''
         Apost += 15
         Apost = clip(Apost, 0, A_max)
-        rand_int_Apost1 = ceil(rand() * (2**rand_num_bits-1))
-        rand_int_Apost2 = ceil(rand() * (2**rand_num_bits-1))
+        rand_int_Apost1 = ceil(rand() * (2**rand_num_bits_syn-1))
+        rand_int_Apost2 = ceil(rand() * (2**rand_num_bits_syn-1))
         delta_w  = 1 * int(lastspike_post!=lastspike_pre)*int(rand_int_Apost1 < Apre)*int(rand_int_Apost2 <= stdp_thres)
         w_plast = clip(w_plast + delta_w, 0, w_max)
 
@@ -65,6 +61,6 @@ StochInhStdp = {'model':
 'taupre': '20 * msecond',
 'taupost': '20 * msecond',
 'stdp_thres': '1',
-'rand_num_bits': '4'
+'rand_num_bits_syn': '4'
 }
 }

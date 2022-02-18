@@ -16,7 +16,7 @@ StochasticSynSummed = {'model':
 'on_pre':
 '''
 
-        I_syn += gain_syn * abs(weight) * w_plast
+        I_syn += gain_syn * weight * w_plast
         
          ''',
 'on_post':

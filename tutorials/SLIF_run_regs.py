@@ -55,6 +55,8 @@ def add_activity_proxy(group, buffer_size, decay):
         group.kernel.set_with_index_array(
             item=ind, value=mask, check_units=False)
 
+    # This considers that Iin0 is the current from Pyr cells. I may 
+    # have to write a more flexible code
     group.run_regularly('''Iin0 = clip(Iin0, 0*mA, 500*mA)''', dt=1 * ms)
 
     group.run_regularly('''buffer_pointer = (buffer_pointer + 1) % buffer_size;\

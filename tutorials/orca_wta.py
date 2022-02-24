@@ -257,7 +257,7 @@ def add_populations(_groups,
             be added to neurons. This is generated with a poisson process.
     """
     temp_groups = {}
-    for pop_id, params in pop_params._groups.items():
+    for pop_id, params in pop_params.groups.items():
         neu_type = pop_params.group_plast[pop_id]
         temp_groups[pop_id] = Neurons(
             params['num_neu'],
@@ -265,7 +265,7 @@ def add_populations(_groups,
             method=stochastic_decay,
             name=group_name+pop_id,
             verbose=verbose)
-        temp_groups[pop_id].set_params(pop_params._base_vals[pop_id])
+        temp_groups[pop_id].set_params(pop_params.base_vals[pop_id])
     
     if noise:
         pyr_noise_cells = PoissonInput(pyr_cells, 'Vm_noise', 1, 3*Hz, 12*mV)
@@ -331,9 +331,9 @@ def add_connections(connection_ids,
                 temp_conns[conn_id].connect(p=1)
             else:
                 temp_conns[conn_id].connect(p=connectivity)
-        temp_conns[conn_id].set_params(conn_params._base_vals[conn_id])
+        temp_conns[conn_id].set_params(conn_params.base_vals[conn_id])
 
-        sample_vars = conn_params._sample[conn_id]
+        sample_vars = conn_params.sample[conn_id]
         for sample_var in sample_vars: 
             add_group_param_init([temp_conns[conn_id]],
                                  variable=sample_var['variable'],
@@ -396,12 +396,12 @@ def add_connections(connection_ids,
                 temp_conns[conn_id].weight[ffe_zero_w, neu] = 0
                 temp_conns[conn_id].w_plast[ffe_zero_w, neu] = 0
 
-            # TODO for reinit_var in conn_params._reinit_vars[conn_id]
+            # TODO for reinit_var in conn_params.reinit_vars[conn_id]
             add_group_params_re_init(groups=[temp_conns[conn_id]],
                                      variable='w_plast',
                                      re_init_variable='re_init_counter',
                                      re_init_threshold=1,
-                                     re_init_dt=conn_params._reinit_vars[conn_id]['re_init_dt'],
+                                     re_init_dt=conn_params.reinit_vars[conn_id]['re_init_dt'],
                                      dist_param=3,
                                      scale=1,
                                      distribution='gamma',
@@ -413,7 +413,7 @@ def add_connections(connection_ids,
                                      variable='weight',
                                      re_init_variable='re_init_counter',
                                      re_init_threshold=1,
-                                     re_init_dt=conn_params._reinit_vars[conn_id]['re_init_dt'],
+                                     re_init_dt=conn_params.reinit_vars[conn_id]['re_init_dt'],
                                      distribution='deterministic',
                                      const_value=1,
                                      reference='synapse_counter')
@@ -422,7 +422,7 @@ def add_connections(connection_ids,
             #                         variable='tausyn',
             #                         re_init_variable='re_init_counter',
             #                         re_init_threshold=1,
-            #                         re_init_dt=conn_params._reinit_vars[conn_id]['re_init_dt'],
+            #                         re_init_dt=conn_params.reinit_vars[conn_id]['re_init_dt'],
             #                         dist_param=5.5,
             #                         scale=1,
             #                         distribution='normal',

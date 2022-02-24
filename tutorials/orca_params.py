@@ -7,10 +7,9 @@ This file contains main parameters and definitions of the building block
 related to quantized stochastic models described by Wang et al. (2018).
 The dictionaries provided below represent motifs for connections and groups.
 The descriptor will filter values according to layer and plasticity rules, so
-that scaling up is more modular and (hopefully) more organized. After that,
-populations and connections values can be changed as desired. Note that we
-chose to be explicit, so there are a lot of variables. The final
-descriptor however contains only specific parameters from the motifs.
+that scaling up is more modular and (hopefully) more organized. Note that we
+chose to be explicit, so there are a lot of variables. The final descriptor
+however contains only specific parameters from the motifs.
 """
 import os
 import copy
@@ -916,12 +915,9 @@ class ConnectionDescriptor(ParameterDescriptor):
         input_plast (dict): Plasticity types of inputs.
         intra_prob (dict): Connection probability of intralaminar projections.
         intra_plast (dict): Plasticity types of intralaminar projections.
-        conn_vals (dict): General parameters that  will be used 
-            to generate final parameters. This should be changed only AFTER
-            calling filter_params().
-        _base_vals (dict): General paramaters, as defined by layer and plasticty
+        base_vals (dict): General paramaters, as defined by layer and plasticty
             types defined. Goes to set_params()
-        _sample (dict): Variables that will be sampled.
+        sample (dict): Variables that will be sampled.
         reinit_var (dict): Variables used for plasticity of type 'reinit'.
     """
     def __init__(self, layer, model_path):
@@ -948,53 +944,52 @@ class ConnectionDescriptor(ParameterDescriptor):
         self.input_plast = syn_input_plast
         self.intra_prob = syn_intra_prob[self.layer]
         self.intra_plast = syn_intra_plast[self.layer]
-        self.conn_vals = {}
-        self._base_vals = {}
-        self._sample = {}
-        self._reinit_vars = {}
+        self.base_vals = {}
+        self.sample = {}
+        self.reinit_vars = {}
 
     def filter_params(self):
         """ Update parameters that will be used to build synapse model. This
-            is done by changing the values of attributes _base_vals, _sample, 
-            and _reinit_vars according to what was set in the other
+            is done by changing the values of attributes base_vals, sample, 
+            and reinit_vars according to what was set in the other
             dictionaries.
         """
+        # Filter parameters from template according to plasticity for
+        # each connection
+        conn_vals = {}
         for conn, plast in self.input_plast.items():
-            self.conn_vals[conn] = syn_model_vals[plast][conn]
+            conn_vals[conn] = syn_model_vals[plast][conn]
         for conn, plast in self.intra_plast.items():
-            self.conn_vals[conn] = syn_model_vals[plast][conn]
+            conn_vals[conn] = syn_model_vals[plast][conn]
 
         conn_groups = [self.intra_plast, self.input_plast]
         for conn_group in conn_groups:
             for conn, plast in conn_group.items():
-                self._base_vals[conn] = process_base_vars(
-                    self.conn_vals[conn],
+                self.base_vals[conn] = process_base_vars(
+                    conn_vals[conn],
                     self.constants)
 
         for conn_group in conn_groups:
             for conn, plast in conn_group.items():
-                self._sample[conn] = process_sample_vars(
+                self.sample[conn] = process_sample_vars(
                     syn_sample_vars[plast][conn],
-                    {**self._base_vals[conn], **self.constants})
+                    {**self.base_vals[conn], **self.constants})
 
         for conn, plast in self.input_plast.items():
             # At the moment only works for reinit connections
             if plast == 'reinit':
-                self._reinit_vars[conn] = reinit_vars[conn]
+                self.reinit_vars[conn] = reinit_vars[conn]
 
 class PopulationDescriptor(ParameterDescriptor):
     """ This class describes the standard characterists of the populations.
 
     Attributes:
         models (dict): Neuronal models available.
-        group_vals (dict): General parameters that  will be used 
-            to generate final parameters. This should be changed only
-            AFTER calling filter_params().
         group_prop (dict): Main values to calculate proportions of
             subgroups.
-        _base_vals (dict): General parameters, after filtering. Goes to
+        base_vals (dict): General parameters, after filtering. Goes to
             set_params()
-        _sample (dict): Variables that will be sampled.
+        sample (dict): Variables that will be sampled.
         e_ratio (flot): Proportion that will scale total number of
             excitatory cells in each layer.
     """
@@ -1007,20 +1002,22 @@ class PopulationDescriptor(ParameterDescriptor):
             position='spatial')
 
         self.group_plast = neu_pop_plast
-        self.group_vals = {}
         self.group_prop = neu_pop[self.layer]
-        self._base_vals = {}
-        self._sample = {}
-        self._groups = {}
+        self.base_vals = {}
+        self.sample = {}
+        self.groups = {}
         self.e_ratio = 1.0
         
     def filter_params(self):
         """ Filter parameters that will be used to build neuron model. This
-            is done by changing the values of attributes _base_vals, _sample, and
-            _groups according to what was set in other dictionaries.
+            is done by changing the values of attributes base_vals, sample, and
+            groups according to what was set in other dictionaries.
         """
+        # Filter parameters from template according to plasticity for
+        # each population
+        group_vals = {}
         for conn, plast in self.group_plast.items():
-            self.group_vals[conn] = neu_model_vals[plast][conn]
+            group_vals[conn] = neu_model_vals[plast][conn]
 
         temp_pop = {}
         self.group_prop['n_exc'] = int(self.e_ratio * self.group_prop['n_exc'])
@@ -1033,17 +1030,17 @@ class PopulationDescriptor(ParameterDescriptor):
         for pop, n_inp in self.group_prop['num_inputs'].items():
             temp_pop[pop].update({'num_inputs': n_inp})
 
-        self._groups = temp_pop
+        self.groups = temp_pop
 
         for conn, plast in self.group_plast.items():
-            self._base_vals[conn] = process_base_vars(
-                self.group_vals[conn],
+            self.base_vals[conn] = process_base_vars(
+                group_vals[conn],
                 self.constants)
 
         for neu_group in self.group_plast.keys():
-            self._sample[neu_group] = process_sample_vars(
+            self.sample[neu_group] = process_sample_vars(
                 neu_sample_vars[neu_group],
-                {**self._base_vals[neu_group], **self.constants})
+                {**self.base_vals[neu_group], **self.constants})
 
 def process_base_vars(base_objects, reference_vals):
     ''' This function filter the necessary parameters from provided

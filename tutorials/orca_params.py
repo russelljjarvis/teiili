@@ -7,12 +7,10 @@ This file contains main parameters and definitions of the building block
 related to quantized stochastic models described by Wang et al. (2018).
 The dictionaries provided below represent motifs for connections and groups.
 The descriptor will filter values according to layer and plasticity rules, so
-that scaling up is more modular and (hopefully) more organized. Therefore,
-global dictionaries below represent motifs that will be selected according to
-laminar and plasticity options provided. Parameters that require fine
-tunning can be used with filter_params methods of classes below.
-Note that we chose to be explicit, so there are a lot of variables. The final
-descriptor however contains only the desired parameters from motifs.
+that scaling up is more modular and (hopefully) more organized. After that,
+populations and connections values can be changed as desired. Note that we
+chose to be explicit, so there are a lot of variables. The final
+descriptor however contains only specific parameters from the motifs.
 """
 import os
 import copy
@@ -141,141 +139,6 @@ syn_intra_plast = {
         'sst_pyr': 'istdp',
         'sst_vip': 'static',
         'vip_sst': 'static'},
-    }
-
-syn_inter_prob = {
-    'L23_L4': {
-        'pyr_pyr': 0.008,
-        'pyr_pv': 0.069,
-        'pyr_sst': 0.069,
-        'pyr_vip': 0.069,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L23_L5': {
-        'pyr_pyr': 0.100,
-        'pyr_pv': 0.055,
-        'pyr_sst': 0.055,
-        'pyr_vip': 0.055,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L23_L6': {
-        'pyr_pyr': 0.016,
-        'pyr_pv': 0.036,
-        'pyr_sst': 0.036,
-        'pyr_vip': 0.036,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L4_L23': {
-        'pyr_pyr': 0.044,
-        'pyr_pv': 0.032,
-        'pyr_sst': 0.032,
-        'pyr_vip': 0.032,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L4_L5': {
-        'pyr_pyr': 0.051,
-        'pyr_pv': 0.026,
-        'pyr_sst': 0.026,
-        'pyr_vip': 0.026,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L4_L6': {
-        'pyr_pyr': 0.021,
-        'pyr_pv': 0.003,
-        'pyr_sst': 0.003,
-        'pyr_vip': 0.003,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L5_L23': {
-        'pyr_pyr': 0.032,
-        'pyr_pv': 0.075,
-        'pyr_sst': 0.075,
-        'pyr_vip': 0.075,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L5_L4': {
-        'pyr_pyr': 0.007,
-        'pyr_pv': 0.003,
-        'pyr_sst': 0.003,
-        'pyr_vip': 0.003,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L5_L6': {
-        'pyr_pyr': 0.057,
-        'pyr_pv': 0.028,
-        'pyr_sst': 0.028,
-        'pyr_vip': 0.028,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L6_L23': {
-        'pyr_pyr': 0.008,
-        'pyr_pv': 0.004,
-        'pyr_sst': 0.004,
-        'pyr_vip': 0.004,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L6_L4': {
-        'pyr_pyr': 0.045,
-        'pyr_pv': 0.106,
-        'pyr_sst': 0.106,
-        'pyr_vip': 0.106,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65}, #TODO
-    'L6_L5': {
-        'pyr_pyr': 0.020,
-        'pyr_pv': 0.009,
-        'pyr_sst': 0.009,
-        'pyr_vip': 0.009,
-        'pv_pyr': 1.0, #TODO
-        'pv_pv': 1.0, #TODO
-        'sst_pv': 0.9, #TODO
-        'sst_pyr': 1.0, #TODO
-        'sst_vip': 0.9, #TODO
-        'vip_sst': 0.65} #TODO
     }
 
 # The dictionaries below contain the parameters for each case, as defined above
@@ -1054,9 +917,10 @@ class ConnectionDescriptor(ParameterDescriptor):
         intra_prob (dict): Connection probability of intralaminar projections.
         intra_plast (dict): Plasticity types of intralaminar projections.
         conn_vals (dict): General parameters that  will be used 
-            to generate final parameters.
+            to generate final parameters. This should be changed only AFTER
+            calling filter_params().
         _base_vals (dict): General paramaters, as defined by layer and plasticty
-            types defined.
+            types defined. Goes to set_params()
         _sample (dict): Variables that will be sampled.
         reinit_var (dict): Variables used for plasticity of type 'reinit'.
     """
@@ -1085,10 +949,6 @@ class ConnectionDescriptor(ParameterDescriptor):
         self.intra_prob = syn_intra_prob[self.layer]
         self.intra_plast = syn_intra_plast[self.layer]
         self.conn_vals = {}
-        for conn, plast in self.input_plast.items():
-            self.conn_vals[conn] = syn_model_vals[plast][conn]
-        for conn, plast in self.intra_plast.items():
-            self.conn_vals[conn] = syn_model_vals[plast][conn]
         self._base_vals = {}
         self._sample = {}
         self._reinit_vars = {}
@@ -1099,6 +959,11 @@ class ConnectionDescriptor(ParameterDescriptor):
             and _reinit_vars according to what was set in the other
             dictionaries.
         """
+        for conn, plast in self.input_plast.items():
+            self.conn_vals[conn] = syn_model_vals[plast][conn]
+        for conn, plast in self.intra_plast.items():
+            self.conn_vals[conn] = syn_model_vals[plast][conn]
+
         conn_groups = [self.intra_plast, self.input_plast]
         for conn_group in conn_groups:
             for conn, plast in conn_group.items():
@@ -1123,10 +988,12 @@ class PopulationDescriptor(ParameterDescriptor):
     Attributes:
         models (dict): Neuronal models available.
         group_vals (dict): General parameters that  will be used 
-            to generate final parameters.
+            to generate final parameters. This should be changed only
+            AFTER calling filter_params().
         group_prop (dict): Main values to calculate proportions of
             subgroups.
-        _base_vals (dict): General parameters, after filtering.
+        _base_vals (dict): General parameters, after filtering. Goes to
+            set_params()
         _sample (dict): Variables that will be sampled.
         e_ratio (flot): Proportion that will scale total number of
             excitatory cells in each layer.
@@ -1141,8 +1008,6 @@ class PopulationDescriptor(ParameterDescriptor):
 
         self.group_plast = neu_pop_plast
         self.group_vals = {}
-        for conn, plast in self.group_plast.items():
-            self.group_vals[conn] = neu_model_vals[plast][conn]
         self.group_prop = neu_pop[self.layer]
         self._base_vals = {}
         self._sample = {}
@@ -1154,16 +1019,22 @@ class PopulationDescriptor(ParameterDescriptor):
             is done by changing the values of attributes _base_vals, _sample, and
             _groups according to what was set in other dictionaries.
         """
+        for conn, plast in self.group_plast.items():
+            self.group_vals[conn] = neu_model_vals[plast][conn]
+
         temp_pop = {}
         self.group_prop['n_exc'] = int(self.e_ratio * self.group_prop['n_exc'])
         num_inh = int(self.group_prop['n_exc']/self.group_prop['ei_ratio'])
         temp_pop['pyr_cells'] = {'num_neu': self.group_prop['n_exc']}
         for inh_pop, ratio in self.group_prop['inh_ratio'].items():
             temp_pop[inh_pop] = {'num_neu': int(num_inh * ratio)}
-            #num_pv = num_pv if num_pv else 1
+            # TODO add 1 if zero e.g. num_pv = num_pv if num_pv else 1
+
         for pop, n_inp in self.group_prop['num_inputs'].items():
             temp_pop[pop].update({'num_inputs': n_inp})
+
         self._groups = temp_pop
+
         for conn, plast in self.group_plast.items():
             self._base_vals[conn] = process_base_vars(
                 self.group_vals[conn],

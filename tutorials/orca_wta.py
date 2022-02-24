@@ -12,7 +12,6 @@ from teili.core.groups import Neurons, Connections
 from teili.tools.group_tools import add_group_activity_proxy,\
     add_group_params_re_init, add_group_param_init
 
-from orca_params import conn_desc, pop_desc
 from teili.tools.misc import DEFAULT_FUNCTIONS
 from SLIF_run_regs import add_alt_activity_proxy
 from monitor_params import monitor_params
@@ -36,9 +35,9 @@ class orcaWTA(BuildingBlock):
 
     def __init__(self,
                  layer,
-                 name='orca_wta_',
-                 conn_params=conn_desc,
-                 pop_params=pop_desc,
+                 name,
+                 conn_params,
+                 pop_params,
                  verbose=False,
                  monitor=False,
                  noise=False):
@@ -82,8 +81,6 @@ class orcaWTA(BuildingBlock):
         add_connections([*conn_params.intra_prob],
                         self._groups,
                         group_name=self.name,
-                        syn_types=conn_params.intra_plast,
-                        connectivities=conn_params.intra_prob,
                         conn_params=conn_params,
                         verbose=verbose)
 
@@ -91,9 +88,7 @@ class orcaWTA(BuildingBlock):
                   input_group,
                   source_name,
                   targets,
-                  syn_types=conn_desc.input_plast,
-                  connectivities=conn_desc.input_prob,
-                  conn_params=conn_desc):
+                  conn_params):
         """ This functions add an input group and connections to the building
             block.
 
@@ -103,8 +98,6 @@ class orcaWTA(BuildingBlock):
             source_name (str): Name of the input group to be registered.
             targets (list of str): Name of the postsynaptic groups as
                 stored in _groups.
-            syn_type (dict): Type of synapses for each connection.
-            connectivities (dict): Connection probabilities for each connection.
             conn_params (ConnectionDescriptor): Class which holds building_block
                 specific parameters. It can be find on tutorials/orca_params.py
         """
@@ -112,8 +105,6 @@ class orcaWTA(BuildingBlock):
         add_connections(conn_ids,
                         self._groups,
                         group_name=self.name,
-                        syn_types=syn_types,
-                        connectivities=connectivities,
                         conn_params=conn_params,
                         external_input=input_group)
 
@@ -291,8 +282,6 @@ def add_populations(_groups,
 def add_connections(connection_ids,
                     _groups,
                     group_name,
-                    syn_types,
-                    connectivities,
                     conn_params,
                     external_input=None,
                     verbose=False):
@@ -304,39 +293,44 @@ def add_connections(connection_ids,
             in _groups.
         _groups (dict): Keys to all neuron and synapse groups.
         group_name (str, required): Name of the building_block population
-        syn_type (dict): Type of synapses for each connection.
-        connectivities (dict): Connection probabilities for each connection.
         conn_params (ConnectionDescriptor): Class which holds building_block
             specific parameters. It can be find on tutorials/orca_params.py
-        external_input (brian2.NeuronGroup, optional): Indicates whether
-            input comes from group outside target group.
+        external_input (brian2.NeuronGroup, optional): Contains input group
+            in case it comes from outside target group.
         verbose (bool, optional): Flag to gain additional information
     """
     temp_conns = {}
     source_group = _groups
+    syn_types = conn_params.intra_plast
+    connectivities = conn_params.intra_prob
     if external_input is not None:
         # Only one input is connected at a time, so this can be done once
         temp_name = connection_ids[0].split('_')[0]
         source_group[f'{temp_name}_cells'] = external_input
+        syn_types = conn_params.input_plast
+        connectivities = conn_params.input_prob
     for conn_id in connection_ids:
         source, target = conn_id.split('_')[0], conn_id.split('_')[1]
         syn_type = syn_types[conn_id]
+        connectivity = connectivities[conn_id]
+
         temp_conns[conn_id] = Connections(
             source_group[source+'_cells'], _groups[target+'_cells'],
             equation_builder=conn_params.models[syn_type](),
             method=stochastic_decay,
             name=group_name+source+'_'+target
             )
+
         if source==target:
             if syn_type == 'reinit':
                 temp_conns[conn_id].connect('i!=j', p=1)
             else:
-                temp_conns[conn_id].connect('i!=j', p=connectivities[conn_id])
+                temp_conns[conn_id].connect('i!=j', p=connectivity)
         else:
             if syn_type == 'reinit':
                 temp_conns[conn_id].connect(p=1)
             else:
-                temp_conns[conn_id].connect(p=connectivities[conn_id])
+                temp_conns[conn_id].connect(p=connectivity)
         temp_conns[conn_id].set_params(conn_params._base_vals[conn_id])
 
         sample_vars = conn_params._sample[conn_id]

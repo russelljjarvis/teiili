@@ -43,8 +43,10 @@ syn_input_plast = {
     'ff_pv': 'static',
     'ff_sst': 'static',
     'ff_vip': 'static',
-    #'fb_pyr': 'stdp',
-    #'fb_vip': 'stdp'
+    'fb_pyr': 'stdp',
+    'fb_pv': 'stdp',
+    'fb_sst': 'static',
+    'fb_vip': 'static'
     }
 
 syn_intra_prob = {
@@ -141,7 +143,7 @@ syn_intra_plast = {
         'vip_sst': 'static'},
     }
 
-interlaminar_conn_prob = {
+syn_inter_prob = {
     'L23_L4': {
         'pyr_pyr': 0.008,
         'pyr_pv': 0.069,
@@ -277,7 +279,7 @@ interlaminar_conn_prob = {
     }
 
 # The dictionaries below contain the parameters for each case, as defined above
-syn_base_vals = {
+syn_model_vals = {
     'static': {
         'ff_pyr': {
             'gain_syn': 1*mA,
@@ -295,6 +297,26 @@ syn_base_vals = {
             'w_plast': 1,
             'delay': 0*ms},
         'ff_vip': {
+            'gain_syn': 1*mA,
+            'weight': 3,
+            'w_plast': 1,
+            'delay': 0*ms},
+        'fb_pyr': {
+            'gain_syn': 1*mA,
+            'weight': 3,
+            'w_plast': 1,
+            'delay': 0*ms},
+        'fb_pv': {
+            'gain_syn': 1*mA,
+            'weight': 3,
+            'w_plast': 1,
+            'delay': 0*ms},
+        'fb_sst': {
+            'gain_syn': 1*mA,
+            'weight': 3,
+            'w_plast': 1,
+            'delay': 0*ms},
+        'fb_vip': {
             'gain_syn': 1*mA,
             'weight': 3,
             'w_plast': 1,
@@ -449,6 +471,92 @@ syn_base_vals = {
             'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
             'stdp_thres': 1
             },
+        'fb_pyr': {
+            'gain_syn': 1*mA,
+            'delay': 0*ms,
+            'taupre': 20*ms,
+            'taupost': 30*ms,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'weight': 1,
+            'w_plast': 2,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
+            'stdp_thres': 1
+            },
+        'fb_pv': {
+            'gain_syn': 1*mA,
+            'delay': 0*ms,
+            'taupre': 20*ms,
+            'taupost': 30*ms,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'weight': 1,
+            'w_plast': 2,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
+            'stdp_thres': 1
+            },
+        'pyr_pyr': {
+            'gain_syn': 1*mA,
+            'delay': 4*ms,
+            'taupre': 20*ms,
+            'taupost': 30*ms,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'weight': 1,
+            'w_plast': 4,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
+            'stdp_thres': 1
+            },
+        },
+    'redsymstdp': {
+        'ff_pyr': {
+            'gain_syn': 1*mA,
+            'delay': 0*ms,
+            'taupre': 20*ms,
+            'taupost': 30*ms,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'weight': 1,
+            'w_plast': 2,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
+            'stdp_thres': 1
+            },
+        'ff_pv': {
+            'gain_syn': 1*mA,
+            'delay': 0*ms,
+            'taupre': 20*ms,
+            'taupost': 30*ms,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'weight': 1,
+            'w_plast': 2,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
+            'stdp_thres': 1
+            },
+        'fb_pyr': {
+            'gain_syn': 1*mA,
+            'delay': 0*ms,
+            'taupre': 20*ms,
+            'taupost': 30*ms,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'weight': 1,
+            'w_plast': 2,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
+            'stdp_thres': 1
+            },
+        'fb_pv': {
+            'gain_syn': 1*mA,
+            'delay': 0*ms,
+            'taupre': 20*ms,
+            'taupost': 30*ms,
+            'A_max': lambda n_bits: 2**n_bits - 1,
+            'rand_num_bits': lambda n_bits: n_bits,
+            'weight': 1,
+            'w_plast': 2,
+            'w_max': lambda n_bits: 2**(n_bits - 1) - 1,
+            'stdp_thres': 1
+            },
         'pyr_pyr': {
             'gain_syn': 1*mA,
             'delay': 4*ms,
@@ -464,7 +572,7 @@ syn_base_vals = {
         }
     }
 
-# Values of type string must correspond to a key in base_vals (except variable)
+# Values of type string must correspond to a key in model_vals (except variable)
 syn_sample_vars = {
     'static': {
         'ff_pyr': [
@@ -483,6 +591,26 @@ syn_sample_vars = {
                 'max': lambda n_bits: 2**(n_bits - 1) - 1},
             ],
         'ff_vip': [
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
+            ],
+        'fb_pyr': [
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
+            ],
+        'fb_pv': [
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
+            ],
+        'fb_sst': [
+            {'variable': 'weight', 'unit': 1,
+                'sign': lambda weight: np.sign(weight), 'min': 1,
+                'max': lambda n_bits: 2**(n_bits - 1) - 1},
+            ],
+        'fb_vip': [
             {'variable': 'weight', 'unit': 1,
                 'sign': lambda weight: np.sign(weight), 'min': 1,
                 'max': lambda n_bits: 2**(n_bits - 1) - 1},
@@ -567,6 +695,12 @@ syn_sample_vars = {
                 'max': lambda max_tau: max_tau},
             ]
         },
+    'adp': {
+        'sst_pv': [
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            ]
+        },
     'altadp': {
         'sst_pv': [
             {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
@@ -583,6 +717,65 @@ syn_sample_vars = {
                 'max': lambda max_tau: max_tau},
             ],
         'ff_pv': [
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            ],
+        'fb_pyr': [
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            ],
+        'fb_pv': [
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            ],
+        'pyr_pyr': [
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'delay', 'unit': 1*ms, 'sign': 1, 'min': 0, 'max': 8},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            ]
+        },
+    'redsymstdp': {
+        'ff_pyr': [
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            ],
+        'ff_pv': [
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            ],
+        'fb_pyr': [
+            {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
+                'max': lambda w_max: w_max},
+            {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            {'variable': 'taupost', 'unit': 1*ms, 'sign': 1, 'min': 0,
+                'max': lambda max_tau: max_tau},
+            ],
+        'fb_pv': [
             {'variable': 'w_plast', 'unit': 1, 'sign': 1, 'min': 1,
                 'max': lambda w_max: w_max},
             {'variable': 'taupre', 'unit': 1*ms, 'sign': 1, 'min': 0,
@@ -680,7 +873,7 @@ neu_pop_plast = {
     'vip_cells': 'static'
     }
 
-neu_base_vals = {
+neu_model_vals = {
     'static': {
         'pyr_cells': {
             'tau': 20*ms,
@@ -844,11 +1037,11 @@ class ParameterDescriptor:
         constants (dict): Constants that will be used for all elements.
         models (dict): Models of the class.
     """
-    def __init__(self, layer, path):
+    def __init__(self, layer, model_path):
         self.layer = layer
         self.constants = {'n_bits': 4, 'max_tau': 2**5 - 1}
-        path = os.path.expanduser(path)
-        self.model_path = os.path.join(path, "teili", "models", "equations", "")
+        model_path = os.path.expanduser(model_path)
+        self.model_path = os.path.join(model_path, "teili", "models", "equations", "")
         self.models = {}
 
 class ConnectionDescriptor(ParameterDescriptor):
@@ -860,16 +1053,23 @@ class ConnectionDescriptor(ParameterDescriptor):
         input_plast (dict): Plasticity types of inputs.
         intra_prob (dict): Connection probability of intralaminar projections.
         intra_plast (dict): Plasticity types of intralaminar projections.
-        base_vals (dict): General paramaters, as defined by layer and plasticty
+        conn_vals (dict): General parameters that  will be used 
+            to generate final parameters.
+        _base_vals (dict): General paramaters, as defined by layer and plasticty
             types defined.
+        _sample (dict): Variables that will be sampled.
         reinit_var (dict): Variables used for plasticity of type 'reinit'.
     """
-    def __init__(self, layer, path):
-        super().__init__(layer, path)
+    def __init__(self, layer, model_path):
+        super().__init__(layer, model_path)
         self.models['static'] = SynapseEquationBuilder(base_unit='quantized',
             plasticity='non_plastic')
         self.models['stdp'] = SynapseEquationBuilder(base_unit='quantized',
             plasticity='quantized_stochastic_stdp')
+        self.models['redsymstdp'] = SynapseEquationBuilder(base_unit='quantized',
+            plasticity='quantized_stochastic_stdp',
+            pairing = 'stochastic_reduced_symmetric',
+            compensatory_process = 'stochastic_heterosynaptic')
         self.models['adp'] = SynapseEquationBuilder.import_eq(
                 self.model_path + 'StochSynAdp.py')
         self.models['altadp'] = SynapseEquationBuilder.import_eq(
@@ -884,83 +1084,95 @@ class ConnectionDescriptor(ParameterDescriptor):
         self.input_plast = syn_input_plast
         self.intra_prob = syn_intra_prob[self.layer]
         self.intra_plast = syn_intra_plast[self.layer]
-        self.base_vals = {}
-        self.sample = {}
-        self.reinit_vars = {}
+        self.conn_vals = {}
+        for conn, plast in self.input_plast.items():
+            self.conn_vals[conn] = syn_model_vals[plast][conn]
+        for conn, plast in self.intra_plast.items():
+            self.conn_vals[conn] = syn_model_vals[plast][conn]
+        self._base_vals = {}
+        self._sample = {}
+        self._reinit_vars = {}
 
     def filter_params(self):
         """ Update parameters that will be used to build synapse model. This
-            is done by changing the values of attributes base_vals, sample, 
-            and reinit_vars according to what was set in intra_plas,
-            input_plast, and constants.
+            is done by changing the values of attributes _base_vals, _sample, 
+            and _reinit_vars according to what was set in the other
+            dictionaries.
         """
         conn_groups = [self.intra_plast, self.input_plast]
         for conn_group in conn_groups:
             for conn, plast in conn_group.items():
-                self.base_vals[conn] = process_base_vars(
-                    syn_base_vals[plast][conn],
+                self._base_vals[conn] = process_base_vars(
+                    self.conn_vals[conn],
                     self.constants)
 
         for conn_group in conn_groups:
             for conn, plast in conn_group.items():
-                self.sample[conn] = process_sample_vars(
+                self._sample[conn] = process_sample_vars(
                     syn_sample_vars[plast][conn],
-                    {**self.base_vals[conn], **self.constants})
+                    {**self._base_vals[conn], **self.constants})
 
         for conn, plast in self.input_plast.items():
             # At the moment only works for reinit connections
             if plast == 'reinit':
-                self.reinit_vars[conn] = reinit_vars[conn]
+                self._reinit_vars[conn] = reinit_vars[conn]
 
 class PopulationDescriptor(ParameterDescriptor):
     """ This class describes the standard characterists of the populations.
 
     Attributes:
         models (dict): Neuronal models available.
-        pop (dict): Contains general information about the population.
-        base_vals (dict): General parameters, as defined by layer.
+        group_vals (dict): General parameters that  will be used 
+            to generate final parameters.
+        group_prop (dict): Main values to calculate proportions of
+            subgroups.
+        _base_vals (dict): General parameters, after filtering.
+        _sample (dict): Variables that will be sampled.
         e_ratio (flot): Proportion that will scale total number of
             excitatory cells in each layer.
     """
-    def __init__(self, layer, path):
-        super().__init__(layer, path)
+    def __init__(self, layer, model_path):
+        super().__init__(layer, model_path)
         self.models['static'] = NeuronEquationBuilder(base_unit='quantized',
             position='spatial')
         self.models['adapt'] = NeuronEquationBuilder(base_unit='quantized',
             intrinsic_excitability='threshold_adaptation',
             position='spatial')
 
-        self.group_vals = neu_pop[self.layer]
         self.group_plast = neu_pop_plast
-        self.base_vals = {}
-        self.sample = {}
-        self.groups = {}
+        self.group_vals = {}
+        for conn, plast in self.group_plast.items():
+            self.group_vals[conn] = neu_model_vals[plast][conn]
+        self.group_prop = neu_pop[self.layer]
+        self._base_vals = {}
+        self._sample = {}
+        self._groups = {}
         self.e_ratio = 1.0
         
     def filter_params(self):
         """ Filter parameters that will be used to build neuron model. This
-            is done by changing the values of attributes base_vals, and sample
-            according to what was set in group_vals, group_plast, and constants.
+            is done by changing the values of attributes _base_vals, _sample, and
+            _groups according to what was set in other dictionaries.
         """
         temp_pop = {}
-        self.group_vals['n_exc'] = int(self.e_ratio * self.group_vals['n_exc'])
-        num_inh = int(self.group_vals['n_exc']/self.group_vals['ei_ratio'])
-        temp_pop['pyr_cells'] = {'num_neu': self.group_vals['n_exc']}
-        for inh_pop, ratio in self.group_vals['inh_ratio'].items():
+        self.group_prop['n_exc'] = int(self.e_ratio * self.group_prop['n_exc'])
+        num_inh = int(self.group_prop['n_exc']/self.group_prop['ei_ratio'])
+        temp_pop['pyr_cells'] = {'num_neu': self.group_prop['n_exc']}
+        for inh_pop, ratio in self.group_prop['inh_ratio'].items():
             temp_pop[inh_pop] = {'num_neu': int(num_inh * ratio)}
             #num_pv = num_pv if num_pv else 1
-        for pop, n_inp in self.group_vals['num_inputs'].items():
+        for pop, n_inp in self.group_prop['num_inputs'].items():
             temp_pop[pop].update({'num_inputs': n_inp})
-        self.groups = temp_pop
+        self._groups = temp_pop
         for conn, plast in self.group_plast.items():
-            self.base_vals[conn] = process_base_vars(
-                neu_base_vals[plast][conn],
+            self._base_vals[conn] = process_base_vars(
+                self.group_vals[conn],
                 self.constants)
 
         for neu_group in self.group_plast.keys():
-            self.sample[neu_group] = process_sample_vars(
+            self._sample[neu_group] = process_sample_vars(
                 neu_sample_vars[neu_group],
-                {**self.base_vals[neu_group], **self.constants})
+                {**self._base_vals[neu_group], **self.constants})
 
 def process_base_vars(base_objects, reference_vals):
     ''' This function filter the necessary parameters from provided
@@ -1038,8 +1250,8 @@ def process_dynamic_values(lambda_func, reference_dict):
     return lambda_func(reference_dict[var_name])
 
 layer = 'L4'
-path = '/Users/Pablo/git/teili/'
-conn_desc = ConnectionDescriptor(layer, path)
-pop_desc = PopulationDescriptor(layer, path)
+model_path = '/Users/Pablo/git/teili/'
+conn_desc = ConnectionDescriptor(layer, model_path)
+pop_desc = PopulationDescriptor(layer, model_path)
 pop_desc.filter_params()
 conn_desc.filter_params()

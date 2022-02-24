@@ -282,8 +282,8 @@ def load_merge_multiple(path_name, file_name, mode='pickle', allow_pickle=False)
                                  key=lambda path: int(path.stem.split('_')[1])):
             data = np.load(saved_file, allow_pickle=allow_pickle)
             for key, val in data.items():
-                if key == 'rec_ids':
-                    # These are supposed to be always the same. There could be
+                if key == 'rec_ids' or key == 'ff_ids' or key == 'ffi_ids':
+                    # These connections do not change. There could be
                     # an if conditional here but that would slow things down
                     merged_dict[key] = val
                 else:
@@ -399,3 +399,113 @@ def get_metrics(spike_monitor):
     cv = [np.std(x)/np.mean(x) if len(x)>1 else np.nan for x in isi]
 
     return isi, cv
+
+def altsort(mon):
+    neu_rates = neuron_rate(mon, kernel_len=10*ms,kernel_var=1*ms,
+        simulation_dt=defaultclock.dt,interval=[last_sequence_t, training_duration],
+        smooth=True, trials=3)
+    permutation_ids = permutation_from_rate(neu_rates)
+    sorted_i = np.asarray([np.where(np.asarray(permutation_ids) == int(i))[0][0] for i in spikemon_upper.i])
+    plt.plot(spikemon_upper.t, sorted_i, '.')
+    plt.show()
+
+def plot_norm_act(monitor):
+    plt.figure()
+    plt.plot(monitor.normalized_activity_proxy.T)
+    plt.xlabel('time (ms)')
+    plt.ylabel('normalized activity value')
+    plt.title('Normalized activity of all neurons')
+    plt.show()
+
+def plot_w(conn, num_channels, plast=True, hist=True, idx=0):
+    if hist:
+        if plast:
+            _ = plt.hist(conn.w_plast)
+        else:
+            _ = plt.hist(conn.weight)
+    else:
+        if plast:
+            plt.imshow(np.reshape(conn.w_plast[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
+        else:
+            plt.imshow(np.reshape(conn.weight[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
+    plt.show()
+
+def plot_all_w(conn, num, ch):
+    from mpl_toolkits.axes_grid1 import ImageGrid
+    fig = plt.figure()
+    grid = ImageGrid(fig, 111,  # similar to subplot(111)
+                    nrows_ncols=(np.sqrt(num).astype(int), np.sqrt(num).astype(int)),  # creates 2x2 grid of axes
+                    axes_pad=0.1,  # pad between axes in inch.
+                    )
+    for idx in range(num):
+        grid[idx].imshow(np.reshape(conn.w_plast[:, idx], (np.sqrt(ch).astype(int), np.sqrt(ch).astype(int))))
+    plt.show()
+
+def plot_EI_balance(idx=None, win_len=None, limits=None):
+    if limits is None:
+        limits = [max(statemon_net_current.t)/defaultclock.dt - 500, max(statemon_net_current.t)/defaultclock.dt]
+
+    if idx is not None:
+        if win_len:
+            iin0 = np.convolve(statemon_net_current.Iin0[idx], np.ones(win_len)/win_len, mode='valid')
+            iin1 = np.convolve(statemon_net_current.Iin1[idx], np.ones(win_len)/win_len, mode='valid')
+            iin2 = np.convolve(statemon_net_current.Iin2[idx], np.ones(win_len)/win_len, mode='valid')
+            iin3 = np.convolve(statemon_net_current.Iin3[idx], np.ones(win_len)/win_len, mode='valid')
+            total_Iin = np.convolve(statemon_net_current.Iin[idx], np.ones(win_len)/win_len, mode='valid')
+        else:
+            iin0 = statemon_net_current.Iin0[idx]
+            iin1 = statemon_net_current.Iin1[idx]
+            iin2 = statemon_net_current.Iin2[idx]
+            iin3 = statemon_net_current.Iin3[idx]
+            total_Iin = statemon_net_current.Iin[idx]
+    else:
+        if win_len:
+            iin0 = np.convolve(np.mean(statemon_net_current.Iin0, axis=0), np.ones(win_len)/win_len, mode='valid')
+            iin1 = np.convolve(np.mean(statemon_net_current.Iin1, axis=0), np.ones(win_len)/win_len, mode='valid')
+            iin2 = np.convolve(np.mean(statemon_net_current.Iin2, axis=0), np.ones(win_len)/win_len, mode='valid')
+            iin3 = np.convolve(np.mean(statemon_net_current.Iin3, axis=0), np.ones(win_len)/win_len, mode='valid')
+            total_Iin = np.convolve(np.mean(statemon_net_current.Iin, axis=0), np.ones(win_len)/win_len, mode='valid')
+        else:
+            iin0 = np.mean(statemon_net_current.Iin0, axis=0)
+            iin1 = np.mean(statemon_net_current.Iin1, axis=0)
+            iin2 = np.mean(statemon_net_current.Iin2, axis=0)
+            iin3 = np.mean(statemon_net_current.Iin3, axis=0)
+            total_Iin = np.mean(statemon_net_current.Iin, axis=0)
+    plt.plot(iin0, 'r', label='pyr')
+    plt.plot(iin1, 'g', label='pv')
+    plt.plot(iin2, 'b', label='sst')
+    plt.plot(iin3, 'k--', label='input')
+    plt.plot(total_Iin, 'k', label='net current')
+    plt.legend()
+    if limits is not None:
+        plt.xlim(limits)
+    plt.ylabel('Current [amp]')
+    plt.xlabel('time [ms]')
+    plt.title('EI balance')
+    plt.show()
+
+def run_batches(Net, orca, training_blocks, training_duration,
+                dt, path, monitor_params):
+    remainder_time = int(np.around(training_duration/dt)
+                         % training_blocks) * dt
+    for block in range(training_blocks):
+        block_duration = int(np.around(training_duration/dt)
+                             / training_blocks) * dt
+        Net.run(block_duration, report='stdout', report_period=100*ms)
+        # Free up memory
+        orca.save_data(monitor_params, path, block)
+
+        # Reinitialization. Remove first so obj reference is not lost
+        Net.remove([x for x in orca.monitors.values()])
+        orca.monitors = {}
+        orca.create_monitors(monitor_params)
+        Net.add([x for x in orca.monitors.values()])
+
+    if remainder_time != 0:
+        block += 1
+        Net.run(remainder_time, report='stdout', report_period=100*ms)
+        orca.save_data(monitor_params, path, block)
+        Net.remove([x for x in orca.monitors.values()])
+        orca.monitors = {}
+        orca.create_monitors(monitor_params)
+        Net.add([x for x in orca.monitors.values()])

@@ -12,6 +12,15 @@ import sys
 from teili.tools.sorting import SortMatrix
 from SLIF_utils import load_merge_multiple
 
+def pad_matrices(n_rows, n_cols, matrix, target_ids):
+    pad_mat = np.zeros((n_rows, n_cols, np.shape(matrix)[-1]))
+    ref_id = 0
+    for neu_id, targets in enumerate(target_ids):
+        pad_mat[neu_id, targets, :] = matrix[ref_id:ref_id+len(targets), :]
+        ref_id += len(targets)
+
+    return pad_mat
+
 sort_type = sys.argv[2]
 
 app = QtGui.QApplication([])
@@ -58,12 +67,14 @@ exc_rate_t = traces['exc_rate_t']
 exc_rate = traces['exc_rate']
 inh_rate_t = traces['inh_rate_t']
 inh_rate = traces['inh_rate']
-rf = matrices['rf']
-rfw = matrices['rfw']
-rfi = matrices['rfi']
-rfwi = matrices['rfwi']
-rec_mem = matrices['rec_mem']
+ff = matrices['rf']
+ffw = matrices['rfw']
+ffi = matrices['rfi']
+ffwi = matrices['rfwi']
+stored_memory = matrices['rec_mem']
 rec_ids = matrices['rec_ids']
+ff_ids = matrices['ff_ids']
+ffi_ids = matrices['ffi_ids']
 I_t = min(input_t)*1e-3 + np.array(range(len(I)))*1e-3
 del matrices
 del rasters
@@ -73,9 +84,9 @@ del traces
 # TODO problem when reinit is None
 #weights_duration = int(metadata['re_init_dt']/metadata['time_step'])  # in samples
 #temp_ind = 0
-#for we, wi in zip(rfw.T, rfwi.T):
-#    rf[:, temp_ind:temp_ind+weights_duration] *= we[:, np.newaxis]
-#    rfi[:, temp_ind:temp_ind+weights_duration] *= wi[:, np.newaxis]
+#for we, wi in zip(ffw.T, ffwi.T):
+#    ff[:, temp_ind:temp_ind+weights_duration] *= we[:, np.newaxis]
+#    ffi[:, temp_ind:temp_ind+weights_duration] *= wi[:, np.newaxis]
 #    temp_ind += weights_duration
 
 if plot_d1:
@@ -101,15 +112,25 @@ if plot_d1:
     d1.addWidget(p2, 1, 1)
 
     # Prepate matrices
-    rf_matrix = np.reshape(rf, (num_channels, num_exc, -1))[:,:,-1]
-    sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
-                           matrix=rf_matrix, axis=1,
+    try:
+        ff_matrix = np.reshape(ff, (num_channels, num_exc, -1))
+    except ValueError:
+        ff_matrix = pad_matrices(num_channels, num_exc, ff, ff_ids)
+    sorted_ff = SortMatrix(ncols=num_exc, nrows=num_channels,
+                           matrix=ff_matrix[:,:,-1], axis=1,
                            similarity_metric='euclidean')
+    try:
+        ffi_matrix = np.reshape(ffi, (num_channels, num_pv, -1))
+    except ValueError:
+        ffi_matrix = pad_matrices(num_channels, num_pv, ffi, ffi_ids)
+    sorted_ffi = SortMatrix(ncols=num_pv, nrows=num_channels,
+                            matrix=ffi_matrix[:,:,-1], axis=1,
+                            similarity_metric='euclidean')
     # recurrent connections are not present in some simulations
     try:
         neu_ids = np.zeros(len(rec_ids)+1, dtype=int)
         neu_ids[1:] = np.cumsum([len(x) for x in rec_ids])
-        rec_w = [rec_mem[neu_ids[idx] : neu_ids[idx+1], -1] for idx, _ in enumerate(neu_ids[:-1])]
+        rec_w = [stored_memory[neu_ids[idx] : neu_ids[idx+1], -1] for idx, _ in enumerate(neu_ids[:-1])]
         sorted_rec = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=rec_w,
                                 target_indices=rec_ids, rec_matrix=True,
                                 similarity_metric='euclidean')
@@ -122,8 +143,8 @@ if plot_d1:
     elif sort_type == 'rate_sort':
         permutation_file = np.load(f'{data_folder}permutation.npz')
         permutation = permutation_file['ids']
-    elif sort_type == 'rf_sort':
-        permutation = sorted_rf.permutation
+    elif sort_type == 'ff_sort':
+        permutation = sorted_ff.permutation
     elif sort_type == 'no_sort':
         permutation = [x for x in range(num_exc)]
     print(f'permutation indices: {permutation}')
@@ -196,7 +217,7 @@ if plot_d2:
     #m3.ui.histogram.hide()
     m3.ui.roiBtn.hide()
     m3.ui.menuBtn.hide() 
-    m3.setImage(sorted_rf.matrix[:, permutation], axes={'y':0, 'x':1})
+    m3.setImage(sorted_ff.matrix[:, permutation], axes={'y':0, 'x':1})
     m3.setColorMap(cmap)
 
     image_axis = pg.PlotItem()
@@ -206,11 +227,7 @@ if plot_d2:
     m4 = pg.ImageView(view=image_axis)
     m4.ui.roiBtn.hide()
     m4.ui.menuBtn.hide() 
-    mem_evolution = np.zeros((num_exc, num_exc, np.shape(rec_mem)[-1]))
-    ref_id = 0
-    for neu_id, targets in enumerate(rec_ids):
-        mem_evolution[neu_id, targets, :] = rec_mem[ref_id:ref_id+len(targets), :]
-        ref_id += len(targets)
+    mem_evolution = pad_matrices(num_exc, num_exc, stored_memory, rec_ids)
     m4.setImage(mem_evolution[:, permutation, :][permutation, :, :], axes={'t':2, 'y':0, 'x':1})
     m4.setColorMap(cmap)
 
@@ -224,20 +241,19 @@ def play_receptive_fields(receptive_fields):
     for i in receptive_fields:
         i.play(1000)
 if plot_d3:
-    last_frame = np.reshape(rf, (num_channels, num_exc, -1))
     dims = np.sqrt(num_channels).astype(int)
-    temp_rfe = []
+    temp_ffe = []
     j = 0
     k = 0
     for i in permutation:
-        temp_rfe.append(pg.ImageView())
-        temp_rfe[-1].ui.histogram.hide()
-        temp_rfe[-1].ui.roiBtn.hide()
-        temp_rfe[-1].ui.menuBtn.hide() 
-        temp_rfe[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
-        temp_rfe[-1].setColorMap(cmap)
+        temp_ffe.append(pg.ImageView())
+        temp_ffe[-1].ui.histogram.hide()
+        temp_ffe[-1].ui.roiBtn.hide()
+        temp_ffe[-1].ui.menuBtn.hide() 
+        temp_ffe[-1].setImage(np.reshape(ff_matrix[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
+        temp_ffe[-1].setColorMap(cmap)
 
-        d3.addWidget(temp_rfe[-1], j, k)
+        d3.addWidget(temp_ffe[-1], j, k)
         if j < np.sqrt(num_exc)-1:
             j += 1
         else:
@@ -245,23 +261,22 @@ if plot_d3:
             k += 1
 
     btn = QtGui.QPushButton("play")
-    btn.clicked.connect(lambda: play_receptive_fields(temp_rfe))
+    btn.clicked.connect(lambda: play_receptive_fields(temp_ffe))
     d3.addWidget(btn, j, k)
 if plot_d4:
-    last_frame = np.reshape(rfi, (num_channels, num_pv, -1))
     dims = np.sqrt(num_channels).astype(int)
-    temp_rfi = []
+    temp_ffi = []
     j = 0
     k = 0
     for i in range(num_pv):
-        temp_rfi.append(pg.ImageView())
-        temp_rfi[-1].ui.histogram.hide()
-        temp_rfi[-1].ui.roiBtn.hide()
-        temp_rfi[-1].ui.menuBtn.hide() 
-        temp_rfi[-1].setImage(np.reshape(last_frame[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
-        temp_rfi[-1].setColorMap(cmap)
+        temp_ffi.append(pg.ImageView())
+        temp_ffi[-1].ui.histogram.hide()
+        temp_ffi[-1].ui.roiBtn.hide()
+        temp_ffi[-1].ui.menuBtn.hide() 
+        temp_ffi[-1].setImage(np.reshape(ffi_matrix[:, i, :], (dims, dims, -1)), axes={'t':2, 'y':0, 'x':1})
+        temp_ffi[-1].setColorMap(cmap)
 
-        d4.addWidget(temp_rfi[-1], j, k)
+        d4.addWidget(temp_ffi[-1], j, k)
         if j < np.sqrt(num_pv)-1:
             j += 1
         else:
@@ -269,7 +284,7 @@ if plot_d4:
             k += 1
 
     btn = QtGui.QPushButton("play")
-    btn.clicked.connect(lambda: play_receptive_fields(temp_rfi))
+    btn.clicked.connect(lambda: play_receptive_fields(temp_ffi))
     d4.addWidget(btn, j, k)
 
 win.show()
@@ -282,11 +297,11 @@ QtGui.QApplication.instance().exec_()
 #ylabel('presynaptic neuron')
 #colorbar()
 #figure()
-#imshow(sorted_rf.matrix[:, permutation_file['ids']], origin='lower')
+#imshow(sorted_ff.matrix[:, permutation_file['ids']], origin='lower')
 #xlabel('Neuron index')
 #ylabel('Input channel')
 #colorbar()
 #show()
 np.savez('seq.npz', seq_i=input_i, seq_t=input_t, e_raster_i=sorted_i,
-         e_raster_t=exc_spikes_t, ff_matrix=sorted_rf.matrix[:, permutation],
+         e_raster_t=exc_spikes_t, ff_matrix=sorted_ff.matrix[:, permutation],
          rec_matrix=sorted_rec.matrix[:, permutation][permutation, :])

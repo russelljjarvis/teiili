@@ -111,7 +111,7 @@ class orcaWTA(BuildingBlock):
         conn_ids = [source_name + '_' + target.split('_')[0] for target in targets]
         add_connections(conn_ids,
                         self._groups,
-                        group_name=source_name,
+                        group_name=self.name,
                         syn_types=syn_types,
                         connectivities=connectivities,
                         conn_params=conn_params,
@@ -228,9 +228,13 @@ class orcaWTA(BuildingBlock):
                  )
 
         # Save targets of recurrent connections as python object
-        recurrent_ids = []
+        recurrent_ids, ff_ids, ffi_ids = [], [], []
         for row in range(self._groups['pyr_cells'].N):
             recurrent_ids.append(list(self._groups['pyr_pyr'].j[row, :]))
+        for row in range(self._groups['ff_cells'].N):
+            ff_ids.append(list(self._groups['ff_pyr'].j[row, :]))
+        for row in range(self._groups['pv_cells'].N):
+            ffi_ids.append(list(self._groups['ff_pv'].j[row, :]))
         #selected_keys = [x for x in monitor_params.keys() if 'state' in x]
         #for key in selected_keys:
         np.savez_compressed(path + f'matrices_{block}.npz',
@@ -239,7 +243,7 @@ class orcaWTA(BuildingBlock):
             rfi=self.monitors['statemon_conn_ff_pv'].w_plast.astype(np.uint8),
             rfwi=self.monitors['statemon_static_conn_ff_pv'].weight.astype(np.uint8),
             rec_mem=self.monitors['statemon_conn_pyr_pyr'].w_plast.astype(np.uint8),
-            rec_ids=recurrent_ids
+            rec_ids=recurrent_ids, ff_ids=ff_ids, ffi_ids=ffi_ids
             )
         pickled_monitor = self.monitors['spikemon_pyr_cells'].get_states()
         with open(path + f'pickled_{block}', 'wb') as f:
@@ -262,7 +266,7 @@ def add_populations(_groups,
             be added to neurons. This is generated with a poisson process.
     """
     temp_groups = {}
-    for pop_id, params in pop_params.groups.items():
+    for pop_id, params in pop_params._groups.items():
         neu_type = pop_params.group_plast[pop_id]
         temp_groups[pop_id] = Neurons(
             params['num_neu'],
@@ -270,7 +274,7 @@ def add_populations(_groups,
             method=stochastic_decay,
             name=group_name+pop_id,
             verbose=verbose)
-        temp_groups[pop_id].set_params(pop_params.base_vals[pop_id])
+        temp_groups[pop_id].set_params(pop_params._base_vals[pop_id])
     
     if noise:
         pyr_noise_cells = PoissonInput(pyr_cells, 'Vm_noise', 1, 3*Hz, 12*mV)
@@ -311,7 +315,9 @@ def add_connections(connection_ids,
     temp_conns = {}
     source_group = _groups
     if external_input is not None:
-        source_group[f'{group_name}_cells'] = external_input
+        # Only one input is connected at a time, so this can be done once
+        temp_name = connection_ids[0].split('_')[0]
+        source_group[f'{temp_name}_cells'] = external_input
     for conn_id in connection_ids:
         source, target = conn_id.split('_')[0], conn_id.split('_')[1]
         syn_type = syn_types[conn_id]
@@ -319,7 +325,7 @@ def add_connections(connection_ids,
             source_group[source+'_cells'], _groups[target+'_cells'],
             equation_builder=conn_params.models[syn_type](),
             method=stochastic_decay,
-            name=source+'_'+target
+            name=group_name+source+'_'+target
             )
         if source==target:
             if syn_type == 'reinit':
@@ -331,9 +337,9 @@ def add_connections(connection_ids,
                 temp_conns[conn_id].connect(p=1)
             else:
                 temp_conns[conn_id].connect(p=connectivities[conn_id])
-        temp_conns[conn_id].set_params(conn_params.base_vals[conn_id])
+        temp_conns[conn_id].set_params(conn_params._base_vals[conn_id])
 
-        sample_vars = conn_params.sample[conn_id]
+        sample_vars = conn_params._sample[conn_id]
         for sample_var in sample_vars: 
             add_group_param_init([temp_conns[conn_id]],
                                  variable=sample_var['variable'],
@@ -396,12 +402,12 @@ def add_connections(connection_ids,
                 temp_conns[conn_id].weight[ffe_zero_w, neu] = 0
                 temp_conns[conn_id].w_plast[ffe_zero_w, neu] = 0
 
-            # TODO for reinit_var in conn_params.reinit_vars[conn_id]
+            # TODO for reinit_var in conn_params._reinit_vars[conn_id]
             add_group_params_re_init(groups=[temp_conns[conn_id]],
                                      variable='w_plast',
                                      re_init_variable='re_init_counter',
                                      re_init_threshold=1,
-                                     re_init_dt=conn_params.reinit_vars[conn_id]['re_init_dt'],
+                                     re_init_dt=conn_params._reinit_vars[conn_id]['re_init_dt'],
                                      dist_param=3,
                                      scale=1,
                                      distribution='gamma',
@@ -413,7 +419,7 @@ def add_connections(connection_ids,
                                      variable='weight',
                                      re_init_variable='re_init_counter',
                                      re_init_threshold=1,
-                                     re_init_dt=conn_params.reinit_vars[conn_id]['re_init_dt'],
+                                     re_init_dt=conn_params._reinit_vars[conn_id]['re_init_dt'],
                                      distribution='deterministic',
                                      const_value=1,
                                      reference='synapse_counter')
@@ -422,7 +428,7 @@ def add_connections(connection_ids,
             #                         variable='tausyn',
             #                         re_init_variable='re_init_counter',
             #                         re_init_threshold=1,
-            #                         re_init_dt=conn_params.reinit_vars[conn_id]['re_init_dt'],
+            #                         re_init_dt=conn_params._reinit_vars[conn_id]['re_init_dt'],
             #                         dist_param=5.5,
             #                         scale=1,
             #                         distribution='normal',

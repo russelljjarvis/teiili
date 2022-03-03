@@ -4,7 +4,7 @@
 import pickle
 import numpy as np
 
-from brian2 import ms, amp, mA, Hz, mV, ohm, defaultclock, ExplicitStateUpdater,\
+from brian2 import ms, amp, mA, Hz, mV, ohm, ExplicitStateUpdater,\
         PoissonGroup, PoissonInput, SpikeMonitor, StateMonitor, PopulationRateMonitor
 
 from teili.building_blocks.building_block import BuildingBlock
@@ -16,7 +16,6 @@ from teili.tools.misc import DEFAULT_FUNCTIONS
 from SLIF_run_regs import add_alt_activity_proxy
 from monitor_params import monitor_params
 
-defaultclock.dt = 1 * ms
 stochastic_decay = ExplicitStateUpdater('''x_new = f(x,t)''')
 
 class orcaWTA(BuildingBlock):
@@ -78,7 +77,7 @@ class orcaWTA(BuildingBlock):
                         verbose=verbose,
                         noise=noise
                         )
-        add_connections([*conn_params.intra_prob],
+        add_connections([*conn_params.base_vals],
                         self._groups,
                         group_name=self.name,
                         conn_params=conn_params,
@@ -88,25 +87,31 @@ class orcaWTA(BuildingBlock):
                   input_group,
                   source_name,
                   targets,
-                  conn_params):
+                  conn_params,
+                  extra_name=''):
         """ This functions add an input group and connections to the building
             block.
 
         Args:
-            input_group (brian2.NeuronGroup): Input to
-                building block.
-            source_name (str): Name of the input group to be registered.
+            input_group (brian2.NeuronGroup): Input to building block.
+            source_name (str): Name of the input group to be registered. These
+                must be the names of neuron groups as identified in
+                dictionaries containing parameters.
             targets (list of str): Name of the postsynaptic groups as
                 stored in _groups.
             conn_params (ConnectionDescriptor): Class which holds building_block
                 specific parameters. It can be find on tutorials/orca_params.py
+            extra_name (str): Aditional name that is appened to source_name
+                provided. This is useful when scaling up models as groups
+                with repeated names in Brian2 will raise an error.
         """
         conn_ids = [source_name + '_' + target.split('_')[0] for target in targets]
+        self.input_groups[self.name+extra_name+source_name+'_cells'] = input_group
         add_connections(conn_ids,
                         self._groups,
-                        group_name=self.name,
+                        group_name=extra_name+self.name,
                         conn_params=conn_params,
-                        external_input=input_group)
+                        input_groups=self.input_groups)
 
     def create_monitors(self, monitor_params):
         """ This creates monitors according to dictionary provided.
@@ -132,11 +137,18 @@ class orcaWTA(BuildingBlock):
                                                       dt=val['mon_dt'],
                                                       name=self.name + key)
                 elif 'conn' in key:
-                    self.monitors[key] = StateMonitor(self._groups[val['group']],
-                                                      variables=val['variables'],
-                                                      record=True,
-                                                      dt=val['mon_dt'],
-                                                      name=self.name + key)
+                    try:
+                        self.monitors[key] = StateMonitor(self._groups[val['group']],
+                                                          variables=val['variables'],
+                                                          record=True,
+                                                          dt=val['mon_dt'],
+                                                          name=self.name + key)
+                    except KeyError:
+                        self.monitors[key] = StateMonitor(self.input_groups[val['group']],
+                                                          variables=val['variables'],
+                                                          record=True,
+                                                          dt=val['mon_dt'],
+                                                          name=self.name + key)
             elif 'rate' in key:
                 self.monitors[key] = PopulationRateMonitor(self._groups[val['group']],
                                                            name=self.name + key)
@@ -222,10 +234,10 @@ class orcaWTA(BuildingBlock):
         recurrent_ids, ff_ids, ffi_ids = [], [], []
         for row in range(self._groups['pyr_cells'].N):
             recurrent_ids.append(list(self._groups['pyr_pyr'].j[row, :]))
-        for row in range(self._groups['ff_cells'].N):
-            ff_ids.append(list(self._groups['ff_pyr'].j[row, :]))
+        for row in range(self.input_groups['L4_ff_cells'].N):
+            ff_ids.append(list(self.input_groups['L4_ff_pyr'].j[row, :]))
         for row in range(self._groups['pv_cells'].N):
-            ffi_ids.append(list(self._groups['ff_pv'].j[row, :]))
+            ffi_ids.append(list(self.input_groups['L4_ff_pv'].j[row, :]))
         #selected_keys = [x for x in monitor_params.keys() if 'state' in x]
         #for key in selected_keys:
         np.savez_compressed(path + f'matrices_{block}.npz',
@@ -244,8 +256,7 @@ def add_populations(_groups,
                     group_name,
                     pop_params,
                     verbose,
-                    noise
-                    ):
+                    noise):
     """ This functions add populations of the building block.
 
     Args:
@@ -259,6 +270,8 @@ def add_populations(_groups,
     temp_groups = {}
     for pop_id, params in pop_params.groups.items():
         neu_type = pop_params.group_plast[pop_id]
+        if not params['num_neu']:
+            continue
         temp_groups[pop_id] = Neurons(
             params['num_neu'],
             equation_builder=pop_params.models[neu_type](num_inputs=params['num_inputs']),
@@ -283,59 +296,56 @@ def add_connections(connection_ids,
                     _groups,
                     group_name,
                     conn_params,
-                    external_input=None,
+                    input_groups=None,
                     verbose=False):
     """ This function adds the connections of the building block.
 
     Args:
         connection_ids (list of str): Identification of each connection
-            to be made. Each source and target groups must be present
-            in _groups.
+            to be made.
         _groups (dict): Keys to all neuron and synapse groups.
         group_name (str, required): Name of the building_block population
         conn_params (ConnectionDescriptor): Class which holds building_block
             specific parameters. It can be find on tutorials/orca_params.py
-        external_input (brian2.NeuronGroup, optional): Contains input group
-            in case it comes from outside target group.
+        input_groups (brian2.NeuronGroup): Contains input group in case it
+            comes from outside target group.
         verbose (bool, optional): Flag to gain additional information
     """
-    temp_conns = {}
-    source_group = _groups
-    syn_types = conn_params.intra_plast
-    connectivities = conn_params.intra_prob
-    if external_input is not None:
-        # Only one input is connected at a time, so this can be done once
-        temp_name = connection_ids[0].split('_')[0]
-        source_group[f'{temp_name}_cells'] = external_input
-        syn_types = conn_params.input_plast
-        connectivities = conn_params.input_prob
+    syn_types = conn_params.plasticities
+    connectivities = conn_params.probabilities
+    source_group = {}
+    if input_groups:
+        # Only one external input connected at a time, so is done once
+        temp_name = connection_ids[0].split('_')[0] + '_cells'
+        source_group[temp_name] = input_groups[group_name+temp_name]
+    else:
+        source_group = _groups
+
     for conn_id in connection_ids:
         source, target = conn_id.split('_')[0], conn_id.split('_')[1]
-        syn_type = syn_types[conn_id]
         connectivity = connectivities[conn_id]
+        if (not source+'_cells' in source_group) or (not target+'_cells' in _groups):
+            continue
+        if not conn_params.probabilities[conn_id]:
+            continue
+        syn_type = syn_types[conn_id]
 
-        temp_conns[conn_id] = Connections(
+        temp_conns = Connections(
             source_group[source+'_cells'], _groups[target+'_cells'],
             equation_builder=conn_params.models[syn_type](),
             method=stochastic_decay,
-            name=group_name+source+'_'+target
+            name=group_name+conn_id
             )
 
-        if source==target:
-            if syn_type == 'reinit':
-                temp_conns[conn_id].connect('i!=j', p=1)
-            else:
-                temp_conns[conn_id].connect('i!=j', p=connectivity)
+        if syn_type == 'reinit':
+            temp_conns.connect(p=1)
         else:
-            if syn_type == 'reinit':
-                temp_conns[conn_id].connect(p=1)
-            else:
-                temp_conns[conn_id].connect(p=connectivity)
-        temp_conns[conn_id].set_params(conn_params.base_vals[conn_id])
+            temp_conns.connect(p=connectivity)
+        temp_conns.set_params(conn_params.base_vals[conn_id])
 
         sample_vars = conn_params.sample[conn_id]
         for sample_var in sample_vars: 
-            add_group_param_init([temp_conns[conn_id]],
+            add_group_param_init([temp_conns],
                                  variable=sample_var['variable'],
                                  dist_param=sample_var['dist_param'],
                                  scale=1,
@@ -345,14 +355,14 @@ def add_connections(connection_ids,
                                  clip_max=sample_var['clip_max'])
             # TODO could be fixed in teili, as __getattr__('delay') fails
             try:
-                rounded_vals = temp_conns[conn_id].__getattr__(
+                rounded_vals = temp_conns.__getattr__(
                         sample_var['variable'])
             except AttributeError:
                 if sample_var['variable'] == 'delay':
-                    rounded_vals = temp_conns[conn_id].delay
+                    rounded_vals = temp_conns.delay
             rounded_vals = rounded_vals / np.abs(sample_var['unit'])
             rounded_vals = np.around(rounded_vals)
-            temp_conns[conn_id].__setattr__(
+            temp_conns.__setattr__(
                 sample_var['variable'],
                 rounded_vals*np.abs(sample_var['unit']))
 
@@ -369,10 +379,10 @@ def add_connections(connection_ids,
             add_group_activity_proxy(activity_proxy_group,
                                      buffer_size=400,
                                      decay=150)
-            temp_conns[conn_id].variance_th = np.random.uniform(
-                low=temp_conns[conn_id].variance_th - 0.1,
-                high=temp_conns[conn_id].variance_th + 0.1,
-                size=len(temp_conns[conn_id]))
+            temp_conns.variance_th = np.random.uniform(
+                low=temp_conns.variance_th - 0.1,
+                high=temp_conns.variance_th + 0.1,
+                size=len(temp_conns))
 
         if syn_type == 'altadp':
             dummy_unit = 1*amp
@@ -390,14 +400,14 @@ def add_connections(connection_ids,
         if syn_type == 'reinit':
             for neu in range(_groups[target+'_cells'].N):
                 ffe_zero_w = np.random.choice(
-                    external_input.N,
-                    int(external_input.N * conn_params.input_prob[conn_id]),
+                    source_group[source+'_cells'].N,
+                    int(source_group[source+'_cells'].N * conn_params.probabilities[conn_id]),
                     replace=False)
-                temp_conns[conn_id].weight[ffe_zero_w, neu] = 0
-                temp_conns[conn_id].w_plast[ffe_zero_w, neu] = 0
+                temp_conns.weight[ffe_zero_w, neu] = 0
+                temp_conns.w_plast[ffe_zero_w, neu] = 0
 
             # TODO for reinit_var in conn_params.reinit_vars[conn_id]
-            add_group_params_re_init(groups=[temp_conns[conn_id]],
+            add_group_params_re_init(groups=[temp_conns],
                                      variable='w_plast',
                                      re_init_variable='re_init_counter',
                                      re_init_threshold=1,
@@ -409,7 +419,7 @@ def add_connections(connection_ids,
                                      clip_max=15,
                                      variable_type='int',
                                      reference='synapse_counter')
-            add_group_params_re_init(groups=[temp_conns[conn_id]],
+            add_group_params_re_init(groups=[temp_conns],
                                      variable='weight',
                                      re_init_variable='re_init_counter',
                                      re_init_threshold=1,
@@ -418,7 +428,7 @@ def add_connections(connection_ids,
                                      const_value=1,
                                      reference='synapse_counter')
             # TODO error when usinng below. Ditch tausyn reinit?
-            #add_group_params_re_init(groups=[temp_conns[conn_id]],
+            #add_group_params_re_init(groups=[temp_conns],
             #                         variable='tausyn',
             #                         re_init_variable='re_init_counter',
             #                         re_init_threshold=1,
@@ -432,4 +442,7 @@ def add_connections(connection_ids,
             #                         unit='ms',
             #                         reference='synapse_counter')
 
-    _groups.update(temp_conns)
+        if input_groups:
+            input_groups[group_name+conn_id] = temp_conns
+        else:
+            _groups[conn_id] = temp_conns

@@ -485,12 +485,12 @@ def plot_EI_balance(idx=None, win_len=None, limits=None):
     plt.show()
 
 def run_batches(Net, orca, training_blocks, training_duration,
-                dt, path, monitor_params):
-    remainder_time = int(np.around(training_duration/dt)
-                         % training_blocks) * dt
+                simulation_dt, path, monitor_params):
+    remainder_time = int(np.around(training_duration/simulation_dt)
+                         % training_blocks) * simulation_dt
     for block in range(training_blocks):
-        block_duration = int(np.around(training_duration/dt)
-                             / training_blocks) * dt
+        block_duration = int(np.around(training_duration/simulation_dt)
+                             / training_blocks) * simulation_dt
         Net.run(block_duration, report='stdout', report_period=100*ms)
         # Free up memory
         orca.save_data(monitor_params, path, block)

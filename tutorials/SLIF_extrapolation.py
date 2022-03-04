@@ -25,32 +25,40 @@ from datetime import datetime
 def change_params_conn1(desc):
     # Changes some intralaminar connections
     desc.plasticities['sst_pv'] = 'static'
-    desc.plasticities['pyr_pyr'] = 'stdp'
+    desc.plasticities['pyr_pyr'] = 'redsymstdp'
+    desc.probabilities['pyr_pyr'] = .3
     desc.filter_params()
     desc.base_vals['pyr_pyr']['w_max'] = 15
+    desc.base_vals['pyr_pyr']['stdp_thres'] = 7
 
 def change_params_conn2(desc):
     # Changes input parameters
-    desc.plasticities['ff_pyr'] = 'stdp'
+    desc.plasticities['ff_pyr'] = 'redsymstdp'
     desc.filter_params()
     desc.base_vals['ff_pyr']['w_max'] = 15
+    desc.base_vals['ff_pyr']['stdp_thres'] = 7
 
 def change_params_conn3(desc):
     # Changes input parameters
-    desc.plasticities['ff_pyr'] = 'stdp'
+    desc.plasticities['ff_pyr'] = 'redsymstdp'
     desc.probabilities['ff_pyr'] = 0.7
     desc.probabilities['ff_pv'] = 1
     desc.probabilities['ff_sst'] = 1
     desc.filter_params()
     desc.base_vals['ff_pyr']['w_max'] = 15
+    desc.base_vals['ff_pyr']['stdp_thres'] = 7
 
 def change_params_pop1(desc):
     # Changes proportions of the EI population
     desc.e_ratio = .00224
-    desc.group_prop['ei_ratio'] = 3
-    desc.group_prop['inh_ratio']['pv_cells'] = .75
-    desc.group_prop['inh_ratio']['sst_cells'] = .125
-    desc.group_prop['inh_ratio']['vip_cells'] = .125
+    desc.filter_params()
+    for pop in desc.base_vals:
+        desc.base_vals[pop]['I_min'] = -256*mA
+        desc.base_vals[pop]['I_max'] = 256*mA
+
+def change_params_pop2(desc):
+    # Changes proportions of the EI population
+    desc.e_ratio = .01
     desc.filter_params()
     for pop in desc.base_vals:
         desc.base_vals[pop]['I_min'] = -256*mA
@@ -63,46 +71,22 @@ prefs.codegen.target = "numpy"
 defaultclock.dt = 1*ms
 
 # Initialize input sequence
-num_items = 4
+num_items = 3
 item_duration = 60
 item_superposition = 0
 num_channels = 144
-noise_prob = None#0.005
+noise_prob = 0.005
 item_rate = 100
 #repetitions = 700# 350
-repetitions = 200
+repetitions = 500
 
 sequence = SequenceTestbench(num_channels, num_items, item_duration,
                              item_superposition, noise_prob, item_rate,
-                             repetitions, surprise_item=True)
+                             repetitions)
 input_indices, input_times = sequence.stimuli()
 training_duration = np.max(input_times)
 sequence_duration = sequence.cycle_length * ms
 testing_duration = 0*ms
-
-# Adding alternative sequence at the end of simulation
-alternative_sequences = 10
-include_symbols = [[0, 1, 2, 3] for _ in range(alternative_sequences)]
-test_duration = alternative_sequences * sequence_duration
-symbols = sequence.items
-for alt_seq in range(alternative_sequences):
-    for incl_symb in include_symbols[alt_seq]:
-        tmp_symb = [(x*ms + alt_seq*sequence_duration + training_duration)
-                        for x in symbols[incl_symb]['t']]
-        input_times = np.append(input_times, tmp_symb)
-        input_indices = np.append(input_indices, symbols[incl_symb]['i'])
-# Get back unit that was remove by append operation
-input_times = input_times*second
-
-# Adding noise at the end of simulation
-#alternative_sequences = 5
-#test_duration = alternative_sequences*sequence_duration*ms
-#noise_prob = 0.01
-#noise_spikes = np.random.rand(num_channels, int(test_duration/ms))
-#noise_indices = np.where(noise_spikes < noise_prob)[0]
-#noise_times = np.where(noise_spikes < noise_prob)[1]
-#input_indices = np.concatenate((input_indices, noise_indices))
-#input_times = np.concatenate((input_times, noise_times+training_duration/ms))
 
 training_duration = np.max(input_times) - testing_duration
 sim_duration = input_times[-1]
@@ -116,7 +100,7 @@ relay_cells = neuron_group_from_spikes(num_channels,
 Net = TeiliNetwork()
 column = orcaColumn(['L4', 'L5'])
 conn_modifier = {'L4': change_params_conn1, 'L5': change_params_conn1}
-pop_modifier = {'L4': change_params_pop1, 'L5': change_params_pop1}
+pop_modifier = {'L4': change_params_pop1, 'L5': change_params_pop2}
 column.create_layers(pop_modifier, conn_modifier)
 column.connect_layers()
 conn_modifier = {'L4': change_params_conn2, 'L5': change_params_conn3}
@@ -188,39 +172,20 @@ np.savez(path+f'permutation.npz',
   
 Net.store(filename=f'{path}network')
 
-############ Extra analysis of orca2
-#import matplotlib.pyplot as plt
-#last_sequence_t = training_duration - sequence_duration
-#neu_rates = neuron_rate(orca2_mon, kernel_len=200,
-#    kernel_var=10, kernel_min=0.001, simulation_dt=defaultclock.dt,
-#    interval=[last_sequence_t, training_duration])
-#permutation_ids = permutation_from_rate(neu_rates, sequence_duration,
-#                                        defaultclock.dt)
-#
-#G = orca2._groups['pyr_pyr']
-#G = orca._groups['fb_pyr']
-#fb_ids = []
-#for row in range(num_exc):
-#    fb_ids.append(list(G.j[row, :]))
-#matrix = [None for _ in range(num_exc)]
-#interval1 = 0
-#interval2 = 0
-#for source_neu, values in enumerate(fb_ids):
-#    interval2 += len(values)
-#    matrix[source_neu] = G.w_plast[interval1:interval2]
-#    interval1 += len(values)
-#matrix = np.array(matrix, dtype=object)
+############ Extra analysis of alternative layer
+from tutorials.plot_utils import plot_weight_matrix, pad_matrices, raster_sort
+from teili.tools.sorting import SortMatrix
 
-#plt.plot(sorted_rf.matrix[:, permutation_ids][permutation_ids, :])
+num_exc = column.col_groups['L5'].groups['pyr_cells'].N
+G = column.col_groups['L5'].input_groups['L5_ff_pyr']
 
-#from SLIF_utils import plot_weight_matrix
-#from teili.tools.sorting import SortMatrix
-#sorted_rf = SortMatrix(ncols=num_exc, nrows=num_exc, matrix=matrix, axis=1,similarity_metric='euclidean', target_indices=fb_ids)#, rec_matrix=True)
-#plot_weight_matrix(sorted_rf.sorted_matrix, title='asd', xlabel='x', ylabel='y')
-# raster
-#import matplotlib.pyplot as plt
-#sorted_i = np.asarray([np.where(
-#                np.asarray(permutation_ids) == int(i))[0][0] for i in orca2_mon.i])
-#plt.plot(orca2_mon.t/ms, sorted_i, '.k')
-#plt.show()
+conn_ids = []
+for row in range(num_channels):
+    conn_ids.append(list(G.j[row, :]))
 
+matrix = pad_matrices(num_channels, num_exc, G.w_plast, conn_ids)
+sorted_rf = SortMatrix(ncols=num_exc, nrows=num_channels,
+                       matrix=matrix, axis=1, similarity_metric='euclidean')
+plot_weight_matrix(sorted_rf.sorted_matrix, title='asd', xlabel='x', ylabel='y')
+
+raster_sort(spkmon_l5, sorted_rf.permutation)

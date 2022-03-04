@@ -106,7 +106,7 @@ class orcaWTA(BuildingBlock):
                 with repeated names in Brian2 will raise an error.
         """
         conn_ids = [source_name + '_' + target.split('_')[0] for target in targets]
-        self.input_groups[self.name+extra_name+source_name+'_cells'] = input_group
+        self.input_groups[extra_name+self.name+source_name+'_cells'] = input_group
         add_connections(conn_ids,
                         self._groups,
                         group_name=extra_name+self.name,

@@ -11,15 +11,7 @@ import sys
 
 from teili.tools.sorting import SortMatrix
 from SLIF_utils import load_merge_multiple
-
-def pad_matrices(n_rows, n_cols, matrix, target_ids):
-    pad_mat = np.zeros((n_rows, n_cols, np.shape(matrix)[-1]))
-    ref_id = 0
-    for neu_id, targets in enumerate(target_ids):
-        pad_mat[neu_id, targets, :] = matrix[ref_id:ref_id+len(targets), :]
-        ref_id += len(targets)
-
-    return pad_mat
+from plot_utils import pad_matrices
 
 sort_type = sys.argv[2]
 

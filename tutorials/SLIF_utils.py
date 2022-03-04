@@ -294,42 +294,6 @@ def load_merge_multiple(path_name, file_name, mode='pickle', allow_pickle=False)
 
     return merged_dict
 
-def plot_weight_matrix(weight_matrix, title, xlabel, ylabel):
-    # Plot matrices
-    # Inferno colormap
-    colors = [
-        (0, 0, 4),
-        (40, 11, 84),
-        (101, 21, 110),
-        (159, 42, 99),
-        (212, 72, 66),
-        (245, 125, 21),
-        (250, 193, 39),
-        (252, 255, 16)
-    ]
-    import matplotlib.pyplot as plt
-    plt.imshow(weight_matrix)
-    plt.show()
-    #cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 8), color=colors)
-
-    #app = QtGui.QApplication([])
-    #win = QtGui.QMainWindow()
-    #win.setWindowTitle(title)
-    #image_axis = pg.PlotItem()
-    #image_axis.setLabel(axis='bottom', text=xlabel)
-    #image_axis.setLabel(axis='left', text=ylabel)
-    ##image_axis.hideAxis('left')
-    #imv = pg.ImageView(view=image_axis)
-    #win.setCentralWidget(imv)
-    #win.show()
-    ##imv.ui.histogram.hide()
-    #imv.ui.roiBtn.hide()
-    #imv.ui.menuBtn.hide() 
-    #imv.setImage(weight_matrix, axes={'y':0, 'x':1})
-    #imv.setColorMap(cmap)
-    #if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-    #    QtGui.QApplication.instance().exec_()
-
 def bar_from_recording(filename):
     """ Converts aedat output with events and save arrays to disk
     
@@ -400,88 +364,12 @@ def get_metrics(spike_monitor):
 
     return isi, cv
 
-def altsort(mon):
-    neu_rates = neuron_rate(mon, kernel_len=10*ms,kernel_var=1*ms,
-        simulation_dt=defaultclock.dt,interval=[last_sequence_t, training_duration],
-        smooth=True, trials=3)
-    permutation_ids = permutation_from_rate(neu_rates)
-    sorted_i = np.asarray([np.where(np.asarray(permutation_ids) == int(i))[0][0] for i in spikemon_upper.i])
-    plt.plot(spikemon_upper.t, sorted_i, '.')
-    plt.show()
-
 def plot_norm_act(monitor):
     plt.figure()
     plt.plot(monitor.normalized_activity_proxy.T)
     plt.xlabel('time (ms)')
     plt.ylabel('normalized activity value')
     plt.title('Normalized activity of all neurons')
-    plt.show()
-
-def plot_w(conn, num_channels, plast=True, hist=True, idx=0):
-    if hist:
-        if plast:
-            _ = plt.hist(conn.w_plast)
-        else:
-            _ = plt.hist(conn.weight)
-    else:
-        if plast:
-            plt.imshow(np.reshape(conn.w_plast[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
-        else:
-            plt.imshow(np.reshape(conn.weight[:, idx], (np.sqrt(num_channels).astype(int), np.sqrt(num_channels).astype(int))))
-    plt.show()
-
-def plot_all_w(conn, num, ch):
-    from mpl_toolkits.axes_grid1 import ImageGrid
-    fig = plt.figure()
-    grid = ImageGrid(fig, 111,  # similar to subplot(111)
-                    nrows_ncols=(np.sqrt(num).astype(int), np.sqrt(num).astype(int)),  # creates 2x2 grid of axes
-                    axes_pad=0.1,  # pad between axes in inch.
-                    )
-    for idx in range(num):
-        grid[idx].imshow(np.reshape(conn.w_plast[:, idx], (np.sqrt(ch).astype(int), np.sqrt(ch).astype(int))))
-    plt.show()
-
-def plot_EI_balance(idx=None, win_len=None, limits=None):
-    if limits is None:
-        limits = [max(statemon_net_current.t)/defaultclock.dt - 500, max(statemon_net_current.t)/defaultclock.dt]
-
-    if idx is not None:
-        if win_len:
-            iin0 = np.convolve(statemon_net_current.Iin0[idx], np.ones(win_len)/win_len, mode='valid')
-            iin1 = np.convolve(statemon_net_current.Iin1[idx], np.ones(win_len)/win_len, mode='valid')
-            iin2 = np.convolve(statemon_net_current.Iin2[idx], np.ones(win_len)/win_len, mode='valid')
-            iin3 = np.convolve(statemon_net_current.Iin3[idx], np.ones(win_len)/win_len, mode='valid')
-            total_Iin = np.convolve(statemon_net_current.Iin[idx], np.ones(win_len)/win_len, mode='valid')
-        else:
-            iin0 = statemon_net_current.Iin0[idx]
-            iin1 = statemon_net_current.Iin1[idx]
-            iin2 = statemon_net_current.Iin2[idx]
-            iin3 = statemon_net_current.Iin3[idx]
-            total_Iin = statemon_net_current.Iin[idx]
-    else:
-        if win_len:
-            iin0 = np.convolve(np.mean(statemon_net_current.Iin0, axis=0), np.ones(win_len)/win_len, mode='valid')
-            iin1 = np.convolve(np.mean(statemon_net_current.Iin1, axis=0), np.ones(win_len)/win_len, mode='valid')
-            iin2 = np.convolve(np.mean(statemon_net_current.Iin2, axis=0), np.ones(win_len)/win_len, mode='valid')
-            iin3 = np.convolve(np.mean(statemon_net_current.Iin3, axis=0), np.ones(win_len)/win_len, mode='valid')
-            total_Iin = np.convolve(np.mean(statemon_net_current.Iin, axis=0), np.ones(win_len)/win_len, mode='valid')
-        else:
-            iin0 = np.mean(statemon_net_current.Iin0, axis=0)
-            iin1 = np.mean(statemon_net_current.Iin1, axis=0)
-            iin2 = np.mean(statemon_net_current.Iin2, axis=0)
-            iin3 = np.mean(statemon_net_current.Iin3, axis=0)
-            total_Iin = np.mean(statemon_net_current.Iin, axis=0)
-    plt.plot(iin0, 'r', label='pyr')
-    plt.plot(iin1, 'g', label='pv')
-    plt.plot(iin2, 'b', label='sst')
-    plt.plot(iin3, 'k--', label='input')
-    plt.plot(total_Iin, 'k', label='net current')
-    plt.legend()
-    if limits is not None:
-        plt.xlim(limits)
-    plt.ylabel('Current [amp]')
-    plt.xlabel('time [ms]')
-    plt.title('EI balance')
     plt.show()
 
 def run_batches(Net, orca, training_blocks, training_duration,

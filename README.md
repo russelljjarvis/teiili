@@ -9,6 +9,19 @@
     <img src="https://gitlab.com/neuroinf/teili/badges/master/pipeline.svg" /></a>
 </p>
 
+# Entry Point for this branch example:
+```python
+from teili import TeiliNetwork
+Net = TeiliNetwork()
+Net.restore(filename='pablo_net')
+```
+or 
+```
+cd tutorials
+ python load_pablo.py
+```
+
+
 # teili
 
 teili, das /taɪli/, Swiss german diminutive for piece. <br />

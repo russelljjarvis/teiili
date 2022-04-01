@@ -1,12 +1,12 @@
 <p align="center">
  <a href='https://teili.readthedocs.io/en/latest/?badge=latest' alt="Documentation Status">
     <img src='https://readthedocs.org/projects/teili/badge/?version=latest' /></a>
- <a href="https://gitlab.com/neuroinf/teili/commits/dev" alt="build status">
-    <img src="https://code.ini.uzh.ch/ncs/teili/badges/dev/build.svg" /></a>
- <a href="https://gitlab.com/neuroinf/teili/-/commits/dev" alt="coverage report">
-    <img src="https://gitlab.com/neuroinf/teili/badges/dev/coverage.svg" /></a>
- <a href="https://gitlab.com/neuroinf/teili/-/commits/master" alt="pipeline">
-    <img src="https://gitlab.com/neuroinf/teili/badges/master/pipeline.svg" /></a>
+ <a href="https://gitlab.com/-/ide/project/russelljjarvis/teili/commits/dev" alt="build status">
+    <img src="https://gitlab.com/-/ide/project/russelljjarvis/teili/badges/dev/build.svg" /></a>
+ <a href="https://gitlab.com/-/ide/project/russelljjarvis/teili/-/commits/dev" alt="coverage report">
+    <img src="https://gitlab.com/-/ide/project/russelljjarvis/teili/badges/dev/coverage.svg" /></a>
+ <a href="https://gitlab.com/-/ide/project/russelljjarvis/teili/-/commits/master" alt="pipeline">
+    <img src="https://gitlab.com/-/ide/project/russelljjarvis/teili/badges/master/pipeline.svg" /></a>
 </p>
 
 # Entry Point for this branch example:

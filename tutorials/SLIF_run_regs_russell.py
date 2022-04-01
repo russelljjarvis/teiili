@@ -167,7 +167,14 @@ spkmon_l4 = SpikeMonitor(column.col_groups['L4']._groups['pyr_cells'],
 
 # Training
 Net.add([x for x in column.col_groups.values()])
+
+#print([x for x in column.col_groups.values()])
+print([list(x)[0][1] for x in column.col_groups.values()])
+
 Net.add([x.input_groups for x in column.col_groups.values()])
+#print([dir(x.input_groups) for x in column.col_groups.values()])
+print([list(x.input_groups.values())[0][1] for x in column.col_groups.values()])
+
 #Net.add(spikemon_input, spkmon_l4, spkmon_l5)
 Net.store(filename='pablo_network')
 
@@ -179,12 +186,3 @@ Net.restore(filename='pablo_network')
 for k in Net.neurongroups.keys(): 
     print(Net.neurongroups[k].synapses_dict)
 
-#Net.run(1000*ms, report='stdout', report_period=100*ms)
-{'L5_pyr_sst': 1, 'L5_vip_sst': 2, 'L4_L5_pyr_sst': 3, 'L4_L5_vip_sst': 4}
-{'L4_pyr_pyr': 1, 'L4_pv_pyr': 2, 'L4_sst_pyr': 3, 'L5_L4_pyr_pyr': 4, 'L5_L4_pv_pyr': 5, 'L5_L4_sst_pyr': 6}
-{'L5_pyr_vip': 1, 'L5_sst_vip': 2, 'L4_L5_pyr_vip': 3, 'L4_L5_sst_vip': 4}
-{'L5_pyr_pyr': 1, 'L5_pv_pyr': 2, 'L5_sst_pyr': 3, 'L4_L5_pyr_pyr': 4, 'L4_L5_pv_pyr': 5, 'L4_L5_sst_pyr': 6}
-{'L4_pyr_sst': 1, 'L4_vip_sst': 2, 'L5_L4_pyr_sst': 3}
-{'L5_pyr_pv': 1, 'L5_pv_pv': 2, 'L5_sst_pv': 3, 'L4_L5_pyr_pv': 4, 'L4_L5_pv_pv': 5, 'L4_L5_sst_pv': 6}
-{'L4_pyr_vip': 1, 'L4_sst_vip': 2, 'L5_L4_pyr_vip': 3}
-{'L4_pyr_pv': 1, 'L4_pv_pv': 2, 'L4_sst_pv': 3, 'L5_L4_pyr_pv': 4}

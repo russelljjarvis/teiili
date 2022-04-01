@@ -8,7 +8,9 @@ from brian2 import ms, mA, second, prefs, SpikeMonitor,\
 from teili import TeiliNetwork
 from teili.tools.misc import neuron_group_from_spikes
 
-from SLIF_utils import deterministic_sequence
+#from SLIF_utils import deterministic_sequence
+import brian2
+sequence_duration=10*brian2.ms
 
 from orca_column import orcaColumn
 from monitor_params import monitor_params, selected_cells
@@ -94,30 +96,30 @@ noise_prob = None
 item_rate = 250
 repetitions = 300
 
-spike_indices = []
-spike_times = []
-for i in range(repetitions):
-    sequence = deterministic_sequence(num_channels, num_items, item_duration,
-                                 item_superposition, noise_prob, item_rate,
-                                 1)
-    tmp_i, tmp_t = sequence.stimuli()
+#spike_indices = []
+#spike_times = []
+#for i in range(repetitions):
+    #sequence = deterministic_sequence(num_channels, num_items, item_duration,
+    #                             item_superposition, noise_prob, item_rate,
+    #                             1)
+    #tmp_i, tmp_t = sequence.stimuli()
 
-    spike_indices.extend(tmp_i)
-    tmp_t = [x/ms + i*(num_items*(item_duration - item_superposition)+item_superposition)
-        for x in tmp_t]
-    spike_times.extend(tmp_t)
-input_indices = np.array(spike_indices)
-input_times = np.array(spike_times) * ms
-sequence_duration = sequence.cycle_length * ms
-testing_duration = 1000*ms
-training_duration = np.max(input_times)
+    #spike_indices.extend(tmp_i)
+    #tmp_t = [x/ms + i*(num_items*(item_duration - item_superposition)+item_superposition)
+    #    for x in tmp_t]
+    #spike_times.extend(tmp_t)
+#input_indices = np.array(spike_indices)
+#input_times = np.array(spike_times) * ms
+#sequence_duration = sequence.cycle_length * ms
+#testing_duration = 1000*ms
+#training_duration = np.max(input_times)
 
 # Convert input into neuron group (necessary for STDP compatibility)
-relay_cells = neuron_group_from_spikes(num_channels,
-                                       defaultclock.dt,
-                                       training_duration,
-                                       spike_indices=input_indices,
-                                       spike_times=input_times)
+#relay_cells = neuron_group_from_spikes(num_channels,
+#                                      defaultclock.dt,
+#                                      training_duration,
+#                                      spike_indices=input_indices,
+#                                      spike_times=input_times)
 
 Net = TeiliNetwork()
 column = orcaColumn(['L4', 'L5'])
@@ -127,13 +129,14 @@ column.create_layers(pop_modifier, conn_modifier)
 conn_modifier = {'L4_L5': change_params_conn4}
 column.connect_layers(conn_modifier)
 conn_modifier = {'L4': change_params_conn2, 'L5': change_params_conn3}
-column.connect_inputs(relay_cells, 'ff', conn_modifier)
+#column.connect_inputs(relay_cells, 'ff', conn_modifier)
 
 # Prepare for saving data
 date_time = datetime.now()
 path = f"""{date_time.strftime('%Y.%m.%d')}_{date_time.hour}.{date_time.minute}/"""
 os.mkdir(path)
 num_exc = column.col_groups['L4'].groups['pyr_cells'].N
+
 Metadata = {'time_step': defaultclock.dt,
             'num_exc': num_exc,
             'num_pv': column.col_groups['L4'].groups['pv_cells'].N,
@@ -149,14 +152,14 @@ with open(path+'metadata', 'wb') as f:
 
 ##################
 # Setting up monitors
-monitor_params['statemon_static_conn_ff_pyr']['group'] = 'L4_ff_pyr'
-monitor_params['statemon_conn_ff_pv']['group'] = 'L4_ff_pv'
-monitor_params['statemon_static_conn_ff_pv']['group'] = 'L4_ff_pv'
-monitor_params['statemon_conn_ff_pyr']['group'] = 'L4_ff_pyr'
-column.col_groups['L4'].create_monitors(monitor_params)
+#monitor_params['statemon_static_conn_ff_pyr']['group'] = 'L4_ff_pyr'
+#monitor_params['statemon_conn_ff_pv']['group'] = 'L4_ff_pv'
+#monitor_params['statemon_static_conn_ff_pv']['group'] = 'L4_ff_pv'
+#monitor_params['statemon_conn_ff_pyr']['group'] = 'L4_ff_pyr'
+#column.col_groups['L4'].create_monitors(monitor_params)
 
 # Temporary monitors
-spikemon_input = SpikeMonitor(relay_cells, name='input_spk')
+#spikemon_input = SpikeMonitor(relay_cells, name='input_spk')
 spkmon_l5 = SpikeMonitor(column.col_groups['L5']._groups['pyr_cells'],
                          name='l5_spk')
 spkmon_l4 = SpikeMonitor(column.col_groups['L4']._groups['pyr_cells'],
@@ -165,7 +168,8 @@ spkmon_l4 = SpikeMonitor(column.col_groups['L4']._groups['pyr_cells'],
 # Training
 Net.add([x for x in column.col_groups.values()])
 Net.add([x.input_groups for x in column.col_groups.values()])
-Net.add(spikemon_input, spkmon_l4, spkmon_l5)
+#Net.add(spikemon_input, spkmon_l4, spkmon_l5)
+Net.store(filename='network')
 
 # store in a first simulation
 #Net.store(filename='network')

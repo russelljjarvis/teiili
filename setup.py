@@ -122,12 +122,13 @@ setup(
         'sparse>=0.3.0',
         'Brian2>=2.4.2',
         'scipy>=1.1.0',
-        'pyqtgraph>=0.10.0',
         'pandas>=0.23.1',
         'matplotlib>=2.2.2',
         'h5py>=2.8.0',
-        'pyqt5>=5.10.1',
-        'sympy==1.5.1'
+        'sympy==1.5.1',
+        'pyqtgraph>=0.10.0',
+        'pyqt5>=5.10.1'
+
     ],
     cmdclass={
         'install': PostInstallCommand,

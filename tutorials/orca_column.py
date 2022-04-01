@@ -1,7 +1,7 @@
 import itertools
 
 from brian2 import mA
-
+import os
 from orca_wta import orcaWTA
 from orca_params import ConnectionDescriptor, PopulationDescriptor
 
@@ -9,12 +9,12 @@ class orcaColumn:
     """ This class defines how layer are connected within a column.
 
     Attributes:
-        layers (list of str): Layers of the column. Note that we can have 
+        layers (list of str): Layers of the column. Note that we can have
             abstract columns with fewer layers.
         col_groups (dict of list): Brian2 col_groups for each layer.
     """
     def __init__(self, layers):
-        self.model_path = '/Users/Pablo/git/teili/'
+        self.model_path = str(os.getcwd())+"/../"
         self.layers = layers
         self.col_groups = {x: None for x in self.layers}
 

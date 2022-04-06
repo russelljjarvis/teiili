@@ -786,7 +786,13 @@ class Connections(Synapses, TeiliGroup, Nameable):
         xlabel('Source neuron index')
         ylabel('Target neuron index')
 
-
+    def return_connectome(self):
+        """Simple visualization of synapse connectivity (connected dots and
+        connectivity matrix)
+        """
+        S = self
+        return (S.source, S.target, S.i, S.j)
+         
 def set_params(briangroup, params, ndargs=None, raise_error=False, verbose=False):
     """This function takes a params dictionary and sets the parameters of
     a briangroup.
